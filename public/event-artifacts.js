@@ -1,12 +1,12 @@
 // v38: pháp bảo sự kiện (chỉ trao khi sự kiện kết thúc, không rèn được) + hình vẽ khi trang bị.
 export const EVENT_ARTIFACTS=Object.freeze([
-  {id:'hoa-tien-kiem',type:'artifact',name:'Bách Hoa Tiên Kiếm',icon:'sword',tier:0,price:0,herbs:0,damage:45,bonus:.30,exclusive:true,eventReward:'Thiên Hoa Vũ · Top 1',description:'Kiếm ngọc hồng kết từ trăm hoa: +45 sát thương, +30% tu vi khi trang bị.'},
-  {id:'dao-hoa-phien',type:'artifact',name:'Đào Hoa Linh Phiến',icon:'orb',tier:0,price:0,herbs:0,damage:34,bonus:.22,exclusive:true,eventReward:'Thiên Hoa Vũ · Top 2',description:'Quạt lụa đào hoa, phẩy ra cánh hoa sắc như kiếm: +34 sát thương, +22% tu vi.'},
-  {id:'hoa-linh-lung',type:'artifact',name:'Hoa Vũ Linh Lung',icon:'orb',tier:0,price:0,herbs:0,damage:24,bonus:.16,exclusive:true,eventReward:'Thiên Hoa Vũ · Top 3',description:'Linh lung tháp nhỏ chứa mưa hoa: +24 sát thương, +16% tu vi.'},
-  {id:'tinh-ha-kinh',type:'artifact',name:'Tinh Hà Bảo Kính',icon:'orb',tier:0,price:0,herbs:0,damage:42,bonus:.32,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · Top 1',description:'Gương soi cả dải ngân hà: +42 sát thương, +32% tu vi khi trang bị.'},
-  {id:'luu-tinh-cung',type:'artifact',name:'Lưu Tinh Thần Cung',icon:'sword',tier:0,price:0,herbs:0,damage:36,bonus:.20,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · Top 2',description:'Cung bắn sao băng: +36 sát thương, +20% tu vi.'},
-  {id:'that-tinh-phu',type:'artifact',name:'Thất Tinh Linh Phù',icon:'scroll',tier:0,price:0,herbs:0,damage:22,bonus:.18,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · Top 3',description:'Linh phù khắc Bắc Đẩu thất tinh: +22 sát thương, +18% tu vi.'},
-  {id:'tinh-sa-dai',type:'artifact',name:'Tinh Sa Linh Đại',icon:'vase',tier:0,price:0,herbs:0,damage:12,bonus:.10,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · tham gia',description:'Túi gấm đựng bụi sao: +12 sát thương, +10% tu vi.'}
+  {id:'hoa-tien-kiem',type:'artifact',name:'Bách Hoa Tiên Kiếm',icon:'sword',tier:0,price:0,herbs:0,damage:45,bonus:.30,exclusive:true,eventReward:'Thiên Hoa Vũ · Top 1',description:'Kiếm ngọc hồng kết từ trăm hoa: +45 công lực, +30% tu vi khi trang bị.'},
+  {id:'dao-hoa-phien',type:'artifact',name:'Đào Hoa Linh Phiến',icon:'orb',tier:0,price:0,herbs:0,damage:34,bonus:.22,exclusive:true,eventReward:'Thiên Hoa Vũ · Top 2',description:'Quạt lụa đào hoa, phẩy ra cánh hoa sắc như kiếm: +34 công lực, +22% tu vi.'},
+  {id:'hoa-linh-lung',type:'artifact',name:'Hoa Vũ Linh Lung',icon:'orb',tier:0,price:0,herbs:0,damage:24,bonus:.16,exclusive:true,eventReward:'Thiên Hoa Vũ · Top 3',description:'Linh lung tháp nhỏ chứa mưa hoa: +24 công lực, +16% tu vi.'},
+  {id:'tinh-ha-kinh',type:'artifact',name:'Tinh Hà Bảo Kính',icon:'orb',tier:0,price:0,herbs:0,damage:42,bonus:.32,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · Top 1',description:'Gương soi cả dải ngân hà: +42 công lực, +32% tu vi khi trang bị.'},
+  {id:'luu-tinh-cung',type:'artifact',name:'Lưu Tinh Thần Cung',icon:'sword',tier:0,price:0,herbs:0,damage:36,bonus:.20,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · Top 2',description:'Cung bắn sao băng: +36 công lực, +20% tu vi.'},
+  {id:'that-tinh-phu',type:'artifact',name:'Thất Tinh Linh Phù',icon:'scroll',tier:0,price:0,herbs:0,damage:22,bonus:.18,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · Top 3',description:'Linh phù khắc Bắc Đẩu thất tinh: +22 công lực, +18% tu vi.'},
+  {id:'tinh-sa-dai',type:'artifact',name:'Tinh Sa Linh Đại',icon:'vase',tier:0,price:0,herbs:0,damage:12,bonus:.10,exclusive:true,eventReward:'Tinh Hà Lưu Tinh · tham gia',description:'Túi gấm đựng bụi sao: +12 công lực, +10% tu vi.'}
 ]);
 const TAU=Math.PI*2;
 // Vẽ pháp bảo bay quanh nhân vật (toạ độ nhân vật, giống artifact-visuals.js).

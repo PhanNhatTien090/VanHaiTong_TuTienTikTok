@@ -7,9 +7,9 @@ export const ELITE_BOSSES=Object.freeze([
  {species:'rebirth-phoenix',name:'Phượng Hoàng Niết Bàn',cell:2,elite:true,reward:'rebirth-feather',skill:'Niết Bàn Hỏa Vũ',color:'#ffd49c'}
 ]);
 export const BOSS_RELICS=Object.freeze([
- {id:'storm-fang',type:'artifact',name:'Thiên Kiếp Lôi Nha',icon:'sword',tier:0,price:0,herbs:0,damage:54,bonus:.30,exclusive:true,eventReward:'Lôi Hổ Thiên Kiếp · Top sát thương',description:'Chiến lợi phẩm yêu thú: +54 sát thương, +30% tu vi.',cell:0},
- {id:'astral-shell',type:'artifact',name:'Tinh Hà Huyền Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:42,bonus:.42,exclusive:true,eventReward:'Huyền Vũ Tinh Hà · Top sát thương',description:'Chiến lợi phẩm yêu thú: +42 sát thương, +42% tu vi.',cell:3},
- {id:'rebirth-feather',type:'artifact',name:'Niết Bàn Linh Vũ',icon:'orb',tier:0,price:0,herbs:0,damage:48,bonus:.36,exclusive:true,eventReward:'Phượng Hoàng Niết Bàn · Top sát thương',description:'Chiến lợi phẩm yêu thú: +48 sát thương, +36% tu vi.',cell:1}
+ {id:'storm-fang',type:'artifact',name:'Thiên Kiếp Lôi Nha',icon:'sword',tier:0,price:0,herbs:0,damage:54,bonus:.30,exclusive:true,eventReward:'Lôi Hổ Thiên Kiếp · Top công lực',description:'Chiến lợi phẩm yêu thú: +54 công lực, +30% tu vi.',cell:0},
+ {id:'astral-shell',type:'artifact',name:'Tinh Hà Huyền Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:42,bonus:.42,exclusive:true,eventReward:'Huyền Vũ Tinh Hà · Top công lực',description:'Chiến lợi phẩm yêu thú: +42 công lực, +42% tu vi.',cell:3},
+ {id:'rebirth-feather',type:'artifact',name:'Niết Bàn Linh Vũ',icon:'orb',tier:0,price:0,herbs:0,damage:48,bonus:.36,exclusive:true,eventReward:'Phượng Hoàng Niết Bàn · Top công lực',description:'Chiến lợi phẩm yêu thú: +48 công lực, +36% tu vi.',cell:1}
 ]);
 export function encounterPhase(b,now){const abyss=abyssPhase(b,now);if(abyss)return abyss;const celestial=celestialPhase(b,now);if(celestial)return celestial;const def=ELITE_BOSSES.find(x=>x.species===b?.species);if(!def)return null;const age=Math.max(0,now-b.startedAt),enraged=b.hp/b.maxHp<.4,period=def.cell===2?(enraged?10000:14000):def.cell===1?18000:12000,at=age%period;
  if(def.cell===1){const broken=b.shieldBrokenUntil>now,weak=broken||at>=14000;return {id:weak?'exposed':'shield',name:weak?'VỠ GIÁP · đánh ngay':'KẾT GIỚI · 3 người hợp kích',mult:weak?1.65:.65,progress:at/period,enraged,color:def.color,skill:def.skill};}

@@ -1,5 +1,6 @@
 import {eventDashboardHTML} from './event-dashboard.js';
 import {SCENES} from './world-rotation.js';
+import {safeAvatar} from './honors.js';
 const esc=s=>String(s??'').normalize('NFC').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clock=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
 export function mountEventTab(post){
@@ -27,10 +28,22 @@ export function renderSocialUI(state,admin=true){
  else if(race?.phase==='running')h='<b>PHI KIẾM · '+clock(race.endsAt-now)+'</b><span>Gõ danh để bứt tốc · hồi 10 giây · không giới hạn số lần</span>';
  else if(race?.active)h='<b>VỀ ĐÍCH · '+esc(race.results?.[0]?.name||'Chờ thêm đấu thủ')+'</b><span>Lượt tuyển tiếp theo sau '+clock(race.podiumUntil-now)+'</span>';
  else if(t?.phase==='registration')h='<b>LUẬN KIẾM · '+clock(t.registrationEndsAt-now)+'</b><span>Gõ tythi · '+t.entries.length+' người đăng ký</span>';
- else if(current)h='<b>'+esc(short(current.a))+' '+current.hp[current.a]+'% · '+esc(short(current.b))+' '+current.hp[current.b]+'%</b><span>Hai đấu thủ gõ danh · trợ lực '+(current.boosts[current.a]||0)+'/3 — '+(current.boosts[current.b]||0)+'/3 · '+clock(current.endsAt-now)+'</span>';
+ else if(current){const au=current.aura||{};h='<b>'+esc(short(current.a))+' ✦ '+(au[current.a]||0)+' · '+esc(short(current.b))+' ✦ '+(au[current.b]||0)+'</b><span>Linh áp · đấu thủ gõ kiem tiếp linh lực '+(current.boosts[current.a]||0)+'/3 — '+(current.boosts[current.b]||0)+'/3 · '+clock(current.endsAt-now)+'</span>';}
+ else if(t?.quick)h='<b>LUẬN KIẾM · VÒNG '+t.quick.round+'</b><span>So tài nhanh · '+(t.roundSize||'')+' đấu thủ · '+(t.results?.length||0)+' ván đã xong</span>';
  else if(t?.phase==='running')h='<b>LUẬN KIẾM · VÒNG '+t.round+'</b><span>Đang chuẩn bị cặp tiếp theo</span>';
  else if(s.ceremony)h='<b>'+(s.ceremony.festivalId?'NGUYỆT HẠ THÀNH DUYÊN':'TAM SINH ƯỚC')+'</b><span>'+esc(name(s.ceremony.a))+' ♥ '+esc(name(s.ceremony.b))+'</span>';
  else if(s.invites.length){const i=s.invites[0];h='<b>'+esc(i.fromName)+' mời '+esc(i.toName)+'</b><span>'+esc(i.toName)+' gõ dongy · '+clock(i.expiresAt-now)+'</span>';}
  if(!h&&f?.active&&!state.boss)h='<b>NGUYỆT HẠ KẾT DUYÊN · '+clock(f.endsAt-now)+'</b><span>ketduyen tên → dongy · '+(practice?'điểm tu luyện ':'tim chúc phúc ')+f.blessings+'/'+f.goal+'</span>';
  hud.hidden=!h;if(hud._last!==h){hud.innerHTML=h;hud._last=h;}
+ renderQuickBoard(t,now,players);
+}
+// 05/11/2026: vòng loại luận kiếm hiện thẻ avatar từng cặp, vài giây sau lộ người thắng. Không có cảnh đánh.
+function renderQuickBoard(t,now,players){
+ const q=t?.phase==='running'?t.quick:null;let board=document.querySelector('#duelBoard');
+ if(!q){if(board&&!board.hidden){board.hidden=true;board._last='';}return;}
+ if(!board){board=document.createElement('div');board.id='duelBoard';board.className='duel-board';(document.querySelector('.scene-shell')||document.body).appendChild(board);}
+ const shown=now>=q.revealAt,key=q.id+':'+shown;board.hidden=false;if(board._last===key)return;board._last=key;
+ const card=(id,fallback,winner,tech)=>{const tl=tech?.name?`<small class="duel-tech" style="color:${esc(tech.color||'#bfeaff')}">${esc(tech.name)}${tech.intensity>1?' '+'✦'.repeat(tech.intensity-1):''}</small>`:'';const p=players.get(id),name=p?.name||fallback||'Đạo hữu',av=safeAvatar(p?.avatar),state=shown?(id===winner?' win':' bow'):'';
+  return `<span class="duel-card${state}"><i class="duel-portrait"><em>${esc(Array.from(name)[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}</i><b>${esc(Array.from(name).slice(0,12).join(''))}</b>${tl}<small>${shown?(id===winner?'Tiến vòng sau':'Đa tạ chỉ giáo'):'&nbsp;'}</small></span>`;};
+ board.innerHTML='<header>LUẬN KIẾM · VÒNG '+q.round+' · SO TÀI NHANH</header>'+q.pairs.map(m=>`<div class="duel-pair">${card(m.a,m.aName,m.winner,m.aTech)}<span class="duel-mid">${shown?'✦':'⟡'}</span>${card(m.b,m.bName,m.winner,m.bTech)}</div>`).join('');
 }

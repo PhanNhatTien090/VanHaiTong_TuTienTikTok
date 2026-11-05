@@ -28,7 +28,7 @@ export function railPages(s){
   const craft=cat.filter(i=>i.type==='artifact'&&!i.exclusive).sort((a,b)=>a.tier-b.tier||a.price-b.price)
     .map(i=>({cmd:i.name,text:`${stat(i)} · ${i.price} thạch${i.herbs?' '+i.herbs+' thảo':''} · ${realms[i.tier]||''}`}));
   for(const rows of chunk(craft))pages.push({title:'PHÁP BẢO · gõ rèn',rows});
-  const special=cat.filter(i=>i.type==='artifact'&&i.exclusive).map(i=>({cmd:i.name,text:`${stat(i)} · ${i.eventReward||(i.giftMin?`quà ${i.giftMin}+ coin`:i.loyaltyMinutes?`hoạt động ${i.loyaltyMinutes} phút`:i.id==='tiger-bell'?'Top sát thương Lôi Hổ':'Đại Hộ Pháp')}`}));
+  const special=cat.filter(i=>i.type==='artifact'&&i.exclusive).map(i=>({cmd:i.name,text:`${stat(i)} · ${i.eventReward||(i.giftMin?`quà ${i.giftMin}+ coin`:i.loyaltyMinutes?`hoạt động ${i.loyaltyMinutes} phút`:i.id==='tiger-bell'?'Top công lực Lôi Hổ':'Đại Hộ Pháp')}`}));
   for(const rows of chunk(special))pages.push({title:'PHÁP BẢO QUÀ · SỰ KIỆN',rows});
   const pills=cat.filter(i=>i.type==='pill').map(i=>({cmd:i.name,text:`+${i.qi} tu vi · ${i.price} thạch ${i.herbs} thảo`}));
   if(pills.length)pages.push({title:'ĐAN DƯỢC · gõ luyện đan',rows:pills.slice(0,5)});

@@ -10,7 +10,7 @@ export function heartHUD(state){
  if(b&&b.hp>0&&now<b.endsAt){
    const h=b.hearts||{count:0,target:Math.min(500,Math.max(100,Math.ceil(state.players.filter(p=>p.active&&!p.resident&&!p.puppet).length*20/50)*50)),strikes:0,limit:6};
    context='boss';title='❤ KIẾM TRẬN TIM · '+h.strikes+'/'+h.limit;
-   detail=h.strikes<h.limit?`Còn ${fmt(Math.max(0,h.target-h.count))} tim → −5% máu boss`:'Đủ 6 trận · gõ danh kết liễu';
+   detail=h.strikes<h.limit?`Còn ${fmt(Math.max(0,h.target-h.count))} tim → −5% yêu lực`:'Đủ 6 trận · gõ danh kết liễu';
    progress=bar(h.strikes>=h.limit?h.target:h.count,h.target);extra='Người góp tim được nhận thưởng khi hạ boss';
  }else if(r?.phase==='running'){
    context='race';title='❤ NGỰ PHONG';

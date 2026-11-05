@@ -429,3 +429,6 @@ body.overlay .scene-shell>#basicCommands.corner-command-guide{width:66%!importan
 body.overlay .scene-shell>#basicCommands.corner-command-guide li{gap:7px;align-items:baseline}
 body.overlay .scene-shell>#basicCommands.corner-command-guide span{font-size:1em;line-height:1.3;color:#fff6df}
 body.overlay #phoneHudLeft>*,body.overlay #phoneHudRight>*,body.overlay .scene-guide-dock{zoom:1}
+
+/* 05/11/2026: trận Hắc Uyên Ma Long có bảng yêu lực rộng trên canvas — ẩn bảng xếp hạng góc trái để không chồng chữ */
+body.abyss-fight #liveRanks{display:none!important}

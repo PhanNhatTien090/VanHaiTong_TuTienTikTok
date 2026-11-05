@@ -8,6 +8,9 @@ export const SOCIAL_ITEMS=[FESTIVAL_ITEM,
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const ok=()=>({ok:true}),fail=message=>({ok:false,message});
 export const tournamentActive=w=>['registration','running'].includes(w.tournament?.phase);
+// 05/11/2026: ai ghi danh cũng vào giải. Vòng còn trên 4 người so tài nhanh bằng thẻ avatar (không lên đài);
+// chỉ bán kết + chung kết (tối đa 3 ván) mới diễn trên đài. Cách tính thắng thua giữ nguyên.
+export const STAGED_MAX=4,QUICK_PAIRS=4,QUICK_REVEAL_MS=2600,QUICK_MS=4200,DUEL_MS=25000;
 export function socialState(w){return w.social??={nextCode:1,invites:{},bonds:{},ceremonies:[],activeCeremony:null,history:[]};}
 export function socialProfile(w,p){const s=socialState(w);if(!p.socialCode)p.socialCode=(s.nextCode++).toString(36).toUpperCase().padStart(4,'0');return p;}
 export function socialBusy(w,now){return ['queued','registration','running'].includes(w.race?.phase)||w.race?.podiumUntil>now||tournamentActive(w)||w.tournament?.podiumUntil>now||socialState(w).activeCeremony?.endsAt>now;}
@@ -15,50 +18,70 @@ export function existingEvent(w,now){return stageConflict(w,now,{allowBond:true}
 export function startTournament(w,now,c){
  const busy=stageConflict(w,now);if(busy||socialBusy(w,now))return fail('Đang có '+(busy||'tỷ thí / lễ kết duyên')+'. Dừng hoặc chờ hoạt động đó kết thúc.');
  w.tournament={id:'tournament-'+now,phase:'registration',startedAt:now,registrationEndsAt:now+90000,entries:[...(w.tournament?.waiting||[])].map(e=>({id:e.id,at:now})),waiting:[],round:1,matches:[],matchIndex:0,current:null,results:[],awarded:{}};
- c.emit(w,null,'Phong Vân Luận Kiếm mở tuyển 90 giây • gõ tythi • tối đa 8 đấu thủ mỗi lượt','tournament',now);return ok();
+ c.emit(w,null,'Phong Vân Luận Kiếm mở tuyển 90 giây • gõ tythi • ai ghi danh cũng được so tài','tournament',now);return ok();
 }
-export function stopTournament(w,now,c){if(!tournamentActive(w))return fail('Không có tỷ thí đang chạy.');w.tournament.phase='cancelled';w.tournament.current=null;w.nextBossAt=now+(w.settings?.bossInterval??240)*1000;c.emit(w,null,'Tỷ thí đã dừng • giữ nguyên tu vi và trang bị','tournament',now);return ok();}
+export function stopTournament(w,now,c){if(!tournamentActive(w))return fail('Không có tỷ thí đang chạy.');w.tournament.phase='cancelled';w.tournament.current=null;w.tournament.quick=null;w.nextBossAt=now+(w.settings?.bossInterval??240)*1000;c.emit(w,null,'Tỷ thí đã dừng • giữ nguyên tu vi và trang bị','tournament',now);return ok();}
 function notify(w,p,text,now,c){c.emit(w,p,text,'social',now);}
 function giveItem(p,id){if(!p.artifacts.includes(id))p.artifacts.push(id);}
-function reward(w,p,eventId,medals,now,c){const e=w.tournament;if(e.awarded[eventId])return;e.awarded[eventId]=true;p.tournamentMedals=(p.tournamentMedals||0)+medals;notify(w,p,'Luận Kiếm • +'+medals+' huy chương • tổng '+p.tournamentMedals,now,c);}
+function reward(w,p,eventId,medals,now,c,quiet=false){const e=w.tournament;if(e.awarded[eventId])return;e.awarded[eventId]=true;p.tournamentMedals=(p.tournamentMedals||0)+medals;if(!quiet)notify(w,p,'Luận Kiếm • +'+medals+' huy chương • tổng '+p.tournamentMedals,now,c);}
+// Quy tắc thắng thua (không đổi): tổng tu vi cao hơn từ 3% trở lên thì thắng chắc; sát nhau mới so điểm + trợ lực; hòa điểm ưu tiên đăng ký trước.
+function decide(t,a,b,strengths,boosts={}){
+ const score=id=>strengths[id]+Math.min(3,boosts[id]||0)*2,qa=t.fighters[a]?.totalQi||0,qb=t.fighters[b]?.totalQi||0,decided=qa>=qb*1.03?a:qb>=qa*1.03?b:null;
+ const tie=!decided&&score(a)===score(b),aEarlier=(t.entries.find(e=>e.id===a)?.at||0)<=(t.entries.find(e=>e.id===b)?.at||0),winner=decided||(score(a)>score(b)||tie&&aEarlier?a:b);
+ return {winner,loser:winner===a?b:a,scoreA:score(a),scoreB:score(b),tie};
+}
 function match(w,a,b,now,c){
  const t=w.tournament,pa=w.players[a],pb=w.players[b],sa=t.fighters[a],sb=t.fighters[b];
- return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+25000,boosts:{[a]:0,[b]:0},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},hp:{[a]:100,[b]:100}};
+ return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+DUEL_MS,boosts:{[a]:0,[b]:0},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},aura:{[a]:0,[b]:0}};
 }
-function pairRound(w,ids,now,c){const t=w.tournament;t.matches=[];for(let i=0;i<ids.length;i+=2)t.matches.push([ids[i],ids[i+1]||null]);t.matchIndex=0;t.nextMatchAt=now+3000;t.current=null;}
+function pairRound(w,ids,now,c){const t=w.tournament;t.matches=[];for(let i=0;i<ids.length;i+=2)t.matches.push([ids[i],ids[i+1]||null]);t.matchIndex=0;t.nextMatchAt=now+3000;t.current=null;t.quick=null;t.roundSize=ids.length;t.roundStaged=ids.length<=STAGED_MAX;t.roundAnnounced=false;}
 function beginRound(w,now,c){
  const t=w.tournament,eligible=t.entries.filter(e=>w.players[e.id]&&c.active(w,w.players[e.id],now)).sort((a,b)=>(w.players[a.id].lastTournamentAt||0)-(w.players[b.id].lastTournamentAt||0)||a.at-b.at);
  if(eligible.length<2){t.phase='cancelled';notify(w,null,'Chưa đủ 2 đạo hữu hoạt động • hẹn lượt tỷ thí tiếp theo',now,c);return;}
- const selected=eligible.slice(0,8);t.waiting=eligible.slice(8);t.participants=selected.map(e=>e.id);t.phase='running';t.fighters={};
+ const selected=eligible;t.waiting=[];const quietJoin=selected.length>8;t.participants=selected.map(e=>e.id);t.phase='running';t.fighters={};
  // Sức mạnh tỷ thí = sức mạnh chiến đấu + cảnh giới×5; khoảng giãn rộng (70–160) để người mạnh hơn rõ ràng thì thắng.
  // Tỷ thí xét TỔNG TU VI: tu vi cao hơn thì mạnh hơn (thanh máu cũng theo đó). Sức mạnh trang bị chỉ cộng rất nhỏ để phân định khi bằng nhau.
  const duelPower=p=>Math.log10((Number(p.totalQi)||0)+10)*100+c.power(p)*0.05;
  const powers=selected.map(e=>duelPower(w.players[e.id])).sort((a,b)=>a-b),median=powers[Math.floor(powers.length/2)]||1;
- for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;t.fighters[p.id]={name:p.name,strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0};reward(w,p,'join:'+p.id,1,now,c);}
+ for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
  const sorted=selected.map(e=>e.id).sort((a,b)=>t.fighters[a].power-t.fighters[b].power||a.localeCompare(b));pairRound(w,sorted,now,c);
- c.emit(w,null,'Luận Kiếm bắt đầu • '+selected.length+' đấu thủ • gõ danh khi đến lượt, tối đa 3 trợ lực','tournament',now);
+ c.emit(w,null,'Luận Kiếm bắt đầu • '+selected.length+' đấu thủ • '+(selected.length>STAGED_MAX?'vòng loại so tài nhanh, tối đa 3 ván cuối lên đài':'các ván lên đài')+' • đấu thủ gõ kiem tiếp linh lực','tournament',now);
 }
 function finishMatch(w,now,c){
- const t=w.tournament,m=t.current;const score=id=>m.strengths[id]+Math.min(3,m.boosts[id]||0)*2;
- // Quy tắc: tổng tu vi cao hơn từ 3% trở lên thì THẮNG CHẮC (trợ lực không lật được); sát nhau mới so điểm + trợ lực.
- const qa=t.fighters[m.a]?.totalQi||0,qb=t.fighters[m.b]?.totalQi||0,decided=qa>=qb*1.03?m.a:qb>=qa*1.03?m.b:null;
- const tie=!decided&&score(m.a)===score(m.b),aEarlier=(t.entries.find(e=>e.id===m.a)?.at||0)<=(t.entries.find(e=>e.id===m.b)?.at||0),winner=decided||(score(m.a)>score(m.b)||tie&&aEarlier?m.a:m.b),loser=winner===m.a?m.b:m.a;
- t.results.push({id:m.id,round:t.round,a:m.a,b:m.b,winner,loser,scoreA:score(m.a),scoreB:score(m.b),tieBreak:tie?'Ưu tiên thứ tự đăng ký':null});
- reward(w,w.players[winner],'win:'+m.id,2,now,c);c.emit(w,w.players[winner],'Thắng tỷ thí'+(tie?' • hòa điểm, ưu tiên đăng ký trước':''),'tournament',now,{duelResult:true,pair:[m.a,m.b]});
+ const t=w.tournament,m=t.current,r=decide(t,m.a,m.b,m.strengths,m.boosts),{winner,loser,tie}=r;
+ t.results.push({id:m.id,round:t.round,a:m.a,b:m.b,winner,loser,scoreA:r.scoreA,scoreB:r.scoreB,tieBreak:tie?'Ưu tiên thứ tự đăng ký':null,staged:true});
+ t.lastBow={winner,loser,pair:[m.a,m.b],at:now,until:now+3000};
+ reward(w,w.players[winner],'win:'+m.id,2,now,c);c.emit(w,w.players[winner],'Thắng ván luận kiếm'+(tie?' • hòa điểm, ưu tiên đăng ký trước':''),'tournament',now,{duelResult:true,pair:[m.a,m.b]});
  t.current=null;t.matchIndex++;t.nextMatchAt=now+3000;
 }
+// Vòng loại: so tài nhanh từng cụm tối đa QUICK_PAIRS cặp, chỉ hiện thẻ avatar rồi lộ người thắng; không đánh trên đài, không đọc từng ván.
+function quickBatch(w,now,c){
+ const t=w.tournament,pairs=[];
+ while(t.matchIndex<t.matches.length&&pairs.length<QUICK_PAIRS){const [a,b]=t.matches[t.matchIndex];t.matchIndex++;if(!b)continue;
+  const id=t.id+'-'+t.round+'-q'+t.matchIndex,r=decide(t,a,b,{[a]:t.fighters[a].strength,[b]:t.fighters[b].strength});
+  t.results.push({id,round:t.round,a,b,winner:r.winner,loser:r.loser,scoreA:r.scoreA,scoreB:r.scoreB,tieBreak:r.tie?'Ưu tiên thứ tự đăng ký':null,quick:true});
+  reward(w,w.players[r.winner],'win:'+id,2,now,c,true);pairs.push({a,b,winner:r.winner,aName:t.fighters[a].name,bName:t.fighters[b].name,aTech:t.fighters[a].tech,bTech:t.fighters[b].tech});}
+ if(!pairs.length){t.nextMatchAt=now;return;}
+ if(!t.roundAnnounced){t.roundAnnounced=true;c.emit(w,null,'Luận Kiếm vòng '+t.round+' • '+t.roundSize+' đấu thủ so tài nhanh','tournament',now,{quickRound:true});}
+ t.quick={id:t.id+'-'+t.round+'-batch'+t.matchIndex,round:t.round,pairs,startedAt:now,revealAt:now+QUICK_REVEAL_MS,endsAt:now+QUICK_MS};
+}
 function finishTournament(w,winner,now,c){
- const t=w.tournament;if(t.phase==='finished')return;t.phase='finished';t.winner=winner;t.finishedAt=now;t.current=null;
+ const t=w.tournament;if(t.phase==='finished')return;t.phase='finished';t.winner=winner;t.finishedAt=now;t.current=null;t.quick=null;
  const p=w.players[winner];reward(w,p,'champion:'+t.id,5,now,c);p.tournamentWins=(p.tournamentWins||0)+1;p.tournamentTitle='Kiếm Khôi Tông Môn';giveItem(p,'tournament-laurel');
  t.podiumUntil=now+12000;c.emit(w,p,'KIẾM KHÔI TÔNG MÔN • vô địch Phong Vân Luận Kiếm','tournament',now,{tournamentChampion:true});w.nextBossAt=now+(w.settings?.bossInterval??240)*1000;
 }
 function tickTournament(w,now,c){
  const t=w.tournament;if(!tournamentActive(w))return;
  if(t.phase==='registration'){if(now>=t.registrationEndsAt)beginRound(w,now,c);return;}
- if(t.current){const m=t.current,progress=Math.max(0,Math.min(1,(now-m.startedAt)/25000));for(const id of [m.a,m.b]){const opponent=id===m.a?m.b:m.a;m.hp[id]=Math.max(1,Math.round(100-progress*(60+m.strengths[opponent]*.15+(m.boosts[opponent]||0)*3)));}if(now>=m.endsAt)finishMatch(w,now,c);return;}
+ if(t.current){const m=t.current,progress=Math.max(0,Math.min(1,(now-m.startedAt)/DUEL_MS)),lead=decide(t,m.a,m.b,m.strengths,m.boosts);m.aura??={};
+  // Linh áp tăng dần (không có thanh máu): bên đang dẫn lên 100, bên kia dừng thấp hơn theo tỉ lệ điểm.
+  for(const id of [m.a,m.b]){const own=id===m.a?lead.scoreA:lead.scoreB,top=Math.max(lead.scoreA,lead.scoreB)||1,cap=id===lead.winner?100:Math.max(60,Math.min(97,Math.round(100*own/top)-(lead.winner===id?0:3)));m.aura[id]=Math.round(progress*cap);}
+  if(now>=m.endsAt)finishMatch(w,now,c);return;}
+ if(t.quick){if(now<t.quick.endsAt)return;t.quick=null;t.nextMatchAt=now+600;return;}
  if(now<t.nextMatchAt)return;
  if(t.matchIndex>=t.matches.length){const wins=t.matches.map(([a,b])=>b?t.results.findLast(r=>r.round===t.round&&r.a===a&&r.b===b)?.winner:a).filter(Boolean);if(wins.length===1){finishTournament(w,wins[0],now,c);return;}t.round++;pairRound(w,wins,now,c);return;}
- const [a,b]=t.matches[t.matchIndex];if(!b){t.matchIndex++;return;}t.current=match(w,a,b,now,c);c.emit(w,null,'Tỷ thí: '+w.players[a].name+' gặp '+w.players[b].name+' • hai đấu thủ gõ danh để trợ lực','tournament',now,{duelStart:true,pair:[a,b]});
+ if(!(t.roundStaged??t.matches.length*2<=STAGED_MAX)){quickBatch(w,now,c);return;}
+ const [a,b]=t.matches[t.matchIndex];if(!b){t.matchIndex++;return;}t.current=match(w,a,b,now,c);c.emit(w,null,'Luận Kiếm: '+w.players[a].name+' · '+w.players[b].name+' so tài • hai đấu thủ gõ kiem tiếp linh lực','tournament',now,{duelStart:true,pair:[a,b]});
 }
 function resolveTarget(w,text){const query=norm(text);if(!query)return [];return Object.values(w.players).filter(p=>!p.resident&&(norm(p.name)===query||norm(p.socialCode)===query||p.id===text));}
 function markInteraction(w,p){p.interactions++;w.totalInteractions++;}
@@ -69,9 +92,9 @@ export function socialCommand(w,p,cmd,rest,now,c){
   t.entries.push({id:p.id,at:now});markInteraction(w,p);notify(w,p,'Đã đăng ký tỷ thí • tự vào sân khi đến lượt',now,c);return ok();
  }
  if(cmd==='danh'&&tournamentActive(w)){
-  tickTournament(w,now,c);const m=w.tournament.current;if(!m||now>=m.endsAt||![m.a,m.b].includes(p.id))return fail('Chưa đến lượt tỷ thí của đạo hữu.');
+  tickTournament(w,now,c);const m=w.tournament.current;if(!m||now>=m.endsAt||![m.a,m.b].includes(p.id))return fail('Chưa đến lượt lên đài của đạo hữu.');
   if((m.boosts[p.id]||0)>=3)return {ok:true,duplicate:true};if(now-(m.lastBoost[p.id]||0)<5000)return fail('Trợ lực hồi sau 5 giây.');
-  m.lastBoost[p.id]=now;m.boosts[p.id]=(m.boosts[p.id]||0)+1;markInteraction(w,p);notify(w,p,'Trợ lực tỷ thí '+m.boosts[p.id]+'/3',now,c);return ok();
+  m.lastBoost[p.id]=now;m.boosts[p.id]=(m.boosts[p.id]||0)+1;markInteraction(w,p);notify(w,p,'Tiếp linh lực '+m.boosts[p.id]+'/3',now,c);return ok();
  }
  if(cmd==='ketduyen'){
   if(w.settings.bondEnabled===false)return fail('Kết duyên đang tạm đóng.');const own=bondAllowance(w,p);if(!own.remaining)return fail(own.name+' đã đủ '+own.limit+' đạo lữ.');const matches=resolveTarget(w,rest);

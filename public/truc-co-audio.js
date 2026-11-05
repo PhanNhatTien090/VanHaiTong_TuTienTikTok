@@ -82,6 +82,29 @@ export function scheduleTrucCoAudio(c,destination,elapsed=0,duration=10.8,streng
  [1568,2093,2637,3136].forEach((f,i)=>voice('burst',B+.06+i*.03,2.3-i*.25,.016,f,f*1.003,{attack:.06,hold:.25,transient:true}));
  voice('burst',B+.04,1.5,.055,9000,2500,{noise:true,filter:'highpass',attack:.02,hold:.15,transient:true});
  [146.8,185,220,293.7].forEach((f,i)=>voice('tail',B+.2,2.2,.026-i*.003,f,f*1.001,{attack:.4,hold:.55,transient:true}));
+ // v3 (05/11/2026) — lớp điện ảnh cho "Linh Mạch Định Cơ" (nhóm 'cine', chỉ phát ở bản mix).
+ const cv=(at,len,level,from,to,o={})=>voice('cine',at,len,level,from,to,{...o,transient:true}); // lỡ mốc thì bỏ, không phát nửa chừng
+ const drum=(at,level,f0=130,f1=38,len=1.1)=>{cv(at,len,level,f0,f1,{attack:.003,hold:.05,fixed:true,transient:true});cv(at,.2,level*.5,2400,280,{noise:true,attack:.002,hold:.04,transient:true});};
+ const strings=(at,len,notes,level,attack=.8)=>notes.forEach((f,i)=>{for(const d of [.997,1.004])cv(at,len,level/(i+1.4),f*d,f*d,{type:'sawtooth',attack,hold:.75});});
+ const gong=(at,f0,level)=>[1,1.48,2.05,2.76,3.6].forEach((r,i)=>cv(at,3.4-i*.45,level*[1,.7,.5,.32,.2][i],f0*r,f0*r*.997,{attack:.004,hold:.02,transient:true}));
+ // 0–1,6 s địa mạch thức tỉnh: đất rền + trống trầm + cồng thấp; chuông vàng theo mạch trên sống núi.
+ cv(0,1.8,.07,60,240,{noise:true,filter:'lowpass',q:.6,attack:.5,hold:.6});
+ drum(.05,.26,95,34,1.6);gong(.05,87.3,.07);
+ [1174.7,1318.5,1568,1760].forEach((f,i)=>cv(.6+i*.22,.9,.016,f,f*1.002,{attack:.005,hold:.04,pan:i%2?.3:-.3}));
+ // 2,4–8,6 s thiên ấn giáng: kèn trầm (sawtooth thấp) trượt lên + dàn dây Rê thứ dày dần.
+ cv(2.4,6.0,.028,55,73.4,{type:'sawtooth',attack:1.4,hold:.85});
+ strings(2.6,6.0,[146.8,174.6,220],.017,1.6);strings(5.2,3.4,[293.7,349.2,440],.012,1.2);
+ // 3,6–8,6 s nạp mạch: nhịp tim trống dồn dần (khoảng cách .8 → .28 s).
+ {let t=3.65,gap=.8,i=0;while(t<8.55){drum(t,.07+i*.005,92,40,.5);drum(t+.15,.055,88,40,.32);t+=gap;gap=Math.max(.28,gap*.88);i++;}}
+ // Ba lần định cơ: trống lớn + cồng khi vòng ấn chạm tầng đài.
+ TRUC_CO_TIERS.forEach((at,i)=>{drum(at+.47,.09+i*.02,125-i*8,36,1.0);gong(at+.48,110+i*16.5,.016+i*.004);});
+ // Nổ: trống lớn ba lớp (sóng đất), tiếng đá vỡ, đá rơi lách cách sau đó.
+ drum(B,.3,150,32,1.9);drum(B+.24,.17,130,38,1.1);drum(B+.52,.09,120,40,.8);
+ cv(B+.01,1.0,.13,1400,260,{noise:true,filter:'bandpass',q:.9,attack:.004,hold:.08,transient:true});
+ for(let i=0;i<9;i++){const t=B+.35+i*.13+((i*37)%7)*.02;cv(t,.12,.035,2600-i*120,900,{noise:true,filter:'bandpass',q:3,attack:.002,hold:.05,pan:((i*53)%9-4)/6,transient:true});}
+ // Hiện thân: dàn dây Rê trưởng add9 nở + sáo (sine + bồi âm nhẹ) một câu ngắn ngũ cung đi lên.
+ strings(B+.15,2.0,[146.8,185,220,329.6],.026,.35);
+ [[587.3,.0,.45],[659.3,.42,.4],[880,.8,.6],[740,1.36,.35],[880,1.68,.9]].forEach(([f,d,l])=>{cv(B+.25+d,l+.25,.03,f,f*1.003,{attack:.06,hold:.6});cv(B+.25+d,l+.2,.008,f*2,f*2.006,{attack:.08,hold:.5});});
  if(!active)dispose();
  return {endAt:now+Math.max(0,duration-elapsed)+1,stop(){if(stopped)return;stopped=true;const t=c.currentTime;bus.gain.cancelScheduledValues(t);bus.gain.setTargetAtTime(.0001,t,.012);for(const o of sources)try{o.stop(t+.05);}catch{}release(80);}};
 }

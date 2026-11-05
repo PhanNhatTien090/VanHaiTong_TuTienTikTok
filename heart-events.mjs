@@ -41,5 +41,5 @@ export function bossHearts(w,p,count,now,c){
     h.count-=h.target;h.strikes++;charges++;
     const d=Math.min(b.hp,Math.max(1,Math.floor(b.maxHp*.05)));b.hp-=d;damage+=d;
   }
-  if(charges){c.emit(w,null,`KIẾM TRẬN TIM • ${charges} đòn • ${damage} sát thương • ${h.strikes}/${h.limit} trận`,'attack',now,{heartStrike:true,damage});if(!b.hp)c.win(w,now);}
+  if(charges){c.emit(w,null,`KIẾM TRẬN TIM • ${charges} đòn • ${damage} công lực • ${h.strikes}/${h.limit} trận`,'attack',now,{heartStrike:true,damage});if(!b.hp)c.win(w,now);}
 }

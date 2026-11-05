@@ -8,13 +8,15 @@ test('tournament register, fair capped strengths, boosts, finish and restart awa
  let w=world();for(let i=0;i<8;i++){const p=player(w,'p'+i);p.realm=i;p.manuals=i>3?['sword']:[];}assert.ok(startTournament(w,NOW).ok);
  for(let i=0;i<8;i++)assert.ok(chat(w,'p'+i,'tythi',NOW+10+i).ok);assert.equal(chat(w,'p0','tythi',NOW+100).duplicate,true);
  tick(w,NOW+90001);assert.equal(w.tournament.phase,'running');assert.ok(Object.values(w.tournament.fighters).every(p=>p.strength>=70&&p.strength<=160));{const f=w.tournament.fighters;for(let i=1;i<8;i++)assert.ok(f['p'+i].strength>=f['p'+(i-1)].strength,'tu vi/cảnh giới cao hơn → điểm gốc không thấp hơn');}
- tick(w,NOW+94000);const m=w.tournament.current;assert.ok(m);assert.ok(chat(w,m.a,'danh',NOW+94100).ok);assert.equal(chat(w,m.a,'danh',NOW+94200).ok,false);assert.ok(chat(w,m.a,'danh',NOW+99200).ok);assert.ok(chat(w,m.a,'danh',NOW+104300).ok);assert.equal(chat(w,m.a,'danh',NOW+109400).duplicate,true);
- w=JSON.parse(JSON.stringify(w));let at=NOW+120000;for(let i=0;i<80&&w.tournament.phase==='running';i++){tick(w,at);at+=5000;}
- assert.equal(w.tournament.phase,'finished');assert.equal(w.tournament.results.length,7);const p=w.players[w.tournament.winner];assert.equal(p.tournamentWins,1);assert.ok(p.artifacts.includes('tournament-laurel'));const medals=p.tournamentMedals;tick(w,at+1000);assert.equal(p.tournamentMedals,medals);assert.equal(p.tournamentWins,1);
+ // 8 người: vòng 1 so tài nhanh (thẻ avatar, không lên đài), bán kết + chung kết lên đài.
+ tick(w,NOW+94000);assert.equal(w.tournament.current,null);assert.equal(w.tournament.quick.pairs.length,4);assert.equal(chat(w,'p0','danh',NOW+94100).ok,false);
+ tick(w,NOW+98300);tick(w,NOW+99000);tick(w,NOW+102100);const m=w.tournament.current;assert.ok(m);assert.equal(w.tournament.round,2);assert.ok(chat(w,m.a,'danh',NOW+102200).ok);assert.equal(chat(w,m.a,'kiem',NOW+102300).ok,false);assert.ok(chat(w,m.a,'kiem',NOW+107300).ok);assert.ok(chat(w,m.a,'danh',NOW+112400).ok);assert.equal(chat(w,m.a,'kiem',NOW+117500).duplicate,true);
+ w=JSON.parse(JSON.stringify(w));let at=NOW+130000;for(let i=0;i<80&&w.tournament.phase==='running';i++){tick(w,at);at+=5000;}
+ assert.equal(w.tournament.phase,'finished');assert.equal(w.tournament.results.length,7);assert.equal(w.tournament.results.filter(r=>r.staged).length,3);assert.equal(w.tournament.results.filter(r=>r.quick).length,4);const p=w.players[w.tournament.winner];assert.equal(p.tournamentWins,1);assert.ok(p.artifacts.includes('tournament-laurel'));const medals=p.tournamentMedals;tick(w,at+1000);assert.equal(p.tournamentMedals,medals);assert.equal(p.tournamentWins,1);
 });
 test('registration expiry, odd bracket, waiting queue and explicit cancellation have no fake champion',()=>{
  const w=world();startTournament(w,NOW);player(w,'a');assert.ok(chat(w,'a','tythi').ok);assert.equal(chat(w,'late','tythi',NOW+90000).ok,false);tick(w,NOW+90001);assert.equal(w.tournament.phase,'cancelled');assert.equal(w.players.a.tournamentWins,undefined);
- startTournament(w,NOW+100000);for(let i=0;i<9;i++){player(w,'p'+i);chat(w,'p'+i,'tythi',NOW+100010+i);}tick(w,NOW+190001);assert.equal(w.tournament.participants.length,8);assert.equal(w.tournament.waiting.length,1);assert.ok(stopTournament(w,NOW+190002).ok);assert.equal(w.tournament.phase,'cancelled');assert.equal(w.tournament.winner,undefined);
+ startTournament(w,NOW+100000);for(let i=0;i<9;i++){player(w,'p'+i);chat(w,'p'+i,'tythi',NOW+100010+i);}tick(w,NOW+190001);assert.equal(w.tournament.participants.length,9);assert.equal(w.tournament.waiting.length,0);assert.ok(stopTournament(w,NOW+190002).ok);assert.equal(w.tournament.phase,'cancelled');assert.equal(w.tournament.winner,undefined);
 });
 test('mutual consent, duplicate names, recipient ownership and invitation expiry',()=>{
  const w=world();player(w,'a','Anh');player(w,'b','Bình');player(w,'c','Bình');assert.equal(chat(w,'a','ketduyen Bình').ok,false);assert.ok(chat(w,'a','ketduyen '+w.players.b.socialCode).ok);assert.equal(w.players.a.bondId,undefined);assert.equal(chat(w,'c','dongy').ok,false);
@@ -49,4 +51,23 @@ test('tỷ thí: tu vi sát nhau (chênh dưới 3%) thì trợ lực quyết đ
  for(const at of [NOW+94100,NOW+99200,NOW+104300])assert.ok(chat(w,'b1','danh',at).ok);
  let at=NOW+120000;for(let i=0;i<20&&w.tournament.phase==='running';i++){tick(w,at);at+=5000;}
  assert.equal(w.tournament.winner,'b1');
+});
+test('luận kiếm: ai ghi danh cũng vào giải; vòng loại so tài nhanh, tối đa 3 ván lên đài, không đọc từng người',()=>{
+ for(const n of [2,3,4,5,8,20,37]){
+  let w=world();for(let i=0;i<n;i++){const p=player(w,'q'+i);p.totalQi=1000+i*50;}assert.ok(startTournament(w,NOW).ok);
+  for(let i=0;i<n;i++)assert.ok(chat(w,'q'+i,'tythi',NOW+10+i).ok);
+  const before=w.events.length;let at=NOW+90001,maxPairs=0,sawQuick=false;
+  for(let i=0;i<2000&&['registration','running'].includes(w.tournament.phase);i++){tick(w,at);const q=w.tournament.quick;if(q){sawQuick=true;maxPairs=Math.max(maxPairs,q.pairs.length);assert.equal(w.tournament.current,null);}if(w.tournament.current)assert.ok(w.tournament.roundSize<=4,'chỉ vòng ≤4 người mới lên đài');at+=500;}
+  const t=w.tournament;assert.equal(t.phase,'finished',n+' người');assert.equal(t.participants.length,n);
+  assert.equal(t.results.length,n-1,'loại trực tiếp: n-1 ván');assert.ok(t.results.filter(r=>r.staged).length<=3);assert.ok(maxPairs<=4);assert.equal(sawQuick,n>4);
+  assert.equal(t.winner,'q'+(n-1),'tu vi cao nhất vẫn vô địch');assert.ok(Object.values(t.fighters).every(f=>f.tech?.name&&f.tech.id),'mỗi người có chiêu riêng');
+  const spoken=w.events.slice(before).filter(e=>e.effect==='social'||e.effect==='tournament').length;assert.ok(spoken<=(n>8?0:n)+14,n+' người → '+spoken+' sự kiện');
+ }
+});
+test('luận kiếm: linh áp tăng dần, không còn thanh máu; kiem ngoài giải là trò chuyện',()=>{
+ const w=world();player(w,'a');player(w,'b');assert.ok(startTournament(w,NOW).ok);chat(w,'a','tythi',NOW+10);chat(w,'b','tythi',NOW+11);
+ tick(w,NOW+90001);tick(w,NOW+94000);const m=w.tournament.current;assert.ok(m);assert.equal(m.hp,undefined);
+ tick(w,NOW+106500);const mid={...m.aura};tick(w,NOW+118999);assert.ok(Object.values(m.aura).every((v,i)=>v>=Object.values(mid)[i]));assert.equal(Math.max(...Object.values(m.aura))>90,true);
+ tick(w,NOW+119001);assert.ok(w.tournament.lastBow);assert.deepEqual(snapshot(w,NOW+119500).socialStage,[m.a,m.b]);
+ const x=world();player(x,'c');assert.equal(chat(x,'c','kiem',NOW+10).chatOnly,true);
 });
