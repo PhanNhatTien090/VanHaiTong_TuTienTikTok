@@ -1,6 +1,6 @@
 ---
 name: van-hai-dot-pha
-description: Cải tiến hiệu ứng đột phá cảnh giới (hình + âm thanh) của game Vân Hải Tông LIVE cho chỉn chu, theo đúng quy trình đã làm cho Luyện Khí → Hóa Thần. Dùng khi được nhờ "làm lại / nâng cấp / chỉnh hiệu ứng đột phá" một cảnh giới (Luyện Hư, Đại Thừa, Chân Tiên, Huyền Tiên…), sửa lỗi hình lúc đột phá, hoặc thêm biến thể chống lặp cho cảnh đột phá.
+description: Làm / nâng cấp hiệu ứng đột phá cảnh giới (hình + âm thanh điện ảnh) của game Vân Hải Tông LIVE theo chuẩn v5 (Luyện Khí "Bát Quái Dẫn Khí" đã được chủ game khen đẹp). Dùng khi được nhờ làm lại / nâng cấp / chỉnh hiệu ứng hoặc âm thanh đột phá một cảnh giới, sửa lỗi hình lúc đột phá, hoặc thêm biến thể. Có công cụ dựng video từng khung, xuất âm WAV, đo hiệu năng từng lớp. Dùng khi được nhờ "làm lại / nâng cấp / chỉnh hiệu ứng đột phá" một cảnh giới (Luyện Hư, Đại Thừa, Chân Tiên, Huyền Tiên…), sửa lỗi hình lúc đột phá, hoặc thêm biến thể chống lặp cho cảnh đột phá.
 ---
 
 # Nâng cấp hiệu ứng đột phá — Vân Hải Tông LIVE
@@ -15,8 +15,36 @@ Bộ lớp dùng chung đã có sẵn — **dùng lại, đừng viết lại**:
 - `public/style.css` — hiệu ứng chữ cảnh giới (`.ritual-hud[data-realm="N"]`).
 - `public/live-cinema.js` — `drawRitual` chọn hàm vẽ theo cảnh giới; `mountRitualHud` hiện tên + cảnh giới + danh hiệu (`subtitle`).
 
-Đã xong: 1 Luyện Khí, 2 Trúc Cơ, 3 Kim Đan, 4 Nguyên Anh, 5 Hóa Thần (cả 5 diễn ra trên "thiên đài" `drawAscensionStageBackdrop`).
+Đã xong: 1 Luyện Khí (v5 05/11/2026 = chuẩn mới), 2 Trúc Cơ, 3 Kim Đan, 4 Nguyên Anh, 5 Hóa Thần (cả 5 diễn ra trên "thiên đài" `drawAscensionStageBackdrop`).
 Còn lại: 6 Luyện Hư (20,8 s), 7 Đại Thừa (22,8 s), 8 Chân Tiên (31,6 s, có `chan-tien-prelude.js`), 9+ dùng nhánh chung trong `live-cinema.js` (nổ ở k≈.71).
+
+## CHUẨN v5 — 05/11/2026 (ưu tiên cao nhất, thay mọi hướng dẫn cũ bên dưới khi mâu thuẫn)
+
+Chủ game duyệt **Luyện Khí v5 "Bát Quái Dẫn Khí"** là "rất đẹp" (hình) và yêu cầu âm "điện ảnh". Đây là **mức sàn**. Mẫu tham chiếu:
+`public/luyen-khi-formation.js` (hình), `public/qi-audio.js` (âm), `LUYEN-KHI-V5-2026-11-05.md` (ghi chú).
+
+### Luật leo thang: cảnh giới sau PHẢI đỉnh hơn cảnh giới trước
+So cạnh nhau bản realm N với realm N−1 (contact sheet + video). Realm N chỉ đạt khi hơn ở **ít nhất 3/5** trục, và không kém ở trục nào:
+1. **Quy mô không gian**: N−1 chiếm thân người + trận dưới chân + trời → N phải mở rộng thêm (cả bầu trời, núi xa vỡ, chân trời, nhiều tầng sâu…).
+2. **Số nhịp có nghĩa** (nguyên nhân → biến cố → tích lực → phá → hiện thân): v5 có 6 nhịp; mỗi cảnh giới sau ≥ số nhịp trước, mỗi nhịp phải đổi tình thế thật, không lặp.
+3. **Motif mới làm chủ đạo**: không lấy motif chủ đạo của cảnh trước (Bát Quái đã dùng cho Luyện Khí). Được dùng lại *primitive* (sprite, brushRibbon, glow), không dùng lại *cảnh*.
+4. **Cao trào**: cú phá mạnh hơn (nhiều lớp hơn: sóng, vật văng, camera, âm), nhưng mặt nhân vật vẫn đọc được.
+5. **Âm**: nhiều lớp nhạc cụ/nhịp hơn, cao trào âm lớn hơn tương đối (vẫn peak < 1), có chủ đề giai điệu riêng.
+Gợi ý motif theo cảnh giới (không bắt buộc, phải hợp thần thái): 2 Trúc Cơ – dựng đạo cơ: đài/trụ ngọc mọc từ đất, linh mạch dưới lòng đất; 3 Kim Đan – đan lô, kim đan ngưng tụ, lôi nhỏ; 4 Nguyên Anh – nguyên anh xuất khiếu, sen; 5 Hóa Thần – pháp tướng, thiên địa dị tượng; 6 Luyện Hư – hư không nứt, gương vỡ; 7 Đại Thừa – vạn kiếm/đại đạo; 8 Chân Tiên – tiên môn, thiên kiếp; 9+ xem kế hoạch post-Chân Tiên. Cảnh giới đã có bản cũ: giữ ý tưởng hay, nâng theo thang này.
+
+### Quy trình v5 (làm đúng thứ tự)
+1. **Quay bản hiện tại trước** (bằng chứng "trước"): `node skills/van-hai-dot-pha/scripts/render-realm-frames.mjs output/frames-rN N` (dựng từng khung 30 fps theo thời gian chính xác, máy chậm cũng mượt) → `ffmpeg -framerate 30 -i output/frames-rN/f%04d.png -vf scale=540:960 -c:v libx264 -pix_fmt yuv420p before.mp4`. Contact sheet: `montage $(ls -d output/frames-rN/f*.png | awk 'NR%22==1') -tile 6x -geometry 180x320+1+1 sheet.png`. Không dùng quay video trình duyệt headless để đánh giá chuyển động (máy không GPU chỉ ~5 fps → giật giả).
+2. **Viết kịch bản nhịp** (bảng k 0..1 → giây; mốc nổ giữ theo timeline cảnh giới) trước khi code: mỗi nhịp ghi *cái gì xảy ra, vì sao, lấp vùng nào của màn hình*. Màn 900×H: nửa trên (trời) và nửa dưới (mặt đất/nước) đều phải có nội dung có nghĩa.
+3. **Module riêng** `public/<ten>-formation.js` (mẫu: `luyen-khi-formation.js`): một hàm `xxxState(k)` trả về các đường bao (envelope) cho từng nhịp, mỗi lớp một hàm `drawXx(scene,c,st,s,…)`. Ghép vào `*-awakening.js` theo thứ tự: trời (ngoài camera) → mặt đất/nước → trận/đồ hình → nguồn khí phía sau → nhân vật → kinh mạch/lớp trên thân → nén khí → impact chung → vật văng → (ngoài camera) motes, vignette.
+4. **Luật kỹ thuật**: không `Math.random` (dùng `rnd(i)` theo chỉ số); biến thể từ `qiVariant(e)` (flip, phase); tài nguyên tĩnh (trận đồ, mây, núi, sprite sáng, cánh sen) **vẽ sẵn một lần và cache trên scene**, gradient chỉ tạo trong cache; `scene.budget.level==='light'` giảm số hạt/lớp; không phủ trắng mặt (không vẽ kinh mạch/điểm sáng qua mặt; tô sáng thân ≤ .4).
+5. **Soi và sửa ít nhất 3 vòng**: sau mỗi vòng dựng lại frame, xem contact sheet + phóng to 3–6 khung then chốt (khai cảnh, giữa tích lực, ngay trước nổ, nổ, hiện thân). Lỗi đã gặp ở v5 và cách sửa: mây thành mảng xám mờ → tường vân có viền + móc xoắn, alpha thấp; dải khí rót thành hình chữ X → nhiều sợi mảnh xoắn phễu có đoạn sáng chạy; núi chìm vào nền tối → sáng màu + viền ngọc; dải mây thành bức tường → ít mây, alpha .2–.4; vệt phản chiếu thành khối chữ nhật → sprite tròn kéo dọc; sáng phủ mặt → dời điểm sáng lên trên đầu, kinh mạch dừng ở cổ.
+6. **Hiệu năng**: `node skills/van-hai-dot-pha/scripts/bench-layers.cjs` (sửa danh sách lớp) đo ms/khung từng lớp; lớp tốn nhất thường là vùng tô lớn (sương, trời) → vẽ sẵn ở nửa độ phân giải, mỗi khung một drawImage. Báo số so với bản cũ, nói rõ là đo trên máy không GPU.
+7. **Âm điện ảnh** (mẫu `qi-audio.js` v5): lập *cue list* khớp từng nhịp hình (giây). Bộ nhạc cụ tổng hợp có sẵn trong mẫu: `drum` (taiko: sine hạ cao độ + nhiễu ngắn), `strings` (2 sawtooth lệch .997/1.004 mỗi nốt, attack chậm), `bowl` (cồng/khánh bồi âm lệch), `pluck` (chuông/đàn), `swell` (âm dâng cắt đúng mốc nổ), nhiễu bandpass quét (gió, nét bút), nhịp tim trống dồn dần trước nổ, nền chìm một nhịp ngay trước nổ, sau nổ: dàn dây hợp âm trưởng + đàn rải. Kiểm bằng `scripts/render-audio.cjs`: peak < 1.0; đường đỉnh 0,5 s phải là vòng cung (mở vừa → tích tụ thấp → dâng → nổ cao nhất → dư âm); xem phổ để thấy nhịp. **Tránh nhiễu highpass** (tạo gai đột biến ~0,8 ở biên vòng lặp buffer) — dùng bandpass Q thấp.
+8. **Ghép video có tiếng cho chủ game duyệt**: `ffmpeg -framerate 30 -i frames/f%04d.png -i cue.wav -vf "scale=540:960,tpad=stop_mode=clone:stop_duration=1.6" -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest out.mp4`, gửi kèm bản "trước".
+9. `npm test`, `npm run check` (thêm file mới vào script check), sao lưu bản cũ vào `data/backups/`, viết `<TEN>-V?-yyyy-mm-dd.md` (kịch bản, giữ luật gì, số đo, phần chưa nghe/xem), commit + push.
+
+### Thang chấm khi tự đánh giá (ghi vào báo cáo, 1–5 mỗi mục, phải ≥ bản cảnh giới trước)
+Lấp màn hình (trên/dưới) · Cấu trúc nhịp · Chất tu tiên (motif, thủy mặc, phù văn) · Cao trào · Hiện thân/dư âm · Nhân vật đọc rõ · Hiệu năng · Âm khớp hình. Không tự gọi "đẹp/đã duyệt" khi chủ game chưa xem; báo rõ phần chưa nghe bằng tai.
 
 ## Yêu cầu mới của chủ game — 04/11/2026 (ưu tiên hơn hướng dẫn cũ)
 
