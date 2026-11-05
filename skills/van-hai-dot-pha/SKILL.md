@@ -43,6 +43,11 @@ Gợi ý motif theo cảnh giới (không bắt buộc, phải hợp thần thá
 8. **Ghép video có tiếng cho chủ game duyệt**: `ffmpeg -framerate 30 -i frames/f%04d.png -i cue.wav -vf "scale=540:960,tpad=stop_mode=clone:stop_duration=1.6" -c:v libx264 -pix_fmt yuv420p -c:a aac -shortest out.mp4`, gửi kèm bản "trước".
 9. `npm test`, `npm run check` (thêm file mới vào script check), sao lưu bản cũ vào `data/backups/`, viết `<TEN>-V?-yyyy-mm-dd.md` (kịch bản, giữ luật gì, số đo, phần chưa nghe/xem), commit + push.
 
+### Lưu ý công cụ (05/11)
+- Bộ dựng Node (`render-realm-frames.mjs`) vẽ skin cảnh giới ≥2 với **khối chữ nhật quanh nhân vật** — lỗi của @napi-rs/canvas với atlas, không có trên trình duyệt. Trước khi sửa "lỗi khối", chụp kiểm bằng trình duyệt: mở `ascension-preview.html?realm=N&capture=1`, bấm `#ritual`, chụp sau vài giây.
+- Hàm cue âm có tham số khác nhau: Luyện Khí `(c,dest,elapsed,dur,strength,pitch)`, Trúc Cơ `(…,strength,stem,pitch)`, Kim Đan `(…,strength,stem)` → truyền `'[1,"mix"]'` cho render-audio. Lớp mới đặt trong nhóm `'cine'` và luôn `transient:true` (test bắt buộc: vào giữa chừng không phát lớp đã lỡ).
+- Tiến độ chuẩn v5: 1 Luyện Khí v5 (8,8 s) → 2 Trúc Cơ v3 "Linh Mạch Định Cơ" (10,8 s) → 3 Kim Đan v2 "Cửu Chuyển · Thiên Hỏa Đan Lô" (11,8 s). Tiếp theo: 4 Nguyên Anh (phải hơn Kim Đan v2: cả trời đổi sắc, 8 nhịp, vật vỡ + tia quét trời đã dùng → cần quy mô/nhịp lớn hơn nữa).
+
 ### Thang chấm khi tự đánh giá (ghi vào báo cáo, 1–5 mỗi mục, phải ≥ bản cảnh giới trước)
 Lấp màn hình (trên/dưới) · Cấu trúc nhịp · Chất tu tiên (motif, thủy mặc, phù văn) · Cao trào · Hiện thân/dư âm · Nhân vật đọc rõ · Hiệu năng · Âm khớp hình. Không tự gọi "đẹp/đã duyệt" khi chủ game chưa xem; báo rõ phần chưa nghe bằng tai.
 

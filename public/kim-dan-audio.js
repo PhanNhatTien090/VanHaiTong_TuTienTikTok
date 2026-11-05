@@ -67,6 +67,31 @@ export function scheduleKimDanAudio(c,destination,elapsed=0,duration=11.8,streng
  voice('tail',9.60,1.1,.025,1082,1080,{transient:true});
  voice('tail',10.45,1.1,.06,587,586,{transient:true});
  voice('tail',10.85,.85,.035,784,783,{transient:true});
+ // v2 (05/11/2026) — lớp điện ảnh "Cửu Chuyển Kim Đan · Thiên Hỏa Đan Lô" (nhóm 'cine', transient: lỡ mốc thì bỏ).
+ const cv=(at,len,level,from,to,o={})=>voice('cine',at,len,level,from,to,{...o,transient:true});
+ const drum=(at,level,f0=130,f1=36,len=1.1)=>{cv(at,len,level,f0,f1,{attack:.003,hold:.05});cv(at,.2,level*.5,2400,280,{noise:true,attack:.002,hold:.04});};
+ const strings=(at,len,notes,level,attack=.8)=>notes.forEach((f,i)=>{for(const d of [.997,1.004])cv(at,len,level/(i+1.4),f*d,f*d,{type:'sawtooth',attack,hold:.75});});
+ const metal=(at,f0,level)=>[1,2.32,3.81,5.4,7.1].forEach((r,i)=>cv(at,2.6-i*.35,level*[1,.7,.5,.35,.25][i],f0*r,f0*r*.996,{attack:.003,hold:.02}));
+ const Bk=KIM_DAN_BURST;
+ // 0–1,6 s thiên hỏa giáng: lửa gầm dâng + cồng trầm + trống.
+ cv(0,2.2,.08,80,420,{noise:true,filter:'lowpass',q:.7,attack:.7,hold:.6});metal(.05,73.4,.06);drum(.05,.26,100,32,1.6);
+ // 1,2–8,2 s luyện dược: lửa lách tách, kèn trầm, dàn dây Mi thứ.
+ for(let i=0;i<20;i++){const t=1.3+i*.34+((i*37)%5)*.04;if(t>8.1)break;cv(t,.07,.03,3200-((i*53)%7)*180,1200,{noise:true,filter:'bandpass',q:4,attack:.002,hold:.05,pan:((i*29)%9-4)/6});}
+ cv(1.4,6.8,.026,55,61.7,{type:'sawtooth',attack:1.4,hold:.85});strings(1.6,6.6,[164.8,196,246.9],.016,1.6);
+ // Cửu chuyển: chuông nhỏ đi lên theo mỗi nấc sáng.
+ KIM_DAN_DROPS.forEach((at,i)=>{const f=[659.3,740,830.6,987.8,1108.7,1318.5,1480,1661.2,1975.5][i];cv(at+.02,.8,.018,f,f*1.002,{attack:.004,hold:.04,pan:(i%3-1)*.3});});
+ // 5,6–8,0 s lôi kiếp: sấm rền nền + ba tiếng sét (nứt cao + nổ trầm) đúng ba lần khóa đan văn.
+ cv(5.6,2.8,.07,40,120,{noise:true,filter:'lowpass',q:.6,attack:.8,hold:.6});
+ KIM_DAN_SEALS.forEach((at,i)=>{cv(at-.04,.18,.12,7000,2200,{noise:true,filter:'bandpass',q:.8,attack:.002,hold:.06,pan:(i-1)*.4});cv(at+.06,1.3,.16,75,28,{attack:.004,hold:.08});cv(at+.06,.9,.08,600,90,{noise:true,filter:'lowpass',attack:.01,hold:.2});});
+ // 8,2–9,05 s nhật thực: nhịp tim dồn.
+ [8.25,8.62,8.9,9.1,9.26].forEach((t,i)=>drum(t,.08+i*.02,90,38,.5));
+ // 9,4 s phá: đan lô vỡ (kim loại nứt) + trống ba lớp.
+ metal(Bk+.01,196,.07);metal(Bk+.04,277.2,.05);cv(Bk+.01,1.0,.12,5200,400,{noise:true,filter:'bandpass',q:.9,attack:.003,hold:.08});
+ drum(Bk,.3,150,30,2.0);drum(Bk+.26,.17,130,36,1.1);drum(Bk+.55,.09,120,40,.8);
+ for(let i=0;i<8;i++)cv(Bk+.4+i*.15,.1,.03,3000-i*150,1100,{noise:true,filter:'bandpass',q:3,attack:.002,hold:.05,pan:((i*53)%9-4)/6});
+ // 9,55–11,8 s bình minh: dàn dây Mi trưởng + kèn (sawtooth thấp) + câu kèn ngắn đi lên.
+ strings(Bk+.15,2.3,[164.8,207.7,246.9,329.6],.028,.35);cv(Bk+.1,2.3,.03,82.4,82.4,{type:'sawtooth',attack:.4,hold:.7});
+ [[659.3,.2,.4],[830.6,.55,.35],[987.8,.85,.8],[1318.5,1.55,.9]].forEach(([f,d,l])=>{cv(Bk+.3+d,l+.25,.024,f,f*1.003,{type:'triangle',attack:.05,hold:.6});});
  if(!active)dispose();
  return {endAt:now+Math.max(0,duration-elapsed)+1.25,stop(){if(stopped)return;stopped=true;const t=c.currentTime;bus.gain.cancelScheduledValues(t);bus.gain.setTargetAtTime(.0001,t,.012);for(const o of sources)try{o.stop(t+.05);}catch{}release(80);}};
 }
