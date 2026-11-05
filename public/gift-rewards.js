@@ -1,8 +1,8 @@
 export const GIFT_POLICY_VERSION=3; // v33: thưởng quà ×2
 export const GIFT_ARTIFACTS=Object.freeze([
- {id:'vip-storm-sword',type:'artifact',name:'Cửu Thiên Lôi Kiếm',icon:'sword',tier:0,price:0,herbs:0,damage:65,bonus:.4,exclusive:true,giftMin:999,description:'Quà từ 999 coin/món: +65 sát thương, +40% tu vi khi trang bị.'},
- {id:'vip-dragon-orb',type:'artifact',name:'Long Phượng Thần Châu',icon:'orb',tier:0,price:0,herbs:0,damage:95,bonus:.55,exclusive:true,giftMin:2999,description:'Quà từ 2.999 coin/món: +95 sát thương, +55% tu vi khi trang bị.'},
- {id:'vip-heaven-seal',type:'artifact',name:'Thiên Đế Chí Tôn Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:140,bonus:.75,exclusive:true,giftMin:9999,description:'Quà từ 9.999 coin/món: +140 sát thương, +75% tu vi khi trang bị.'}
+ {id:'vip-storm-sword',type:'artifact',name:'Cửu Thiên Lôi Kiếm',icon:'sword',tier:0,price:0,herbs:0,damage:65,bonus:.4,exclusive:true,giftMin:999,description:'Quà từ 999 coin/món: +65 công lực, +40% tu vi khi trang bị.'},
+ {id:'vip-dragon-orb',type:'artifact',name:'Long Phượng Thần Châu',icon:'orb',tier:0,price:0,herbs:0,damage:95,bonus:.55,exclusive:true,giftMin:2999,description:'Quà từ 2.999 coin/món: +95 công lực, +55% tu vi khi trang bị.'},
+ {id:'vip-heaven-seal',type:'artifact',name:'Thiên Đế Chí Tôn Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:140,bonus:.75,exclusive:true,giftMin:9999,description:'Quà từ 9.999 coin/món: +140 công lực, +75% tu vi khi trang bị.'}
 ]);
 export const GIFT_TIERS=Object.freeze([
  {id:'petal',name:'Linh hoa',min:1,qi:24,stones:6,herbs:0,effect:'petal'},

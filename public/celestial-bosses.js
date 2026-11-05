@@ -5,9 +5,9 @@ export const CELESTIAL_BOSSES=Object.freeze([
  {species:'moon-fox',name:'Cửu Vĩ Nguyệt Hồ',cell:2,celestial:true,reward:'moon-fox-jade',skill:'Cửu Ảnh Nguyệt Luân',color:'#e9bcff'}
 ]);
 export const CELESTIAL_RELICS=Object.freeze([
- {id:'dragon-pearl',type:'artifact',name:'Thương Long Đạo Châu',icon:'orb',tier:0,price:0,herbs:0,damage:55,bonus:.35,exclusive:true,eventReward:'Thương Long Vân Hải · Top sát thương',description:'Long châu: +55 sát thương, +35% tu vi.',cell:2},
- {id:'kun-heart',type:'artifact',name:'Tinh Hải Côn Tâm',icon:'orb',tier:0,price:0,herbs:0,damage:45,bonus:.45,exclusive:true,eventReward:'Tinh Hải Cự Côn · Top sát thương',description:'Tinh hạch biển trời: +45 sát thương, +45% tu vi.',cell:3},
- {id:'moon-fox-jade',type:'artifact',name:'Cửu Vĩ Nguyệt Ngọc',icon:'orb',tier:0,price:0,herbs:0,damage:50,bonus:.40,exclusive:true,eventReward:'Cửu Vĩ Nguyệt Hồ · Top sát thương',description:'Nguyệt ngọc: +50 sát thương, +40% tu vi.',cell:1}
+ {id:'dragon-pearl',type:'artifact',name:'Thương Long Đạo Châu',icon:'orb',tier:0,price:0,herbs:0,damage:55,bonus:.35,exclusive:true,eventReward:'Thương Long Vân Hải · Top công lực',description:'Long châu: +55 công lực, +35% tu vi.',cell:2},
+ {id:'kun-heart',type:'artifact',name:'Tinh Hải Côn Tâm',icon:'orb',tier:0,price:0,herbs:0,damage:45,bonus:.45,exclusive:true,eventReward:'Tinh Hải Cự Côn · Top công lực',description:'Tinh hạch biển trời: +45 công lực, +45% tu vi.',cell:3},
+ {id:'moon-fox-jade',type:'artifact',name:'Cửu Vĩ Nguyệt Ngọc',icon:'orb',tier:0,price:0,herbs:0,damage:50,bonus:.40,exclusive:true,eventReward:'Cửu Vĩ Nguyệt Hồ · Top công lực',description:'Nguyệt ngọc: +50 công lực, +40% tu vi.',cell:1}
 ]);
 export function celestialPhase(b,now){const d=CELESTIAL_BOSSES.find(d=>d.species===b?.species);if(!d)return null;const period=d.cell===1?16000:d.cell===2?14000:12000,at=Math.max(0,now-b.startedAt)%period,k=at/period;let id,mult,name;
  if(d.cell===2){id=k<.42?'illusion':k<.65?'strike':'exposed';mult=id==='illusion'?.65:id==='exposed'?1.85:1;name=id==='illusion'?'PHÂN THÂN · chờ chân thân':id==='exposed'?'CHÂN THÂN HIỆN · đánh ngay':d.skill.toUpperCase();}

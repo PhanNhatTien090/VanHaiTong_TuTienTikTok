@@ -91,7 +91,7 @@ export function speechPlan(e){
   if(e.starter)return [say('tiennu','Tân thủ lệnh!'),say('tongsu',pickBy(seed,[`${Who} đột phá Luyện Khí! Tân đệ tử tiến bộ thần tốc!`,`Chúc mừng ${who} bước vào Luyện Khí! Cứ tu luyện là mạnh lên!`]))];
   if(e.vipUp){const n=['','Bạc','Vàng','Kim Cương'][e.vipUp],pct=['','mười','hai mươi','ba mươi'][e.vipUp];return [say('tiennu',`${Who} thăng VIP ${n}!`),say('tongsu',`Từ nay tu luyện thêm ${pct} phần trăm, luôn có chỗ trên quảng trường!`)];}
   if(e.likeGoal)return [say('tiennu',`Cả tông môn đạt ${viNumber(e.likeGoal)} tim!`),say('tongsu',`Thiên đạo ban phúc ${viNumber(e.count)} đồng môn, phúc duyên gấp hai!`)];
-  if(e.heartStrike)return [say('tongsu',`Kiếm trận tim xuất kích! Gây ${viNumber(e.damage)} sát thương. Tiếp tục thả tim tiếp sức đồng môn!`)];
+  if(e.heartStrike)return [say('tongsu',`Kiếm trận tim xuất kích! Gây ${viNumber(e.damage)} công lực. Tiếp tục thả tim tiếp sức đồng môn!`)];
   if(e.heartMilestone)return [say('tiennu',`${Who} đạt ${viNumber(e.heartMilestone)} tim, nhận tu vi và linh thạch!`)];
   if(e.heartRank)return [say('tongsu',`${Who} là hộ pháp tim hạng ${viNumber(e.heartRank)}, với ${viNumber(e.heartCount)} tim!`)];
   if(e.heartBloom)return [say('tiennu','Hoa tâm khai nở! Tất cả đạo hữu đã góp tim nhận tu vi, linh thạch và linh thảo!')];
@@ -135,10 +135,10 @@ export function speechPlan(e){
   if(e.opportunityEnd)return [say('tiennu','Thiên Đạo Cơ Duyên đã khép lại. Đa tạ chư vị!')];
   if(e.opportunityAward)return [say('tiennu',`Chúc mừng ${who} đón cơ duyên!`),say('tongsu',`Đột phá ${viNumber(e.tiers)} cảnh giới, đạt ${REALMS[e.toRealm]||'cảnh giới mới'}!`)];
   // ----- yêu thú -----
-  if(e.bossChampion){const prize=(text.match(/nhận ([^•]+)/)||[])[1]?.trim();return [say('trongtai',`${Who} dẫn đầu với ${roundSay(e.damage)} sát thương!`),say('tongsu',`Ban ${prize?cutWords(prize,40):'bảo vật yêu thú'} cùng tu vi và tài nguyên!`)];}
+  if(e.bossChampion){const prize=(text.match(/nhận ([^•]+)/)||[])[1]?.trim();return [say('trongtai',`${Who} dẫn đầu với ${roundSay(e.damage)} công lực!`),say('tongsu',`Ban ${prize?cutWords(prize,40):'bảo vật yêu thú'} cùng tu vi và tài nguyên!`)];}
   if(e.effect==='victory')return [say('trongtai',pickBy(seed,['Yêu thú đã bị phong ấn! Chư vị đồng môn uy vũ!','Thắng lợi! Bí cảnh hoàn tất, mọi người tham chiến đều có thưởng!']))];
   if(e.effect==='boss'){const name=e.bossName||(head.match(/^(.+?) giáng/)||[])[1]||(text.startsWith('Bí cảnh mở')?'Huyền Giao':null);const prize=(text.match(/nhận ([^•]+?) khi/)||[])[1];
-    if(name&&!/trở về|rời/.test(text))return [say('trongtai',`${name} giáng thế! Thả tim nạp kiếm trận, gõ đánh để tham chiến${prize?`, top sát thương nhận ${cutWords(prize,30)}`:''}!`)];
+    if(name&&!/trở về|rời/.test(text))return [say('trongtai',`${name} giáng thế! Thả tim nạp kiếm trận, gõ đánh để hàng yêu${prize?`, top công lực nhận ${cutWords(prize,30)}`:''}!`)];
     return [say('trongtai',`${name||'Yêu thú'} đã rút lui. Chư vị tiếp tục tu luyện.`)];}
   if(e.effect==='attack')return [say('trongtai',e.technique?.name?`${Who} thi triển ${e.technique.name}!`:`${Who} xuất chiêu!`)];
   // ----- đua phi kiếm -----

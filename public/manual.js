@@ -20,7 +20,7 @@ function render(){
  $('#itemRows').innerHTML=state.catalog.map(i=>{
    const commands=i.exclusive?['trang bị '+i.name]:[(i.type==='manual'?'học':i.type==='pill'?'luyện đan':'rèn')+' '+i.name];
    if(i.type==='pill')commands.push('dùng '+i.name);else if(i.type==='artifact'&&!i.exclusive)commands.push('trang bị '+i.name);
-   const cost=i.exclusive?(i.giftMin?`Quà từ ${i.giftMin} coin mỗi món.`:i.id==='tiger-bell'?'Dẫn đầu sát thương trong trận hạ Lôi Hổ.':i.loyaltyMinutes?`Tri ân miễn phí sau ${i.loyaltyMinutes} phút kể từ nhập môn, khi có tương tác trong 5 phút gần đây. Mỗi món nhận một lần; không phải thời gian xem đo trực tiếp.`:'Nhận khi dẫn đầu quà trong nhóm đang hoạt động.'):`${state.realms[i.tier]} · ${i.price} linh thạch${i.herbs?' + '+i.herbs+' linh thảo':''}.`;
+   const cost=i.exclusive?(i.giftMin?`Quà từ ${i.giftMin} coin mỗi món.`:i.id==='tiger-bell'?'Dẫn đầu công lực trong trận hạ Lôi Hổ.':i.loyaltyMinutes?`Tri ân miễn phí sau ${i.loyaltyMinutes} phút kể từ nhập môn, khi có tương tác trong 5 phút gần đây. Mỗi món nhận một lần; không phải thời gian xem đo trực tiếp.`:'Nhận khi dẫn đầu quà trong nhóm đang hoạt động.'):`${state.realms[i.tier]} · ${i.price} linh thạch${i.herbs?' + '+i.herbs+' linh thảo':''}.`;
    return card(i.name,{manual:'BÍ PHÁP',artifact:'PHÁP BẢO',pill:'TINH THỂ GAME'}[i.type],cost+' '+i.description,commands);
  }).join('');
  const gifts=[...state.gifts].sort((a,b)=>a.min-b.min);

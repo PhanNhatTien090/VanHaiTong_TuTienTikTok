@@ -5,7 +5,7 @@ export const COMBAT_RELICS=Object.freeze([
  {id:'celestial-lotus-mirror',name:'Thiên Liên Bảo Kính',cell:1,tier:5,price:1400,herbs:25,damage:60,bonus:.40,technique:'lotus'},
  {id:'azure-cloud-gourd',name:'Thanh Vân Hồ Lô',cell:2,tier:6,price:1800,herbs:35,damage:70,bonus:.45,technique:'vortex'},
  {id:'galaxy-dharma-wheel',name:'Tinh Hà Pháp Luân',cell:3,tier:7,price:2400,herbs:45,damage:85,bonus:.50,technique:'stars'}
-].map(a=>({...a,type:'artifact',icon:'orb',description:`Pháp bảo có chiêu riêng khi gõ danh: +${a.damage} sát thương, +${Math.round(a.bonus*100)}% tu vi khi trang bị.`})));
+].map(a=>({...a,type:'artifact',icon:'orb',description:`Pháp bảo có chiêu riêng khi gõ danh: +${a.damage} công lực, +${Math.round(a.bonus*100)}% tu vi khi trang bị.`})));
 export const TECHNIQUES=Object.freeze({
  'dora-door':{name:'Cánh Cửa Xuyên Không',color:'#ffb6de',pose:'cast',duration:2200},
  'dora-copter':{name:'Tụ Phong Lốc Xoáy',color:'#7de7ff',pose:'cast',duration:1900},

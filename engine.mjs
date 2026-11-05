@@ -39,19 +39,19 @@ import {REALM_NAMES} from './public/progression.js';
 export const REALMS = REALM_NAMES;
 export const CATALOG = [
   ...DORA_RELICS,...LOYALTY_ARTIFACTS,...GIFT_ARTIFACTS,...EVENT_ARTIFACTS,...VISITOR_RELICS,...SIGNATURE_ARTIFACTS,...COMBAT_RELICS,...SOCIAL_ITEMS,...BOSS_RELICS,...CELESTIAL_RELICS,
-  {id:'tiger-bell',type:'artifact',name:'Lôi Hổ Thần Chung',icon:'bell',tier:0,price:0,herbs:0,damage:50,bonus:.35,exclusive:true,description:'Chiến lợi phẩm Top sát thương khi hạ Lôi Hổ: +50 sát thương, +35% tu vi khi trang bị.'},
+  {id:'tiger-bell',type:'artifact',name:'Lôi Hổ Thần Chung',icon:'bell',tier:0,price:0,herbs:0,damage:50,bonus:.35,exclusive:true,description:'Chiến lợi phẩm Top công lực khi hạ Lôi Hổ: +50 công lực, +35% tu vi khi trang bị.'},
   {id:'breath', type:'manual', name:'Thanh Tâm Quyết', icon:'scroll', tier:0, price:35, herbs:0, description:'Tu luyện nhận thêm 15% tu vi.', bonus:0.15},
-  {id:'sword', type:'manual', name:'Vạn Kiếm Quy Tông', icon:'swords', tier:1, price:110, herbs:0, description:'Tăng 12 sát thương khi xuất chiêu.', damage:12},
+  {id:'sword', type:'manual', name:'Vạn Kiếm Quy Tông', icon:'swords', tier:1, price:110, herbs:0, description:'Tăng 12 công lực khi xuất chiêu.', damage:12},
   {id:'lotus', type:'manual', name:'Cửu Chuyển Liên Hoa', icon:'lotus', tier:2, price:240, herbs:0, description:'Tu luyện nhận thêm 25% tu vi.', bonus:0.25},
-  {id:'jade', type:'artifact', name:'Thanh Ngọc Kiếm', icon:'sword', tier:0, price:60, herbs:2, description:'Pháp bảo trang bị: +8 sát thương.', damage:8},
-  {id:'bell', type:'artifact', name:'Huyền Thiên Linh', icon:'bell', tier:1, price:140, herbs:4, description:'Pháp bảo trang bị: +14 sát thương, +10% tu vi.', damage:14, bonus:0.10},
-  {id:'orb', type:'artifact', name:'Tinh Hà Châu', icon:'orb', tier:2, price:280, herbs:8, description:'Pháp bảo trang bị: +22 sát thương, +20% tu vi.', damage:22, bonus:0.20},
+  {id:'jade', type:'artifact', name:'Thanh Ngọc Kiếm', icon:'sword', tier:0, price:60, herbs:2, description:'Pháp bảo trang bị: +8 công lực.', damage:8},
+  {id:'bell', type:'artifact', name:'Huyền Thiên Linh', icon:'bell', tier:1, price:140, herbs:4, description:'Pháp bảo trang bị: +14 công lực, +10% tu vi.', damage:14, bonus:0.10},
+  {id:'orb', type:'artifact', name:'Tinh Hà Châu', icon:'orb', tier:2, price:280, herbs:8, description:'Pháp bảo trang bị: +22 công lực, +20% tu vi.', damage:22, bonus:0.20},
   {id:'qi-pill', type:'pill', name:'Tụ Khí Đan', icon:'pill', tier:0, price:12, herbs:2, qi:65, description:'Dùng một viên nhận 65 tu vi. Hồi 3 giây.'},
-  {id:'frost-sword',type:'artifact',name:'Băng Phách Kiếm',icon:'sword',tier:3,price:420,herbs:12,damage:26,description:'Kiếm băng: +26 sát thương.'},
-  {id:'phoenix-blade',type:'artifact',name:'Xích Diễm Kiếm',icon:'sword',tier:4,price:650,herbs:20,damage:34,skinReward:'crimson-phoenix',description:'Kiếm hỏa: +34 sát thương; mở Xích Phượng Chiến Y.'},
-  {id:'celestial-orb',type:'artifact',name:'Cửu Tiêu Linh Châu',icon:'orb',tier:5,price:900,herbs:30,damage:24,bonus:.15,skinReward:'ivory-celestial',description:'Pháp bảo tinh tú: +24 sát thương, +15% tu vi; mở Bạch Kim Tiên Đế.'},
-  {id:PATRON_SWORD,type:'artifact',name:'Hộ Pháp Thiên Kiếm',icon:'sword',tier:0,price:0,herbs:0,damage:28,exclusive:true,description:'Thưởng dẫn đầu quà tích lũy: +28 sát thương, kiếm Thương Long riêng.'},
-  {id:PATRON_SEAL,type:'artifact',name:'Trấn Tông Long Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:18,bonus:.12,exclusive:true,description:'Thưởng dẫn đầu quà tích lũy: +18 sát thương, +12% tu vi khi trang bị.'},
+  {id:'frost-sword',type:'artifact',name:'Băng Phách Kiếm',icon:'sword',tier:3,price:420,herbs:12,damage:26,description:'Kiếm băng: +26 công lực.'},
+  {id:'phoenix-blade',type:'artifact',name:'Xích Diễm Kiếm',icon:'sword',tier:4,price:650,herbs:20,damage:34,skinReward:'crimson-phoenix',description:'Kiếm hỏa: +34 công lực; mở Xích Phượng Chiến Y.'},
+  {id:'celestial-orb',type:'artifact',name:'Cửu Tiêu Linh Châu',icon:'orb',tier:5,price:900,herbs:30,damage:24,bonus:.15,skinReward:'ivory-celestial',description:'Pháp bảo tinh tú: +24 công lực, +15% tu vi; mở Bạch Kim Tiên Đế.'},
+  {id:PATRON_SWORD,type:'artifact',name:'Hộ Pháp Thiên Kiếm',icon:'sword',tier:0,price:0,herbs:0,damage:28,exclusive:true,description:'Thưởng dẫn đầu quà tích lũy: +28 công lực, kiếm Thương Long riêng.'},
+  {id:PATRON_SEAL,type:'artifact',name:'Trấn Tông Long Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:18,bonus:.12,exclusive:true,description:'Thưởng dẫn đầu quà tích lũy: +18 công lực, +12% tu vi khi trang bị.'},
   {id:'spirit-pill', type:'pill', name:'Ngưng Thần Đan', icon:'pill', tier:1, price:35, herbs:4, qi:180, description:'Dùng một viên nhận 180 tu vi. Hồi 3 giây.'}
 ];
 export const DEFAULT_GIFTS=GIFT_TIERS;
@@ -416,7 +416,7 @@ function actionCore(w,input,now) {
     if(!w.boss||w.boss.endsAt<=now||w.boss.hp<=0)return fail('Chưa có yêu thú. Bí cảnh sẽ mở theo lịch.');
     const wait=cooldown(p,'attack',4000,now);if(wait)return fail(`Chiêu thức hồi sau ${wait}s.`);
     const encounter=encounterHit(w.boss,p.id,now);const dmg=Math.min(w.boss.hp,Math.max(1,Math.round(power(p)*(encounter?.mult||1))));w.boss.hp-=dmg;p.contribution+=dmg;w.boss.participants[p.id]=true;w.boss.damage??={};w.boss.damage[p.id]=(w.boss.damage[p.id]||0)+dmg;
-    const gearList=[p.equipped,...(p.equippedExtra||[])].filter(Boolean),gearNow=gearList.length>1?gearList[(p.attackSeq=(p.attackSeq||0)+1)%gearList.length]:p.equipped;const technique=attackTechnique(gearNow===p.equipped?p:{...p,equipped:gearNow});gain(w,p,3,1,0,now,'attack');emit(w,p,`${technique.name} • ${dmg} sát thương`,'attack',now,{technique,target:{x:450,yRatio:.37},damage:dmg,encounterPhase:encounter?.id,damageMultiplier:encounter?.mult||1});
+    const gearList=[p.equipped,...(p.equippedExtra||[])].filter(Boolean),gearNow=gearList.length>1?gearList[(p.attackSeq=(p.attackSeq||0)+1)%gearList.length]:p.equipped;const technique=attackTechnique(gearNow===p.equipped?p:{...p,equipped:gearNow});gain(w,p,3,1,0,now,'attack');emit(w,p,`${technique.name} • ${dmg} công lực`,'attack',now,{technique,target:{x:450,yRatio:.37},damage:dmg,encounterPhase:encounter?.id,damageMultiplier:encounter?.mult||1});
     if(w.boss.hp===0) {
       winBoss(w,now);
     }
@@ -538,7 +538,7 @@ export function reconcilePatron(w,now=Date.now()){
   }else if(changed)emit(w,leader,'Đại Hộ Pháp • dẫn đầu tổng quà tích lũy','skin',now,{patronAward:true});
 }
 function winBoss(w,now) {
-  const boss=w.boss;
+  const boss=w.boss;const sealAt=now;
   const ranking=Object.entries(boss.damage||{}).filter(([id,d])=>w.players[id]&&!w.players[id].resident&&(boss.species!==ABYSS_BOSS.species||!w.players[id].puppet&&w.players[id].actorKind!=='npc'&&!w.players[id].webOnly)&&d>0).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
   if(['thunder-tiger','raid'].includes(boss.kind)&&ranking.length){
     const [winnerId,damage]=ranking[0],p=w.players[winnerId],item=[...ELITE_BOSSES,...CELESTIAL_BOSSES,ABYSS_BOSS].find(b=>b.species===boss.species)?.reward||'tiger-bell';
@@ -547,7 +547,7 @@ function winBoss(w,now) {
     const qi=gain(w,p,800,250,20);
     p.bossWins=(p.bossWins||0)+1;
     w.lastBossResult={id:boss.id,name:boss.name,at:now,winnerId,winner:p.name,damage,ranking:ranking.slice(0,3).map(([id,damage])=>({id,name:w.players[id].name,damage})),reward:{qi,stones:250,herbs:20,item}};
-    emit(w,p,`Đệ nhất sát thương • ${damage} sát thương • nhận ${CATALOG.find(a=>a.id===item)?.name||'Lôi Hổ Thần Chung'}, +${qi} tu vi, 250 linh thạch và 20 linh thảo`,'victory',now,{bossChampion:true,damage,reward:w.lastBossResult.reward});
+    emit(w,p,`Đệ nhất hàng yêu • ${damage} công lực • nhận ${CATALOG.find(a=>a.id===item)?.name||'Lôi Hổ Thần Chung'}, +${qi} tu vi, 250 linh thạch và 20 linh thảo`,'victory',now,{bossChampion:true,damage,reward:w.lastBossResult.reward});
   }
   if(boss.species===ABYSS_BOSS.species){
     const members=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&p.actorKind!=='npc'&&!p.webOnly);
@@ -559,6 +559,8 @@ function winBoss(w,now) {
     for(const id of Object.keys(boss.participants)) {const ally=w.players[id];if(ally)gain(w,ally,45,25,4);}
     emit(w,null,'Bí cảnh hoàn tất • mỗi người tham chiến nhận 45 tu vi, 25 linh thạch, 4 linh thảo','victory',now);
   }
+  // 05/11/2026: cảnh Phong Ấn trên overlay (chỉ hình ảnh, ~3,6 s) — ai đứng đầu công lực nhận ấn bay về.
+  const sealTop=w.lastBossResult?.id===boss.id?w.lastBossResult:null;w.bossSeal={id:boss.id,species:boss.species,name:boss.name,startedAt:boss.startedAt,at:sealAt,winnerId:sealTop?.winnerId||null,winnerName:sealTop?.winner||null};
   w.boss=null;w.nextBossAt=now+w.settings.bossInterval*1000;
 }
 // Tu tiên giả thường trú (Tý Tèo, Người Không Buồn Cười, Hai Thùy) hợp lực đánh yêu thú ở máy chủ:
@@ -576,11 +578,14 @@ export function openBoss(w,now=Date.now(),species=null) {
   if(socialBusy(w,now))return fail('Đang có tỷ thí hoặc lễ kết duyên.');
   if(w.boss)return fail('Bí cảnh đang mở.');
   if(eventBusyUntil(w,now))return fail('Đang có sự kiện • đợi sự kiện kết thúc rồi mở bí cảnh.');
-  const active=Object.values(w.players).filter(p=>now-p.lastActive<15*60000).length;
-  const baseHp=active?480+Math.min(active,40)*100:120; // 4/11: giảm ~40% máu để trận nhanh hơn (trước 800+160/người)
+  const activeList=Object.values(w.players).filter(p=>now-p.lastActive<15*60000&&!p.resident&&!p.puppet),active=activeList.length;
+  // 05/11/2026: sàn yêu lực theo người mạnh nhất đang chơi (≈6 chiêu, ~20 giây đánh một mình) để boss không bị hạ trong 1 chiêu
+  // lúc vắng người; khi đông người công thức cũ vẫn quyết định. Không ai hoạt động → giữ 120 để NPC tự kết thúc trận.
+  const strongest=activeList.reduce((m,p)=>Math.max(m,power(p)),0);
+  const baseHp=active?Math.max(480+Math.min(active,40)*100,strongest*6):120; // 4/11: giảm ~40% máu để trận nhanh hơn (trước 800+160/người)
   const variant=species?BOSSES.find(b=>b.species===species):BOSSES[(w.bossSequence||0)%BOSSES.length];w.bossSequence=(w.bossSequence||0)+1;
   const hp=baseHp*(variant.hpMultiplier||1);
-  w.boss={id:'raid-'+now,kind:'raid',species:variant.species,name:variant.name,startedAt:now,hp,maxHp:hp,endsAt:now+(variant.duration||120000),participants:{},damage:{},worldBoss:!!variant.worldBoss};emit(w,null,`${variant.name} giáng thế${variant.worldBoss?' • máu ×10 • hạ quái: cả tông môn nhận 500 tu vi cơ bản, 200 linh thạch, 15 linh thảo':''} • thả tim nạp kiếm trận • gõ đánh • Top sát thương nhận ${CATALOG.find(a=>a.id===variant.reward)?.name||'Lôi Hổ Thần Chung'} khi hạ quái`,'boss',now,{bossName:variant.name});return {ok:true};
+  w.boss={id:'raid-'+now,kind:'raid',species:variant.species,name:variant.name,startedAt:now,hp,maxHp:hp,endsAt:now+(variant.duration||120000),participants:{},damage:{},worldBoss:!!variant.worldBoss};emit(w,null,`${variant.name} giáng thế${variant.worldBoss?' • yêu lực ×10 • hạ quái: cả tông môn nhận 500 tu vi cơ bản, 200 linh thạch, 15 linh thảo':''} • thả tim nạp kiếm trận • gõ đánh • Top công lực nhận ${CATALOG.find(a=>a.id===variant.reward)?.name||'Lôi Hổ Thần Chung'} khi hạ quái`,'boss',now,{bossName:variant.name});return {ok:true};
 }
 // Sự kiện "Thiên Đạo Ban Phúc": linh khí bộc phát, tối đa `count` người đang hoạt động (gần đủ tu vi nhất)
 // Chỉ chọn người đủ điều kiện và trừ tài nguyên như đột phá thường; không tạo cấp miễn phí.

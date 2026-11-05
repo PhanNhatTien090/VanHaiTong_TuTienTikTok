@@ -19,3 +19,8 @@ test('NPC finishing hit preserves human champion; timeout grants no championship
  openBoss(w,now+10000);w.settings.residents=false;const wins=p.bossWins;
  tick(w,now+131000);assert.equal(w.boss,null);assert.equal(p.bossWins,wins);
 });
+test('05/11: one strong active player cannot one-shot a fresh boss; HP floor ≈ 6 strikes of the strongest',async()=>{
+ const {createWorld,ensurePlayer,openBoss,power}=await import('../engine.mjs');const N=1_800_000_000_000;
+ const w=createWorld('live');Object.assign(w.settings,{residents:false,autoEvents:false});const p=ensurePlayer(w,'s','S',N);p.realm=14;p.lastActive=N;
+ assert.ok(openBoss(w,N,'thunder-tiger').ok);assert.ok(w.boss.maxHp>=power(p)*6,'floor');assert.ok(w.boss.maxHp>power(p)*1.75*3);
+});
