@@ -1,8 +1,9 @@
+import {MAX_REALM} from './progression.js';
 import {divineSelection} from './divine-wardrobe.js';
 import {specialSkinFor} from './patrons.js';
 import {skinFor,SKINS} from './cosmetics.js';
-const TIERS=[0,0,1,2,2,3,3,4,4,4,4,4,4,4,4,4,4,4,4];const MAX_REALM=18;
-const TRIMS=['#b8c5b1','#e2c184','#bcecff','#d4b7ff','#8fe1d4','#ffd580','#a3d4ff','#f2c8ff','#fff0af','#9fd0ff','#ffd86b','#c9a6ff','#ff9f8a','#fff6d8','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b'];
+const TIERS=[0,0,1,2,2,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4];
+const TRIMS=['#b8c5b1','#e2c184','#bcecff','#d4b7ff','#8fe1d4','#ffd580','#a3d4ff','#f2c8ff','#fff0af','#9fd0ff','#ffd86b','#c9a6ff','#ff9f8a','#fff6d8','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf'];
 export const REALM_STYLES=Object.freeze([
  {robe:'#71817b',metal:'#bcc3ac',motif:0},
  {robe:'#258b73',metal:'#b2e8bd',motif:1},
@@ -18,9 +19,9 @@ export const REALM_STYLES=Object.freeze([
  {robe:'#3b1f66',metal:'#e6d4ff',motif:11},
  {robe:'#6e1a1a',metal:'#ffd0a0',motif:12},
  {robe:'#f2ead2',metal:'#fff8e0',motif:13},
- ...['#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b'].map((metal,i)=>({robe:['#124c49','#382360','#661d46','#153c64','#52370d'][i],metal,motif:14+i}))
+ ...['#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf'].map((metal,i)=>({robe:['#124c49','#382360','#661d46','#153c64','#52370d','#164e4a','#493376','#67532c'][i],metal,motif:14+i}))
 ]);
-export const REALM_ROBES=['Áo vải nhập môn','Đạo bào Luyện Khí','Ngân văn Trúc Cơ','Tử văn Kim Đan','Đạo bào Nguyên Anh','Kim văn Hóa Thần','Đạo bào Luyện Hư','Thiên y Đại Thừa','Tiên y Chân Tiên','Huyền quang tiên bào','Kim thân tiên y','Thái Ất tử bào','Đại La xích kim bào','Tiên Đế long bào','Đạo Tổ thiên y','Thiên Tôn tinh bào','Thần Quân huyền y','Thần Vương long y','Thần Đế vạn tượng'];
+export const REALM_ROBES=['Áo vải nhập môn','Đạo bào Luyện Khí','Ngân văn Trúc Cơ','Tử văn Kim Đan','Đạo bào Nguyên Anh','Kim văn Hóa Thần','Đạo bào Luyện Hư','Thiên y Đại Thừa','Tiên y Chân Tiên','Huyền quang tiên bào','Kim thân tiên y','Thái Ất tử bào','Đại La xích kim bào','Tiên Đế long bào','Đạo Tổ thiên y','Thiên Tôn tinh bào','Thần Quân huyền y','Thần Vương long y','Thần Đế vạn tượng','Thần Tôn thiên y','Thần Tổ nguyên bào','Hồng Mông chí tôn y'];
 // v48: nấc áo theo cảnh giới — Kim Đan/Nguyên Anh áo vàng · Hóa Thần/Luyện Hư áo đỏ (Xích Phượng) · Đại Thừa+ Thương Long.
 // Coin quà tích lũy lên được cùng nấc: 500 → vàng, 2.000 → đỏ, 10.000 → Thương Long.
 export const OUTFIT_RUNGS=Object.freeze([{name:null,minRealm:0,minCoins:0},{name:'Kim Y',minRealm:3,minCoins:500},{name:'Xích Phượng Chiến Y',minRealm:5,minCoins:2000},{name:'Thương Long Hộ Pháp',minRealm:7,minCoins:10000}]);

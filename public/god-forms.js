@@ -16,20 +16,24 @@ export const GOD_FORMS=Object.freeze([
  {name:'Cửu Thiên Tinh Thể',color:'#d4a1ff',dragon:1},
  {name:'Hồng Mông Lôi Thể',color:'#72ceff',dragon:1},
  {name:'Xích Diệm Thần Vương',color:'#ffab50',dragon:2},
- {name:'Vạn Giới Nhật Thần',color:'#ffe99a',dragon:2}
+ {name:'Vạn Giới Nhật Thần',color:'#ffe99a',dragon:2},
+ {name:'Thần Tôn Thiên Quang',color:'#94fff0',dragon:0,bodyCell:4,hue:95},
+ {name:'Thần Tổ Nguyên Thể',color:'#c9b4ff',dragon:1,bodyCell:2,hue:50},
+ {name:'Hồng Mông Chí Tôn',color:'#fff1cf',dragon:2,bodyCell:4,hue:-15}
 ]);
 export function godFormFor(p,{aura=false}={}){
- const rank=Math.trunc(Number(p.realm))-14;if(!Number.isInteger(rank)||p.resident||rank<0||rank>=5)return null;
+ const rank=Math.trunc(Number(p.realm))-14;if(!Number.isInteger(rank)||p.resident||rank<0||rank>=GOD_FORMS.length)return null;
  if(!aura&&specialSkinFor(p)&&['manual','admin','visitor'].includes(p.skinChoiceSource))return null;
  return {...GOD_FORMS[rank],rank};
 }
 export function drawGodBody(scene,c,p,pose,t){
  const form=godFormFor(p);if(!form)return false;
- const art=scene.divineArt?.get(6),im=art?.frames[(visualGender(p)==='nu'?5:0)+form.rank],phase=scene.motion===false?0:t*.003;
+ const art=scene.divineArt?.get(6),im=art?.frames[(visualGender(p)==='nu'?5:0)+(form.bodyCell??form.rank)],phase=scene.motion===false?0:t*.003;
  c.save();c.translate(0,(pose.lift||0)+(scene.motion===false?0:Math.sin(phase)*2));c.rotate((pose.lean||0)*.55);
- if(im){const bands=scene.budget?.level==='light'?4:7;
+ if(im){if(form.hue)c.filter='hue-rotate('+form.hue+'deg)';const bands=scene.budget?.level==='light'?4:7;
   for(let i=0;i<bands;i++){const wave=scene.motion===false?0:Math.sin(phase+i*.65)*.45;
    c.drawImage(im,0,i*im.height/bands,im.width,im.height/bands,-66+wave,-109+i*150/bands,132,150/bands+.4);}
+  c.filter='none';
  }else{
   // An unclothed luminous divine silhouette while its PNG loads; no robe flash.
   c.fillStyle=form.color+'55';c.beginPath();c.ellipse(0,-66,13,24,0,0,Math.PI*2);c.fill();c.beginPath();c.arc(0,-98,8,0,Math.PI*2);c.fill();
@@ -67,7 +71,7 @@ export function drawGodPresence(scene,c,a,t){
  c.save();c.translate(0,-35);c.scale((r+2)/60,1);const glow=c.createRadialGradient(0,0,4,0,0,60);glow.addColorStop(0,f.color+'42');glow.addColorStop(1,f.color+'00');c.fillStyle=glow;c.fillRect(-60,-60,120,120);c.restore();
  c.strokeStyle=f.color;c.fillStyle=f.color;c.lineWidth=1.5;c.globalAlpha=pulse;
  // Each rank has a distinct, moving floor seal.
- const points=[3,4,6,8,12][f.rank],spin=phase*(.16+f.rank*.04);
+ const points=[3,4,6,8,12,14,16,18][f.rank],spin=phase*(.16+f.rank*.04);
  c.save();c.translate(0,31);c.scale(1,.28);c.rotate(spin);c.beginPath();
  for(let i=0;i<=points;i++){const angle=i/points*Math.PI*2,x=Math.cos(angle)*r*.9,y=Math.sin(angle)*r*.9;i?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();c.restore();
  if(f.rank===0){ // jade qi climbs in two braided rivers
@@ -78,6 +82,12 @@ export function drawGodPresence(scene,c,a,t){
   for(const side of [-1,1]){c.beginPath();for(let i=0;i<9;i++){const x=side*(r*.65+Math.sin(i*7+Math.floor(phase*8))*(i%2?6:2)),y=-99+i*16;i?c.lineTo(x,y):c.moveTo(x,y);}c.stroke();}
  }else if(f.rank===3){ // rising crimson-gold tongues of flame
   for(let i=0;i<(light?5:8);i++){const u=(phase*.36+i*.19)%1,x=Math.sin(i*3.7)*r*.8,y=32-u*125;c.globalAlpha=(1-u)*pulse;c.beginPath();c.moveTo(x,y+13);c.quadraticCurveTo(x-10,y,x+Math.sin(phase*3+i)*5,y-18);c.quadraticCurveTo(x+10,y,x,y+13);c.fill();}
+ }else if(f.rank===5){ // three linked celestial meridians
+  for(let i=0;i<3;i++){const a=phase*.4+i*Math.PI/3;c.beginPath();c.ellipse(0,-48,r*.76,48,a,0,Math.PI*2);c.stroke();}
+ }else if(f.rank===6){ // paired origin streams with moving knots
+  for(const side of [-1,1]){c.beginPath();for(let i=0;i<=20;i++){const u=i/20,x=Math.sin(u*Math.PI*3+phase)*r*.68*side,y=30-u*134;i?c.lineTo(x,y):c.moveTo(x,y);if(i%5===0)c.fillRect(x-1,y-1,2,2);}c.stroke();}
+ }else if(f.rank===7){ // axial crown and twelve ordered rays
+  for(let i=0;i<12;i++){const a=i*Math.PI/6+phase*.16;c.beginPath();c.moveTo(Math.cos(a)*r*.45,-48+Math.sin(a)*38);c.lineTo(Math.cos(a)*r,-48+Math.sin(a)*73);c.stroke();}c.beginPath();c.ellipse(0,-48,r*.7,61,0,0,Math.PI*2);c.stroke();
  }else{ // solar crown, constant shafts and circling light motes
   for(const side of [-1,1]){c.globalAlpha=.42*pulse;c.lineWidth=3;c.beginPath();c.moveTo(side*r*.7,33);c.lineTo(side*r*.5,-102);c.stroke();}
   c.globalAlpha=pulse;c.lineWidth=1.5;for(let i=0;i<(light?8:12);i++){const q=spin+i*Math.PI*2/(light?8:12);c.beginPath();c.moveTo(Math.cos(q)*17,-84+Math.sin(q)*17);c.lineTo(Math.cos(q)*24,-84+Math.sin(q)*24);c.stroke();}

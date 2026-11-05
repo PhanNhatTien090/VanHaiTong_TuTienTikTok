@@ -1,7 +1,8 @@
+import {MAX_REALM} from './progression.js';
 import {makeSurface} from './performance.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),mix=(a,b,u)=>a+(b-a)*u;
 export function impactChoreography(realm,k,motion=true){
- const r=Math.max(1,Math.min(18,realm||1)),absorb=clamp((k-.49)/.215),rushStart=r===18?.49:.57,rushEnd=r===18?.635:.735,rush=clamp((k-rushStart)/.135),strike=clamp((k-.62)/.085);
+ const r=Math.max(1,Math.min(MAX_REALM,realm||1)),absorb=clamp((k-.49)/.215),rushStart=r===18?.49:.57,rushEnd=r===18?.635:.735,rush=clamp((k-rushStart)/.135),strike=clamp((k-.62)/.085);
  return {realm:r,absorb,phoenix:r>=10&&r<=13,dragon:r>=6&&r<=9||r===18,palm:r>=14,crack:r>=6,dragonSize:motion?mix(110,1250,rush*rush):0,palmSize:motion?mix(140,1040,strike*strike):0,flightProgress:rush,flightAlpha:motion&&k>=rushStart&&k<rushEnd?clamp((k-rushStart)/.02)*clamp((rushEnd-k)/.03):0,phoenixSize:mix(480,8,absorb**1.7),crackAlpha:motion&&k>=.705?clamp((k-.705)/.018)*clamp((.94-k)/.12):0};
 }
 export function sliceImpactArt(im,factory=makeSurface,size=640){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,frames=[];for(let i=0;i<2;i++){const f=factory(size,size);if(!f)continue;const c=f.getContext('2d');c.imageSmoothingQuality='high';c.drawImage(im,i*w/2,0,w/2,h,10,10,size-20,size-20);frames.push(f);}return frames;}

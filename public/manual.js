@@ -6,10 +6,11 @@ const plain=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'
 let state,toastTimer;
 function card(name,tag,description,commands=[]){return `<article class="card" data-search="${esc([name,tag,description,...commands].join(' ').toLowerCase())}"><span class="tag">${esc(tag)}</span><h3>${esc(name)}</h3><p>${esc(description)}</p>${commands.map(cmd=>`<code>${esc(cmd)}</code><button class="secondary" data-copy="${esc(cmd)}">Chép lệnh</button>`).join('')}</article>`;}
 const basics=[
+ ['Chuyển sinh','Mở sau Hồng Mông Chí Tôn. Gõ chuyển sinh, rồi chuyển sinh xác nhận trong 30 giây: về Phàm nhân, tu vi hiện tại về 0; giữ tổng tu vi, vật phẩm, skin, VIP, đạo lữ và thành tích. Ngân sách tu luyện ngày không làm mới.',['chuyển sinh','chuyển sinh xác nhận']],
  ['Kết duyên và VIP',bondRuleText()+' Gõ kết duyên kèm mã người muốn mời; người nhận gõ đồng ý. Gõ duyên để xem tất cả hoặc duyên kèm mã để chọn một đôi dự lễ.',['kết duyên mã','đồng ý','duyên','duyên mã']],
  ['Hủy một đạo lữ','Gõ hủy duyên kèm mã đạo lữ, sau đó hủy duyên mã xác nhận trong 30 giây. Chỉ kết thúc đôi đã chọn; các quan hệ khác, đồ và thành tích giữ nguyên. Nếu chỉ có một đạo lữ, có thể dùng lệnh ngắn cũ.',['hủy duyên mã','hủy duyên mã xác nhận']],
  ['Nhập môn','Chọn nam/nữ để đổi hình và xưng hô. Nhận 30 linh thạch, 3 linh thảo khi tạo hồ sơ.',['nhập môn nam','nhập môn nữ']],
- ['Tu luyện','+10 tu vi cơ bản, +2 linh thạch. Hồi 10 giây.',['tu luyện']],
+ ['Tu luyện','Hồi 10 giây. Từ Hóa Thần có ngân sách 900 điểm vận công/ngày cho tu vi thường, làm mới 0 giờ Việt Nam. Vận công dùng 1 điểm, hái 1,4 điểm, đánh 0,35 điểm. Hết ngân sách vẫn nhận tài nguyên và tham gia sự kiện; quà tặng, Cơ duyên và thưởng sự kiện không tính vào trần.',['tu luyện']],
  ['Hái linh thảo','+5 tu vi cơ bản, +3 linh thạch, +3 linh thảo. Hồi 30 giây.',['hái']],
  ['Điểm danh','+25 tu vi cơ bản, +20 linh thạch, +3 linh thảo. Một lần/ngày Việt Nam.',['điểm danh']],
  ['Xem tiến độ và gợi ý','Xem tài nguyên còn thiếu hoặc hỏi bước tiếp theo có thể làm. Hồi 15 giây.',['tu vi','gợi ý']],

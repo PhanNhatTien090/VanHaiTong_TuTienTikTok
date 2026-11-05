@@ -5,14 +5,14 @@ import {ASCENSION_PRACTICE_STEPS} from '../public/ascension-pacing.js';
 const N=Date.now();
 function world(){const w=createWorld('live');w.settings.ascensionShowcase=true;w.settings.goldenHour=true;action(w,{type:'join',userId:'a',name:'An'},N);return w;}
 test('real free progression reaches every realm at a bounded, progressively slower cadence',()=>{
- const w=world(),p=w.players.a,milestones=[],breaks=new Set();let now=N;
+ const w=world(),p=w.players.a,milestones=[],breaks=new Set();w.settings.dailyPracticeLimit=0;let now=N;
  for(let r=0;r<REALMS.length-1;r++){
   let count=0;while(!readyToBreak(p)){assert.equal(action(w,{type:'cultivate',userId:p.id},now).ok,true);now+=10000;assert.ok(++count<=ASCENSION_PRACTICE_STEPS[r]);}
   const qi=p.qi,stones=p.stones,needQi=requiredQi(p),needStones=requiredStones(p);
   assert.equal(action(w,{type:'breakthrough',userId:p.id},now-1).ok,true);assert.equal(p.realm,r+1);breaks.add(w.events.findLast(e=>e.effect==='breakthrough').id);
   assert.equal(p.qi,qi-needQi);assert.equal(p.stones,stones-needStones);milestones.push({realm:p.realm,seconds:(now-N)/1000,actions:count});
  }
- assert.equal(p.giftCoins,0);assert.equal(p.realm,18);assert.equal(breaks.size,18);
+ assert.equal(p.giftCoins,0);assert.equal(p.realm,REALMS.length-1);assert.equal(breaks.size,REALMS.length-1);
  assert.ok(milestones[3].seconds<=150);assert.ok(milestones[17].seconds<=ASCENSION_PRACTICE_STEPS.reduce((n,x)=>n+x,0)*10);assert.ok(milestones[8].actions>=20);assert.ok(milestones[17].actions>milestones[3].actions);
  assert.equal(action(w,{type:'breakthrough',userId:p.id},now).ok,false);
 });
@@ -43,6 +43,6 @@ test('pacing v2 preserves entry to Hoa Than and slows every later practice route
   const gained=p.qi-before.qi;assert.ok(gained>0&&gained<=previousFloor*.11,kind+' should be about ten times slower');
   assert.equal(p.totalQi-before.totalQi,gained);assert.ok(p.stones>=before.stones);assert.equal(p.realm,5);assert.equal(p.giftCoins,120);assert.equal(p.skinChoice,'sea-dragon-heir');
   const qi=p.qi;action(w,{type:kind,userId:p.id,...(kind==='like'?{count:1}:{})},N+2);assert.equal(p.qi,qi,'cooldowns remain active');
-  assert.equal(snapshot(w,N+wait).progressionPacingVersion,2);
+  assert.equal(snapshot(w,N+wait).progressionPacingVersion,3);
  }
 });

@@ -1,3 +1,4 @@
+import {MAX_REALM} from './progression.js';
 import {makeSurface} from './performance.js';
 import {REALM_NAMES} from './progression.js';
 import {isNPC} from './live-integrity.js';
@@ -45,7 +46,7 @@ export function drawAscensionStageBackdrop(scene,c,H,{clock=0,ritual=false,color
 }
 export function stagePlayer(scene,t){
  const players=(scene.realPlayers||scene.players||[]).filter(p=>p.active&&!isNPC(p));if(!players.length)return null;
- const ready=players.filter(p=>p.finalRealmEligible!==false&&p.realm<18&&p.qi>=p.neededQi&&p.stones>=p.neededStones);
+ const ready=players.filter(p=>p.finalRealmEligible!==false&&p.realm<MAX_REALM&&p.qi>=p.neededQi&&p.stones>=p.neededStones);
  const pool=ready.length?ready:players;return pool[Math.floor(t/9000)%pool.length];
 }
 export function drawAscensionStageIdle(scene,c,t,H){
@@ -55,7 +56,7 @@ export function drawAscensionStageIdle(scene,c,t,H){
  if(p){const target={id:p.id,player:p,x:450,y:feet,scale:4.3};scene.targets=[target];scene.ritualDrawing=true;c.save();
   try{c.translate(0,scene.motion===false?0:Math.sin(t*.0011)*5);scene.drawPlayer(c,p,450,feet,scene.motion===false?0:t);}finally{scene.ritualDrawing=false;c.restore();}
  }
- const ready=!!p&&p.finalRealmEligible!==false&&p.realm<18&&p.qi>=p.neededQi&&p.stones>=p.neededStones;
+ const ready=!!p&&p.finalRealmEligible!==false&&p.realm<MAX_REALM&&p.qi>=p.neededQi&&p.stones>=p.neededStones;
  const progress=p?clamp(Math.min(p.qi/Math.max(1,p.neededQi||1),p.stones/Math.max(1,p.neededStones||1))):0;
  scene.onAscensionIdle?.({player:p,name:p?.name||'',realm:p?.realmName||REALM_NAMES[p?.realm||0],ready,progress});
 }
