@@ -1,6 +1,7 @@
 import {drawAscensionStageBackdrop} from './ascension-stage.js';
 import {makeSurface} from './performance.js';
 import {setFxPalette,qiVariant,qiCamera,drawQiEnvironment,drawQiVignette,drawQiInflow,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
+import {trucCoV3State,drawTcSky,drawTcGroundVeins,drawTcShards,drawTcSigil,drawTcHalo} from './truc-co-formation.js';
 import {TRUC_CO_DURATION,TRUC_CO_SWORDS,TRUC_CO_TIERS,TRUC_CO_BURST,TRUC_CO_REVEAL} from './truc-co-timeline.js';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>{v=clamp(v);return v*v*(3-2*v);};
 const angles=[-2.75,-2.15,-1.4,-.7,.08,.82,1.6,2.4];
@@ -115,10 +116,12 @@ export function drawTrucCoAwakening(scene,c,e,t,H){
  const kb=TRUC_CO_BURST/(TRUC_CO_DURATION/1000),kq=s.k<kb?s.k*.70/kb:.70+(s.k-kb)*.30/(1-kb),body=s.feet-s.lift,origin={x:450,y:body-30};
  setFxPalette(TC_PALETTE);
  c.save();drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:'#a7f2e2',feet:s.feet});drawQiEnvironment(scene,c,kq,H,origin,true); // 4/11: thiên đài cả trên LIVE
+ const v3=trucCoV3State(s.seconds),sv={...s,body};drawTcSky(scene,c,v3,H,v); // v3 05/11: núi xa + linh mạch
  glow(c,450,s.feet-130,420,'#438c662c',s.open*.9);
  const zoom=1+(qiCamera(kq,motion&&scene.cameraEnabled!==false)-1)*v.zoom,fy=s.feet-150+v.dy;c.save();c.translate(450,fy);c.scale(zoom,zoom);c.translate(-450,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
  const shake=motion&&scene.cameraEnabled!==false?s.burst*7:0;c.translate(Math.sin(s.clock*95)*shake,Math.cos(s.clock*80)*shake*.6);
- foundation(scene,c,s);drawQiInflow(scene,c,kq,origin,v.phase);swords(scene,c,s,false);streams(scene,c,s,false);atmosphere(scene,c,s,false);platform(scene,c,s);column(scene,c,s);drawQiAura(scene,c,kq,origin,body);actor(scene,c,e,s,t-e.start);swords(scene,c,s,true);streams(scene,c,s,true);atmosphere(scene,c,s,true);drawQiCompression(c,kq,origin);burst(c,s,motion);drawQiImpact(scene,c,kq,H,origin,body);
+ drawTcGroundVeins(scene,c,v3,sv);drawTcShards(scene,c,v3,sv,false);
+ foundation(scene,c,s);drawQiInflow(scene,c,kq,origin,v.phase);swords(scene,c,s,false);streams(scene,c,s,false);atmosphere(scene,c,s,false);platform(scene,c,s);drawTcSigil(scene,c,v3,sv,v);column(scene,c,s);drawQiAura(scene,c,kq,origin,body);drawTcHalo(scene,c,v3,sv,v);actor(scene,c,e,s,t-e.start);swords(scene,c,s,true);streams(scene,c,s,true);atmosphere(scene,c,s,true);drawTcShards(scene,c,v3,sv,true);drawQiCompression(c,kq,origin);burst(c,s,motion);drawQiImpact(scene,c,kq,H,origin,body);
  c.restore();drawQiMotes(scene,c,kq,H);drawQiVignette(c,kq,H);
  const ui={k:s.k,realm:2,phase:s.revealed?'reveal':s.seconds<3.6?'swords':s.seconds<6.3?'flow':s.seconds<8.4?'foundation':'compress',revealed:s.revealed,color,title:'Trúc Cơ',subtitle:'Ngọc Cơ Thành Đạo',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake};
  if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.textAlign='center';c.fillStyle='#eaf2e5';c.font='600 25px Arial';c.fillText(ui.name,450,H*.19,700);if(s.revealed){c.font='700 40px Arial';c.fillStyle=color;c.fillText('TRÚC CƠ',450,H*.24,740);}}
