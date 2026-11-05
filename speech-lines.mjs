@@ -154,12 +154,13 @@ export function speechPlan(e){
   }
   // ----- luận kiếm -----
   if(e.effect==='tournament'||e.effect==='social'){
-    if(/mở tuyển/.test(text))return [say('trongtai','Phong Vân Luận Kiếm mở tuyển! Gõ tỷ thí để ghi danh.')];
-    if(/^Luận Kiếm bắt đầu/.test(text)){const n=(text.match(/(\d+) đấu thủ/)||[])[1];return [say('trongtai',`Luận Kiếm bắt đầu${n?` với ${viNumber(n)} đấu thủ`:''}! Gõ đánh khi tới lượt.`)];}
-    const mt=text.match(/^Tỷ thí: (.+?) gặp (.+?) •/);if(mt)return [say('trongtai',`${sayName(mt[1])||'Đấu thủ'} đối đầu ${sayName(mt[2])||'đấu thủ'}! Gõ đánh để trợ lực.`)];
-    if(/^KIẾM KHÔI/.test(text))return [say('tiennu',`Vinh danh Kiếm Khôi Tông Môn!`),say('tongsu',`${Who} vô địch Phong Vân Luận Kiếm!`)];
-    if(/^Thắng tỷ thí/.test(text))return [say('trongtai',`${Who} thắng trận!`)];
-    if(/^Đã đăng ký tỷ thí/.test(text))return [say('trongtai',`${Who} ghi danh tỷ thí.`)];
+    if(/mở tuyển/.test(text))return [say('trongtai','Phong Vân Luận Kiếm mở tuyển! Gõ tỷ thí để ghi danh, ai ghi danh cũng được so tài.')];
+    if(/^Luận Kiếm bắt đầu/.test(text)){const n=(text.match(/(\d+) đấu thủ/)||[])[1];return [say('trongtai',`Luận Kiếm bắt đầu${n?` với ${viNumber(n)} đấu thủ`:''}! Ba ván cuối sẽ lên đài.`)];}
+    const qr=text.match(/^Luận Kiếm vòng (\d+) • (\d+) đấu thủ/);if(qr)return [say('trongtai',`Vòng ${viNumber(qr[1])}, ${viNumber(qr[2])} đấu thủ so tài nhanh!`)];
+    const mt=text.match(/^Luận Kiếm: (.+?) · (.+?) so tài •/);if(mt)return [say('trongtai',`${sayName(mt[1])||'Đấu thủ'} và ${sayName(mt[2])||'đấu thủ'} lên đài so tài! Gõ kiếm để tiếp linh lực.`)];
+    if(/^KIẾM KHÔI/.test(text))return [say('tiennu',`Vinh danh Kiếm Khôi Tông Môn!`),say('tongsu',`${Who} đứng đầu Phong Vân Luận Kiếm!`)];
+    if(/^Thắng ván luận kiếm/.test(text))return [say('trongtai',`${Who} thắng ván luận kiếm!`)];
+    if(/^Đã đăng ký tỷ thí/.test(text))return [say('trongtai',`${Who} ghi danh luận kiếm.`)];
     if(/^Luận Kiếm • \+1 huy chương/.test(text))return [say('trongtai',`${Who} nhận một huy chương Luận Kiếm.`)];
   }
   // ----- tiên nhân -----

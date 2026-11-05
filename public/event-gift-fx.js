@@ -62,7 +62,7 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
  }
  if(layer==='front'){
   const n=Math.min(light?12:20,q.blades);c.fillStyle=q.color;for(let i=0;i<n;i++){const u=(k*1.7+i/n)%1,xx=x+Math.cos(i*2.399)*(25+u*q.size*.55),yy=y+20+u*u*170;c.globalAlpha=fade*(1-u)*.65;c.fillRect(xx,yy,2,5);}
-  c.globalAlpha=fade;c.font='bold '+(mode==='race'?15:18)+'px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#101422';c.fillStyle=q.color;const label=(mode==='duel'&&!e.fighter?e.name+' · ':'')+q.name+(mode==='race'?(e.boost?' · BỨT TỐC':' · VINH DANH'):' · TRỢ UY');const yy=mode==='race'?y+70*s:y+90;c.strokeText(label,x,yy,mode==='race'?170:370);c.fillText(label,x,yy,mode==='race'?170:370);
+  c.globalAlpha=fade;c.font='bold '+(mode==='race'?15:18)+'px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#101422';c.fillStyle=q.color;const label=(mode==='duel'&&!e.fighter?e.name+' · ':'')+q.name+(mode==='race'?(e.boost?' · BỨT TỐC':' · VINH DANH'):' · CỔ VŨ');const yy=mode==='race'?y+70*s:y+90;c.strokeText(label,x,yy,mode==='race'?170:370);c.fillText(label,x,yy,mode==='race'?170:370);
  }
  c.restore();return true;
 }

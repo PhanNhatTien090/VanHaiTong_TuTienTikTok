@@ -135,7 +135,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','coduyen','tythi','ketduyen','dongy','tuchoi','duyen','huyduyen'];
+const COMMANDS=['phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -318,6 +318,8 @@ function actionCore(w,input,now) {
       const wait=cooldown(p,'status',15000,now);if(wait)return fail(`Xem tu vi lại sau ${wait}s.`);
       emit(w,p,statusText(p),'status',now);return {ok:true};
     }
+    // 05/11: lệnh tiếp linh lực khi lên đài luận kiếm (vẫn nhận 'danh' như cũ). Ngoài giải, 'kiem' là lời trò chuyện bình thường.
+    if(cmd==='kiem'&&tournamentActive(w))return action(w,{...input,type:'attack'},now);
     const commands={nhapmon:'join',tuluyen:'cultivate',dotpha:'breakthrough',hai:'gather',diemdanh:'checkin',danh:'attack',hoc:'learn',ren:'craft',luyendan:'brew',dung:'use',trangbi:'equip'};
     if(commands[cmd]) {
       const wanted=CATALOG.find(x=>normalize(x.name)===rest||normalize(gameText(x.name))===rest||x.id===rest);
@@ -723,7 +725,7 @@ export function tick(w,now=Date.now()) {
 export function snapshot(w,now=Date.now()) {
   const players=Object.values(w.players).map(p=>({...p,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
   const socialStatus=socialView(w,now),t=socialStatus.tournament,ceremony=socialStatus.ceremony;
-  const socialStage=t?.current?[t.current.a,t.current.b]:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
+  const socialStage=t?.current?[t.current.a,t.current.b]:t?.lastBow?.until>now&&t.lastBow.pair?t.lastBow.pair:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
   const socialScene=tournamentActive(w)||t?.podiumUntil>now?'tournament':ceremony?'bond':null;
   for(const p of players){p.socialCode=w.players[p.id].socialCode;p.bondInfo=socialStatus.bonds.find(b=>b.a===p.id||b.b===p.id)||null;}
   const raceStatus=raceView(w,now),raceStage=raceStageIds(w,now);
