@@ -22,7 +22,7 @@ test('daily practice shares an exact budget across actions and resets only at Vi
  p.realm=6;assert.equal(dailyPracticeView(w,p,midnight).used,.35,'a realm change must not refresh the daily budget');
 });
 
-test('daily ceiling leaves early realms, demo, NPCs, gifts and unknown reward sources unchanged',()=>{
+test('daily ceiling leaves early realms, demo, NPCs and personal gift rewards unchanged',()=>{
  const {w,p}=setup(4);w.settings.dailyPracticeLimit=1;
  for(let i=0;i<3;i++)assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);assert.equal(p.dailyPractice,undefined);
  p.realm=5;creditDailyPractice(w,p,100,'cultivate',N);assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,0);
@@ -48,7 +48,7 @@ test('three post-Than-De realms persist and are the only path to the rebirth unl
  assert.deepEqual(ASCENSION_PRACTICE_STEPS.slice(18),[7000,10000,15000]);
  for(let r=19;r<=21;r++){
   assert.equal(snapshot(w,N).players[0].rebirthEligible,false);p.qi=requiredQi(p);p.stones=requiredStones(p);
-  assert.equal(action(w,{type:'breakthrough',userId:p.id},N+r).ok,true);assert.equal(p.realm,r);assert.ok(ascensionProfile(r).duration>ascensionProfile(r-1).duration);
+  assert.equal(action(w,{type:'breakthrough',userId:p.id},N+r*86400000).ok,true);assert.equal(p.realm,r);assert.ok(ascensionProfile(r).duration>ascensionProfile(r-1).duration);
   assert.equal(realmDivineLook(p).realm,r);assert.equal(godFormFor(p).rank,r-14);
  }
  const view=snapshot(w,N+30).players[0];assert.equal(view.rebirthEligible,true);assert.equal(view.realmName,'Hồng Mông Chí Tôn');

@@ -10,7 +10,7 @@ const basics=[
  ['Kết duyên và VIP',bondRuleText()+' Gõ kết duyên kèm mã người muốn mời; người nhận gõ đồng ý. Gõ duyên để xem tất cả hoặc duyên kèm mã để chọn một đôi dự lễ.',['kết duyên mã','đồng ý','duyên','duyên mã']],
  ['Hủy một đạo lữ','Gõ hủy duyên kèm mã đạo lữ, sau đó hủy duyên mã xác nhận trong 30 giây. Chỉ kết thúc đôi đã chọn; các quan hệ khác, đồ và thành tích giữ nguyên. Nếu chỉ có một đạo lữ, có thể dùng lệnh ngắn cũ.',['hủy duyên mã','hủy duyên mã xác nhận']],
  ['Nhập môn','Chọn nam/nữ để đổi hình và xưng hô. Nhận 30 linh thạch, 3 linh thảo khi tạo hồ sơ.',['nhập môn nam','nhập môn nữ']],
- ['Tu luyện','Hồi 10 giây. Từ Hóa Thần có ngân sách 900 điểm vận công/ngày cho tu vi thường, làm mới 0 giờ Việt Nam. Vận công dùng 1 điểm, hái 1,4 điểm, đánh 0,35 điểm. Hết ngân sách vẫn nhận tài nguyên và tham gia sự kiện; quà tặng, Cơ duyên và thưởng sự kiện không tính vào trần.',['tu luyện']],
+ ['Tu luyện','Từ Hóa Thần: 900 điểm tu vi miễn phí/ngày, quy đổi theo lượng tu vi thực nhận; vận công, tim, hái, đánh, đan dược, cùng tu và mọi thưởng miễn phí dùng chung trần. Hết trần vẫn nhận vật phẩm và thành tích. Làm mới 0 giờ Việt Nam. Tối đa một đại cảnh/ngày, chung với Cơ duyên. Quà nhận đủ; tiến độ Cơ duyên dư được giữ, gõ cơ duyên khi sự kiện mở để dùng lại.',['tu luyện','tu vi','cơ duyên']],
  ['Hái linh thảo','+5 tu vi cơ bản, +3 linh thạch, +3 linh thảo. Hồi 30 giây.',['hái']],
  ['Điểm danh','+25 tu vi cơ bản, +20 linh thạch, +3 linh thảo. Một lần/ngày Việt Nam.',['điểm danh']],
  ['Xem tiến độ và gợi ý','Xem tài nguyên còn thiếu hoặc hỏi bước tiếp theo có thể làm. Hồi 15 giây.',['tu vi','gợi ý']],

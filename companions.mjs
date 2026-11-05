@@ -5,7 +5,7 @@ const state=w=>w.companions??={invites:[],pairs:[],guards:[]};
 const livePair=(s,id,now)=>s.pairs.find(x=>x.endsAt>now&&!x.finishedAt&&[x.a,x.b].includes(id));
 const fail=message=>({ok:false,message});
 function target(w,q){const n=norm(q);return Object.values(w.players).filter(p=>real(p)&&(norm(p.name)===n||norm(p.socialCode)===n||p.id===q));}
-function reward(p,qi,stones,points){p.qi+=qi;p.totalQi+=qi;p.stones+=stones;p.companionPoints=(p.companionPoints||0)+points;}
+function reward(w,p,qi,stones,points,now,c){const got=c.creditQi?c.creditQi(w,p,qi,now):qi;p.qi+=got;p.totalQi+=got;w.sectQi+=got;p.stones+=stones;p.companionPoints=(p.companionPoints||0)+points;return got;}
 export function companionCommand(w,p,cmd,rest,now,c){
  if(!['cungtu','giup'].includes(cmd))return null;if(!real(p))return fail('Hoạt động dành cho người xem thật.');
  const s=state(w);s.queue??=[];tickCompanions(w,now,c);
@@ -28,7 +28,7 @@ export function companionCommand(w,p,cmd,rest,now,c){
  if(!rest){const pair=livePair(s,p.id,now),pending=s.invites.find(i=>i.to===p.id&&i.expiresAt>now);c.emit(w,p,cmd==='giup'?'Gõ giup tên hoặc mã đạo hữu đủ điều kiện đột phá • tối đa 3 hộ pháp':pair?`Đang cùng tu • ${Math.ceil((pair.endsAt-now)/1000)}s • mỗi người gõ tuluyen 3 lần`:pending?`${w.players[pending.from]?.name} mời cùng tu • gõ cungtu ${w.players[pending.from]?.socialCode} để đồng ý`:'Gõ cungtu tên hoặc mã đạo hữu • người kia gõ lại để đồng ý • cungtu huy để dừng','status',now);return {ok:true};}
  const matches=target(w,rest);if(matches.length!==1)return fail(matches.length?'Trùng tên, hãy dùng mã #đạo hữu trên danh sách.':'Không tìm thấy tên / mã đạo hữu.');const other=matches[0];if(other.id===p.id)return fail('Chọn một đồng môn khác.');if(!c.active(w,other,now))return fail('Đồng môn cần bình luận lại để có mặt.');
  if(cmd==='giup'){
-  if(!c.ready(other))return fail('Đồng môn chưa đủ điều kiện đột phá.');
+  if(!c.ready(other,w,now))return fail('Đồng môn chưa đủ điều kiện đột phá.');
   s.guards=s.guards.filter(g=>g.endsAt>now);const own=s.guards.find(g=>g.helper===p.id);if(own)return fail('Đạo hữu đang hộ pháp • chờ lượt này kết thúc.');
   if(s.guards.filter(g=>g.target===other.id&&g.realm===other.realm).length>=3)return fail('Đã đủ 3 hộ pháp.');
   if(now-(p.lastGuardRewardAt||0)<600000)return fail('Thưởng hộ pháp hồi sau 10 phút.');
@@ -46,11 +46,11 @@ export function createCompanionPair(w,a,b,now,c){const s=state(w),pair={id:'toge
 export function companionActivity(w,p,input,now,c){const s=w.companions;if(!s||!real(p))return;const pair=livePair(s,p.id,now);if(!pair)return;
  if(input.type==='cultivate')pair.actions[p.id]=Math.min(3,(pair.actions[p.id]||0)+1);
  if(input.type==='like')pair.hearts[p.id]=Math.min(300,(pair.hearts[p.id]||0)+input.count);
- if(pair.actions[pair.a]>=3&&pair.actions[pair.b]>=3&&lanternPairReady(pair)){pair.finishedAt=now;awardLantern(w,pair,now,c);for(const id of [pair.a,pair.b]){const q=w.players[id];reward(q,30,10,1);q.lastTogetherRewardAt=now;w.sectQi+=30;}c.emit(w,p,`${w.players[pair.a].name} và ${w.players[pair.b].name} cùng tu viên mãn • mỗi người +30 tu vi, 10 linh thạch, 1 điểm Đồng môn`,'social',now,{togetherDone:true,pair:[pair.a,pair.b]});}
+ if(pair.actions[pair.a]>=3&&pair.actions[pair.b]>=3&&lanternPairReady(pair)){pair.finishedAt=now;awardLantern(w,pair,now,c);for(const id of [pair.a,pair.b]){const q=w.players[id];reward(w,q,30,10,1,now,c);q.lastTogetherRewardAt=now;}c.emit(w,p,`${w.players[pair.a].name} và ${w.players[pair.b].name} cùng tu viên mãn • tu vi theo hạn mức ngày, mỗi người 10 linh thạch và 1 điểm Đồng môn`,'social',now,{togetherDone:true,pair:[pair.a,pair.b]});}
 }
 export function finishGuard(w,p,from,now,c){const s=w.companions;if(!s)return [];const helpers=s.guards.filter(g=>g.target===p.id&&g.realm===from&&g.endsAt>now&&real(w.players[g.helper])&&c.active(w,w.players[g.helper],now)).slice(0,3);s.guards=s.guards.filter(g=>g.target!==p.id);if(!helpers.length)return [];
- const names=[];for(const g of helpers){const q=w.players[g.helper];reward(q,20,10,1);q.lastGuardRewardAt=now;w.sectQi+=20;names.push(q.name);}reward(p,30,10,1);w.sectQi+=30;
- c.emit(w,p,`${p.name} đột phá thành công • cảm tạ ${names.join(', ')} hộ pháp • chủ nhân +30 tu vi, hộ pháp +20; mỗi người +10 linh thạch, 1 điểm Đồng môn`,'social',now,{guardSuccess:true,pair:[p.id,...helpers.map(g=>g.helper)]});return helpers.map(g=>g.helper);
+ const names=[];for(const g of helpers){const q=w.players[g.helper];reward(w,q,20,10,1,now,c);q.lastGuardRewardAt=now;names.push(q.name);}reward(w,p,30,10,1,now,c);
+ c.emit(w,p,`${p.name} đột phá thành công • cảm tạ ${names.join(', ')} hộ pháp • tu vi theo hạn mức ngày; mỗi người +10 linh thạch, 1 điểm Đồng môn`,'social',now,{guardSuccess:true,pair:[p.id,...helpers.map(g=>g.helper)]});return helpers.map(g=>g.helper);
 }
 export function tickCompanions(w,now,c){const s=w.companions;if(!s)return;s.queue=(s.queue||[]).filter(q=>q.expiresAt>now&&real(w.players[q.id])&&c.active(w,w.players[q.id],now)&&!livePair(s,q.id,now));s.invites=s.invites.filter(i=>i.expiresAt>now);s.guards=s.guards.filter(g=>g.endsAt>now&&w.players[g.target]?.realm===g.realm);for(const pair of s.pairs)if(!pair.finishedAt&&now>=pair.endsAt){pair.finishedAt=now;pair.expired=true;c.emit(w,w.players[pair.a],'Cùng tu khép lại • chưa đủ 3 lượt tu luyện mỗi người • hẹn đồng môn lượt sau','social',now,{pair:[pair.a,pair.b]});}s.pairs=s.pairs.filter(x=>!x.finishedAt||now-x.finishedAt<15000);}
 export function companionView(w,now){const s=w.companions;return s?{waiting:(s.queue||[]).length,pairs:s.pairs.filter(x=>!x.finishedAt&&x.endsAt>now).map(x=>({...x,aName:w.players[x.a]?.name,bName:w.players[x.b]?.name,prompt:x.festivalId?LANTERN_PROMPTS[x.promptIndex]:null})),guards:s.guards.filter(x=>x.endsAt>now),invites:s.invites.filter(x=>x.expiresAt>now).map(x=>({...x,fromName:w.players[x.from]?.name,toName:w.players[x.to]?.name,fromCode:w.players[x.from]?.socialCode}))}:{pairs:[],guards:[],invites:[]};}

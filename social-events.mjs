@@ -132,7 +132,7 @@ export function bondActivity(w,p,input,now,c){
  if(!['cultivate','gather','attack','checkin','like'].includes(input.type))return;const bonds=activeBonds(w,p.id);if(!bonds.length)return;
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
  for(const b of bonds){b.marks??={};b.marks[p.id]=day;if(b.lastDay===day||b.marks[b.a]!==day||b.marks[b.b]!==day)continue;
- b.lastDay=day;b.days++;b.level=[3,7,14,30].filter(d=>b.days>=d).length;for(const id of [b.a,b.b]){const ally=w.players[id];if(ally){ally.bondMilestone=Math.max(ally.bondMilestone||0,b.level);c.gain(w,ally,30,10,1);notify(w,ally,'Đồng hành ngày '+b.days+' cùng '+w.players[b.a===id?b.b:b.a]?.name+' • +30 tu vi cơ bản, 10 linh thạch'+(b.level?' • mốc kết duyên '+b.level:''),now,c);}}}
+ b.lastDay=day;b.days++;b.level=[3,7,14,30].filter(d=>b.days>=d).length;for(const id of [b.a,b.b]){const ally=w.players[id];if(ally){ally.bondMilestone=Math.max(ally.bondMilestone||0,b.level);c.gain(w,ally,30,10,1,now);notify(w,ally,'Đồng hành ngày '+b.days+' cùng '+w.players[b.a===id?b.b:b.a]?.name+' • +30 tu vi cơ bản, 10 linh thạch'+(b.level?' • mốc kết duyên '+b.level:''),now,c);}}}
 }
 
 export function tickSocial(w,now,c){

@@ -312,7 +312,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
   }
   // Thanh tu vi dưới tên: xanh = đang tích lũy, vàng nhấp nháy + "✦ gõ dotpha" trên đầu = đủ đột phá.
   drawQiBar(c,l,t){const p=l.player;if(p.resident||p.puppet||!p.neededQi)return;
-    const ready=p.finalRealmEligible!==false&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<(this.realmCount??REALM_STYLES.length)-1,k=Math.max(0,Math.min(1,p.qi/p.neededQi)),pulse=.5+.5*Math.sin(t*.008);
+    const ready=p.finalRealmEligible!==false&&p.progressionReady!==false&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<(this.realmCount??REALM_STYLES.length)-1,k=Math.max(0,Math.min(1,p.qi/p.neededQi)),pulse=.5+.5*Math.sin(t*.008);
     const bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle='#ffffff26';c.fillRect(bx,by,bw,3.5);
     c.fillStyle=ready?`hsl(45,100%,${55+20*pulse}%)`:'#7fdcc6';c.fillRect(bx,by,bw*k,3.5);
     if(ready&&this.targets.length>12){c.fillStyle=`hsl(45,100%,${60+20*pulse}%)`;c.font='700 15px Segoe UI';c.textAlign='center';c.textBaseline='middle';c.fillText('✦',l.x-7,l.y+l.h/2);}

@@ -1,3 +1,5 @@
+> Cập nhật: phần trần ngày/Cơ duyên của bản này đã được thay bằng UNIFIED-PROGRESSION-V4-2026-11-05.md; tên cảnh giới và quy tắc chuyển sinh vẫn giữ.
+
 # Ba cảnh giới sau Thần Đế, trần tu luyện ngày và chuyển sinh · 05/11/2026
 
 Mở rộng từ19 lên22 mốc (0..21): Thần Đế18 → Thần Tôn19 → Thần Tổ20 → Hồng Mông Chí Tôn21. REBIRTH_UNLOCK_REALM=21, các consumer dùng MAX_REALM theo REALM_NAMES, không chặn cứng18.
