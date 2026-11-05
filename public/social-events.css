@@ -26,3 +26,6 @@ body.sword-race #spotlight{display:none!important}
 .duel-card.win .duel-portrait{border-color:#ffd978;box-shadow:0 0 2cqw #ffd978}
 .duel-card.win small{color:#ffd978;font-weight:700}
 .duel-card.bow{opacity:.6;filter:saturate(.6)}
+.duel-card{grid-template-rows:auto auto auto}.duel-portrait{grid-row:1/4!important}
+.duel-card .duel-tech{font-size:1.8cqw;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 1cqw currentColor}
+.duel-pair .duel-card:last-child .duel-tech{grid-column:1}

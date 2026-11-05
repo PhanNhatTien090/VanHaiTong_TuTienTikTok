@@ -42,7 +42,7 @@ function beginRound(w,now,c){
  // Tỷ thí xét TỔNG TU VI: tu vi cao hơn thì mạnh hơn (thanh máu cũng theo đó). Sức mạnh trang bị chỉ cộng rất nhỏ để phân định khi bằng nhau.
  const duelPower=p=>Math.log10((Number(p.totalQi)||0)+10)*100+c.power(p)*0.05;
  const powers=selected.map(e=>duelPower(w.players[e.id])).sort((a,b)=>a-b),median=powers[Math.floor(powers.length/2)]||1;
- for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;t.fighters[p.id]={name:p.name,strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
+ for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
  const sorted=selected.map(e=>e.id).sort((a,b)=>t.fighters[a].power-t.fighters[b].power||a.localeCompare(b));pairRound(w,sorted,now,c);
  c.emit(w,null,'Luận Kiếm bắt đầu • '+selected.length+' đấu thủ • '+(selected.length>STAGED_MAX?'vòng loại so tài nhanh, tối đa 3 ván cuối lên đài':'các ván lên đài')+' • đấu thủ gõ kiem tiếp linh lực','tournament',now);
 }
@@ -59,7 +59,7 @@ function quickBatch(w,now,c){
  while(t.matchIndex<t.matches.length&&pairs.length<QUICK_PAIRS){const [a,b]=t.matches[t.matchIndex];t.matchIndex++;if(!b)continue;
   const id=t.id+'-'+t.round+'-q'+t.matchIndex,r=decide(t,a,b,{[a]:t.fighters[a].strength,[b]:t.fighters[b].strength});
   t.results.push({id,round:t.round,a,b,winner:r.winner,loser:r.loser,scoreA:r.scoreA,scoreB:r.scoreB,tieBreak:r.tie?'Ưu tiên thứ tự đăng ký':null,quick:true});
-  reward(w,w.players[r.winner],'win:'+id,2,now,c,true);pairs.push({a,b,winner:r.winner,aName:t.fighters[a].name,bName:t.fighters[b].name});}
+  reward(w,w.players[r.winner],'win:'+id,2,now,c,true);pairs.push({a,b,winner:r.winner,aName:t.fighters[a].name,bName:t.fighters[b].name,aTech:t.fighters[a].tech,bTech:t.fighters[b].tech});}
  if(!pairs.length){t.nextMatchAt=now;return;}
  if(!t.roundAnnounced){t.roundAnnounced=true;c.emit(w,null,'Luận Kiếm vòng '+t.round+' • '+t.roundSize+' đấu thủ so tài nhanh','tournament',now,{quickRound:true});}
  t.quick={id:t.id+'-'+t.round+'-batch'+t.matchIndex,round:t.round,pairs,startedAt:now,revealAt:now+QUICK_REVEAL_MS,endsAt:now+QUICK_MS};

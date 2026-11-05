@@ -60,7 +60,7 @@ test('luận kiếm: ai ghi danh cũng vào giải; vòng loại so tài nhanh, 
   for(let i=0;i<2000&&['registration','running'].includes(w.tournament.phase);i++){tick(w,at);const q=w.tournament.quick;if(q){sawQuick=true;maxPairs=Math.max(maxPairs,q.pairs.length);assert.equal(w.tournament.current,null);}if(w.tournament.current)assert.ok(w.tournament.roundSize<=4,'chỉ vòng ≤4 người mới lên đài');at+=500;}
   const t=w.tournament;assert.equal(t.phase,'finished',n+' người');assert.equal(t.participants.length,n);
   assert.equal(t.results.length,n-1,'loại trực tiếp: n-1 ván');assert.ok(t.results.filter(r=>r.staged).length<=3);assert.ok(maxPairs<=4);assert.equal(sawQuick,n>4);
-  assert.equal(t.winner,'q'+(n-1),'tu vi cao nhất vẫn vô địch');
+  assert.equal(t.winner,'q'+(n-1),'tu vi cao nhất vẫn vô địch');assert.ok(Object.values(t.fighters).every(f=>f.tech?.name&&f.tech.id),'mỗi người có chiêu riêng');
   const spoken=w.events.slice(before).filter(e=>e.effect==='social'||e.effect==='tournament').length;assert.ok(spoken<=(n>8?0:n)+14,n+' người → '+spoken+' sự kiện');
  }
 });

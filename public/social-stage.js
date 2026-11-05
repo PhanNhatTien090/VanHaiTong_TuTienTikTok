@@ -26,7 +26,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
     for(const [p,i] of [[L,0],[R,1]]){const tech=match.techniques[p.id];beam(c,p.x,p.y-60,orb.x,orb.y,tech?.color||(i?'#c6a0ff':'#a6ecff'),.35+.25*Math.sin((scene.motion?t:0)*.006+i*2));}
     linhChau(c,orb.x,orb.y,scene.motion?t:0);
     const turn=Math.floor(age/4000),a=scene.targets[turn%2],technique=match.techniques[a.id],k=age%4000/4000;
-    if(age>1800&&technique&&!scene.eventGiftQueue?.active?.fighter){scene.animator?.trigger({id:match.id+':'+turn,user:a.id,effect:'attack',technique:{...technique,pose:technique.pose==='slash'?'cast':technique.pose}},t);drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});}
+    if(age>1800&&technique&&!scene.eventGiftQueue?.active?.fighter){scene.animator?.trigger({id:match.id+':'+turn,user:a.id,effect:'attack',technique},t);drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});techName(c,a.x,a.y-235,technique,Math.min(1,k/.08,(1-k)/.2));}
     if(k>.6&&k<.95)image(3,orb.x-60,orb.y-60,120,120,Math.sin((k-.6)/.35*Math.PI)*.55);
     if(age<1800)for(const p of scene.targets)bubble(c,p.x,p.y-250,'Mời chỉ giáo',Math.min(1,age/250,(1800-age)/250));
    }
@@ -56,3 +56,6 @@ function beam(c,x0,y0,x1,y1,color,a){c.save();c.globalAlpha=Math.max(0,a);c.line
 // Bong bóng lễ nghi trên đầu đấu thủ.
 function bubble(c,x,y,text,a){if(a<=0)return;c.save();c.globalAlpha=Math.min(1,a);c.font='bold 30px "Segoe UI",Tahoma,sans-serif';c.textAlign='center';c.textBaseline='middle';const w=c.measureText(text).width+56,h=50;
  c.fillStyle='#102633e6';c.strokeStyle='#d3b778';c.lineWidth=2;c.beginPath();c.roundRect?c.roundRect(x-w/2,y-h/2,w,h,12):c.rect(x-w/2,y-h/2,w,h);c.fill();c.stroke();c.fillStyle='#f5e5be';c.fillText('🙏 '+text,x,y+1);c.restore();}
+// Tên chiêu riêng (theo pháp bảo/cảnh giới) hiện trên đầu người đang ra chiêu; cường độ cao thêm sao.
+function techName(c,x,y,tech,a){if(!tech?.name||a<=0)return;c.save();c.globalAlpha=a;c.font='bold 28px "Segoe UI",Tahoma,sans-serif';c.textAlign='center';c.textBaseline='middle';const label=tech.name+(tech.intensity>1?' '+'✦'.repeat(tech.intensity-1):'');
+ c.lineWidth=6;c.strokeStyle='#0b1a26';c.shadowColor=tech.color||'#bfeaff';c.shadowBlur=14;c.strokeText(label,x,y,420);c.fillStyle=tech.color||'#bfeaff';c.fillText(label,x,y,420);c.restore();}

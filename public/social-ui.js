@@ -43,7 +43,7 @@ function renderQuickBoard(t,now,players){
  if(!q){if(board&&!board.hidden){board.hidden=true;board._last='';}return;}
  if(!board){board=document.createElement('div');board.id='duelBoard';board.className='duel-board';(document.querySelector('.scene-shell')||document.body).appendChild(board);}
  const shown=now>=q.revealAt,key=q.id+':'+shown;board.hidden=false;if(board._last===key)return;board._last=key;
- const card=(id,fallback,winner)=>{const p=players.get(id),name=p?.name||fallback||'Đạo hữu',av=safeAvatar(p?.avatar),state=shown?(id===winner?' win':' bow'):'';
-  return `<span class="duel-card${state}"><i class="duel-portrait"><em>${esc(Array.from(name)[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}</i><b>${esc(Array.from(name).slice(0,12).join(''))}</b><small>${shown?(id===winner?'Tiến vòng sau':'Đa tạ chỉ giáo'):'&nbsp;'}</small></span>`;};
- board.innerHTML='<header>LUẬN KIẾM · VÒNG '+q.round+' · SO TÀI NHANH</header>'+q.pairs.map(m=>`<div class="duel-pair">${card(m.a,m.aName,m.winner)}<span class="duel-mid">${shown?'✦':'⟡'}</span>${card(m.b,m.bName,m.winner)}</div>`).join('');
+ const card=(id,fallback,winner,tech)=>{const tl=tech?.name?`<small class="duel-tech" style="color:${esc(tech.color||'#bfeaff')}">${esc(tech.name)}${tech.intensity>1?' '+'✦'.repeat(tech.intensity-1):''}</small>`:'';const p=players.get(id),name=p?.name||fallback||'Đạo hữu',av=safeAvatar(p?.avatar),state=shown?(id===winner?' win':' bow'):'';
+  return `<span class="duel-card${state}"><i class="duel-portrait"><em>${esc(Array.from(name)[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}</i><b>${esc(Array.from(name).slice(0,12).join(''))}</b>${tl}<small>${shown?(id===winner?'Tiến vòng sau':'Đa tạ chỉ giáo'):'&nbsp;'}</small></span>`;};
+ board.innerHTML='<header>LUẬN KIẾM · VÒNG '+q.round+' · SO TÀI NHANH</header>'+q.pairs.map(m=>`<div class="duel-pair">${card(m.a,m.aName,m.winner,m.aTech)}<span class="duel-mid">${shown?'✦':'⟡'}</span>${card(m.b,m.bName,m.winner,m.bTech)}</div>`).join('');
 }
