@@ -128,3 +128,7 @@ Chủ game đã từ chối v1: vài hiệu ứng nhỏ, đầu cảnh trống, 
 ## Phản hồi và tiến độ Huyền Tiên v3 · 04/11/2026
 
 Chủ game đánh giá v2 hình tạm ổn nhưng chuyển động thiếu ý nghĩa, nhiều nhịp dừng và quá dài. V3 rút riêng realm 9 xuống 26s; 36 kiếm khóa thành 12 trụ lưới hộ pháp, đỡ sét rồi dẫn lực lên kiếm chủ; thêm khí thoát cơ thể, nhạc trống/dây và hall reverb. Mốc thực: absorbComplete17.5, impact18.1, reveal18.55. Timeline giữ action clock nội bộ cho primitive và xuất real clock cho consumer; không dùng nhầm mốc 28.65 cũ. Xem HUYEN-TIEN-V3-2026-11-04.md. 416 test qua; chưa nghe/xem trực tiếp trọn clip, chưa tự coi được duyệt. Chủ game yêu cầu sau đó lập kế hoạch Kim Tiên khác concept, tìm phim tham khảo; đã có KIM-TIEN-PLAN-2026-11-04.md (29s dự kiến, chưa runtime). Phân biệt nguồn tìm được với cảnh thực sự đã xem; không bịa timecode/phân tích phim từ tiêu đề.
+
+## Kim Tiên v1 · 05/11/2026
+
+Chủ game yêu cầu cảnh tiếp khác toàn bộ concept/hình/nền và chỉ dài hơn1–2s. Realm10 đã có nghi thức riêng Thiên Lô Luyện Thân28s (Huyền Tiên26s); ba asset mới ở public/assets/kim-tien-v1, không dùng art/cue/hoạt cảnh realm cũ. Timeline19.6 nhập thể xong→20.2 nổ→20.65 reveal. Nhạc/SFX riêng, model/skin LIVE gốc và chính sách ngoại hình giữ nguyên. Xem KIM-TIEN-V1-2026-11-05.md; 424 test qua nhưng chưa coi đã duyệt nghệ thuật hay đã nghe trực tiếp. Không tự sang realm11 hoặc tự kích hoạt nghi thức thật.

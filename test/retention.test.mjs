@@ -7,7 +7,7 @@ test('first gift doubles rewards and greets a new Hộ Pháp; VIP tiers, returns
  action(w,{type:'gift',userId:'a',name:'An',coins:100,eventId:'3'},now+=1000);assert.equal(w.events.findLast(e=>e.vipUp)?.vipUp,1);
  action(w,{type:'chat',userId:'a',name:'An',text:'tuvi'},now+=31*60000);assert.match(announcement(w.events.findLast(e=>e.vipReturn)),/Hộ Pháp Bạc An đã trở lại/);
  for(let i=0;i<3;i++)action(w,{type:'like',userId:'a',name:'An',count:400},now+=20000);const g=w.events.findLast(e=>e.likeGoal);assert.equal(g.likeGoal,1000);assert.equal(w.likeGoal.target,1200);
- assert.equal(vipTier(99),0);assert.equal(vipTier(1000),2);assert.equal(nameBadge({giftCoins:10000}),'💎 ');assert.equal(nameBadge({realm:0,joinedAt:Date.now()}),'🌱 ');
+ assert.equal(vipTier(99),0);assert.equal(vipTier(300),2);assert.equal(vipTier(1000),3);assert.equal(nameBadge({giftCoins:10000}),'💎 ');assert.equal(nameBadge({realm:0,joinedAt:Date.now()}),'🌱 ');
 });
 test('tân thủ lệnh: newcomer who tries cultivation breaks through to Luyện Khí once',()=>{
  const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});let now=1e12;action(w,{type:'chat',userId:'n',name:'N',text:'nhapmon'},now);action(w,{type:'cultivate',userId:'n'},now+1);

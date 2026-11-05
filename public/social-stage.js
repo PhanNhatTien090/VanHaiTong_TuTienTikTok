@@ -31,7 +31,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
 
 export function drawBondLinks(scene,c,t){
  if(scene.socialScene||scene.presentation?.until>t)return;const paired=new Set();
- for(const a of scene.targets){const bond=a.player.bondInfo;if(!bond||bond.level<1&&!a.player.bondFestivalWins||paired.has(bond.id))continue;const b=scene.targets.find(p=>p.id===(bond.a===a.id?bond.b:bond.a));if(!b)continue;paired.add(bond.id);
+ const targets=new Map(scene.targets.map(p=>[p.id,p]));for(const a of scene.targets)for(const bond of (a.player.bondInfos||[a.player.bondInfo].filter(Boolean))){if(!bond||bond.level<1&&!a.player.bondFestivalWins||paired.has(bond.id))continue;const b=targets.get(bond.a===a.id?bond.b:bond.a);if(!b)continue;paired.add(bond.id);
  c.save();c.globalAlpha=.35;c.strokeStyle=bond.level>=3?'#ffe3a2':'#f0b5da';c.lineWidth=1.4;c.beginPath();c.moveTo(a.x,a.y);c.bezierCurveTo(a.x,a.y-40,b.x,b.y-40,b.x,b.y);c.stroke();
  if(bond.level>=2||a.player.bondFestivalWins)for(const p of [a,b])scene.drawFlyingSword(c,p.x,p.y+18,Math.PI/2,'#d4edf5');
  if(bond.level>=3)for(const p of [a,b]){c.beginPath();c.ellipse(p.x,p.y+15,37,10,0,0,Math.PI*2);c.stroke();}

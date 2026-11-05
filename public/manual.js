@@ -1,3 +1,4 @@
+import {bondRuleText} from './bond-policy.js';
 import {SKINS} from './cosmetics.js';
 import {SPECIAL_SKINS} from './patrons.js';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -5,7 +6,8 @@ const plain=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'
 let state,toastTimer;
 function card(name,tag,description,commands=[]){return `<article class="card" data-search="${esc([name,tag,description,...commands].join(' ').toLowerCase())}"><span class="tag">${esc(tag)}</span><h3>${esc(name)}</h3><p>${esc(description)}</p>${commands.map(cmd=>`<code>${esc(cmd)}</code><button class="secondary" data-copy="${esc(cmd)}">Chép lệnh</button>`).join('')}</article>`;}
 const basics=[
- ['Hủy đạo lữ','Gõ hủy duyên, sau đó hủy duyên xác nhận trong 30 giây. Chỉ cần một người xác nhận; cả hai trở lại độc thân, giữ nguyên tu vi, đồ và thành tích. Không cần sự kiện kết duyên đang mở.',['hủy duyên','hủy duyên xác nhận']],
+ ['Kết duyên và VIP',bondRuleText()+' Gõ kết duyên kèm mã người muốn mời; người nhận gõ đồng ý. Gõ duyên để xem tất cả hoặc duyên kèm mã để chọn một đôi dự lễ.',['kết duyên mã','đồng ý','duyên','duyên mã']],
+ ['Hủy một đạo lữ','Gõ hủy duyên kèm mã đạo lữ, sau đó hủy duyên mã xác nhận trong 30 giây. Chỉ kết thúc đôi đã chọn; các quan hệ khác, đồ và thành tích giữ nguyên. Nếu chỉ có một đạo lữ, có thể dùng lệnh ngắn cũ.',['hủy duyên mã','hủy duyên mã xác nhận']],
  ['Nhập môn','Chọn nam/nữ để đổi hình và xưng hô. Nhận 30 linh thạch, 3 linh thảo khi tạo hồ sơ.',['nhập môn nam','nhập môn nữ']],
  ['Tu luyện','+10 tu vi cơ bản, +2 linh thạch. Hồi 10 giây.',['tu luyện']],
  ['Hái linh thảo','+5 tu vi cơ bản, +3 linh thạch, +3 linh thảo. Hồi 30 giây.',['hái']],

@@ -53,3 +53,11 @@ body.ritual-active .scene-shell>div:not(.scene-top){visibility:hidden!important}
 @media(prefers-reduced-motion:reduce){.ritual-hud[data-realm="9"] :is(h2,.ritual-sub){animation:none}}
 
 .ritual-hud[data-realm="9"][data-phase="gather"]{top:6%}
+
+/* Kim Tien: bronze seal reveal, no sword-stage title treatment. */
+.ritual-hud[data-realm="10"][data-phase="gather"]{top:4%!important}
+.ritual-hud[data-realm="10"][data-phase="reveal"]{top:15%!important;animation:kimSealReveal .52s cubic-bezier(.16,.8,.2,1) both}
+.ritual-hud[data-realm="10"] h2{text-shadow:0 0 12px #ffb74f,0 2px 3px #301105,0 0 35px #c85a2080}
+.ritual-hud[data-realm="10"] .ritual-sub{color:#ffe1a0}
+@keyframes kimSealReveal{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.ritual-hud[data-realm="10"]{animation:none!important}}

@@ -248,6 +248,12 @@ h1, h2, .item h3 { font-family: "Noto Serif", Georgia, serif; }
 #adminBar{position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:50;padding:6px 14px;border-radius:99px;background:#7a1010ee;color:#fff;font-size:13px;box-shadow:0 4px 14px #000a}
 #adminBar a{color:#ffe08a;margin-left:10px}
 
+.profile-search{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.profile-search input{flex:1;min-width:140px}.profile-search select{max-width:180px;padding:10px;background:#102a25;color:var(--gold);border:1px solid var(--line);border-radius:10px}
+.public-profile-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.public-profile-head canvas{width:150px;height:175px;max-width:42%;object-fit:contain}.public-profile-head h3{color:var(--gold)}
+.rank [data-public-profile]{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;text-align:left;padding:6px;color:inherit}
+.web-status{position:absolute;top:84px;left:12px;right:12px;pointer-events:none;color:#f2deb0;text-align:center;font-size:12px;text-shadow:0 1px 3px #000;z-index:3}
+.profile-only [data-act]:disabled,.profile-only [data-enhance]:disabled,.profile-only [data-buy]:disabled{opacity:.5}
+
 /* Điện thoại: 5 ô tài nguyên chia đều, không tràn màn hình. */
 @media (max-width: 520px) {
   .hud-res { gap: 4px; justify-content: space-between; }

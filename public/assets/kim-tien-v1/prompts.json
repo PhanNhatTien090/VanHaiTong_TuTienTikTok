@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-05",
+  "provider": "built-in image_gen",
+  "referenceImages": null,
+  "assets": [
+    {
+      "file": "forge-world.png",
+      "prompt": "Create a premium original background asset for a Chinese xianxia game breakthrough cinematic, portrait 9:16. No characters, no people, no animals, no swords, no text, no interface, no lotus object in the center. Environment: an enormous ancient celestial bronze forge suspended over an obsidian sea, a black solar eclipse high at the center with a thin molten-gold corona. At left and right, colossal weathered dark bronze pillars and fragmented basalt arches recede into deep crimson atmospheric haze, immense scale, richly engraved subtle geometric metalwork, distant floating slag islands. Lower third a dark obsidian circular forge floor in perspective, narrow molten gold seams on stone lead inward toward EMPTY center at x50% y69%; reserve central middle/lower space for a seated character and animated lotus furnace added later. Top third eclipse and layered clouds. Color deep oxblood, near-black obsidian, antique copper, bright gold pinpoints, NOT blue, NOT a palace or floating white cloud fairyland. Cinematic painterly 3D game environment, physically shaded textured materials, sophisticated lighting and spatial depth, sumptuous detail, strong dramatic warm rim lighting. No giant central flame, no solid bright white areas. Center silhouette area readable and dark. This is an entirely new environment, not an adaptation of any existing game's composition.",
+      "sha256": "69ea1651417238f97b742ae9dc7c1ca21e8234fb62886648b09354e27656e679"
+    },
+    {
+      "file": "bronze-petal.png",
+      "prompt": "An original AAA xianxia game VFX sprite: ONE single tall broad lotus petal made of ancient forged bronze and lustrous antique gold, vertical symmetrical blade-like petal, broad curved body widest at middle, pointed tip at top, narrow mounting root at bottom. NOT a sword, no handle or guard, not a whole lotus flower. Hammered dark gold metal, ornate engraved branching veins like a lotus leaf, tiny jade inlays, thin fiery molten gold channels within the veins, beveled raised edges, dimensional concave shape, sharp detailed texture. Front view with slight dimensional curvature and directional cinematic highlights, physically shaded painted game art. Petal occupies 80 percent of width and 90 percent of height, isolated exactly centered on genuinely TRANSPARENT background, no floor, no shadow plane, no glow cloud outside silhouette, no text, no other objects, no people. This sprite will be rotated and articulated into a gigantic eight-petal celestial furnace. Rich detailed material, strong gold edge against dark body, no solid white overexposed areas.",
+      "sha256": "62599019ba2af05b748d33552d5a7dc341e600c747985e6d5a35e0e2b6fc4ee0"
+    },
+    {
+      "file": "forge-fire.png",
+      "prompt": "Original high-end realistic magical fire VFX sprite for a xianxia game. A tall downward pouring vortex of celestial forge fire, a thin tapered neck at top expanding into a roaring wide furnace flame crown in the lower half. Real turbulent volumetric flames with intricate orange-gold curls, white-gold tiny hottest cores, dark crimson translucent smoke, hundreds of tiny glowing embers. Fire billows twist around a dark open central channel; layered wisps lick upward on the edges while the overall flow pours downward. Rich photographed-fire texture with cinematic fantasy art finish, NOT flat vector ribbons, NOT electrical lightning, NOT a beam, no swords, no characters, no objects, no text, no ground. One isolated elongated fire formation centered, gently faded translucent perimeter, genuinely transparent RGBA background. Occupy center 70% width and 90% height with plenty of clear border. This will be composited behind a golden lotus furnace, preserve lots of transparent dark gaps and avoid opaque white shapes.",
+      "sha256": "c9455792f8dc931c44d8d53b5979c6eb79ea3dbb7812c2f69a4b0e577b6fa311"
+    }
+  ]
+}

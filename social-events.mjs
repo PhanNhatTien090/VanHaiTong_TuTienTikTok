@@ -1,3 +1,4 @@
+import {activeBonds,syncBondRefs,bondAllowance,alreadyBonded} from './bond-relations.mjs';
 import {stageConflict} from './stage-lock.mjs';
 import {FESTIVAL_ITEM,festivalEnroll,tickBondFestival,festivalView} from './bond-festival.mjs';
 export const SOCIAL_ITEMS=[FESTIVAL_ITEM,
@@ -73,9 +74,9 @@ export function socialCommand(w,p,cmd,rest,now,c){
   m.lastBoost[p.id]=now;m.boosts[p.id]=(m.boosts[p.id]||0)+1;markInteraction(w,p);notify(w,p,'Trợ lực tỷ thí '+m.boosts[p.id]+'/3',now,c);return ok();
  }
  if(cmd==='ketduyen'){
-  if(w.settings.bondEnabled===false)return fail('Kết duyên đang tạm đóng.');if(p.bondId)return fail('Đạo hữu đã có đạo lữ.');const matches=resolveTarget(w,rest);
+  if(w.settings.bondEnabled===false)return fail('Kết duyên đang tạm đóng.');const own=bondAllowance(w,p);if(!own.remaining)return fail(own.name+' đã đủ '+own.limit+' đạo lữ.');const matches=resolveTarget(w,rest);
   if(matches.length!==1)return fail(matches.length?'Trùng tên: '+matches.slice(0,3).map(p=>p.name+' #'+p.socialCode).join(' · ')+'. Gõ ketduyen kèm mã đúng người.':'Gõ ketduyen kèm đúng tên hoặc mã đạo hữu.');const other=matches[0];
-  if(other.id===p.id||other.resident)return fail('Chọn một đạo hữu khác.');if(other.bondId)return fail('Đạo hữu này đã có đạo lữ.');if(!c.active(w,other,now))return fail('Người nhận cần tương tác lại trước khi mời.');
+  if(other.id===p.id||other.resident)return fail('Chọn một đạo hữu khác.');if(alreadyBonded(w,p.id,other.id))return fail('Hai người đã là đạo lữ.');const target=bondAllowance(w,other);if(!target.remaining)return fail(other.name+' đã đủ '+target.limit+' đạo lữ ('+target.name+').');if(!c.active(w,other,now))return fail('Người nhận cần tương tác lại trước khi mời.');
   if(s.invites[other.id]?.expiresAt>now)return fail('Người nhận đang có lời mời chờ.');if(now-(p.lastBondInvite||0)<60000||now-(s.rejections?.[p.id+':'+other.id]||0)<600000)return fail('Hãy chờ trước khi mời lại.');
   if(Object.values(s.invites).some(i=>i.from===p.id&&i.expiresAt>now))return fail('Đạo hữu đang có một lời mời chờ.');
   p.lastBondInvite=now;s.invites[other.id]={from:p.id,to:other.id,createdAt:now,expiresAt:now+120000};markInteraction(w,p);
@@ -84,22 +85,33 @@ export function socialCommand(w,p,cmd,rest,now,c){
  if(cmd==='dongy'||cmd==='tuchoi'){
   const invite=s.invites[p.id];if(!invite||now>=invite.expiresAt)return fail('Không có lời mời còn hiệu lực.');const other=w.players[invite.from];
   if(cmd==='tuchoi'){delete s.invites[p.id];s.rejections??={};s.rejections[invite.from+':'+p.id]=now;notify(w,p,'Đã từ chối lời mời kết duyên',now,c);return ok();}
-  if(w.settings.bondEnabled===false)return fail('Kết duyên đang tạm đóng.');if(!other||p.bondId||other.bondId)return fail('Một người đã có đạo lữ.');if(s.ceremonies.length>=20)return fail('Tiên đàn đang đầy. Thử đồng ý lại sau ít giây.');
-  const id='bond-'+now+'-'+p.socialCode,bond={id,a:other.id,b:p.id,createdAt:now,days:0,lastDay:null,marks:{},level:0};s.bonds[id]=bond;p.bondId=id;other.bondId=id;giveItem(p,'bond-jade');giveItem(other,'bond-jade');
-  for(const [key,i]of Object.entries(s.invites))if([p.id,other.id].includes(i.from)||[p.id,other.id].includes(i.to))delete s.invites[key];
+  if(w.settings.bondEnabled===false)return fail('Kết duyên đang tạm đóng.');if(!other)return fail('Không tìm thấy người mời.');if(alreadyBonded(w,p.id,other.id))return fail('Hai người đã là đạo lữ.');if(!bondAllowance(w,p).remaining||!bondAllowance(w,other).remaining)return fail('Một người đã đủ hạn mức đạo lữ.');if(s.ceremonies.length>=20)return fail('Tiên đàn đang đầy. Thử đồng ý lại sau ít giây.');
+  const id='bond-'+now+'-'+p.socialCode+'-'+(s.nextBondId=(s.nextBondId||0)+1),bond={id,a:other.id,b:p.id,createdAt:now,days:0,lastDay:null,marks:{},level:0};s.bonds[id]=bond;syncBondRefs(w,p);syncBondRefs(w,other);giveItem(p,'bond-jade');giveItem(other,'bond-jade');
+  for(const [key,i]of Object.entries(s.invites)){const from=w.players[i.from],to=w.players[i.to];if(key===p.id||!from||!to||alreadyBonded(w,i.from,i.to)||!bondAllowance(w,from).remaining||!bondAllowance(w,to).remaining)delete s.invites[key];}
   s.ceremonies.push({id,a:other.id,b:p.id});festivalEnroll(w,bond,p.id,now,c,{mutual:true});markInteraction(w,p);c.emit(w,p,'Đã kết duyên cùng '+other.name+' • nhận Tam Sinh Ngọc Bội • lễ sẽ đến lượt trình diễn','bond',now);return ok();
  }
- if(cmd==='duyen'){const festivalResult=festivalEnroll(w,s.bonds[p.bondId],p.id,now,c);if(festivalResult)return festivalResult;if(now-(p.socialStatusAt||0)<15000)return fail('Xem duyên lại sau 15 giây.');p.socialStatusAt=now;const b=s.bonds[p.bondId];notify(w,p,b&&!b.endedAt?'Đạo lữ: '+w.players[b.a===p.id?b.b:b.a]?.name+' • '+b.days+' ngày đồng hành':'Chưa có đạo lữ • gõ ketduyen kèm tên người muốn mời',now,c);return ok();}
- if(cmd==='huyduyen'){
-  const b=s.bonds[p.bondId];if(!b||b.endedAt)return fail('Chưa có đạo lữ.');if(rest!=='xac nhan'){p.endBondUntil=now+30000;notify(w,p,'Để chấm dứt quan hệ, gõ huyduyen xac nhan trong 30 giây',now,c);return ok();}
-  if(now>=(p.endBondUntil||0))return fail('Gõ huyduyen trước để xác nhận.');b.endedAt=now;for(const id of [b.a,b.b])if(w.players[id]?.bondId===b.id)w.players[id].bondId=null;s.ceremonies=s.ceremonies.filter(x=>x.id!==b.id);if(s.activeCeremony?.id===b.id)s.activeCeremony=null;notify(w,p,'Đã kết thúc quan hệ • giữ nguyên kỷ vật và thành tích',now,c);return ok();
+ if(cmd==='duyen'){
+  const bonds=activeBonds(w,p.id);let selected=bonds.length===1?bonds[0]:null;
+  if(rest){const matches=resolveTarget(w,rest);if(matches.length!==1)return fail('Gõ duyên kèm đúng mã đạo hữu.');selected=bonds.find(b=>(b.a===p.id?b.b:b.a)===matches[0].id);if(!selected)return fail('Người này chưa là đạo lữ của đạo hữu.');}
+  if(selected){const festivalResult=festivalEnroll(w,selected,p.id,now,c);if(festivalResult)return festivalResult;}
+  if(now-(p.socialStatusAt||0)<15000)return fail('Xem duyên lại sau 15 giây.');p.socialStatusAt=now;const allowance=bondAllowance(w,p),names=(selected?[selected]:bonds).map(b=>{const other=w.players[b.a===p.id?b.b:b.a];return other.name+' #'+other.socialCode+' ('+b.days+' ngày)';});
+  notify(w,p,allowance.name+' • Đạo lữ '+allowance.used+'/'+allowance.limit+' • '+(names.length?names.join(' · '):'Chưa có đạo lữ • gõ kết duyên kèm tên người muốn mời')+(bonds.length>1?' • gõ duyên kèm mã để chọn một đôi dự lễ':''),now,c);return ok();
  }
+ if(cmd==='huyduyen'){
+  const bonds=activeBonds(w,p.id);if(!bonds.length)return fail('Chưa có đạo lữ.');const query=norm(rest).replace(/(?:^| )xac nhan$/,'').trim(),confirmed=/(?:^| )xac nhan$/.test(norm(rest));let b;
+  if(confirmed){const request=p.endBondRequest;if(!request||now>=request.until)return fail('Gõ hủy duyên kèm mã đạo lữ trước để xác nhận.');b=bonds.find(x=>x.id===request.id);if(!b)return fail('Quan hệ đã kết thúc.');if(query){const matches=resolveTarget(w,query);if(matches.length!==1||(b.a===p.id?b.b:b.a)!==matches[0].id)return fail('Mã xác nhận không khớp đạo lữ đã chọn.');}}
+  else{if(query){const matches=resolveTarget(w,query);if(matches.length!==1)return fail('Gõ hủy duyên kèm đúng mã đạo lữ.');b=bonds.find(x=>(x.a===p.id?x.b:x.a)===matches[0].id);}else if(bonds.length===1)b=bonds[0];if(!b)return fail('Chọn đạo lữ cần hủy: '+bonds.map(x=>{const other=w.players[x.a===p.id?x.b:x.a];return other.name+' #'+other.socialCode;}).join(' · '));p.endBondRequest={id:b.id,until:now+30000};p.endBondUntil=now+30000;const other=w.players[b.a===p.id?b.b:b.a];notify(w,p,'Hủy duyên với '+other.name+' • gõ hủy duyên '+other.socialCode+' xác nhận trong 30 giây',now,c);return ok();}
+  b.endedAt=now;for(const id of [b.a,b.b])if(w.players[id])syncBondRefs(w,w.players[id]);delete p.endBondRequest;delete p.endBondUntil;s.ceremonies=s.ceremonies.filter(x=>x.id!==b.id);if(s.activeCeremony?.id===b.id)s.activeCeremony=null;notify(w,p,'Đã kết thúc quan hệ đã chọn • giữ nguyên các đạo lữ khác, kỷ vật và thành tích',now,c);return ok();
+ }
+
 }
 export function bondActivity(w,p,input,now,c){
- if(!['cultivate','gather','attack','checkin','like'].includes(input.type))return;const s=socialState(w),b=s.bonds[p.bondId];if(!b||b.endedAt)return;
- const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);b.marks[p.id]=day;if(b.lastDay===day||b.marks[b.a]!==day||b.marks[b.b]!==day)return;
- b.lastDay=day;b.days++;b.level=[3,7,14,30].filter(d=>b.days>=d).length;for(const id of [b.a,b.b]){const ally=w.players[id];if(ally){ally.bondMilestone=Math.max(ally.bondMilestone||0,b.level);c.gain(w,ally,30,10,1);notify(w,ally,'Đồng hành ngày '+b.days+' • +30 tu vi cơ bản, 10 linh thạch'+(b.level?' • mốc kết duyên '+b.level:''),now,c);}}
+ if(!['cultivate','gather','attack','checkin','like'].includes(input.type))return;const bonds=activeBonds(w,p.id);if(!bonds.length)return;
+ const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+ for(const b of bonds){b.marks??={};b.marks[p.id]=day;if(b.lastDay===day||b.marks[b.a]!==day||b.marks[b.b]!==day)continue;
+ b.lastDay=day;b.days++;b.level=[3,7,14,30].filter(d=>b.days>=d).length;for(const id of [b.a,b.b]){const ally=w.players[id];if(ally){ally.bondMilestone=Math.max(ally.bondMilestone||0,b.level);c.gain(w,ally,30,10,1);notify(w,ally,'Đồng hành ngày '+b.days+' cùng '+w.players[b.a===id?b.b:b.a]?.name+' • +30 tu vi cơ bản, 10 linh thạch'+(b.level?' • mốc kết duyên '+b.level:''),now,c);}}}
 }
+
 export function tickSocial(w,now,c){
  tickBondFestival(w,now,c);
  const s=socialState(w);for(const [key,at]of Object.entries(s.rejections||{}))if(now-at>=600000)delete s.rejections[key];for(const [id,i]of Object.entries(s.invites))if(now>=i.expiresAt){delete s.invites[id];notify(w,w.players[id],'Lời mời kết duyên đã hết hạn',now,c);}
@@ -111,5 +123,5 @@ export function tickSocial(w,now,c){
 }
 export function socialView(w,now){
  const s=socialState(w),t=w.tournament;const invites=Object.values(s.invites).filter(i=>now<i.expiresAt).map(i=>({...i,fromName:w.players[i.from]?.name,toName:w.players[i.to]?.name}));
- return {festival:festivalView(w,now),bondEnabled:w.settings.bondEnabled!==false,invites,bonds:Object.values(s.bonds).filter(b=>!b.endedAt).map(b=>({id:b.id,a:b.a,b:b.b,aName:w.players[b.a]?.name,bName:w.players[b.b]?.name,days:b.days,level:b.level})),queuedCeremonies:s.ceremonies.length,ceremony:s.activeCeremony,tournament:t||null};
+ return {festival:festivalView(w,now),bondEnabled:w.settings.bondEnabled!==false,invites,bonds:Object.values(s.bonds).filter(b=>!b.endedAt&&b.a!==b.b&&w.players[b.a]&&w.players[b.b]).map(b=>({id:b.id,a:b.a,b:b.b,aName:w.players[b.a]?.name,bName:w.players[b.b]?.name,days:b.days,level:b.level})),queuedCeremonies:s.ceremonies.length,ceremony:s.activeCeremony,tournament:t||null};
 }

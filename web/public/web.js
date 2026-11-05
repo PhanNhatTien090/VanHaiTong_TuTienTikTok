@@ -1,6 +1,9 @@
 // Vân Hải Tông — giao diện web. Mọi thao tác gọi server; server dùng đúng engine của LIVE.
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
+import { createProfileBrowser } from '/profile-browser.js';
+const profileBrowser=createProfileBrowser({api,toast,getMe:()=>me});
+const accountPosts=new Set(['/api/check','/api/register','/api/login','/api/logout','/api/link/start','/api/character']);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => Number(n || 0).toLocaleString('vi-VN');
 const pct = (a, b) => Math.max(0, Math.min(100, b ? (a / b) * 100 : 0));
@@ -13,6 +16,7 @@ let pollTimer = null;
 
 // ---------- Gọi server ----------
 async function api(path, body) {
+  if(body!==undefined && session?.readOnly && !accountPosts.has(path))return {ok:false,status:403,readOnly:true,message:'Tạm khóa phát triển nhân vật trên web.'};
   const opts = body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
   let res;
   try { res = await fetch(path, { cache: 'no-store', credentials: 'same-origin', ...opts }); }
@@ -203,7 +207,7 @@ $('#devList').onclick = async e => {
 };
 
 // ---------- Game ----------
-let gameStarted = false, hub = null;
+let gameStarted = false, hub = null, updateStream=null, streamAt=0, refreshPromise=null;
 async function startGame() {
   if (!gameStarted) {
     gameStarted = true;
@@ -211,7 +215,17 @@ async function startGame() {
   }
   await refresh();
   clearInterval(pollTimer);
-  pollTimer = setInterval(refresh, 2500);
+  const status=await api('/api/site-status');
+  updateStream?.close();updateStream=null;
+  if(status.stream && typeof EventSource!=='undefined'){
+    updateStream=new EventSource('/api/updates');
+    let scheduled;
+    updateStream.addEventListener('change',()=>{streamAt=Date.now();clearTimeout(scheduled);scheduled=setTimeout(()=>{refresh();refreshPlaza();refreshLiveFeed();refreshScene();},350);});
+  }
+  pollTimer = setInterval(()=>{if(!document.hidden && (!updateStream || Date.now()-streamAt>30000)){refresh();refreshPlaza();refreshLiveFeed();}},15000);
+  document.body.classList.toggle('profile-only',!!session.readOnly);
+  if(!$('#webStatus')){const status=document.createElement('div');status.id='webStatus';status.className='web-status';$('#gameView').appendChild(status);}
+  $('#webStatus').textContent=session.readOnly?'Đang mở chế độ xem hồ sơ':'';
 }
 
 // Trang chủ tông môn (PixiJS). Bấm công trình → mở đúng khu.
@@ -242,7 +256,7 @@ function openBuilding(b) {
     case 'forge': return panels.forge();
     case 'hall': return panels.hall();
     case 'events': return showEvents();
-    case 'dungeon': return openDungeon();
+    case 'dungeon': return session?.readOnly?toast('Bí cảnh đang tạm khóa.'):openDungeon();
     case 'beasts': return panels.pets();
   }
 }
@@ -271,7 +285,7 @@ async function refreshPlaza() {
       const [x, y] = spots[i], mine = p.id === me.player.id;
       const shortName = innerWidth < 600 && [...p.name].length > 12 ? [...p.name].slice(0, 11).join('') + '…' : p.name;
       hub.addActor(p.id, a.texture, { x, y, unitPx: mine ? 1.3 : 1.05, res: a.res, anchor: a.anchor, name: shortName, live: !mine,
-        onTap: () => mine ? openSheet('home') : toast(`${p.name} · ${p.realmName || ''} · đang chơi trên LIVE`) });
+        onTap: () => mine ? openSheet('home') : profileBrowser.profile(p.id) });
     }
   });
 }
@@ -292,8 +306,8 @@ async function refreshLiveFeed() {
 }
 function startPlaza() {
   refreshPlaza(); refreshLiveFeed();
-  setInterval(refreshPlaza, 15000);
-  setInterval(refreshLiveFeed, 8000);
+  setInterval(()=>{if(!document.hidden && !updateStream)refreshPlaza();},30000);
+  setInterval(()=>{if(!document.hidden && !updateStream)refreshLiveFeed();},30000);
   // Vẽ lần lượt: mỗi khung hình chỉ vẽ lại 1/3 số nhân vật để nhẹ máy.
   hub.onFrame(() => {
     const list = [...plaza.actors.values()];
@@ -318,6 +332,7 @@ const GUIDE = [
   { title: 'Hòm thư có quà', text: 'Mở Thư (bên phải) để nhận quà nhập môn, rồi vào Bí Cảnh thử sức nhé!', building: null },
 ];
 function startGuide() {
+  if(session?.readOnly)return;
   if (session?.adminView) return;
   let done = false; try { done = localStorage.getItem('vh-guide') === 'done'; } catch {}
   if (done || !hub) return;
@@ -471,7 +486,7 @@ async function initScene() {
     scene.zoom = 1.7;
     scene.showNames = true;
     await refreshScene();
-    setInterval(refreshScene, 5000);
+    setInterval(()=>{if(!document.hidden && !updateStream)refreshScene();},15000);
   } catch (e) {
     console.error('Không dựng được cảnh', e);
     $('#stageCanvas').replaceWith(Object.assign(document.createElement('div'), { className: 'muted small', style: 'padding:20px', textContent: 'Không tải được hình nhân vật.' }));
@@ -487,12 +502,17 @@ async function refreshScene() {
 }
 
 async function refresh() {
+  if(refreshPromise)return refreshPromise;
+  refreshPromise=(async()=>{
   const r = await api('/api/me?since=' + lastEventAt);
   if (r.status === 401) return location.reload();
   if (!r.player) return;
   me = r;
 
   render();
+  if($('#webStatus')){const s=await api('/api/site-status');$('#webStatus').textContent=s.cloud?(s.liveConnected?'Đang xem hồ sơ · LIVE đang kết nối':`Đang xem hồ sơ · ${s.lastSyncAt?'Cập nhật '+new Date(s.lastSyncAt).toLocaleTimeString('vi-VN'):'Đang chờ dữ liệu LIVE'}`):'Đang mở chế độ xem hồ sơ';}
+  })();
+  try{return await refreshPromise;}finally{refreshPromise=null;}
 }
 
 function playEvents(events) {
@@ -603,7 +623,7 @@ function cooldownLoop() {
       const left = Math.max(0, (me.player.cooldowns[key] || 0) - age);
       const btn = $(`[data-act="${key}"]`);
       btn.querySelector('.cd').style.width = (left / total) * 100 + '%';
-      if (key !== 'attack') btn.disabled = left > 0;
+      if (key !== 'attack') btn.disabled = !!session?.readOnly || left > 0;
     }
   }
   requestAnimationFrame(cooldownLoop);
@@ -702,7 +722,7 @@ $('#rankFilter').onclick = e => {
 async function loadRanking() {
   const r = await api('/api/ranking');
   const rows = r[rankMode] || [];
-  $('#rankList').innerHTML = rows.map(x => `<li class="${x.id === me?.player?.id ? 'me' : ''}"><span>${esc(x.name)}</span><small>${esc(x.realmName)} · ${x.floor ? 'Tầng ' + x.floor : fmt(x.totalQi) + ' tu vi'}</small></li>`).join('') || '<p class="muted">Chưa có ai.</p>';
+  $('#rankList').innerHTML = rows.map(x => `<li class="${x.id === me?.player?.id ? 'me' : ''}"><button ${String(x.id).startsWith('web-')?'disabled':`data-public-profile="${esc(x.id)}"`}><span>${esc(x.name)}</span><small>${esc(x.realmName)} · ${x.floor ? 'Tầng ' + x.floor : fmt(x.totalQi) + ' tu vi'}</small></button></li>`).join('') || '<p class="muted">Chưa có ai.</p>';
 }
 
 // ---------- Tab & menu ----------
@@ -719,4 +739,10 @@ function updateMenu() {
   $('#menuLinkBtn').hidden = linked;
 }
 
+$('#profilesBtn').onclick=()=>profileBrowser.directory();
+$('#myRelations').onclick=()=>me?.player?.fromTikTok?profileBrowser.profile(me.player.id):profileBrowser.directory();
+const lockButtons=()=>{if(!session?.readOnly)return;for(const button of $$('[data-act],[data-use],[data-equip],[data-craft],[data-learn],[data-brew],[data-skin],[data-buy],[data-mail],[data-gift],[data-retreat],[data-enhance],[data-feed],[data-choose],[data-claim],[data-event],#goDungeon')){button.disabled=true;button.title='Tạm khóa phát triển nhân vật trên web';}};
+new MutationObserver(lockButtons).observe($('#profileSheet'),{childList:true,subtree:true});
+new MutationObserver(lockButtons).observe($('#gpBody'),{childList:true,subtree:true});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden && me?.player){refresh();refreshPlaza();refreshLiveFeed();}});
 boot();
