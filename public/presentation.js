@@ -17,6 +17,6 @@ export class PresentationQueue{
   if(this.items.length>this.limit){const dropped=this.items.pop();this.coalesced++;return dropped!==entry;}
   return true;
  }
- prune(now){for(let i=this.items.length-1;i>=0;i--){const e=this.items[i];if(e.skyPresentationUntil&&now+presentationDuration(e)>e.skyPresentationUntil||now-e._queuedAt>(presentationPriority(e)>=3?180000:20000)){this.items.splice(i,1);this.coalesced++;}}}
- take(now=Date.now()){this.prune(now);const i=this.items.reduce((best,e,j)=>now-e._queuedAt>=12000&&(best<0||e._queuedAt<this.items[best]._queuedAt)?j:best,-1);return i<0?this.items.shift():this.items.splice(i,1)[0];}
+ prune(now){for(let i=this.items.length-1;i>=0;i--){const e=this.items[i];if(e.skyPresentationUntil&&now+presentationDuration(e)>e.skyPresentationUntil||now-e._queuedAt>(e.effect==='breakthrough'?600000:presentationPriority(e)>=3?180000:20000)){this.items.splice(i,1);this.coalesced++;}}}
+ take(now=Date.now(),allowed=()=>true){this.prune(now);const eligible=this.items.map((e,i)=>({e,i})).filter(x=>allowed(x.e));if(!eligible.length)return;const overdue=eligible.filter(x=>now-x.e._queuedAt>=12000).sort((a,b)=>a.e._queuedAt-b.e._queuedAt);return this.items.splice((overdue[0]||eligible[0]).i,1)[0];}
 }

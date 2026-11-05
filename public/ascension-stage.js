@@ -62,12 +62,12 @@ export function drawAscensionStageIdle(scene,c,t,H){
 }
 export function mountAscensionStage(shell,scene){
  prepareAscensionStage(scene);const hud=document.createElement('section');hud.className='ascension-lobby';
- hud.innerHTML='<header class="ascension-masthead"><span>VÂN HẢI TÔNG</span><h1>THIÊN ĐÀI</h1><p>Tu luyện · Đột phá · Khai mở cảnh giới</p></header><div class="ascension-person"><strong></strong><span></span><div class="ascension-progress"><i></i></div></div><aside class="ascension-waiting" hidden></aside><footer class="ascension-command-dock"><p class="ascension-next">Gõ nhapmon để lên thiên đài</p><div><span><code>tuluyen</code>Vận công</span><span><code>hai</code>Hái linh thảo</span><span><code>dotpha</code>Lên cảnh giới</span></div><small class="ascension-access"></small></footer>';
+ hud.innerHTML='<header class="ascension-masthead"><span>VÂN HẢI TÔNG</span><h1>THIÊN ĐÀI</h1><p>Tu luyện · Đột phá · Khai mở cảnh giới</p></header><div class="ascension-person"><strong></strong><span></span><div class="ascension-progress"><i></i></div></div><aside class="ascension-waiting" hidden></aside><footer class="ascension-command-dock"><p class="ascension-next">Gõ nhập môn để lên thiên đài</p><div><span><code>tu luyện</code>Vận công</span><span><code>hái</code>Hái linh thảo</span><span><code>đột phá</code>Lên cảnh giới</span></div><small class="ascension-access"></small></footer>';
  shell.appendChild(hud);let signature='';
  scene.onAscensionIdle=s=>{const key=[s.player?.id,s.name,s.realm,s.ready,Math.floor(s.progress*100)].join('|');if(key===signature)return;signature=key;
   hud.querySelector('.ascension-person strong').textContent=s.name||'Chờ đạo hữu';hud.querySelector('.ascension-person>span').textContent=s.name?s.realm:'Thiên đài đã mở';
   hud.querySelector('.ascension-person').classList.toggle('is-ready',s.ready);hud.querySelector('.ascension-progress i').style.transform=`scaleX(${s.progress})`;
-  hud.querySelector('.ascension-next').textContent=s.ready?'Đủ điều kiện · gõ dotpha':s.player?'Gõ tuluyen hoặc hai để tiến đến đột phá':'Gõ nhapmon để lên thiên đài';
+  hud.querySelector('.ascension-next').textContent=s.ready?'Đủ điều kiện · gõ đột phá':s.player?'Gõ tu luyện hoặc hái để tiến đến đột phá':'Gõ nhập môn để lên thiên đài';
  };
  return {update(state,queue=[]){
   hud.querySelector('.ascension-access').textContent=state.settings?.ascensionShowcase===true?'Tu luyện nhanh · không cần quà để đột phá':'';

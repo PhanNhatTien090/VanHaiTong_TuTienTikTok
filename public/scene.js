@@ -1,3 +1,4 @@
+import {drawRealmSkinV2,ensureRealmSkinV2} from './realm-skins-v2.js';
 import {prepareHoaThanArt} from './hoa-than-formation.js';
 import {prepareKimTienArt} from './kim-tien-awakening.js';
 import {petCoveOn,petCoveTargets,drawPetCove,PET_COVE_MAP} from './pet-cove.js';
@@ -38,7 +39,7 @@ import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';
 import {loadImmortalArt,robeCell,outfitArt,drawPngRelic,drawImmortalGift,drawBackRelic} from './immortal-art.js';
 import {drawVisitor} from './visitor-event.js';
-import {drawBossSprite} from './world-rotation.js';
+import {drawBossSprite,SCENES} from './world-rotation.js';
 import {sealingBoss,drawBossSeal} from './boss-seal.js';
 import {luxuryTier,queueLuxury,drawLuxuryFx} from './luxury-fx.js';
 import {drawThunderTiger} from './thunder-tiger.js';
@@ -76,9 +77,9 @@ export class Scene {
 loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEventGiftFx(this,state);this.visitor=state.visitor;
     this.sectMaster=state.sectMaster;this.stateServerNow=state.serverNow||Date.now();this.stateReceivedAt=performance.now();
     this.sectElders=sectElders(state.players,this.sectMaster?.userId);
-    const env=petCoveOn({...this,boss:state.boss})?PET_COVE_MAP:state.environment;this.environment=env;if(env?.ambience==='underwater')loadFish(this);
+    const currentEnv=state.environment?.id==='sect-hall'?{...state.environment,...SCENES.find(s=>s.id==='sect-hall')}:state.environment;const env=petCoveOn({...this,boss:state.boss})?PET_COVE_MAP:currentEnv;this.environment=env;if(env?.ambience==='underwater')loadFish(this);
     if(env?.image&&this.environmentImage!==env.image){this.environmentImage=env.image;const next=new Image();next.onload=()=>{if(this.environmentImage!==env.image)return;const previous=this.background;this.art=next;this.resize();this.previousBackground=previous;this.backgroundChangedAt=performance.now();};next.src=env.image;}
-    this.realPlayers=state.players.filter(p=>!(this.environment?.layout==='sect'&&p.id===this.sectMaster?.userId)).filter(p=>p.active||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];this.playerIndex=new Map(this.players.map(p=>[p.id,p]));this.selected=selected;this.boss=state.boss||sealingBoss(state);}
+    this.realPlayers=state.players.filter(p=>!(this.environment?.layout==='sect'&&p.id===this.sectMaster?.userId)).filter(p=>p.active||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];for(const actor of this.players)ensureRealmSkinV2(this,actor);this.playerIndex=new Map(this.players.map(p=>[p.id,p]));this.selected=selected;this.boss=state.boss||sealingBoss(state);}
   // v51: strength = độ zoom khi vinh danh (quà lớn zoom sâu hơn). Gọi lại cùng người mà không truyền strength thì giữ nguyên độ zoom.
   focus(id,duration=5200,strength=null){if(this.welcomeFocus?.until>performance.now()&&this.welcomeFocus.id!==id&&!(this.presentation?.until>performance.now()))return;if(this.presentation?.until>performance.now()&&this.presentation.id!==id)return;if(strength)this.focusStrength=strength;else if(id!==this.focusId)this.focusStrength=null;this.focusId=id;this.focusUntil=Math.max(this.focusId===id?this.focusUntil||0:0,performance.now()+duration);}
   moveCamera(t){if(petCoveOn(this)&&!(this.presentation?.until>t)){this.camera={s:1,x:0,y:0};this.cameraTime=t;return this.camera;}
@@ -99,7 +100,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     return cam;
   }
   /** Gọi ngay khi nhận sự kiện (kể cả khi chưa tới lượt trình diễn): giúp người vừa bình luận được lên sân khấu sớm. */
-  noteEvent(e){if(this.showcase&&!isAscensionEvent(this,e))return;if(e.engagementAction){noteEngagementReaction(this,e,performance.now());(this.animator??=new CharacterAnimator()).trigger(e,performance.now());(this.mover??=new Mover()).onEvent(e,performance.now(),this.motion);}if(e.petAward){loadPetArt(this,[{spiritPet:e.petId}]);this.petArrivals??=new Map();this.petArrivals.set(e.user,performance.now());if(this.petArrivals.size>64)this.petArrivals.delete(this.petArrivals.keys().next().value);}if(giftSpectacleTier(e)){loadGiftSpectacle(this);loadSpiritBeasts(this);}if(e.effect==='breakthrough'){if(breakthroughRealm(e)===10)prepareKimTienArt(this);else{if(breakthroughRealm(e)===4)prepareNguyenAnhArt(this);if(breakthroughRealm(e)===5)prepareHoaThanArt(this);prepareAscensionArt(this,breakthroughRealm(e));prepareBreakthroughSpectacle(this);if(breakthroughRealm(e)>=6)loadImpactArt(this);}}notePrestigeGift(this,e,performance.now());this.stageDirty=true;(this.stage??=new StageDirector()).note(e,performance.now());this.recentEvents=(this.recentEvents||0)+1;}
+  noteEvent(e){if(this.showcase&&!isAscensionEvent(this,e))return;if(e.engagementAction){noteEngagementReaction(this,e,performance.now());(this.animator??=new CharacterAnimator()).trigger(e,performance.now());(this.mover??=new Mover()).onEvent(e,performance.now(),this.motion);}if(e.petAward){loadPetArt(this,[{spiritPet:e.petId}]);this.petArrivals??=new Map();this.petArrivals.set(e.user,performance.now());if(this.petArrivals.size>64)this.petArrivals.delete(this.petArrivals.keys().next().value);}if(giftSpectacleTier(e)){loadGiftSpectacle(this);loadSpiritBeasts(this);}if(e.effect==='breakthrough'){for(const actor of [e.visualFrom,e.visualTo])if(actor)ensureRealmSkinV2(this,actor);if(breakthroughRealm(e)===10)prepareKimTienArt(this);else{if(breakthroughRealm(e)===4)prepareNguyenAnhArt(this);if(breakthroughRealm(e)===5)prepareHoaThanArt(this);prepareAscensionArt(this,breakthroughRealm(e));prepareBreakthroughSpectacle(this);if(breakthroughRealm(e)>=6)loadImpactArt(this);}}notePrestigeGift(this,e,performance.now());this.stageDirty=true;(this.stage??=new StageDirector()).note(e,performance.now());this.recentEvents=(this.recentEvents||0)+1;}
   addEffect(event){if(this.showcase&&!isAscensionEvent(this,event)&&!event.gift)return;if(!event.effect)return;if(this.presentation?.kind==='breakthrough'&&this.presentation.until>performance.now()&&event.effect!=='breakthrough'&&!luxuryTier(event)){if(event.gift)queueLuxury(this.luxuryQueue??=[],event);return;}if(event.eventGiftFx)return;if(this.raceStatus?.active&&!event.petAward&&!this.showcase){this.presentation=null;return;}(this.mover??=new Mover()).onEvent(event,performance.now(),this.motion);
     if(event.gift)prepareGiftTribute(this);if(tributeProfile(event)?.value>=99)loadGiftSpectacle(this);if(giftSpectacleTier(event))loadSpiritBeasts(this);const luxury=event.luxury||luxuryTier(event);if(luxury)event={...event,luxury};
     // Quà có tên lạ (vd. "You're awesome") không khớp loại nào → vẫn có hoạt cảnh theo giá coin, không chỉ vài chấm nhỏ.
@@ -218,6 +219,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     const visitorCell=hideNew?null:visitorSkinCell(p),visitorArt=visitorCell===null?null:this.visitorSprites?.[visitorCell];
     if(!hideNew&&drawSeaBody(this,c,p,pose,t)){}
     else if(!hideNew&&drawDoraBody(this,c,p,pose,t)){}
+    else if(!hideNew&&drawRealmSkinV2(this,c,p,pose,t)){}
     else if(!hideNew&&godFormFor(p)&&drawDivineBody(this,c,p,pose,t)){}
     else if(!hideNew&&drawShendeBody(this,c,p,pose,t)){}
     else if(!hideNew&&drawLinWanBody(this,c,p,pose,t)){}
@@ -262,7 +264,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     c.restore();if(level>=2){const n=level>=4?4:level>=3?3:2;for(let i=0;i<n;i++){const phase=a+i*TAU/n;this.drawFlyingSword(c,Math.cos(phase)*38,-7+Math.sin(phase)*14,phase+.6,skin.trim);}}
   }
   drawNames(c,t){if(this.raceStatus?.active){this.labels=[];return;}
-    c.font='700 24px Segoe UI'; // 4/11: đo đúng cỡ chữ khi vẽ (trước đo 17px nhưng vẽ 24px → tên nào cũng bị thu nhỏ rồi cắt)
+    c.font='700 24px Georgia'; // 4/11: đo đúng cỡ chữ khi vẽ (trước đo 17px nhưng vẽ 24px → tên nào cũng bị thu nhỏ rồi cắt)
     const targets=this.targets.filter(a=>a.player.puppet||a.player.resident||this.showNames||this.selected===a.id||this.focusUntil>t&&this.focusId===a.id);
     this.nameWidths??=new Map();if(this.nameWidths.size>1000)this.nameWidths.clear();
     this.labels=layoutLabels(targets,name=>{if(!this.nameWidths.has(name))this.nameWidths.set(name,c.measureText(name).width);return this.nameWidths.get(name);});
@@ -273,7 +275,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
         // 3/11: tên rõ hơn — nền đậm hơn, chữ trắng đậm có viền tối, chữ tối thiểu 11px (thà rút gọn còn hơn chữ li ti).
         if(offscreen)x.setTransform(2,0,0,2,2,2);x.fillStyle=selected||focus?'#06121df8':'#04101af2';x.beginPath();x.roundRect(0,0,l.w,l.h,5);x.fill();
         x.strokeStyle=skin.level?skin.trim+'d0':selected?'#e6d1a1':'#cfe6e870';x.lineWidth=1.2;x.stroke();
-        x.textAlign='center';x.textBaseline='middle';x.font='700 24px Segoe UI';
+        x.textAlign='center';x.textBaseline='middle';x.font='700 24px Georgia';
         // 4/11: giữ nguyên cỡ chữ, không ép dẹt (bỏ maxWidth), không cắt "…" — tên dài đã xuống dòng ở layoutLabels.
         if(l.scroll)return; // tên chạy chữ: chữ vẽ riêng bên dưới
         const lines=l.lines||[l.name],lh=l.lineH||25;x.lineJoin='round';x.lineWidth=3;x.strokeStyle='#000000d0';
@@ -285,12 +287,12 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
       else{c.save();c.translate(l.x,l.y);paint(c,false);c.restore();}
       // 4/11/2026: đông người → tên dài chạy chữ trong khung (giữ cỡ chữ 24, không che mặt hàng dưới).
       // Dừng 1,5 s ở đầu → trượt 35 đv/s → dừng 1,2 s ở cuối → trượt về. Ảnh chữ vẽ một lần, mỗi khung chỉ dịch + cắt.
-      if(l.scroll){const tw=Math.ceil(l.textW)+12,paintText=x=>{x.setTransform(2,0,0,2,2,2);x.textAlign='left';x.textBaseline='middle';x.font='700 24px Segoe UI';x.lineJoin='round';x.lineWidth=3;x.strokeStyle='#000000d0';x.strokeText(l.name,6,l.h/2);x.fillStyle=skin.level?'#fff6dc':'#ffffff';x.fillText(l.name,6,l.h/2);};
+      if(l.scroll){const tw=Math.ceil(l.textW)+12,paintText=x=>{x.setTransform(2,0,0,2,2,2);x.textAlign='left';x.textBaseline='middle';x.font='700 24px Georgia';x.lineJoin='round';x.lineWidth=3;x.strokeStyle='#000000d0';x.strokeText(l.name,6,l.h/2);x.fillStyle=skin.level?'#fff6dc':'#ffffff';x.fillText(l.name,6,l.h/2);};
         const text=cache.get('txt:'+l.name+':'+l.h+':'+skin.level,(tw+2)*2,(l.h+2)*2,paintText),inner=l.w-10,travel=Math.max(0,tw-inner),move=travel/35*1000,cycle=2*(move)+2700,u=this.motion===false?0:(t+(String(l.id).length*397))%cycle;
         const off=u<1500?0:u<1500+move?travel*(u-1500)/move:u<2700+move?travel:travel*(1-(u-2700-move)/move);
         c.save();c.beginPath();c.rect(l.x+5,l.y,inner,l.h);c.clip();if(text)c.drawImage(text,l.x+5-off-1,l.y-1,text.width/2,text.height/2);c.restore();}
       this.drawQiBar(c,l,t);
-      if(l.player.honor){c.save();c.textAlign='center';c.font='700 13px Segoe UI';c.fillStyle=['#a9f1e0','#ffe3a0','#d9c2ff'][l.player.honor.frame]||'#ffe3a0';c.fillText(l.player.honor.title,l.x+l.w/2,l.y-7);c.restore();}
+      if(l.player.honor){c.save();c.textAlign='center';c.font='700 13px Georgia';c.fillStyle=['#a9f1e0','#ffe3a0','#d9c2ff'][l.player.honor.frame]||'#ffe3a0';c.fillText(l.player.honor.title,l.x+l.w/2,l.y-7);c.restore();}
     }
     this.drawTalkBubbles(c,t,cache);
   }
@@ -303,20 +305,19 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
       let row=seen.get(a.id);if(!row||row.text!==text){row={text,at:now};seen.set(a.id,row);}
       const age=now-row.at;if(age>6000)continue;
       const alpha=Math.min(1,age/180,(6000-age)/400);
-      c.font='700 20px Segoe UI';const lines=wrapName(text,s=>c.measureText(s).width,230),lh=24,w=Math.ceil(Math.max(...lines.map(s=>c.measureText(s).width)))+22,h=lines.length*lh+12;
+      c.font='700 20px Georgia';const lines=wrapName(text,s=>c.measureText(s).width,230),lh=24,w=Math.ceil(Math.max(...lines.map(s=>c.measureText(s).width)))+22,h=lines.length*lh+12;
       const bitmap=cache.get('talk:'+text,(w+2)*2,(h+12)*2,x=>{x.setTransform(2,0,0,2,2,2);x.fillStyle='#fffdf2f2';x.strokeStyle='#183238';x.lineWidth=1.6;x.beginPath();x.roundRect(0,0,w,h,10);x.moveTo(w/2-8,h);x.lineTo(w/2,h+9);x.lineTo(w/2+8,h);x.fill();x.stroke();x.fillStyle='#fffdf2';x.fillRect(w/2-7,h-2,14,3);
-        x.font='700 20px Segoe UI';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#14202a';lines.forEach((s,i)=>x.fillText(s,w/2,6+lh/2+i*lh));});
+        x.font='700 20px Georgia';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#14202a';lines.forEach((s,i)=>x.fillText(s,w/2,6+lh/2+i*lh));});
       const bx=Math.max(8,Math.min(892-w,a.x-w/2)),by=a.y-62*(a.scale||1)-h-12;
       c.save();c.globalAlpha=alpha;if(bitmap)c.drawImage(bitmap,bx-1,by-1,bitmap.width/2,bitmap.height/2);c.restore();
     }
   }
-  // Thanh tu vi dưới tên: xanh = đang tích lũy, vàng nhấp nháy + "✦ gõ dotpha" trên đầu = đủ đột phá.
+  // Thanh tu vi dưới tên: xanh = đang tích lũy, vàng nhấp nháy + "✦ Gõ đột phá" trên đầu = đủ đột phá.
   drawQiBar(c,l,t){const p=l.player;if(p.resident||p.puppet||!p.neededQi)return;
     const ready=p.finalRealmEligible!==false&&p.progressionReady!==false&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<(this.realmCount??REALM_STYLES.length)-1,k=Math.max(0,Math.min(1,p.qi/p.neededQi)),pulse=.5+.5*Math.sin(t*.008);
     const bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle='#ffffff26';c.fillRect(bx,by,bw,3.5);
     c.fillStyle=ready?`hsl(45,100%,${55+20*pulse}%)`:'#7fdcc6';c.fillRect(bx,by,bw*k,3.5);
-    if(ready&&this.targets.length>12){c.fillStyle=`hsl(45,100%,${60+20*pulse}%)`;c.font='700 15px Segoe UI';c.textAlign='center';c.textBaseline='middle';c.fillText('✦',l.x-7,l.y+l.h/2);}
-    else if(ready){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='700 16px Segoe UI';const label='✦ gõ dotpha',w=c.measureText(label).width+18;
+    if(ready){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='700 16px Georgia';const label='✦ Gõ đột phá',w=c.measureText(label).width+18;
       c.shadowColor='#ffd76a';c.shadowBlur=10+pulse*10;c.fillStyle='#3a2a08ee';c.beginPath();c.roundRect(a.x-w/2,y-13,w,26,13);c.fill();c.shadowBlur=0;
       c.strokeStyle=`rgba(255,215,106,${.6+.4*pulse})`;c.lineWidth=1.5;c.stroke();c.fillStyle='#ffe7a3';c.textAlign='center';c.textBaseline='middle';c.fillText(label,a.x,y+1);}}
     c.restore();}

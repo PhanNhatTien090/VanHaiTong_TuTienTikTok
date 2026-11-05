@@ -24,3 +24,26 @@ html body.overlay .scene-shell>#basicCommands.corner-command-guide ol{grid-templ
 html body.overlay .scene-shell>#basicCommands.corner-command-guide li{grid-template-columns:1fr!important;gap:0}
 html body.overlay .scene-shell>#basicCommands.corner-command-guide code{white-space:nowrap;overflow:visible;text-overflow:clip}
 html body.overlay .scene-shell>#basicCommands.corner-command-guide span{display:none}
+
+/* Restore the LIVE gift chart and enlarge its type for phone viewers. */
+html body.overlay #phoneHudRight{width:32%;max-height:43%;overflow:visible}
+html body.overlay #phoneHudRight #giftBoard.gift-board:not([hidden]){display:block!important;width:100%!important;font-size:clamp(15px,2.8cqw,30px)!important;padding:10px 12px!important}
+html body.overlay #giftBoard .gift-board-row{padding:8px 0;gap:8px}
+html body.overlay #giftBoard .gb-body{min-width:0}
+html body.overlay #giftBoard .gb-price{font-size:1em}
+html body.overlay #giftBoard .gb-main-qi{font-size:1em;white-space:normal}
+html body.overlay #giftBoard .gb-main-item{font-size:.88em;line-height:1.3}
+html body.overlay #giftBoard h3{font-size:.9em}
+html body.overlay #giftBoard .gb-disclosure{font-size:.62em;line-height:1.3}
+html body.overlay #giftBoard img.gift-original{width:clamp(34px,7cqw,74px);height:clamp(34px,7cqw,74px);flex:0 0 clamp(34px,7cqw,74px)}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide{font-size:clamp(16px,2.8cqw,30px)!important;max-width:52%!important}
+
+/* Keep two gift rows readable on narrow phone viewports. */
+html body.overlay #phoneHudRight{width:41%;max-height:none}
+html body.overlay #phoneHudRight #giftBoard.gift-board:not([hidden]){font-size:clamp(12px,2.8cqw,30px)!important;padding:8px!important}
+html body.overlay #giftBoard .gift-board-row{display:grid!important;grid-template-columns:clamp(24px,5.5cqw,60px) minmax(0,1fr);gap:5px;align-items:start!important}
+html body.overlay #giftBoard img.gift-original{width:100%;height:auto;max-height:60px}
+html body.overlay #giftBoard .gb-price{white-space:nowrap;overflow:visible;text-overflow:clip}
+html body.overlay #giftBoard .gb-main-qi,html body.overlay #giftBoard .gb-main-item{overflow-wrap:normal;word-break:normal}
+html body.overlay #giftBoard h3{font-size:.82em;white-space:nowrap}
+html body.overlay #giftBoard .gb-disclosure{font-size:clamp(9px,1.5cqw,16px)}

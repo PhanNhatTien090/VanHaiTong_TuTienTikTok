@@ -37,4 +37,4 @@ export function residentCycle(now=Date.now()){
   return {cycle:k,offset,group,original:group===0,slots,events};
 }
 export const residentName=(id,now=Date.now())=>residentCycle(now).slots.find(s=>s.id===id)?.name||RESIDENTS.find(r=>r.id===id)?.name||'Đạo hữu';
-export const residentPlayers=(now=Date.now())=>{const c=residentCycle(now);return RESIDENTS.map(r=>{const s=c.slots.find(x=>x.id===r.id);return {id:r.id,name:(s?.name||r.name)+' · NPC',giftCoins:0,equipped:r.equipped,realm:presentedRealms.get(r.id)??(s?s.realm:1),joinedAt:0,active:true,resident:true};});};
+export const residentPlayers=(now=Date.now())=>{const c=residentCycle(now);return RESIDENTS.map(r=>{const s=c.slots.find(x=>x.id===r.id);return {id:r.id,name:(s?.name||r.name),giftCoins:0,equipped:r.equipped,realm:presentedRealms.get(r.id)??(s?s.realm:1),joinedAt:0,active:true,resident:true};});};

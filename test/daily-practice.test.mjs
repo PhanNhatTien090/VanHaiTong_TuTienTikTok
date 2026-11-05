@@ -10,11 +10,22 @@ import {realmDivineLook} from '../public/divine-wardrobe.js';
 const N=Date.parse('2026-11-05T12:00:00+07:00');
 function setup(realm=5){const w=createWorld('live');w.settings.ascensionShowcase=true;const p=ensurePlayer(w,'a','A',N);p.realm=realm;return {w,p};}
 
-test('daily practice shares an exact budget across actions and resets only at Vietnam midnight',()=>{
- const {w,p}=setup();w.settings.dailyPracticeLimit=2;
+test('higher realms widen the daily full-rate pool without refilling spent points or removing reduced progress',()=>{
+ const {w,p}=setup();let previous=0;
+ for(let realm=5;realm<=21;realm++){p.realm=realm;const limit=dailyPracticeView(w,p,N).limit;assert.ok(limit>previous);previous=limit;}
+ p.realm=5;p.dailyPractice={day:practiceDay(N),used:90000};assert.equal(dailyPracticeView(w,p,N).remaining,0);
+ assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,10);
+ p.realm=8;const expanded=dailyPracticeView(w,p,N);assert.equal(expanded.limit,1125);assert.equal(expanded.used,900);assert.equal(expanded.remaining,225);
+ const restored=JSON.parse(JSON.stringify(w));assert.equal(dailyPracticeView(restored,restored.players.a,N).remaining,225);
  assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);
- assert.equal(creditDailyPractice(w,p,140,'gather',N).amount,100);
- assert.equal(dailyPracticeView(w,p,N).used,2);assert.equal(creditDailyPractice(w,p,35,'attack',N).amount,0);
+ p.realm=21;assert.equal(dailyPracticeView(w,p,N).limit,2100);
+});
+
+test('daily practice shares an exact budget across actions and resets only at Vietnam midnight',()=>{
+ const {w,p}=setup();w.settings.dailyPracticeRealmBonus=0;w.settings.dailyPracticeLimit=2;
+ assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);
+ assert.equal(creditDailyPractice(w,p,140,'gather',N).amount,104);
+ assert.equal(dailyPracticeView(w,p,N).used,2);assert.equal(creditDailyPractice(w,p,35,'attack',N).amount,3);
  const midnight=Date.parse('2026-11-06T00:00:00+07:00');assert.equal(practiceDay(midnight-1),'2026-11-05');assert.equal(practiceDay(midnight),'2026-11-06');
  assert.equal(dailyPracticeView(w,p,midnight-1).remaining,0);assert.equal(dailyPracticeView(w,p,midnight).remaining,2);assert.equal(creditDailyPractice(w,p,35,'attack',midnight).amount,35);
  assert.equal(dailyPracticeView(w,p,midnight).used,.35);
@@ -23,20 +34,20 @@ test('daily practice shares an exact budget across actions and resets only at Vi
 });
 
 test('daily ceiling leaves early realms, demo, NPCs and personal gift rewards unchanged',()=>{
- const {w,p}=setup(4);w.settings.dailyPracticeLimit=1;
+ const {w,p}=setup(4);w.settings.dailyPracticeRealmBonus=0;w.settings.dailyPracticeLimit=1;
  for(let i=0;i<3;i++)assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);assert.equal(p.dailyPractice,undefined);
- p.realm=5;creditDailyPractice(w,p,100,'cultivate',N);assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,0);
+ p.realm=5;creditDailyPractice(w,p,100,'cultivate',N);assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,10);
  assert.equal(creditDailyPractice(w,p,100,'gift',N).amount,100);
  w.mode='demo';assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);w.mode='live';p.puppet=true;assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);
- p.puppet=false;w.settings.dailyPracticeLimit=0;assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);
+ p.puppet=false;w.settings.dailyPracticeRealmBonus=0;w.settings.dailyPracticeLimit=0;assert.equal(creditDailyPractice(w,p,100,'cultivate',N).amount,100);
 });
 
 test('capped players keep combat, items and gift rewards; snapshot cannot refresh or mutate their ledger',()=>{
- const {w,p}=setup();w.settings.dailyPracticeLimit=1;
+ const {w,p}=setup();w.settings.dailyPracticeRealmBonus=0;w.settings.dailyPracticeLimit=1;
  action(w,{type:'cultivate',userId:p.id},N);const q=p.qi,st=p.stones,herbs=p.herbs;
- action(w,{type:'gather',userId:p.id},N+1);assert.equal(p.qi,q);assert.ok(p.herbs>herbs);assert.ok(p.stones>st);
+ action(w,{type:'gather',userId:p.id},N+1);assert.ok(p.qi>q);const afterGather=p.qi;assert.ok(p.herbs>herbs);assert.ok(p.stones>st);
  w.boss={id:'test',name:'Test',species:'tiger',hp:1e9,maxHp:1e9,endsAt:N+1e9,participants:{},damage:{}};
- const hp=w.boss.hp;assert.equal(action(w,{type:'attack',userId:p.id},N+2).ok,true);assert.ok(w.boss.hp<hp);assert.equal(p.qi,q);
+ const hp=w.boss.hp;assert.equal(action(w,{type:'attack',userId:p.id},N+2).ok,true);assert.ok(w.boss.hp<hp);assert.ok(p.qi>afterGather);
  const ledger=JSON.stringify(p.dailyPractice);action(w,{type:'gift',userId:p.id,coins:1,count:1,eventId:'gift-after-cap'},N+3);assert.ok(p.qi>q);assert.equal(p.giftCoins,1);assert.equal(JSON.stringify(p.dailyPractice),ledger);
  const before=JSON.stringify(p);const view=snapshot(w,N+5).players.find(x=>x.id===p.id);assert.equal(view.dailyPracticeStatus.exhausted,true);assert.equal(JSON.stringify(p.dailyPractice),ledger);assert.equal(p.realm,5);
  const parsed=JSON.parse(before);assert.equal(p.qi,parsed.qi);assert.equal(w.events.filter(x=>x.dailyPracticeCap).length,1);

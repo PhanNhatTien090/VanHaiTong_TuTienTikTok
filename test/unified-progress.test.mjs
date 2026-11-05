@@ -12,33 +12,33 @@ function setup(realm=14){const w=createWorld('live');Object.assign(w.settings,{a
 const act=(w,type,extra={},now=N)=>action(w,{userId:'a',type,...extra},now);
 const unit=p=>Math.ceil(requiredQi(p)/ascensionPracticeReward(p.realm,'cultivate',requiredQi(p),requiredStones(p)).steps);
 
-test('eight hours of mixed free gameplay cannot exceed one shared daily qi budget',()=>{
- const {w,p}=setup(18),ceiling=unit(p)*900;p.qi=0;p.totalQi=0;
+test('eight hours retain reduced progress after the shared full-rate budget without reaching unrestricted speed',()=>{
+ const {w,p}=setup(18),ceiling=unit(p)*dailyPracticeView(w,p,N).limit;p.qi=0;p.totalQi=0;
  w.boss={id:'test',name:'Test',species:'tiger',hp:1e12,maxHp:1e12,endsAt:N+DAY,participants:{},damage:{}};
  for(let s=0;s<8*3600;s+=10){act(w,'cultivate',{},N+s*1000);if(s%30===0)act(w,'gather',{},N+s*1000+1);act(w,'attack',{},N+s*1000+2);}
- assert.equal(dailyPracticeView(w,p,N+8*3600000).exhausted,true);assert.ok(p.totalQi>0&&p.totalQi<=ceiling);assert.equal(p.qi,p.totalQi);assert.ok(p.herbs>100);assert.ok(w.boss.hp<1e12);
+ assert.equal(dailyPracticeView(w,p,N+8*3600000).exhausted,true);assert.ok(p.totalQi>ceiling&&p.totalQi<=ceiling*1.5);assert.equal(p.qi,p.totalQi);assert.ok(p.herbs>100);assert.ok(w.boss.hp<1e12);
 });
 
 test('weekly checkin and ordinary rewards share the pool; capped pills remain owned',()=>{
- const {w,p}=setup();w.settings.dailyPracticeLimit=2;p.lastCheckinDay='2026-11-04';p.checkinStreak=6;p.pills={'qi-pill':3};p.qi=0;p.totalQi=0;
- assert.equal(act(w,'checkin').ok,true);assert.equal(dailyPracticeView(w,p,N).exhausted,true);assert.ok(p.qi<=unit(p)*2);assert.ok(p.artifacts.includes('nine-heaven-seal'));
+ const {w,p}=setup();w.settings.dailyPracticeRealmBonus=0;w.settings.dailyPracticeLimit=2;p.lastCheckinDay='2026-11-04';p.checkinStreak=6;p.pills={'qi-pill':3};p.qi=0;p.totalQi=0;
+ assert.equal(act(w,'checkin').ok,true);assert.equal(dailyPracticeView(w,p,N).exhausted,true);const full=setup();full.w.settings.dailyPracticeRealmBonus=0;full.w.settings.dailyPracticeLimit=0;full.p.lastCheckinDay='2026-11-04';full.p.checkinStreak=6;full.p.qi=0;full.p.totalQi=0;act(full.w,'checkin');assert.ok(p.qi>0&&p.qi<full.p.qi);assert.ok(p.artifacts.includes('nine-heaven-seal'));
  const qi=p.qi,stones=p.stones,herbs=p.herbs;
  assert.equal(act(w,'use',{itemId:'qi-pill'},N+1).ok,false);assert.equal(p.pills['qi-pill'],3);assert.equal(p.qi,qi);
- assert.equal(act(w,'gather',{},N+2).ok,true);assert.equal(p.qi,qi);assert.ok(p.stones>stones&&p.herbs>herbs);
+ assert.equal(act(w,'gather',{},N+2).ok,true);assert.ok(p.qi>qi);assert.ok(p.stones>stones&&p.herbs>herbs);
 });
 
 test('mutual cultivation cannot bypass free qi cap but still grants partnership points and resources',()=>{
  const {w,p}=setup();const b=ensurePlayer(w,'b','Binh',N);b.realm=14;
- p.dailyPractice={day:'2026-11-05',used:90000};b.dailyPractice={day:'2026-11-05',used:90000};const before=p.qi;
+ p.dailyPractice={day:'2026-11-05',used:dailyPracticeView(w,p,N).limit*100};b.dailyPractice={day:'2026-11-05',used:dailyPracticeView(w,b,N).limit*100};const before=p.qi;
  act(w,'chat',{text:'cungtu Binh'},N+10);assert.equal(action(w,{type:'chat',userId:'b',text:'cungtu An'},N+20).ok,true);
  for(let i=0;i<3;i++){act(w,'cultivate',{},N+1000+i*11000);action(w,{type:'cultivate',userId:'b'},N+1000+i*11000);}
- assert.equal(p.qi,before);assert.equal(p.companionPoints,1);assert.equal(b.companionPoints,1);assert.equal(w.events.filter(e=>e.togetherDone).length,1);
+ assert.ok(p.qi>before);assert.equal(p.companionPoints,1);assert.equal(b.companionPoints,1);assert.equal(w.events.filter(e=>e.togetherDone).length,1);
 });
 
 test('personal gift rewards remain full and do not receive an accidental buff multiplier',()=>{
- const a=setup(),b=setup();a.p.dailyPractice={day:'2026-11-05',used:90000};for(const p of [a.p,b.p]){p.buffMult=12;p.buffUntil=N+3600000;}
+ const a=setup(),b=setup();a.p.dailyPractice={day:'2026-11-05',used:dailyPracticeView(a.w,a.p,N).limit*100};for(const p of [a.p,b.p]){p.buffMult=12;p.buffUntil=N+3600000;}
  act(a.w,'gift',{coins:1,eventId:'paid-a'});act(b.w,'gift',{coins:1,eventId:'paid-b'});
- assert.ok(a.p.qi>0);assert.equal(a.p.qi,b.p.qi);assert.equal(a.p.giftCoins,1);assert.equal(a.p.dailyPractice.used,90000);assert.equal(b.p.dailyPractice,undefined);
+ assert.ok(a.p.qi>0);assert.equal(a.p.qi,b.p.qi);assert.equal(a.p.giftCoins,1);assert.equal(a.p.dailyPractice.used,dailyPracticeView(a.w,a.p,N).limit*100);assert.equal(b.p.dailyPractice,undefined);
  const plain=setup();act(plain.w,'gift',{coins:1,eventId:'plain'});assert.equal(plain.p.qi,a.p.qi);
 });
 
@@ -83,7 +83,7 @@ test('the live qi bar does not advertise dotpha after the shared daily allowance
  const {w,p}=setup(6);p.qi=requiredQi(p);p.stones=requiredStones(p);p.dailyAscension={day:'2026-11-05',used:1};
  const view=snapshot(w,N).players[0],scene=Object.create(Scene.prototype),c=createCanvas(900,800).getContext('2d'),labels=[];
  scene.realmCount=22;scene.targets=[{id:p.id,x:450,y:400,scale:1.5}];c.fillText=t=>labels.push(t);
- scene.drawQiBar(c,{player:view,x:400,y:440,w:100,h:30},1000);assert.equal(labels.includes('✦ gõ dotpha'),false);assert.equal(view.progressionReady,false);
+ scene.drawQiBar(c,{player:view,x:400,y:440,w:100,h:30},1000);assert.equal(labels.includes('✦ Gõ đột phá'),false);assert.equal(view.progressionReady,false);
 });
 
 

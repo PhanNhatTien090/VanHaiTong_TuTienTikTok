@@ -39,7 +39,7 @@ test('gifts grant a timed phúc duyên buff that multiplies hand-played rewards,
   action(w,{type:'chat',userId:'g',name:'Gấm',text:'tuluyen'},now+=1000);assert.equal(p.qi,27,'Phàm nhân ×4,5');
   action(w,{type:'gift',userId:'g',name:'Gấm',coins:1,giftName:'Rose',eventId:'r1'},now+=1000);
   const e=w.events.find(x=>x.gift);assert.equal(e.buff.mult,5,'lễ quà đầu tiên: phúc duyên ≥×5');
-  const say=announcement({...e,gender:'nu'});assert.match(say,/Hoa hồng/);assert.match(say,/hai mươi tư tu vi/);assert.match(say,/gấp năm/);assert.ok(say.length<=200,'câu quà nhỏ ngắn gọn');
+  const say=announcement({...e,gender:'nu'});assert.doesNotMatch(say,/tặng|Hoa hồng|coin/i);assert.match(say,/hai mươi tư tu vi/);assert.match(say,/gấp năm/);assert.ok(say.length<=200,'câu quà nhỏ ngắn gọn');
   const before=p.qi;action(w,{type:'chat',userId:'g',name:'Gấm',text:'tuluyen'},now+=11000);assert.equal(p.qi-before,135,'6 × 4,5 (Phàm nhân) × 5 (phúc duyên lễ quà đầu)');
   action(w,{type:'gift',userId:'g',name:'Gấm',coins:199,eventId:'r2'},now+=1000);assert.equal(p.buffMult,8);
   const b2=p.qi;action(w,{type:'chat',userId:'g',name:'Gấm',text:'tuluyen'},now+=11000);assert.equal(p.qi-b2,297,'6 × 4,5 × 1,25 (Trấn Hồn Chung) × 8 × 1,1 (VIP Bạc)');

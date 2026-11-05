@@ -57,7 +57,7 @@ const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
 const savedSig={},savedAt={};
-function persist(force=false){for(const [mode,w]of Object.entries(worlds)){auditStorage.flush(w,mode);const sig=`${w.events.at(-1)?.id}|${Object.keys(w.players).length}|${w.sectQi}|${w.boss?.hp}|${w.totalInteractions}`;if(!force&&sig===savedSig[mode]&&Date.now()-(savedAt[mode]||0)<30000)continue;savedSig[mode]=sig;savedAt[mode]=Date.now();const dest=path.join(dataDir,`${mode}.json`);const tmp=dest+'.tmp';fs.writeFileSync(tmp,JSON.stringify(w));fs.renameSync(tmp,dest);}}
+function persist(force=false){for(const [mode,w]of Object.entries(worlds)){auditStorage.flush(w,mode);const sig=`${w.events.at(-1)?.id}|${Object.keys(w.players).length}|${w.sectQi}|${w.boss?.hp}|${w.totalInteractions}`;if(!force&&sig===savedSig[mode]&&Date.now()-(savedAt[mode]||0)<30000)continue;const dest=path.join(dataDir,`${mode}.json`);const tmp=dest+'.tmp';try{fs.writeFileSync(tmp,JSON.stringify(w));fs.renameSync(tmp,dest);savedSig[mode]=sig;savedAt[mode]=Date.now();}catch(err){if(!['EPERM','EBUSY','EACCES'].includes(err.code))throw err;console.error('[save] File temporarily locked; current progress retained in memory and save retried on next tick:',mode,err.code);}}}
 // Mỗi giây chỉ gửi người đang hoạt động + top 100 bảng xếp hạng (không gửi cả 10.000 hồ sơ).
 const payloadCache=new Map(),assets=new AssetCache();
 const announcementHistory={demo:new EventAnnouncementHistory(),live:new EventAnnouncementHistory()};

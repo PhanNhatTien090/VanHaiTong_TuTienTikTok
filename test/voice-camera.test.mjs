@@ -8,7 +8,7 @@ test('announcements describe identity and action rather than reading raw chat',(
   const e={name:'Minh 🌸',effect:'join',text:'anything'};
   assert.match(announcement(e),/đạo hữu Minh gia nhập/i);
   assert.match(announcement({...e,effect:'qi',text:'Luận đạo cùng đồng môn • +3 tu vi'}),/Đạo hữu Minh vừa luận đạo/);
-  assert.match(announcement({...e,effect:'petal',text:'Linh hoa ×3 • +36 tu vi • cảm ơn đạo hữu'}),/Đa tạ đạo hữu Minh.*nhân ba/);
+  assert.match(announcement({...e,effect:'petal',text:'Linh hoa ×3 • +36 tu vi • cảm ơn đạo hữu'}),/Đa tạ đạo hữu Minh.*ghi nhận tâm ý/);
 });
 
 test('voice flood stays bounded and protects important events; mute clears pending actions',()=>{
