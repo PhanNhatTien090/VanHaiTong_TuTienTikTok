@@ -1,6 +1,7 @@
 import {drawAscensionStageBackdrop} from './ascension-stage.js';
 import {qiEnergyState,drawQiGround,drawQiStreams,drawQiBurst} from './qi-energy.js';
 import {makeSurface} from './performance.js';
+import {luyenKhiState,drawLkFloor,drawLkSky,drawLkFormation,drawLkVortex,drawLkGroundQi,drawLkMeridians,drawLkConverge,drawLkScatter,drawLkWheel} from './luyen-khi-formation.js';
 import {setFxPalette,qiVariant,QI_IMPACT,qiStoryK,qiCamera,drawQiEnvironment,drawQiVignette,drawQiInflow,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),smooth=x=>{x=clamp(x);return x*x*x*(x*(x*6-15)+10);},mix=(a,b,u)=>a+(b-a)*u;
 export const QI_BEATS=Object.freeze([
@@ -37,16 +38,22 @@ export function drawQiAwakening(scene,c,e,t,H){
  c.save();
  drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:'#9deed1',feet:s.feet}); // 4/11: thiên đài cả trên LIVE
  drawQiEnvironment(scene,c,k,H,s.origin,true);
+ const lk=luyenKhiState(k);drawLkSky(scene,c,lk,H,v); // v5: núi mực + biển mây lấp nửa trên
  const halo=c.createRadialGradient(x,s.center.y,10,x,s.center.y,340);halo.addColorStop(0,'#3f8e7d22');halo.addColorStop(1,'#3f8e7d00');c.fillStyle=halo;c.fillRect(80,s.center.y-340,740,680);
  // Camera đẩy vào quanh thân người tu luyện.
  const zoom=1+(qiCamera(k,motion&&scene.cameraEnabled!==false)-1)*v.zoom,fy=s.feet-150+v.dy;c.save();c.translate(x,fy);c.scale(zoom,zoom);c.translate(-x,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
  c.fillStyle='#00000045';c.beginPath();c.ellipse(x,s.feet+32,150,25,0,0,TAU);c.fill();
  const energy=qiEnergyState(sk,motion),jolt=motion&&scene.cameraEnabled!==false?energy.burst*7:0;c.translate(Math.sin(k*1700)*jolt,Math.cos(k*1400)*jolt*.6);
  drawQiGround(scene,c,sk,s);
+ drawLkFloor(scene,c,lk,s,H);      // v5: mặt nước gợn sóng dưới trận
+ drawLkFormation(scene,c,lk,s,v);  // v5: trận đồ Bát Quái
+ drawLkVortex(scene,c,lk,s,H,v);    // v5: phễu mây + khí rót bách hội
+ drawLkGroundQi(scene,c,lk,s,v);    // v5: khí đất từ tám quẻ
  drawQiInflow(scene,c,k,s.origin,v.phase);
  drawQiStreams(scene,c,sk,s,'back');
  for(const p of s.parts.filter(p=>p.z<0)){trail(c,sk,H,p.id,motion);pearl(c,im,p);}
  drawQiAura(scene,c,k,s.origin,s.feet);
+ drawLkWheel(scene,c,lk,s,v);       // v5: pháp luân sau lưng khi hiện thân
  const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user),to=e.visualTo||live,from=e.visualFrom||(to?{...to,realm:e.fromRealm??0}:null),actor=s.revealed?to:from;
  if(actor){scene.targets=[{id:e.user,player:actor,x,y:s.feet,scale:4.2}];const wasCompact=scene.compact,wasRitual=scene.ritualDrawing;scene.compact=true;scene.ritualDrawing=true;c.save();c.translate(0,-s.lift);try{// Tint through the actor's alpha: energy lights the body, not a rectangle.
  const surface=scene.qiActorSurface??=makeSurface(600,760);
@@ -55,14 +62,17 @@ export function drawQiAwakening(scene,c,e,t,H){
   const strength=Math.min(.45,energy.charge*.22+energy.burst*.28+(k>=QI_IMPACT?(1-clamp((k-QI_IMPACT)/.2))*.12:0));
   if(strength>0){a.save();a.globalCompositeOperation='source-in';const g=a.createLinearGradient(0,530,0,240);g.addColorStop(0,'#91ffd0');g.addColorStop(.55,'#e4fff3');g.addColorStop(1,'#b2faff');a.fillStyle=g;a.fillRect(0,0,600,760);a.globalCompositeOperation='destination-in';a.drawImage(surface,0,0);a.drawImage(surface,0,0);a.restore();c.save();c.globalCompositeOperation='screen';c.globalAlpha=strength;c.drawImage(surface,x-300,s.feet-530);c.restore();}
  }else scene.drawPlayer(c,actor,x,s.feet,t-e.start);}finally{scene.compact=wasCompact;scene.ritualDrawing=wasRitual;c.restore();}}
+ drawLkMeridians(scene,c,lk,s,s.lift); // v5: kinh mạch + tiểu chu thiên
  for(const p of s.parts.filter(p=>p.z>=0)){trail(c,sk,H,p.id,motion);pearl(c,im,p);}
  drawQiStreams(scene,c,sk,s,'front');
  pearl(c,im,s.core);
+ drawLkConverge(scene,c,lk,s);
  drawQiCompression(c,k,s.origin);
  drawQiBurst(c,sk,s,motion);
  if(s.pulse>0){const g=c.createRadialGradient(x,s.origin.y,0,x,s.origin.y,55+s.pulse*70);g.addColorStop(0,'#f5fff4');g.addColorStop(.15,'#baffdcbd');g.addColorStop(1,'#87f6c900');c.save();c.globalAlpha=s.pulse*.7;c.fillStyle=g;c.fillRect(x-210,s.origin.y-210,420,420);c.restore();}
  if(s.settle>0){c.save();c.globalAlpha=s.settle*.65;c.strokeStyle=color;c.lineWidth=1.5;c.beginPath();c.ellipse(x,s.feet+27,110,22,0,0,TAU);c.stroke();pearl(c,im,{x,y:s.origin.y,r:8,alpha:s.settle*.7});c.restore();}
  drawQiImpact(scene,c,k,H,s.origin,s.feet);
+ drawLkScatter(scene,c,lk,s);
  c.restore();
  drawQiMotes(scene,c,k,H);
  drawQiVignette(c,k,H);
