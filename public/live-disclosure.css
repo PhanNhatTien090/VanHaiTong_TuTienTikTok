@@ -1,0 +1,26 @@
+/* Readable jade and ink panels; no claim that a visual change lifts restrictions. */
+.scene-shell .live-disclosure{position:absolute;z-index:9;top:52px;left:50%;transform:translateX(-50%);max-width:85%;padding:5px 12px;border:1px solid #9dd9ce65;border-radius:20px;background:#081d2fe8;color:#d9f2eb;font:600 10px/1.4 Arial,sans-serif;text-align:center;pointer-events:none}
+.gift-board .gb-disclosure{display:block;margin-top:9px;padding-top:8px;border-top:1px solid #9dd9ce55;color:#c8e2df;font:500 11px/1.45 Arial,sans-serif}
+#phoneHudLeft .live-ranks,#phoneHudRight .gift-board,#phoneHudRight .command-rail{background:linear-gradient(145deg,#07192ff2,#102e39ed)!important;border:1px solid #9dd9ce66!important;border-radius:12px!important;box-shadow:0 8px 28px #020c1e45!important}
+#phoneHudLeft .qi-leaders>b,#phoneHudRight .gift-board h3,#phoneHudRight .command-rail h3{color:#b9eddd!important;border-bottom-color:#9dd9ce55!important}
+body.overlay .scene-shell .live-disclosure{top:5.8%;font-size:clamp(8px,1.8cqw,16px);padding:.5em 1em}
+body.ritual-active .scene-shell .live-disclosure{visibility:hidden!important}
+@media(max-width:480px){.scene-shell .live-disclosure{top:45px;font-size:9px}}
+/* 4/11/2026: bảng lệnh + bảng top trong suốt để không che nhân vật; chữ có viền tối để vẫn đọc được trên nền sáng. */
+html body #phoneHudLeft #liveRanks.live-ranks,html body #liveRanks.live-ranks.compact-ranks,
+html body #phoneHudRight #commandRail.command-rail,
+html body .scene-shell>#basicCommands.corner-command-guide,html body.overlay .scene-shell>#basicCommands.corner-command-guide{
+ background:linear-gradient(145deg,#07192f38,#102e3926)!important;border-color:#9dd9ce30!important;box-shadow:none!important;backdrop-filter:none!important;
+ text-shadow:0 1px 2px #000,0 0 5px #000,0 0 10px #000a!important}
+html body #liveRanks.live-ranks *,html body #commandRail.command-rail *,html body #basicCommands.corner-command-guide *{text-shadow:inherit}
+/* 4/11/2026: bảng "CÁCH CHƠI" gọn lại — khung vừa chữ (tối đa ~46% bề ngang) thay vì 66%, chữ nhỏ đi một chút nhưng vẫn rõ. */
+html body.overlay .scene-shell>#basicCommands.corner-command-guide,html body .scene-shell>#basicCommands.corner-command-guide{
+ width:auto!important;max-width:46%!important;font-size:clamp(13px,2.2cqw,24px)!important;padding:6px 10px!important;line-height:1.25!important}
+html body .scene-shell>#basicCommands.corner-command-guide li{white-space:nowrap}
+html body .scene-shell>#basicCommands.corner-command-guide b{font-size:.85em}
+
+/* Lệnh có dấu cần một cột để không bẻ chữ trong bảng góc nhỏ. */
+html body.overlay .scene-shell>#basicCommands.corner-command-guide ol{grid-template-columns:1fr;gap:5px}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide li{grid-template-columns:1fr!important;gap:0}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide code{white-space:nowrap;overflow:visible;text-overflow:clip}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide span{display:none}

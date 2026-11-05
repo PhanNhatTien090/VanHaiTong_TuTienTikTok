@@ -1,0 +1,16 @@
+Use your built-in image generation tool with the attached image as the character reference. Set the tool's background option to "transparent" (PNG with real alpha). Create ONE image, then copy it into the current working directory as parts-nam.png. Do not write code or edit other files.
+
+Image: a 2D CUTOUT-ANIMATION PARTS SHEET of EXACTLY the same character as the reference (same face, hair, crown, robe colors, gold cloud embroidery, belt, jade pendant, boots, sword design, same art style and lighting), side view facing RIGHT, at the same scale as the reference. Draw each body part as a SEPARATE isolated piece, laid out in a neat grid with wide empty transparent gaps between pieces (no piece touching another). Each piece must be COMPLETE, including the areas that would normally be hidden behind other parts, with rounded/overlapping joint ends so they can be rotated at the joints without gaps:
+1. head with face, front hair and crown (no neck below the jaw except a short neck stub)
+2. long back hair mass with the ribbons (separate from the head)
+3. torso: chest and waist with the inner white robe collar, outer robe shoulders and the belt with pendant, NO arms, NO sleeves, ending at the hips
+4. robe skirt front panel (from belt to below the knees)
+5. robe skirt back panel / trailing robe tail
+6. back upper arm with its wide sleeve
+7. back forearm and open hand with the bracer
+8. front upper arm with its wide sleeve
+9. front forearm with bracer and hand in a gripping fist (empty grip, no sword)
+10. front leg: thigh, knee, shin and boot, straight
+11. back leg: thigh, knee, shin and boot, straight
+12. the sword alone, horizontal, hilt on the left, blade pointing right
+Clean edges, no text, no labels, no numbers, no watermark, no shadows on the ground.

@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "status": "art-ready",
+  "backgrounds": {
+    "tournament": {
+      "url": "/assets/events-v1/tournament-background.png",
+      "width": 941,
+      "height": 1672,
+      "name": "Luận Kiếm Đài",
+      "actorAnchors": [
+        [
+          0.25,
+          0.55
+        ],
+        [
+          0.75,
+          0.55
+        ]
+      ]
+    },
+    "bond": {
+      "url": "/assets/events-v1/bond-background.png",
+      "width": 941,
+      "height": 1672,
+      "name": "Tam Sinh Tiên Cảnh",
+      "actorAnchors": [
+        [
+          0.3,
+          0.57
+        ],
+        [
+          0.7,
+          0.57
+        ]
+      ]
+    }
+  },
+  "atlases": {
+    "tournament": {
+      "url": "/assets/events-v1/tournament-effects.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 3,
+      "rows": 2,
+      "transparentFraction": 0.365298589070638,
+      "frames": [
+        {
+          "id": "entrance-cyan",
+          "x": 0,
+          "y": 0,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "entrance-gold",
+          "x": 512,
+          "y": 0,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "crossed-slashes",
+          "x": 1024,
+          "y": 0,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "impact-ring",
+          "x": 0,
+          "y": 512,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "champion-frame",
+          "x": 512,
+          "y": 512,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "champion-trophy",
+          "x": 1024,
+          "y": 512,
+          "width": 512,
+          "height": 512
+        }
+      ]
+    },
+    "bond": {
+      "url": "/assets/events-v1/bond-effects.png",
+      "width": 1536,
+      "height": 1024,
+      "columns": 3,
+      "rows": 2,
+      "transparentFraction": 0.4363473256429036,
+      "frames": [
+        {
+          "id": "ceremony-arch",
+          "x": 0,
+          "y": 0,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "jade-pendants",
+          "x": 512,
+          "y": 0,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "destiny-ribbons",
+          "x": 1024,
+          "y": 0,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "lotus-platforms",
+          "x": 0,
+          "y": 512,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "petal-ring",
+          "x": 512,
+          "y": 512,
+          "width": 512,
+          "height": 512
+        },
+        {
+          "id": "paired-swords",
+          "x": 1024,
+          "y": 512,
+          "width": 512,
+          "height": 512
+        }
+      ]
+    }
+  },
+  "runtime": {
+    "loadOnlyDuringRelevantEvent": true,
+    "recommendedSpriteSize": 384,
+    "lightSpriteSize": 256,
+    "displayNamesAsLiveText": true
+  }
+}

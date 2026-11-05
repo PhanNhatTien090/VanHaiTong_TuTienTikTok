@@ -1,0 +1,29 @@
+import {sliceSpiritAtlas} from '../public/gift-spirit-beasts.js';
+import {test} from 'node:test';import assert from 'node:assert/strict';import {createCanvas,loadImage} from '@napi-rs/canvas';
+import {createWorld,ensurePlayer,action,tick,startRace,startTournament,snapshot} from '../engine.mjs';import {EventGiftQueue,EVENT_GIFT_TIERS,eventGiftTier,sliceEventGiftAtlas,drawEventGiftFx,eventGiftImpulse,eventGiftCamera} from '../public/event-gift-fx.js';import {presentationDuration} from '../public/presentation.js';
+const N=1800000000000;
+function world(){const w=createWorld('live');Object.assign(w.settings,{residents:false,autoEvents:false,blessingMinutes:0});w.nextBossAt=N+1e9;for(const id of ['a','b','spectator'])ensurePlayer(w,id,id,N);return w;}
+test('race gifts keep visual receipts after finishing, do not replay duplicates, and survive restart',()=>{
+ let w=world();startRace(w,N);for(const id of ['a','b'])action(w,{type:'chat',text:'bay',userId:id},N+10);tick(w,N+45000);
+ const gift=i=>({type:'gift',userId:'a',coins:1000,count:1,eventId:'race-gift-'+i});for(let i=0;i<4;i++)action(w,gift(i),N+46000+i);const r=w.race.racers.find(r=>r.id==='a');assert.equal(r.giftBoosts,1000);assert.equal(r.bonus,30000);assert.equal(w.race.giftFx.length,4);assert.equal(w.race.giftFx.at(-1).boost,0);assert.equal(r.giftAt,N+46003);
+ action(w,gift(3),N+46004);assert.equal(w.race.giftFx.length,4);assert.equal(w.events.findLast(e=>e.eventGiftFx).eventGiftFx,'race');w=JSON.parse(JSON.stringify(w));assert.equal(snapshot(w,N+46005).raceStatus.giftFx.length,4);
+});
+test('duel participant and spectator gifts animate on the current stage without changing match score or forcing solo',()=>{
+ const w=world();startTournament(w,N);for(const id of ['a','b'])action(w,{type:'chat',text:'tythi',userId:id},N+10);tick(w,N+90001);tick(w,N+94000);const m=w.tournament.current;assert.ok(m);const before=JSON.stringify({boosts:m.boosts,strengths:m.strengths,hp:m.hp});
+ for(const id of ['a','spectator'])action(w,{type:'gift',userId:id,coins:2000,count:1,eventId:'gift-'+id},N+94100);assert.equal(m.giftFx.length,2);assert.equal(m.giftFx[0].fighter,true);assert.equal(m.giftFx[1].fighter,false);assert.equal(JSON.stringify({boosts:m.boosts,strengths:m.strengths,hp:m.hp}),before);
+ const e=w.events.findLast(e=>e.eventGiftFx);assert.equal(e.eventGiftFx,'duel');assert.equal(presentationDuration(e),1400);assert.equal(snapshot(w,N+94101).socialStatus.tournament.current.giftFx.length,2);
+ for(let i=0;i<30;i++)action(w,{type:'gift',userId:'a',coins:1,eventId:'burst-'+i},N+94200+i);assert.equal(m.giftFx.length,16);
+});
+test('bounded event queue coalesces small streaks, prioritises high gifts, deduplicates snapshots and clears on stage change',()=>{
+ const q=new EventGiftQueue(),rows=Array.from({length:500},(_,i)=>({id:'gift'+i,user:'p'+i,value:i+1,at:N,mode:'race'}));q.sync('race:1',rows,N);assert.equal(q.pending.length,8);assert.ok(q.seen.size<=256);assert.equal(q.sample(100).value,500);q.sync('race:1',rows.slice(-16),N+1);assert.equal(q.pending.length,7);q.sync('duel:2',[],N+2);assert.equal(q.pending.length,0);assert.equal(q.active,null);
+ q.sync('duel:2',[{id:'x',user:'a',value:1,at:N,mode:'duel'},{id:'y',user:'a',value:1,at:N+100,mode:'duel'}],N+100);assert.equal(q.pending.length,1);assert.equal(q.pending[0].value,2);q.sync('race:3',[{id:'old',user:'a',value:1000,at:N-20000}],N);assert.equal(q.pending.length,0);
+ for(let i=1;i<EVENT_GIFT_TIERS.length;i++){const a=EVENT_GIFT_TIERS[i-1],b=EVENT_GIFT_TIERS[i];assert.ok(b.size>a.size&&b.blades>a.blades&&b.duration>a.duration);assert.equal(eventGiftTier(b.min).name,b.name);}
+});
+test('transparent race and duel PNGs animate moving exhaust and travelling attacks with bounded draw work',async()=>{
+ const art={};for(const mode of ['race','duel']){art[mode]=sliceEventGiftAtlas(await loadImage('public/assets/event-gift-v1/'+mode+'.png'),createCanvas);for(const f of art[mode]){const d=f.getContext('2d').getImageData(0,0,256,256).data;let clear=0;for(let i=3;i<d.length;i+=4)if(d[i]===0)clear++;assert.ok(clear>5000);}}
+ const spiritBeasts={dragon:sliceSpiritAtlas(await loadImage('public/assets/gift-beasts-v1/dragon.png'),3,createCanvas),phoenix:sliceSpiritAtlas(await loadImage('public/assets/gift-beasts-v1/phoenix.png'),2,createCanvas)};
+ const canvas=createCanvas(450,800),c=canvas.getContext('2d'),draw=c.drawImage.bind(c);let calls=0;c.drawImage=(...args)=>{calls++;return draw(...args);};
+ for(const mode of ['race','duel'])for(const value of [1,30,100,500,700,1000,1500,2000,10000]){const q=new EventGiftQueue();q.sync(mode,[{id:mode+value,user:'a',name:'A',value,at:N,mode,fighter:true,boost:4}],N);q.sample(0);const scene={eventGiftQueue:q,eventGiftArt:art,spiritBeasts,targets:[{id:'a',x:260,y:900,scale:1.7},{id:'b',x:640,y:930,scale:1.7}],height:1600,motion:true,cameraEnabled:true,budget:{level:'light'}};let previous;for(const phase of [.15,.36,.65,.88]){const t=phase*eventGiftTier(value).duration;c.setTransform(.5,0,0,.5,0,0);c.clearRect(0,0,900,1600);calls=0;for(const layer of ['back','front'])assert.equal(drawEventGiftFx(scene,c,t,layer,mode),true);assert.ok(calls<70);const pixels=canvas.toBuffer('image/png');if(previous)assert.notDeepEqual(pixels,previous);previous=pixels;const shake=eventGiftImpulse(scene,t);assert.ok(Math.abs(shake.x)<=5&&Math.abs(shake.y)<=5);scene.motion=false;assert.deepEqual(eventGiftImpulse(scene,t),{x:0,y:0});scene.motion=true;}}
+});
+
+test('race and duel camera impulses remain visible at 1x without exposing background edges',()=>{const base={s:1,x:0,y:0},cam=eventGiftCamera(base,{x:3,y:-2},1600);assert.ok(cam.s>1);assert.ok(cam.x<0&&cam.x>=900*(1-cam.s));assert.ok(cam.y<0&&cam.y>=1600*(1-cam.s));assert.equal(eventGiftCamera(base,{x:0,y:0},1600),base);assert.deepEqual(base,{s:1,x:0,y:0});});

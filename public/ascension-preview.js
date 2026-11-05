@@ -1,0 +1,18 @@
+import {Scene} from './scene.js';
+import {REALM_NAMES} from './progression.js';
+import {mountRitualHud} from './live-cinema.js';
+import {mountAscensionStage} from './ascension-stage.js';
+import {CultivationAudio} from './audio.js';
+const params=new URLSearchParams(location.search),scene=new Scene(document.querySelector('#preview'),()=>{}),audio=new CultivationAudio();
+scene.showcase=true;scene.residents=false;scene.zoom=1;scene.setQuality(params.get('quality')||'balanced');
+const shell=document.querySelector('.scene-shell'),lobby=mountAscensionStage(shell,scene);mountRitualHud(shell,scene);
+scene.onRitualAudio=(e,elapsed)=>audio.ritual(e,elapsed);scene.onRitualSound=kind=>audio.play(kind==='gather'?'qi':kind==='reveal'?'victory':kind==='surge'?'ascension-charge':kind==='echo'?'ascension-echo':kind==='rush'?'ascension-rush':kind==='screen-impact'?'ascension-screen-impact':'impact');
+const p={id:'preview:one',name:'Mộc Miên',gender:'nu',active:true,joinedAt:1,realm:1,realmName:REALM_NAMES[1],giftCoins:0,qi:220,neededQi:360,stones:45,neededStones:70,finalRealmEligible:true};
+const state={players:[p],serverNow:Date.now(),settings:{ascensionShowcase:true},realms:REALM_NAMES,boss:null};scene.update(state,p.id);lobby.update(state);
+const select=document.querySelector('#realm');for(let i=1;i<REALM_NAMES.length;i++){const option=document.createElement('option');option.value=i;option.textContent=REALM_NAMES[i];select.appendChild(option);}select.value=params.get('realm')||4;
+document.querySelector('#idle').onclick=()=>{audio.ritual(null);scene.effects=[];scene.presentation=null;scene.update(state,p.id);};
+document.querySelector('#ritual').onclick=()=>{document.querySelector('#idle').click();const r=Number(select.value),e={id:'preview:'+Date.now(),user:p.id,name:p.name,effect:'breakthrough',fromRealm:r-1,toRealm:r,visualFrom:{...p,realm:r-1},visualTo:{...p,realm:r}};scene.noteEvent(e);scene.addEffect(e);};
+document.querySelector('#sound').onclick=async e=>{try{await audio.enable(!audio.enabled);e.target.textContent=audio.enabled?'Tắt âm thanh':'Bật âm thanh';}catch{e.target.textContent='Bấm để thử âm lại';}};
+if(params.get('capture')==='1')document.querySelector('.preview-tools').hidden=true;
+if(params.get('autoplay')==='1')setTimeout(()=>document.querySelector('#ritual').click(),1000);
+window.addEventListener('beforeunload',()=>audio.destroy());

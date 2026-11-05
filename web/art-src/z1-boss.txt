@@ -1,0 +1,3 @@
+Use your built-in image generation tool, with its background option set to "transparent" (PNG with real alpha). Create ONE image, then copy it into the current working directory as z1-boss.png. Do not write code or edit other files.
+
+Image: a BOSS for a 2D side-view xianxia action game: "Huyền Giao" - a colossal ancient flood dragon (jiao) rising from a jade lake, serpentine body with dark teal and black scales, glowing cyan runes, pale jade horns, long whiskers, fins like torn silk, water swirling around its coils. Strict SIDE VIEW facing LEFT, imposing, mouth slightly open with glowing breath, full body coiled so it fits in a roughly square composition. Painterly anime game boss art, dramatic rim light. Transparent background, no ground, no text, no watermark.

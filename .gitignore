@@ -1,0 +1,28 @@
+node_modules/
+data/
+*.log
+output/
+web/data/
+
+# Local credentials and runtime state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.pid
+*.tmp
+*.bak
+__pycache__/
+*.pyc
+
+# Downloaded tooling (install separately; game media remains tracked)
+tools/*.exe
+tools-bin/*.exe
+
+# Personal operations/handoff files, not project source
+BAN-GIAO-*.md
+scripts/activate-huy-account.mjs
+scripts/activate-huy-web.ps1

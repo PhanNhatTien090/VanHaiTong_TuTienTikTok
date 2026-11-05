@@ -1,0 +1,40 @@
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
+import {sliceRitualSwords} from './public/dai-thua-awakening.js';
+import {sliceSpiritAtlas} from './public/gift-spirit-beasts.js';
+import {NGUYEN_ANH_ASSETS,sliceNguyenAnhArt} from './public/nguyen-anh-art.js';
+import {createCanvas,loadImage} from '@napi-rs/canvas';
+import fs from 'node:fs/promises';
+import {Scene} from './public/scene.js';
+import {RenderBudget,CharacterFrames} from './public/performance.js';
+import {CharacterAnimator} from './public/character-animation.js';
+import {sliceDivineAtlas} from './public/divine-wardrobe.js';
+import {sliceAscensionAtlas} from './public/ascension-art.js';
+import {sliceSpectacle} from './public/breakthrough-spectacle.js';
+import {breakthroughDuration} from './public/breakthrough-fx.js';
+import {divineAsset} from './public/divine-wardrobe.js';
+import {drawRitual} from './public/live-cinema.js';
+globalThis.document={body:{classList:{contains:()=>true,toggle(){}}},createElement:()=>createCanvas(1,1)};globalThis.requestAnimationFrame=()=>{};
+const canvas=createCanvas(540,960);canvas.clientWidth=540;
+const s=Object.create(Scene.prototype);Object.assign(s,{canvas,ctx:canvas.getContext('2d'),background:createCanvas(540,960),height:1600,visible:true,motion:true,showNames:true,worldLife:{environment:false,npcs:false},residents:false,cameraEnabled:true,camera:{s:1,x:0,y:0},zoom:1,targets:[],effects:[],budget:new RenderBudget('balanced'),characterFrames:new CharacterFrames(createCanvas),animator:new CharacterAnimator(),characterArt:await loadImage('public/assets/cultivators-v3.png'),standingArt:await loadImage('public/assets/cultivators-standing-v14.png'),robeArt:await loadImage('public/assets/cultivators-robes-v39.png'),robeStandingArt:await loadImage('public/assets/cultivators-standing-v39.png')});
+s.divineArt=new Map();for(let group=0;group<7;group++){try{s.divineArt.set(group,sliceDivineAtlas(await loadImage('public'+divineAsset(group)),group,createCanvas,512));}catch{}}
+s.ascensionArt={};for(const name of ['mid','high','bursts'])s.ascensionArt[name]=sliceAscensionAtlas(await loadImage('public/assets/breakthrough-v2/'+name+'.png'),320,createCanvas);
+s.breakthroughSpectacle=sliceSpectacle(await loadImage('public/assets/breakthrough-v3/celestial-spectacle.png'),createCanvas);
+s.nguyenAnhArt={};for(const spec of NGUYEN_ANH_ASSETS)Object.assign(s.nguyenAnhArt,sliceNguyenAnhArt(await loadImage('public'+spec.url),spec.tiles,createCanvas));
+s.spiritBeasts={dragon:sliceSpiritAtlas(await loadImage('public/assets/gift-beasts-v1/dragon.png'),3,createCanvas),phoenix:[]};
+s.ritualSwords=sliceRitualSwords(await loadImage('public/assets/events-v1/prestige-swords-v1.png'),createCanvas);
+s.immortalWorldArt=await loadImage('public/assets/chan-tien-cinema-v2/immortal-world.png');
+s.art=await loadImage('public/assets/sect-morning-v20.png');s.background.getContext('2d').scale(.6,.6);s.paintWorld(s.background.getContext('2d'));
+const names=['Thanh Vân','Mộc Miên','Tiểu Ngư','Hàn Phong','Bạch Lộ','Vô Trần','Lạc Yên','Minh Nguyệt'];
+const players=Array.from({length:48},(_,i)=>({id:'p'+i,name:names[i%8]+' '+(i+1),active:true,joinedAt:i,realm:i%6,giftCoins:0,qi:20,neededQi:100,stones:5,neededStones:20}));s.update({players,boss:null},null);s.frame(1000);
+players[1].gender=process.argv.includes('--female')?'nu':'nam';
+const raidDir='output/abyss-boss-v1';await fs.mkdir(raidDir,{recursive:true});
+s.abyssArt=await loadImage('public/assets/abyss-dragon-v1/abyss-dragon.png');
+s.arenaArt={bg:await loadImage('public/assets/arena-v1/boss-arena.png'),wings:await loadImage('public/assets/arena-v1/wings-atlas.png')};
+const epoch=1800000000000,boss={id:'qa-abyss',species:'abyss-dragon',name:'Hắc Uyên Ma Long',kind:'raid',startedAt:epoch,endsAt:epoch+300000,hp:14800,maxHp:14800,participants:{},damage:{}};
+s.effects=[];s.presentation=null;s.cameraEnabled=false;s.camera={s:1,x:0,y:0};s.showcase=false;s.update({players:players.slice(0,24),boss,realms:[]},null);
+const originalNow=Date.now,sheet=createCanvas(1620,960),q=sheet.getContext('2d');
+for(const [i,ms]of [2000,3900,4800,5700,7600,12000].entries()){
+ Date.now=()=>epoch+ms;s.frame(ms+20000);q.drawImage(canvas,i%3*540,Math.floor(i/3)*480,540,480);await fs.writeFile(raidDir+'/'+ms+'.png',canvas.toBuffer('image/png'));
+}
+Date.now=originalNow;await fs.writeFile(raidDir+'/phases.png',sheet.toBuffer('image/png'));console.log(raidDir);

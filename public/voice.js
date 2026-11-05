@@ -1,0 +1,93 @@
+import {isEventAnnouncement} from './event-announcements.js';
+// 4/11/2026: tốc độ đọc (1 = gốc). Trình duyệt giữ nguyên cao độ khi preservesPitch=true.
+export const VOICE_RATE=1.8;
+export const syntheticVoice=e=>!!(e.resident||e.actorKind==='npc'||e.simulated||e.autoRose||String(e.user||'').startsWith('puppet-'));
+export const raceOpeningVoice=e=>!!(e.raceEntry||e.effect==='race'&&/^VÂN HẢI PHI KIẾM|^Phi kiếm xuất phát/.test(e.text||''));
+export const realGiftVoice=e=>!!(e.gift&&Number(e.coins)>0&&!syntheticVoice(e));
+// Tu tiên giả thường trú luôn xếp sau khách thật (0).
+export const priority=e=>syntheticVoice(e)?0:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
+
+export class VoiceQueue {
+  constructor({world,audio,onStart=()=>{},onStatus=()=>{}}){this.world=world;this.audio=audio;this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
+  add(e){
+    if(!this.enabled||!this.audio.enabled)return;
+    // 4/11/2026: mỗi sự kiện chỉ vào hàng giọng một lần (giờ được thêm ngay khi nhận, trước khi hình hiện).
+    if(e.id){this.handled??=new Set();if(this.handled.has(e.id))return;this.handled.add(e.id);if(this.handled.size>400)this.handled.delete(this.handled.values().next().value);}
+    if(e.resident&&(!e.file||this.queue.length))return;
+    if(!e.resident&&syntheticVoice(e)&&(this.running||this.queue.length))return;
+    if(e.id&&(isEventAnnouncement(e)||realGiftVoice(e)||e.autoArrival)){if(this.announced.has(e.id))return;this.announced.add(e.id);if(this.announced.size>256)this.announced.delete(this.announced.values().next().value);}
+    const now=Date.now(),key=(e.user||'sect')+':'+e.effect;
+    if(priority(e)<=1&&now-(this.last.get(key)||0)<6500)return;
+    if(priority(e)<=1&&this.queue.length>=3)return; // v54: hàng chờ đã dồn → bỏ câu thường, để quà/đột phá/sự kiện được đọc kịp
+    this.last.set(key,now);if(this.last.size>500)this.last=new Map([...this.last].slice(-200));
+    if(this.queue.some(x=>x.e.id===e.id))return;
+    if(e.autoArrival){
+      this.queue=this.queue.filter(x=>!x.e.autoArrival||now-x.at<8000);
+      // Bound spoken entrances to three; gifts remain highest priority.
+      if(this.queue.filter(x=>x.e.autoArrival).length>=3)return;
+    }
+    this.queue.push({e,at:now});
+    if(this.queue.length>6){const min=Math.min(...this.queue.map(x=>priority(x.e)));this.queue.splice(this.queue.findIndex(x=>priority(x.e)===min),1);}
+    this.prunePrepared();
+    // Tạo sẵn tối đa hai câu kế tiếp, kể cả hành động thường.
+    this.prepareQueued();
+    // Hành động thật nhường chỗ khỏi lời nền; quà/sự kiện mới ngắt câu thường.
+    if(!syntheticVoice(e)&&this.running&&((this.activePriority??9)===0||priority(e)>2&&(this.activePriority??9)<=2))this.cancelPlayback?.();
+    this.next();
+  }
+  prepareQueued(){
+    if(!this.enabled||!this.audio.enabled)return;
+    const waiting=[...this.queue].sort((a,b)=>priority(b.e)-priority(a.e)||a.at-b.at);
+    for(const {e} of waiting){
+      if(e.file||syntheticVoice(e)||this.prepared.has(e.id))continue;
+      if((this.preparing||0)>=2||this.prepared.size>=2)break;
+      this.prepare(e).catch(()=>{});
+    }
+  }
+  prepare(e){
+    if(this.prepared.has(e.id))return this.prepared.get(e.id);
+    const query=e.sourceIds?.length>1?`ids=${encodeURIComponent(e.sourceIds.join(','))}`:e.summary?`summary=${encodeURIComponent(e.summary)}&n=${Number(e.count)||0}`:`id=${encodeURIComponent(e.id)}`;
+    this.preparing=(this.preparing||0)+1;
+    const job=(async()=>{const response=await fetch(`/api/speech?world=${this.world}&${query}`,{signal:AbortSignal.timeout(realGiftVoice(e)||isEventAnnouncement(e)?45000:20000)});if(!response.ok)throw Error(`Không tạo được giọng đọc (${response.status}).`);return response.blob();})().finally(()=>{this.preparing=Math.max(0,(this.preparing||1)-1);});
+    this.prepared.set(e.id,job);return job;
+  }
+  prunePrepared(){const keep=new Set(this.queue.map(x=>x.e.id));if(this.activeVoiceId)keep.add(this.activeVoiceId);for(const id of this.prepared.keys())if(!keep.has(id))this.prepared.delete(id);}
+  async next(){
+    if(this.running||!this.enabled||!this.audio.enabled)return;
+    this.queue=this.queue.filter(x=>Date.now()-x.at<(x.e.autoArrival?8000:realGiftVoice(x.e)?90000:isEventAnnouncement(x.e)?75000:priority(x.e)<=1?5000:25000));if(!this.queue.length)return;
+    this.queue.sort((a,b)=>priority(b.e)-priority(a.e)||a.at-b.at);
+    const {e}=this.queue.shift(),generation=this.generation;this.running=true;this.activeVoiceId=e.id;this.activePriority=priority(e);let url=null;
+    try{
+      if(e.file){await this.play(e.file,e,generation);return;}
+      this.onStatus('Đang chuẩn bị giọng đọc…');
+      const pending=this.prepare(e);this.prepareQueued();
+      const blob=await pending;if(generation!==this.generation)return;
+      url=URL.createObjectURL(blob);await this.play(url,e,generation);
+    }catch(err){if(generation===this.generation){this.onStatus(err.name==='NotAllowedError'?'Bấm ♫ hoặc Thử âm để mở giọng đọc.':err.message);if(isEventAnnouncement(e)&&err.name!=='NotAllowedError'&&(e.voiceRetries||0)<2){await new Promise(r=>setTimeout(r,1200));if(generation===this.generation)this.queue.unshift({e:{...e,voiceRetries:(e.voiceRetries||0)+1},at:Date.now()});}}}
+    finally{if(url)URL.revokeObjectURL(url);if(generation===this.generation){this.prepared.delete(e.id);this.activeVoiceId=null;this.running=false;this.current=null;this.audio.duck(false);this.prunePrepared();this.next();}}
+  }
+  async play(url,e,generation=this.generation){
+    const clip=new Audio(url);this.current=clip;clip.volume=this.clipVolume();clip.preload='auto';clip.preservesPitch=true;clip.playbackRate=VOICE_RATE; // 4/11: đọc nhanh 1,8× giữ cao độ
+    let finish;const ended=new Promise(resolve=>finish=resolve);let timer;
+    clip.onended=clip.onerror=()=>finish();this.cancelPlayback=()=>{clip.pause();finish();};
+    this.audio.duck(true);
+    try{
+      await clip.play();if(generation!==this.generation){clip.pause();return;}
+      this.onStatus('Giọng Việt đang hoạt động');this.onStart(e,Math.min(12000,(Number.isFinite(clip.duration)?clip.duration:5)*1000/VOICE_RATE));
+      timer=setTimeout(()=>{clip.pause();finish();},15000);await ended;
+    }finally{clearTimeout(timer);clip.pause();if(this.current===clip)this.current=null;if(generation===this.generation)this.audio.duck(false);}
+  }
+  /** Lời tông sư lúc vắng: chỉ phát khi không có gì đang đọc/chờ đọc. */
+  async idle(line){
+    if(this.running||this.queue.length||!this.enabled||!this.audio.enabled)return false;
+    const generation=this.generation;this.running=true;this.activePriority=0;
+    try{await this.play(line.file,{name:'Tông sư',text:line.text,user:line.user},generation);return true;}
+    catch{return false;}
+    finally{if(generation===this.generation){this.running=false;this.next();}}
+  }
+  // Giọng phải rõ hơn nhạc nền: âm lượng tổng 30% (mặc định) → giọng 90%.
+  clipVolume(){return Math.min(1,(this.audio.volume??1)*3)*this.volume;}
+  setVolume(v){this.volume=Math.max(0,Math.min(1,v));if(this.current)this.current.volume=this.clipVolume();}
+  stop(){this.generation++;this.queue=[];this.prepared.clear();this.activeVoiceId=null;this.cancelPlayback?.();this.current=null;this.running=false;this.audio.duck(false);}
+  async sample(){this.stop();const generation=this.generation;this.running=true;try{await this.play('/assets/voice-welcome.mp3',{name:'Vân Hải Tông',text:'Chào mừng đạo hữu · gõ nhapmon để tu luyện'},generation);}finally{if(generation===this.generation){this.running=false;this.next();}}}
+}

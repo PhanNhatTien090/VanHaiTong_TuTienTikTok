@@ -1,0 +1,50 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createWorld,action,tick,startFlowerEvent} from '../engine.mjs';
+import {announcement} from '../speech.mjs';
+test('Thiên Hoa Vũ scores likes and gifts, buffs participants, and rewards the top 3 + participants once',()=>{
+  const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});let now=1e7;
+  for(const id of ['a','b','c','d','e'])action(w,{type:'chat',userId:id,name:id.toUpperCase(),text:'nhapmon'},now);
+  assert.equal(startFlowerEvent(w,now,3).ok,true);assert.equal(startFlowerEvent(w,now+1,3).ok,false,'cannot restart while running');
+  assert.match(announcement(w.events.at(-1)),/Thiên Hoa Vũ giáng thế ba phút!/);
+  action(w,{type:'like',userId:'a',name:'A',count:120},now+=1000);
+  action(w,{type:'like',userId:'a',name:'A',count:80},now+=1000); // phần thưởng tim đang hồi nhưng điểm vẫn tính
+  action(w,{type:'gift',userId:'b',name:'B',coins:5,count:3,eventId:'g1'},now+=1000);
+  action(w,{type:'like',userId:'c',name:'C',count:30},now+=1000);
+  action(w,{type:'like',userId:'d',name:'D',count:15},now+=1000);
+  action(w,{type:'like',userId:'e',name:'E',count:3},now+=1000);
+  const ev=w.flowerEvent;assert.equal(ev.scores.a,200);assert.equal(ev.scores.b,1500,'1 coin = 100 điểm');assert.equal(ev.scores.c,30);
+  assert.ok(w.players.a.buffUntil>now&&w.players.a.buffMult>=2,'participants are buffed immediately');
+  w.nextBossAt=now+1e12;tick(w,now=ev.endsAt+1);
+  assert.ok(w.players.b.artifacts.includes('hoa-tien-kiem'));assert.ok(w.players.a.artifacts.includes('dao-hoa-phien'));assert.ok(w.players.c.artifacts.includes('hoa-linh-lung'));
+  assert.ok(w.players.d.artifacts.includes('spirit-vase'),'participant ≥10 points');assert.ok(!w.players.e.artifacts.includes('spirit-vase'),'below 10 points');
+  assert.equal(w.events.filter(e=>e.flowerRank).length,3);assert.ok(w.events.some(e=>e.flowerEnd));
+  const first=w.events.find(e=>e.flowerRank===1);assert.match(announcement({...first,gender:null}),/hạng nhất thuộc về đạo hữu B với một nghìn năm trăm điểm/);
+  const qi=w.players.b.qi;tick(w,now+5000);assert.equal(w.players.b.qi,qi,'rewards are granted once');
+  assert.equal(action(w,{type:'like',userId:'e',name:'E',count:50},now+=20000).ok,true);assert.equal(ev.scores.e,3,'no scoring after the event');
+});
+test('Tinh Hà Lưu Tinh scores comments (rate-limited) and grants its own artifacts',async()=>{
+  const {announcement}=await import('../speech.mjs');
+  const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});let now=2e7;
+  for(const id of ['a','b','c'])action(w,{type:'chat',userId:id,name:id.toUpperCase(),text:'nhapmon'},now);
+  assert.equal(startFlowerEvent(w,now,2,'meteor').ok,true);assert.match(announcement(w.events.at(-1)),/Tinh Hà Lưu Tinh giáng thế .*Thả tim nhận thưởng mốc/);
+  action(w,{type:'chat',userId:'a',name:'A',text:'hello'},now+=1000);action(w,{type:'chat',userId:'a',name:'A',text:'hi'},now+=1000);
+  assert.equal(w.flowerEvent.scores.a,5,'3-second limit per viewer');
+  action(w,{type:'chat',userId:'a',name:'A',text:'tuluyen'},now+=3000);assert.equal(w.flowerEvent.scores.a,10,'commands count too');
+  action(w,{type:'like',userId:'b',name:'B',count:4},now+=1000);action(w,{type:'chat',userId:'c',name:'C',text:'wow'},now+=1000);
+  w.nextBossAt=now+1e12;tick(w,now=w.flowerEvent.endsAt+1);
+  assert.ok(w.players.a.artifacts.includes('tinh-ha-kinh'));assert.ok(w.players.c.artifacts.includes('luu-tinh-cung'));assert.ok(w.players.b.artifacts.includes('that-tinh-phu'));
+  assert.equal(action(w,{type:'craft',userId:'a',itemId:'tinh-ha-kinh'},now+1).ok,false,'event relics cannot be crafted');
+});
+test('auto events alternate kinds, need ≥2 active viewers and no boss, and can be turned off',async()=>{
+  const {setEventSettings}=await import('../engine.mjs');
+  const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});let now=3e7;w.nextBossAt=now+1e12;w.settings.blessingMinutes=0;
+  tick(w,now);assert.ok(w.nextAutoEventAt>now);
+  now=w.nextAutoEventAt;tick(w,now);assert.equal(w.flowerEvent,undefined,'nobody active → postponed');
+  for(const id of ['x','y'])action(w,{type:'chat',userId:id,name:id,text:'nhapmon'},now);
+  now=w.nextAutoEventAt;for(const p of Object.values(w.players))p.lastActive=now;tick(w,now);assert.equal(w.flowerEvent.kind,'flower');
+  tick(w,now=w.flowerEvent.endsAt+1);now=w.nextAutoEventAt;for(const p of Object.values(w.players))p.lastActive=now;tick(w,now);assert.equal(w.flowerEvent.kind,'meteor','alternates');
+  assert.equal(setEventSettings(w,{autoEvents:false}).ok,true);tick(w,now=w.flowerEvent.endsAt+1);const id=w.flowerEvent.id;
+  now+=60*60000;for(const p of Object.values(w.players))p.lastActive=now;tick(w,now);assert.equal(w.flowerEvent.id,id,'off → no new event');
+  assert.equal(setEventSettings(w,{autoEventMinutes:2}).ok,false);
+});

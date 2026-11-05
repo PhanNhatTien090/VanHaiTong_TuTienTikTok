@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1d1c">
+<title>Vân Hải Tông</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%230d2423'/%3E%3Ctext x='24' y='33' font-size='26' text-anchor='middle' fill='%23e8c977'%3E山%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@600;700&family=Be+Vietnam+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/web.css">
+<link rel="stylesheet" href="/battle.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Đăng nhập / đăng ký -->
+  <section id="authView" class="screen center" hidden>
+    <div class="card auth-card">
+      <div class="brand"><span class="seal">山</span><div><b>VÂN HẢI TÔNG</b><small>Tiên giới · bản web</small></div></div>
+      <form id="authForm" autocomplete="on">
+        <div id="nameStep">
+          <label>Nhập tên của bạn<input name="username" autocomplete="username" required maxlength="30" placeholder="vd: Nam nguyễn (tên TikTok nếu đã chơi LIVE)"></label>
+          <small class="field-hint">Đã chơi trên LIVE thì gõ đúng tên TikTok để nhận lại nhân vật. Có dấu hay không dấu đều được.</small>
+          <button class="primary" type="button" id="nameNext">Tiếp tục</button>
+        </div>
+        <div id="passStep" hidden>
+          <div class="who-line"><span id="whoName"></span><button type="button" class="link" id="changeName">Đổi tên</button></div>
+          <div id="whoInfo"></div>
+          <label><span id="passLabel">Mật khẩu</span><input name="password" type="password" minlength="6" placeholder="ít nhất 6 ký tự"></label>
+          <label class="show-pass"><input type="checkbox" id="showPass"> Hiện mật khẩu</label>
+          <button class="primary" type="submit" id="authSubmit">Đăng nhập</button>
+        </div>
+        <p class="error" id="authError" role="alert"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- Chưa có nhân vật -->
+  <section id="startView" class="screen center" hidden>
+    <div class="card start-card">
+      <ol class="steps">
+        <li class="done"><b>✓</b><span>Tạo tài khoản web</span></li>
+        <li class="on"><b>2</b><span>Lấy nhân vật</span></li>
+        <li><b>3</b><span>Vào tông môn</span></li>
+      </ol>
+      <h1>Bạn đã từng chơi trên LIVE chưa?</h1>
+      <button class="choice" id="chooseLink"><b>Có, tôi đã chơi trên LIVE TikTok</b><span>Lấy lại đúng nhân vật cũ (cảnh giới, pháp bảo, skin). Cần gõ 1 bình luận trong LIVE để xác nhận, mất khoảng 30 giây.</span></button>
+      <button class="choice" id="chooseNew"><b>Chưa, tạo nhân vật mới</b><span>Chơi ngay trên web từ Phàm Nhân. Sau này vẫn nối với TikTok được.</span></button>
+      <form id="newForm" hidden>
+        <label>Đạo hiệu<input name="name" required minlength="2" maxlength="24" placeholder="Tên hiện trên tiên môn"></label>
+        <div class="seg" role="radiogroup" aria-label="Xưng hô">
+          <label><input type="radio" name="gender" value="nam" checked><span>Sư huynh</span></label>
+          <label><input type="radio" name="gender" value="nu"><span>Sư tỷ</span></label>
+        </div>
+        <button class="primary" type="submit">Nhập môn</button>
+        <p class="error" id="newError" role="alert"></p>
+      </form>
+      <button class="link" data-logout>Đăng xuất</button>
+    </div>
+  </section>
+
+  <!-- Liên kết TikTok -->
+  <section id="linkView" class="screen center" hidden>
+    <div class="card link-card">
+      <h1>Lấy lại nhân vật TikTok</h1>
+      <ol class="how">
+        <li><b>1</b><span>Mở TikTok, vào <b>LIVE Vân Hải Tông</b> (giữ trang này mở).</span></li>
+        <li><b>2</b><span>Gõ đúng bình luận dưới đây, rồi gửi:</span></li>
+      </ol>
+      <div class="code-box"><span>lienket</span> <b id="linkCode">······</b></div>
+      <button id="copyCode" class="copy-btn">Sao chép bình luận</button>
+      <ol class="how" start="3">
+        <li><b>3</b><span>Chờ vài giây, trang này <b>tự chuyển</b> sang nhân vật của bạn. Không cần bấm gì thêm.</span></li>
+      </ol>
+      <p class="link-wait"><i></i>Đang chờ bình luận của bạn trên LIVE… mã còn hiệu lực <b id="linkTimer">10:00</b></p>
+      <p class="muted small">Gõ có dấu hay không dấu đều được. Mã chỉ dùng một lần; hết hạn thì bấm "Lấy mã mới".</p>
+      <button id="newCode">Lấy mã mới</button>
+      <details id="devBox" hidden>
+        <summary>Thử trên máy (không cần LIVE)</summary>
+        <p class="muted small">Chỉ hiện khi mở trên máy chủ. Chọn một người chơi TikTok để giả lập họ gõ mã.</p>
+        <input id="devSearch" placeholder="Tìm tên người chơi…">
+        <ul id="devList" class="dev-list"></ul>
+      </details>
+      <button class="link" id="linkBack">← Quay lại</button>
+    </div>
+  </section>
+
+  <!-- Game -->
+  <section id="gameView" class="screen hub-screen" hidden>
+    <div id="hubCanvas" class="hub-canvas" aria-label="Tông môn"></div>
+    <div id="hubLoading" class="hub-loading"><span class="seal">山</span><b>VÂN HẢI TÔNG</b><small>Đang mở cổng tông môn…</small><i></i></div>
+    <div id="panHint" class="pan-hint" hidden>⇆ Kéo để xem toàn tông môn</div>
+    <div id="guide" class="guide" hidden><img src="/art/ui/avatar-nam.png" alt=""><div><b id="guideTitle"></b><p id="guideText"></p><div class="guide-act"><button id="guideSkip" class="link">Bỏ qua</button><button id="guideNext" class="gp-go">Tiếp</button></div></div></div>
+    <header class="hub-hud">
+      <button id="avatarBtn" class="avatar-btn" aria-label="Hồ sơ nhân vật"><img id="avatarImg" alt=""><span class="avatar-ring"></span></button>
+      <div class="hud-id">
+        <b id="hudName">—</b>
+        <span><span id="hudRealm">—</span> <span id="hudVip" class="vip" hidden></span></span>
+        <div class="hud-qi" title="Tu vi"><i id="hudQi"></i></div>
+      </div>
+      <div class="hud-res">
+        <span class="res" title="Thể lực"><img src="/art/ui/icon-stamina.png" alt=""><b id="hudStamina">0</b></span>
+        <span class="res" title="Linh thạch"><img src="/art/ui/icon-stone.png" alt=""><b id="hudStones">0</b></span>
+        <span class="res" title="Linh thảo"><img src="/art/ui/icon-herb.png" alt=""><b id="hudHerbs">0</b></span>
+        <span class="res" title="Sức mạnh"><img src="/art/ui/icon-power.png" alt=""><b id="hudPower">0</b></span>
+        <span class="res jade" title="Tiên Ngọc"><img src="/art/ui/icon-jade.png" alt=""><b id="hudJade">0</b></span>
+      </div>
+    </header>
+    <aside class="hub-side">
+      <button class="side-btn" id="mailBtn"><img src="/art/ui/icon-mail.png" alt=""><span>Thư</span><i class="dot" id="mailDot" hidden></i></button>
+      <button class="side-btn" id="giftBtn"><img src="/art/ui/icon-gift.png" alt=""><span>Quà</span><i class="dot" id="giftDot" hidden></i></button>
+      <button class="side-btn" id="settingsBtn"><img src="/art/ui/icon-settings.png" alt=""><span>Cài đặt</span></button>
+    </aside>
+    <div id="eventBanner" class="event-banner" hidden></div>
+    <button id="liveTicker" class="live-ticker" hidden><span class="lt-tag"><i></i>LIVE <em id="liveOnline">0</em></span><span id="liveText" class="lt-text"></span></button>
+    <!-- Điện thoại: màn dọc chỉ thấy Đại Điện → dải đi nhanh tới các khu (vẫn vuốt ngang quảng trường được). -->
+    <nav id="travel" class="travel" aria-label="Đi tới">
+      <button data-go="dungeon">⚔️ Bí Cảnh</button><button data-go="events">🏮 Sự Kiện</button><button data-go="forge">🔨 Luyện Khí</button>
+      <button data-go="beasts">🐉 Linh Thú</button><button data-go="library">📜 Tàng Kinh</button><button data-go="hall">🏯 Đại Điện</button>
+    </nav>
+    <nav class="hub-dock">
+      <button id="questBtn"><img src="/art/ui/icon-quest.png" alt=""><span>Nhiệm vụ</span><i class="dot" id="questDot" hidden></i></button>
+      <button id="shopBtn"><img src="/art/ui/icon-shop.png" alt=""><span>Cửa hàng</span></button>
+      <button data-open="ranking"><img src="/art/ui/icon-rank.png" alt=""><span>Xếp hạng</span></button>
+      <button data-soon="Chat tông môn"><img src="/art/ui/icon-chat.png" alt=""><span>Chat</span></button>
+    </nav>
+  </section>
+
+  <section id="profileSheet" class="sheet game" hidden>
+    <button class="sheet-close" id="sheetClose" aria-label="Về tông môn">✕</button>
+    <header class="hud">
+      <div class="who">
+        <b id="pName">—</b>
+        <span id="pRealm" class="realm">—</span>
+        <span id="pVip" class="vip" hidden></span>
+      </div>
+      <div class="wallet">
+        <span title="Linh thạch"><i class="gem stone"></i><b id="pStones">0</b></span>
+        <span title="Linh thảo"><i class="gem herb"></i><b id="pHerbs">0</b></span>
+        <span title="Sức mạnh"><i class="gem power"></i><b id="pPower">0</b></span>
+      </div>
+      <button class="icon-btn" id="menuBtn" aria-label="Tài khoản">☰</button>
+    </header>
+
+    <div class="stage">
+      <canvas id="stageCanvas" aria-label="Nhân vật của bạn"></canvas>
+      <div id="buffChip" class="chip" hidden></div>
+      <div id="bossBar" class="boss" hidden><span id="bossName"></span><div class="bar"><i id="bossHp"></i></div><small id="bossInfo"></small></div>
+    </div>
+
+    <div class="qi">
+      <div class="qi-row"><span>Tu vi</span><b id="qiText">0 / 0</b></div>
+      <div class="bar"><i id="qiBar"></i></div>
+      <div class="qi-row"><span>Linh thạch đột phá</span><b id="stoneText">0 / 0</b></div>
+      <div class="bar thin"><i id="stoneBar"></i></div>
+    </div>
+
+    <main class="panels">
+      <section class="panel active" data-panel="home">
+        <div class="actions">
+          <button class="act" data-act="cultivate"><b>Tu luyện</b><small>+tu vi · 10 giây</small><i class="cd"></i></button>
+          <button class="act" data-act="gather"><b>Hái linh thảo</b><small>+thảo, +thạch · 30 giây</small><i class="cd"></i></button>
+          <button class="act" data-act="checkin"><b>Điểm danh</b><small>Mỗi ngày</small><i class="cd"></i></button>
+          <button class="act" id="goDungeon"><b>Đi bí cảnh</b><small>Đánh boss, nhặt nguyên liệu</small></button>
+          <button class="act wide gold" data-act="breakthrough" id="breakBtn"><b>Đột phá</b><small id="breakInfo">—</small></button>
+        </div>
+        <div id="pillQuick" class="pill-quick"></div>
+        <ol id="log" class="log" aria-live="polite"></ol>
+      </section>
+
+      <section class="panel" data-panel="artifacts">
+        <div class="filter" id="artifactFilter">
+          <button class="active" data-f="all">Tất cả</button><button data-f="owned">Đang có</button><button data-f="craft">Rèn được</button><button data-f="special">Đặc biệt</button>
+        </div>
+        <div class="grid" id="artifactList"></div>
+      </section>
+
+      <section class="panel" data-panel="library">
+        <h2>Tàng Kinh Các</h2>
+        <div class="grid" id="manualList"></div>
+        <h2>Đan phòng</h2>
+        <div class="grid" id="pillList"></div>
+      </section>
+
+      <section class="panel" data-panel="wardrobe">
+        <h2>Trang phục</h2>
+        <p class="muted small">Bộ áo đang mặc sẽ hiện cả trên LIVE.</p>
+        <div class="grid" id="skinList"></div>
+        <h2>Bậc áo theo tổng quà</h2>
+        <div class="tiers" id="tierList"></div>
+      </section>
+
+      <section class="panel" data-panel="ranking">
+        <div class="filter" id="rankFilter"><button class="active" data-r="web">Đạo hữu web</button><button data-r="live">Đang LIVE</button><button data-r="tower">Tháp</button><button data-r="sect">Toàn tông</button></div>
+        <ol class="rank" id="rankList"></ol>
+      </section>
+    </main>
+
+    <nav class="tabbar">
+      <button class="active" data-tab="home"><span>⛰</span>Động phủ</button>
+      <button data-tab="artifacts"><span>⚔</span>Pháp bảo</button>
+      <button data-tab="library"><span>📜</span>Tu luyện</button>
+      <button data-tab="wardrobe"><span>✧</span>Trang phục</button>
+      <button data-tab="ranking"><span>☰</span>Xếp hạng</button>
+    </nav>
+  </section>
+
+  <section id="dungeonPanel" class="dungeon-panel" hidden>
+    <div class="dp-card">
+      <button class="sheet-close" id="dungeonClose" aria-label="Đóng">✕</button>
+      <h2 id="dpZone">Bí Cảnh</h2>
+      <p class="dp-sub"><img src="/art/ui/icon-stamina.png" alt=""> Thể lực <b id="dpStamina">0/100</b> · <span id="dpDaily"></span></p>
+      <div id="dpZones" class="dp-zones"></div>
+      <div id="dpStages" class="dp-stages"></div>
+    </div>
+  </section>
+  <section id="gamePanel" class="dungeon-panel" hidden>
+    <div class="dp-card">
+      <button class="sheet-close" id="gpClose" aria-label="Đóng">✕</button>
+      <h2 id="gpTitle"></h2>
+      <div id="gpBody"></div>
+    </div>
+  </section>
+  <div id="battleHost" class="battle-host" hidden></div>
+
+  <dialog id="menu">
+    <form method="dialog">
+      <h3 id="menuUser">Tài khoản</h3>
+      <p id="menuLink" class="muted small"></p>
+      <button type="button" id="menuLinkBtn" hidden>Liên kết nhân vật TikTok</button>
+      <button type="button" id="soundBtn">Âm thanh: Bật</button>
+      <button type="button" data-logout>Đăng xuất</button>
+      <button value="close" class="link">Đóng</button>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status"></div>
+</div>
+<script type="module" src="/web.js"></script>
+</body>
+</html>

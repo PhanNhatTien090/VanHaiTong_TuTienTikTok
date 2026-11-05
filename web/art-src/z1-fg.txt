@@ -1,0 +1,3 @@
+Use your built-in image generation tool, with its background option set to "transparent" (PNG with real alpha). Create ONE image, then copy it into the current working directory as z1-fg.png. Do not write code or edit other files.
+
+Image: an ULTRA-WIDE (about 2.5:1) FOREGROUND OVERLAY layer for a side-scrolling xianxia game level at a jade lake: only along the very BOTTOM EDGE and the far left/right corners - tall reeds, lotus leaves, glowing jade flowers, a mossy rock and a drooping willow branch entering from the top corners. The whole middle and center of the image must be EMPTY TRANSPARENT so the gameplay remains visible. Same painterly 3D-render style, slightly darker and blurred like depth of field. Transparent background, no text, no watermark.

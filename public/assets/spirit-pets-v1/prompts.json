@@ -1,0 +1,33 @@
+[
+  {
+    "id": "jade-rabbit",
+    "prompt": "Use case: stylized-concept. Asset type: transparent PNG game companion animation sprite sheet for a premium Chinese cultivation fantasy game. Subject: a small jade-white moon rabbit, mint-tipped ears, tiny green jade forehead jewel, short fluffy rounded body, common tier charming and simple. Create ONE horizontal sprite sheet of THREE equal sized cells on a genuinely transparent background, full body creature centered separately in each cell, left frame idle with feet tucked, middle frame lively hop with raised head and tail, right frame floating relaxed with different tail/wing position. All three depict exactly the SAME small companion at matching scale and three-quarter view facing left. Polished detailed 3D donghua game rendering with readable silhouette at 64px, graceful, beautiful, NOT flat emoji, no humans, no scenery, no ground, no text, no watermark. All body parts fully within each cell with generous transparent padding, never overlap neighboring cells. Soft painted glow confined very closely to creature, no giant circles or large particles. For flying animal open wings in middle pose. Consistent orthographic camera.",
+    "tool": "built-in image_gen",
+    "file": "public/assets/spirit-pets-v1/jade-rabbit.png"
+  },
+  {
+    "id": "ember-fox",
+    "prompt": "Use case: stylized-concept. Asset type: transparent PNG game companion animation sprite sheet for a premium Chinese cultivation fantasy game. Subject: a small elegant vermilion fox spirit, three fluffy tails, glowing orange paws, gold ear markings, rare tier. Create ONE horizontal sprite sheet of THREE equal sized cells on a genuinely transparent background, full body creature centered separately in each cell, left frame idle with feet tucked, middle frame lively hop with raised head and tail, right frame floating relaxed with different tail/wing position. All three depict exactly the SAME small companion at matching scale and three-quarter view facing left. Polished detailed 3D donghua game rendering with readable silhouette at 64px, graceful, beautiful, NOT flat emoji, no humans, no scenery, no ground, no text, no watermark. All body parts fully within each cell with generous transparent padding, never overlap neighboring cells. Soft painted glow confined very closely to creature, no giant circles or large particles. For flying animal open wings in middle pose. Consistent orthographic camera.",
+    "tool": "built-in image_gen",
+    "file": "public/assets/spirit-pets-v1/ember-fox.png",
+    "revision": "Edit the same three-pose fox sprite sheet. Preserve creature identity. Remove all backdrop, shadows and broad glow; true alpha outside creature. Three equal columns, full bodies and large clear gutters, no crossing cell boundaries."
+  },
+  {
+    "id": "frost-tiger",
+    "prompt": "Use case: stylized-concept. Asset type: transparent PNG game companion animation sprite sheet for a premium Chinese cultivation fantasy game. Subject: a small majestic white tiger cub spirit, silver cyan stripes, blue crystal mane tufts and icy paws, epic tier. Create ONE horizontal sprite sheet of THREE equal sized cells on a genuinely transparent background, full body creature centered separately in each cell, left frame idle with feet tucked, middle frame lively hop with raised head and tail, right frame floating relaxed with different tail/wing position. All three depict exactly the SAME small companion at matching scale and three-quarter view facing left. Polished detailed 3D donghua game rendering with readable silhouette at 64px, graceful, beautiful, NOT flat emoji, no humans, no scenery, no ground, no text, no watermark. All body parts fully within each cell with generous transparent padding, never overlap neighboring cells. Soft painted glow confined very closely to creature, no giant circles or large particles. For flying animal open wings in middle pose. Consistent orthographic camera.",
+    "tool": "built-in image_gen",
+    "file": "public/assets/spirit-pets-v1/frost-tiger.png"
+  },
+  {
+    "id": "sun-phoenix",
+    "prompt": "Create a production game sprite animation atlas, a wide horizontal PNG with a genuinely transparent background. Exactly THREE SMALL miniature golden red phoenix companions, the same creature in three different poses, each fully isolated in its own square cell. IMPORTANT composition: reserve left 10% and right 10% margins of EACH CELL completely empty and transparent. The phoenixes must be SMALL in the canvas, no more than 55% of each cell width and 65% of cell height, with huge clear gaps, never touching or overlapping other cells. Left cell seated floating with wings partly closed, center cell wings spread upwards with full wing tips inside cell, right cell relaxed flying with wings lowered. Detailed 3D donghua fantasy game animal, luminous ruby and gold feathers, regal tiny golden crest, beautiful flowing but compact tail, three quarter view facing left. No people, text, ground, circle, environment, backdrop or broad glow. Uniform camera and size across cells. It must be possible to slice the canvas into exactly three equal rectangles without cutting any phoenix or showing fragments of neighboring phoenixes. Entire animals visible with lots of clear transparent padding.",
+    "tool": "built-in image_gen",
+    "file": "public/assets/spirit-pets-v1/sun-phoenix.png"
+  },
+  {
+    "id": "astral-dragon",
+    "prompt": "Use case: stylized-concept. Asset type: transparent PNG game companion animation sprite sheet for a premium Chinese cultivation fantasy game. Subject: a miniature serpentine Chinese celestial dragon, obsidian and royal violet scales with luminous golden antlers, pearl and tiny star sparks, extremely prestigious mythic tier. Create ONE horizontal sprite sheet of THREE equal sized cells on a genuinely transparent background, full body creature centered separately in each cell, left frame idle with feet tucked, middle frame lively hop with raised head and tail, right frame floating relaxed with different tail/wing position. All three depict exactly the SAME small companion at matching scale and three-quarter view facing left. Polished detailed 3D donghua game rendering with readable silhouette at 64px, graceful, beautiful, NOT flat emoji, no humans, no scenery, no ground, no text, no watermark. All body parts fully within each cell with generous transparent padding, never overlap neighboring cells. Soft painted glow confined very closely to creature, no giant circles or large particles. For flying animal open wings in middle pose. Consistent orthographic camera.",
+    "tool": "built-in image_gen",
+    "file": "public/assets/spirit-pets-v1/astral-dragon.png"
+  }
+]

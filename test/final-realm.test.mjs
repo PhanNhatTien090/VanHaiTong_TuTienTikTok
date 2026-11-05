@@ -1,0 +1,7 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {createWorld,ensurePlayer,action,blessing,readyToBreak,requiredQi,startOpportunity,snapshot} from '../engine.mjs';
+const N=1800000000000;
+function setup(coins=0){const w=createWorld('demo'),p=ensurePlayer(w,'a','An',N);Object.assign(p,{realm:12,qi:requiredQi({realm:12})*3,stones:5000,giftCoins:coins});return {w,p};}
+test('final normal breakthrough requires 100 cumulative coins without consuming them',()=>{for(const coins of [0,99,100,300]){const {w,p}=setup(coins),qi=p.qi;assert.equal(readyToBreak(p),coins>=100);const r=action(w,{type:'breakthrough',userId:'a'},N+1);assert.equal(r.ok,coins>=100);assert.equal(p.realm,coins>=100?13:12);assert.equal(p.giftCoins,coins);if(coins<100)assert.equal(p.qi,qi);assert.equal(snapshot(w,N+1).players[0].finalRealmEligible,coins>=100);}});
+test('blessing cannot bypass final realm gate and leaves established max players intact',()=>{const {w,p}=setup();assert.equal(blessing(w,N+1,1).ok,false);assert.equal(p.realm,12);p.giftCoins=100;assert.equal(blessing(w,N+2,1).ok,true);assert.equal(p.realm,13);p.giftCoins=0;snapshot(w,N+3);assert.equal(p.realm,13,'no retroactive punishment');});
+test('opportunity cannot bypass gate; 99 plus one genuine coin qualifies',()=>{const {w,p}=setup(99);startOpportunity(w,N);w.opportunity.costs[12]=1;action(w,{type:'gift',userId:'a',coins:1,eventId:'real'},N+1);assert.equal(p.giftCoins,100);assert.equal(p.realm,13);});

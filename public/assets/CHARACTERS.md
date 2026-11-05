@@ -1,0 +1,34 @@
+# Cultivators v3
+
+File: cultivators-v3.png. Created with built-in ImageGen, 31/10/2026. Five transparent equally divided source cells: Thanh Y, Nguyệt Bạch, Tử Vân, Kim Long, Thiên Đế. Source retained under Codex generated_images; project copy included with the application. Runtime slices the strip using drawImage; no background removal or manual raster edits. Skin colors, halo, particles and flying swords are drawn separately.
+
+## Final prompt
+
+Use case: stylized-concept. Asset type: TRANSPARENT game character sprite strip, exactly FIVE equally spaced square CELLS in a SINGLE HORIZONTAL ROW. Each cell contains ONE complete seated immortal cultivator, same size, centered within its cell. Overall canvas approximately 5:1 if possible, otherwise wide 3:1 with all five figures in one row at equal x centers 10%,30%,50%,70%,90%. NO text, NO numbers, NO borders, NO background, NO scene, NO pedestal. Characters isolated with genuine transparent alpha. Front view from slightly above, full body seated cross-legged in lotus meditation pose, hands cupped at abdomen, eyes gently closed, elegant youthful adult Chinese xianxia fantasy characters, refined anime-donghua game art with highly detailed clean fabric folds, soft cinematic painted 3D volume, readable silhouette at small game size, faces visible, long flowing hair, embroidered robes. Each same ground baseline, no figure overlaps neighboring cell; margin around each figure. LEFT TO RIGHT EXACT ORDER: 1) male novice, teal green robes, ivory inner layer, dark hair in simple top knot, modest jade sash. 2) female lunar immortal, white and pale cyan silk, silver hair ornaments and elegant dark hair. 3) male purple celestial sage, flowing indigo-purple robes with silver star embroidery and silver crown. 4) male gold dragon immortal, rich midnight blue robes with elaborate GOLD dragon embroidery, gold shoulder ornaments and a small imperial crown. 5) female celestial empress, pearlescent ivory gold robes with violet accents, elaborate gold diadem, white flowing hair, rich celestial ornaments. Keep each seated body comparable height and same scale, feet and sleeves fully visible. NO wings, NO huge weapons, NO floating objects or vfx around the bodies; these are added in game separately. Not photorealistic, no chibi caricature, no UI, no shadow rectangles. Beautiful polished premium RPG sprites. Transparent background.
+
+
+## v14 articulated standing characters — 31/10/2026
+
+Asset: `cultivators-standing-v14.png`, built-in image_gen with `cultivators-v3.png` as identity reference; transparent five-column full-body standing sheet. Original generated output copied into this workspace, source retained under Codex generated_images.
+
+Prompt: Create a production game character asset sheet matching the five Chinese xianxia cultivators in the reference, all five standing full body, equal-width columns and common baseline. Preserve the jade male / moon female / violet male / dragon male / celestial female identities and embroidered silk costumes. Neutral rig stance, hands visible diagonally down and outward. Painterly detailed fantasy game art; transparent background; no weapons, VFX, labels or scene backdrop.
+
+Runtime: `character-animation.js` clips source art into sleeves, skirt, torso and head; samples articulated poses using one animation clock. Includes salute, sword strike, read manual, alchemy/gathering, casting, breakthrough, celebration and staggered quiet stretching. Seated art remains during meditation, with gentle mesh breathing. Brief transitions blend standing/seated art. No new recorded gifts, viewer actions, XP or rankings are generated. Reduced motion freezes pose and suppresses automatic exercises. Drawn art is retained unchanged on disk.
+
+This is a lightweight 2D joint animation with overlapping sleeve crops, not a 3D model or a complete hand-drawn frame-by-frame animation. Large sleeves may show joint seams at extreme poses; bounded angles and torso overlap reduce them. Tests cover pose timing, priority under spam, bounded memory, all five skins and no mutation of player state. Offline rendering preview: output/character-actions-v14.png.
+
+
+## v15 continuous mesh and action choreography
+
+Reuses the original v14 standing artwork unchanged. Replaces disconnected polygon limbs with a shared-vertex 6 × 12 mesh, reduced to 4 × 8 when more than twelve actors share the stage. Each triangle samples a small padded source patch to avoid antialias seams and whole-atlas overdraw. Sleeves, hair and skirt follow continuous weighted deformation, with a shared shoulder topology.
+
+New action mappings: follow → wave, likes → floating heart, pill use → elixir, craft/equip → forge; lotus and dragon resident acts have separate gestures. Sword and forge actions have authored anticipation / strike / recovery keys; skin and victory celebrate, breakthrough raises the arms and levitates with layered rings. Scroll pages, cauldron, elixir, sword trails and spell motes accompany relevant actions. Sitting/standing uses aligned rise transforms with a short crossfade. Motion reduction and visual-only isolation remain intact. Preview renderer: render-motion-v15.mjs; exported sample output/character-motion-v15.gif. This remains lightweight 2D deformation, not 3D skeletal animation.
+
+
+## v18 special skins and donor set
+
+Asset: patron-sets-v18.png (1536 × 1024, transparent), generated using built-in image_gen on 31/10/2026; original retained at C:/Users/Admins/.codex/generated_images/01a18f7c-ea76-71b3-b2f6-4615155b3497/exec-318f74bf-662e-454b-b788-fa6a3a5fa12c.png. Five columns: azure male/female, crimson male/female, ivory gold male. Upper standing pose and lower meditation pose are extracted at runtime into two cached sheets. Rows differ in height: standing0–590; seated600–1024. Blank gap excludes floating standing-boot pixels from the seated frame.
+
+Final prompt: Production Chinese xianxia game sprite atlas, transparent background, five equal columns and two rows. Standing full-body neutral with hands visible above, corresponding seated meditating identity below. Azure-black silver dragon robes for male/female; crimson-black gold phoenix robes for male/female; ivory and antique-gold celestial emperor male. Consistent realistic painterly rendering, embroidered brocade, full crowns and boots, no weapons, VFX, labels or scenery. Tool output includes genuine alpha, verified on multiple blank pixels.
+
+Thương Long Hộ Pháp is granted once to eligible active gift leaders. Xích Phượng Chiến Y unlocks on crafting Xích Diễm Kiếm; Bạch Kim Tiên Đế unlocks on crafting Cửu Tiêu Linh Châu. skin + owned set name changes selection, with ten-second cooldown. Equipment affects power separately from cosmetic appearance. Cached per-character keys include owned skin IDs and selected skin/equipment so changes invalidate the raster frame.

@@ -1,0 +1,23 @@
+// Render khung hình v8 (không khí, ánh sáng, thu phóng) bằng chính code Scene, không cần trình duyệt.
+import {createCanvas,loadImage} from '@napi-rs/canvas';
+import fs from 'node:fs/promises';
+import {Scene} from './public/scene.js';
+import {drawWorldLife,drawAtmosphere} from './public/world-life.js';
+import {layoutPlayers,SKINS} from './public/cosmetics.js';
+import {residentPlayers} from './public/residents.js';
+import {StageDirector} from './public/stage.js';
+globalThis.document={body:{classList:{contains:()=>true}}};
+const T=Number(process.argv[2]||14000),zoom=Number(process.argv[3]||1.3),H=1600;
+const scene=Object.create(Scene.prototype);Object.assign(scene,{width:900,height:H,motion:true,showNames:true,effects:[],focusUntil:0,selected:null,cameraEnabled:true,zoom,worldLife:{npcs:true,environment:true}});
+scene.art=await loadImage('public/assets/sect-twilight-v2.png');scene.characterArt=await loadImage('public/assets/cultivators-v3.png');
+const bg=createCanvas(1080,1920),b=bg.getContext('2d');b.scale(1.2,1.2);scene.paintWorld(b);
+const names=Array.from({length:30},(_,i)=>['Thanh Vân','Mộc Miên','Hàn Phong','Tiểu Ngư','Bạch Lộ','Vô Trần'][i%6]+' '+(i+1));const _unused=['Thanh Vân','Mộc Miên','Hàn Phong','Tiểu Ngư','Bạch Lộ','Vô Trần','Lạc Yên','Minh Nguyệt','A Thanh','Trúc Linh','Thiên Vũ','Lam Khê'];
+const count=Number(process.argv[4]??12);scene.players=[...residentPlayers(),...names.slice(0,count).map((name,i)=>({id:'p'+i,name,realm:i%4,giftCoins:SKINS[i%5].min,equipped:i%3?'jade':null,gender:i%2?'nu':'nam',qi:i===2?130:i*9,neededQi:120,stones:40,neededStones:20}))];
+scene.floorY=scene.courtyardY(H);const seated=new StageDirector().update(scene.players.filter(p=>!p.resident),scene.players.filter(p=>p.resident),T);scene.targets=scene.layoutTargets(seated,H);
+scene.camera={s:zoom,x:0,y:0};scene.cameraTime=T-3000;for(let t=T-3000;t<=T;t+=32)scene.moveCamera(t);
+const canvas=createCanvas(1080,1920),c=canvas.getContext('2d');const cam=scene.camera,sx=1.2;
+c.setTransform(sx*cam.s,0,0,sx*cam.s,sx*cam.x,sx*cam.y);c.drawImage(bg,0,0,900,H);
+drawAtmosphere(scene,c,T,'back');drawWorldLife(scene,c,T,{crowd:12,npcs:true,environment:true});
+for(const t of scene.targets)scene.drawPlayer(c,t.player,t.x,t.y,T);
+drawAtmosphere(scene,c,T,'front');scene.drawNames(c,T);c.setTransform(sx,0,0,sx,0,0);drawAtmosphere(scene,c,T,'screen');
+await fs.mkdir('output',{recursive:true});const dest=`output/preview-v8-${T}.png`;await fs.writeFile(dest,canvas.toBuffer('image/png'));console.log(dest);
