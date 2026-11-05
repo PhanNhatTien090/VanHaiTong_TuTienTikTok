@@ -1,0 +1,1 @@
+Original generated environment for Hoa Than v2, 2026-11-05. Built-in imagegen. No third-party character or scene reference. Background only; all ritual motion, seals, lightning and the actual LIVE actor are rendered in code.

@@ -8,7 +8,7 @@ import {makeSurface} from './performance.js';
 import {TRUC_CO_DURATION} from './truc-co-timeline.js';
 import {KIM_DAN_DURATION} from './kim-dan-timeline.js';
 import {NGUYEN_ANH_DURATION} from './nguyen-anh-timeline.js';
-const TITLES=['','Khí Hải Sơ Khai','Ngọc Cơ Thành Đạo','Kim Đan Diệu Nhật','Nguyên Thần Liên Sinh','Thần Lôi Tẩy Tủy','Hư Không Khai Giới','Vạn Kiếm Triều Tông','Long Môn Đăng Tiên','Huyền Tinh Chuyển Mệnh','Kim Liên Bất Diệt','Thái Cực Khai Thiên','Đại La Pháp Tướng','Tiên Đế Đăng Cơ','Thái Sơ Khai Đạo','Cửu Thiên Quy Nhất','Hồng Mông Thần Hiện','Vạn Giới Triều Vương','Thần Đế Khai Thiên'];
+const TITLES=['','Khí Hải Sơ Khai','Ngọc Cơ Thành Đạo','Kim Đan Diệu Nhật','Nguyên Thần Liên Sinh','Thần Niệm Chấn Thiên','Hư Không Khai Giới','Vạn Kiếm Triều Tông','Long Môn Đăng Tiên','Huyền Tinh Chuyển Mệnh','Kim Liên Bất Diệt','Thái Cực Khai Thiên','Đại La Pháp Tướng','Tiên Đế Đăng Cơ','Thái Sơ Khai Đạo','Cửu Thiên Quy Nhất','Hồng Mông Thần Hiện','Vạn Giới Triều Vương','Thần Đế Khai Thiên'];
 const SHAPES=['','qi','foundation','core','spirit','thunder','rift','swords','gate','orrery','solar-lotus','taichi','qilin','emperor','orrery','taichi','solar-lotus','qilin','emperor'];
 const COLORS=['','#8de9ba','#9eefff','#ffe098','#d8a9ff','#9bcfff','#b59aff','#e8ceff','#ffe7b0','#9dbcff','#ffdc78','#c9a3ff','#ffad7f','#fff1c7','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b'];
 // Authored early rituals have their own lengths; retain the spacing of later realms.
