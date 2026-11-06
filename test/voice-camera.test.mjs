@@ -15,7 +15,7 @@ test('voice flood stays bounded and protects important events; mute clears pendi
   const audio={enabled:true,duck(){}};const q=new VoiceQueue({world:'demo',audio});q.running=true;
   q.add({id:'gift',user:'giver',effect:'dragon',text:'cảm ơn đạo hữu'});
   for(let i=0;i<30;i++)q.add({id:String(i),user:String(i),effect:'qi'});
-  assert.equal(q.queue.length,3,'routine lines stop once 3 are waiting (v54)');assert.ok(q.queue.some(x=>x.e.id==='gift'));
+  assert.equal(q.queue.length,2,'important voice plus only the latest routine response wait');assert.ok(q.queue.some(x=>x.e.id==='gift'));
   q.add({id:'bt',user:'b',effect:'breakthrough',text:'ĐỘT PHÁ KIM ĐAN'});assert.ok(q.queue.some(x=>x.e.id==='bt'),'important lines still queue');
   assert.ok(priority(q.queue[0].e)>=1);
   q.stop();assert.equal(q.queue.length,0);assert.equal(q.running,false);

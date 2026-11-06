@@ -1,3 +1,4 @@
+import {drawRealmPresenceV3} from './realm-presence-v3.js';
 import {MAX_REALM} from './progression.js';
 import {godFormFor,drawGodBody,GOD_FORMS} from './god-forms.js';
 import {makeSurface,actorSample} from './performance.js';
@@ -27,15 +28,4 @@ export function drawDivineBody(scene,c,p,pose,t){const look=divineSelection(p);i
 export function divineHaloSize(scene,target,desired){const scale=target.scale||1.6;let nearest=Infinity;for(const other of scene.targets||[]){if(other.id===target.id)continue;const dx=other.x-target.x,dy=other.y-target.y;if(Math.abs(dy)<100*Math.min(scale,other.scale||1.6)&&Math.abs(dx)>2)nearest=Math.min(nearest,Math.abs(dx));}return Math.min(desired,nearest*.96/scale);}
 export function divineHaloProfile(realm){const r=Math.min(MAX_REALM,Math.trunc(Number(realm)||0));if(r<8)return null;const rank=r-8;return {rank,size:Math.min(240,122+rank*15),speed:.00010+rank*.000065,orbs:Math.min(12,[2,3,4,6,8,10][rank]||12),arcs:1+Math.floor(rank/2),layers:rank>=7?3:rank>=2?2:1};}
 export function divineHaloAnchor(scene,target,t){const p=target.player,s=target.scale||1.6,at=scene.budget?.config?actorSample(t,scene.budget.config.poseFps,p.id,scene.motion).at:t,pose=scene.animator?.pose?.(p,at,scene.motion)||{},flight=scene.raceStatus?.active,stand=flight?1:pose.stand||0,lean=flight ? .07 : pose.lean||0,lift=flight?(scene.motion?Math.sin(at*.002)*2:0):pose.lift||0,back=36+18*stand;let hash=0;for(const ch of String(p.id))hash=(Math.imul(hash,31)+ch.charCodeAt(0))|0;const bob=scene.motion?Math.sin(t*.0018+Math.abs(hash))*1.3:0;return {x:target.x+Math.sin(lean*.65)*back*s,y:target.y+bob+(lift-Math.cos(lean*.65)*back)*s};}
-export function drawDivineHalo(scene,c,target,t){const p=target.player,profile=divineHaloProfile(p.realm);if(p.resident||!profile)return;const r=profile.rank+8,look=divineSelection(p)||realmDivineLook(p);ensureDivineHalos(scene);const s=target.scale||1.6,a=scene.motion?t*profile.speed:0,size=divineHaloSize(scene,target,profile.size),light=scene.budget?.level==='light',anchor=divineHaloAnchor(scene,target,t),image=scene.divineHalos?.[Math.min(5,profile.rank)];
- c.save();c.translate(anchor.x,anchor.y);c.scale(s,s);
- if(image){c.save();c.globalAlpha=(scene.targets?.length||1)>1?.9:1;if(r>13)c.filter='hue-rotate('+((r-13)*48)+'deg)';c.rotate(a);c.drawImage(image,-size/2,-size/2,size,size);c.restore();if(profile.layers>1){c.save();c.globalAlpha=.16+profile.rank*.025;if(r>13)c.filter='hue-rotate('+((r-13)*48)+'deg)';c.rotate(-a*1.35);c.drawImage(image,-size*.36,-size*.36,size*.72,size*.72);c.restore();}}
- else{c.strokeStyle=look.color;c.globalAlpha=.6;c.lineWidth=1.2;c.beginPath();c.arc(0,0,size*.42,0,Math.PI*2);c.stroke();}
- c.strokeStyle=look.color;c.lineWidth=.8;c.globalAlpha=.5;for(let i=0;i<profile.arcs;i++){const start=-a*(1.2+i*.25)+i*2.1;c.beginPath();c.arc(0,0,size*(.38+i*.035),start,start+Math.PI*(.45+profile.rank*.055));c.stroke();}
- const count=profile.orbs,orbSize=Math.min(size*.075,7+profile.rank*.5),orbs=scene.divineOrbs??=new Map();
- for(let i=0;i<count;i++){const q=a*1.6+i*Math.PI*2/count,rr=size*(.43+Math.sin(a*2+i)*.012),x=Math.cos(q)*rr,y=Math.sin(q)*rr,key=i%2?'#fff1ce':look.color;
-  if(!orbs.has(key)){const f=makeSurface(24,24);if(f){const z=f.getContext('2d'),g=z.createRadialGradient(9,8,1,12,12,11);g.addColorStop(0,'#ffffff');g.addColorStop(.25,key);g.addColorStop(.7,'#17223dee');g.addColorStop(.86,key);g.addColorStop(1,key+'00');z.fillStyle=g;z.fillRect(0,0,24,24);orbs.set(key,f);}}
-  c.globalAlpha=.68+Math.sin(a*3+i)*.15;const orb=orbs.get(key);if(orb)c.drawImage(orb,x-orbSize/2,y-orbSize/2,orbSize,orbSize);else{c.fillStyle=key;c.fillRect(x-orbSize/3,y-orbSize/3,orbSize*.66,orbSize*.66);}
-  if(!light){c.strokeStyle=key;c.lineWidth=.6;c.beginPath();c.arc(x,y,orbSize*.6,0,Math.PI*2);c.stroke();}
- }
- c.restore();}
+export function drawDivineHalo(scene,c,target,t){if(scene.crowded||Number(target.player?.realm)>=14)return;return drawRealmPresenceV3(scene,c,target,t);}

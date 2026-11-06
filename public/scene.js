@@ -76,6 +76,9 @@ export class Scene {
   update(state,selected){this.petEvent=state.petEvent;if(state.visitor?.kind==='hailam'||state.players.some(seaWorn))loadSeaArt(this);if(state.visitor?.kind==='doraemon'||state.players.some(p=>doraWorn(p)||String(p.equipped||'').startsWith('dora-')))loadDoraArt(this);this.lanternFestival=state.lanternFestival;this.companionStatus=state.companionStatus;loadPetArt(this,state.players);this.realmCount=state.realms?.length||REALM_STYLES.length;if(state.visitor?.kind==='vuonglam'||state.players.some(linWanWorn))loadLinWanArt(this);if(state.visitor?.kind==='shende'||state.players.some(p=>shendeWorn(p)||p.equipped==='shende-dao-seal'))loadShendeArt(this);loadCelestialArt(this); // v61: luôn tải — ảnh Thương Long dùng cho hiệu ứng vinh danh/quà lớn
 loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEventGiftFx(this,state);this.visitor=state.visitor;
     this.sectMaster=state.sectMaster;this.stateServerNow=state.serverNow||Date.now();this.stateReceivedAt=performance.now();
+    const activeCount=state.players.filter(p=>p.active&&!p.resident&&!p.puppet).length;
+    this.crowded=activeCount>=10;this.heavyCrowd=activeCount>20;
+    if(this.budget?.setCrowded(this.crowded,this.heavyCrowd)){this.characterFrames?.clear();if(this.canvas?.getBoundingClientRect)this.resize();}
     this.sectElders=sectElders(state.players,this.sectMaster?.userId);
     const currentEnv=state.environment?.id==='sect-hall'?{...state.environment,...SCENES.find(s=>s.id==='sect-hall')}:state.environment;const env=petCoveOn({...this,boss:state.boss})?PET_COVE_MAP:currentEnv;this.environment=env;if(env?.ambience==='underwater')loadFish(this);
     if(env?.image&&this.environmentImage!==env.image){this.environmentImage=env.image;const next=new Image();next.onload=()=>{if(this.environmentImage!==env.image)return;const previous=this.background;this.art=next;this.resize();this.previousBackground=previous;this.backgroundChangedAt=performance.now();};next.src=env.image;}
@@ -208,7 +211,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     if(this.cinematicPose)Object.assign(pose,this.cinematicPose);if(this.huyenRitualPose)Object.assign(pose,this.huyenRitualPose);
     const standing=pose.stand>.001&&this.standingArt?.complete&&this.standingArt.naturalWidth;
     const divine=divineSelection(p);
-    if(!this.raceStatus?.active&&!this.compact&&!divine)drawRealmAscension(c,p,pose,t,this.motion,this.budget?.level);
+    if(!this.crowded&&!this.raceStatus?.active&&!this.compact&&!divine)drawRealmAscension(c,p,pose,t,this.motion,this.budget?.level);
     // Back halo is rendered once in the shared background pass, above Chân Tiên only. // v52: hào quang cảnh giới cao, sau lưng
     // 3/11: đang đột phá thì ẩn pháp bảo bay vòng quanh (trước và sau lưng) cho hiệu ứng đột phá gọn.
     const breaking=pose.mode==='ascend'||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id);
@@ -232,7 +235,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     else drawSeatedAnimated(c,this.characterArt,cell,pose,this.budget?.level==='light'?4:8);drawRealmClothes(c,p,pose,false);c.restore();}
     }
     c.restore();
-    if(this.compact||this.raceStatus?.active)return;
+    if(this.heavyCrowd||this.compact||this.raceStatus?.active)return;
     if(!divine)drawRealmQiFront(c,p,pose,t,this.motion);
     if(breaking){}
     else if(drawDoraRelic(this,c,p,t)){}
@@ -243,6 +246,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     else if(p.equipped&&(!pose.blade||pose.energy<.15)){const phase=this.motion?t*.001:0;this.drawFlyingSword(c,Math.cos(phase)*32,-12+Math.sin(phase)*15,phase+.7,skin.trim);}
   }
   drawCompactGear(c,target,t,layer){
+    if(this.heavyCrowd)return;
     const p=target.player;if(this.raceStatus?.active||!p.equipped||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id))return;
     c.save();c.translate(target.x,target.y);c.scale(target.scale||1.4,target.scale||1.4);
     if(layer==='back')drawBackRelic(c,p,t,this.signatureSprites,this.motion);
@@ -254,7 +258,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     c.restore();
   }
   drawFlyingSword(c,x,y,a,color){c.save();c.translate(x,y);c.rotate(a);c.shadowColor=color;c.shadowBlur=8;const metal=c.createLinearGradient(-2,0,2,0);metal.addColorStop(0,'#aac4db');metal.addColorStop(.5,'#fff6d2');metal.addColorStop(1,color);this.path(c,[[-1.4,-22],[1.4,-22],[2,4],[0,12],[-2,4]],metal);c.shadowBlur=0;c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.moveTo(-6,-16);c.lineTo(6,-16);c.stroke();c.fillStyle='#182c43';c.fillRect(-1,-26,2,8);c.restore();}
-  drawSkinVFX(c,skin,t,p){if(this.raceStatus?.active)return;const level=0,a=this.motion?t*.0006+hash(p.id):hash(p.id);c.save();c.globalCompositeOperation='screen';
+  drawSkinVFX(c,skin,t,p){if(this.crowded||this.raceStatus?.active)return;const level=0,a=this.motion?t*.0006+hash(p.id):hash(p.id);c.save();c.globalCompositeOperation='screen';
     const glow=c.createRadialGradient(0,-8,2,0,-8,43);glow.addColorStop(0,skin.color+(level?'30':'15'));glow.addColorStop(1,skin.color+'00');c.fillStyle=glow;c.fillRect(-44,-52,88,90);
     c.strokeStyle=skin.color+(level?'b0':'55');c.lineWidth=.8;this.ellipse(c,0,16,25+level*2,7+level,null,c.strokeStyle);
     if(level>=1){c.save();c.translate(0,-21);c.rotate(Math.sin(a)*.10);c.strokeStyle=skin.color+'90';c.lineWidth=1.2;c.beginPath();c.arc(0,0,27+level*2,-Math.PI*.9,Math.PI*.6);c.stroke();if(level>=2){c.strokeStyle=skin.trim+'a0';c.setLineDash([2,4]);c.beginPath();c.arc(0,0,32+level*2,0,TAU);c.stroke();c.setLineDash([]);}c.restore();}
@@ -350,7 +354,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
   // Khi phóng to cho điện thoại, nén hàng nhân vật vào vùng nhìn thấy để không ai bị cắt ở mép.
   layoutTargets(players,H){if(this.environment?.layout==='sect')return sectHallTargets(players,H);const targets=courtyardTargets(players,H,this.courtyardY(H),this.environment,this.art);if(!targets.length)return targets;const half=450*.96/Math.max(1,this.zoom||1),body=33*targets[0].scale,reach=Math.max(...targets.map(a=>Math.abs(a.x-450)));if(reach+body>half&&reach>0){const fit=Math.max(.5,(half-body)/reach);for(const a of targets)a.x=450+(a.x-450)*fit;}return targets;}
   courtyardY(H){const ground=projectedGround(this.environment,H,this.art);if(ground)return ground.cy;if(this.environment?.floorY)return H*this.environment.floorY;if(!this.art?.naturalWidth)return H*.70-24;const ratio=this.art.naturalWidth/this.art.naturalHeight;const fullH=900/ratio;return H<fullH?(fullH*.54-(fullH-H)*.52):H*.54;}
-  atmosphere(c,t,layer){if(this.raceStatus?.active)return;
+  atmosphere(c,t,layer){if(this.heavyCrowd||this.raceStatus?.active)return;
     const config=this.budget?.config;if(!config){if(this.environment?.ambience){drawWorldAmbience(this,c,t,layer);return;}drawAtmosphere(this,c,t,layer);return;}
     if(!this.worldLife?.environment)return;
     if(this.budget.level==='light'&&layer==='front'&&this.environment?.ambience!=='underwater')return;
@@ -388,15 +392,15 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
     if(!solo&&!this.boss?.sealing)drawAbyssRetaliation(this,c,this.boss,this.motion?Date.now():(this.boss?.startedAt||0)+1000,H,'back');
     for(const e of this.effects)this.drawEffect(c,e,t,'back');
     // All wearable auras are behind ALL bodies, never interleaved with another player.
-    if(!this.raceStatus?.active)for(const target of this.targets){drawSeaAdornment(this,c,target,t,'back');if(this.compact)this.drawCompactGear(c,target,t,'back');}
+    if(!this.heavyCrowd&&!this.raceStatus?.active)for(const target of this.targets){drawSeaAdornment(this,c,target,t,'back');if(this.compact)this.drawCompactGear(c,target,t,'back');}
     if(!this.raceStatus?.active&&!solo&&!arena&&!petCoveOn(this))drawSectCourt(this,c,t); // màn đánh boss: ẩn ngai tông chủ để yêu thú chiếm trời
-    if(!this.raceStatus?.active&&!this.compact)drawGodAuras(this,c,t,'back');
+    if(!this.crowded&&!this.raceStatus?.active&&!this.compact)drawGodAuras(this,c,t,'back');
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn
-     for(const target of this.targets){if(!inView(target,this.camera,H))continue;drawWings(this,c,target,t);if(!this.raceStatus?.active&&!this.compact)drawLinWanQi(this,c,target,t);if(!this.raceStatus?.active)drawDivineHalo(this,c,target,t);}c.globalAlpha=ga;}
-    for(const target of this.targets){if(!inView(target,this.camera,H))continue;if(!solo&&this.environment?.layout!=='float')mv.under(c,target,t);this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t);if(!this.raceStatus?.active)drawPet(this,c,target,t);if(this.compact)this.drawCompactGear(c,target,t,'front');}
-    if(!this.raceStatus?.active)for(const target of this.targets)drawSeaAdornment(this,c,target,t,'front');
+     for(const target of this.targets){if(!inView(target,this.camera,H))continue;if(!this.heavyCrowd||this.raceStatus?.active)drawWings(this,c,target,t);if(!this.heavyCrowd&&!this.raceStatus?.active&&!this.compact)drawLinWanQi(this,c,target,t);if(!this.raceStatus?.active)drawDivineHalo(this,c,target,t);}c.globalAlpha=ga;}
+    for(const target of this.targets){if(!inView(target,this.camera,H))continue;if(!solo&&this.environment?.layout!=='float')mv.under(c,target,t);this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t);if(!this.heavyCrowd&&!this.raceStatus?.active)drawPet(this,c,target,t);if(this.compact)this.drawCompactGear(c,target,t,'front');}
+    if(!this.heavyCrowd&&!this.raceStatus?.active)for(const target of this.targets)drawSeaAdornment(this,c,target,t,'front');
     if(arena){drawArenaShots(this,c,t,H);if(this.boss?.species!=='abyss-dragon')drawArenaCasts(this,c,t,H);if(!this.boss?.sealing)drawAbyssRetaliation(this,c,this.boss,this.motion?Date.now():(this.boss?.startedAt||0)+1000,H,'front');}
-    if(!this.raceStatus?.active&&!this.compact)drawGodAuras(this,c,t,'front');
+    if(!this.crowded&&!this.raceStatus?.active&&!this.compact)drawGodAuras(this,c,t,'front');
     if(!solo&&!arena&&!petCoveOn(this)&&!this.raceStatus?.active&&!drawSeaVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawDoraVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawLinWanVisitor(c,this.visitor,this,this.motion?t:0,H,this.signatureSprites))drawVisitor(c,this.visitor,this.armedVisitorSprites||this.visitorSprites,this.motion?t:0,H,this.signatureSprites,this.shendeArt);
     this.effects=this.effects.filter(e=>t-e.start<e.duration);if(this.luxuryQueue?.length&&!this.effects.some(e=>e.luxury||e.effect==='breakthrough'))this.addEffect(this.luxuryQueue.shift());if(!solo&&this.fxQueue?.length&&this.effects.filter(x=>x.kind&&x.kind!=='blessing').length<2)this.addEffect(this.fxQueue.shift());for(const e of this.effects)this.drawEffect(c,e,t,'front');drawSocialStage(this,c,t,'front',solo);drawRace(this,c,t,'front');if(!this.raceStatus?.active)drawBondLinks(this,c,t);this.atmosphere(c,t,'front');if(!this.raceStatus?.active)drawEngagementReactions(this,c,t);this.drawNames(c,t);if(!this.raceStatus?.active)this.mover?.drawBubbles(c,this.targets,t);c.setTransform(sx,0,0,sy,0,0);this.atmosphere(c,t,'screen');drawAbyssHealth(c,this.boss,Date.now(),H);if(!this.raceStatus?.active)this.drawAscensionTitle(c,t);for(const e of this.effects)if(!this.raceStatus?.active&&e.petAward)drawPetArrivalTitle(c,e,t,H,this.motion);this.lastCost=Math.round((performance.now()-cost0)*10)/10;(this.frameCosts??=[]).push(this.lastCost);if(this.frameCosts.length>60)this.frameCosts.shift();if(this.budget?.sample(this.lastCost,t,this.fps))this.resize();
   }

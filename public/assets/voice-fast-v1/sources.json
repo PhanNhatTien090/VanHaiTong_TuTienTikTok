@@ -1,0 +1,16 @@
+{
+  "engine": "VieNeu local",
+  "voice": "Thiền Tâm Đức",
+  "purpose": "Deadline fallback when personalized voice is late; never reads a different player name",
+  "lines": {
+    "qi": "Linh khí hội tụ, đạo hạnh tăng tiến!",
+    "attack": "Xuất chiêu!",
+    "ready": "Đã đủ điều kiện. Gõ đột phá ngay!",
+    "breakthrough": "Thiên môn khai mở! Chúc mừng đạo hữu đột phá!",
+    "gift": "Tông môn ghi nhận tâm ý của đạo hữu!",
+    "join": "Chào mừng đạo hữu gia nhập tông môn!",
+    "gather": "Đã thu thập linh thảo!",
+    "learn": "Đạo hữu lĩnh ngộ bí pháp!",
+    "notice": "Tông môn đã ghi nhận. Đạo hữu hãy xem thông tin trên màn hình."
+  }
+}

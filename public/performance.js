@@ -1,13 +1,15 @@
 export const QUALITY={
+  crowded:{seats:32,width:720,fps:20,poseFps:4,mesh:1,spriteScale:1.5,atmosphereFps:2,effects:1},
   light:{seats:32,width:900,fps:24,poseFps:8,mesh:2,spriteScale:2,atmosphereFps:4,effects:2},
   balanced:{seats:48,width:1080,fps:30,poseFps:10,mesh:3,spriteScale:2.5,atmosphereFps:6,effects:4},
   high:{seats:60,width:1440,fps:30,poseFps:18,mesh:6,spriteScale:3,atmosphereFps:12,effects:8}
 };
 export class RenderBudget{
   constructor(mode='auto'){this.set(mode);this.mean=0;this.samples=0;this.changedAt=0;}
-  set(mode){this.mode=['light','balanced','high'].includes(mode)?mode:'auto';this.level=this.mode==='auto'?'balanced':this.mode;this.config=QUALITY[this.level];}
+  set(mode){this.mode=['light','balanced','high'].includes(mode)?mode:'auto';this.level=this.mode==='auto'?'balanced':this.mode;if(this.crowded){this.beforeCrowd=this.level;this.level='light';}this.config=this.heavyCrowd?QUALITY.crowded:QUALITY[this.level];}
+  setCrowded(active,heavy=false){active=!!active;heavy=active&&!!heavy;if(active===!!this.crowded&&heavy===!!this.heavyCrowd)return false;if(active&&!this.crowded)this.beforeCrowd=this.level;this.crowded=active;this.heavyCrowd=heavy;this.level=active?'light':this.mode==='auto'?(this.beforeCrowd||'balanced'):this.mode;this.config=heavy?QUALITY.crowded:QUALITY[this.level];this.samples=0;this.mean=0;return true;}
   sample(ms,t,fps=30){if(!Number.isFinite(ms))return false;this.mean=this.samples?this.mean*.94+ms*.06:ms;this.samples++;
-    if(this.mode!=='auto'||this.samples<45||t-this.changedAt<10000)return false;
+    if(this.crowded||this.mode!=='auto'||this.samples<45||t-this.changedAt<10000)return false;
     if(this.level==='balanced'&&(this.mean>25||fps>0&&fps<18)){this.level='light';this.config=QUALITY.light;this.changedAt=t;return true;}
     if(this.level==='light'&&this.mean<11&&fps>=22&&t-this.changedAt>30000){this.level='balanced';this.config=QUALITY.balanced;this.changedAt=t;return true;}return false;
   }

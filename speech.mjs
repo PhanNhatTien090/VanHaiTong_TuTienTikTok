@@ -77,7 +77,7 @@ export function createSpeech(root,dataDir){
     const output=path.join(dir,key+'.mp3');
     if(fs.existsSync(output))return output;
     if(jobs.has(key))return jobs.get(key);
-    if(active>=4)throw Error('Giọng đọc đang bận; chờ lượt tiếp theo.');
+    if(active>=1)throw Error('Giọng đọc đang bận; dùng phản hồi nhanh.');
     active++;
     const tmp=output+'.tmp';
     const promise=(async()=>{
@@ -97,5 +97,6 @@ export function createSpeech(root,dataDir){
   speech.warm=()=>vieneu?.warm();
   speech.stop=()=>vieneu?.stop();
   speech.engine=engine;
+  Object.defineProperty(speech,'busy',{get:()=>active>0});
   return speech;
 }

@@ -223,7 +223,7 @@ if(process.env.VAN_HAI_RECOVERY_FILE){
 }
 // 4/11/2026: tạo sẵn giọng cho sự kiện quan trọng (quà, sự kiện, đột phá…) ngay khi xảy ra → trang hỏi tới là có file, giọng đến trước chữ.
 const prewarmed=new Set(),bootAt=Date.now();
-function prewarmSpeech(){try{for(const e of worlds.live.events.slice(-15)){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||voicePriority(e)<3||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});}}catch{}}
+function prewarmSpeech(){try{if(synthesizeSpeech.busy)return;for(const e of worlds.live.events.slice(-15).sort((a,b)=>voicePriority(b)-voicePriority(a))){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||voicePriority(e)<3||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});break;}}catch{}}
 setInterval(()=>{tick(worlds.demo);tick(worlds.live);prewarmSpeech();broadcast();},1000).unref();
 setInterval(persist,3000).unref();
 // v54: sao lưu tự động thế giới LIVE mỗi 30 phút vào data/backups, giữ 48 bản mới nhất (~24 giờ).
