@@ -35,13 +35,18 @@ export function openCloudStore(dataDir) {
     world.players = Object.fromEntries(db.prepare('SELECT id,payload FROM players').all().map(row => [row.id, JSON.parse(row.payload)]));
     return world;
   }
+  const protectedIds = () => new Set(db.prepare("SELECT substr(key,6) AS id FROM meta WHERE key LIKE 'play:%' AND json_extract(value,'$.phase') IN ('web','release')").all().map(r=>r.id));
   function saveLocal(world, accounts) {
     tx(() => {
       if (accounts) put('accounts', accounts);
       if (accounts && linkEvent) put('link:'+linkEvent.eventId,{ok:true,playerId:String(linkEvent.userId)});
+      const protectedPlayers=protectedIds();
       const liveIds = new Set(db.prepare("SELECT id FROM players WHERE source='live'").all().map(row => row.id));
       const upsert = db.prepare("INSERT INTO players(id,source,payload) VALUES(?,'local',?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload WHERE players.source='local'");
-      for (const p of Object.values(world.players)) if (!liveIds.has(p.id)) upsert.run(p.id, JSON.stringify(p));
+      for (const p of Object.values(world.players)) {
+        if(protectedPlayers.has(p.id))db.prepare('UPDATE players SET payload=? WHERE id=?').run(JSON.stringify(p),p.id);
+        else if (!liveIds.has(p.id)) upsert.run(p.id, JSON.stringify(p));
+      }
     });
   }
   function apply(batch, now = Date.now()) {
@@ -53,13 +58,14 @@ export function openCloudStore(dataDir) {
     if (batch.seq !== (state?.seq || 0) + 1) throw Error('Sync sequence gap; retain the agent checkpoint and pending batch');
     if (!state && !batch.full) throw Error('First sync must be a full snapshot');
     return tx(() => {
+      const protectedPlayers=protectedIds();
       const upsert = db.prepare("INSERT INTO players(id,source,payload) VALUES(?,'live',?) ON CONFLICT(id) DO UPDATE SET source='live',payload=excluded.payload");
-      for (const player of batch.players) { const p = projectPlayer(player); upsert.run(p.id, JSON.stringify(p)); }
+      for (const player of batch.players) { if(protectedPlayers.has(player.id))continue; const p = projectPlayer(player); upsert.run(p.id, JSON.stringify(p)); }
       if (batch.full) {
         const ids = new Set(batch.players.map(p => p.id));
-        for (const row of db.prepare("SELECT id FROM players WHERE source='live'").all()) if (!ids.has(row.id)) db.prepare('DELETE FROM players WHERE id=?').run(row.id);
+        for (const row of db.prepare("SELECT id FROM players WHERE source='live'").all()) if (!ids.has(row.id)&&!protectedPlayers.has(row.id)) db.prepare('DELETE FROM players WHERE id=?').run(row.id);
       }
-      for (const id of batch.deleted) db.prepare("DELETE FROM players WHERE id=? AND source='live'").run(id);
+      for (const id of batch.deleted) if(!protectedPlayers.has(id))db.prepare("DELETE FROM players WHERE id=? AND source='live'").run(id);
       const changed = batch.players.length>0 || batch.deleted.length>0 || digest(get('world'))!==digest(batch.meta);
       put('world', batch.meta);
       const next = { agentId: batch.agentId, seq: batch.seq, receivedAt: now, sourceAt: batch.sourceAt, profiles: db.prepare("SELECT count(*) AS n FROM players WHERE source='live'").get().n, changed };
@@ -89,7 +95,10 @@ export function openCloudStore(dataDir) {
     for (const old of fs.readdirSync(dir).filter(f=>/^web-.*\.sqlite$/.test(f)).sort().slice(0,-48)) fs.unlinkSync(path.join(dir,old));
     return file;
   }
-  return { db, get, put, loadWorld, saveLocal, apply, importAccounts, backup,
+  return { db, get, put,
+    transfers() {return db.prepare("SELECT value FROM meta WHERE key LIKE 'play:%'").all().map(r=>JSON.parse(r.value));},
+    transfer(record, player) {tx(()=>{put('play:'+record.playerId,record);if(player)db.prepare("INSERT INTO players(id,source,payload) VALUES(?,'live',?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload").run(player.id,JSON.stringify(player));});},
+    loadWorld, saveLocal, apply, importAccounts, backup,
     withLinkEvent(event, fn) { linkEvent=event;try{return fn();}finally{linkEvent=null;} },
     close() { db.close(); if (fs.existsSync(lock) && JSON.parse(fs.readFileSync(lock,'utf8')).owner===owner) fs.unlinkSync(lock); }
   };

@@ -1,0 +1,96 @@
+name: Deploy production web
+
+on:
+  push:
+    tags:
+      - 'prod-*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vanhai-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PROD_HOST: ${{ vars.PROD_HOST }}
+      PROD_URL: ${{ vars.PROD_URL }}
+      RELEASE_SHA: ${{ github.sha }}
+      RELEASE_NAME: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Check configuration
+        shell: bash
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_KNOWN_HOSTS: ${{ vars.PROD_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ $PROD_HOST =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]] || { echo 'Set PROD_HOST in repository Actions variables'; exit 1; }
+          [[ $PROD_URL == https://* && -n $PROD_SSH_KEY && -n $PROD_KNOWN_HOSTS ]] || { echo 'Set PROD_URL, PROD_KNOWN_HOSTS, and secret PROD_SSH_KEY'; exit 1; }
+      - name: Test
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run test:web
+      - name: Build directory without archive
+        run: node scripts/build-web-release.mjs --directory-only --output "$RUNNER_TEMP/vanhai-release" --version "$RELEASE_SHA"
+      - name: Prepare SSH
+        shell: bash
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_KNOWN_HOSTS: ${{ vars.PROD_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          directory="$RUNNER_TEMP/vanhai-ssh"
+          mkdir "$directory"
+          printf '%s\n' "$PROD_SSH_KEY" > "$directory/key"
+          printf '%s\n' "$PROD_KNOWN_HOSTS" > "$directory/known_hosts"
+          ssh-keygen -F "$PROD_HOST" -f "$directory/known_hosts" >/dev/null || { echo 'Pinned host key does not cover PROD_HOST'; exit 1; }
+          printf '%s\n' '#!/usr/bin/env bash' 'exec ssh -i "$DEPLOY_KEY_FILE" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$DEPLOY_KNOWN_HOSTS_FILE" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "$@"' > "$directory/ssh"
+          chmod 700 "$directory/ssh"
+          printf 'DEPLOY_KEY_FILE=%s\nDEPLOY_KNOWN_HOSTS_FILE=%s\nDEPLOY_SSH=%s\n' "$directory/key" "$directory/known_hosts" "$directory/ssh" >> "$GITHUB_ENV"
+      - name: Transfer changed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          release="/opt/van-hai-web/releases/$RELEASE_NAME"
+          "$DEPLOY_SSH" "root@$PROD_HOST" bash -s -- "$release" <<'REMOTE'
+          set -euo pipefail
+          [[ $1 =~ ^/opt/van-hai-web/releases/[a-f0-9]{40}-[0-9]+-[0-9]+$ ]] || exit 1
+          [[ -L /opt/van-hai-web/current && -f /etc/van-hai-web.env ]] || { echo 'Complete initial installation, account migration, and HTTPS first'; exit 1; }
+          [[ ! -e $1 ]] || { echo 'Release directory already exists'; exit 1; }
+          install -d -m 755 "$1"
+          REMOTE
+          rsync -a --checksum --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --link-dest=/opt/van-hai-web/current -e "$DEPLOY_SSH" "$RUNNER_TEMP/vanhai-release/" "root@$PROD_HOST:$release/"
+      - name: Back up and switch release
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$DEPLOY_SSH" "root@$PROD_HOST" bash -s -- "/opt/van-hai-web/releases/$RELEASE_NAME" <<'REMOTE'
+          set -euo pipefail
+          [[ $1 =~ ^/opt/van-hai-web/releases/[a-f0-9]{40}-[0-9]+-[0-9]+$ ]] || exit 1
+          previous=$(readlink -f /opt/van-hai-web/current)
+          bash "$1/web/deploy/upgrade.sh"
+          if ! flock -n /run/lock/van-hai-web-upgrade.lock node "$1/web/deploy/release-operations.mjs" prune /opt/van-hai-web "$previous"; then
+            echo 'Release is running, but old-release cleanup needs inspection.' >&2
+          fi
+          REMOTE
+      - name: Verify public HTTPS revision and readiness
+        run: node web/deploy/verify-production.mjs "$PROD_URL" "$RELEASE_SHA"
+      - name: Remove runner SSH files
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/vanhai-ssh"

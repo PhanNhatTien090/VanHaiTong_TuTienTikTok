@@ -241,8 +241,15 @@ export function puppetControl(w,b={},now=Date.now()){
     return result;}
   return fail('Thao tác không hợp lệ.');
 }
-export function action(w,input,now=Date.now()) {
+function protectTransferred(w,fn){
+  const held=Object.entries(w.playTransfers||{}).filter(([id,lock])=>lock.phase==='web'&&w.players[id]).map(([id,lock])=>[w.players[id],structuredClone(lock.player)]);
+  try{return fn();}finally{for(const [p,saved]of held){for(const key of Object.keys(p))delete p[key];Object.assign(p,saved);}}
+}
+export function action(w,input,now=Date.now()) {return protectTransferred(w,()=>unlockedAction(w,input,now));}
+function unlockedAction(w,input,now) {
   const actor=w.players[clean(input.userId,80)];
+  if(w.playTransfers?.[actor?.id]?.phase==='web')return {ok:false,code:'PLAYING_WEB',message:'Nhân vật đang chơi trên web. Hãy đăng xuất web trước khi trở lại LIVE.'};
+  if(w.mode==='live' && input.type==='chat' && ['roi live','roilive'].includes(normalize(input.text||'')) && actor){actor.leftLiveAt=now;actor.lastActive=0;return {ok:true,leftLive:true};}
   if(w.mode==='live'&&(input.simulated||input.autoRose||((actor?.puppet||actor?.resident)&&['gift','like','follow','share'].includes(clean(input.type,30)))))return fail('Sự kiện mô phỏng không được ghi vào LIVE.');
   if(input.type==='like'){
     const count=Number(input.count);if(!Number.isSafeInteger(count)||count<1)return fail('Số tim không hợp lệ.');
@@ -540,7 +547,7 @@ export function awardLoyalty(w,now=Date.now(),limit=3){
   return awarded;
 }
 export function currentParticipant(w,p,now=Date.now()){
-  return !p.resident&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=90000)&&now-p.lastActive<LIVE_ACTIVE_MS&&p.lastActive>=(w.liveSession?.startedAt||0)&&w.liveSession?.active!==false;
+  return w.playTransfers?.[p.id]?.phase!=='web'&&!p.resident&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=90000)&&now-p.lastActive<LIVE_ACTIVE_MS&&p.lastActive>=(w.liveSession?.startedAt||0)&&w.liveSession?.active!==false;
 }
 export function markLiveSession(w,isLive,now=Date.now()){
   if(isLive){if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};}
@@ -715,6 +722,10 @@ export function tickCompetitionSchedule(w,now=Date.now(),{manual=false}={}){
  schedule.lastAt=now;schedule.lastKind=kind;schedule.cycleIndex=(schedule.cycleIndex+1)%3;schedule.nextKind=cycle[schedule.cycleIndex];schedule.nextAt=now+COMPETITION_INTERVAL_MS;
 }
 export function tick(w,now=Date.now()) {
+  // A transferred player must not receive automatic/group rewards on LIVE.
+  return protectTransferred(w,()=>tickCore(w,now));
+}
+function tickCore(w,now) {
  automaticEventsPaused(w,now);
  tickLantern(w,now,companionContext);tickCompanions(w,now,companionContext);
  if(w.petEvent&&!w.petEvent.closedAt&&now>=w.petEvent.endsAt){w.petEvent.closedAt=now;emit(w,null,'LINH THÚ CỐC KHÉP LẠI • giữ nguyên linh thú đã nhận','pet',now,{petEnd:true});}
@@ -777,6 +788,15 @@ export function ingest(w,event,now=Date.now()) {
   const userId=u.userId||u.id||d.userId||d.id||u.uniqueId||d.uniqueId||u.displayId;
   if(!userId)return {ok:false,message:'Sự kiện không có ID người xem.'};
   const base={userId:String(userId),name:u.nickname||u.uniqueId||d.nickname||d.uniqueId,avatar:eventAvatar(d)};
+  if(w.playTransfers?.[base.userId]?.phase==='web'){
+    if(event.event==='gift'){
+      const queue=w.playTransfers[base.userId].gifts??=[];
+      const encoded=JSON.stringify(event);
+      if(!queue.some(x=>JSON.stringify(x)===encoded))queue.push(structuredClone(event));
+      return {ok:true,pending:true,queuedGift:true};
+    }
+    return {ok:false,code:'PLAYING_WEB',message:'Nhân vật đang chơi web. Đăng xuất web trước khi trở lại LIVE.'};
+  }
   if(event.event==='member'){
     // Only per-viewer arrivals; roomUser is an aggregate counter, not a roster.
     if(d.actionId!==undefined&&Number(d.actionId)!==1)return {ok:true,ignored:true};
@@ -935,6 +955,7 @@ export const ADMIN_COMBOS=Object.freeze({
   breakthrough:{name:'Đột Phá Đan',qiPct:1,stones:0,herbs:0,buff:0,fill:true}
 });
 export function adminGift(w,id,combo,now=Date.now(),custom=null){
+  if(w.playTransfers?.[id]?.phase==='web')return fail('Nhân vật đang chơi web; đăng xuất trước khi sửa tài nguyên.');
   if(combo==='custom')return adminCustomGift(w,id,custom||{},now);
   const c=ADMIN_COMBOS[combo];if(!c)return fail('Gói quà không hợp lệ.');
   let p;if(id==='*'){const pool=Object.values(w.players).filter(x=>!x.resident&&currentParticipant(w,x,now));if(!pool.length)return fail('Chưa có ai đang chơi.');p=pool[Math.floor(Math.random()*pool.length)];}
@@ -951,6 +972,7 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
 }
 // 4/11/2026: ban thưởng tùy chỉnh cho một người (hoặc '*' = ngẫu nhiên 1 người đang chơi). Cộng thẳng đúng số đã nhập.
 export function adminCustomGift(w,id,custom={},now=Date.now()){
+  if(w.playTransfers?.[id]?.phase==='web')return fail('Nhân vật đang chơi web; đăng xuất trước khi sửa tài nguyên.');
   const num=(v,max)=>{const n=Math.round(Number(v)||0);return n<0||!Number.isFinite(n)?NaN:Math.min(max,n);};
   const qi=num(custom.qi,1e10),stones=num(custom.stones,1e6),herbs=num(custom.herbs,1e5),buff=num(custom.buff,10),minutes=num(custom.minutes??10,120);
   if([qi,stones,herbs,buff,minutes].some(Number.isNaN))return fail('Số không hợp lệ.');
@@ -967,6 +989,7 @@ export function adminCustomGift(w,id,custom={},now=Date.now()){
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:'Thưởng Riêng',qi};
 }
 export function adminEditPlayer(w,id,patch={},now=Date.now(),{announce=false}={}){
+  if(w.playTransfers?.[id]?.phase==='web')return fail('Nhân vật đang chơi web; đăng xuất trước khi sửa tài nguyên.');
   id=clean(id,80);if(!id||!Object.hasOwn(w.players,id))return fail('Không tìm thấy người này.');
   const p=w.players[id],changes=[];
   const int=(v,max=1e9)=>{const n=Number(v);if(!Number.isSafeInteger(n)||n<0||n>max)throw Error('Số không hợp lệ (0 – '+max.toLocaleString('vi-VN')+').');return n;};
