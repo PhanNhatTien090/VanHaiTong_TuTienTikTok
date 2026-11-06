@@ -16,8 +16,9 @@ Trạng thái đã xác minh ngày 06/11/2026:
   `service_started:false`, `data_imported:false` và đúng SHA trên.
 - **Game chưa mở chơi.** Service được giữ tắt bằng chốt systemd
   `/var/lib/van-hai-web/.migration-pending`; database chưa được khởi tạo.
-- Người dùng cần thêm Variable `PROD_URL=https://vanhaitong.duckdns.org`
-  nếu chưa thêm. Staging dùng URL cố định, chưa kiểm chứng biến này.
+- Workflow production đã có URL mặc định `https://vanhaitong.duckdns.org`;
+  người dùng không cần thêm biến mới. Variable PROD_URL chỉ dùng để ghi đè
+  khi chủ động đổi tên miền.
 - Worktree thiết lập: `/workspace/cloudfly-setup-worktree`. Repo gốc vẫn giữ
   các thay đổi có sẵn; không reset nó hoặc triển khai nhầm HEAD cũ `fcaf8f5`.
 
@@ -46,7 +47,7 @@ Trong GitHub repository → Settings → Secrets and variables → Actions:
 | --- | --- | --- |
 | Secret | `PROD_SSH_KEY` | Private Key của khóa CI riêng được VPS cấp quyền; không ghi vào Git hoặc chat |
 | Variable | `PROD_HOST` | `103.82.26.70` |
-| Variable | `PROD_URL` | URL HTTPS cố định của game sau khi thiết lập DNS/TLS |
+| Variable tùy chọn | `PROD_URL` | Ghi đè URL mặc định `https://vanhaitong.duckdns.org` khi đổi tên miền |
 | Variable | `PROD_KNOWN_HOSTS` | Dòng host key công cộng được lấy từ chính VPS qua phiên SSH đã tin cậy |
 
 Nên tạo khóa CI riêng, không dùng lâu dài khóa quản trị đã gửi trong chat.

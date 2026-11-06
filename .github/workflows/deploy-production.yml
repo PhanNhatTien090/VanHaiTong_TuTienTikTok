@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 20
     env:
       PROD_HOST: ${{ vars.PROD_HOST }}
-      PROD_URL: ${{ vars.PROD_URL }}
+      PROD_URL: ${{ vars.PROD_URL || 'https://vanhaitong.duckdns.org' }}
       RELEASE_SHA: ${{ github.sha }}
       RELEASE_NAME: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
