@@ -1,10 +1,14 @@
 import {drawKimTienAwakening} from './kim-tien-awakening.js';
 import {QUALITY} from './performance.js';
+import {beginRitualPalette} from './qi-impact.js';
+import {ritualAppearance,ritualAppearanceFrame,drawRitualAppearance} from './ritual-appearance.js';
 const FULL_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
 export function drawRitual(scene,...args){
- const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,reducePresence:scene.reducePresence,compact:scene.compact};
- Object.assign(scene,{budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,reducePresence:false,compact:false});
- try{return drawRitualFull(scene,...args);}finally{Object.assign(scene,saved);}
+ const [c,e,t,H]=args,a=scene.ritualVariantsEnabled===false?null:ritualAppearance(e),restorePalette=beginRitualPalette(a?.palette||null);
+ const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
+ Object.assign(scene,{budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
+ if(a&&typeof saved.onRitualFrame==='function')scene.onRitualFrame=ui=>saved.onRitualFrame.call(scene,ritualAppearanceFrame(ui,a));
+ try{const result=drawRitualFull(scene,...args);drawRitualAppearance(scene,c,e,t,H,a);return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
 }
 import {drawHuyenTienAwakening} from './huyen-tien-awakening.js';
 import {drawDaiThuaAwakening} from './dai-thua-awakening.js';
@@ -62,5 +66,5 @@ function drawRitualFull(scene,c,e,t,H){if(breakthroughRealm(e)===10)return drawK
 
 export function mountRitualHud(shell,scene){
  const hud=document.createElement('aside');hud.className='ritual-hud';hud.hidden=true;hud.innerHTML='<strong class="ritual-name"></strong><h2></h2><p class="ritual-sub" hidden></p>';shell.appendChild(hud);let last='';
- scene.onRitualFrame=s=>{if(!s){hud.hidden=true;last='';return;}const key=s.name+'|'+s.revealed+'|'+s.title;if(key===last)return;last=key;hud.hidden=false;hud.dataset.phase=s.revealed?'reveal':'gather';hud.style.setProperty('--ritual-color',s.color);hud.querySelector('.ritual-name').textContent=s.name;const title=hud.querySelector('h2');title.textContent=s.revealed?s.title:'';title.hidden=!s.revealed;hud.dataset.realm=s.realm||'';const sub=hud.querySelector('.ritual-sub');if(sub){sub.textContent=s.revealed&&s.subtitle?s.subtitle:'';sub.hidden=!sub.textContent;}};return hud;
+ scene.onRitualFrame=s=>{if(!s){hud.hidden=true;last='';return;}const key=s.name+'|'+s.revealed+'|'+s.title+'|'+(s.appearanceKey||'');if(key===last)return;last=key;hud.hidden=false;hud.dataset.phase=s.revealed?'reveal':'gather';hud.style.setProperty('--ritual-color',s.color);hud.style.setProperty('--ritual-accent',s.accent||s.color);if(s.appearanceKey)hud.dataset.appearance=s.appearanceKey;else delete hud.dataset.appearance;hud.querySelector('.ritual-name').textContent=s.name;const title=hud.querySelector('h2');title.textContent=s.revealed?s.title:'';title.hidden=!s.revealed;hud.dataset.realm=s.realm||'';const sub=hud.querySelector('.ritual-sub');if(sub){sub.textContent=s.revealed&&s.subtitle?s.subtitle:'';sub.hidden=!sub.textContent;}};return hud;
 }

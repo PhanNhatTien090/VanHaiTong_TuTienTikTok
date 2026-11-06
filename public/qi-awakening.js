@@ -34,9 +34,9 @@ function trail(c,k,H,i,motion){if(!motion||k<.37||k>.88)return;c.save();c.lineWi
 // v4 (4/11/2026): k = thời gian hiển thị; sk = thời gian mạch truyện linh châu (cũ). Nổ ở k=.70 thay vì .88
 // để dư âm ~2,6 s đủ cho người xem LIVE đọc được tên cảnh giới.
 export function drawQiAwakening(scene,c,e,t,H){
- setFxPalette(null);const v=qiVariant(e),k=clamp((t-e.start)/e.duration),sk=qiStoryK(k),motion=scene.motion!==false,s=qiAwakeningState(sk,H,motion),im=makePearl(scene),x=450,color='#9deed1';
+ setFxPalette(null);const v=qiVariant(e),k=clamp((t-e.start)/e.duration),sk=qiStoryK(k),motion=scene.motion!==false,s=qiAwakeningState(sk,H,motion),im=makePearl(scene),x=450,color=scene.ritualAppearance?.palette.main2||'#9deed1';
  c.save();
- drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:'#9deed1',feet:s.feet}); // 4/11: thiên đài cả trên LIVE
+ drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:scene.ritualAppearance?.palette.main2||'#9deed1',feet:s.feet}); // 4/11: thiên đài cả trên LIVE
  drawQiEnvironment(scene,c,k,H,s.origin,true);
  const lk=luyenKhiState(k);drawLkSky(scene,c,lk,H,v); // v5: núi mực + biển mây lấp nửa trên
  const halo=c.createRadialGradient(x,s.center.y,10,x,s.center.y,340);halo.addColorStop(0,'#3f8e7d22');halo.addColorStop(1,'#3f8e7d00');c.fillStyle=halo;c.fillRect(80,s.center.y-340,740,680);

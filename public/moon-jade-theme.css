@@ -37,3 +37,7 @@ html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.so
 html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud) code{
  font-size:1.05em!important;font-weight:900!important;color:#baffeb!important}
 html body #giftBoard.gift-board{display:none!important}
+/* Personalized early-realm titles keep the approved entrance animation. */
+html body .ritual-hud[data-appearance] h2{color:var(--ritual-color)!important;text-shadow:0 0 18px var(--ritual-color),0 0 36px var(--ritual-accent),0 3px 8px #000!important}
+html body .ritual-hud[data-appearance] .ritual-name{color:#fff8e8;text-shadow:0 2px 5px #000,0 0 14px var(--ritual-color)}
+html body .ritual-hud[data-appearance] .ritual-sub{color:var(--ritual-accent)!important;text-shadow:0 2px 5px #000,0 0 12px var(--ritual-color)}

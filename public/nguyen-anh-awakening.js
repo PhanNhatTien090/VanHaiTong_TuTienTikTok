@@ -96,8 +96,8 @@ function actor(scene,c,e,s,t){
  }finally{scene.compact=compact;scene.ritualDrawing=ritual;c.restore();}
 }
 export function drawNguyenAnhAwakening(scene,c,e,t,H){
- prepareNguyenAnhArt(scene);const s=nguyenAnhState((t-e.start)/e.duration,H,scene.motion!==false),art=assets(scene),color='#d9c2ff';c.save();
- const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#070c1c');bg.addColorStop(.5,'#17213a');bg.addColorStop(1,'#11152b');c.fillStyle=bg;c.fillRect(0,0,900,H);/* 4/11: thiên đài cả trên LIVE (<= Hóa Thần) */drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:'#d0b6ff',feet:s.feet});
+ prepareNguyenAnhArt(scene);const s=nguyenAnhState((t-e.start)/e.duration,H,scene.motion!==false),art=assets(scene),color=scene.ritualAppearance?.palette.main2||'#d9c2ff';c.save();
+ const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#070c1c');bg.addColorStop(.5,'#17213a');bg.addColorStop(1,'#11152b');c.fillStyle=bg;c.fillRect(0,0,900,H);/* 4/11: thiên đài cả trên LIVE (<= Hóa Thần) */drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:scene.ritualAppearance?.palette.main2||'#d0b6ff',feet:s.feet});
  // 4/11 v2: lớp chung + biến thể chống lặp; hoa sen gốc giữ nguyên.
  const v=qiVariant(e),kq=qiRemap(s.k,NGUYEN_ANH_BURST/(NGUYEN_ANH_DURATION/1000)),origin={x:450,y:s.belly};setFxPalette(NA_PALETTE);drawQiEnvironment(scene,c,kq,H,origin,true);pushFxCamera(scene,c,kq,v,s.feet);
  glow(c,450,s.hover,480,'#6777b835',s.open*.9);const shake=scene.motion!==false&&scene.cameraEnabled!==false?s.burst*10:0;c.translate(Math.sin(s.clock*93)*shake,Math.cos(s.clock*79)*shake*.55);

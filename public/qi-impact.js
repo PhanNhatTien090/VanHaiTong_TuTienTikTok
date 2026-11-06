@@ -7,7 +7,9 @@ const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);retur
 export const QI_IMPACT=.70;
 // Bảng màu hiện hành; mỗi cảnh giới đặt lại trước khi vẽ (setFxPalette), mặc định là ngọc lục Luyện Khí.
 export const QI_PALETTE=Object.freeze({main:'#7dffcf',main2:'#9cf7da',soft:'#bff6ff',gold:'#ffe7a8'});
-let P=QI_PALETTE;export function setFxPalette(p){P=p?{...QI_PALETTE,...p}:QI_PALETTE;}
+let P=QI_PALETTE,ritualOverride=null;
+export function setFxPalette(p){P={...QI_PALETTE,...p,...ritualOverride};}
+export function beginRitualPalette(palette){const previous=P,override=ritualOverride;ritualOverride=palette;return ()=>{P=previous;ritualOverride=override;};}
 // Thời gian hiển thị (k mới) → thời gian của mạch truyện cũ (cũ nổ ở .88). Dư âm giãn ra 2,5 lần.
 export const qiStoryK=k=>k<QI_IMPACT?k*(.88/QI_IMPACT):.88+(k-QI_IMPACT)*(.12/(1-QI_IMPACT));
 const glowCache=new Map();

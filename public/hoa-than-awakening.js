@@ -1,4 +1,5 @@
 import {makeSurface} from './performance.js';
+import {drawRitualTint} from './ritual-appearance.js';
 import {setFxPalette,qiVariant,qiRemap,pushFxCamera,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
 import {prepareHoaThanArt,hoaThanFormationState,drawHtSky,drawHtSea,drawHtSeals,drawHtAuthority,drawHtBodyQi,drawHtBreak,drawHtEdges} from './hoa-than-formation.js';
 const HT_PALETTE={main:'#8bdcff',main2:'#bfe8ff',soft:'#eefaff',gold:'#f5d693'};
@@ -42,7 +43,7 @@ export function drawHoaThanAwakening(scene,c,e,t,H){
  prepareHoaThanArt(scene);const s=hoaThanState((t-e.start)/e.duration,H,scene.motion!==false),st=hoaThanFormationState(s.seconds,H,s.motion),sec=s.seconds;
  const {from,to}=hoaThanPlayers(scene,e),p=s.revealed?to:from,v=qiVariant(e),kq=qiRemap(s.k,14.4/17.6),origin={x:450,y:st.belly};
  const im=hoaThanActorImage(scene,from,e),image=hoaThanActorImage(scene,p,e);
- c.save();setFxPalette(HT_PALETTE);drawHtSky(scene,c,st,v);pushFxCamera(scene,c,kq,v,s.feet);
+ c.save();setFxPalette(HT_PALETTE);drawHtSky(scene,c,st,v);drawRitualTint(scene,c,H);pushFxCamera(scene,c,kq,v,s.feet);
  const opener=sec>=.16?Math.exp(-(sec-.16)*8)*3:0,shake=s.motion&&scene.cameraEnabled!==false?opener+s.burst*7:0;c.translate(Math.sin(sec*81)*shake,Math.cos(sec*67)*shake*.5);
  drawHtSea(scene,c,st);drawHtSeals(scene,c,st,v);drawHtAuthority(scene,c,st,im,ghost);
  // One projected soul gains authority over the storm; it is not a second permanent character.
@@ -52,7 +53,7 @@ export function drawHoaThanAwakening(scene,c,e,t,H){
  drawHtBodyQi(scene,c,st);drawQiCompression(c,kq,origin);
  c.restore();drawQiMotes(scene,c,kq,H);drawHtEdges(scene,c,st);c.restore();
  const phase=s.revealed?'reveal':sec<2?'sky-break':sec<4.4?'spirit':sec<7.6?'seals':sec<10.5?'thunder':sec<12.8?'authority':sec<14.25?'recall':'compression';
- const ui={k:s.k,realm:5,phase,revealed:s.revealed,color:'#bfe8ff',title:'Hóa Thần',subtitle:'Thần Niệm Chấn Thiên',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake};
+ const ui={k:s.k,realm:5,phase,revealed:s.revealed,color:scene.ritualAppearance?.title||'#bfe8ff',title:'Hóa Thần',subtitle:'Thần Niệm Chấn Thiên',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake};
  if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.textAlign='center';c.font='600 26px Arial';c.fillStyle='#e1ecff';c.fillText(ui.name,450,H*.1);if(s.revealed){c.font='700 44px Arial';c.fillText('HÓA THẦN',450,H*.145);}}
  return ui;
 }
