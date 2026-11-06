@@ -1,3 +1,4 @@
+import {drawRitualTint} from './ritual-appearance.js';
 import {drawAscensionStageBackdrop} from './ascension-stage.js';
 import {makeSurface} from './performance.js';
 import {setFxPalette,qiVariant,qiCamera,drawQiEnvironment,drawQiVignette,drawQiInflow,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
@@ -116,7 +117,7 @@ export function drawTrucCoAwakening(scene,c,e,t,H){
  const kb=TRUC_CO_BURST/(TRUC_CO_DURATION/1000),kq=s.k<kb?s.k*.70/kb:.70+(s.k-kb)*.30/(1-kb),body=s.feet-s.lift,origin={x:450,y:body-30};
  setFxPalette(TC_PALETTE);
  c.save();drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:scene.ritualAppearance?.palette.main2||'#a7f2e2',feet:s.feet});drawQiEnvironment(scene,c,kq,H,origin,true); // 4/11: thiên đài cả trên LIVE
- const v3=trucCoV3State(s.seconds),sv={...s,body};drawTcSky(scene,c,v3,H,v); // v3 05/11: núi xa + linh mạch
+ const v3=trucCoV3State(s.seconds),sv={...s,body};drawTcSky(scene,c,v3,H,v);drawRitualTint(scene,c,H); // v3 05/11: núi xa + linh mạch
  glow(c,450,s.feet-130,420,'#438c662c',s.open*.9);
  const zoom=1+(qiCamera(kq,motion&&scene.cameraEnabled!==false)-1)*v.zoom,fy=s.feet-150+v.dy;c.save();c.translate(450,fy);c.scale(zoom,zoom);c.translate(-450,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
  const shake=motion&&scene.cameraEnabled!==false?s.burst*7:0;c.translate(Math.sin(s.clock*95)*shake,Math.cos(s.clock*80)*shake*.6);

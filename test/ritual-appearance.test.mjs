@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createCanvas} from '@napi-rs/canvas';
 import {createHash} from 'node:crypto';
-import {ritualAppearance,drawRitualAppearance} from '../public/ritual-appearance.js';
+import {ritualAppearance,drawRitualAppearance,drawRitualTint} from '../public/ritual-appearance.js';
 import {drawRitual,mountRitualHud} from '../public/live-cinema.js';
 import {breakthroughDuration} from '../public/breakthrough-fx.js';
 test('early-realm variation is stable within each event, varies across people and repeat breakthroughs, and stays bounded',()=>{
@@ -11,6 +11,15 @@ test('early-realm variation is stable within each event, varies across people an
  }
  const e={id:'a',user:'same',toRealm:3};assert.notEqual(ritualAppearance(e).key,ritualAppearance({...e,id:'b'}).key);
  assert.equal(ritualAppearance({toRealm:6}),null);assert.equal(ritualAppearance({toRealm:21}),null);assert.equal(ritualAppearance({text:'ĐỘT PHÁ HÓA THẦN'}).realm,5);
+});
+test('background tones vary independently, stay cached throughout an event and leave actor drawing untouched',()=>{
+ const old=globalThis.document;globalThis.document={createElement:()=>createCanvas(1,1)};
+ try{
+  const variants=Array.from({length:64},(_,i)=>ritualAppearance({id:'background-'+i,user:'viewer-'+i,toRealm:3}));assert.equal(new Set(variants.map(a=>a.background)).size,6);
+  const a=variants[0],b=variants.find(x=>x.background!==a.background),scene={ritualAppearance:a},canvas=createCanvas(900,1600),c=canvas.getContext('2d');
+  const render=appearance=>{scene.ritualAppearance=appearance;c.fillStyle='#081322';c.fillRect(0,0,900,1600);drawRitualTint(scene,c,1600);assert.equal(c.globalCompositeOperation,'source-over');c.fillStyle='#a47852';c.fillRect(400,650,100,200);return {bg:[...c.getImageData(450,60,1,1).data],actor:[...c.getImageData(450,700,1,1).data]};};
+  const first=render(a),cached=scene.ritualTint.surface;assert.deepEqual(render(a),first);assert.equal(scene.ritualTint.surface,cached);const second=render(b);assert.notDeepEqual(second.bg,first.bg);assert.deepEqual(second.actor,first.actor);
+ }finally{globalThis.document=old;}
 });
 test('decor stays in the side lanes, respects reduced motion, and restores canvas state',()=>{
  const e={id:'a',user:'a',toRealm:4,start:0,duration:10000},a=ritualAppearance(e),canvas=createCanvas(900,1600),c=canvas.getContext('2d');

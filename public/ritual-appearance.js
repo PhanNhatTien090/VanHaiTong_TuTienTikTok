@@ -3,6 +3,7 @@ import {qiSeed} from './qi-impact.js';
 import {REALM_NAMES} from './progression.js';
 import {makeSurface} from './performance.js';
 const BASE=['','#7dffcf','#9dffc4','#ffd36e','#d8a9ff','#8bdcff'];
+export const RITUAL_BACKGROUNDS=Object.freeze(['#46bea2','#4f9adb','#9370d4','#d99c45','#ba759e','#85a6b8']);
 const SHIFTS=[-30,-15,0,15,30,45],cache=new Map(),TAU=Math.PI*2;
 const clamp=x=>Math.max(0,Math.min(1,x));
 function hue(hex,deg){
@@ -19,13 +20,14 @@ export function ritualAppearance(e){
  const seed=qiSeed(e),key=realm+':'+seed;if(cache.has(key))return cache.get(key);
  const colorIndex=(seed>>>1)%SHIFTS.length,main=hue(BASE[realm],SHIFTS[colorIndex]),accent=hue('#ffe4ad',SHIFTS[(seed>>>7)%6]*.7);
  const palette=Object.freeze({main,main2:lighten(main,.28),soft:lighten(main,.74),gold:accent});
- const a=Object.freeze({key,realm,seed,colorIndex,palette,title:lighten(main,.52),accent,border:(seed>>>4)%4,details:3+(seed>>>12)%4,phase:(seed>>>16)/65535,direction:seed&1?1:-1});
+ const backgroundIndex=(seed>>>17)%RITUAL_BACKGROUNDS.length;
+ const a=Object.freeze({key,realm,seed,colorIndex,palette,backgroundIndex,background:RITUAL_BACKGROUNDS[backgroundIndex],title:lighten(main,.52),accent,border:(seed>>>4)%4,details:3+(seed>>>12)%4,phase:(seed>>>16)/65535,direction:seed&1?1:-1});
  cache.set(key,a);if(cache.size>128)cache.delete(cache.keys().next().value);return a;
 }
 export function ritualAppearanceFrame(ui,a){return ui&&a?{...ui,color:a.title,accent:a.accent,appearanceKey:a.key,border:a.border}:ui;}
 export function drawRitualTint(scene,c,H){
- const a=scene.ritualAppearance;if(!a)return;const key=a.palette.main+':'+H;let entry=scene.ritualTint;
- if(entry?.key!==key){const surface=makeSurface(450,Math.ceil(H/2));if(surface){const x=surface.getContext('2d'),g=x.createLinearGradient(0,0,0,surface.height);g.addColorStop(0,a.palette.main+'32');g.addColorStop(.42,a.palette.main+'0b');g.addColorStop(.75,a.palette.main+'20');g.addColorStop(1,a.palette.main+'07');x.fillStyle=g;x.fillRect(0,0,surface.width,surface.height);}entry=scene.ritualTint={key,surface};}
+ const a=scene.ritualAppearance;if(!a)return;const key=a.background+':'+H;let entry=scene.ritualTint;
+ if(entry?.key!==key){const surface=makeSurface(450,Math.ceil(H/2));if(surface){const x=surface.getContext('2d'),g=x.createLinearGradient(0,0,0,surface.height);g.addColorStop(0,a.background+'48');g.addColorStop(.42,a.background+'18');g.addColorStop(.75,a.background+'30');g.addColorStop(1,a.background+'12');x.fillStyle=g;x.fillRect(0,0,surface.width,surface.height);}entry=scene.ritualTint={key,surface};}
  if(entry.surface){c.save();c.globalCompositeOperation='screen';c.drawImage(entry.surface,0,0,900,H);c.restore();}
 }
 export function drawRitualAppearance(scene,c,e,t,H,a){

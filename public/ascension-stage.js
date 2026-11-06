@@ -1,5 +1,4 @@
 import {MAX_REALM} from './progression.js';
-import {drawRitualTint} from './ritual-appearance.js';
 import {makeSurface} from './performance.js';
 import {REALM_NAMES} from './progression.js';
 import {isNPC} from './live-integrity.js';
@@ -15,14 +14,13 @@ export function prepareAscensionStage(scene){
 }
 function cover(c,im,W,H){const iw=im.naturalWidth||im.width,ih=im.naturalHeight||im.height,s=Math.max(W/iw,H/ih);c.drawImage(im,(W-iw*s)/2,(H-ih*s)/2,iw*s,ih*s);}
 function background(scene,H){
- const W=scene.canvas?.width||900,PH=scene.canvas?.height||Math.round(H),key=W+':'+PH+':'+(scene.ritualAppearance?.palette.main||'base');
+ const W=scene.canvas?.width||900,PH=scene.canvas?.height||Math.round(H),key=W+':'+PH;
  if(scene.ascensionStageBackground?.key===key)return scene.ascensionStageBackground.surface;
  const surface=makeSurface(W,PH);if(!surface)return null;const c=surface.getContext('2d');c.scale(W/900,PH/H);
  c.fillStyle='#0d203d';c.fillRect(0,0,900,H);
  const im=scene.ascensionStageArt;if(im?.complete&&im.naturalWidth){c.save();c.globalAlpha=.76;cover(c,im,900,H);c.restore();}
  const tint=c.createLinearGradient(0,0,0,H);tint.addColorStop(0,'#1827539c');tint.addColorStop(.35,'#24497865');tint.addColorStop(.7,'#102a4ba3');tint.addColorStop(1,'#06152bea');c.fillStyle=tint;c.fillRect(0,0,900,H);
  const mist=c.createRadialGradient(450,H*.45,10,450,H*.45,520);mist.addColorStop(0,'#c3e8ff36');mist.addColorStop(1,'#c3e8ff00');c.fillStyle=mist;c.fillRect(0,H*.12,900,H*.75);
- if(scene.ritualAppearance){c.fillStyle=scene.ritualAppearance.palette.main+'18';c.fillRect(0,0,900,H);}
  scene.ascensionStageBackground={key,surface};return surface;
 }
 function ellipse(c,x,y,rx,ry,fill,stroke,width=1){c.beginPath();c.ellipse(x,y,rx,ry,0,0,TAU);if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=width;c.stroke();}}
@@ -31,7 +29,6 @@ export function drawAscensionStageBackdrop(scene,c,H,{clock=0,ritual=false,color
  if(base)c.drawImage(base,0,0,900,H);else{c.fillStyle='#102440';c.fillRect(0,0,900,H);}
  if(ritual){const veil=c.createLinearGradient(0,0,0,H);veil.addColorStop(0,'#020617c9');veil.addColorStop(.45,'#071025b8');veil.addColorStop(1,'#030b1be5');c.fillStyle=veil;c.fillRect(0,0,900,H);}
  const t=scene.motion===false?0:clock,ground=feet+42;
- if(ritual)drawRitualTint(scene,c,H);
  const shine=c.createRadialGradient(450,ground,10,450,ground,380);shine.addColorStop(0,color+'30');shine.addColorStop(1,color+'00');c.fillStyle=shine;c.fillRect(60,ground-380,780,760);
  // Jade tiers have real side faces, perspective and a restrained reflection.
  ellipse(c,450,ground+45,308,88,'#030c2070');
