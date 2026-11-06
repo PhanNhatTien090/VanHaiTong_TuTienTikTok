@@ -29,5 +29,5 @@ export function drawRealmSkinV2(scene,c,p,pose,t){
   if(stand>.001&&!standing||stand<.999&&!seated)return false;
   c.save();c.translate(0,pose.lift||0);c.rotate(pose.lean||0);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
   const draw=(im,alpha,height)=>{if(!im||alpha<=.001)return;const width=height*im.width/im.height;c.save();c.globalAlpha*=alpha;const breath=scene.motion===false?0:Math.sin(t*.0018)*.003;c.scale(1+breath,1-breath);c.drawImage(im,-width/2,27-height,width,height);c.restore();};
-  draw(seated,1-stand,85);draw(standing,stand,118);c.restore();return true;
+  draw(seated,1-stand,p.realm>=14?100:85);draw(standing,stand,p.realm>=14?138:118);c.restore();return true;
 }
