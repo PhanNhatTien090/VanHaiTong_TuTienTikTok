@@ -5,14 +5,21 @@ Mục tiêu vận hành: người dùng nói **“cập nhật lên prod”**, t
 kết nối VPS, chỉ truyền file thay đổi, sao lưu và chuyển mã. Người dùng không
 phải tải/nén/upload thủ công trong các lần cập nhật sau khi thiết lập xong.
 
-Trạng thái 06/11/2026: workflow và các script được chuẩn bị trong worktree;
-Git push dry-run thành công, không tạo nhánh hoặc đẩy thay đổi. Người dùng đã
-báo thêm Secret PROD_SSH_KEY và Variables PROD_HOST, PROD_KNOWN_HOSTS; chưa
-xác minh bằng workflow. Hostname đã được người dùng tạo: `vanhaitong.duckdns.org`, DNS A đã xác minh
-trỏ `103.82.26.70`, không có AAAA. Cần thêm Variable PROD_URL với giá trị
-`https://vanhaitong.duckdns.org`; chưa xác nhận người dùng đã thêm biến này. Chưa chạy workflow
-thật hoặc triển khai game lên VPS.
-Khả năng SSH trực tiếp từ môi trường chat hiện tại chưa có.
+Trạng thái đã xác minh ngày 06/11/2026:
+
+- URL: **https://vanhaitong.duckdns.org**. HTTPS và trang chờ hoạt động.
+- GitHub Actions đã kết nối SSH tới VPS thành công bằng cấu hình người dùng
+  đã thêm; không cần SSH trực tiếp từ môi trường chat.
+- Mã game và dịch vụ đã cài sẵn từ commit
+  `6f94588a56394d82fc9e41c70fb6ae376b295814`, nhánh `codex/cloudfly-setup`.
+- Marker HTTPS `/game-setup-status.json` xác nhận `code_prepared:true`,
+  `service_started:false`, `data_imported:false` và đúng SHA trên.
+- **Game chưa mở chơi.** Service được giữ tắt bằng chốt systemd
+  `/var/lib/van-hai-web/.migration-pending`; database chưa được khởi tạo.
+- Người dùng cần thêm Variable `PROD_URL=https://vanhaitong.duckdns.org`
+  nếu chưa thêm. Staging dùng URL cố định, chưa kiểm chứng biến này.
+- Worktree thiết lập: `/workspace/cloudfly-setup-worktree`. Repo gốc vẫn giữ
+  các thay đổi có sẵn; không reset nó hoặc triển khai nhầm HEAD cũ `fcaf8f5`.
 
 ## Dữ liệu LIVE còn thiếu
 
@@ -24,7 +31,7 @@ thật trong workspace. Có thể tiếp tục DNS/HTTPS và cài phần mềm, 
 production cloud chưa khởi động cho đến khi nhập đúng dữ liệu lần đầu. Không
 khởi tạo tài khoản production rỗng để bỏ qua bước di chuyển vì import chỉ một lần.
 Nếu mở bản thử độc lập phải có lựa chọn rõ của người dùng, dùng thư mục dữ liệu
-riêng và nói rõ tiến độ thử không tự nhập vào LIVE. Câu hỏi này đang chờ trả lời.
+riêng và nói rõ tiến độ thử không tự nhập vào LIVE. Người dùng chọn để việc chuyển dữ liệu sau khi về nhà, không chọn bản thử riêng.
 
 ## Cấu hình một lần
 
@@ -114,11 +121,18 @@ DNS/HTTPS và kiểm thử đăng nhập, bàn giao LIVE–web trước khi gử
 
 ## Trang chờ và HTTPS trong lần chuẩn bị đầu
 
-DNS đã xác minh từ nguồn công khai: vanhaitong.duckdns.org → 103.82.26.70.
-HTTP hiện trả trang Welcome to nginx. Script HTTPS trang chờ đã chuẩn bị tại
-`/workspace/cloudfly-https-waiting.sh`; chưa xác nhận được chạy trên VPS.
-Script chỉ tạo trang chờ tĩnh, không chạy server cloud hoặc khởi tạo accounts.
-Khi cài game thật, install.sh sẽ thay cấu hình trang chờ ở cùng site nginx.
-Sau import và start service, chạy lại certbot --nginx với --reinstall --redirect
-để khôi phục cấu hình HTTPS trước khi phát link, rồi xác minh HTTPS công khai.
+DNS và HTTPS đã xác minh: vanhaitong.duckdns.org → 103.82.26.70.
+HTTPS được thiết lập qua workflow prepare-cloudfly.yml từ commit e530b43,
+sau đó stage-cloudfly.yml đã cài mã bằng install.sh --defer-nginx.
+Cấu hình proxy chờ tại /etc/nginx/sites-available/van-hai-web.pending;
+site đang phục vụ vẫn là trang chờ có HTTPS.
+
+Khi người dùng về nhà: xác nhận đường dẫn LIVE thật (C:\GAME chỉ là tạm),
+sao lưu dữ liệu và nhập đúng tài khoản/world như README. File nhập phải
+nằm trong thư mục riêng mà service user vanhai-web đọc được; không yêu cầu
+service user đọc trực tiếp file dưới /root. Chưa khởi động service trước import.
+Chỉ sau import thành công mới gỡ .migration-pending, kích hoạt service,
+đổi từ cấu hình trang chờ sang proxy pending, và cài lại cấu hình TLS bằng
+certbot --nginx với --reinstall --redirect. Ghép agent và xác minh dữ liệu/
+bàn giao LIVE–web trước khi mở chơi. Không lùi database khi rollback mã.
 Không thông báo game đã sẵn sàng chỉ vì trang chờ có HTTPS.
