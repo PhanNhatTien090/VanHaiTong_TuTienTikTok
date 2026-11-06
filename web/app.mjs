@@ -13,7 +13,7 @@ import { snapshot, REALMS, normalize } from '../engine.mjs';
 import { SPECIAL_SKINS } from '../public/patrons.js';
 import { createAccountStore, parseLinkComment, normalizeUsername } from './accounts.mjs';
 import { playerView, inventoryView, webRanking } from './game-view.mjs';
-import { createDungeon, dungeonView, staminaView, BOSSES, towerView, towerRanking } from './dungeon.mjs';
+import { createDungeon, dungeonView, staminaView, BOSSES, towerView, towerRanking, ZONES } from './dungeon.mjs';
 import { forgeView, enhance, petView, feedPet, choosePet, questView, claimQuest, bumpQuest, matsView } from './progress.mjs';
 import { webAction, addPlayerQuietly } from './isolate.mjs';
 import { jadeBalance, shopView, buy, takeExtraPills, retreatView, startRetreat, claimRetreat, mailView, claimMail, welcomeMail, giftView, claimGift } from './extras.mjs';
@@ -22,7 +22,7 @@ import { liveView } from './live-view.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(here, '..');
 
-export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {} }) {
+export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', trial = process.env.WEB_CLOUD_TRIAL === '1', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {} }) {
   fs.mkdirSync(dataDir, { recursive: true });
   const accounts = accountStore || createAccountStore(path.join(dataDir, 'accounts.json'));
   const dungeon = createDungeon();
@@ -220,7 +220,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       if(playSessions&&req.method==='POST')req.playBody=await readBody(req);
       const token = cookies(req).vh_session, user = accounts.userForSession(token, now), route = req.method + ' ' + url.pathname;
 
-      if(route==='GET /api/site-status')return json(req,res,{ok:true,mode:profileOnly?'profiles':'game',readOnly:profileOnly,loginRequired:true,updatedAt:now,...siteStatus()});
+      if(route==='GET /api/site-status')return json(req,res,{ok:true,mode:profileOnly?'profiles':'game',readOnly:profileOnly,trial:!profileOnly&&trial,loginRequired:true,updatedAt:now,...siteStatus()});
       if(route==='GET /api/updates') {
         if (!user) return json(req,res,{ok:false},401);
         if (!updates) return json(req,res,{ok:false},404);
@@ -236,6 +236,11 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       // Keep the original authentication and TikTok-linking flow; only gameplay is paused.
       const accountRoutes=new Set(['POST /api/check','POST /api/register','POST /api/login','POST /api/logout','POST /api/link/start','POST /api/character']);
       if(profileOnly&&req.method!=='GET'&&!accountRoutes.has(route))return json(req,res,{ok:false,readOnly:true,message:'Tạm khóa tu luyện, bế quan và nhận thưởng trên web.'},403);
+      // Bản thử (WEB_CLOUD_TRIAL=1): khóa mọi thứ tăng sức mạnh; chỉ cho đánh ải đầu tiên, đánh xong không nhận thưởng.
+      if(trial&&req.method==='POST'&&!accountRoutes.has(route)&&route!=='POST /api/play/heartbeat'&&route!=='POST /api/dungeon/finish'){
+        const b=await readBody(req)||{};
+        if(!(route==='POST /api/dungeon/start'&&String(b.zone||'')===ZONES[0].id&&Number(b.stage)===1))return json(req,res,{ok:false,trial:true,message:'Bản web đang thử nghiệm: tạm khóa tu luyện, bế quan, nâng cấp và nhận thưởng. Hiện chỉ mở đánh thử ải đầu tiên.'},403);
+      }
 
       // ----- Quản trị: CHỈ trên máy này (qua tunnel/proxy luôn bị chặn). Xem hồ sơ bất kỳ người chơi, chỉ đọc. -----
       const viewId = !publicOnly && isLocal(req) ? cookies(req).vh_view : null;
@@ -387,7 +392,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
           if (!ev || ev.id !== String(body.eventId || '')) return reply({ ok: false, message: 'Sự kiện LIVE đã kết thúc.' });
           return reply(dungeon.startEvent(world, p, ev, now), { extraPills: p.web?.extraPills || 0 });
         }
-        case 'POST /api/dungeon/finish': { const r = dungeon.finish(world, p, body, now); if (r.ok !== false) takeExtraPills(p, Math.trunc(Number(body.pillsUsed) || 0) - 3); changed(); return reply(r, { dungeon: dungeonView(p, now), player: playerView(world, p, now) }); }
+        case 'POST /api/dungeon/finish': { const r = dungeon.finish(world, p, body, now, { noReward: trial }); if (r.ok !== false) takeExtraPills(p, Math.trunc(Number(body.pillsUsed) || 0) - 3); changed(); return reply(r, { dungeon: dungeonView(p, now), player: playerView(world, p, now) }); }
         case 'POST /api/dungeon/sweep': { const r = dungeon.sweep(world, p, String(body.zone || ''), Number(body.stage), now); changed(); return reply(r, { dungeon: dungeonView(p, now), player: playerView(world, p, now) }); }
         // ----- Cửa hàng (Tiên Ngọc), Bế quan, Thư, Quà mỗi ngày -----
         case 'GET /api/shop': return json(req, res, shopView(p, now));
