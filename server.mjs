@@ -1,4 +1,6 @@
 import {giftMasterView} from './master-rewards.mjs';
+import {createLiveTransfers} from './web/cloud/live-transfers.mjs';
+import {authenticate} from './web/cloud/protocol.mjs';
 import {raceEntryAnnouncement} from './sword-race.mjs';
 import {createSectMaster} from './sect-master.mjs';
 import {observeViewerCount} from './public/crowd-policy.js';
@@ -55,6 +57,12 @@ for(const [mode,w]of Object.entries(worlds)){
  if(repairs.length)console.log(`[${mode}] Đối soát và bù ${repairs.length} lượt thưởng tiên nhân.`);
 }
 if(fs.existsSync(visitorRecovery))fs.renameSync(visitorRecovery,visitorRecovery+'.applied-'+Date.now());
+function persistPlayTransfer(){
+  persist(true);
+  const fd=fs.openSync(path.join(dataDir,'live.json'),'r+');try{fs.fsyncSync(fd);}finally{fs.closeSync(fd);}
+  if(process.platform!=='win32'){const dir=fs.openSync(dataDir,'r');try{fs.fsyncSync(dir);}finally{fs.closeSync(dir);}}
+}
+const liveTransfers=createLiveTransfers({world:worlds.live,save:persistPlayTransfer});
 const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
@@ -103,7 +111,7 @@ function connect(){
     try{const event=JSON.parse(raw.toString());if(event.event==='config')return;
       observeViewerCount(connection,event);sectMaster.observe(event);connection.received++;connection.lastEvent=Date.now();
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
-      connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
+      connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.queuedGift)persistPlayTransfer();if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;
       broadcast();
     }catch(e){connection.lastError=`Không đọc được sự kiện: ${e.message}`;}
@@ -125,6 +133,13 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='POST'){
       if(req.headers.origin&&req.headers.origin!==`http://${host}`){json(res,{ok:false,message:'Origin không hợp lệ.'},403);return;}
       if(!String(req.headers['content-type']).startsWith('application/json')){json(res,{ok:false,message:'Cần JSON.'},415);return;}
+    }
+    if(url.pathname==='/internal/play-transfer'&&req.method==='POST'){
+      const secret=process.env.WEB_SYNC_SECRET;
+      const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>1024*1024){json(res,{ok:false},413);return;}chunks.push(chunk);}
+      const raw=Buffer.concat(chunks);
+      if(!secret||secret.length<48||!authenticate(req,url.pathname,raw,secret)){json(res,{ok:false},401);return;}
+      const result=liveTransfers.apply(JSON.parse(raw.toString()));payloadCache.clear();broadcast();json(res,result);return;
     }
     if(url.pathname==='/api/speech'&&req.method==='GET'){
       const id=url.searchParams.get('id');

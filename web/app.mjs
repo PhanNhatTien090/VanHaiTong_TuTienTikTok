@@ -22,7 +22,7 @@ import { liveView } from './live-view.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(here, '..');
 
-export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', accountStore = null, publicOnly = false, handleInternal = null, updates = null, siteStatus = () => ({}), onChange = () => {}, limits = {} }) {
+export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {} }) {
   fs.mkdirSync(dataDir, { recursive: true });
   const accounts = accountStore || createAccountStore(path.join(dataDir, 'accounts.json'));
   const dungeon = createDungeon();
@@ -49,8 +49,16 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
     res.writeHead(status, { ...headers, 'Content-Length': body.length });
     res.end(body);
   }
-  const json = (req, res, data, status = 200, headers = {}) => send(req, res, status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers }, Buffer.from(JSON.stringify(data)));
+  const json = (req, res, data, status = 200, headers = {}) => {
+    if(req.playing){req.playing=false;invalidate();markDirty();}
+    return send(req, res, status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', ...headers }, Buffer.from(JSON.stringify(data)));
+  };
+  const bodies=new WeakMap();
   async function readBody(req) {
+    if(bodies.has(req))return bodies.get(req);
+    const pending=parseBody(req);bodies.set(req,pending);return pending;
+  }
+  async function parseBody(req) {
     let text = '';
     for await (const part of req) { text += part; if (text.length > 8192) throw Error('Yêu cầu quá lớn.'); }
     return JSON.parse(text || '{}');
@@ -122,6 +130,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
   function completeLink(code, tiktok, now = Date.now()) {
     if (publicOnly) {
       const candidate = accounts.peekLink(code, now), id = String(tiktok.userId || '');
+      if(playSessions&&candidate?.playerId&&candidate.playerId!==id&&!world.players[candidate.playerId]?.webOnly)return {ok:false,message:'Tài khoản đã liên kết nhân vật. Không đổi nhân vật trong phiên chơi.'};
       if (!candidate || !id || id.length > 128) return { ok: false, message: 'Mã không đúng hoặc đã hết hạn.' };
       const owner = accounts.userForPlayer(id);
       if (owner && owner !== candidate) return { ok: false, message: 'Nhân vật đã liên kết với tài khoản khác. Cần chủ game đối chiếu.' };
@@ -208,6 +217,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       if (!url.pathname.startsWith('/api/') && !url.pathname.startsWith('/dev/') && !url.pathname.startsWith('/admin/')) return serveStatic(req, res, url.pathname);
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json')) return json(req, res, { ok: false, message: 'Yêu cầu không hợp lệ.' }, 400);
       if (limited('ip:' + ip, limits.requestsPerIp || 240, 60000, now)) return json(req, res, { ok: false, message: 'Quá nhiều yêu cầu, thử lại sau.' }, 429);
+      if(playSessions&&req.method==='POST')req.playBody=await readBody(req);
       const token = cookies(req).vh_session, user = accounts.userForSession(token, now), route = req.method + ' ' + url.pathname;
 
       if(route==='GET /api/site-status')return json(req,res,{ok:true,mode:profileOnly?'profiles':'game',readOnly:profileOnly,loginRequired:true,updatedAt:now,...siteStatus()});
@@ -251,6 +261,13 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         return json(req, res, { ok: false, message: 'Không có.' }, 404);
       }
       if (route === 'GET /api/session' && viewP) return json(req, res, { user: { username: 'Quản trị · xem ' + viewP.name, linkedTikTok: !viewP.webOnly }, player: playerView(world, viewP, now), pendingLink: null, devTools: false, adminView: { id: viewP.id, name: viewP.name } });
+      if(playSessions&&user&&playerOf(user)&&!['POST /api/logout','POST /api/login','POST /api/register','POST /api/check','POST /api/link/start'].includes(route)){
+        const access=await playSessions.enter(user,token);
+        if(!access.ok)return json(req,res,access,409);
+        if(!playSessions.allowed(user,token))return json(req,res,{ok:false,code:'PLAY_SESSION_CONFLICT',message:'Phiên chơi đang bàn giao. Thử lại sau.'},409);
+        req.playing=true;
+      }
+      if(route==='POST /api/play/heartbeat')return json(req,res,{ok:!!user},user?200:401);
       if (route === 'GET /api/session') return json(req, res, sessionPayload(user, now));
       if (route === 'POST /api/check') {
         if (limited('check:' + ip, 30, 60000, now)) return json(req, res, { ok: false, message: 'Thử lại sau một phút.' }, 429);
@@ -272,10 +289,15 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         const r = route === 'POST /api/register' ? await accounts.registerAsync(b.username, b.password, now) : await accounts.loginAsync(b.username, b.password);
         if (!r.ok && publicOnly) limited('auth-fail:' + username,8,60000,now);
         if (!r.ok) return json(req, res, r, 400);
-        const t = accounts.createSession(r.user, now); accounts.save();
+        const t = accounts.createSession(r.user, now);
+        if(playSessions){
+          const access=await playSessions.enter(r.user,t);
+          if(!access.ok){accounts.endSession(t);accounts.save();return json(req,res,access,409);}
+        }
+        accounts.save();
         return json(req, res, { ok: true, ...sessionPayload(r.user, now) }, 200, { 'Set-Cookie': sessionCookie(req, t, 30 * 24 * 3600) });
       }
-      if (route === 'POST /api/logout') { accounts.endSession(token); accounts.save(); return json(req, res, { ok: true }, 200, { 'Set-Cookie': sessionCookie(req, '', 0) }); }
+      if (route === 'POST /api/logout') { playSessions?.logout(user,token); accounts.endSession(token); accounts.save(); return json(req, res, { ok: true }, 200, { 'Set-Cookie': sessionCookie(req, '', 0) }); }
       if (route === 'GET /api/live') {
         const l = live(now), b = l.event?.kind === 'boss' ? BOSSES[l.event.species] : null, me = playerOf(user);
         const event = l.event ? { ...l.event, atlas: b?.atlas, cell: b?.cell, won: !!me?.web?.eventsWon?.[l.event.id] } : null;
@@ -344,7 +366,8 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       if(!profileOnly)p.lastWebAt = now;
       if (!profileOnly&&!p.web?.welcomed) { (p.web ??= {}).welcomed = now; welcomeMail(p, now); changed(); }
 
-      const body = req.method === 'POST' ? await readBody(req) : null;
+      const body = req.method === 'POST' ? (playSessions ? req.playBody : await readBody(req)) : null;
+      if(playSessions&&!playSessions.allowed(user,token))return json(req,res,{ok:false,code:'PLAY_SESSION_CONFLICT',message:'Phiên chơi đã kết thúc hoặc đang bàn giao. Đăng nhập lại để tiếp tục.'},409);
       const reply = (r, extra = {}) => json(req, res, { ...r, ...extra }, r.ok === false ? 400 : 200);
       switch (route) {
         case 'GET /api/me': return json(req, res, { player: playerView(world, p, now), inventory: inventoryView(world, p), stamina: staminaView(p, now), mats: matsView(p), quests: questView(p, now), jade: jadeBalance(p), mailUnread: mailView(p).unread, giftReady: !giftView(p, now).claimedToday, retreat: retreatView(p, now), liveEvent: live(now).event, eventWon: !!p.web?.eventsWon?.[live(now).event?.id], serverNow: now });

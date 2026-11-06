@@ -1,0 +1,51 @@
+name: Prepare CloudFly HTTPS
+
+on:
+  push:
+    branches: ['codex/cloudfly-setup']
+    paths:
+      - '.github/workflows/prepare-cloudfly.yml'
+      - 'web/deploy/prepare-host.sh'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vanhai-host-setup
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROD_HOST: ${{ vars.PROD_HOST }}
+      SETUP_REVISION: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Validate script
+        run: bash -n web/deploy/prepare-host.sh
+      - name: Configure HTTPS waiting page
+        shell: bash
+        env:
+          PROD_SSH_KEY: ${{ secrets.PROD_SSH_KEY }}
+          PROD_KNOWN_HOSTS: ${{ vars.PROD_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ $PROD_HOST == 103.82.26.70 ]] || { echo 'PROD_HOST must match the approved CloudFly server'; exit 1; }
+          [[ -n $PROD_SSH_KEY && -n $PROD_KNOWN_HOSTS ]] || { echo 'Missing Actions key or pinned host key'; exit 1; }
+          umask 077
+          directory="$RUNNER_TEMP/vanhai-setup-ssh"
+          mkdir "$directory"
+          printf '%s\n' "$PROD_SSH_KEY" | tr -d '\r' > "$directory/key"
+          printf '%s\n' "$PROD_KNOWN_HOSTS" | tr -d '\r' > "$directory/known_hosts"
+          ssh-keygen -y -f "$directory/key" >/dev/null
+          ssh-keygen -F "$PROD_HOST" -f "$directory/known_hosts" >/dev/null
+          ssh -i "$directory/key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$directory/known_hosts" -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "root@$PROD_HOST" bash -s -- "$SETUP_REVISION" < web/deploy/prepare-host.sh
+      - name: Verify HTTPS
+        run: curl --fail --silent --show-error --max-time 20 https://vanhaitong.duckdns.org/setup-status.json
+      - name: Remove runner SSH files
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/vanhai-setup-ssh"
