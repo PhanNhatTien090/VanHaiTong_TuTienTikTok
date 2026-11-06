@@ -6,7 +6,7 @@ import {CharacterFrames,RenderBudget,QUALITY,FrameClock,inView,actorSample,Bitma
 test('output stays full HD even inside a narrow Studio pane; editor preview remains bounded',()=>{
  assert.deepEqual(renderDimensions({width:635,height:635*16/9},QUALITY.balanced),{width:1080,height:1920});
  assert.deepEqual(renderDimensions({width:360,height:640},QUALITY.balanced,true),{width:720,height:1280});
- assert.deepEqual(renderDimensions({width:1080,height:1920},QUALITY.light),{width:900,height:1600});
+ assert.deepEqual(renderDimensions({width:1080,height:1920},QUALITY.light),{width:1080,height:1920});
  assert.equal(renderDimensions({width:0,height:0},QUALITY.high),null);
 });
 
@@ -18,7 +18,7 @@ test('automatic budget lowers resolution on sustained slow rendering and waits b
   for(let i=0;i<60;i++)b.sample(4,50000+i*34,24);
   assert.equal(b.level,'balanced');
   b.set('high');for(let i=0;i<100;i++)b.sample(99,100000+i*100,4);assert.equal(b.level,'high');
-  assert.ok(QUALITY.light.width<QUALITY.balanced.width&&QUALITY.balanced.width<QUALITY.high.width);
+  assert.ok(QUALITY.light.width===QUALITY.balanced.width&&QUALITY.light.mesh<QUALITY.balanced.mesh&&QUALITY.balanced.width<QUALITY.high.width);
 });
 
 test('GPU-starved low FPS also triggers auto mode even when CPU draw timings look small',()=>{

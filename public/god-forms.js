@@ -53,4 +53,4 @@ export function godAuraRadius(scene,a){
 // This lightweight presence is ALWAYS drawn for every visible god, even while
 // the more expensive dragon sprites rotate between players or are loading.
 export function drawGodPresence(scene,c,a,t){return drawRealmPresenceV3(scene,c,a,t);}
-export function drawGodAuras(scene,c,t,layer){if(scene.crowded||layer!=='back')return;for(const a of scene.targets||[])if(godFormFor(a.player,{aura:true}))drawGodPresence(scene,c,a,t);}
+export function drawGodAuras(scene,c,t,layer){if((scene.reducePresence??scene.crowded)||layer!=='back')return;for(const a of scene.targets||[])if(godFormFor(a.player,{aura:true}))drawGodPresence(scene,c,a,t);}

@@ -4,7 +4,7 @@ export const PRESENCE_STYLES=Object.freeze([
  ['#87e8cb','jade'],['#b5d9ff','star'],['#f4d082','dragon'],['#a8d9ff','star'],['#ffd7a1','sun'],['#c2a1f8','void'],['#a4e0c4','jade'],['#edc8ff','lotus']
 ]);
 export function drawRealmPresenceV3(scene,c,a,t){
- const p=a.player,r=Math.trunc(Number(p?.realm)||0);if(scene.crowded||p?.resident||r<8||r>21)return false;
+ const p=a.player,r=Math.trunc(Number(p?.realm)||0);if((scene.reducePresence??scene.crowded)||p?.resident||r<8||r>21)return false;
  const [color,motif]=PRESENCE_STYLES[r-8],phase=scene.motion===false?0:t*.001,scale=a.scale||1.6,light=scene.budget?.level==='light';
  // Accents stay beside shoulders and below feet; center column stays clear.
  const radius=Math.min(48,Math.max(23,(scene.targets||[]).reduce((v,b)=>b.id!==a.id&&Math.abs(b.y-a.y)<140*scale?Math.min(v,Math.abs(b.x-a.x)*.40/scale):v,48)));

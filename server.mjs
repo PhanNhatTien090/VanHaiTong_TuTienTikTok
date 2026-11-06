@@ -1,5 +1,6 @@
 import {raceEntryAnnouncement} from './sword-race.mjs';
 import {createSectMaster} from './sect-master.mjs';
+import {observeViewerCount} from './public/crowd-policy.js';
 import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
@@ -99,7 +100,7 @@ function connect(){
   bridge.on('open',()=>{connection.status='connected';connection.lastError=null;broadcast();});
   bridge.on('message',raw=>{
     try{const event=JSON.parse(raw.toString());if(event.event==='config')return;
-      sectMaster.observe(event);connection.received++;connection.lastEvent=Date.now();
+      observeViewerCount(connection,event);sectMaster.observe(event);connection.received++;connection.lastEvent=Date.now();
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
       connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;

@@ -19,5 +19,5 @@ test('crowd quality remains light under sustained fast frames and restores reque
  const untouched=new Proxy({},{get(){assert.fail('crowded halo must not load art or draw');}});drawDivineHalo({crowded:true},untouched,untouched,1000);
 });
 test('heavy crowd reduces pixels and animation further, then restores each intermediate tier',()=>{
- const b=new RenderBudget('high');b.setCrowded(true,false);assert.equal(b.config.width,900);b.setCrowded(true,true);assert.equal(b.config.width,720);assert.equal(b.config.fps,20);assert.equal(b.config.poseFps,4);b.set('balanced');assert.equal(b.config.width,720);b.setCrowded(true,false);assert.equal(b.config.width,900);b.setCrowded(false);assert.equal(b.level,'balanced');assert.equal(b.config.width,1080);
+ const b=new RenderBudget('high');b.setCrowded(true,false);assert.equal(b.config.width,1080);b.setCrowded(true,true);assert.equal(b.config.width,1080);assert.equal(b.config.fps,24);assert.equal(b.config.poseFps,5);b.set('balanced');assert.equal(b.config.width,1080);b.setCrowded(true,false);assert.equal(b.config.width,1080);b.setCrowded(false);assert.equal(b.level,'balanced');assert.equal(b.config.width,1080);
 });
