@@ -4,7 +4,7 @@ import {makeSurface} from './performance.js';
 import {qiVariant,qiRemap,setFxPalette,drawQiInflow,drawQiCompression,drawQiImpact,drawQiAura} from './qi-impact.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 export const TRIBUTE_TIERS=Object.freeze([
- {min:1,name:'Linh Hoa Tâm Ý',duration:2200,color:'#ff658d',soft:'#ffd9e8',size:45,petals:12,swords:0},
+ {min:1,name:'Linh Hoa Tâm Ý',duration:2800,color:'#ff658d',soft:'#ffd9e8',size:62,petals:18,swords:0},
  {min:5,name:'Hoa Vũ Đồng Môn',duration:2800,color:'#ff80b5',soft:'#ffdcf0',size:62,petals:18,swords:0},
  {min:30,name:'Ngọc Liên Khai Hoa',duration:4400,color:'#63e6d0',soft:'#ddfff4',size:115,petals:26,swords:0},
  {min:99,name:'Kim Kiếm Tri Ân',duration:5800,color:'#ffc66d',soft:'#fff1ce',size:155,petals:30,swords:7},
@@ -51,7 +51,7 @@ export function drawGiftTribute(scene,c,e,t,k,p,H,layer='front'){
  const q=tributeProfile(e);if(!q||k<0||k>1)return false;
  const small=q.value<=10,impactAt=q.value>=500?.34:.46,v=qiVariant(e),phase=scene.motion===false?.53:k,clock=scene.motion===false?0:(t-e.start)*.001,
  fade=ease(phase/.09)*(1-ease((phase-.78)/.22)),open=ease((phase-.12)/.30),release=ease((phase-.46)/.28),
- x=p.x,y=p.y-45,scale=small?1:q.value>=500?1.1:.85,r=q.size,light=scene.budget?.level==='light',n=light?Math.ceil(q.petals*.6):q.petals;
+ x=p.x,y=p.y-45,scale=small?1:q.value>=500?1.1:.85,r=q.size,light=scene.presentation?.kind==='gift'?false:scene.budget?.level==='light',n=light?Math.ceil(q.petals*.6):q.petals;
  c.save();c.globalAlpha*=fade;
  if(layer==='back'){
   if(!small){const shade=c.createRadialGradient(x,y,70,x,y,r*4);shade.addColorStop(0,'#060e2000');shade.addColorStop(1,'#060e205c');c.fillStyle=shade;c.fillRect(0,0,900,H);}

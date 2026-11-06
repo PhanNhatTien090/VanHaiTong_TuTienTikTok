@@ -26,7 +26,7 @@ let skinGuideAt=0;function renderSkinGuide(force=false){const el=document.queryS
 // v42: bảng lệnh / trang bị dọc bên phải, đổi trang mỗi 12 giây.
 let railPage=0;function renderRail(){if(state)renderSimpleGuide(state,esc);const el=document.querySelector('#commandRail');if(!el||!state)return;const html=railHTML(state,railPage,esc);if(el._last!==html){el.innerHTML=html;el._last=html;}}
 setInterval(()=>{railPage++;renderRail();},12000);
-import {giftBoardHTML} from './gift-board.js';import {safeAvatar} from './honors.js';
+import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
 import {Scene,portrait,symbols} from './scene.js';
@@ -59,7 +59,7 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
 }
-const giftBoardStartedAt=Date.now();
+
 const params=new URLSearchParams(location.search),mode=params.get('world')==='live'?'live':'demo',overlay=params.get('overlay')==='1';
 if(overlay)document.body.classList.add('overlay');else{document.body.classList.add('management-only');document.title='Vân Hải Tông · Quản lý LIVE';const panel=$('#audioPanel');panel.hidden=false;$('#managementDisplaySettings').append(panel);}
 $('#worldSelect').value=mode;
@@ -312,7 +312,6 @@ function enqueueReady(e){
   if(e.resident&&!e.scheduled&&(busy||queue.length))return; // đột phá/nhập môn theo lịch của NPC không bị bỏ khi đang bận
   if(e.effect==='join'&&!e.vipReturn&&queue.length>=3){joinBatch++;return;}
   if(e.effect==='attack'&&e.technique&&!e.resident){pushAttack(e);return;}
-  if(smallGift(e)){scene.addEffect(e);showGiftReceipt(e);tone('petal');return;}
   presentations.push(e);playNext();
 }
 // v76: đòn đánh yêu thú chạy LÀN RIÊNG song song (2 người cùng lúc, ≥12 người đang chơi → 3), không chờ hàng hiệu ứng chung.
@@ -344,7 +343,7 @@ function playNext(){
  if(e.visitorProgress){const r=VISITOR_GIFT_REWARDS[e.visitorProgress.kind];$('#giftReceipt').insertAdjacentHTML('beforeend',`<span>✦ ${esc(r.skinName)}: ${fmt(e.visitorProgress.coins)} coin · ${r.skinCoins||100}: skin · ${r.artifactCoins||500}: ${esc(r.artifactName)}</span>`);}
  if(e.loyaltyAward||e.visitorAward){const el=$('#giftReceipt');el.innerHTML=`<strong>Tri ân ${esc(e.name)}</strong><span>${esc(e.itemNames.join(' · '))}</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,duration);}
  scene.addEffect(e);honorUI.show(e);if(e.effect!=='breakthrough'||![1,2,3,4,5,6,7,8,9,10].includes(breakthroughRealm(e)))tone(e.effect==='breakthrough'?'qi':e.technique?({thunder:'boss',soul:'dragon',lotus:'lotus',stars:'petal',celestial:'breakthrough',bamboo:'sword',vortex:'qi',frost:'sword',flame:'dragon',bell:'boss',dragon:'dragon',petal:'petal',meteor:'boss',flowersword:'petal',peachfan:'petal',flowercage:'lotus',starmirror:'breakthrough',stararrow:'sword',sevenstars:'boss',stardust:'qi'})[e.technique.id]||'attack':e.effect);narrator.add(e);
- if(shouldFocusEvent(e)&&!e.eventGiftFx)scene.focus(e.user,duration);
+ if(shouldFocusEvent(e)&&!scene.raceStatus?.active&&!scene.socialStage?.length)scene.focus(e.user,duration);
  const label=e.raceGift?(e.raceBoost?'BỨT TỐC +'+e.raceBoost+' trượng':'Quà đã ghi nhận · chờ kết quả xếp hạng'):e.technique?.name||highGiftName(e)||luxury?.name||({breakthrough:'ĐỘT PHÁ · '+REALM_NAMES[breakthroughRealm(e)],join:'Nhập môn',attack:'Xuất chiêu',qi:'Tu luyện',sword:'Ngự kiếm',lotus:'Liên hoa trận',dragon:'Thanh long giáng thế',victory:'Bí cảnh hoàn tất',boss:'Yêu thú giáng thế',opportunity:e.opportunityEnd?'Cơ duyên kết thúc':'Thiên Đạo Cơ Duyên',transform:'BIẾN HÌNH · '+String(e.skinName||'').toUpperCase()})[e.effect]||e.text;
  // v39: trên cảnh LIVE chỉ còn 1 khung (khung tên này); phần thưởng gộp thành 1 dòng nhỏ thay cho khung biên nhận riêng.
  const r=e.reward,extra=r&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
@@ -371,7 +370,7 @@ function render(){if(!state)return;if(overlay){renderSimpleGuide(state,esc);rend
   const remain=Math.max(0,Math.ceil(((state.boss?.endsAt||state.nextBossAt)-state.serverNow)/1000));$('#scenePhase').textContent=state.raceStatus?.active?'Vân Hải Thiên Lộ':state.socialScene?(state.socialScene==='tournament'?'Luận Kiếm':'Tam Sinh Ước'):state.boss?`Bí cảnh còn ${remain}s`:`♜ ${Math.floor(remain/60)}:${String(remain%60).padStart(2,'0')}`;
   const bh=$('#bossHud');bh.classList.toggle('visible',!!state.boss&&state.boss.species!=='abyss-dragon');document.body.classList.toggle('abyss-fight',state.boss?.species==='abyss-dragon'&&state.boss.hp>0); // 05/11: bảng yêu lực Ma Long vẽ trên canvas, ẩn bảng xếp hạng góc trái để không chồng
   if(state.boss)setHUD(bh,`<div class="boss-line"><span>♜ ${esc(state.boss.name)}</span><span>${fmt(state.boss.hp)} / ${fmt(state.boss.maxHp)}</span></div><div class="progress"><i style="width:${state.boss.hp/state.boss.maxHp*100}%"></i></div><small>Gõ <b>danh</b> · ${remain}s · ${esc(state.boss.encounter?.name||'Top công lực nhận thưởng')}</small>${Object.entries(state.boss.damage||{}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3).map(([id,d],i)=>`<small class="boss-rank">${i+1}. ${esc(state.players.find(p=>p.id===id)?.name||'Đạo hữu')} · ${fmt(d)} công lực</small>`).join('')}`);
-  if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();setHUD($('#giftBoard'),giftBoardHTML(state,Date.now()-giftBoardStartedAt));}else syncAutoEvents();
+  if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();setHUD($('#giftBoard'),'');$('#giftBoard').hidden=true;}else syncAutoEvents();
   const oh=$('#opportunityHud'),o=state.opportunity,seconds=o?Math.max(0,Math.ceil((o.endsAt-state.serverNow)/1000)):0;oh.hidden=!seconds;
   if(seconds){const offset=Math.floor(state.serverNow/7000)%2*4;setHUD(oh,`<b>CƠ DUYÊN · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}</b><span>${o.costs.slice(offset,offset+4).map((cost,i)=>`${esc(state.realms[offset+i])} ${cost} coin`).join(' · ')}</span><small>Từ Hóa Thần: tối đa 1 đại cảnh/ngày · tiến độ dư được giữ · gõ cơ duyên</small>`);}
   if(overlay)return;

@@ -24,7 +24,7 @@ import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
 export const giftValue=e=>Math.max(0,Number(e?.coins)||0)*Math.max(1,Number(e?.count)||1);
 export const smallGift=e=>!!e?.gift&&giftValue(e)<=10;
-export function shouldFocusEvent(e){return !!e?.user&&!smallGift(e)&&!e.autoArrival&&!e.newcomerWelcome&&(e.effect==='breakthrough'||e.transform||!!e.gift||e.petAward||e.flowerRank);}
+export function shouldFocusEvent(e){return !!e?.user&&!e.autoArrival&&!e.newcomerWelcome&&(e.effect==='breakthrough'||e.transform||!!e.gift||e.petAward||e.flowerRank);}
 export function ritualPhase(k){return k<.12?'arrival':k<.34?'gather':k<.59?'formation':k<.69?'surge':k<.76?'burst':k<.94?'reveal':'return';}
 export function ritualState(e,t,motion=true){const k=clamp((t-e.start)/e.duration),realm=breakthroughRealm(e),phase=ritualPhase(k),impact=clamp(1-Math.abs(k-.71)/.035);return {k,realm,phase,revealed:k>=.72,color:ascensionProfile(realm).color,title:REALM_NAMES[realm].normalize('NFC'),name:String(e.name||'Đạo hữu').normalize('NFC'),shake:motion?impact*breakthroughPower(realm).shake:0};}
 export function crowdTargets(players,H){const n=players.length,cols=n>40?8:n>24?7:n>12?6:4,rows=Math.ceil(n/cols),top=H*.40,bottom=H*.77,scale=Math.min(1.35,100/120,rows>1?(bottom-top)/(rows-1)/135:1.35);return players.map((player,i)=>{const row=Math.floor(i/cols),len=Math.min(cols,n-row*cols);return {id:player.id,player,x:450+(i%cols-(len-1)/2)*780/cols,y:rows===1?H*.62:top+row*(bottom-top)/(rows-1),scale,lift:0};});}

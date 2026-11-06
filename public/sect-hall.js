@@ -1,5 +1,6 @@
 import {artworkCrop} from './courtyard-layout.js';
 import {skinFor} from './cosmetics.js';
+import {drawWings} from './boss-arena.js';
 export function sectHallTargets(players,H){
  const n=players.length,cols=n<=3?Math.max(1,n):n<=12?4:n<=24?6:8,rows=Math.ceil(n/cols);
  const scale=n<=3?2.9:n<=4?2.7:n<=8?2.35:n<=12?2.05:n<=24?1.5:1.05;
@@ -15,10 +16,23 @@ export function drawSectMaster(scene,c,t){
  const seat=masterSeatGeometry(scene.height,scene.art),x=seat.x,y=seat.y,age=speaking?Math.max(0,now-host.at):Infinity,appear=1,motion=scene.motion!==false,nod=motion&&age<1800?Math.sin(age*.0035)*.018:0,breathe=motion?Math.sin(t*.0018)*1.2:0;
  const p={id:'resident:sect-master',name:'Tông chủ',resident:true,gender:'nam',realm:3,giftCoins:500,equipped:null};
  loadSectMasterArt(scene);c.save();c.globalAlpha=appear;
- if(scene.sectMasterArt){const im=scene.sectMasterArt,w=seat.height*(im.naturalWidth||im.width)/(im.naturalHeight||im.height);c.translate(x,seat.top+seat.height*.35);c.rotate(nod*.25);c.scale(1,1+breathe*.0015);c.imageSmoothingQuality='high';c.drawImage(im,-w/2,-seat.height*.35,w,seat.height);}
+ if(host.source==='gift'&&host.player){
+  const height=seat.height,scale=height/120;
+  const jade=c.createLinearGradient(x-60*scale,y,x+60*scale,y);jade.addColorStop(0,'#355f61');jade.addColorStop(.3,'#102f3a');jade.addColorStop(.7,'#102f3a');jade.addColorStop(1,'#355f61');
+  c.fillStyle=jade;c.strokeStyle='#e7c278';c.lineWidth=4;c.beginPath();c.moveTo(x-59*scale,y+14);c.lineTo(x-54*scale,y-height*.63);c.quadraticCurveTo(x,y-height*.96,x+54*scale,y-height*.63);c.lineTo(x+59*scale,y+14);c.closePath();c.fill();c.stroke();
+  c.strokeStyle='#caa75c88';c.lineWidth=1.5;
+  for(const side of [-1,1]){c.beginPath();c.moveTo(x+side*48*scale,y);c.lineTo(x+side*44*scale,y-height*.6);c.quadraticCurveTo(x+side*34*scale,y-height*.75,x,y-height*.82);c.stroke();c.fillStyle='#edcc80';c.beginPath();c.arc(x+side*54*scale,y-height*.63,4*scale,0,Math.PI*2);c.fill();}
+  c.fillStyle='#f2d689';c.beginPath();c.moveTo(x,y-height*.91);c.lineTo(x+7*scale,y-height*.85);c.lineTo(x,y-height*.79);c.lineTo(x-7*scale,y-height*.85);c.closePath();c.fill();
+  c.fillStyle='#a78743';c.fillRect(x-61*scale,y+10,122*scale,10*scale);c.fillRect(x-54*scale,y+20,7*scale,22*scale);c.fillRect(x+47*scale,y+20,7*scale,22*scale);
+  drawWings(scene,c,{id:host.player.id,player:host.player,x,y,scale},t);
+  c.translate(x,y);c.scale(scale,scale);const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
+  try{scene.drawCharacterBody(c,host.player,skinFor(host.player.giftCoins),t);}finally{scene.compact=compact;scene.cinematicPose=pose;}
+ }
+ else if(scene.sectMasterArt){const im=scene.sectMasterArt,w=seat.height*(im.naturalWidth||im.width)/(im.naturalHeight||im.height);c.translate(x,seat.top+seat.height*.35);c.rotate(nod*.25);c.scale(1,1+breathe*.0015);c.imageSmoothingQuality='high';c.drawImage(im,-w/2,-seat.height*.35,w,seat.height);}
  else{c.translate(x,y-42);c.scale(1.35,1.35);const old=scene.compact;scene.compact=true;try{scene.drawCharacterBody(c,p,skinFor(p.giftCoins),0);}finally{scene.compact=old;}}
  c.restore();
  c.save();c.textAlign='center';c.textBaseline='middle';c.font='700 19px Georgia';const label='TÔNG CHỦ',w=c.measureText(label).width+28;c.fillStyle='#102632ed';c.fillRect(x-w/2,seat.top+seat.height+8,w,28);c.strokeStyle='#c8ab68';c.strokeRect(x-w/2,seat.top+seat.height+8,w,28);c.fillStyle='#ffe0a0';c.fillText(label,x,seat.top+seat.height+22);
+ if(host.source==='gift'&&host.player){c.font='700 18px Georgia';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}
  if(speaking&&age<12000){const raw=host.text||'Chư vị đạo hữu, cùng tu luyện!',words=raw.split(/\s+/),lines=[''];c.font='600 18px Georgia';for(const word of words){const at=lines.length-1,next=(lines[at]+' '+word).trim();if(c.measureText(next).width>270&&lines[at]){if(lines.length===2){lines[at]+='…';break;}lines.push(word);}else lines[at]=next;}const width=Math.min(310,Math.max(...lines.map(s=>c.measureText(s).width))+28),h=lines.length*25+18,by=y-190-h;c.fillStyle='#0b2332f0';c.fillRect(x-width/2,by,width,h);c.strokeStyle='#d9bd7777';c.strokeRect(x-width/2,by,width,h);c.fillStyle='#f8ecd0';lines.forEach((line,i)=>c.fillText(line,x,by+21+i*25));}
  c.restore();return true;
 }

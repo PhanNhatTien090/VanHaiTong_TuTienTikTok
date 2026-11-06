@@ -29,8 +29,8 @@ function drawRaceGiftBoard(c,e,H){const top=e.giftTop||[],w=410,x=900-w-12,y=H*.
   c.restore();}
 // bảng chú thích bứt tốc (dưới cùng)
 function drawBoostLegend(c,H,reg){const y=H*.9,w=820,x=40,h=96;c.save();c.fillStyle='#071a2bd8';c.strokeStyle='#ffd76a90';c.lineWidth=2;c.beginPath();c.roundRect(x,y,w,h,12);c.fill();c.stroke();
-  c.textAlign='center';c.font='900 20px Segoe UI';c.fillStyle='#ffe7a0';c.fillText(reg?'⚡ GÕ bay GHI DANH · THẢ TIM ĐỂ BỨT TỐC':'❤ NGỰ PHONG · mỗi 50 tim +18 trượng · không giới hạn lượt',450,y+26);
-  c.font='bold 17px Segoe UI';c.fillStyle='#eafcff';c.fillText('danh: +18 trượng, hồi 10s · quà: mỗi coin +30 trượng · đến khi về đích',450,y+50);
+  c.textAlign='center';c.font='900 24px Segoe UI';c.fillStyle='#fff1ae';c.fillText(reg?'⚡ GÕ bay GHI DANH · THẢ TIM ĐỂ BỨT TỐC':'❤ NGỰ PHONG · mỗi 50 tim +18 trượng · không giới hạn lượt',450,y+26);
+  c.font='bold 20px Segoe UI';c.fillStyle='#ffffff';c.fillText('danh: +18 trượng, hồi 10s · quà: mỗi coin +30 trượng · đến khi về đích',450,y+50);
   c.fillStyle='#ffe2a0';c.fillText('TOP 3 TẶNG QUÀ: SKIN PHI KIẾM · TOP 5: TU VI',450,y+76);c.restore();}
 const serverNow=(scene,t)=>scene.raceServerNow+Math.min(2000,t-scene.raceReceivedAt);
 const dist=(r,now)=>Math.min(1000,Math.max(0,(Math.min(now,r.finishAt||now)-r.startedAt)/1000*r.speed+r.bonus));

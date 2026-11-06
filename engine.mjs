@@ -1,3 +1,4 @@
+import {creditMasterGift,unlockMasterLoadout} from './master-rewards.mjs';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand} from './rebirth.mjs';
 import {dailyPracticeView,creditDailyPractice,dailyAscensionView,recordDailyAscension,practiceDay} from './daily-practice.mjs';
@@ -454,6 +455,7 @@ function actionCore(w,input,now) {
     const items=[];if(tier.artifact&&!p.artifacts.includes(tier.artifact)){p.artifacts.push(tier.artifact);items.push(tier.artifact);const value=id=>{const a=CATALOG.find(x=>x.id===id);return (a?.damage||0)+(a?.bonus||0)*100;};if(value(tier.artifact)>value(p.equipped))p.equipped=tier.artifact;}
     if(tier.skin){p.rewardSkins??=[];if(!p.rewardSkins.includes(tier.skin)){p.rewardSkins.push(tier.skin);if(autoSkinChoiceAllowed(p)){p.skinChoice=tier.skin;p.skinChoiceSource='gift';}}}
     const itemNames=items.map(id=>CATALOG.find(x=>x.id===id).name);
+    if(!input.simulated&&!input.autoRose)creditMasterGift(w,p,input.coins*count);
     p.giftCoins+=input.coins*count;w.totalGifts+=input.coins*count;sectBuild(w,p,input.coins*count,now,engageCtx);
     // Quà có tên nhận diện được → sự kiện riêng (hoa hồng, mèo, sư tử…); không thì theo mốc coin.
     const kind=giftKind(input.giftName),gift=input.giftName?giftNameVi(input.giftName,kind):null;
@@ -461,6 +463,7 @@ function actionCore(w,input,now) {
     const mult=Math.max(giftBuff(input.coins*count),firstGift?5:1,p.buffUntil>now?p.buffMult||1:1);p.buffMult=mult;p.buffUntil=now+(firstGift?2:1)*GIFT_BUFF_MS;
     const buff={mult,minutes:(firstGift?2:1)*GIFT_BUFF_MS/60000};
     const giftEvent=emit(w,p,`${gift||tier.name}${count>1?` ×${count}`:''} • +${q} tu vi • phúc duyên ×${String(mult).replace('.',',')} 10 phút • cảm ơn đạo hữu`,tier.effect,now,{kind,gift,count,tier:tier.name,coins:input.coins,comboKey:input.comboKey,comboFinal:input.comboFinal,buff,firstGift,reward:{qi:q,stones:award.stones*count,herbs:award.herbs*count,items,itemNames}});
+    if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;}
     if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t});} // v86
     if(['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
     if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;
@@ -1067,3 +1070,5 @@ export const startBondFestival=(w,now=Date.now())=>beginBondFestival(w,now,socia
 export const stopBondFestival=(w,now=Date.now())=>endBondFestival(w,now,socialContext);
 
 export function migrateDivineWardrobe(w){if(w.divineWardrobeVersion===1)return 0;const manual=new Set((w.adminLog||[]).filter(r=>r.changes?.some(s=>s.startsWith('mặc '))).map(r=>r.id));let n=0;for(const p of Object.values(w.players)){if(['azure-patron','crimson-phoenix','ivory-celestial'].includes(p.skinChoice)&&!manual.has(p.id)&&!['manual','admin'].includes(p.skinChoiceSource)){p.skinChoiceSource='gift';n++;}}w.divineWardrobeVersion=1;return n;}
+
+export function migrateSectMasters(w,now=Date.now()){let n=0;for(const p of Object.values(w.players))if(unlockMasterLoadout(w,p,CATALOG,now))n++;return n;}

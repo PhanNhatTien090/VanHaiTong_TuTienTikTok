@@ -1,3 +1,4 @@
+import {giftMasterView} from './master-rewards.mjs';
 import {raceEntryAnnouncement} from './sword-race.mjs';
 import {createSectMaster} from './sect-master.mjs';
 import {observeViewerCount} from './public/crowd-policy.js';
@@ -20,7 +21,7 @@ import {fileURLToPath} from 'node:url';
 import {WebSocket} from 'ws';
 import {streamState,eventAllowedOnLive,isNPC,actorLabel} from './public/live-integrity.js';
 import {priority as voicePriority} from './public/voice.js';
-import {startNextCompetition,engageNow,honorCeremony,adminGift,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe} from './engine.mjs';
+import {startNextCompetition,engageNow,honorCeremony,adminGift,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
 
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dataDir=process.env.VAN_HAI_DATA_DIR||path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
@@ -40,7 +41,7 @@ function load(mode) {
 }
 // v54: chỉ cho MỘT máy chủ chạy. Nếu cổng đã có máy chủ Vân Hải Tông trả lời → thoát ngay, không đọc/ghi dữ liệu (tránh 2 máy chủ ghi đè live.json).
 {const probePort=Number(process.env.PORT??4317);if(probePort){try{const r=await fetch(`http://127.0.0.1:${probePort}/api/state?world=demo`,{signal:AbortSignal.timeout(1500)});if(r.ok&&(await r.text()).includes('sectQi')){console.error(`Đã có máy chủ Vân Hải Tông đang chạy ở cổng ${probePort}. Không mở thêm máy chủ thứ hai để tránh ghi đè dữ liệu.`);process.exit(1);}}catch{}}}
-const worlds={demo:load('demo'),live:load('live')};for(const w of Object.values(worlds)){prepareSocial(w);migrateDivineWardrobe(w);}
+const worlds={demo:load('demo'),live:load('live')};for(const w of Object.values(worlds)){prepareSocial(w);migrateDivineWardrobe(w);migrateSectMasters(w);}
 // Giờ vàng tân thủ chỉ bật trên thế giới LIVE thật (tắt bằng settings.goldenHour=false trong live.json).
 worlds.live.settings??={};worlds.live.settings.goldenHour??=true;
 // Real, faster progression for the ascension stage; existing resources are preserved.
@@ -68,7 +69,7 @@ function payload(mode,view='full'){
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
   let value;
   if(view==='overlay'){
-    const full=payload(mode),fields=['puppet','resident','id','name','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice'];
+    const full=payload(mode),fields=['puppet','resident','id','name','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','sectMasterUnlocked'];
     // Cảnh LIVE chỉ cần: người đang hoạt động (sân khấu) + top 10 (bảng xếp hạng nhỏ) + 30 sự kiện mới nhất.
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
@@ -83,7 +84,7 @@ function payload(mode,view='full'){
     // Top tặng quà cho bảng TOP QUÀ trên cảnh: chỉ người đang có mặt trên LIVE (tương tác trong 5 phút gần nhất), xếp theo tổng coin quà.
     const giftEdited=new Set((s.adminLog||[]).filter(r=>r.changes?.some(c=>c.startsWith('coin quà '))).map(r=>r.id));
     const topGifters=s.players.filter(p=>!p.resident&&!p.puppet&&p.active&&p.giftCoins>0&&!giftEdited.has(p.id)).sort((a,b)=>(a.puppet?1:0)-(b.puppet?1:0)||b.giftCoins-a.giftCoins||a.joinedAt-b.joinedAt).slice(0,5).map(p=>({id:p.id,name:p.name,giftCoins:p.giftCoins,realmName:p.realmName,avatar:p.avatar||null}));
-    value={...s,heartRulesVersion:1,playerCount:s.players.length,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?sectMaster.view():{enabled:false,active:false}};
+    value={...s,heartRulesVersion:1,playerCount:s.players.length,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view()):{enabled:false,active:false}};
   }
   value=streamState(value,mode);
   payloadCache.set(key,{at:now,value});return value;

@@ -27,3 +27,13 @@ html body.overlay #basicCommands code{color:#d8fff7!important;font-family:inheri
 html body .gold-button{background:linear-gradient(135deg,#83dcd1,#b9d6ec);color:#082b39;border-color:#d8fff3}
 html body .soft-button{background:#103a4b99;border-color:#89cfc44d;color:#e4fff9}
 html body .eyebrow{color:#85dfd0;letter-spacing:.13em}
+/* Event instructions: larger phone text, clear foreground and a dark outline. */
+html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud,.like-goal){
+ color:#fff7dc!important;text-shadow:0 2px 2px #03101f,1px 0 2px #03101f,-1px 0 2px #03101f,0 0 5px #03101f!important}
+html body.overlay .scene-shell :is(#phoneHudLeft,#phoneHudRight) :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud){
+ font-size:clamp(13px,2.15cqw,24px)!important;line-height:1.35!important}
+html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud) :is(span,p,small){
+ font-size:clamp(12px,2.1cqw,23px)!important;font-weight:700!important;line-height:1.35!important;color:#fff7dc!important;white-space:normal!important;overflow-wrap:break-word}
+html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud) code{
+ font-size:1.05em!important;font-weight:900!important;color:#baffeb!important}
+html body #giftBoard.gift-board{display:none!important}

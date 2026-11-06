@@ -47,6 +47,7 @@ export function speechPlan(e){
   if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới! Thả tim để bắt đầu vận công.`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
+  if(e.sectMasterAward)return [say('tongsu',`Tông môn tôn phong ${who} làm Tông chủ! Toàn bộ pháp bảo, bí pháp và trang phục đã khai mở!`)];
   if(e.engagementAction==='follow')return [say('tongsu',Who+' vừa theo dõi tông môn. Chào mừng đồng môn!')];
   if(e.engagementAction==='share')return [say('tongsu','Cảm ơn '+who+' vừa chia sẻ buổi LIVE!')];
   const sys=!e.user;
