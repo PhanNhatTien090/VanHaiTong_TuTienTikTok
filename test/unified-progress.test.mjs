@@ -45,20 +45,20 @@ test('personal gift rewards remain full and do not receive an accidental buff mu
 });
 
 test('normal breakthroughs, blessing and opportunities share a single high-realm daily allowance',()=>{
- const {w,p}=setup(5);p.qi=1e12;p.stones=1e6;
- assert.equal(act(w,'breakthrough').ok,true);assert.equal(p.realm,6);const q=p.qi,st=p.stones;
+ const {w,p}=setup(8);p.qi=1e12;p.stones=1e6; // 07/11: cổng ngày bắt đầu từ Chân Tiên
+ assert.equal(act(w,'breakthrough').ok,true);assert.equal(p.realm,9);const q=p.qi,st=p.stones;
  assert.equal(act(w,'breakthrough',{},N+1).ok,false);assert.equal(p.qi,q);assert.equal(p.stones,st);assert.equal(snapshot(w,N+2).players[0].progressionReady,false);
  assert.equal(blessing(w,N+3,1).ok,false);assert.equal(startOpportunity(w,N+4).ok,true);
- assert.equal(act(w,'gift',{coins:100000,eventId:'banked'},N+5).ok,true);assert.equal(p.realm,6);assert.equal(p.opportunityCredit.balance,100000);
- assert.equal(act(w,'breakthrough',{},N+DAY).ok,true);assert.equal(p.realm,7);assert.equal(dailyAscensionView(w,p,N+DAY).used,1);
+ assert.equal(act(w,'gift',{coins:100000,eventId:'banked'},N+5).ok,true);assert.equal(p.realm,9);assert.equal(p.opportunityCredit.balance,100000);
+ assert.equal(act(w,'breakthrough',{},N+DAY).ok,true);assert.equal(p.realm,10);assert.equal(dailyAscensionView(w,p,N+DAY).used,1);
 });
 
 test('opportunity credit survives expiry and reload, is claimable next day without another gift',()=>{
- let {w,p}=setup(5);startOpportunity(w,N);act(w,'gift',{coins:10000,eventId:'once'},N+1);assert.equal(p.realm,6);const balance=10000-399;assert.equal(p.opportunityCredit.balance,balance);
+ let {w,p}=setup(8);startOpportunity(w,N);act(w,'gift',{coins:10000,eventId:'once'},N+1);assert.equal(p.realm,9);const balance=10000-1499;assert.equal(p.opportunityCredit.balance,balance);
  act(w,'gift',{coins:10000,eventId:'once'},N+2);assert.equal(p.opportunityCredit.balance,balance);
  tick(w,N+300001);w=JSON.parse(JSON.stringify(w));p=w.players.a;assert.equal(p.opportunityCredit.balance,balance);
- assert.equal(startOpportunity(w,N+DAY).ok,true);assert.equal(act(w,'chat',{text:'coduyen'},N+DAY+1).ok,true);assert.equal(p.realm,7);assert.equal(p.opportunityCredit.balance,balance-699);
- const kept=p.opportunityCredit.balance;act(w,'chat',{text:'coduyen'},N+DAY+16000);assert.equal(p.realm,7);assert.equal(p.opportunityCredit.balance,kept);
+ assert.equal(startOpportunity(w,N+DAY).ok,true);assert.equal(act(w,'chat',{text:'coduyen'},N+DAY+1).ok,true);assert.equal(p.realm,10);assert.equal(p.opportunityCredit.balance,balance-1999);
+ const kept=p.opportunityCredit.balance;act(w,'chat',{text:'coduyen'},N+DAY+16000);assert.equal(p.realm,10);assert.equal(p.opportunityCredit.balance,kept);
  tick(w,N+DAY+300001);assert.equal(p.opportunityCredit.balance,kept);
 });
 
@@ -69,10 +69,10 @@ test('legacy unspent opportunity credit migrates exactly once across repeats and
 
 test('early onboarding stays fast while rebirth cannot refill the high-realm day ledger',()=>{
  const {w,p}=setup(0);p.qi=1e12;p.stones=1e6;
- for(let i=0;i<6;i++)assert.equal(act(w,'breakthrough',{},N+i).ok,true);assert.equal(p.realm,6);assert.equal(dailyAscensionView(w,p,N).used,1);
- assert.equal(act(w,'breakthrough',{},N+7).ok,false);
+ for(let i=0;i<9;i++)assert.equal(act(w,'breakthrough',{},N+i).ok,true);assert.equal(p.realm,9);assert.equal(dailyAscensionView(w,p,N).used,1); // 0..8 không bị cổng ngày; 8→9 dùng lượt
+ assert.equal(act(w,'breakthrough',{},N+10).ok,false);
  p.realm=21;act(w,'chat',{text:'chuyensinh'},N+10);assert.equal(act(w,'chat',{text:'chuyensinh xac nhan'},N+11).reborn,true);assert.equal(p.realm,0);
- p.realm=5;assert.equal(dailyAscensionView(w,p,N+12).exhausted,true);
+ p.realm=8;assert.equal(dailyAscensionView(w,p,N+12).exhausted,true);p.realm=6;assert.equal(dailyAscensionView(w,p,N+12).exhausted,false,'Luyện Hư không bị cổng ngày');
 });
 
 
@@ -82,7 +82,7 @@ test('unusual opportunity participant IDs cannot mutate object prototypes',()=>{
 });
 
 test('the live qi bar does not advertise dotpha after the shared daily allowance is spent',()=>{
- const {w,p}=setup(6);p.qi=requiredQi(p);p.stones=requiredStones(p);p.dailyAscension={day:'2026-11-05',used:1};
+ const {w,p}=setup(9);p.qi=requiredQi(p);p.stones=requiredStones(p);p.dailyAscension={day:'2026-11-05',used:1};
  const view=snapshot(w,N).players[0],scene=Object.create(Scene.prototype),c=createCanvas(900,800).getContext('2d'),labels=[];
  scene.realmCount=22;scene.targets=[{id:p.id,x:450,y:400,scale:1.5}];c.fillText=t=>labels.push(t);
  scene.drawQiBar(c,{player:view,x:400,y:440,w:100,h:30},1000);assert.equal(labels.includes('✦ Gõ đột phá'),false);assert.equal(view.progressionReady,false);
@@ -91,7 +91,7 @@ test('the live qi bar does not advertise dotpha after the shared daily allowance
 
 test('opportunity spoken opening explains the daily limit and retained credit without reading prices',()=>{
  const text=speechPlan({effect:'opportunity',opportunityStart:true}).map(x=>x.text).join(' ');
- assert.match(text,/Hóa Thần/);assert.match(text,/mỗi ngày tối đa một/);assert.match(text,/Tiến độ dư được giữ/);assert.doesNotMatch(text,/coin|\bxu\b/);
+ assert.match(text,/Chân Tiên/);assert.match(text,/mỗi ngày tối đa một/);assert.match(text,/Tiến độ dư được giữ/);assert.doesNotMatch(text,/coin|\bxu\b/);
 });
 
 test('07/11: engagement rewards taper by realm practice unit — never above the old formula, unchanged up to Nguyen Anh',async()=>{
@@ -105,4 +105,9 @@ test('07/11: engagement rewards taper by realm practice unit — never above the
    assert.equal(a.qi-before,expect,'realm '+realm);}finally{Math.random=orig;}
   if(realm>=8)assert.ok(expect<old,'high realm reward reduced');
  }
+});
+
+test('07/11: Hóa Thần, Luyện Hư and Đại Thừa can break through again the same day once qi and stones are enough',()=>{
+ const {w,p}=setup(5);for(let r=5;r<8;r++){p.qi=requiredQi(p);p.stones=requiredStones(p);assert.equal(snapshot(w,N+r).players[0].progressionReady,true,'ready at '+r);assert.equal(act(w,'breakthrough',{},N+r*10).ok,true);assert.equal(p.realm,r+1);}
+ assert.equal(dailyAscensionView(w,p,N+100).used,0);
 });

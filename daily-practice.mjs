@@ -23,10 +23,13 @@ export function creditDailyPractice(w,p,amount,kind,now=Date.now(),qiPerPoint=nu
  return {amount:Math.floor(amount*(allow/cost+(1-allow/cost)*DAILY_PRACTICE_SOFT_RATE)),limited:allow<cost,justExhausted:used<view.limit*100&&used+allow>=view.limit*100};
 }
 
+// 07/11/2026: giới hạn 1 đại cảnh/ngày chỉ từ Chân Tiên (realm ≥ 8). Hóa Thần/Luyện Hư/Đại Thừa chỉ cần 70–90 lượt nên
+// cổng ngày chặn người đủ tu vi ("đủ tu vi mà không hiện đột phá").
+export const DAILY_ASCENSION_FROM_REALM=8;
 // High-realm ascensions share a calendar-day ledger across normal play, blessings,
 // opportunities, reconnects and rebirth. Early onboarding through Hoa Than stays fast.
 export function dailyAscensionView(w,p,now=Date.now()){
- const day=practiceDay(now),enabled=w.mode==='live'&&!p.resident&&!p.puppet&&p.realm>=5&&w.settings?.dailyRealmLimit!==0;
+ const day=practiceDay(now),enabled=w.mode==='live'&&!p.resident&&!p.puppet&&p.realm>=DAILY_ASCENSION_FROM_REALM&&w.settings?.dailyRealmLimit!==0;
  const limit=Number.isSafeInteger(w.settings?.dailyRealmLimit)&&w.settings.dailyRealmLimit>0?Math.min(10,w.settings.dailyRealmLimit):1;
  const used=p.dailyAscension?.day===day&&Number.isSafeInteger(p.dailyAscension.used)?Math.max(0,p.dailyAscension.used):0;
  return {enabled,day,limit,used,remaining:Math.max(0,limit-used),exhausted:enabled&&used>=limit,resetsAt:Date.parse(day+'T00:00:00+07:00')+86400000};

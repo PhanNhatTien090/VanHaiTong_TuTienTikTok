@@ -508,7 +508,7 @@ export function startOpportunity(w,now=Date.now()){
   if(w.boss&&now<w.boss.endsAt&&w.boss.hp>0)return fail(BOSS_BUSY);
   preserveOpportunityCredit(w,w.opportunity);
   w.opportunity={id:'opportunity-'+now,startedAt:now,endsAt:now+OPPORTUNITY_MS,costs:[...OPPORTUNITY_COSTS],players:{}};
-  emit(w,null,'Thiên Đạo Cơ Duyên mở trong 5 phút • tiến độ dư được giữ qua các lần mở • từ Hóa Thần tối đa một đại cảnh mỗi ngày','opportunity',now,{opportunityStart:true});
+  emit(w,null,'Thiên Đạo Cơ Duyên mở trong 5 phút • tiến độ dư được giữ qua các lần mở • từ Chân Tiên tối đa một đại cảnh mỗi ngày','opportunity',now,{opportunityStart:true});
   return {ok:true,endsAt:w.opportunity.endsAt};
 }
 function settleOpportunity(w,p,now){

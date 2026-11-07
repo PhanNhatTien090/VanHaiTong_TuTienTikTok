@@ -123,7 +123,7 @@ export function speechPlan(e){
   if(e.flowerStart)return [say('tiennu',`Thiên Hoa Vũ giáng thế ${viNumber(e.minutes)} phút! Thả tim làm hoa nở! Đạt năm mươi, một trăm năm mươi và ba trăm tim nhận quà riêng, top tim còn có thưởng!`)];
   if(e.flowerRank){const ev=e.eventKind==='meteor'?'Tinh Hà Lưu Tinh':'Thiên Hoa Vũ',rank=['','nhất','nhì','ba'][e.flowerRank];return [say('tiennu',`${ev}, hạng ${rank} thuộc về ${who} với ${roundSay(e.score)} điểm!`),say('tongsu',`Ban ${list2((e.itemNames||[]).slice(0,1))||'pháp bảo'} cùng ${roundSay(e.reward?.qi)} tu vi!`)];}
   if(e.flowerEnd){const ev=e.eventKind==='meteor'?'Tinh Hà Lưu Tinh':'Thiên Hoa Vũ',n=Number(e.count)||0;return [say('tiennu',n?`${ev} kết thúc. ${cap(viNumber(n))} vị đồng môn tham gia. Đa tạ chư vị!`:`${ev} kết thúc. Lần sau chư vị nhớ tham gia nhé!`)];}
-  if(e.opportunityStart)return [say('tiennu','Thiên Đạo Cơ Duyên mở năm phút!'),say('tongsu','Từ Hóa Thần, mỗi ngày tối đa một lần đột phá đại cảnh. Tiến độ dư được giữ qua lần mở sau. Gõ cơ duyên để sử dụng.')];
+  if(e.opportunityStart)return [say('tiennu','Thiên Đạo Cơ Duyên mở năm phút!'),say('tongsu','Từ Chân Tiên, mỗi ngày tối đa một lần đột phá đại cảnh. Tiến độ dư được giữ qua lần mở sau. Gõ cơ duyên để sử dụng.')];
   if(e.opportunityEnd)return [say('tiennu','Thiên Đạo Cơ Duyên đã khép lại. Tiến độ chưa dùng vẫn được giữ cho lần sau. Đa tạ chư vị!')];
   if(e.opportunityAward)return [say('tiennu',`Chúc mừng ${who} đón cơ duyên!`),say('tongsu',`Đột phá ${viNumber(e.tiers)} cảnh giới, đạt ${REALMS[e.toRealm]||'cảnh giới mới'}!`)];
   // ----- yêu thú -----

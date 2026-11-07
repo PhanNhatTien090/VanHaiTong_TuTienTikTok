@@ -13,7 +13,7 @@ test('real free progression reaches every realm at a bounded, progressively slow
   assert.equal(p.qi,qi-needQi);assert.equal(p.stones,stones-needStones);milestones.push({realm:p.realm,seconds:(now-N)/1000,actions:count});
  }
  assert.equal(p.giftCoins,0);assert.equal(p.realm,REALMS.length-1);assert.equal(breaks.size,REALMS.length-1);
- assert.ok(milestones[3].seconds<=150);assert.ok(milestones[17].seconds<=ASCENSION_PRACTICE_STEPS.reduce((n,x)=>n+x,0)*10);assert.ok(milestones[8].actions>=20);assert.ok(milestones[17].actions>milestones[3].actions);
+ assert.ok(milestones[3].seconds<=300,'Kim Đan vẫn tới trong vài phút');assert.ok(milestones[17].seconds<=ASCENSION_PRACTICE_STEPS.reduce((n,x)=>n+x,0)*10);assert.ok(milestones[8].actions>=20);assert.ok(milestones[17].actions>milestones[3].actions);
  assert.equal(action(w,{type:'breakthrough',userId:p.id},now).ok,false);
 });
 test('cooldown, duplicate chat, likes and failed attacks cannot manufacture showcase progress (strict mode heartPlay=false)',()=>{
@@ -33,7 +33,7 @@ test('existing high-realm resources and a chosen outfit survive; gathering remai
 
 test('pacing v2 preserves entry to Hoa Than and slows every later practice route without touching saved progress',()=>{
  const old=[2,3,4,5,6,7,8,9,165,190,210,240,270,310,345,390,440,495];
- assert.deepEqual(ASCENSION_PRACTICE_STEPS.slice(0,5),old.slice(0,5));
+ assert.deepEqual(ASCENSION_PRACTICE_STEPS.slice(0,3),old.slice(0,3));assert.deepEqual(ASCENSION_PRACTICE_STEPS.slice(3,5),[15,30]); // 07/11: Nguyên Anh 15, Hóa Thần 30
  for(let r=5;r<18;r++)assert.equal(ASCENSION_PRACTICE_STEPS[r],old[r]*10);
  for(const [kind,wait]of [['cultivate',10000],['like',10000],['gather',30000],['attack',4000]]){
   const w=world(),p=w.players.a;Object.assign(p,{realm:5,qi:123,totalQi:456,stones:789,giftCoins:120,skinChoice:'sea-dragon-heir'});
