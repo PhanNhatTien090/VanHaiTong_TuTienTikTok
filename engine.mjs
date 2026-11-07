@@ -967,17 +967,20 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:c.name,qi:got};
 }
 // 07/11/2026: THIÊN ĐẠO — người điều hành giáng thiên lôi xuống 1 người (hoặc '*' ngẫu nhiên người đang chơi).
-// Trừ 20% tu vi hiện có, choáng 5 phút: không vận công/hái/đánh/dùng đan/đột phá, tim vẫn tính điểm sự kiện, quà vẫn nhận đủ.
-export const HEAVEN_STRIKE=Object.freeze({lossPct:.2,stunMs:5*60000,cooldownMs:60000});
+// Trừ 20% tu vi hiện có (07/11 tối: tối đa 5% tu vi cần để lên cảnh giới hiện tại, để cao thủ không mất hàng chục triệu), choáng 5 phút: không vận công/hái/đánh/dùng đan/đột phá, tim vẫn tính điểm sự kiện, quà vẫn nhận đủ.
+export const HEAVEN_STRIKE=Object.freeze({lossPct:.2,maxRealmPct:.05,stunMs:5*60000,cooldownMs:60000});
+// Mức trừ: min(20% tu vi hiện có, 5% tu vi cần cho cảnh giới hiện tại). Chỉnh bằng settings.heavenStrikeLossPct / heavenStrikeMaxRealmPct (0 = bỏ trần).
+export function heavenStrikeLoss(w,p){const pct=Number.isFinite(w?.settings?.heavenStrikeLossPct)?Math.max(0,Math.min(1,w.settings.heavenStrikeLossPct)):HEAVEN_STRIKE.lossPct,capPct=Number.isFinite(w?.settings?.heavenStrikeMaxRealmPct)?Math.max(0,w.settings.heavenStrikeMaxRealmPct):HEAVEN_STRIKE.maxRealmPct;
+  const byPct=Math.floor((Number(p.qi)||0)*pct);return Math.max(0,capPct>0?Math.min(byPct,Math.floor(requiredQi(p)*capPct)):byPct);}
 export const heavenStunned=(p,now=Date.now())=>!!p&&p.stunUntil>now;
 export function heavenStrike(w,id,now=Date.now()){
   const wait=HEAVEN_STRIKE.cooldownMs-(now-(w.lastHeavenStrikeAt||0));if(wait>0)return fail(`Thiên lôi đang tụ lại • chờ ${Math.ceil(wait/1000)} giây nữa.`);
   let p;if(id==='*'){const pool=Object.values(w.players).filter(x=>!x.resident&&!x.puppet&&!heavenStunned(x,now)&&currentParticipant(w,x,now));if(!pool.length)return fail('Chưa có ai đang chơi để giáng lôi.');p=pool[Math.floor(Math.random()*pool.length)];}
   else p=w.players[clean(id,80)];if(!p||p.resident)return fail('Không tìm thấy người chơi.');
-  const loss=Math.max(0,Math.floor((p.qi||0)*HEAVEN_STRIKE.lossPct));p.qi-=loss;p.totalQi=Math.max(0,(p.totalQi||0)-loss);w.sectQi=Math.max(0,(w.sectQi||0)-loss);
+  const loss=heavenStrikeLoss(w,p);p.qi-=loss;p.totalQi=Math.max(0,(p.totalQi||0)-loss);w.sectQi=Math.max(0,(w.sectQi||0)-loss);
   p.stunUntil=now+HEAVEN_STRIKE.stunMs;w.lastHeavenStrikeAt=now;p.lastActive=Math.max(p.lastActive||0,now);
   const seed=Math.floor(Math.random()*1e9);
-  emit(w,p,`THIÊN KIẾP GIÁNG LÂM • thiên lôi đánh trúng • -${loss} tu vi (20%) • choáng 5 phút`,'heavenStrike',now,{gender:p.gender,realm:p.realm,heavenStrike:{loss,stunMs:HEAVEN_STRIKE.stunMs,seed,until:p.stunUntil}});
+  emit(w,p,`THIÊN KIẾP GIÁNG LÂM • thiên lôi đánh trúng • -${loss.toLocaleString('vi-VN')} tu vi • choáng 5 phút`,'heavenStrike',now,{gender:p.gender,realm:p.realm,heavenStrike:{loss,stunMs:HEAVEN_STRIKE.stunMs,seed,until:p.stunUntil}});
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['thiên lôi: -'+loss+' tu vi, choáng 5 phút']});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   return {ok:true,id:p.id,name:p.name,loss,until:p.stunUntil};
 }

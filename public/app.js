@@ -522,7 +522,7 @@ function renderLiveControls(){
 let heavenTarget='',heavenArm='',heavenArmTimer=null;
 function renderHeavenPanel(){const el=document.getElementById('heavenPanel');if(!el||!state)return;
   if(!el.dataset.ready){el.dataset.ready='1';
-    el.innerHTML='<div class="qg-head"><b>⚡ Thiên Đạo · Giáng thiên lôi</b><span class="muted">Trừ 20% tu vi hiện có · choáng 5 phút không tu luyện được (quà vẫn nhận đủ) · giọng đọc báo thiên kiếp ngẫu nhiên giáng xuống · mỗi lần cách nhau 60 giây</span></div>'+
+    el.innerHTML='<div class="qg-head"><b>⚡ Thiên Đạo · Giáng thiên lôi</b><span class="muted">Trừ 20% tu vi hiện có (tối đa 5% tu vi cần của cảnh giới) · choáng 5 phút không tu luyện được (quà vẫn nhận đủ) · giọng đọc báo thiên kiếp ngẫu nhiên giáng xuống · mỗi lần cách nhau 60 giây</span></div>'+
      '<div class="qg-row hv-search"><input id="hvSearch" type="search" placeholder="Gõ tên người chơi…" autocomplete="off"><span id="hvPicked" class="hv-picked"></span></div>'+
      '<div id="hvList" class="hv-list"></div>'+
      '<div class="qg-row"><button id="hvStrike" class="small gold-button hv-strike" disabled>⚡ Giáng lôi</button><button id="hvRandom" class="small soft-button">🎲 Ngẫu nhiên 1 người đang chơi</button><span id="hvCooldown" class="muted"></span></div>'+
