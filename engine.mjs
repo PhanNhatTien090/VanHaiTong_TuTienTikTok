@@ -792,13 +792,15 @@ export function ingest(w,event,now=Date.now()) {
   if(!userId)return {ok:false,message:'Sự kiện không có ID người xem.'};
   const base={userId:String(userId),name:u.nickname||u.uniqueId||d.nickname||d.uniqueId,avatar:eventAvatar(d)};
   if(w.playTransfers?.[base.userId]?.phase==='web'){
+    // Người xem đang có mặt trên LIVE: xin web trả nhân vật về (web chỉ nhả khi không còn chơi).
+    w.playTransfers[base.userId].wantsLiveAt=now;
     if(event.event==='gift'){
       const queue=w.playTransfers[base.userId].gifts??=[];
       const encoded=JSON.stringify(event);
       if(!queue.some(x=>JSON.stringify(x)===encoded))queue.push(structuredClone(event));
       return {ok:true,pending:true,queuedGift:true};
     }
-    return {ok:false,code:'PLAYING_WEB',message:'Nhân vật đang chơi web. Đăng xuất web trước khi trở lại LIVE.'};
+    return {ok:false,code:'PLAYING_WEB',message:'Nhân vật đang ở web. Nếu không còn chơi web, vài giây nữa sẽ tự về LIVE.'};
   }
   if(event.event==='member'){
     // Only per-viewer arrivals; roomUser is an aggregate counter, not a roster.

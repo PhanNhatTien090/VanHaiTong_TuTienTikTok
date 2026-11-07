@@ -16,7 +16,7 @@ export function createSyncAgent(config) {
   fs.mkdirSync(config.dataDir,{recursive:true,mode:0o700});
   const file=path.join(config.dataDir,'checkpoint.json');
   let state=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{agentId:crypto.randomUUID(),seq:0,hashes:{},fullAt:0,links:[]};
-  let stopped=false,timer=null,bridge=null,busy=false,failures=0;
+  let stopped=false,timer=null,bridge=null,busy=false,failures=0,wantsLive=[];
   function save(){const tmp=file+'.tmp';fs.writeFileSync(tmp,JSON.stringify(state),{mode:0o600});fs.renameSync(tmp,file);}
   save();
   async function post(route,data){
@@ -32,7 +32,7 @@ export function createSyncAgent(config) {
   }
   async function controls(){
     if(!state.playSessions)return;
-    const response=await post('/internal/play/control',{agentId:state.agentId});
+    const response=await post('/internal/play/control',{agentId:state.agentId,wantsLive});
     for(const command of response.commands||[]){
       const raw=Buffer.from(JSON.stringify(command)),at=String(Date.now()),url=new URL('/internal/play-transfer',source);
       const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-VH-Time':at,'X-VH-Signature':signature(config.secret,'POST',url.pathname,at,raw)},body:raw,signal:AbortSignal.timeout(10000)});
@@ -48,6 +48,7 @@ export function createSyncAgent(config) {
       await controls();
       const response=await fetch(source,{signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('Local LIVE export unavailable');
       const raw=await response.json();if(raw.mode!=='live')throw Error('Refusing to synchronize a non-LIVE world');
+      wantsLive=Object.entries(raw.playTransfers||{}).filter(([,l])=>l?.phase==='web'&&Date.now()-(Number(l.wantsLiveAt)||0)<120000).map(([id])=>id).slice(0,500);
       const {players,meta}=projectWorld(raw),hashes=Object.fromEntries(players.map(p=>[p.id,digest(p)]));
       const deleted=Object.keys(state.hashes).filter(id=>!Object.hasOwn(hashes,id));
       if(deleted.length>Math.max(100,Object.keys(state.hashes).length*.2) && !config.allowLargeDeletion)throw Error('Large deletion blocked; verify the source world before allowing it');

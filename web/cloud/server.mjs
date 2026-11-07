@@ -47,7 +47,7 @@ export function createCloudServer({ dataDir, secret, secureCookie = true, trustP
         if(!playSessions)return writeJson(res,404,{ok:false});
         if(body.agentId!==store.get('sync')?.agentId)return writeJson(res,409,{ok:false,message:'Agent not paired'});
         if(url.pathname.endsWith('/ack')){playSessions.ack(body.command,body.result);return writeJson(res,200,{ok:true});}
-        return writeJson(res,200,{ok:true,commands:playSessions.controls(true)});
+        return writeJson(res,200,{ok:true,commands:playSessions.controls(true,Array.isArray(body.wantsLive)?body.wantsLive.filter(id=>typeof id==='string').slice(0,500):[])});
       }
       if(url.pathname==='/internal/link') {
         if(!body.eventId || typeof body.eventId!=='string' || body.eventId.length>128)return writeJson(res,400,{ok:false});

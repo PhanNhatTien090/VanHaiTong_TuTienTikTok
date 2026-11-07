@@ -3,6 +3,8 @@ import {validId} from './protocol.mjs';
 
 // The durable lock lives in live.json, alongside the player. It never expires
 // locally: timeout is not evidence that the cloud has stopped accepting writes.
+// Không tương tác trên LIVE trong khoảng này thì web được nhận nhân vật mà không cần roilive.
+export const LIVE_RECENT_MS=60000;
 export function createLiveTransfers({world, save}) {
   world.playTransfers ??= {};
   function apply(command,now=Date.now()){
@@ -23,7 +25,7 @@ export function createLiveTransfers({world, save}) {
       const p=world.players[playerId];
       let message;
       if(!p||p.resident||p.puppet)message='Không tìm thấy nhân vật hợp lệ trên LIVE.';
-      else if(currentParticipant(world,p,now))message='Nhân vật đang ở LIVE. Gõ roilive trong bình luận LIVE rồi đăng nhập lại.';
+      else if(currentParticipant(world,p,now)&&now-(p.lastRealInteractionAt||0)<LIVE_RECENT_MS)message='Bạn vừa tương tác trên LIVE. Chờ 1 phút không bình luận/thả tim (hoặc gõ roilive) rồi đăng nhập lại.';
       if(message){world.playTransfers[playerId]={id,generation,phase:'denied',message};save();return {ok:false,id,message};}
       world.playTransfers[playerId]={id,generation,phase:'web',player:structuredClone(p),gifts:[]};
       save(); // Do not acknowledge ownership before its lock reaches disk.

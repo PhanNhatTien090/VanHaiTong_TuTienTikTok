@@ -22,7 +22,8 @@ const acquire=(generation=1)=>({generation,id:'transfer-'+generation,playerId:id
 
 test('exclusive LIVE lock: explicit exit, durable lock, automatic rewards, queued gifts, fencing and idempotent return',()=>{
  const w=world();let disk;const live=createLiveTransfers({world:w,save:()=>{disk=structuredClone(w);}});
- assert.equal(live.apply(acquire()).ok,false,'active LIVE player cannot log in');
+ action(w,{userId:id,type:'chat',text:'xin chao'});
+ assert.equal(live.apply(acquire()).ok,false,'player who just interacted on LIVE cannot log in');
  assert.equal(action(w,{userId:id,type:'chat',text:'roilive'}).leftLive,true);
  const cmd=acquire(2),result=live.apply(cmd);assert.equal(result.ok,true);assert.equal(disk.playTransfers[id].phase,'web');
  assert.equal(currentParticipant(w,w.players[id]),false);
@@ -73,6 +74,7 @@ test('cloud + agent: login excludes LIVE, stale mirrors cannot overwrite web, re
  }
  try{
   const user=cloud.accounts.register('playerone','test-password').user;cloud.accounts.setPlayer(user,id);cloud.accounts.save();await agent.once();
+  action(w,{userId:id,type:'chat',text:'xin chao'});
   let r=await loginWithRelay();assert.equal(r.status,409);assert.match(r.body.message,/roilive/);
   action(w,{userId:id,type:'chat',text:'roilive'});
   r=await loginWithRelay();assert.equal(r.status,200);assert.equal((await api.api('/api/site-status')).body.readOnly,false);

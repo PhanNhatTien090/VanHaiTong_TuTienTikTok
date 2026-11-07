@@ -2,7 +2,8 @@ import crypto from 'node:crypto';
 import {digest} from './protocol.mjs';
 
 const conflict=message=>({ok:false,code:'PLAY_SESSION_CONFLICT',message});
-export function createPlaySessions({store,world,notify=()=>{},idleMs=120000}) {
+// idleMs: không có hoạt động web thì tự trả về LIVE. activeMs: LIVE xin lại nhân vật thì chỉ giữ ở web nếu vừa dùng web trong khoảng này (heartbeat 30 giây/lần khi đang mở trang).
+export function createPlaySessions({store,world,notify=()=>{},idleMs=120000,activeMs=45000}) {
   const waiters=new Map();
   const read=id=>store.get('play:'+id);
   function release(record) {
@@ -44,8 +45,9 @@ export function createPlaySessions({store,world,notify=()=>{},idleMs=120000}) {
     const r=read(user?.playerId);
     if(r?.phase==='web'&&r.tokenHash===digest(token))release(r);
   }
-  function controls(dispatch=false) {
-    sweep();
+  function controls(dispatch=false,wantsLive=[],now=Date.now()) {
+    for(const id of wantsLive){const r=read(id);if(r?.phase==='web'&&now-r.lastUsed>=activeMs)release(r);}
+    sweep(now);
     const records=store.transfers().filter(r=>['acquire','release'].includes(r.phase));
     if(dispatch)for(const r of records)if(r.phase==='release'&&!r.dispatched)store.transfer({...r,dispatched:true});
     return records.map(r=>({generation:r.generation,id:r.id,playerId:r.playerId,kind:r.phase,...(r.phase==='release'?{player:r.player}:{})}));
