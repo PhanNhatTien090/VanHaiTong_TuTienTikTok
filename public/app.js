@@ -302,6 +302,12 @@ function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.res
   if(now-lastFullRitualAt<(breakthroughRealm(e)<=1?90000:60000))return {...e,effect:"qi",kind:undefined,ritualSkipped:true};lastFullRitualAt=now;return e;}
 function enqueue(e){if(!overlay)return;e=throttleRitual(e);if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
 let engagementSoundAt=-Infinity;
+// 07/11/2026: QUÀ HIỆN NGAY LÚC TẶNG. Thẻ quà hiện lập tức; quà ưu tiên cao nhất và cắt ngang hiệu ứng thường.
+// Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.
+const GIFT_STALE_MS=10000;let current=null,currentTimer=null;
+const giftValue=e=>(Number(e.coins)||0)*Math.max(1,Number(e.count)||1);
+function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony)return false;if(cur.effect==='breakthrough')return (giftValue(g)>=99||!!luxuryTier(g))&&breakthroughRealm(cur)<=5;return true;}
+function interruptShow(){clearTimeout(spotTimer);clearTimeout(currentTimer);$('#spotlight').classList.remove('visible');scene.interruptPresentation?.();cultivationAudio.ritual(null);busy=false;current=null;}
 function enqueueReady(e){
   if(raceOpeningVoice(e)&&state?.raceStatus?.entryAnnouncement)e={...e,...state.raceStatus.entryAnnouncement};
   // 4/11/2026: đưa vào hàng giọng NGAY khi nhận (trước khi hiệu ứng/chữ đến lượt hiện) — giọng đến sớm hơn chữ.
@@ -310,6 +316,7 @@ function enqueueReady(e){
   if(isArrivalWelcome(e)){arrivalWelcomes.add(e);return;}
   if(e.engagementAction){scene.noteEvent(e);narrator.add(e);const now=performance.now();if(now-engagementSoundAt>800){tone(e.engagementAction==='follow'?'petal':'lotus');engagementSoundAt=now;}return;}
   if(isEventAnnouncement(e)||e.gift)narrator.add(e);
+  if(e.gift&&!e.resident){e._arrivedAt??=Date.now();showGiftReceipt(e);if(busy&&current&&giftMayPreempt(current.e,e))interruptShow();}
   scene.noteEvent(e);if(!e.resident)pulse.push({t:Date.now(),e});
   if(e.resident&&!e.scheduled&&(busy||queue.length))return; // đột phá/nhập môn theo lịch của NPC không bị bỏ khi đang bận
   if(e.effect==='join'&&!e.vipReturn&&queue.length>=3){joinBatch++;return;}
@@ -337,9 +344,10 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
   const n={tu:0,join:0,gift:0,heart:0,other:0};for(const {e}of pulse){if(e.gift)n.gift++;else if(e.effect==='join')n.join++;else if(String(e.text).startsWith('Tụ linh'))n.heart++;else if(/^Vận|^Luận|^Hái/.test(String(e.text)))n.tu++;else n.other++;}
   el.innerHTML=`✦ 10 giây qua: <b>${pulse.length}</b> lượt`+[[n.tu,'tu luyện'],[n.join,'nhập môn'],[n.heart,'thả tim'],[n.gift,'quà']].filter(([k])=>k).map(([k,l])=>` · ${k} ${l}`).join('');el.hidden=false;},1000);
 function playNext(){
- if(busy)return;const e=presentations.take(Date.now(),e=>!(scene.raceStatus?.active&&e.effect==='breakthrough'));if(!e)return;busy=true;
- if(e.heavenStrike){scene.startHeavenStrike(e);const au=cultivationAudio;if(au.enabled&&au.ctx?.state==='running'){au.duck(true);scheduleHeavenStrikeAudio(au.ctx,au.fxBus,strikeProfile(e.heavenStrike.seed));}setTimeout(()=>{au.duck(false);busy=false;playNext();},HEAVEN_STRIKE_MS+200);return;} // 07/11: Thiên Đạo giáng lôi
- if(e.ceremony){showCeremony(document.getElementById('ceremony'),e);narrator.add(e);tone('breakthrough');setTimeout(()=>{busy=false;playNext();},presentationDuration(e)+200);return;} // v84: đại điển vinh danh
+ if(busy)return;let e;for(;;){e=presentations.take(Date.now(),e=>!(scene.raceStatus?.active&&e.effect==='breakthrough'));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
+ busy=true;current={e,at:Date.now()};
+ if(e.heavenStrike){scene.startHeavenStrike(e);const au=cultivationAudio;if(au.enabled&&au.ctx?.state==='running'){au.duck(true);scheduleHeavenStrikeAudio(au.ctx,au.fxBus,strikeProfile(e.heavenStrike.seed));}currentTimer=setTimeout(()=>{au.duck(false);busy=false;current=null;playNext();},HEAVEN_STRIKE_MS+200);return;} // 07/11: Thiên Đạo giáng lôi
+ if(e.ceremony){showCeremony(document.getElementById('ceremony'),e);narrator.add(e);tone('breakthrough');currentTimer=setTimeout(()=>{busy=false;current=null;playNext();},presentationDuration(e)+200);return;} // v84: đại điển vinh danh
  const luxury=luxuryTier(e),duration=presentationDuration(e);
  if(e.petAward){const el=$('#giftReceipt');el.innerHTML=`<strong>${esc(e.name)} · Linh thú đồng hành</strong><span>${esc((e.petNames||[]).join(' · '))}</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,duration);}
  if(e.gift)showGiftReceipt(e);
@@ -352,7 +360,7 @@ function playNext(){
  const r=e.reward,extra=r&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
  $('#spotlight').innerHTML=`<strong>${esc(e.name)}</strong><span>${esc(label)}</span>${extra?`<small class="spot-reward">${esc(extra)}</small>`:''}`;
  $('#spotlight').classList.add('visible');clearTimeout(spotTimer);
- spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;playNext();},duration+150);
+ spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;current=null;playNext();},duration+150);
 }
 
 function receive(s){

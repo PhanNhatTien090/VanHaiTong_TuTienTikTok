@@ -36,7 +36,7 @@ export class VoiceQueue {
     // Tạo sẵn tối đa hai câu kế tiếp, kể cả hành động thường.
     this.prepareQueued();
     // Hành động thật nhường chỗ khỏi lời nền; quà/sự kiện mới ngắt câu thường.
-    if(!syntheticVoice(e)&&this.running&&((this.activePriority??9)===0||priority(e)>2&&(this.activePriority??9)<=2)){this.cancelPreparation?.();this.cancelPlayback?.();}
+    if(!syntheticVoice(e)&&this.running&&((this.activePriority??9)===0||priority(e)>2&&(this.activePriority??9)<=2||realGiftVoice(e)&&(this.activePriority??9)<5)){this.cancelPreparation?.();this.cancelPlayback?.();} // 07/11: quà cắt câu thường/đột phá để cảm ơn đúng lúc
     this.next();
   }
   prepareQueued(){
@@ -58,7 +58,7 @@ export class VoiceQueue {
   prunePrepared(){const keep=new Set(this.queue.map(x=>x.e.id));if(this.activeVoiceId)keep.add(this.activeVoiceId);for(const id of this.prepared.keys())if(!keep.has(id))this.prepared.delete(id);}
   async next(){
     if(this.running||!this.enabled||!this.audio.enabled)return;
-    this.queue=this.queue.filter(x=>Date.now()-x.at<(x.e.autoArrival?8000:realGiftVoice(x.e)?90000:isEventAnnouncement(x.e)?75000:priority(x.e)<=1?5000:25000));if(!this.queue.length)return;
+    this.queue=this.queue.filter(x=>Date.now()-x.at<(x.e.autoArrival?8000:realGiftVoice(x.e)?30000:isEventAnnouncement(x.e)?75000:priority(x.e)<=1?5000:25000));if(!this.queue.length)return;
     this.queue.sort((a,b)=>priority(b.e)-priority(a.e)||a.at-b.at);
     const {e}=this.queue.shift(),generation=this.generation;this.running=true;this.activeVoiceId=e.id;this.activePriority=priority(e);let url=null;
     try{

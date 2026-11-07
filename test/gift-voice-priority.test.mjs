@@ -9,9 +9,10 @@ test('gift voice prepares immediately, reuses clip and never repeats when its vi
  const q=new VoiceQueue({world:'demo',audio});q.running=true;q.play=async()=>{played++;};
  try{q.add(gift());assert.equal(requests,1,'TTS begins before the visual queue is released');q.add(gift());assert.equal(q.queue.length,1);q.running=false;await q.next();q.add(gift());await new Promise(r=>setImmediate(r));assert.equal(requests,1);assert.equal(played,1);assert.equal(q.queue.length,0);}finally{q.stop();globalThis.fetch=old;}
 });
-test('35-second-old gift survives original 25-second routine expiry',async()=>{
+// 07/11/2026: lời cảm ơn trễ quá 30 giây bị bỏ — đọc cảm ơn khi không còn ai tặng trông như quà giả.
+test('20-second-old gift thanks still plays; a 35-second-old one is dropped',async()=>{
  const old=globalThis.fetch;let played=0;globalThis.fetch=async()=>({ok:true,blob:async()=>new Blob(['clip'])});const q=new VoiceQueue({world:'demo',audio});q.play=async()=>{played++;};
- try{q.queue=[{e:gift(),at:Date.now()-35000}];await q.next();assert.equal(played,1);}finally{q.stop();globalThis.fetch=old;}
+ try{q.queue=[{e:gift(),at:Date.now()-20000}];await q.next();assert.equal(played,1);q.queue=[{e:gift('late'),at:Date.now()-35000}];await q.next();assert.equal(played,1);}finally{q.stop();globalThis.fetch=old;}
 });
 test('gift flood has bounded preparation even when queued clips are evicted',()=>{
  const old=globalThis.fetch;let requests=0;globalThis.fetch=()=>{requests++;return new Promise(()=>{});};const q=new VoiceQueue({world:'demo',audio});q.running=true;
