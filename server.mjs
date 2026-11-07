@@ -28,6 +28,8 @@ import {startNextCompetition,engageNow,honorCeremony,adminGift,puppetControl,cre
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dataDir=process.env.VAN_HAI_DATA_DIR||path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
 const runtimeLog=installRuntimeLog(dataDir);
+// Secret chuyển nhân vật với bản web: ưu tiên biến môi trường; thiếu thì đọc file cấu hình riêng của agent, để mọi script restart đều giữ được kết nối.
+function webSyncSecret(){if(process.env.WEB_SYNC_SECRET)return process.env.WEB_SYNC_SECRET;try{const s=JSON.parse(fs.readFileSync(path.join(dataDir,'web-cloud-agent.json'),'utf8')).secret;return typeof s==='string'?s:'';}catch{return '';}}
 const sectMaster=createSectMaster(dataDir);
 const auditStorage=createAuditStorage(dataDir);
 const synthesizeSpeech=createSpeech(root,dataDir);
@@ -135,7 +137,7 @@ const server=http.createServer(async(req,res)=>{
       if(!String(req.headers['content-type']).startsWith('application/json')){json(res,{ok:false,message:'Cần JSON.'},415);return;}
     }
     if(url.pathname==='/internal/play-transfer'&&req.method==='POST'){
-      const secret=process.env.WEB_SYNC_SECRET;
+      const secret=webSyncSecret();
       const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>1024*1024){json(res,{ok:false},413);return;}chunks.push(chunk);}
       const raw=Buffer.concat(chunks);
       if(!secret||secret.length<48||!authenticate(req,url.pathname,raw,secret)){json(res,{ok:false},401);return;}
