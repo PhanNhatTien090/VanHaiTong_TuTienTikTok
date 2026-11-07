@@ -3,6 +3,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
+import {isEventAnnouncement} from './public/event-announcements.js';
 // v75: lời thoại + phối giọng nằm ở speech-lines.mjs
 import {speechPlan,announcement,viNumber} from './speech-lines.mjs';
 export {speechPlan,announcement,viNumber};
@@ -77,7 +78,9 @@ export function createSpeech(root,dataDir){
     const output=path.join(dir,key+'.mp3');
     if(fs.existsSync(output))return output;
     if(jobs.has(key))return jobs.get(key);
-    if(active>=1)throw Error('Giọng đọc đang bận; dùng phản hồi nhanh.');
+    // 07/11/2026: quà thật và thông báo sự kiện được xếp hàng chờ (tối đa 3) thay vì bị trả 'đang bận' → không còn đọc câu chung chung.
+    const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
+    if(active>=(important?3:1))throw Error('Giọng đọc đang bận; dùng phản hồi nhanh.');
     active++;
     const tmp=output+'.tmp';
     const promise=(async()=>{
