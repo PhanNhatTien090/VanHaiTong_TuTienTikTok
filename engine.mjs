@@ -93,6 +93,7 @@ export const goldenHour=(p,now,w=null)=>!!p&&w?.settings?.goldenHour===true&&!p.
 const qiBonus=p=>p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.bonus||0),0)+(CATALOG.find(x=>x.id===p.equipped)?.bonus||0)+extraStat(p,'bonus');
 const freeQiUnit=p=>Math.ceil(requiredQi(p)/ascensionPracticeReward(p.realm,'cultivate',requiredQi(p),requiredStones(p)).steps);
 function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
+  if(hand&&heavenStunned(p,now??Date.now()))return 0; // 07/11: Thiên Lôi trấn áp — không tu luyện được
   if(hand)qi*=handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
   if(hand&&talking(p,now))qi*=1.2; // 4/11: Luận Đạo — có trò chuyện thường trong 5 phút gần nhất
   if(hand&&goldenHour(p,now,w)){qi*=2;stones*=3;}
@@ -242,12 +243,21 @@ export function puppetControl(w,b={},now=Date.now()){
     return result;}
   return fail('Thao tác không hợp lệ.');
 }
+// 07/11/2026: CHỐNG TỰ THẢ TIM. Tim tính điểm sự kiện tối đa ~2 tim/giây mỗi người (dồn được 120 tim cho lúc thả dồn dập).
+// Thả liên tục trung bình >1,5 tim/giây (đo ~5 phút) → tim tụ linh hồi 30 giây thay vì 10 giây. Không phát thông báo nào.
+export const HEART_GATE=Object.freeze({refillPerSec:2,burst:120,tauSec:300,heavyRate:1.5,heavyCooldownMs:30000});
+export function heartGate(p,count,now=Date.now()){const g=HEART_GATE,f=p.heartFlow&&Number.isFinite(p.heartFlow.at)?p.heartFlow:{at:now,rate:0,tokens:g.burst},dt=Math.max(0,(now-f.at)/1000);
+  const rate=f.rate*Math.exp(-dt/g.tauSec)+count/g.tauSec,tokens=Math.min(g.burst,f.tokens+dt*g.refillPerSec),eff=Math.max(0,Math.min(count,Math.floor(tokens)));
+  p.heartFlow={at:now,rate:Math.round(rate*1000)/1000,tokens:tokens-eff};return eff;}
+export const heartHeavy=p=>(p.heartFlow?.rate||0)>HEART_GATE.heavyRate;
 export function action(w,input,now=Date.now()) {
   const actor=w.players[clean(input.userId,80)];
   if(w.mode==='live'&&(input.simulated||input.autoRose||((actor?.puppet||actor?.resident)&&['gift','like','follow','share'].includes(clean(input.type,30)))))return fail('Sự kiện mô phỏng không được ghi vào LIVE.');
   if(input.type==='like'){
     const count=Number(input.count);if(!Number.isSafeInteger(count)||count<1)return fail('Số tim không hợp lệ.');
     input={...input,count:Math.min(5000,count)};
+    // 07/11/2026: chống công cụ tự thả tim — chạy ngầm, không báo trên màn hình.
+    if(w.mode==='live'&&w.settings?.heartGate===true&&actor&&!actor.resident&&!actor.puppet){const eff=heartGate(actor,input.count,now);if(eff<=0)return {ok:true,likes:0,throttled:true};input={...input,count:eff};}
   }
   const result=actionCore(w,input,now);
   // Per-realm novice shortcut. Only attributed, successful actions count;
@@ -360,6 +370,7 @@ function actionCore(w,input,now) {
     emit(w,p,`Luận đạo cùng đồng môn • +${q} tu vi${buffTag(p,now)}`,'qi',now);return {ok:true};
   }
   if(type==='join')return {ok:true,playerId:p.id};
+  if(['cultivate','gather','attack','use','breakthrough'].includes(type)&&heavenStunned(p,now)){const left=Math.ceil((p.stunUntil-now)/1000),msg=`Đang bị Thiên Lôi trấn áp • kinh mạch tê liệt, chưa tu luyện được • còn ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(!cooldown(p,'stun-msg',20000,now))emit(w,p,msg,'status',now,{heavenStunned:true});return fail(msg);}
   if(type==='cultivate') {p.cultivatedAt??=now;
     const wait=cooldown(p,'cultivate',10000,now);if(wait)return fail(`Đang vận công • còn ${wait}s.`);
     const q=gain(w,p,6,1,0,now,'cultivate');emit(w,p,`Vận Thanh Tâm • +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}`,'qi',now);
@@ -380,7 +391,8 @@ function actionCore(w,input,now) {
     }
     flowerScore(w,p,count,now); // Điểm sự kiện luôn nhận, độc lập hồi thưởng tu vi.
     if(heartLive){if(p.resident||p.puppet)return {ok:true,likes:count};
-      const wait=cooldown(p,'cultivate',10000,now);if(wait){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,xpCooldown:wait};}
+      if(heavenStunned(p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,stunned:true};}
+      const wait=cooldown(p,'cultivate',w.settings?.heartGate===true&&heartHeavy(p)?HEART_GATE.heavyCooldownMs:10000,now);if(wait){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,xpCooldown:wait};}
       p.cultivatedAt??=now;const q=gain(w,p,6,1,0,now,'cultivate');emit(w,p,`Tim tụ linh • vận công +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}${talking(p,now)?' • luận đạo +20%':''}`,'qi',now,{heartCultivate:true});
       p.interactions++;w.totalInteractions++;return {ok:true,likes:count,heartCultivated:true};
     }
@@ -952,6 +964,21 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['ban '+c.name]});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:c.name,qi:got};
 }
+// 07/11/2026: THIÊN ĐẠO — người điều hành giáng thiên lôi xuống 1 người (hoặc '*' ngẫu nhiên người đang chơi).
+// Trừ 20% tu vi hiện có, choáng 5 phút: không vận công/hái/đánh/dùng đan/đột phá, tim vẫn tính điểm sự kiện, quà vẫn nhận đủ.
+export const HEAVEN_STRIKE=Object.freeze({lossPct:.2,stunMs:5*60000,cooldownMs:60000});
+export const heavenStunned=(p,now=Date.now())=>!!p&&p.stunUntil>now;
+export function heavenStrike(w,id,now=Date.now()){
+  const wait=HEAVEN_STRIKE.cooldownMs-(now-(w.lastHeavenStrikeAt||0));if(wait>0)return fail(`Thiên lôi đang tụ lại • chờ ${Math.ceil(wait/1000)} giây nữa.`);
+  let p;if(id==='*'){const pool=Object.values(w.players).filter(x=>!x.resident&&!x.puppet&&!heavenStunned(x,now)&&currentParticipant(w,x,now));if(!pool.length)return fail('Chưa có ai đang chơi để giáng lôi.');p=pool[Math.floor(Math.random()*pool.length)];}
+  else p=w.players[clean(id,80)];if(!p||p.resident)return fail('Không tìm thấy người chơi.');
+  const loss=Math.max(0,Math.floor((p.qi||0)*HEAVEN_STRIKE.lossPct));p.qi-=loss;p.totalQi=Math.max(0,(p.totalQi||0)-loss);w.sectQi=Math.max(0,(w.sectQi||0)-loss);
+  p.stunUntil=now+HEAVEN_STRIKE.stunMs;w.lastHeavenStrikeAt=now;p.lastActive=Math.max(p.lastActive||0,now);
+  const seed=Math.floor(Math.random()*1e9);
+  emit(w,p,`THIÊN KIẾP GIÁNG LÂM • thiên lôi đánh trúng • -${loss} tu vi (20%) • choáng 5 phút`,'heavenStrike',now,{gender:p.gender,realm:p.realm,heavenStrike:{loss,stunMs:HEAVEN_STRIKE.stunMs,seed,until:p.stunUntil}});
+  (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['thiên lôi: -'+loss+' tu vi, choáng 5 phút']});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
+  return {ok:true,id:p.id,name:p.name,loss,until:p.stunUntil};
+}
 // 4/11/2026: ban thưởng tùy chỉnh cho một người (hoặc '*' = ngẫu nhiên 1 người đang chơi). Cộng thẳng đúng số đã nhập.
 export function adminCustomGift(w,id,custom={},now=Date.now()){
   const num=(v,max)=>{const n=Math.round(Number(v)||0);return n<0||!Number.isFinite(n)?NaN:Math.min(max,n);};
@@ -1056,7 +1083,9 @@ function advanceVisitor(w,p,input,now){
 const companionContext={emit,active:currentParticipant,ready:readyToBreak,creditQi,createPair:(w,a,b,now)=>createCompanionPair(w,a,b,now,companionContext)};
 export const controlLanternEvent=(w,op,now=Date.now())=>controlLantern(w,op,now,companionContext);
 const socialContext={emit,gain,power,technique:attackTechnique,active:currentParticipant};
-const engageCtx={emit,gain,active:currentParticipant,requiredQi:p=>requiredQi(p)/progressionMult(p),giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
+// 07/11/2026: thưởng sự kiện (điểm danh chuỗi, lì xì, câu đố, nhiệm vụ ngày, kiến tạo tông) tính theo % tu vi cần,
+// không trừ hạn mức tu luyện ngày — nếu không một lần điểm danh 7 ngày đã tiêu sạch hạn mức.
+const engageCtx={emit,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),active:currentParticipant,requiredQi:p=>requiredQi(p)/progressionMult(p),giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
 export const engageNow=(w,kind,now=Date.now())=>kind==='quiz'?startQuizNow(w,now,engageCtx):kind==='envelope'?startEnvelopeNow(w,now,engageCtx):fail('Không rõ hoạt động.');
 export const startTournament=(w,now=Date.now())=>beginTournament(w,now,socialContext);
 export const stopTournament=(w,now=Date.now())=>endTournament(w,now,socialContext);

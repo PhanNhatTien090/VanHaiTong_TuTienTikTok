@@ -65,3 +65,9 @@ test('three post-Than-De realms persist and are the only path to the rebirth unl
  const view=snapshot(w,N+30).players[0];assert.equal(view.rebirthEligible,true);assert.equal(view.realmName,'Hồng Mông Chí Tôn');
  const saved=JSON.parse(JSON.stringify(w));assert.equal(saved.players.a.realm,21);assert.equal(action(w,{type:'breakthrough',userId:p.id},N+31).ok,false);
 });
+
+test('engagement rewards do not drain the daily practice budget',()=>{
+ const {w,p}=setup();const before=dailyPracticeView(w,p,N).used;
+ const r=creditDailyPractice(w,p,1e9,'reward',N,1);
+ assert.equal(r.amount,1e9);assert.equal(r.limited,false);assert.equal(dailyPracticeView(w,p,N).used,before);
+});

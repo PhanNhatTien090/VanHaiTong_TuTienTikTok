@@ -18,6 +18,8 @@ import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 import {VISITORS} from './visitor-event.js';
 import {HonorUI} from './honor-ui.js';
 import {PresentationQueue,presentationDuration,presentationPriority} from './presentation.js';
+import {strikeProfile,HEAVEN_STRIKE_MS} from './heaven-strike.js';
+import {scheduleHeavenStrikeAudio} from './heaven-strike-audio.js';
 import {luxuryTier} from './luxury-fx.js';
 import {highGiftName} from './high-gift-fx.js';
 import {railHTML} from './command-rail.js';
@@ -336,6 +338,7 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
   el.innerHTML=`✦ 10 giây qua: <b>${pulse.length}</b> lượt`+[[n.tu,'tu luyện'],[n.join,'nhập môn'],[n.heart,'thả tim'],[n.gift,'quà']].filter(([k])=>k).map(([k,l])=>` · ${k} ${l}`).join('');el.hidden=false;},1000);
 function playNext(){
  if(busy)return;const e=presentations.take(Date.now(),e=>!(scene.raceStatus?.active&&e.effect==='breakthrough'));if(!e)return;busy=true;
+ if(e.heavenStrike){scene.startHeavenStrike(e);const au=cultivationAudio;if(au.enabled&&au.ctx?.state==='running'){au.duck(true);scheduleHeavenStrikeAudio(au.ctx,au.fxBus,strikeProfile(e.heavenStrike.seed));}setTimeout(()=>{au.duck(false);busy=false;playNext();},HEAVEN_STRIKE_MS+200);return;} // 07/11: Thiên Đạo giáng lôi
  if(e.ceremony){showCeremony(document.getElementById('ceremony'),e);narrator.add(e);tone('breakthrough');setTimeout(()=>{busy=false;playNext();},presentationDuration(e)+200);return;} // v84: đại điển vinh danh
  const luxury=luxuryTier(e),duration=presentationDuration(e);
  if(e.petAward){const el=$('#giftReceipt');el.innerHTML=`<strong>${esc(e.name)} · Linh thú đồng hành</strong><span>${esc((e.petNames||[]).join(' · '))}</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,duration);}
@@ -364,7 +367,7 @@ function receive(s){
 let renderPending=false;function scheduleRender(){if(renderPending)return;renderPending=true;setTimeout(()=>{renderPending=false;render();},100);}
 function setHUD(el,html){if(el._lastHUD!==html){el.innerHTML=html;el._lastHUD=html;}}
 mountPetUI(post);
-function render(){if(!state)return;if(overlay){renderSimpleGuide(state,esc);renderCompanionHUD(state);renderLikeGoal();renderEngagement();}renderPetUI(state,!overlay);if(!overlay){renderScenePicker();renderQuickGift();renderLiveControls();}renderSocialUI(state,!overlay);if(overlay)renderVisitorHud();const p=player();scene.update(state,selected);if(overlay){if(!busy)playNext();renderFocus();}const active=state.players.filter(p=>p.active),counts=participantCounts(state.players);$('#statPlayers').textContent=fmt(counts.players);$('#statProfiles').textContent=`${fmt(state.playerCount??state.players.length)} hồ sơ được lưu`;$('#statQi').textContent=fmt(state.sectQi);$('#statInteractions').textContent=fmt(state.totalInteractions);$('#sceneCount').textContent=counts.players;$('#worldBadge').textContent=mode==='demo'?'THỬ NGHIỆM':'LIVE';$('#worldNote').textContent=mode==='demo'?'Dữ liệu thử · tách biệt LIVE':'Dữ liệu LIVE · lưu trên máy';$('#demoControls').hidden=mode!=='demo';$('#liveControlsNotice').hidden=mode==='demo';$('#simLabel').textContent=mode==='demo'?'KHÔNG DÙNG QUÀ THẬT':'ĐANG NHẬN SỰ KIỆN THẬT';
+function render(){if(!state)return;if(overlay){renderSimpleGuide(state,esc);renderCompanionHUD(state);renderLikeGoal();renderEngagement();}renderPetUI(state,!overlay);if(!overlay){renderScenePicker();renderQuickGift();renderLiveControls();renderHeavenPanel();}renderSocialUI(state,!overlay);if(overlay)renderVisitorHud();const p=player();scene.update(state,selected);if(overlay){if(!busy)playNext();renderFocus();}const active=state.players.filter(p=>p.active),counts=participantCounts(state.players);$('#statPlayers').textContent=fmt(counts.players);$('#statProfiles').textContent=`${fmt(state.playerCount??state.players.length)} hồ sơ được lưu`;$('#statQi').textContent=fmt(state.sectQi);$('#statInteractions').textContent=fmt(state.totalInteractions);$('#sceneCount').textContent=counts.players;$('#worldBadge').textContent=mode==='demo'?'THỬ NGHIỆM':'LIVE';$('#worldNote').textContent=mode==='demo'?'Dữ liệu thử · tách biệt LIVE':'Dữ liệu LIVE · lưu trên máy';$('#demoControls').hidden=mode!=='demo';$('#liveControlsNotice').hidden=mode==='demo';$('#simLabel').textContent=mode==='demo'?'KHÔNG DÙNG QUÀ THẬT':'ĐANG NHẬN SỰ KIỆN THẬT';
   const connected=state.connection.status==='connected';$('.scene-location').innerHTML='<i></i> '+esc(state.environment?.name||'Tụ Linh Đài').toUpperCase()+(mode==='demo'?'<small>THỬ</small>':connected?'<small>LIVE</small>':'<small>CHỜ KẾT NỐI</small>');$('#connectionText').textContent=mode==='demo'?'Bộ mô phỏng sẵn sàng':connected?'TikFinity đã kết nối':'TikFinity chưa kết nối';$('#connectionDot').classList.toggle('off',mode==='live'&&!connected);$('#bridgeStatus').textContent=({connected:'Đã kết nối • đang nhận sự kiện',connecting:'Đang kết nối…',reconnecting:'Đang thử kết nối lại sau mỗi 5 giây',disconnected:'Chưa kết nối'})[state.connection.status]+` · ${fmt(state.connection.received)} sự kiện`;
   $('#bridgeError').textContent=state.connection.lastError||'';$('#bridgeButton').textContent=state.connection.enabled?'Ngắt kết nối':'Kết nối TikFinity';
   const remain=Math.max(0,Math.ceil(((state.boss?.endsAt||state.nextBossAt)-state.serverNow)/1000));$('#scenePhase').textContent=state.raceStatus?.active?'Vân Hải Thiên Lộ':state.socialScene?(state.socialScene==='tournament'?'Luận Kiếm':'Tam Sinh Ước'):state.boss?`Bí cảnh còn ${remain}s`:`♜ ${Math.floor(remain/60)}:${String(remain%60).padStart(2,'0')}`;
@@ -505,6 +508,34 @@ function renderLiveControls(){
   el.querySelectorAll('[data-cgo]').forEach(b=>b.onclick=async()=>{const custom={};el.querySelectorAll('[data-cg]').forEach(i=>custom[i.dataset.cg]=Number(i.value)||0);
     b.disabled=true;try{const r=await post('/api/admin-gift',{id:b.dataset.cgo,combo:'custom',custom});if(r.ok)toast('Đã ban thưởng riêng cho '+r.name+(r.qi?' (+'+fmt(r.qi)+' tu vi)':''));else toast(r.message||'Không ban được.');}finally{b.disabled=false;}});
 }
+
+// 07/11/2026: THIÊN ĐẠO — giáng thiên lôi xuống 1 người (chọn hoặc ngẫu nhiên). Trừ 20% tu vi, choáng 5 phút. Bấm 2 lần để xác nhận.
+let heavenTarget='',heavenArm='',heavenArmTimer=null;
+function renderHeavenPanel(){const el=document.getElementById('heavenPanel');if(!el||!state)return;
+  if(!el.dataset.ready){el.dataset.ready='1';
+    el.innerHTML='<div class="qg-head"><b>⚡ Thiên Đạo · Giáng thiên lôi</b><span class="muted">Trừ 20% tu vi hiện có · choáng 5 phút không tu luyện được (quà vẫn nhận đủ) · giọng đọc báo thiên kiếp ngẫu nhiên giáng xuống · mỗi lần cách nhau 60 giây</span></div>'+
+     '<div class="qg-row hv-search"><input id="hvSearch" type="search" placeholder="Gõ tên người chơi…" autocomplete="off"><span id="hvPicked" class="hv-picked"></span></div>'+
+     '<div id="hvList" class="hv-list"></div>'+
+     '<div class="qg-row"><button id="hvStrike" class="small gold-button hv-strike" disabled>⚡ Giáng lôi</button><button id="hvRandom" class="small soft-button">🎲 Ngẫu nhiên 1 người đang chơi</button><span id="hvCooldown" class="muted"></span></div>'+
+     '<div id="hvStunned" class="hv-stunned"></div>';
+    el.querySelector('#hvSearch').oninput=()=>renderHeavenPanel();
+    el.querySelector('#hvList').onclick=e=>{const b=e.target.closest('[data-hv]');if(!b)return;heavenTarget=b.dataset.hv;heavenArm='';renderHeavenPanel();};
+    const fire=async(id,btn)=>{if(heavenArm!==id){heavenArm=id;clearTimeout(heavenArmTimer);heavenArmTimer=setTimeout(()=>{heavenArm='';renderHeavenPanel();},3500);renderHeavenPanel();return;}
+      heavenArm='';clearTimeout(heavenArmTimer);btn.disabled=true;try{const r=await post('/api/heaven-strike',{id});if(r.ok)toast('⚡ Thiên lôi đánh trúng '+r.name+' · -'+fmt(r.loss)+' tu vi · choáng 5 phút');else toast(r.message||'Chưa giáng lôi được.');}finally{btn.disabled=false;renderHeavenPanel();}};
+    el.querySelector('#hvStrike').onclick=e=>{if(heavenTarget)fire(heavenTarget,e.currentTarget);};
+    el.querySelector('#hvRandom').onclick=e=>fire('*',e.currentTarget);}
+  const now=state.serverNow||Date.now(),q=fold(el.querySelector('#hvSearch').value.trim()),sel=player();
+  if(!heavenTarget&&sel)heavenTarget=sel.id;
+  const pool=state.players.filter(p=>!p.resident&&!p.puppet&&(q?fold(p.name).includes(q):p.active)).sort((a,b)=>(b.active-a.active)||(b.realm-a.realm)).slice(0,14);
+  el.querySelector('#hvList').innerHTML=pool.map(p=>'<button class="hv-chip'+(p.id===heavenTarget?' on':'')+(p.stunUntil>now?' stunned':'')+'" data-hv="'+esc(p.id)+'">'+esc(p.name)+' <small>'+esc(state.realms?.[p.realm]||'')+(p.stunUntil>now?' · ⚡':'')+'</small></button>').join('')||'<span class="muted">Không thấy ai'+(q?' tên này':' đang chơi')+'.</span>';
+  const t=state.players.find(p=>p.id===heavenTarget);el.querySelector('#hvPicked').innerHTML=t?'Mục tiêu: <strong>'+esc(t.name)+'</strong> <small>('+esc(state.realms?.[t.realm]||'')+' · tu vi '+fmt(t.qi)+' → mất '+fmt(Math.floor(t.qi*.2))+')</small>':'<i class="muted">Chọn một người bên dưới</i>';
+  const sb=el.querySelector('#hvStrike'),rb=el.querySelector('#hvRandom'),wait=Math.max(0,Math.ceil(((state.lastHeavenStrikeAt||0)+60000-now)/1000));
+  sb.disabled=!t||wait>0;sb.textContent=heavenArm&&heavenArm===heavenTarget?'⚠ Bấm lần nữa để giáng lôi':'⚡ Giáng lôi'+(t?' xuống '+t.name:'');sb.classList.toggle('armed',!!heavenArm&&heavenArm===heavenTarget);
+  rb.disabled=wait>0;rb.textContent=heavenArm==='*'?'⚠ Bấm lần nữa · ngẫu nhiên':'🎲 Ngẫu nhiên 1 người đang chơi';rb.classList.toggle('armed',heavenArm==='*');
+  el.querySelector('#hvCooldown').textContent=wait>0?'Thiên lôi đang tụ lại · '+wait+' giây':'';
+  const stunned=state.players.filter(p=>p.stunUntil>now).sort((a,b)=>b.stunUntil-a.stunUntil);
+  el.querySelector('#hvStunned').innerHTML=stunned.length?'<b>Đang bị trấn áp:</b> '+stunned.map(p=>{const s=Math.ceil((p.stunUntil-now)/1000);return '<span class="hv-stun">'+esc(p.name)+' · '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'</span>';}).join(' '):'';}
+const fold=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase();
 
 // v86: thanh MỤC TIÊU TIM toàn LIVE (cảnh LIVE)
 function renderLikeGoal(){const el=document.getElementById('likeGoal');if(!el||!state)return;

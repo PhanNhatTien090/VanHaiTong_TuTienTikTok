@@ -19,9 +19,11 @@ test('eight hours retain reduced progress after the shared full-rate budget with
  assert.equal(dailyPracticeView(w,p,N+8*3600000).exhausted,true);assert.ok(p.totalQi>ceiling&&p.totalQi<=ceiling*1.5);assert.equal(p.qi,p.totalQi);assert.ok(p.herbs>100);assert.ok(w.boss.hp<1e12);
 });
 
-test('weekly checkin and ordinary rewards share the pool; capped pills remain owned',()=>{
+// 07/11/2026: thưởng điểm danh chuỗi không trừ hạn mức ngày (trước đây 1 lần điểm danh 7 ngày tiêu ~80% hạn mức).
+test('weekly checkin is exempt from the pool; ordinary rewards share it; capped pills remain owned',()=>{
  const {w,p}=setup();w.settings.dailyPracticeRealmBonus=0;w.settings.dailyPracticeLimit=2;p.lastCheckinDay='2026-11-04';p.checkinStreak=6;p.pills={'qi-pill':3};p.qi=0;p.totalQi=0;
- assert.equal(act(w,'checkin').ok,true);assert.equal(dailyPracticeView(w,p,N).exhausted,true);const full=setup();full.w.settings.dailyPracticeRealmBonus=0;full.w.settings.dailyPracticeLimit=0;full.p.lastCheckinDay='2026-11-04';full.p.checkinStreak=6;full.p.qi=0;full.p.totalQi=0;act(full.w,'checkin');assert.ok(p.qi>0&&p.qi<full.p.qi);assert.ok(p.artifacts.includes('nine-heaven-seal'));
+ assert.equal(act(w,'checkin').ok,true);assert.equal(dailyPracticeView(w,p,N).exhausted,false);const full=setup();full.w.settings.dailyPracticeRealmBonus=0;full.w.settings.dailyPracticeLimit=0;full.p.lastCheckinDay='2026-11-04';full.p.checkinStreak=6;full.p.qi=0;full.p.totalQi=0;act(full.w,'checkin');assert.ok(p.qi>0&&p.qi===full.p.qi);assert.ok(p.artifacts.includes('nine-heaven-seal'));
+ {const v=dailyPracticeView(w,p,N);p.dailyPractice={day:v.day,used:v.limit*100};assert.equal(dailyPracticeView(w,p,N).exhausted,true);}
  const qi=p.qi,stones=p.stones,herbs=p.herbs;
  assert.equal(act(w,'use',{itemId:'qi-pill'},N+1).ok,false);assert.equal(p.pills['qi-pill'],3);assert.equal(p.qi,qi);
  assert.equal(act(w,'gather',{},N+2).ok,true);assert.ok(p.qi>qi);assert.ok(p.stones>stones&&p.herbs>herbs);

@@ -1,5 +1,5 @@
 import {MAX_REALM} from './public/progression.js';
-// One shared daily budget for ALL free qi. Paid gifts and explicit admin edits are exempt.
+// One shared daily budget for ALL free qi. Paid gifts, explicit admin edits and engagement rewards ('reward') are exempt.
 // Integer hundredths keep 1 / 1.4 / .35 action weights exact across saves.
 export const DAILY_PRACTICE_LIMIT=900;
 export const DAILY_PRACTICE_SOFT_RATE=.1;
@@ -16,7 +16,7 @@ export function dailyPracticeView(w,p,now=Date.now()){
 }
 export function creditDailyPractice(w,p,amount,kind,now=Date.now(),qiPerPoint=null){
  const view=dailyPracticeView(w,p,now);
- if(!view.enabled||['gift','admin'].includes(kind)||amount<=0)return {amount,limited:false,justExhausted:false};
+ if(!view.enabled||['gift','admin','reward'].includes(kind)||amount<=0)return {amount,limited:false,justExhausted:false};
  const cost=Number.isFinite(qiPerPoint)&&qiPerPoint>0?Math.max(COSTS[kind]||1,Math.ceil(amount/qiPerPoint*100)):(COSTS[kind]||100);
  const used=Math.round(view.used*100),allow=Math.min(cost,Math.max(0,view.limit*100-used));
  p.dailyPractice={day:view.day,used:used+allow};

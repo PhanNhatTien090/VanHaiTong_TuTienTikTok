@@ -21,7 +21,7 @@ import {fileURLToPath} from 'node:url';
 import {WebSocket} from 'ws';
 import {streamState,eventAllowedOnLive,isNPC,actorLabel} from './public/live-integrity.js';
 import {priority as voicePriority} from './public/voice.js';
-import {startNextCompetition,engageNow,honorCeremony,adminGift,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
+import {startNextCompetition,engageNow,honorCeremony,adminGift,heavenStrike,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
 
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dataDir=process.env.VAN_HAI_DATA_DIR||path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
@@ -42,6 +42,7 @@ function load(mode) {
 // v54: chỉ cho MỘT máy chủ chạy. Nếu cổng đã có máy chủ Vân Hải Tông trả lời → thoát ngay, không đọc/ghi dữ liệu (tránh 2 máy chủ ghi đè live.json).
 {const probePort=Number(process.env.PORT??4317);if(probePort){try{const r=await fetch(`http://127.0.0.1:${probePort}/api/state?world=demo`,{signal:AbortSignal.timeout(1500)});if(r.ok&&(await r.text()).includes('sectQi')){console.error(`Đã có máy chủ Vân Hải Tông đang chạy ở cổng ${probePort}. Không mở thêm máy chủ thứ hai để tránh ghi đè dữ liệu.`);process.exit(1);}}catch{}}}
 const worlds={demo:load('demo'),live:load('live')};for(const w of Object.values(worlds)){prepareSocial(w);migrateDivineWardrobe(w);migrateSectMasters(w);}
+(worlds.live.settings??={}).heartGate??=true; // 07/11/2026: chống tự thả tim (ngầm); đặt false trong settings để tắt
 // Giờ vàng tân thủ chỉ bật trên thế giới LIVE thật (tắt bằng settings.goldenHour=false trong live.json).
 worlds.live.settings??={};worlds.live.settings.goldenHour??=true;
 // Real, faster progression for the ascension stage; existing resources are preserved.
@@ -174,6 +175,7 @@ const server=http.createServer(async(req,res)=>{
     }
     if(url.pathname==='/api/engage'&&req.method==='POST'){const b=await body(req);const result=engageNow(worlds[mode],b.kind,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/ceremony'&&req.method==='POST'){const result=honorCeremony(worlds[mode],Date.now(),true);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
+    if(url.pathname==='/api/heaven-strike'&&req.method==='POST'){const b=await body(req);const result=heavenStrike(worlds[mode],b.id,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/admin-gift'&&req.method==='POST'){const b=await body(req);const result=adminGift(worlds[mode],b.id,b.combo,Date.now(),b.custom);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/puppet'&&req.method==='POST'){const b=await body(req);const result=puppetControl(worlds[mode],b,Date.now());if(result.ok&&b.op!=='list'){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const result=adminEditPlayer(worlds[mode],b.id,b.patch||{},Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}

@@ -432,3 +432,18 @@ body.overlay #phoneHudLeft>*,body.overlay #phoneHudRight>*,body.overlay .scene-g
 
 /* 05/11/2026: trận Hắc Uyên Ma Long có bảng yêu lực rộng trên canvas — ẩn bảng xếp hạng góc trái để không chồng chữ */
 body.abyss-fight #liveRanks{display:none!important}
+/* 07/11/2026: Thiên Đạo · giáng thiên lôi (tab Sự kiện) */
+.heaven-panel{border-color:#a98bff66;background:linear-gradient(135deg,#120c24,#0d1222)}
+.heaven-panel .qg-head b{color:#d9c8ff}
+.heaven-panel .hv-search input{flex:1;min-width:200px;padding:6px 10px;border-radius:8px;border:1px solid #6a58a8;background:#0a0816;color:#eee}
+.heaven-panel .hv-picked{min-width:0!important;color:#e8e0ff}
+.heaven-panel .hv-list{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+.heaven-panel .hv-chip{padding:4px 9px;border-radius:14px;border:1px solid #4d4380;background:#1a1530;color:#ddd6f5;font-size:.82em;cursor:pointer}
+.heaven-panel .hv-chip small{opacity:.65}
+.heaven-panel .hv-chip.on{border-color:#c7a8ff;background:#3a2a6e;color:#fff;box-shadow:0 0 8px #a07bff88}
+.heaven-panel .hv-chip.stunned{border-style:dashed}
+.heaven-panel .hv-strike{background:linear-gradient(180deg,#b593ff,#6a3fd6);color:#fff;border-color:#d4c0ff}
+.heaven-panel button.armed{background:linear-gradient(180deg,#ff8a6a,#c22a2a)!important;color:#fff;animation:hvPulse .6s ease-in-out infinite alternate}
+@keyframes hvPulse{to{box-shadow:0 0 14px #ff6a4a}}
+.heaven-panel .hv-stunned{margin-top:6px;color:#cbbcf2;font-size:.85em}
+.heaven-panel .hv-stun{display:inline-block;margin:2px 4px;padding:2px 8px;border-radius:10px;background:#2a1f4d}
