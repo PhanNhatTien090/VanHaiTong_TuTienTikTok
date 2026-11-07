@@ -34,6 +34,7 @@ const titleCase=s=>String(s).toLowerCase().replace(/(^|\s)(\p{L})/gu,(m,a,b)=>a+
 const list2=a=>a.length<=1?a.join(''):a.slice(0,-1).join(', ')+' và '+a.at(-1);
 
 function giftLines(e,who,Who,t,seed){
+ if(e.raceGift&&e.raceBoost)return [say('tongsu',pickBy(seed,[`${Who} bứt tốc! Phi kiếm lao vọt ${viNumber(e.raceBoost)} trượng!`,`${Who} tăng tốc! Phi kiếm vọt lên ${viNumber(e.raceBoost)} trượng!`,`Bứt tốc! ${Who} lao lên ${viNumber(e.raceBoost)} trượng!`]))]; // 07/11: đang đua chỉ đọc bứt tốc
  const r=e.reward||{},qi=roundSay(r.qi),items=(r.itemNames||[]).slice(0,2),itemTxt=items.length?list2(items):'';
  const rewards=[itemTxt,Number(r.qi)>0?qi+' tu vi':''].filter(Boolean).join(' và ');
  const buff=e.buff?.mult?' Phúc duyên gấp '+multWord(e.buff.mult)+(e.firstGift?' suốt hai mươi phút.':' trong mười phút.'):'';

@@ -217,6 +217,7 @@ function renderLiveRanks(force=false){
 }
 let giftReceiptTimer;
 function showGiftReceipt(e){
+  if(e.raceGift&&e.raceBoost){const el=$('#giftReceipt');if(!el)return;el.innerHTML=`<strong>⚡ ${esc(e.name)} · ${esc(e.gift||'Quà tặng')}${(Number(e.count)||1)>1?' ×'+e.count:''}</strong><span>Bứt tốc +${fmt(e.raceBoost)} trượng</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,6000);return;} // 07/11: đang đua chỉ báo bứt tốc
   const g=state?.gifts.find(g=>g.name===e.tier),count=Math.max(1,Number(e.count)||1),q=e.reward?.qi??Number(String(e.text).match(/\+(\d+) tu vi/)?.[1]||0),stones=e.reward?.stones??(g?.stones||0)*count,herbs=e.reward?.herbs??(g?.herbs||0)*count;
   const el=$('#giftReceipt');if(!el)return;
   el.innerHTML=`<strong>✓ ${esc(e.name)} · ${esc(e.gift||'Quà tặng')}${count>1?' ×'+count:''}</strong><span>Đã cộng +${fmt(q)} tu vi · +${fmt(stones)} linh thạch${herbs?' · +'+fmt(herbs)+' linh thảo':''}</span>${e.reward?.itemNames?.length?`<span>✦ Đã trao ${esc(e.reward.itemNames.join(' · '))}</span>`:''}${e.buff?.mult?`<span>✦ Phúc duyên ×${String(e.buff.mult).replace('.',',')} tu luyện trong ${e.buff.minutes} phút</span>`:''}`;
@@ -357,7 +358,7 @@ function playNext(){
  if(shouldFocusEvent(e)&&!scene.raceStatus?.active&&!scene.socialStage?.length)scene.focus(e.user,duration);
  const label=e.raceGift?(e.raceBoost?'BỨT TỐC +'+e.raceBoost+' trượng':'Quà đã ghi nhận · chờ kết quả xếp hạng'):e.technique?.name||highGiftName(e)||luxury?.name||({breakthrough:'ĐỘT PHÁ · '+REALM_NAMES[breakthroughRealm(e)],join:'Nhập môn',attack:'Xuất chiêu',qi:'Tu luyện',sword:'Ngự kiếm',lotus:'Liên hoa trận',dragon:'Thanh long giáng thế',victory:'Bí cảnh hoàn tất',boss:'Yêu thú giáng thế',opportunity:e.opportunityEnd?'Cơ duyên kết thúc':'Thiên Đạo Cơ Duyên',transform:'BIẾN HÌNH · '+String(e.skinName||'').toUpperCase()})[e.effect]||e.text;
  // v39: trên cảnh LIVE chỉ còn 1 khung (khung tên này); phần thưởng gộp thành 1 dòng nhỏ thay cho khung biên nhận riêng.
- const r=e.reward,extra=r&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
+ const r=e.reward,extra=r&&!e.raceGift&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
  $('#spotlight').innerHTML=`<strong>${esc(e.name)}</strong><span>${esc(label)}</span>${extra?`<small class="spot-reward">${esc(extra)}</small>`:''}`;
  $('#spotlight').classList.add('visible');clearTimeout(spotTimer);
  spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;current=null;playNext();},duration+150);

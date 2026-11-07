@@ -463,7 +463,9 @@ function actionCore(w,input,now) {
     const count=Math.min(1000,Math.max(1,Math.trunc(Number(input.count)||1)));
     const award=giftReward(input.coins,w.gifts),tier=award.tier;
     const firstGift=!p.giftCoins&&!p.puppet&&!p.resident,vipBefore=vipTier(p.giftCoins); // v86: lễ quà đầu tiên → phúc duyên ≥×5 trong 20 phút
-    const q=gain(w,p,award.qi*count,award.stones*count,award.herbs*count,now,false,'gift');
+    // 07/11/2026: đang đua phi kiếm → quà chỉ để BỨT TỐC, không cộng tu vi.
+    const racing=w.race?.phase==='running'&&now<w.race.endsAt&&w.race.racers.some(r=>r.id===p.id&&!r.finishAt);
+    const q=gain(w,p,racing?0:award.qi*count,award.stones*count,award.herbs*count,now,false,'gift');
     const items=[];if(tier.artifact&&!p.artifacts.includes(tier.artifact)){p.artifacts.push(tier.artifact);items.push(tier.artifact);const value=id=>{const a=CATALOG.find(x=>x.id===id);return (a?.damage||0)+(a?.bonus||0)*100;};if(value(tier.artifact)>value(p.equipped))p.equipped=tier.artifact;}
     if(tier.skin){p.rewardSkins??=[];if(!p.rewardSkins.includes(tier.skin)){p.rewardSkins.push(tier.skin);if(autoSkinChoiceAllowed(p)){p.skinChoice=tier.skin;p.skinChoiceSource='gift';}}}
     const itemNames=items.map(id=>CATALOG.find(x=>x.id===id).name);
@@ -478,7 +480,7 @@ function actionCore(w,input,now) {
     if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;}
     if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t});} // v86
     if(['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
-    if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;
+    if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;if(racing)giftEvent.text=`${gift||tier.name}${count>1?` ×${count}`:''} • BỨT TỐC +${giftEvent.raceBoost} trượng • cảm ơn đạo hữu`;
       // v65: ghi lại để cảnh vẽ hiệu ứng quà theo nấc
       const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';}}
     recordEventGiftFx(w,p,giftEvent,now);
