@@ -557,7 +557,8 @@ export function awardLoyalty(w,now=Date.now(),limit=3){
   return awarded;
 }
 export function currentParticipant(w,p,now=Date.now()){
-  return !p.resident&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=90000)&&now-p.lastActive<LIVE_ACTIVE_MS&&p.lastActive>=(w.liveSession?.startedAt||0)&&w.liveSession?.active!==false;
+  // Vế rẻ nhất, loại nhiều nhất (đa số ~8k hồ sơ đã rời LIVE) đứng trước; mọi vế là boolean không tác dụng phụ nên kết quả không đổi.
+  return now-p.lastActive<LIVE_ACTIVE_MS&&w.liveSession?.active!==false&&p.lastActive>=(w.liveSession?.startedAt||0)&&!p.resident&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=90000);
 }
 export function markLiveSession(w,isLive,now=Date.now()){
   if(isLive){if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};}
@@ -774,15 +775,23 @@ export function tick(w,now=Date.now()) {
   for(const [key,at] of Object.entries(w.seen))if(now-at>86400000)delete w.seen[key];
   for(const [key,v] of Object.entries(w.giftCounts))if(now-v.at>86400000)delete w.giftCounts[key];
 }
-export function snapshot(w,now=Date.now()) {
-  const players=Object.values(w.players).map(p=>({...p,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
+// opts.select(ctx) => Set id: chỉ dựng hồ sơ đầy đủ cho người sẽ được gửi đi (giảm ~150 ms/lần với ~8k hồ sơ).
+// Xếp hạng (danh hiệu, thần vị) vẫn tính trên toàn bộ người chơi bằng bản rút gọn, nên kết quả không đổi.
+export function snapshot(w,now=Date.now(),opts={}) {
+  const select=typeof opts.select==='function'?opts.select:null;
+  const all=Object.values(w.players);
+  const ranked=select?all.map(p=>({id:p.id,name:p.name,avatar:p.avatar,realm:p.realm,realmName:REALMS[p.realm],totalQi:p.totalQi,giftCoins:p.giftCoins,joinedAt:p.joinedAt,bossWins:p.bossWins,contribution:p.contribution,activeMs:p.activeMs,resident:p.resident,puppet:p.puppet,webOnly:p.webOnly,active:currentParticipant(w,p,now)})):null;
+  const earlyHonors=select?honorRoll(w,ranked):null,earlyRoles=select?rankDivineRoles(ranked,w.adminLog||[]):null;
+  let pick=all;
+  if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,stage=rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[];const ids=select({players:ranked,honors:earlyHonors,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
+  const players=pick.map(p=>({...p,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
   const socialStatus=socialView(w,now),t=socialStatus.tournament,ceremony=socialStatus.ceremony;
   const socialStage=t?.current?[t.current.a,t.current.b]:t?.lastBow?.until>now&&t.lastBow.pair?t.lastBow.pair:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
   const socialScene=tournamentActive(w)||t?.podiumUntil>now?'tournament':ceremony?'bond':null;
   const bondIndex=new Map();for(const b of socialStatus.bonds){for(const id of [b.a,b.b]){if(!bondIndex.has(id))bondIndex.set(id,[]);bondIndex.get(id).push(b);}}for(const p of players){p.socialCode=w.players[p.id].socialCode;p.bondInfos=bondIndex.get(p.id)||[];p.bondInfo=p.bondInfos.find(b=>b.id===w.players[p.id].bondId)||p.bondInfos[0]||null;p.bondIds=p.bondInfos.map(b=>b.id);const vip=bondVipInfo(w.players[p.id]);p.bondVip={...vip,used:p.bondInfos.length,remaining:Math.max(0,vip.limit-p.bondInfos.length)};}
   const raceStatus=raceView(w,now),raceStage=raceStageIds(w,now);
-  const divineRoles=rankDivineRoles(players,w.adminLog||[]);for(const p of players)p.divineRoles=divineRoles.get(p.id)||[];
-  const honors=honorRoll(w,players);for(const p of players)p.honor=honorTitle(p,honors);
+  const divineRoles=earlyRoles||rankDivineRoles(players,w.adminLog||[]);for(const p of players)p.divineRoles=divineRoles.get(p.id)||[];
+  const honors=earlyHonors||honorRoll(w,players);for(const p of players)p.honor=honorTitle(p,honors);
   // v53: chi phí lên từng cảnh giới (tu vi + linh thạch cần ở cảnh giới trước) cho bảng cảnh giới trên LIVE.
   const realmCosts=REALMS.map((name,r)=>r?{qi:requiredQi({realm:r-1}),stones:requiredStones({realm:r-1})}:null);
   return {...w,progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,quizUsed:undefined,engagement:engagementView(w,now),serverNow:now,environment:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/events-v1/'+(socialScene==='tournament'?'tournament-background.png':'bond-background.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};

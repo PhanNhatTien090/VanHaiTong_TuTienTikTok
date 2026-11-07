@@ -21,6 +21,10 @@ import {fileURLToPath} from 'node:url';
 import {WebSocket} from 'ws';
 import {streamState,eventAllowedOnLive,isNPC,actorLabel} from './public/live-integrity.js';
 import {priority as voicePriority} from './public/voice.js';
+import {monitorEventLoopDelay,performance as perfHooks} from 'node:perf_hooks';
+// Đo độ trễ vòng sự kiện (server bị chặn bao lâu) để soi lag khi LIVE: GET /api/perf. Chỉ đọc, không đổi gameplay.
+const loopDelay=monitorEventLoopDelay({resolution:20});loopDelay.enable();let lastElu=perfHooks.eventLoopUtilization();
+function perfView(){const ms=n=>Math.round(n/1e4)/100,elu=perfHooks.eventLoopUtilization(lastElu);lastElu=perfHooks.eventLoopUtilization();const v={loopDelayMs:{p50:ms(loopDelay.percentile(50)),p99:ms(loopDelay.percentile(99)),max:ms(loopDelay.max)},busy:Math.round(elu.utilization*1000)/1000,clients:clients.size,heapMiB:Math.round(process.memoryUsage().heapUsed/1048576),at:Date.now()};loopDelay.reset();return v;}
 import {startNextCompetition,engageNow,honorCeremony,adminGift,heavenStrike,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
 
 const root=path.dirname(fileURLToPath(import.meta.url));
@@ -59,12 +63,20 @@ if(fs.existsSync(visitorRecovery))fs.renameSync(visitorRecovery,visitorRecovery+
 const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
-const savedSig={},savedAt={};
-function persist(force=false){for(const [mode,w]of Object.entries(worlds)){auditStorage.flush(w,mode);const sig=`${w.events.at(-1)?.id}|${Object.keys(w.players).length}|${w.sectQi}|${w.boss?.hp}|${w.totalInteractions}`;if(!force&&sig===savedSig[mode]&&Date.now()-(savedAt[mode]||0)<30000)continue;const dest=path.join(dataDir,`${mode}.json`);const tmp=dest+'.tmp';try{fs.writeFileSync(tmp,JSON.stringify(w));fs.renameSync(tmp,dest);savedSig[mode]=sig;savedAt[mode]=Date.now();}catch(err){if(!['EPERM','EBUSY','EACCES'].includes(err.code))throw err;console.error('[save] File temporarily locked; current progress retained in memory and save retried on next tick:',mode,err.code);}}}
+// Lưu định kỳ (3 s) ghi đĩa ở nền để quà/lệnh không phải chờ ổ đĩa + Defender quét file ~8 MB.
+// Lưu bắt buộc (force: thao tác quản trị, bàn giao, tắt máy) vẫn ghi đồng bộ như cũ.
+// saveGen: bản ghi nền chỉ thay file nếu không có lần lưu nào mới hơn bắt đầu sau nó; kiểm tra + rename chạy liền nhau trên luồng chính nên không bao giờ đè bản mới.
+const savedSig={},savedAt={},saveGen={},saving={},SAVE_LOCKED=['EPERM','EBUSY','EACCES'];
+function persist(force=false){for(const [mode,w]of Object.entries(worlds)){auditStorage.flush(w,mode);const sig=`${w.events.at(-1)?.id}|${Object.keys(w.players).length}|${w.sectQi}|${w.boss?.hp}|${w.totalInteractions}`;if(!force&&(saving[mode]||sig===savedSig[mode]&&Date.now()-(savedAt[mode]||0)<30000))continue;const dest=path.join(dataDir,`${mode}.json`);const data=JSON.stringify(w),gen=saveGen[mode]=(saveGen[mode]||0)+1;
+  if(force){const tmp=dest+'.tmp';try{fs.writeFileSync(tmp,data);fs.renameSync(tmp,dest);savedSig[mode]=sig;savedAt[mode]=Date.now();}catch(err){if(!SAVE_LOCKED.includes(err.code))throw err;console.error('[save] File temporarily locked; current progress retained in memory and save retried on next tick:',mode,err.code);}continue;}
+  const tmp=dest+'.bg.tmp';saving[mode]=true;
+  fs.promises.writeFile(tmp,data).then(()=>{if(saveGen[mode]!==gen){fs.rmSync(tmp,{force:true});return;}fs.renameSync(tmp,dest);savedSig[mode]=sig;savedAt[mode]=Date.now();}).catch(err=>{console.error(SAVE_LOCKED.includes(err.code)?'[save] File temporarily locked; current progress retained in memory and save retried on next tick:':'[save] Background save failed; retried on next tick:',mode,err.code||err.message);}).finally(()=>{saving[mode]=false;});}}
 // Mỗi giây chỉ gửi người đang hoạt động + top 100 bảng xếp hạng (không gửi cả 10.000 hồ sơ).
 const payloadCache=new Map(),assets=new AssetCache();
 const announcementHistory={demo:new EventAnnouncementHistory(),live:new EventAnnouncementHistory()};
 function rememberAnnouncements(){for(const mode of ['demo','live'])announcementHistory[mode].remember(worlds[mode].events);}
+// Top 100 cảnh giới/tu vi + top 3 tu vi + người dẫn đầu quà + danh hiệu + người đang lên đài.
+function visibleTop(players,s){const top=new Set([...players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,100).map(p=>p.id));for(const p of [...players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);if(s.patronCurrent)top.add(s.patronCurrent);for(const h of s.honors||[])top.add(h.id);for(const id of [...(s.socialStage||[]),...(s.raceStage||[])])top.add(id);return top;}
 function payload(mode,view='full'){
   announcementHistory[mode].remember(worlds[mode].events);
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
@@ -78,14 +90,15 @@ function payload(mode,view='full'){
     if(full.patronCurrent)top.add(full.patronCurrent);for(const h of full.honors||[])top.add(h.id);for(const id of [...(full.socialStage||[]),...(full.raceStage||[])])top.add(id);
     value={...full,players:full.players.filter(p=>p.active||top.has(p.id)).map(p=>Object.fromEntries(fields.map(k=>[k,p[k]]))),events:[...new Map([...full.events.slice(-30),...announcementHistory[mode].recent().slice(-16)].map(e=>[e.id,e])).values()].sort((a,b)=>a.at-b.at),feed:[],seen:undefined,giftCounts:undefined,adminLog:undefined};
   }else{
-    const s=snapshot(worlds[mode]);s.players=s.players.filter(p=>!p.webOnly); // nhân vật chỉ có trên web không bao giờ hiện trên LIVE
-    const top=new Set([...s.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,100).map(p=>p.id));
-    for(const p of [...s.players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);
-    if(s.patronCurrent)top.add(s.patronCurrent);for(const h of s.honors||[])top.add(h.id);for(const id of [...(s.socialStage||[]),...(s.raceStage||[])])top.add(id);
+    // Chọn trước người sẽ gửi (đang hoạt động + top) để snapshot không phải dựng đủ ~8k hồ sơ mỗi 400 ms.
+    let playerTotal=0;
+    const s=snapshot(worlds[mode],Date.now(),{select:ctx=>{const list=ctx.players.filter(p=>!p.webOnly);playerTotal=list.length;const top=visibleTop(list,ctx);for(const p of list)if(p.active)top.add(p.id);return top;}});
+    s.players=s.players.filter(p=>!p.webOnly); // nhân vật chỉ có trên web không bao giờ hiện trên LIVE
+    const top=visibleTop(s.players,s);
     // Top tặng quà cho bảng TOP QUÀ trên cảnh: chỉ người đang có mặt trên LIVE (tương tác trong 5 phút gần nhất), xếp theo tổng coin quà.
     const giftEdited=new Set((s.adminLog||[]).filter(r=>r.changes?.some(c=>c.startsWith('coin quà '))).map(r=>r.id));
     const topGifters=s.players.filter(p=>!p.resident&&!p.puppet&&p.active&&p.giftCoins>0&&!giftEdited.has(p.id)).sort((a,b)=>(a.puppet?1:0)-(b.puppet?1:0)||b.giftCoins-a.giftCoins||a.joinedAt-b.joinedAt).slice(0,5).map(p=>({id:p.id,name:p.name,giftCoins:p.giftCoins,realmName:p.realmName,avatar:p.avatar||null}));
-    value={...s,heartRulesVersion:1,playerCount:s.players.length,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view()):{enabled:false,active:false}};
+    value={...s,heartRulesVersion:1,playerCount:playerTotal,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view()):{enabled:false,active:false}};
   }
   value=streamState(value,mode);
   payloadCache.set(key,{at:now,value});return value;
@@ -147,6 +160,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/sect-master'&&req.method==='GET'){json(res,sectMaster.view());return;}
     if(url.pathname==='/api/sect-master'&&req.method==='POST'){try{const config=sectMaster.configure(await body(req));payloadCache.clear();broadcast();json(res,{ok:true,...config});}catch(e){json(res,{ok:false,message:e.message},400);}return;}
     if(url.pathname==='/api/bridge-samples'){json(res,bridgeSamples);return;}
+    if(url.pathname==='/api/perf'){json(res,perfView());return;}
     if(url.pathname==='/api/state'){json(res,payload(mode));return;}
     if(url.pathname==='/api/events'){
       res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache','Connection':'keep-alive'});
