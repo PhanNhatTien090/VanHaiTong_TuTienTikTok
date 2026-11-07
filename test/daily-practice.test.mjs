@@ -50,7 +50,7 @@ test('capped players keep combat, items and gift rewards; snapshot cannot refres
  const hp=w.boss.hp;assert.equal(action(w,{type:'attack',userId:p.id},N+2).ok,true);assert.ok(w.boss.hp<hp);assert.ok(p.qi>afterGather);
  const ledger=JSON.stringify(p.dailyPractice);action(w,{type:'gift',userId:p.id,coins:1,count:1,eventId:'gift-after-cap'},N+3);assert.ok(p.qi>q);assert.equal(p.giftCoins,1);assert.equal(JSON.stringify(p.dailyPractice),ledger);
  const before=JSON.stringify(p);const view=snapshot(w,N+5).players.find(x=>x.id===p.id);assert.equal(view.dailyPracticeStatus.exhausted,true);assert.equal(JSON.stringify(p.dailyPractice),ledger);assert.equal(p.realm,5);
- const parsed=JSON.parse(before);assert.equal(p.qi,parsed.qi);assert.equal(w.events.filter(x=>x.dailyPracticeCap).length,1);
+ const parsed=JSON.parse(before);assert.equal(p.qi,parsed.qi);assert.equal(w.events.filter(x=>x.dailyPracticeCap).length,0);/* 07/11: hạn mức chạy ngầm, không báo */assert.ok(!w.events.some(x=>/10%|hiệu suất|0 giờ/.test(x.text)));
 });
 
 test('three post-Than-De realms persist and are the only path to the rebirth unlock',()=>{

@@ -102,6 +102,7 @@ export function speechPlan(e){
     const mm=text.match(/Tu vi (\d+)\/(\d+) • Linh thạch (\d+)\/(\d+) • ([^•]+)/);
     if(!mm)return [say('tongsu',`${Who}, ${head.toLowerCase()}.`)];
     const [,qi,needQi,st,needSt]=mm.slice(0,5).map(Number),realm=mm[5].trim();
+    if(qi>=needQi&&st>=needSt&&text.includes('đạo cơ đang lắng đọng'))return [say('tongsu',`${Who}, ${realm}, đạo cơ đang lắng đọng. Tiếp tục tu luyện, thiên kiếp sẽ sớm tới!`)];
     if(qi>=needQi&&st>=needSt)return [say('tongsu',`${Who}, ${realm}, đã đủ điều kiện. Gõ đột phá ngay!`)];
     const lack=[qi<needQi&&`${roundSay(needQi-qi)} tu vi`,st<needSt&&`${viNumber(needSt-st)} linh thạch`].filter(Boolean).join(' và ');
     const how=st<needSt&&qi>=needQi?'Gõ hái hoặc điểm danh để có linh thạch.':st<needSt?'Tu luyện để tăng tu vi, gõ hái để có linh thạch.':'Thả tim để vận công, trò chuyện cùng đồng môn để luận đạo.';

@@ -111,11 +111,11 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
 function creditQi(w,p,amount,now=Date.now(),source='free'){
   const unit=freeQiUnit(p);
   const credit=creditDailyPractice(w,p,amount,source,now,unit);
-  if(credit.justExhausted)emit(w,p,'Đã qua mốc tu luyện hiệu suất cao • tiếp tục nhận 10% tu vi, vật phẩm vẫn đầy đủ • trở lại 100% lúc 0 giờ Việt Nam','status',now,{dailyPracticeCap:true});
+  // 07/11/2026: hạn mức ngày chạy ngầm — không báo cho người chơi (đọc thấy rất nản).
   return credit.amount;
 }
 export const buffActive=(p,now=Date.now())=>p.buffUntil>now?p.buffMult:0;
-const practiceTag=(w,p,now)=>dailyPracticeView(w,p,now).exhausted?' • tu luyện duy trì 10%, phục hồi hiệu suất lúc 0 giờ':'';
+const practiceTag=()=>''; // 07/11/2026: ẩn giới hạn tu luyện
 const buffTag=(p,now)=>p.buffUntil>now?` • phúc duyên ×${String(p.buffMult).replace('.',',')}`:'';
 // Phúc duyên theo tổng lượt quà: <10 ×3, <100 ×5, <1000 ×8, từ 1000 ×12; 10 phút.
 export function giftBuff(totalCoins){return totalCoins>=1000?12:totalCoins>=100?8:totalCoins>=10?5:3;} // v68: phúc duyên quà mạnh hơn nhiều
@@ -159,7 +159,7 @@ export function commandWords(text){
 }
 export const finalRealmEligible=p=>p.ascensionAccess==='free'||p.realm<12||Number(p.giftCoins||0)>=100;
 export const readyToBreak=(p,w=null,now=Date.now())=>finalRealmEligible(p)&&p.realm<REALMS.length-1&&p.qi>=requiredQi(p)&&p.stones>=requiredStones(p)&&(!w||!dailyAscensionView(w,p,now).exhausted);
-export const statusText=(p,w=null,now=Date.now())=>`Tu vi ${p.qi}/${requiredQi(p)} • Linh thạch ${p.stones}/${requiredStones(p)} • ${REALMS[p.realm]}${!finalRealmEligible(p)?' • Tiên Đế cần tổng quà 100 coin (hiện '+(p.giftCoins||0)+')':readyToBreak(p,w,now)?' • đủ đột phá':''}${w&&dailyPracticeView(w,p,now).enabled?dailyPracticeView(w,p,now).exhausted?' • tu luyện duy trì: vẫn nhận 10% tu vi; trở lại 100% lúc 0 giờ':' • hiệu suất cao hôm nay còn '+dailyPracticeView(w,p,now).remaining.toLocaleString('vi-VN')+' điểm, làm mới 0 giờ':''}${w&&dailyAscensionView(w,p,now).exhausted?' • đã dùng lượt đột phá đại cảnh hôm nay, chờ 0 giờ':''}`;
+export const statusText=(p,w=null,now=Date.now())=>`Tu vi ${p.qi}/${requiredQi(p)} • Linh thạch ${p.stones}/${requiredStones(p)} • ${REALMS[p.realm]}${!finalRealmEligible(p)?' • Tiên Đế cần tổng quà 100 coin (hiện '+(p.giftCoins||0)+')':readyToBreak(p,w,now)?' • đủ đột phá':''}${w&&dailyAscensionView(w,p,now).exhausted&&p.qi>=requiredQi(p)&&p.stones>=requiredStones(p)?' • đạo cơ đang lắng đọng':''}`; // 07/11/2026: ẩn số liệu hạn mức
 // Báo một lần khi người chơi vừa đủ điều kiện đột phá cảnh giới hiện tại.
 function checkReady(w,p,now){
   if(!readyToBreak(p,w,now)||p.readyRealm===p.realm)return;
@@ -438,14 +438,14 @@ function actionCore(w,input,now) {
     const item=CATALOG.find(x=>x.id===input.itemId&&x.type==='pill');
     if(!item||!(p.pills[item.id]>0))return fail('Chưa có đan dược này. Hãy luyện đan trước.');
     const allowance=dailyPracticeView(w,p,now),pillCost=Math.max(1,Math.ceil(Math.round(item.qi*(1+qiBonus(p)))/freeQiUnit(p)*100))/100;
-    if(allowance.enabled&&allowance.remaining+1e-8<pillCost)return fail('Đã qua mốc hấp thu đan hiệu suất cao • giữ lại đan dược đến 0 giờ để không hao phí; vẫn tu luyện được ở mức 10%.');
+    if(allowance.enabled&&allowance.remaining+1e-8<pillCost)return fail('Kinh mạch đã no linh khí • đan dược giữ lại dùng lúc khác.'); /* 07/11/2026: ẩn giới hạn */
     const wait=cooldown(p,'pill',3000,now);if(wait)return fail(`Đang hấp thu đan dược • ${wait}s.`);
     p.pills[item.id]--;const q=gain(w,p,item.qi,0,0,now);emit(w,p,`Dùng ${item.name} • +${q} tu vi`,'lotus',now);
   } else if(type==='breakthrough') {
     if(p.realm>=REALMS.length-1)return fail('Đã đạt '+REALMS.at(-1)+'. Hãy hỗ trợ đồng môn!');
     if(!finalRealmEligible(p)){const message='Tiên Đế cần tổng quà ít nhất 100 coin • hiện '+(p.giftCoins||0)+' coin';if(!cooldown(p,'final-realm',15000,now))emit(w,p,message,'status',now);return fail(message);}
     if(p.qi<requiredQi(p)||p.stones<requiredStones(p)){if(!cooldown(p,'status',15000,now))emit(w,p,statusText(p,w,now),'status',now);return fail(`Đột phá cần ${requiredQi(p)} tu vi và ${requiredStones(p)} linh thạch.`);}
-    if(dailyAscensionView(w,p,now).exhausted){const message='Đã dùng lượt đột phá đại cảnh hôm nay • mở lại lúc 0 giờ Việt Nam • giữ nguyên tu vi và linh thạch.';if(!cooldown(p,'daily-break',15000,now))emit(w,p,message,'status',now,{dailyAscensionCap:true});return fail(message);}
+    if(dailyAscensionView(w,p,now).exhausted){const message='Đạo cơ đang lắng đọng • thiên kiếp chưa tới, tiếp tục tích lũy tu vi.'; /* 07/11/2026: ẩn giới hạn */if(!cooldown(p,'daily-break',15000,now))emit(w,p,message,'status',now,{dailyAscensionCap:true});return fail(message);}
     recordDailyAscension(w,p,now);
     p.qi-=requiredQi(p);p.stones-=requiredStones(p);p.realm++;
     const helpers=finishGuard(w,p,p.realm-1,now,companionContext);
