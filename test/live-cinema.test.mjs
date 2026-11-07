@@ -6,7 +6,7 @@ import {Scene} from '../public/scene.js';
 import {PresentationQueue} from '../public/presentation.js';
 
 test('gift threshold uses combo total and normal arrivals never move the camera',()=>{
- const gift={user:'a',gift:'Rose',coins:1,count:10};assert.equal(smallGift(gift),true);assert.equal(shouldFocusEvent(gift),false);
+ const gift={user:'a',gift:'Rose',coins:1,count:10};assert.equal(smallGift(gift),true);assert.equal(shouldFocusEvent(gift),true);
  assert.equal(shouldFocusEvent({...gift,count:11}),true);assert.equal(shouldFocusEvent({user:'a',autoArrival:true,effect:'join'}),false);
  const s=Object.create(Scene.prototype);Object.assign(s,{zoom:1.3,motion:true,cameraEnabled:true,focusUntil:0,targets:[],height:1600,camera:{s:1.8,x:-200,y:-400}});
  assert.deepEqual(s.moveCamera(100),{s:1,x:0,y:0});assert.deepEqual(s.moveCamera(100000),{s:1,x:0,y:0});
@@ -30,9 +30,9 @@ test('sixty-player plaza stays within the frame without mutating player data',()
  for(const t of targets){assert.ok(t.x-60*t.scale>0&&t.x+60*t.scale<900);assert.ok(t.y-115*t.scale>160&&t.y+40*t.scale<1400);}
  assert.equal(JSON.stringify(people),original);
 });
-test('small gifts cannot replace an active breakthrough or turn the plaza into a solo',()=>{
+test('small gifts receive their own solo but cannot replace an active breakthrough',()=>{
  const s=Object.create(Scene.prototype);Object.assign(s,{effects:[],motion:false,budget:{level:'light',config:{effects:2}}});
- s.addEffect({id:'rose',user:'a',gift:'Rose',coins:1,effect:'petal'});assert.equal(s.presentation,undefined);
+ s.addEffect({id:'rose',user:'a',gift:'Rose',coins:1,effect:'petal'});assert.equal(s.presentation.id,'a');assert.equal(s.presentation.kind,'gift');
  s.addEffect({id:'break',user:'b',effect:'breakthrough',toRealm:2});
  for(let i=0;i<20;i++)s.addEffect({id:'r'+i,user:'a',gift:'Rose',coins:1,effect:'petal'});
  assert.equal(s.presentation.id,'b');assert.equal(s.effects[0].id,'break');assert.equal(s.effects.length,1);

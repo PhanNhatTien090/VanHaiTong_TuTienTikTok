@@ -1,0 +1,43 @@
+/* Vân Hải Nguyệt Cung: translucent moonlit jade HUD. */
+:root{--gold:#c9e9e5;--jade:#83e3df;--ink:#061c32;--muted:#bdd1e0;--text:#f3fafb;color-scheme:dark}
+body,button,input,select,textarea{font-family:'Palatino Linotype',Georgia,'Times New Roman',serif}
+body{background:#041422;color:#edf8fa}
+body .workspace,body .main-panel{background:linear-gradient(160deg,#0b2d41,#081d31);border-color:#8fe4de30}
+body.overlay .scene-shell{background:#08283d}
+html body.overlay #phoneHudRight #giftBoard.gift-board,
+html body.overlay #phoneHudLeft #liveRanks.live-ranks,
+html body.overlay #phoneHudRight #commandRail.command-rail,
+html body.overlay .scene-shell>#basicCommands.corner-command-guide,
+html body.overlay .scene-guide-dock .honor-banner,
+html body.overlay .flower-hud,html body.overlay .visitor-hud,html body.overlay .opportunity-hud,
+html body.overlay .social-hud,html body.overlay .like-goal{
+ background:linear-gradient(145deg,#092d4380,#061b344d)!important;
+ border:1px solid #8ee9e34d!important;border-radius:10px!important;box-shadow:0 4px 14px #00111d30!important;
+ color:#f0fbff!important;text-shadow:0 1px 3px #03111f,0 0 5px #03111f!important;backdrop-filter:none!important
+}
+html body.overlay #giftBoard h3,html body.overlay #liveRanks b,html body.overlay #commandRail h3{color:#bcfff2!important;letter-spacing:.025em}
+html body.overlay #giftBoard .gb-price{color:#fff0be!important}
+html body.overlay #giftBoard .gb-main-qi{color:#a8ffec!important}
+html body.overlay #giftBoard .gb-main-item{color:#e7f5ff!important}
+html body.overlay #giftBoard .gift-board-row{border-color:#b6eee32b!important}
+html body.overlay .scene-shell .live-disclosure{background:#08273b66;border-color:#b8fff03d;color:#d7fff7;font-family:Georgia,serif;font-size:clamp(9px,1.8cqw,18px)}
+html body.overlay .arrival-welcome{background:linear-gradient(130deg,#092d4388,#0c3c4c55);border-color:#b2f3df77;color:#f3ffff}
+html body.overlay #likeGoal{color:#d4fff5!important}
+html body.overlay #basicCommands code{color:#d8fff7!important;font-family:inherit;font-weight:700}
+html body .gold-button{background:linear-gradient(135deg,#83dcd1,#b9d6ec);color:#082b39;border-color:#d8fff3}
+html body .soft-button{background:#103a4b99;border-color:#89cfc44d;color:#e4fff9}
+html body .eyebrow{color:#85dfd0;letter-spacing:.13em}
+/* Event instructions: larger phone text, clear foreground and a dark outline. */
+html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud,.like-goal){
+ color:#fff7dc!important;text-shadow:0 2px 2px #03101f,1px 0 2px #03101f,-1px 0 2px #03101f,0 0 5px #03101f!important}
+html body.overlay .scene-shell :is(#phoneHudLeft,#phoneHudRight) :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud){
+ font-size:clamp(13px,2.15cqw,24px)!important;line-height:1.35!important}
+html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud) :is(span,p,small){
+ font-size:clamp(12px,2.1cqw,23px)!important;font-weight:700!important;line-height:1.35!important;color:#fff7dc!important;white-space:normal!important;overflow-wrap:break-word}
+html body.overlay .scene-shell :is(.visitor-hud,.flower-hud,.opportunity-hud,.social-hud,.spirit-pet-hud,.lantern-hud) code{
+ font-size:1.05em!important;font-weight:900!important;color:#baffeb!important}
+html body #giftBoard.gift-board{display:none!important}
+/* Personalized early-realm titles keep the approved entrance animation. */
+html body .ritual-hud[data-appearance] h2{color:var(--ritual-color)!important;text-shadow:0 0 18px var(--ritual-color),0 0 36px var(--ritual-accent),0 3px 8px #000!important}
+html body .ritual-hud[data-appearance] .ritual-name{color:#fff8e8;text-shadow:0 2px 5px #000,0 0 14px var(--ritual-color)}
+html body .ritual-hud[data-appearance] .ritual-sub{color:var(--ritual-accent)!important;text-shadow:0 2px 5px #000,0 0 12px var(--ritual-color)}

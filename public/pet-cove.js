@@ -26,6 +26,6 @@ export function drawPetCove(scene,c,t,H){
   if(im)c.drawImage(im,-size/2,-size*.52,size,size);
   c.restore();
  }
- c.fillStyle='#0c243bca';c.fillRect(110,H*.578,680,41);c.font='18px Arial';c.fillStyle='#e7f6ee';c.fillText('Đủ mốc tự nhận · Gõ thú xem tiến độ · Linh thú giữ vĩnh viễn',450,H*.578+27,660);
+ c.fillStyle='#0c243bca';c.fillRect(110,H*.578,680,41);c.font='bold 21px Arial';c.fillStyle='#ffffff';c.fillText('Đủ mốc tự nhận · Gõ thú xem tiến độ · Linh thú giữ vĩnh viễn',450,H*.578+27,660);
  c.restore();
 }

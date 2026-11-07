@@ -17,6 +17,6 @@ test('gift top 3 earn permanent cosmetic swords; top 5 earn cultivation once acr
  assert.ok(action(w,{type:'chat',userId:'a',text:'phi kiếm 1'},N+138000).ok);assert.equal(action(w,{type:'chat',userId:'a',text:'phi kiếm 2'},N+138001).ok,false);
 });
 test('registration and starting narration explicitly read skin top 3 and cultivation top 5 without prices',()=>{
- const w=setup();tick(w,N+45000);for(const e of w.events.filter(e=>/^VÂN HẢI PHI KIẾM|^Phi kiếm xuất phát/.test(e.text))){const line=speechPlan(e).map(x=>x.text).join(' ');assert.match(line,/Top ba tặng quà nhận skin phi kiếm/);assert.match(line,/top năm nhận tu vi/);assert.doesNotMatch(line,/coin/);}
+ const w=setup();tick(w,N+45000);for(const e of w.events.filter(e=>/^VÂN HẢI PHI KIẾM|^Phi kiếm xuất phát/.test(e.text))){const line=speechPlan(e).map(x=>x.text).join(' ');assert.match(line,/Top ba hộ pháp nhận skin phi kiếm/);assert.match(line,/top năm nhận tu vi/);assert.doesNotMatch(line,/coin/);}
 });
 test('cancelled race never issues final ranking rewards',()=>{const w=setup();gift(w,'a',1);stopRace(w,N+2000);tick(w,N+3000);assert.equal(w.players.a.raceSwordSkins,undefined);assert.equal(w.events.filter(e=>e.raceGiftRank).length,0);});

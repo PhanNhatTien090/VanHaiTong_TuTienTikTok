@@ -1,3 +1,4 @@
+import {drawRitualTint} from './ritual-appearance.js';
 import {kimDanV2State,drawKdSky,drawKdCauldron,drawKdFire,drawKdTurns,drawKdBolts,drawKdRays} from './kim-dan-formation.js';
 import {drawAscensionStageBackdrop} from './ascension-stage.js';
 import {makeSurface} from './performance.js';
@@ -103,10 +104,10 @@ function actor(scene,c,e,s,t){
  }finally{scene.compact=compact;scene.ritualDrawing=ritual;c.restore();}
 }
 export function drawKimDanAwakening(scene,c,e,t,H){
- const motion=scene.motion!==false,s=kimDanState((t-e.start)/e.duration,H,motion),color='#ffe09a';c.save();
- const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0c1116');bg.addColorStop(.52,'#222319');bg.addColorStop(1,'#0f1715');c.fillStyle=bg;c.fillRect(0,0,900,H);/* 4/11: thiên đài cả trên LIVE (<= Hóa Thần) */drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:'#ffe4aa',feet:s.feet});
+ const motion=scene.motion!==false,s=kimDanState((t-e.start)/e.duration,H,motion),color=scene.ritualAppearance?.palette.main2||'#ffe09a';c.save();
+ const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#0c1116');bg.addColorStop(.52,'#222319');bg.addColorStop(1,'#0f1715');c.fillStyle=bg;c.fillRect(0,0,900,H);/* 4/11: thiên đài cả trên LIVE (<= Hóa Thần) */drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:scene.ritualAppearance?.palette.main2||'#ffe4aa',feet:s.feet});
  // 4/11 v2: lớp chung (tia nắng, camera, hạt khí, cú nổ, hào quang, mưa sáng, vignette) + biến thể chống lặp.
- const v=qiVariant(e),kq=qiRemap(s.k,KIM_DAN_BURST/(KIM_DAN_DURATION/1000)),origin={x:450,y:s.belly};setFxPalette(KD_PALETTE);drawQiEnvironment(scene,c,kq,H,origin,true);const v2=kimDanV2State(s.seconds);drawKdSky(scene,c,v2,H);/* v2 05/11: trời đổi sắc */pushFxCamera(scene,c,kq,v,s.feet);
+ const v=qiVariant(e),kq=qiRemap(s.k,KIM_DAN_BURST/(KIM_DAN_DURATION/1000)),origin={x:450,y:s.belly};setFxPalette(KD_PALETTE);drawQiEnvironment(scene,c,kq,H,origin,true);const v2=kimDanV2State(s.seconds);drawKdSky(scene,c,v2,H);drawRitualTint(scene,c,H);/* v2 05/11: trời đổi sắc */pushFxCamera(scene,c,kq,v,s.feet);
  glow(c,450,s.hover,430,'#ad82342c',s.open*.8);const shake=motion&&scene.cameraEnabled!==false?s.burst*8:0;c.translate(Math.sin(s.clock*101)*shake,Math.cos(s.clock*83)*shake*.6);
  basin(scene,c,s);drawKdFire(scene,c,v2,s,false);drawKdCauldron(scene,c,v2,s);drawQiInflow(scene,c,kq,origin,v.phase);flowingQi(scene,c,s,false);sparks(scene,c,s,false);droplets(scene,c,s,false);corona(scene,c,s);
  if(s.core.alpha>0){c.save();c.globalCompositeOperation='screen';glow(c,s.core.x,s.core.y,s.core.r*2.8,'#ffd36e70',s.core.alpha*.75);glow(c,s.core.x,s.core.y,s.core.r*1.4,'#fff6dcaa',s.core.alpha*.5);c.restore();}

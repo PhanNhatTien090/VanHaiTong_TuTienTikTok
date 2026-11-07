@@ -1,3 +1,4 @@
+import {MAX_REALM} from './progression.js';
 // Tu tiên giả thường trú của Vân Hải Tông: luôn ngồi trên quảng trường cho cảnh không trống.
 // Chỉ là nhân vật cảnh: không có hồ sơ, không vào Phong Vân Bảng, không tính vào số đạo hữu, không nhận quà.
 // coins chỉ để chọn bộ áo (0 Thanh Y · 100 Nguyệt Bạch · 500 Tử Vân · 2000 Kim Long · 10000 Thiên Đế).
@@ -8,7 +9,7 @@ export const RESIDENTS=Object.freeze([
 ]);
 // Start a fresh presentation at the early realms, not the wall-clock cycle's high ranks.
 const presentedRealms=new Map(RESIDENTS.map((p,i)=>[p.id,i]));
-export function setResidentRealm(id,realm){if(RESIDENTS.some(r=>r.id===id)&&Number.isInteger(realm)&&realm>=0&&realm<=18)presentedRealms.set(id,realm);}
+export function setResidentRealm(id,realm){if(RESIDENTS.some(r=>r.id===id)&&Number.isInteger(realm)&&realm>=0&&realm<=MAX_REALM)presentedRealms.set(id,realm);}
 // Chu kỳ NPC (tính theo giờ thật nên mọi overlay và mỗi lần tải lại đều khớp nhau):
 // đầu chu kỳ: Hai Thùy = Phàm nhân, Tý Tèo = Trúc Cơ, Người Không Buồn Cười = Kim Đan;
 // cứ 3 phút một NPC đột phá lên 1 cảnh giới; tới phút 13 đổi tên cả 3 và quay về Phàm nhân / Trúc Cơ / Kim Đan.
@@ -36,4 +37,4 @@ export function residentCycle(now=Date.now()){
   return {cycle:k,offset,group,original:group===0,slots,events};
 }
 export const residentName=(id,now=Date.now())=>residentCycle(now).slots.find(s=>s.id===id)?.name||RESIDENTS.find(r=>r.id===id)?.name||'Đạo hữu';
-export const residentPlayers=(now=Date.now())=>{const c=residentCycle(now);return RESIDENTS.map(r=>{const s=c.slots.find(x=>x.id===r.id);return {id:r.id,name:(s?.name||r.name)+' · NPC',giftCoins:0,equipped:r.equipped,realm:presentedRealms.get(r.id)??(s?s.realm:1),joinedAt:0,active:true,resident:true};});};
+export const residentPlayers=(now=Date.now())=>{const c=residentCycle(now);return RESIDENTS.map(r=>{const s=c.slots.find(x=>x.id===r.id);return {id:r.id,name:(s?.name||r.name),giftCoins:0,equipped:r.equipped,realm:presentedRealms.get(r.id)??(s?s.realm:1),joinedAt:0,active:true,resident:true};});};

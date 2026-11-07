@@ -1,5 +1,7 @@
+import {giftMasterView} from './master-rewards.mjs';
 import {raceEntryAnnouncement} from './sword-race.mjs';
 import {createSectMaster} from './sect-master.mjs';
+import {observeViewerCount} from './public/crowd-policy.js';
 import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
@@ -19,7 +21,7 @@ import {fileURLToPath} from 'node:url';
 import {WebSocket} from 'ws';
 import {streamState,eventAllowedOnLive,isNPC,actorLabel} from './public/live-integrity.js';
 import {priority as voicePriority} from './public/voice.js';
-import {startNextCompetition,engageNow,honorCeremony,adminGift,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe} from './engine.mjs';
+import {startNextCompetition,engageNow,honorCeremony,adminGift,heavenStrike,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
 
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dataDir=process.env.VAN_HAI_DATA_DIR||path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
@@ -39,7 +41,8 @@ function load(mode) {
 }
 // v54: chỉ cho MỘT máy chủ chạy. Nếu cổng đã có máy chủ Vân Hải Tông trả lời → thoát ngay, không đọc/ghi dữ liệu (tránh 2 máy chủ ghi đè live.json).
 {const probePort=Number(process.env.PORT??4317);if(probePort){try{const r=await fetch(`http://127.0.0.1:${probePort}/api/state?world=demo`,{signal:AbortSignal.timeout(1500)});if(r.ok&&(await r.text()).includes('sectQi')){console.error(`Đã có máy chủ Vân Hải Tông đang chạy ở cổng ${probePort}. Không mở thêm máy chủ thứ hai để tránh ghi đè dữ liệu.`);process.exit(1);}}catch{}}}
-const worlds={demo:load('demo'),live:load('live')};for(const w of Object.values(worlds)){prepareSocial(w);migrateDivineWardrobe(w);}
+const worlds={demo:load('demo'),live:load('live')};for(const w of Object.values(worlds)){prepareSocial(w);migrateDivineWardrobe(w);migrateSectMasters(w);}
+(worlds.live.settings??={}).heartGate??=true; // 07/11/2026: chống tự thả tim (ngầm); đặt false trong settings để tắt
 // Giờ vàng tân thủ chỉ bật trên thế giới LIVE thật (tắt bằng settings.goldenHour=false trong live.json).
 worlds.live.settings??={};worlds.live.settings.goldenHour??=true;
 // Real, faster progression for the ascension stage; existing resources are preserved.
@@ -57,7 +60,7 @@ const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
 const savedSig={},savedAt={};
-function persist(force=false){for(const [mode,w]of Object.entries(worlds)){auditStorage.flush(w,mode);const sig=`${w.events.at(-1)?.id}|${Object.keys(w.players).length}|${w.sectQi}|${w.boss?.hp}|${w.totalInteractions}`;if(!force&&sig===savedSig[mode]&&Date.now()-(savedAt[mode]||0)<30000)continue;savedSig[mode]=sig;savedAt[mode]=Date.now();const dest=path.join(dataDir,`${mode}.json`);const tmp=dest+'.tmp';fs.writeFileSync(tmp,JSON.stringify(w));fs.renameSync(tmp,dest);}}
+function persist(force=false){for(const [mode,w]of Object.entries(worlds)){auditStorage.flush(w,mode);const sig=`${w.events.at(-1)?.id}|${Object.keys(w.players).length}|${w.sectQi}|${w.boss?.hp}|${w.totalInteractions}`;if(!force&&sig===savedSig[mode]&&Date.now()-(savedAt[mode]||0)<30000)continue;const dest=path.join(dataDir,`${mode}.json`);const tmp=dest+'.tmp';try{fs.writeFileSync(tmp,JSON.stringify(w));fs.renameSync(tmp,dest);savedSig[mode]=sig;savedAt[mode]=Date.now();}catch(err){if(!['EPERM','EBUSY','EACCES'].includes(err.code))throw err;console.error('[save] File temporarily locked; current progress retained in memory and save retried on next tick:',mode,err.code);}}}
 // Mỗi giây chỉ gửi người đang hoạt động + top 100 bảng xếp hạng (không gửi cả 10.000 hồ sơ).
 const payloadCache=new Map(),assets=new AssetCache();
 const announcementHistory={demo:new EventAnnouncementHistory(),live:new EventAnnouncementHistory()};
@@ -67,7 +70,7 @@ function payload(mode,view='full'){
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
   let value;
   if(view==='overlay'){
-    const full=payload(mode),fields=['puppet','resident','id','name','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondInfo','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice'];
+    const full=payload(mode),fields=['puppet','resident','id','name','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','sectMasterUnlocked'];
     // Cảnh LIVE chỉ cần: người đang hoạt động (sân khấu) + top 10 (bảng xếp hạng nhỏ) + 30 sự kiện mới nhất.
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
@@ -82,7 +85,7 @@ function payload(mode,view='full'){
     // Top tặng quà cho bảng TOP QUÀ trên cảnh: chỉ người đang có mặt trên LIVE (tương tác trong 5 phút gần nhất), xếp theo tổng coin quà.
     const giftEdited=new Set((s.adminLog||[]).filter(r=>r.changes?.some(c=>c.startsWith('coin quà '))).map(r=>r.id));
     const topGifters=s.players.filter(p=>!p.resident&&!p.puppet&&p.active&&p.giftCoins>0&&!giftEdited.has(p.id)).sort((a,b)=>(a.puppet?1:0)-(b.puppet?1:0)||b.giftCoins-a.giftCoins||a.joinedAt-b.joinedAt).slice(0,5).map(p=>({id:p.id,name:p.name,giftCoins:p.giftCoins,realmName:p.realmName,avatar:p.avatar||null}));
-    value={...s,heartRulesVersion:1,playerCount:s.players.length,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?sectMaster.view():{enabled:false,active:false}};
+    value={...s,heartRulesVersion:1,playerCount:s.players.length,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view()):{enabled:false,active:false}};
   }
   value=streamState(value,mode);
   payloadCache.set(key,{at:now,value});return value;
@@ -99,7 +102,7 @@ function connect(){
   bridge.on('open',()=>{connection.status='connected';connection.lastError=null;broadcast();});
   bridge.on('message',raw=>{
     try{const event=JSON.parse(raw.toString());if(event.event==='config')return;
-      sectMaster.observe(event);connection.received++;connection.lastEvent=Date.now();
+      observeViewerCount(connection,event);sectMaster.observe(event);connection.received++;connection.lastEvent=Date.now();
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
       connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;
@@ -172,6 +175,7 @@ const server=http.createServer(async(req,res)=>{
     }
     if(url.pathname==='/api/engage'&&req.method==='POST'){const b=await body(req);const result=engageNow(worlds[mode],b.kind,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/ceremony'&&req.method==='POST'){const result=honorCeremony(worlds[mode],Date.now(),true);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
+    if(url.pathname==='/api/heaven-strike'&&req.method==='POST'){const b=await body(req);const result=heavenStrike(worlds[mode],b.id,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/admin-gift'&&req.method==='POST'){const b=await body(req);const result=adminGift(worlds[mode],b.id,b.combo,Date.now(),b.custom);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/puppet'&&req.method==='POST'){const b=await body(req);const result=puppetControl(worlds[mode],b,Date.now());if(result.ok&&b.op!=='list'){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const result=adminEditPlayer(worlds[mode],b.id,b.patch||{},Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
@@ -223,7 +227,7 @@ if(process.env.VAN_HAI_RECOVERY_FILE){
 }
 // 4/11/2026: tạo sẵn giọng cho sự kiện quan trọng (quà, sự kiện, đột phá…) ngay khi xảy ra → trang hỏi tới là có file, giọng đến trước chữ.
 const prewarmed=new Set(),bootAt=Date.now();
-function prewarmSpeech(){try{for(const e of worlds.live.events.slice(-15)){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||voicePriority(e)<3||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});}}catch{}}
+function prewarmSpeech(){try{if(synthesizeSpeech.busy)return;for(const e of worlds.live.events.slice(-15).sort((a,b)=>voicePriority(b)-voicePriority(a))){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||voicePriority(e)<3||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});break;}}catch{}}
 setInterval(()=>{tick(worlds.demo);tick(worlds.live);prewarmSpeech();broadcast();},1000).unref();
 setInterval(persist,3000).unref();
 // v54: sao lưu tự động thế giới LIVE mỗi 30 phút vào data/backups, giữ 48 bản mới nhất (~24 giờ).

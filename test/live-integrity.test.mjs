@@ -28,7 +28,7 @@ test('LIVE removes historical simulated gifts from presentation without deleting
  const players=[{id:'npc',name:'Linh',puppet:true,active:true},{id:'real',name:'An',active:true}];
  const state={mode:'live',players,events:[{id:'a',user:'real',gift:'Rose'},{id:'b',user:'npc',gift:'Rose'},{id:'c',user:'real',simulated:true},{id:'d',user:'npc',effect:'qi',name:'Linh'}],feed:[]};
  const clean=streamState(state);
- assert.deepEqual(clean.events.map(e=>e.id),['a','d']);assert.equal(clean.events[1].name,'NPC · Linh');
+ assert.deepEqual(clean.events.map(e=>e.id),['a','d']);assert.equal(clean.events[1].name,'Linh');
  assert.equal(state.events.length,4);assert.equal(state.events[3].name,'Linh');
  assert.equal(streamState(state,'demo'),state);
  assert.deepEqual(participantCounts(players),{players:1,npcs:1});

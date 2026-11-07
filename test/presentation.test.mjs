@@ -1,6 +1,14 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {PresentationQueue,presentationDuration} from '../public/presentation.js';
 import {Scene} from '../public/scene.js';import {StageDirector} from '../public/stage.js';
+
+test('a breakthrough held during a sword race is retained and plays when the race ends',()=>{
+ const q=new PresentationQueue();q.push({id:'break',user:'a',effect:'breakthrough',toRealm:5},1000);
+ assert.equal(q.take(2000,e=>e.effect!=='breakthrough'),undefined);assert.equal(q.items.length,1);
+ q.push({id:'status',user:'b',effect:'status'},2000);assert.equal(q.take(2001,e=>e.effect!=='breakthrough').id,'status');
+ assert.equal(q.take(241000,e=>e.effect!=='breakthrough'),undefined);assert.equal(q.items.length,1);
+ assert.equal(q.take(241001).id,'break');assert.equal(q.take(241002),undefined);
+});
 test('hundreds of viewers cannot create an unbounded visual queue and VIPs take the next slot',()=>{
  const q=new PresentationQueue(12);
  for(let i=0;i<500;i++)q.push({id:'e'+i,user:'p'+i,effect:'qi'},1000+i);

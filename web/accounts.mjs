@@ -7,6 +7,15 @@ import path from 'node:path';
 export const SESSION_MS = 30 * 24 * 3600 * 1000;
 export const LINK_CODE_MS = 10 * 60 * 1000;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bỏ O/0/I/1 cho khỏi nhầm khi gõ trong chat
+// Bound password work so a login burst cannot exhaust RAM or block the event loop.
+let hashJobs = 0;
+const hashWaiters = [];
+async function derivePassword(password, salt) {
+  if (hashJobs >= 2) await new Promise(resolve => hashWaiters.push(resolve));
+  hashJobs++;
+  try { return await new Promise((resolve, reject) => crypto.scrypt(String(password), salt, 64, (e, key) => e ? reject(e) : resolve(key))); }
+  finally { hashJobs--; hashWaiters.shift()?.(); }
+}
 
 // Tên đăng nhập = tên người chơi tự gõ (có dấu, có dấu cách đều được). Khóa lưu là bản không dấu:
 // "Nam nguyễn !" → "nam_nguyen".
@@ -33,13 +42,15 @@ function newCode() {
   return s;
 }
 
-export function createAccountStore(file) {
+export function createAccountStore(file, persistence = null) {
   let data = { users: {}, sessions: {}, links: {}, nextId: 1 };
-  if (file && fs.existsSync(file)) data = { ...data, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
+  if (persistence) data = { ...data, ...persistence.read() };
+  else if (file && fs.existsSync(file)) data = { ...data, ...JSON.parse(fs.readFileSync(file, 'utf8')) };
   let dirty = false;
 
   function save(force = false) {
-    if (!file || (!dirty && !force)) return;
+    if ((!file && !persistence) || (!dirty && !force)) return;
+    if (persistence) { persistence.write(data); dirty = false; return; }
     fs.mkdirSync(path.dirname(file), { recursive: true });
     const tmp = file + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(data));
@@ -48,16 +59,37 @@ export function createAccountStore(file) {
   }
   const touch = () => { dirty = true; };
 
+  function addUser(usernameRaw, username, salt, hash, now) {
+    const user = { id: 'u' + data.nextId++, username, displayName: String(usernameRaw).trim().slice(0, 30), salt, hash, playerId: null, createdAt: now };
+    data.users[username] = user;
+    touch();
+    return { ok: true, user };
+  }
+
   function register(usernameRaw, password, now = Date.now()) {
     const username = normalizeUsername(usernameRaw);
     if (!validUsername(username)) return { ok: false, message: 'Tên cần ít nhất 2 chữ hoặc số.' };
     if (String(password ?? '').length < 6) return { ok: false, message: 'Mật khẩu cần ít nhất 6 ký tự.' };
     if (data.users[username]) return { ok: false, message: 'Tên đăng nhập đã có người dùng.' };
     const { salt, hash } = hashPassword(password);
-    const user = { id: 'u' + data.nextId++, username, displayName: String(usernameRaw).trim().slice(0, 30), salt, hash, playerId: null, createdAt: now };
-    data.users[username] = user;
-    touch();
-    return { ok: true, user };
+    return addUser(usernameRaw, username, salt, hash, now);
+  }
+
+  async function registerAsync(usernameRaw, password, now = Date.now()) {
+    const username = normalizeUsername(usernameRaw);
+    if (!validUsername(username)) return { ok: false, message: 'Tên cần ít nhất 2 chữ hoặc số.' };
+    if (String(password ?? '').length < 6 || String(password).length > 256) return { ok: false, message: 'Mật khẩu cần từ 6 đến 256 ký tự.' };
+    if (Object.hasOwn(data.users, username)) return { ok: false, message: 'Tên đăng nhập đã có người dùng.' };
+    const salt = crypto.randomBytes(16).toString('hex'), hash = (await derivePassword(password, salt)).toString('hex');
+    if (Object.hasOwn(data.users, username)) return { ok: false, message: 'Tên đăng nhập đã có người dùng.' };
+    return addUser(usernameRaw, username, salt, hash, now);
+  }
+
+  async function loginAsync(usernameRaw, password) {
+    const username = normalizeUsername(usernameRaw), user = Object.hasOwn(data.users, username) ? data.users[username] : null;
+    if (!user || String(password ?? '').length > 256) return { ok: false, message: 'Sai tên đăng nhập hoặc mật khẩu.' };
+    const key = await derivePassword(password, user.salt), want = Buffer.from(user.hash, 'hex');
+    return key.length === want.length && crypto.timingSafeEqual(key, want) ? { ok: true, user } : { ok: false, message: 'Sai tên đăng nhập hoặc mật khẩu.' };
   }
 
   function exists(usernameRaw) { return !!data.users[normalizeUsername(usernameRaw)]; }
@@ -115,14 +147,20 @@ export function createAccountStore(file) {
     return data.users[l.username] || null;
   }
 
+  function peekLink(codeRaw, now = Date.now()) {
+    const code = String(codeRaw ?? '').trim().toUpperCase();
+    const l = Object.hasOwn(data.links, code) ? data.links[code] : null;
+    return l && l.expiresAt > now ? data.users[l.username] || null : null;
+  }
+
   function cleanup(now = Date.now()) {
     for (const [t, s] of Object.entries(data.sessions)) if (s.expiresAt <= now) { delete data.sessions[t]; touch(); }
     for (const [c, l] of Object.entries(data.links)) if (l.expiresAt <= now) { delete data.links[c]; touch(); }
   }
 
   return {
-    register, login, exists, createSession, userForSession, endSession, setPlayer, userForPlayer,
-    startLink, pendingLink, consumeLink, cleanup, save,
+    register, login, registerAsync, loginAsync, exists, createSession, userForSession, endSession, setPlayer, userForPlayer,
+    startLink, pendingLink, consumeLink, peekLink, cleanup, save,
     users: () => Object.values(data.users),
   };
 }

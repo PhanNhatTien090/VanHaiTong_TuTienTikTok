@@ -15,7 +15,7 @@ Bộ lớp dùng chung đã có sẵn — **dùng lại, đừng viết lại**:
 - `public/style.css` — hiệu ứng chữ cảnh giới (`.ritual-hud[data-realm="N"]`).
 - `public/live-cinema.js` — `drawRitual` chọn hàm vẽ theo cảnh giới; `mountRitualHud` hiện tên + cảnh giới + danh hiệu (`subtitle`).
 
-Đã xong: 1 Luyện Khí (v5 05/11/2026 = chuẩn mới), 2 Trúc Cơ, 3 Kim Đan, 4 Nguyên Anh, 5 Hóa Thần (cả 5 diễn ra trên "thiên đài" `drawAscensionStageBackdrop`).
+Đã xong: 1 Luyện Khí (v5 05/11/2026 = chuẩn mới), 2 Trúc Cơ, 3 Kim Đan, 4 Nguyên Anh, 5 Hóa Thần (realm 1–4 dùng thiên đài; Hóa Thần v2 có nền Thần Niệm Chấn Thiên riêng).
 Còn lại: 6 Luyện Hư (20,8 s), 7 Đại Thừa (22,8 s), 8 Chân Tiên (31,6 s, có `chan-tien-prelude.js`), 9+ dùng nhánh chung trong `live-cinema.js` (nổ ở k≈.71).
 
 ## CHUẨN v5 — 05/11/2026 (ưu tiên cao nhất, thay mọi hướng dẫn cũ bên dưới khi mâu thuẫn)
@@ -161,3 +161,12 @@ Chủ game đã từ chối v1: vài hiệu ứng nhỏ, đầu cảnh trống, 
 ## Phản hồi và tiến độ Huyền Tiên v3 · 04/11/2026
 
 Chủ game đánh giá v2 hình tạm ổn nhưng chuyển động thiếu ý nghĩa, nhiều nhịp dừng và quá dài. V3 rút riêng realm 9 xuống 26s; 36 kiếm khóa thành 12 trụ lưới hộ pháp, đỡ sét rồi dẫn lực lên kiếm chủ; thêm khí thoát cơ thể, nhạc trống/dây và hall reverb. Mốc thực: absorbComplete17.5, impact18.1, reveal18.55. Timeline giữ action clock nội bộ cho primitive và xuất real clock cho consumer; không dùng nhầm mốc 28.65 cũ. Xem HUYEN-TIEN-V3-2026-11-04.md. 416 test qua; chưa nghe/xem trực tiếp trọn clip, chưa tự coi được duyệt. Chủ game yêu cầu sau đó lập kế hoạch Kim Tiên khác concept, tìm phim tham khảo; đã có KIM-TIEN-PLAN-2026-11-04.md (29s dự kiến, chưa runtime). Phân biệt nguồn tìm được với cảnh thực sự đã xem; không bịa timecode/phân tích phim từ tiêu đề.
+
+## Kim Tiên v1 · 05/11/2026
+
+Chủ game yêu cầu cảnh tiếp khác toàn bộ concept/hình/nền và chỉ dài hơn1–2s. Realm10 đã có nghi thức riêng Thiên Lô Luyện Thân28s (Huyền Tiên26s); ba asset mới ở public/assets/kim-tien-v1, không dùng art/cue/hoạt cảnh realm cũ. Timeline19.6 nhập thể xong→20.2 nổ→20.65 reveal. Nhạc/SFX riêng, model/skin LIVE gốc và chính sách ngoại hình giữ nguyên. Xem KIM-TIEN-V1-2026-11-05.md; 424 test qua nhưng chưa coi đã duyệt nghệ thuật hay đã nghe trực tiếp. Không tự sang realm11 hoặc tự kích hoạt nghi thức thật.
+
+
+## Hóa Thần v2 · 05/11/2026
+
+Theo yêu cầu mới, nâng từ Hóa Thần trở lên từng cảnh một, hiện chỉ làm realm 5. Bản Thần Niệm Chấn Thiên 17,6s giữ mốc nổ14,4/reveal14,65; thêm module hoa-than-formation.js và nền storm-world.png riêng. Sét0,16s → biển khí đảo chiều → xuất hồn2s → sáu thiên ấn4,4s → sáu lôi khảo7,6..9,8s → CHÍNH thần hồn lớn thành pháp tướng10,5s → thu ấn12,8s → nhập thể xong14,25s → nổ → đổi skin. Không dựng hai pháp tướng độc lập. Cache ảnh LIVE gốc riêng cho realm5 (nam/nữ/skin sự kiện), stand1, restore toàn bộ flags, không sửa helper actorImage dùng bởi realm6/8. Nhân vật vẽ sau lớp nổ chung để mặt không bị cột sáng phủ trắng. Nhạc B thứ→Rê trưởng, trống/sét gần-xa/ấn đồng/đàn/dây riêng theo cue, cộng impact chung. Có video trước/sau30fps kèm tiếng, kiểm khung sát nhau, ba vòng sửa + vòng chốt. Xem HOA-THAN-V2-2026-11-05.md về số đo và giới hạn; chưa được chủ game duyệt, chưa tự gọi đẹp/âm hay. Dừng để báo cáo, chưa triển khai Luyện Hư.

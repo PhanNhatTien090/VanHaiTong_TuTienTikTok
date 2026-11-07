@@ -1,0 +1,26 @@
+[Unit]
+Description=Van Hai Tong player web (profile only)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vanhai-web
+Group=vanhai-web
+WorkingDirectory=/opt/van-hai-web/current
+EnvironmentFile=/etc/van-hai-web.env
+ExecStart=/usr/bin/node web/cloud/server.mjs
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=30
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/van-hai-web
+MemoryMax=1400M
+TasksMax=128
+
+[Install]
+WantedBy=multi-user.target

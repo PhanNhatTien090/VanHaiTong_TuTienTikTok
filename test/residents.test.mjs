@@ -25,6 +25,6 @@ test('chu kỳ NPC: Phàm nhân/Trúc Cơ/Kim Đan, cứ 75 giây một người
   const late=residentCycle(t0+RESIDENT_CYCLE_MS-1000);assert.ok(late.events.length>=9,'ít nhất 9 lần đột phá mỗi chu kỳ');
   assert.equal(late.events.at(-1).toRealm,late.slots[late.events.at(-1).slot].realm);
   const b=residentCycle(t0+RESIDENT_CYCLE_MS*3+1000);assert.deepEqual(b.slots.map(s=>s.realm),[0,2,3]);assert.equal(b.slots[0].name,'Hai Thùy','3/11: không đổi tên NPC nữa');
-  assert.ok(residentPlayers(t0).every(p=>p.name.endsWith('· NPC')&&p.giftCoins===0),'NPC gắn nhãn rõ, không có coin quà');
+  assert.ok(residentPlayers(t0).every(p=>p.resident===true&&!p.name.includes('NPC')&&p.giftCoins===0),'Nhân vật thường trú giữ cờ nội bộ, không có nhãn NPC trên tên hoặc coin quà');
   assert.equal(residentPlayers(t0+RESIDENT_CYCLE_MS+1000)[0].name.length>0,true);
 });

@@ -1,3 +1,15 @@
+import {drawKimTienAwakening} from './kim-tien-awakening.js';
+import {QUALITY} from './performance.js';
+import {beginRitualPalette} from './qi-impact.js';
+import {ritualAppearance,ritualAppearanceFrame,drawRitualAppearance} from './ritual-appearance.js';
+const FULL_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
+export function drawRitual(scene,...args){
+ const [c,e,t,H]=args,a=scene.ritualVariantsEnabled===false?null:ritualAppearance(e),restorePalette=beginRitualPalette(a?.palette||null);
+ const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
+ Object.assign(scene,{budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
+ if(a&&typeof saved.onRitualFrame==='function')scene.onRitualFrame=ui=>saved.onRitualFrame.call(scene,ritualAppearanceFrame(ui,a));
+ try{const result=drawRitualFull(scene,...args);drawRitualAppearance(scene,c,e,t,H,a);return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
+}
 import {drawHuyenTienAwakening} from './huyen-tien-awakening.js';
 import {drawDaiThuaAwakening} from './dai-thua-awakening.js';
 import {drawChanTienAwakening} from './chan-tien-awakening.js';
@@ -16,7 +28,7 @@ import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
 export const giftValue=e=>Math.max(0,Number(e?.coins)||0)*Math.max(1,Number(e?.count)||1);
 export const smallGift=e=>!!e?.gift&&giftValue(e)<=10;
-export function shouldFocusEvent(e){return !!e?.user&&!smallGift(e)&&!e.autoArrival&&!e.newcomerWelcome&&(e.effect==='breakthrough'||e.transform||!!e.gift||e.petAward||e.flowerRank);}
+export function shouldFocusEvent(e){return !!e?.user&&!e.autoArrival&&!e.newcomerWelcome&&(e.effect==='breakthrough'||e.transform||!!e.gift||e.petAward||e.flowerRank);}
 export function ritualPhase(k){return k<.12?'arrival':k<.34?'gather':k<.59?'formation':k<.69?'surge':k<.76?'burst':k<.94?'reveal':'return';}
 export function ritualState(e,t,motion=true){const k=clamp((t-e.start)/e.duration),realm=breakthroughRealm(e),phase=ritualPhase(k),impact=clamp(1-Math.abs(k-.71)/.035);return {k,realm,phase,revealed:k>=.72,color:ascensionProfile(realm).color,title:REALM_NAMES[realm].normalize('NFC'),name:String(e.name||'Đạo hữu').normalize('NFC'),shake:motion?impact*breakthroughPower(realm).shake:0};}
 export function crowdTargets(players,H){const n=players.length,cols=n>40?8:n>24?7:n>12?6:4,rows=Math.ceil(n/cols),top=H*.40,bottom=H*.77,scale=Math.min(1.35,100/120,rows>1?(bottom-top)/(rows-1)/135:1.35);return players.map((player,i)=>{const row=Math.floor(i/cols),len=Math.min(cols,n-row*cols);return {id:player.id,player,x:450+(i%cols-(len-1)/2)*780/cols,y:rows===1?H*.62:top+row*(bottom-top)/(rows-1),scale,lift:0};});}
@@ -26,7 +38,7 @@ export function crowdTargets(players,H){const n=players.length,cols=n>40?8:n>24?
 export function compactPlaza(scene){return scene.crowdMode!==false&&!scene.raceStatus?.active&&!scene.socialScene&&!scene.socialStage?.length;}
 function line(c,points,color,width=2){c.strokeStyle=color;c.lineWidth=width;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();}
 function bamboo(c,x,y,h,alpha,color){c.save();c.globalAlpha*=alpha;c.translate(x,y);const g=c.createLinearGradient(-14,0,14,0);g.addColorStop(0,'#19494b');g.addColorStop(.45,color);g.addColorStop(.55,'#eaffee');g.addColorStop(1,'#247977');c.fillStyle=g;c.beginPath();c.moveTo(0,-h-35);c.lineTo(13,-h+5);c.lineTo(10,-30);c.lineTo(-10,-30);c.lineTo(-13,-h+5);c.closePath();c.fill();line(c,[[0,-h-25],[0,-32]],'#eafff1',2);for(let j=1;j<5;j++){const yy=-30-(h-30)*j/5;line(c,[[-10,yy],[10,yy]],'#80dba5',3);}c.fillStyle='#dcc998';c.fillRect(-25,-31,50,6);c.fillStyle='#35705b';c.fillRect(-5,-25,10,29);c.restore();}
-export function drawRitual(scene,c,e,t,H){if(breakthroughRealm(e)===9)return drawHuyenTienAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===1)return drawQiAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===2)return drawTrucCoAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===3)return drawKimDanAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===4)return drawNguyenAnhAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===5)return drawHoaThanAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===6)return drawLuyenHuAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===7)return drawDaiThuaAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===8)return drawChanTienAwakening(scene,c,e,t,H);const s=ritualState(e,t,scene.motion),{k,realm,phase,revealed,color}=s,x=450,feet=H*.62,center=feet-200,gather=clamp((k-.12)/.22),form=clamp((k-.28)/.28),burst=clamp(1-Math.abs(k-.71)/.055);c.save();
+function drawRitualFull(scene,c,e,t,H){if(breakthroughRealm(e)===10)return drawKimTienAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===9)return drawHuyenTienAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===1)return drawQiAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===2)return drawTrucCoAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===3)return drawKimDanAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===4)return drawNguyenAnhAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===5)return drawHoaThanAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===6)return drawLuyenHuAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===7)return drawDaiThuaAwakening(scene,c,e,t,H);if(breakthroughRealm(e)===8)return drawChanTienAwakening(scene,c,e,t,H);const s=ritualState(e,t,scene.motion),{k,realm,phase,revealed,color}=s,x=450,feet=H*.62,center=feet-200,gather=clamp((k-.12)/.22),form=clamp((k-.28)/.28),burst=clamp(1-Math.abs(k-.71)/.055);c.save();
  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#02050d');bg.addColorStop(.52,'#101628');bg.addColorStop(1,'#02050c');c.fillStyle=bg;c.fillRect(0,0,900,H);if(scene.showcase)drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:color,feet:feet});
  const halo=c.createRadialGradient(x,center,5,x,center,470);halo.addColorStop(0,color+'30');halo.addColorStop(1,color+'00');c.fillStyle=halo;c.fillRect(0,center-470,900,940);
  c.translate(Math.sin(t*.073)*s.shake,Math.cos(t*.089)*s.shake*.6);
@@ -54,5 +66,5 @@ export function drawRitual(scene,c,e,t,H){if(breakthroughRealm(e)===9)return dra
 
 export function mountRitualHud(shell,scene){
  const hud=document.createElement('aside');hud.className='ritual-hud';hud.hidden=true;hud.innerHTML='<strong class="ritual-name"></strong><h2></h2><p class="ritual-sub" hidden></p>';shell.appendChild(hud);let last='';
- scene.onRitualFrame=s=>{if(!s){hud.hidden=true;last='';return;}const key=s.name+'|'+s.revealed+'|'+s.title;if(key===last)return;last=key;hud.hidden=false;hud.dataset.phase=s.revealed?'reveal':'gather';hud.style.setProperty('--ritual-color',s.color);hud.querySelector('.ritual-name').textContent=s.name;const title=hud.querySelector('h2');title.textContent=s.revealed?s.title:'';title.hidden=!s.revealed;hud.dataset.realm=s.realm||'';const sub=hud.querySelector('.ritual-sub');if(sub){sub.textContent=s.revealed&&s.subtitle?s.subtitle:'';sub.hidden=!sub.textContent;}};return hud;
+ scene.onRitualFrame=s=>{if(!s){hud.hidden=true;last='';return;}const key=s.name+'|'+s.revealed+'|'+s.title+'|'+(s.appearanceKey||'');if(key===last)return;last=key;hud.hidden=false;hud.dataset.phase=s.revealed?'reveal':'gather';hud.style.setProperty('--ritual-color',s.color);hud.style.setProperty('--ritual-accent',s.accent||s.color);if(s.appearanceKey)hud.dataset.appearance=s.appearanceKey;else delete hud.dataset.appearance;hud.querySelector('.ritual-name').textContent=s.name;const title=hud.querySelector('h2');title.textContent=s.revealed?s.title:'';title.hidden=!s.revealed;hud.dataset.realm=s.realm||'';const sub=hud.querySelector('.ritual-sub');if(sub){sub.textContent=s.revealed&&s.subtitle?s.subtitle:'';sub.hidden=!sub.textContent;}};return hud;
 }

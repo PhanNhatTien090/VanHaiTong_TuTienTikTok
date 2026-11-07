@@ -13,9 +13,9 @@ function startEnvelope(w,now,c){w.envelope={id:'env-'+now,startedAt:now,endsAt:n
   c.emit(w,null,'HỒNG BAO RƠI • gõ nhan trong 20 giây','envelope',now,{envelopeStart:true});}
 function claimEnvelope(w,p,now,c){const e=w.envelope;if(!e||now>=e.endsAt)return null;if(e.claimed[p.id])return {ok:true,duplicate:true};
   const roll=Math.random();let reward;
-  if(roll<.06){const id=rnd(ENVELOPE_ITEMS);const fresh=c.giveArtifact(w,p,id);reward=fresh?{item:c.itemName(id)}:{qi:c.gain(w,p,pct(c,p,.15),40,4)};}
-  else if(roll<.35)reward={qi:c.gain(w,p,0,30+Math.floor(Math.random()*90),2),stones:true};
-  else reward={qi:c.gain(w,p,pct(c,p,.05+Math.random()*.1),10,1)};
+  if(roll<.06){const id=rnd(ENVELOPE_ITEMS);const fresh=c.giveArtifact(w,p,id);reward=fresh?{item:c.itemName(id)}:{qi:c.gain(w,p,pct(c,p,.15),40,4,now)};}
+  else if(roll<.35)reward={qi:c.gain(w,p,0,30+Math.floor(Math.random()*90),2,now),stones:true};
+  else reward={qi:c.gain(w,p,pct(c,p,.05+Math.random()*.1),10,1,now)};
   e.claimed[p.id]=reward;p.interactions++;w.totalInteractions++;
   if(reward.item){e.lucky.push(p.name);c.emit(w,p,'Hồng bao • trúng '+reward.item,'envelope',now,{envelopeLucky:reward.item});}
   return {ok:true,envelope:reward};}
@@ -82,7 +82,7 @@ function answerQuiz(w,p,text,now){const z=w.quiz;if(!z||z.closedAt||now>=z.endsA
   z.answers[p.id]=true;z.order.push(p.id);p.interactions++;w.totalInteractions++;return {ok:true,quiz:true,correct:true};}
 function closeQuiz(w,now,c){const z=w.quiz;if(!z||z.closedAt||now<z.endsAt)return;z.closedAt=now;
   const right=z.order.filter(id=>z.answers[id]&&w.players[id]);
-  right.forEach((id,i)=>{const p=w.players[id];c.gain(w,p,pct(c,p,i<3?.12:.06),i<3?40:20,i<3?3:1);if(i<3)buff(p,3,10*60000,now);});
+  right.forEach((id,i)=>{const p=w.players[id];c.gain(w,p,pct(c,p,i<3?.12:.06),i<3?40:20,i<3?3:1,now);if(i<3)buff(p,3,10*60000,now);});
   const answer=z.show||(z.options&&z.options[z.answer])||'';
   const letter=z.options?'abc'[z.answer]:undefined;
   c.emit(w,null,`Đáp án: ${letter?letter+'. ':''}${answer} • ${right.length} đạo hữu giải được`,'quiz',now,{quizEnd:true,answer,riddle:true,...(letter?{letter}:{}),count:right.length,top:right.slice(0,3).map(id=>w.players[id].name)});}
@@ -90,10 +90,10 @@ function closeQuiz(w,now,c){const z=w.quiz;if(!z||z.closedAt||now<z.endsAt)retur
 // ---------- CHUỖI ĐIỂM DANH ----------
 export function checkinStreak(w,p,day,now,c){const y=vnDay(now-86400000);p.checkinStreak=p.lastCheckinDay===y?(p.checkinStreak||0)+1:1;p.lastCheckinDay=day;const s=p.checkinStreak;
   if(s<2)return;let txt;
-  if(s%7===0){const fresh=c.giveArtifact(w,p,'nine-heaven-seal');const qi=c.gain(w,p,pct(c,p,.4),200,20);txt=fresh?'Cửu Tiêu Lôi Ấn':qi+' tu vi';}
-  else if(s%5===0){buff(p,3,30*60000,now);c.gain(w,p,pct(c,p,.15),120,10);txt='phúc duyên ×3 ba mươi phút';}
-  else if(s>=3){c.gain(w,p,pct(c,p,.1),100,10);txt='100 linh thạch';}
-  else{c.gain(w,p,pct(c,p,.05),50,5);txt='50 linh thạch';}
+  if(s%7===0){const fresh=c.giveArtifact(w,p,'nine-heaven-seal');const qi=c.gain(w,p,pct(c,p,.4),200,20,now);txt=fresh?'Cửu Tiêu Lôi Ấn':qi+' tu vi';}
+  else if(s%5===0){buff(p,3,30*60000,now);c.gain(w,p,pct(c,p,.15),120,10,now);txt='phúc duyên ×3 ba mươi phút';}
+  else if(s>=3){c.gain(w,p,pct(c,p,.1),100,10,now);txt='100 linh thạch';}
+  else{c.gain(w,p,pct(c,p,.05),50,5,now);txt='50 linh thạch';}
   c.emit(w,p,`Chuỗi điểm danh ${s} ngày • ${txt}`,'petal',now,{streak:s,streakReward:txt});}
 
 // ---------- NHIỆM VỤ NGÀY ----------
@@ -104,7 +104,7 @@ export function trackTasks(w,p,input,result,now,c){if(p.resident||p.puppet||!res
   if(w.mode==='live'){
     if(['cultivate','gather','attack'].includes(input.type))t[input.type]=(t[input.type]||0)+1;
   }else if(input.type==='chat'){t.chat++;if(/^\s*danh\b/i.test(input.text||''))t.attack++;}else if(input.type==='like')t.like+=Math.max(0,Math.trunc(Number(input.count)||0));else if(input.type==='attack')t.attack++;
-  if(tasksFor(w).every(([k,,n])=>(t[k]||0)>=n)){t.done=true;c.gain(w,p,pct(c,p,.2),80,10);buff(p,3,10*60000,now);c.emit(w,p,'Hoàn thành nhiệm vụ ngày • rương thưởng','lotus',now,{tasksDone:true});}}
+  if(tasksFor(w).every(([k,,n])=>(t[k]||0)>=n)){t.done=true;c.gain(w,p,pct(c,p,.2),80,10,now);buff(p,3,10*60000,now);c.emit(w,p,'Hoàn thành nhiệm vụ ngày • rương thưởng','lotus',now,{tasksDone:true});}}
 export function taskText(p,now,w){const day=vnDay(now),t=p.tasks?.day===day?p.tasks:{done:false};
   return t.done?'Nhiệm vụ ngày đã xong • mai quay lại nhé':'Nhiệm vụ ngày • '+tasksFor(w).map(([k,l,n])=>`${l} ${Math.min(t[k]||0,n)}/${n}`).join(' • ');}
 
@@ -112,7 +112,7 @@ export function taskText(p,now,w){const day=vnDay(now),t=p.tasks?.day===day?p.ta
 export const SECT_LEVELS=Object.freeze([500,1500,3000,6000,10000,16000,25000,40000,60000,100000]);
 export function sectBuild(w,p,coins,now,c){if(p.puppet||p.resident||coins<=0)return;const b=w.sectBuild??={level:0,coins:0,contrib:{}};b.coins+=coins;b.contrib[p.id]=(b.contrib[p.id]||0)+coins;
   while(b.level<SECT_LEVELS.length&&b.coins>=SECT_LEVELS[b.level]){b.level++;const team=Object.values(w.players).filter(q=>!q.resident&&c.active(w,q,now));
-    for(const q of team){c.gain(w,q,pct(c,q,.03*b.level),20*b.level,b.level);buff(q,2,5*60000,now);}
+    for(const q of team){c.gain(w,q,pct(c,q,.03*b.level),20*b.level,b.level,now);buff(q,2,5*60000,now);}
     const [topId]=Object.entries(b.contrib).sort((x,y)=>y[1]-x[1])[0]||[];const top=w.players[topId];if(top)top.sectFounder=true;
     c.emit(w,null,`TÔNG MÔN LÊN CẤP ${b.level} • ban phúc ${team.length} đồng môn`,'blessing',now,{sectLevel:b.level,count:team.length,founder:top?.name||null});}}
 

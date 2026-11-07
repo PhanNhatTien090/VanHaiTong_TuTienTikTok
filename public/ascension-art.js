@@ -1,3 +1,5 @@
+import {MAX_REALM} from './progression.js';
+import {KIM_TIEN_TIMELINE} from './kim-tien-timeline.js';
 import {HUYEN_TIEN_TIMELINE} from './huyen-tien-timeline.js';
 import {DAI_THUA_DURATION} from './dai-thua-awakening.js';
 import {CHAN_TIEN_DURATION} from './chan-tien-awakening.js';
@@ -7,17 +9,17 @@ import {makeSurface} from './performance.js';
 import {TRUC_CO_DURATION} from './truc-co-timeline.js';
 import {KIM_DAN_DURATION} from './kim-dan-timeline.js';
 import {NGUYEN_ANH_DURATION} from './nguyen-anh-timeline.js';
-const TITLES=['','Khí Hải Sơ Khai','Ngọc Cơ Thành Đạo','Kim Đan Diệu Nhật','Nguyên Thần Liên Sinh','Thần Lôi Tẩy Tủy','Hư Không Khai Giới','Vạn Kiếm Triều Tông','Long Môn Đăng Tiên','Huyền Tinh Chuyển Mệnh','Kim Liên Bất Diệt','Thái Cực Khai Thiên','Đại La Pháp Tướng','Tiên Đế Đăng Cơ','Thái Sơ Khai Đạo','Cửu Thiên Quy Nhất','Hồng Mông Thần Hiện','Vạn Giới Triều Vương','Thần Đế Khai Thiên'];
-const SHAPES=['','qi','foundation','core','spirit','thunder','rift','swords','gate','orrery','solar-lotus','taichi','qilin','emperor','orrery','taichi','solar-lotus','qilin','emperor'];
-const COLORS=['','#8de9ba','#9eefff','#ffe098','#d8a9ff','#9bcfff','#b59aff','#e8ceff','#ffe7b0','#9dbcff','#ffdc78','#c9a3ff','#ffad7f','#fff1c7','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b'];
+const TITLES=['','Khí Hải Sơ Khai','Ngọc Cơ Thành Đạo','Kim Đan Diệu Nhật','Nguyên Thần Liên Sinh','Thần Niệm Chấn Thiên','Hư Không Khai Giới','Vạn Kiếm Triều Tông','Long Môn Đăng Tiên','Huyền Tinh Chuyển Mệnh','Kim Liên Bất Diệt','Thái Cực Khai Thiên','Đại La Pháp Tướng','Tiên Đế Đăng Cơ','Thái Sơ Khai Đạo','Cửu Thiên Quy Nhất','Hồng Mông Thần Hiện','Vạn Giới Triều Vương','Thần Đế Khai Thiên','Thần Tôn Ngự Thiên','Thần Tổ Khai Nguyên','Hồng Mông Quy Nhất'];
+const SHAPES=['','qi','foundation','core','spirit','thunder','rift','swords','gate','orrery','solar-lotus','taichi','qilin','emperor','orrery','taichi','solar-lotus','qilin','emperor','orrery','taichi','solar-lotus'];
+const COLORS=['','#8de9ba','#9eefff','#ffe098','#d8a9ff','#9bcfff','#b59aff','#e8ceff','#ffe7b0','#9dbcff','#ffdc78','#c9a3ff','#ffad7f','#fff1c7','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf'];
 // Authored early rituals have their own lengths; retain the spacing of later realms.
-const DURATIONS=[0,5200,6800,7200,7600,8000,8200,8400,8800,9000,9200,9400,9600,9800,10000,10200,10400,10600,10800].map((ms,r)=>r===1?8800:r===2?TRUC_CO_DURATION:r===3?KIM_DAN_DURATION:r>=4?ms+2200+Math.round((r-1)*800/17)+(NGUYEN_ANH_DURATION-9941):0);
+const DURATIONS=[0,5200,6800,7200,7600,8000,8200,8400,8800,9000,9200,9400,9600,9800,10000,10200,10400,10600,10800,11000,11200,11400].map((ms,r)=>r===1?8800:r===2?TRUC_CO_DURATION:r===3?KIM_DAN_DURATION:r>=4?ms+2200+Math.round((r-1)*800/17)+(NGUYEN_ANH_DURATION-9941):0);
 const afterHoa=DURATIONS.map((ms,r)=>r===5?HOA_THAN_DURATION:r>5?ms+(HOA_THAN_DURATION-DURATIONS[5]):ms);
 const afterLuyenHu=afterHoa.map((ms,r)=>r===6?LUYEN_HU_DURATION:r>6?ms+(LUYEN_HU_DURATION-afterHoa[6]):ms);
 const afterDaiThua=afterLuyenHu.map((ms,r)=>r===7?DAI_THUA_DURATION:r>7?ms+(DAI_THUA_DURATION-afterLuyenHu[7]):ms);
 const finalDurations=afterDaiThua.map((ms,r)=>r===8?CHAN_TIEN_DURATION:r>8?ms+(CHAN_TIEN_DURATION-afterDaiThua[8]):ms);
-export const ASCENSIONS=Object.freeze(TITLES.map((title,realm)=>realm?Object.freeze({realm,title,id:realm>13?'transcendent-'+realm:SHAPES[realm],shape:SHAPES[realm],color:COLORS[realm],duration:realm===9?HUYEN_TIEN_TIMELINE.duration:realm>9?finalDurations[realm]+(36000-finalDurations[9]):finalDurations[realm],group:realm>=8?'high':'mid',cell:realm>=8?Math.min(5,realm-8):Math.max(0,realm-2),burst:realm===13?5:realm===12?3:realm===11||realm===6?2:realm>=8||realm===3?1:0,layers:2+Math.floor(realm/2)}):null));
-export const ascensionProfile=realm=>ASCENSIONS[Math.max(1,Math.min(18,Number(realm)||1))];
+export const ASCENSIONS=Object.freeze(TITLES.map((title,realm)=>realm?Object.freeze({realm,title,id:realm>13?'transcendent-'+realm:SHAPES[realm],shape:SHAPES[realm],color:COLORS[realm],duration:realm>18?finalDurations[18]+(36000-finalDurations[9])+(realm-18)*2000:realm===10?KIM_TIEN_TIMELINE.duration:realm===9?HUYEN_TIEN_TIMELINE.duration:realm>9?finalDurations[realm]+(36000-finalDurations[9]):finalDurations[realm],group:realm>=8?'high':'mid',cell:realm>=8?Math.min(5,realm-8):Math.max(0,realm-2),burst:realm===13?5:realm===12?3:realm===11||realm===6?2:realm>=8||realm===3?1:0,layers:2+Math.floor(realm/2)}):null));
+export const ascensionProfile=realm=>ASCENSIONS[Math.max(1,Math.min(MAX_REALM,Number(realm)||1))];
 export function sliceAscensionAtlas(im,size=320,factory=makeSurface){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,frames=[];for(let i=0;i<6;i++){const f=factory(size,size);if(!f)continue;f.getContext('2d').drawImage(im,i%3*w/3,Math.floor(i/3)*h/2,w/3,h/2,2,2,size-4,size-4);frames.push(f);}return frames;}
 export function prepareAscensionArt(scene,realm){if(typeof Image==='undefined')return;const p=ascensionProfile(realm);scene.ascensionArt??={};scene.ascensionLoading??=new Set();scene.ascensionRetry??={};for(const group of [p.group,'bursts']){if(scene.ascensionArt[group]||scene.ascensionLoading.has(group)||scene.ascensionRetry[group]>Date.now())continue;scene.ascensionLoading.add(group);let im=new Image();im.onload=()=>{scene.ascensionArt[group]=sliceAscensionAtlas(im,group==='high'?384:256);scene.ascensionLoading.delete(group);im=null;};im.onerror=()=>{scene.ascensionLoading.delete(group);scene.ascensionRetry[group]=Date.now()+15000;};im.src='/assets/breakthrough-v2/'+group+'.png';}}
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));

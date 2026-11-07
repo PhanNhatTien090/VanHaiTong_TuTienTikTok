@@ -45,7 +45,7 @@ export function drawWorldLife(scene,c,t,{crowd=0,environment=true,npcs=true}={})
     }
     if(npc.role==='garden'){for(let i=0;i<4;i++)path(c,[[18+i*7,17],[15+i*7,1],[21+i*7,8],[24+i*7,-3],[26+i*7,17]],'#8cba9688');}
     if(npc.role==='patrol'){const step=Math.sin(time*.006)*3;c.strokeStyle='#1b2939';c.lineWidth=6;c.beginPath();c.moveTo(-6,17);c.lineTo(-8+step,23);c.moveTo(7,17);c.lineTo(8-step,23);c.stroke();}
-    c.fillStyle='#142532ee';c.beginPath();c.roundRect(-39,30,78,21,5);c.fill();c.strokeStyle='#b9c5d244';c.lineWidth=.6;c.stroke();c.textAlign='center';c.font='11px Segoe UI';c.fillStyle='#ced9e0';c.fillText('NPC · '+npc.name,0,44);c.restore();
+    c.fillStyle='#142532ee';c.beginPath();c.roundRect(-39,30,78,21,5);c.fill();c.strokeStyle='#b9c5d244';c.lineWidth=.6;c.stroke();c.textAlign='center';c.font='11px Segoe UI';c.fillStyle='#ced9e0';c.fillText(npc.name,0,44);c.restore();
   }
 }
 

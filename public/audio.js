@@ -1,3 +1,4 @@
+import {scheduleKimTienAudio,kimTienMusicDuck} from './kim-tien-audio.js';
 import {scheduleHuyenTienAudio,huyenTienMusicDuck} from './huyen-tien-audio.js';
 import {scheduleBattleSound,combatVoice} from './battle-audio.js';
 import {scheduleDaiThuaAudio,daiThuaMusicDuck} from './dai-thua-audio.js';
@@ -44,11 +45,11 @@ export class CultivationAudio {
     if(!event||!this.enabled||this.ctx?.state!=='running'){
       if(this.qiSession){this.qiSession.audio.stop();this.qiSession=null;this.sync();}return;
     }
-    const realm=breakthroughRealm(event),duck=realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
+    const realm=breakthroughRealm(event),duck=realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
     this.qiSession?.audio.stop();
-    const schedule=realm===9?scheduleHuyenTienAudio:realm===8?scheduleChanTienAudio:realm===7?scheduleDaiThuaAudio:realm===6?scheduleLuyenHuAudio:realm===5?scheduleHoaThanAudio:realm===4?scheduleNguyenAnhAudio:realm===3?scheduleKimDanAudio:realm===2?scheduleTrucCoAudio:scheduleQiAudio;
-    const baseCue=schedule===scheduleHuyenTienAudio?schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000,1,event):schedule===scheduleQiAudio?schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000,1,qiVariant(event).pitch):schedule===scheduleTrucCoAudio?schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000,1,'mix',qiVariant(event).pitch):schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000);const hit=IMPACT_LAYERS[realm],extra=hit?scheduleImpactLayers(this.ctx,this.fxBus,{elapsed:elapsed/1000,at:hit[0],duration:hit[1],scale:(event.duration/1000)/hit[1],pitch:qiVariant(event).pitch,root:hit[2]}):null;this.qiSession={event,duck,audio:extra?{stop(){baseCue.stop();extra.stop();},endAt:Math.max(baseCue.endAt||0,extra.endAt||0)}:baseCue};this.sync();
+    const schedule=realm===10?scheduleKimTienAudio:realm===9?scheduleHuyenTienAudio:realm===8?scheduleChanTienAudio:realm===7?scheduleDaiThuaAudio:realm===6?scheduleLuyenHuAudio:realm===5?scheduleHoaThanAudio:realm===4?scheduleNguyenAnhAudio:realm===3?scheduleKimDanAudio:realm===2?scheduleTrucCoAudio:scheduleQiAudio;
+    const baseCue=(schedule===scheduleHuyenTienAudio||schedule===scheduleKimTienAudio||schedule===scheduleHoaThanAudio)?schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000,1,event):schedule===scheduleQiAudio?schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000,1,qiVariant(event).pitch):schedule===scheduleTrucCoAudio?schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000,1,'mix',qiVariant(event).pitch):schedule(this.ctx,this.fxBus,elapsed/1000,event.duration/1000);const hit=IMPACT_LAYERS[realm],extra=hit?scheduleImpactLayers(this.ctx,this.fxBus,{elapsed:elapsed/1000,at:hit[0],duration:hit[1],scale:(event.duration/1000)/hit[1],pitch:qiVariant(event).pitch,root:hit[2]}):null;this.qiSession={event,duck,audio:extra?{stop(){baseCue.stop();extra.stop();},endAt:Math.max(baseCue.endAt||0,extra.endAt||0)}:baseCue};this.sync();
   }
   duck(on){this.ducked=on;this.sync();}
   set(kind,value){this[kind]=Math.max(0,Math.min(1,Number(value)||0));this.sync();}

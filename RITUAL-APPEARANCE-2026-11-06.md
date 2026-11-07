@@ -1,0 +1,19 @@
+# Early realm appearance variants — 06/11/2026
+
+Scope: the existing Luyện Khí, Trúc Cơ, Kim Đan, Nguyên Anh and Hóa Thần rituals. Keep every approved beat, duration, impact, absorption/reveal threshold, actor snapshot and soundtrack. No new reward or realm progression logic. Higher realms are unchanged.
+
+Each event derives a stable pseudo-random direction from its event ID and player ID using the existing qiSeed. Six restrained primary hue shifts per realm combine with accent choices, four corner-crest designs, three-to-six side ornaments, phase and direction. The same event stays visually stable through all frames and seeks; another player or another breakthrough can get a different combination. A bounded 128-entry descriptor cache prevents event history growing memory. Finite combinations can repeat; this is cosmetic variety, not a guarantee of platform classification.
+
+Apply palette overrides transactionally to the existing shared qi layers. Restore the old palette, HUD callback, appearance and full-quality scene state in finally. Slight background tint is cached per current color and height and drawn before the character. There is no blanket hue filter over skin or text. Corner cloud/crystal/lotus/lightning geometry and side talismans stay outside the middle actor/face column. Reduced-motion freezes their travel while retaining phase entrances/exits. DOM title, glow and subtitle update with the event variation; stale styling is removed for subsequent higher realms.
+
+Review passes: baseline 45 sampled native frames (five realms, three people, opening/gather/reveal), initial variants, stronger cached atmosphere tint, then reveal close-ups and reduced-motion/render-state corrections. Native previews use preloaded fallback atlases and procedural layers; they do not reproduce browser-only DOM captions. Before: output/ritual-variety-before. Initial: output/ritual-variety-after. Final: output/ritual-variety-after-round2. Contact sheet is sheet.png; individual reveal samples include r3-v0-k0.9.png and r3-v1-k0.9.png.
+
+Native CPU measurement of only the additional ornament drawing at 1080×1920: 0.153 ms/frame over 300 iterations after warm-up. Whole sampling/export elapsed 8.177 s before and 8.980 s final for 45 frames; those totals include PNG encoding/file I/O/cache construction and are not browser FPS measurements. One latest tint surface is retained per scene. No audio synthesis or audio changes.
+
+Validation: 476/476 tests passed and npm run check passed. New tests cover deterministic per-event variation, population diversity, early-only scope, reduced-motion behavior, clear center, callback binding, scene/canvas restoration, unchanged player/event snapshots, all five actual dispatches and HUD recoloring for repeat names. The LIVE server returns the new module; actual overlay telemetry remained 1080 px with no client error. Frontend ETag reload activates this without backend restart.
+
+## Follow-up: independent background tones
+
+User requested more visible background variation. Each event now independently chooses one of six restrained background tints: jade, ocean blue, violet, amber, rose and moon silver. A cached half-resolution gradient is composited immediately after each realm's actual sky layer, before its formation and character; the earlier tint under the sky was partly covered by those sky layers. Removed the redundant tint on the common stage base. All five realms now get exactly one visible atmosphere tint. Background selection remains stable per event, including seeking, and does not use a whole-frame filter or recolor the actor.
+
+Verified a fresh 45-frame sample across five realms/three players/three phases at output/ritual-random-backgrounds. Tests check all six backgrounds are reachable, same-event cache reuse, different background pixels and identical opaque actor pixels drawn afterwards. 28 relevant ritual tests and npm run check passed for this follow-up.

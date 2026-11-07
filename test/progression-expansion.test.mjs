@@ -9,7 +9,7 @@ test('five new realms are reachable after save/reload with matching overlay, war
  let w=createWorld(),p=ensurePlayer(w,'veteran','Lão tổ',NOW);
  Object.assign(p,{realm:13,giftCoins:100,totalQi:123456,qi:17,stones:19});
  w=JSON.parse(JSON.stringify(w));p=w.players.veteran;
- for(let r=14;r<19;r++){
+ for(let r=14;r<REALMS.length;r++){
   p.qi=requiredQi(p);p.stones=requiredStones(p);
   assert.equal(action(w,{type:'breakthrough',userId:p.id},NOW+r*60000).ok,true);
   assert.equal(p.realm,r);assert.equal(p.qi,0);assert.equal(p.stones,0);
@@ -17,7 +17,7 @@ test('five new realms are reachable after save/reload with matching overlay, war
   assert.ok(realmDivineLook(p).color);assert.equal(ascensionProfile(r).realm,r);
   assert.ok(divineHaloProfile(r).orbs<=12);
  }
- assert.equal(REALMS.length,19);assert.equal(OPPORTUNITY_COSTS.length,18);
+ assert.equal(REALMS.length,22);assert.equal(OPPORTUNITY_COSTS.length,21);
  assert.equal(action(w,{type:'breakthrough',userId:p.id},NOW+2e6).ok,false);
 });
 test('slower costs preserve onboarding, and blessings cannot recycle stored qi into free levels',()=>{
