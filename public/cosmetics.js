@@ -1,3 +1,4 @@
+import {rebirthMark} from './rebirth-view.js';
 import {displayActorName} from './live-integrity.js';
 import {nameBadge} from './vip.js';
 // Cosmetics use received gift value, never the viewer's TikTok recharge balance.
@@ -39,7 +40,7 @@ export function layoutLabels(targets,measure,width=900){
   const occupied=[],big=targets.length<=4,lineH=big?30:25,pad=14;
   // Bề rộng khung = khoảng cách tới người ngồi cạnh cùng hàng (không đè tên nhau), tối đa 220.
   const gap=t=>{let d=Infinity;for(const o of targets)if(o!==t&&Math.abs(o.y-t.y)<10)d=Math.min(d,Math.abs(o.x-t.x));return d;};
-  return targets.map(t=>{const name=Array.from(displayActorName(t.player).normalize('NFC').trim()).slice(0,40).join('');
+  return targets.map(t=>{const name=Array.from((rebirthMark(t.player)+displayActorName(t.player)).normalize('NFC').trim()).slice(0,44).join(''); // 07/11: ✦N = số lần chuyển sinh
     const cap=Math.max(70,Math.min(220,gap(t)-6)),full=measure(name);
     // Đo bằng đúng cỡ chữ khi vẽ. Vừa khung → một dòng. Một hàng ghế (≤4 người, không có hàng dưới) → xuống dòng.
     // Đông người: giữa các hàng chỉ đủ một dòng → chạy chữ (scroll) trong khung, giữ nguyên cỡ chữ, không che mặt hàng dưới.

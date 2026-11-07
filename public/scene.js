@@ -1,3 +1,4 @@
+import {drawRebirthStars} from './rebirth-view.js';
 import {drawRealmSkinV2,ensureRealmSkinV2} from './realm-skins-v2.js';
 import {drawHeavenStrike,drawStunMark,heavenStrikeShake,strikeProfile,HEAVEN_STRIKE_MS} from './heaven-strike.js';
 import {liveAudienceCount} from './crowd-policy.js';
@@ -176,7 +177,7 @@ loadPrestigeArt(this);syncRace(this,state);syncSocialStage(this,state);syncEvent
   }
   paintArtwork(c){const H=this.height;const iw=this.art.naturalWidth,ih=this.art.naturalHeight;const {sx,sy,sw,sh}=artworkCrop(iw,ih,H);c.drawImage(this.art,sx,sy,sw,sh,0,0,900,H);const shade=c.createLinearGradient(0,0,0,H);shade.addColorStop(0,'#09192430');shade.addColorStop(.4,'#0a1a2200');shade.addColorStop(.8,'#09192405');shade.addColorStop(1,'#09192485');c.fillStyle=shade;c.fillRect(0,0,900,H);}
   drawPlayer(c,p,x,y,t){const skin=skinFor(p.giftCoins);const color=skin.level?skin.robe:palette[hash(p.id)%palette.length];const focus=this.focusUntil>t&&(this.focusId||this.selected)===p.id;const selected=focus||(!document.body.classList.contains('overlay')&&this.selected===p.id);const bob=this.motion?Math.sin(t*.0018+hash(p.id))*1.3:0;y+=bob;if(this.boss?.species==='abyss-dragon'&&!this.boss.sealing&&this.motion){const hit=abyssPose(this.boss,Date.now()).strike;y+=hit*7;x+=Math.sin(t*.04+hash(p.id))*hit*3;}const scale=this.targets.find(a=>a.id===p.id)?.scale||1.42;
-    c.save();c.translate(x,y);c.scale(scale,scale);if(this.characterArt.complete&&this.characterArt.naturalWidth){this.drawSprite(c,p,skin,t);c.restore();return;}
+    c.save();c.translate(x,y);c.scale(scale,scale);if(this.characterArt.complete&&this.characterArt.naturalWidth){this.drawSprite(c,p,skin,t);drawRebirthStars(c,p,t,this.motion);c.restore();return;}
     this.drawSkinVFX(c,specialSkinFor(p)||skin,t,p);
     if(p.realm>0||selected){c.save();c.globalCompositeOperation='screen';const glow=c.createRadialGradient(0,-5,1,0,-5,38);glow.addColorStop(0,color+'45');glow.addColorStop(1,color+'00');c.fillStyle=glow;c.fillRect(-40,-45,80,85);c.strokeStyle=selected?'#ffe1a4':'#9bd9cc80';c.lineWidth=1.1;this.ellipse(c,0,10,22,7,null,c.strokeStyle);c.restore();}
     this.ellipse(c,0,9,18,5,'#344854','#a4c3c35c');
