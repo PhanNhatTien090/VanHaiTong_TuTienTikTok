@@ -3,7 +3,13 @@
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
 const vnDay=now=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
 // 4/11/2026: lì xì/câu đố giờ 1–2 phút một lần → với Chân Tiên trở lên (realm ≥ 8) chỉ thưởng 40% để không thành nguồn lên cấp nhanh.
-const pct=(c,p,f)=>Math.max(10,Math.round(c.requiredQi(p)*f*((p.realm||0)>=8?.4:1)));
+const pct=(c,p,f)=>{const old=c.requiredQi(p)*f*((p.realm||0)>=8?.4:1);
+  // 07/11/2026: từ Hóa Thần (realm ≥ 5) thưởng tương tác quy theo "lượt vận công" của chính cảnh giới đó (f × ENGAGE_PRACTICE_STEPS lượt),
+  // nên tự giảm theo nhịp tu luyện chậm của cảnh giới cao. Chỉ giảm, không bao giờ cao hơn công thức cũ; vẫn ngoài hạn mức ngày.
+  const unit=(p.realm||0)>=5&&c.practiceUnit?c.practiceUnit(p):0;const steps=c.engagePracticeSteps?.()??ENGAGE_PRACTICE_STEPS;
+  return Math.max(10,Math.round(unit>0&&steps>0?Math.min(old,unit*f*steps):old));};
+// Hệ số quy đổi: f=0,10 (hồng bao trung bình) ≈ 10 lượt vận công; câu đố top 3 (0,12) ≈ 12 lượt; nhiệm vụ ngày (0,2) ≈ 20 lượt.
+export const ENGAGE_PRACTICE_STEPS=100;
 const buff=(p,m,ms,now)=>{p.buffMult=Math.max(m,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=Math.max(p.buffUntil||0,now+ms);};
 
 // ---------- HỒNG BAO ----------

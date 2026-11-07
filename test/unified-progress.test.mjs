@@ -93,3 +93,16 @@ test('opportunity spoken opening explains the daily limit and retained credit wi
  const text=speechPlan({effect:'opportunity',opportunityStart:true}).map(x=>x.text).join(' ');
  assert.match(text,/Hóa Thần/);assert.match(text,/mỗi ngày tối đa một/);assert.match(text,/Tiến độ dư được giữ/);assert.doesNotMatch(text,/coin|\bxu\b/);
 });
+
+test('07/11: engagement rewards taper by realm practice unit — never above the old formula, unchanged up to Nguyen Anh',async()=>{
+ const {createWorld,ensurePlayer,requiredQi,progressionMult,tick}=await import('../engine.mjs');const {ASCENSION_PRACTICE_STEPS:S}=await import('../public/ascension-pacing.js');
+ const {ENGAGE_PRACTICE_STEPS}=await import('../engagement.mjs');
+ for(const realm of [3,5,8,16,20]){
+  const p={realm},old=requiredQi(p)/progressionMult(p)*.1*(realm>=8?.4:1),unit=requiredQi(p)/S[realm]*.1*ENGAGE_PRACTICE_STEPS,expect=Math.max(10,Math.round(realm>=5?Math.min(old,unit):old));
+  // envelope path: roll in [.35,1) gives pct(.05+rand*.1); force rand → .5 so f = .10
+  const w=createWorld('live');const N=Date.parse('2026-11-07T10:00:00+07:00');const a=ensurePlayer(w,'a','A',N);a.realm=realm;a.qi=0;
+  const orig=Math.random;Math.random=()=>.5;try{w.envelope={id:'e',startedAt:N,endsAt:N+20000,claimed:{},lucky:[]};const {action}=await import('../engine.mjs');const before=a.qi;action(w,{userId:'a',type:'chat',text:'nhan'},N+100);
+   assert.equal(a.qi-before,expect,'realm '+realm);}finally{Math.random=orig;}
+  if(realm>=8)assert.ok(expect<old,'high realm reward reduced');
+ }
+});

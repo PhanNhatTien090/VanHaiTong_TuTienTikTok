@@ -5,7 +5,7 @@ import {dailyPracticeView,creditDailyPractice,dailyAscensionView,recordDailyAsce
 import {bondVipInfo} from './public/bond-policy.js';
 import {PET_COVE_MAP} from './public/pet-cove.js';
 import {ABYSS_BOSS,ABYSS_SECT_REWARD} from './public/abyss-boss.js';
-import {ascensionPracticeReward,ASCENSION_PACING_VERSION} from './public/ascension-pacing.js';
+import {ascensionPracticeReward,ASCENSION_PACING_VERSION,ASCENSION_PRACTICE_STEPS} from './public/ascension-pacing.js';
 import {DORA_RELICS} from './public/doraemon-data.js';
 import {trackIntro,finishIntro} from './onboarding.mjs';
 import {talk,talking,TALK_SHOW_MS} from './talk.mjs';
@@ -1090,7 +1090,7 @@ export const controlLanternEvent=(w,op,now=Date.now())=>controlLantern(w,op,now,
 const socialContext={emit,gain,power,technique:attackTechnique,active:currentParticipant};
 // 07/11/2026: thưởng sự kiện (điểm danh chuỗi, lì xì, câu đố, nhiệm vụ ngày, kiến tạo tông) tính theo % tu vi cần,
 // không trừ hạn mức tu luyện ngày — nếu không một lần điểm danh 7 ngày đã tiêu sạch hạn mức.
-const engageCtx={emit,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),active:currentParticipant,requiredQi:p=>requiredQi(p)/progressionMult(p),giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
+const engageCtx={emit,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),active:currentParticipant,requiredQi:p=>requiredQi(p)/progressionMult(p),practiceUnit:p=>requiredQi(p)/ASCENSION_PRACTICE_STEPS[Math.max(0,Math.min(ASCENSION_PRACTICE_STEPS.length-1,Number(p.realm)||0))],giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
 export const engageNow=(w,kind,now=Date.now())=>kind==='quiz'?startQuizNow(w,now,engageCtx):kind==='envelope'?startEnvelopeNow(w,now,engageCtx):fail('Không rõ hoạt động.');
 export const startTournament=(w,now=Date.now())=>beginTournament(w,now,socialContext);
 export const stopTournament=(w,now=Date.now())=>endTournament(w,now,socialContext);
