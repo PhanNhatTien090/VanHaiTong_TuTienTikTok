@@ -18,14 +18,16 @@ import { forgeView, enhance, petView, feedPet, choosePet, questView, claimQuest,
 import { webAction, addPlayerQuietly } from './isolate.mjs';
 import { jadeBalance, shopView, buy, takeExtraPills, retreatView, startRetreat, claimRetreat, mailView, claimMail, welcomeMail, giftView, claimGift } from './extras.mjs';
 import { liveView } from './live-view.mjs';
+import { createErrorLog } from './error-log.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(here, '..');
 
-export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', trial = process.env.WEB_CLOUD_TRIAL === '1', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {} }) {
+export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', trial = process.env.WEB_CLOUD_TRIAL === '1', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {}, errorLog = null }) {
   fs.mkdirSync(dataDir, { recursive: true });
   const accounts = accountStore || createAccountStore(path.join(dataDir, 'accounts.json'));
   const dungeon = createDungeon();
+  const errors = errorLog || createErrorLog(dataDir);
 
   // snapshot() duyệt cả nghìn hồ sơ → dựng lại tối đa 3 giây một lần.
   let snapCache = null;
@@ -221,6 +223,13 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       const token = cookies(req).vh_session, user = accounts.userForSession(token, now), route = req.method + ' ' + url.pathname;
 
       if(route==='GET /api/site-status')return json(req,res,{ok:true,mode:profileOnly?'profiles':'game',readOnly:profileOnly,trial:!profileOnly&&trial,loginRequired:true,updatedAt:now,...siteStatus()});
+      // Lỗi phía trình duyệt người chơi (script hỏng, ảnh/âm thanh lỗi...). Giới hạn tần suất, cắt ngắn, không lưu IP.
+      if(route==='POST /api/client-error'){
+        if(limited('cerr:'+ip,20,60000,now))return json(req,res,{ok:false},429);
+        const b=await readBody(req)||{};
+        errors.record('client',{page:b.page,message:b.message,source:b.source,line:Number(b.line)||undefined,col:Number(b.col)||undefined,stack:b.stack,ua:b.ua,user:user?.username});
+        return json(req,res,{ok:true});
+      }
       if(route==='GET /api/updates') {
         if (!user) return json(req,res,{ok:false},401);
         if (!updates) return json(req,res,{ok:false},404);
@@ -268,7 +277,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       if (route === 'GET /api/session' && viewP) return json(req, res, { user: { username: 'Quản trị · xem ' + viewP.name, linkedTikTok: !viewP.webOnly }, player: playerView(world, viewP, now), pendingLink: null, devTools: false, adminView: { id: viewP.id, name: viewP.name } });
       if(playSessions&&user&&playerOf(user)&&!['POST /api/logout','POST /api/login','POST /api/register','POST /api/check','POST /api/link/start'].includes(route)){
         const access=await playSessions.enter(user,token);
-        if(!access.ok)return json(req,res,access,409);
+        if(!access.ok){errors.record('play-session',{route,user:user.username,message:access.code||access.message});return json(req,res,access,409);}
         if(!playSessions.allowed(user,token))return json(req,res,{ok:false,code:'PLAY_SESSION_CONFLICT',message:'Phiên chơi đang bàn giao. Thử lại sau.'},409);
         req.playing=true;
       }
@@ -409,6 +418,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       return json(req, res, { ok: false, message: 'Không có.' }, 404);
     } catch (e) {
       console.error('[web]', e);
+      errors.record('server', { route: req.method + ' ' + url.pathname, message: e?.message || String(e), stack: e?.stack });
       if (!res.headersSent) json(req, res, { ok: false, message: 'Lỗi máy chủ.' }, 500);
     }
   });

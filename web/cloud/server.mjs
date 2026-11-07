@@ -1,3 +1,4 @@
+import {createErrorLog} from '../error-log.mjs';
 import {createPlaySessions} from './play-sessions.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,7 +10,7 @@ import { snapshot } from '../../engine.mjs';
 import { authenticate } from './protocol.mjs';
 import { openCloudStore } from './store.mjs';
 
-export function createCloudServer({ dataDir, secret, secureCookie = true, trustProxy = true, gameplay = false }) {
+export function createCloudServer({ dataDir, secret, secureCookie = true, trustProxy = true, gameplay = false, errorLog = createErrorLog(dataDir) }) {
   if (typeof secret !== 'string' || secret.length < 48) throw Error('WEB_SYNC_SECRET must contain at least 48 characters');
   const store = openCloudStore(dataDir), world = store.loadWorld();
   const accounts = createAccountStore(null,{read:()=>store.get('accounts') || {},write:data=>store.saveLocal(world,data)});
@@ -60,14 +61,14 @@ export function createCloudServer({ dataDir, secret, secureCookie = true, trustP
       const result=store.apply(body);
       if(!result.duplicate){const fresh=store.loadWorld();for(const key of Object.keys(world))delete world[key];Object.assign(world,fresh);sync=result;app.invalidate();if(result.changed)notify();}
       return writeJson(res,200,{ok:true,seq:result.seq,duplicate:!!result.duplicate,playSessions:gameplay});
-    } catch(e) {return writeJson(res,409,{ok:false,message:e.message});}
+    } catch(e) {errorLog.record('sync',{message:e.message});return writeJson(res,409,{ok:false,message:e.message});}
   }
-  app=createWebApp({world,dataDir,accountStore:accounts,profileOnly:!gameplay,playSessions,publicOnly:true,devTools:false,tikfinity:false,secureCookie,trustProxy,handleInternal,updates,siteStatus:status,onChange:notify,markDirty:()=>store.saveLocal(world),limits:{requestsPerIp:1800,authPerIp:60},liveState:()=>status().liveConnected?snapshot(structuredClone(world)):{players:[],feed:[],events:[],boss:null}});
+  app=createWebApp({world,dataDir,accountStore:accounts,profileOnly:!gameplay,playSessions,publicOnly:true,devTools:false,tikfinity:false,secureCookie,trustProxy,handleInternal,errorLog,updates,siteStatus:status,onChange:notify,markDirty:()=>store.saveLocal(world),limits:{requestsPerIp:1800,authPerIp:60},liveState:()=>status().liveConnected?snapshot(structuredClone(world)):{players:[],feed:[],events:[],boss:null}});
   // Prevent public registration before private migration; import via CLI while stopped.
   if(!store.get('accounts'))store.put('accounts',{users:{},sessions:{},links:{},nextId:1});
   const heartbeat=setInterval(()=>{for(const [res] of clients){if(!accounts.userForSession(res.vhToken)||res.writableLength>65536){res.end();clients.delete(res);}else res.write(': heartbeat\n\n');}},20000);heartbeat.unref();
   const saver=setInterval(()=>accounts.save(),3000);saver.unref();
-  const backupTimer=setInterval(()=>{try{accounts.save();store.backup();}catch(e){console.error('[cloud] Backup failed:',e.message);}},30*60000);backupTimer.unref();
+  const backupTimer=setInterval(()=>{try{accounts.save();store.backup();}catch(e){console.error('[cloud] Backup failed:',e.message);errorLog.record('backup',{message:e.message});}},30*60000);backupTimer.unref();
   return { ...app,store,world,status,notify,playSessions,async close(){clearInterval(heartbeat);clearInterval(saver);clearInterval(backupTimer);for(const [res]of clients)res.end();accounts.save();await new Promise(resolve=>app.server.close(resolve));store.close();} };
 }
 
@@ -76,7 +77,8 @@ if(direct){
   process.umask(0o077);
   const dataDir=process.env.WEB_CLOUD_DATA_DIR;
   if(!dataDir || !path.isAbsolute(dataDir))throw Error('Set WEB_CLOUD_DATA_DIR to an absolute persistent directory');
-  const cloud=createCloudServer({dataDir,secret:process.env.WEB_SYNC_SECRET,gameplay:process.env.WEB_CLOUD_GAMEPLAY==='1'});
+  const errorLog=createErrorLog(dataDir);errorLog.installProcessHooks('cloud');
+  const cloud=createCloudServer({dataDir,secret:process.env.WEB_SYNC_SECRET,gameplay:process.env.WEB_CLOUD_GAMEPLAY==='1',errorLog});
   cloud.server.listen(Number(process.env.WEB_PORT || 4320),'127.0.0.1',()=>console.log('[cloud] Player web ready on loopback; gameplay '+(process.env.WEB_CLOUD_GAMEPLAY==='1'?'exclusive sessions':'locked')));
   cloud.server.on('error',async e=>{console.error(e.message);await cloud.close();process.exitCode=1;});
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>cloud.close().then(()=>process.exit(0)));
