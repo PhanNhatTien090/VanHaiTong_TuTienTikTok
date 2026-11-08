@@ -48,6 +48,8 @@ function giftLines(e,who,Who,t,seed){
    :pickBy(seed,[`${Who} phản công! ${S} đẩy mạnh!`,`${Who} đẩy mạnh cho ${S}!`,`${Who} tung chiêu, ${S} tiến lên!`]);
   // 08/11 tối: trong đại chiến chỉ hô chiến — không 'đa tạ tâm ý', không đọc phần thưởng (chủ game yêu cầu).
   return [say('trongtai',hype)];}
+ // 08/11 tối: quà ≥500 lúc không sự kiện — thưởng ngay nửa tu vi + skin ngẫu nhiên.
+ if(e.jackpot)return [say('tiennu',pickBy(seed,[`Đại lễ! ${Who} được thưởng ngay một nửa tu vi!`,`${Who} tặng đại lễ, tu vi tăng thêm một nửa!`])),say('tongsu',master)];
  if(e.firstGift)return [say('tiennu','Chào mừng Tân Hộ Pháp '+who+'!'),say('tongsu',master)];
  return (Number(e.coins)||0)*(Number(e.count)||1)>=99?[say('tiennu','Vinh danh '+who+'!'),say('tongsu',master)]:[say('tongsu',master)];
 }

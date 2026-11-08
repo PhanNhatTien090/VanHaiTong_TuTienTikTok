@@ -40,7 +40,7 @@ import {OPPORTUNITY_COSTS,OPPORTUNITY_MS} from './public/opportunity.js';
 import {gameText} from './public/game-language.js';
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
-import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS} from './public/visitor-rewards.js';
+import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
 import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop} from './sword-race.mjs';
 import {SOCIAL_ITEMS,socialProfile,socialCommand,bondActivity,tickSocial,socialView,socialBusy,tournamentActive,startTournament as beginTournament,stopTournament as endTournament} from './social-events.mjs';
@@ -483,7 +483,7 @@ function actionCore(w,input,now) {
   } else if(type==='gift') {
     if(input.eventId)w.seen[input.eventId]=now;
     const count=Math.min(1000,Math.max(1,Math.trunc(Number(input.count)||1)));
-    const award=giftReward(input.coins,w.gifts),tier=award.tier;
+    const award=giftReward(input.coins,w.gifts),tier=award.tier,qiBeforeGift=p.qi;
     const firstGift=!p.giftCoins&&!p.puppet&&!p.resident,vipBefore=vipTier(p.giftCoins); // v86: lễ quà đầu tiên → phúc duyên ≥×5 trong 20 phút
     // 07/11/2026: đang đua phi kiếm → quà chỉ để BỨT TỐC, không cộng tu vi.
     const racing=w.race?.phase==='running'&&now<w.race.endsAt&&w.race.racers.some(r=>r.id===p.id&&!r.finishAt);
@@ -517,11 +517,25 @@ function actionCore(w,input,now) {
     // v51: nhận skin khách mời → sự kiện BIẾN HÌNH riêng (thông báo + hiệu ứng), chạy sau màn cảm ơn quà.
     if(visitorReward.skinNames?.length){const skinName=visitorReward.skinNames[0].replace(/^Skin /,'');emit(w,p,`Biến hình ${skinName} • nhận skin truyền thừa`,'transform',now,{transform:visitorReward.kind,skinName});}
     if(visitorReward.items.length){const id=visitorReward.items[0];if(itemScore(id)>itemScore(p.equipped))p.equipped=id;giftEvent.visitorTechnique=visitorReward.kind;}
+    const jackpot=input.simulated||input.autoRose?null:giftJackpot(w,p,input.coins*count,now,Math.random,qiBeforeGift);if(jackpot){giftEvent.jackpot=jackpot;giftEvent.text=giftEvent.text.replace(' • cảm ơn đạo hữu',' • ĐẠI LỄ: +'+jackpot.qi+' tu vi (50%)'+(jackpot.skinName?' + skin '+jackpot.skinName:'')+' • cảm ơn đạo hữu');giftEvent.reward.qi+=jackpot.qi;giftEvent.reward.stones+=jackpot.stones;giftEvent.reward.herbs+=jackpot.herbs;if(jackpot.skinName){giftEvent.reward.skinNames=['Skin '+jackpot.skinName];itemNames.push('Skin '+jackpot.skinName);}}
     auditRecord(w,'gift',now,{id:input.eventId,user:p.id,name:p.name,gift:gift||input.giftName||tier.name,unitCoins:input.coins,count,coins:input.coins*count,simulated:!!(p.puppet||p.resident||input.simulated||input.autoRose),eventId:visitorReward.kind?w.visitor.id:null,eventKind:visitorReward.kind||null,contextEventId:w.visitor?.id||null,reason:p.puppet||p.resident||input.simulated||input.autoRose?'simulated':visitorReward.kind?'in-event':'outside-event-window',eventCoins:visitorReward.coins||0,skinNames:visitorReward.skinNames,items:visitorReward.items});
     creditOpportunity(w,p,input.coins*count,now);
     flowerScore(w,p,input.coins*count*100,now); // v59: 1 coin quà = 100 điểm sự kiện
   }
   p.interactions++;w.totalInteractions++;return {ok:true,playerId:p.id};
+}
+// 08/11 tối (chủ game): tặng từ 500 coin một lần lúc KHÔNG có sự kiện → thưởng ngay 50% tu vi hiện tại,
+// 1 skin sự kiện ngẫu nhiên chưa có (bộ giá ≤200 coin) và thêm linh thạch + linh thảo.
+export const GIFT_JACKPOT=Object.freeze({minCoins:500,qiRate:.5,maxSkinCoins:200,stones:1000,stoneRate:.5,herbs:100});
+export function giftJackpot(w,p,coins,now,rand=Math.random,baseQi=p?.qi){
+  if(!p||p.puppet||p.resident||!(coins>=GIFT_JACKPOT.minCoins)||stageConflict(w,now))return null;
+  const qi=creditQi(w,p,Math.floor(Math.max(0,Number(baseQi)||0)*GIFT_JACKPOT.qiRate),now,'gift');
+  const stones=Math.max(GIFT_JACKPOT.stones,Math.round(requiredStones(p)*GIFT_JACKPOT.stoneRate)),herbs=GIFT_JACKPOT.herbs;
+  p.qi+=qi;p.totalQi+=qi;p.stones+=stones;p.herbs+=herbs;w.sectQi+=qi;
+  p.rewardSkins??=[];const pool=Object.entries(VISITOR_GIFT_REWARDS).filter(([,r])=>(r.skinCoins||100)<=GIFT_JACKPOT.maxSkinCoins&&!p.rewardSkins.includes(r.skin));
+  let skinName=null;if(pool.length){const [kind,r]=pool[Math.floor(rand()*pool.length)%pool.length];p.rewardSkins.push(r.skin);p.skinChoice=r.skin;p.skinChoiceSource='gift';skinName=visitorSkinName(kind,p.gender);
+    emit(w,p,`Biến hình ${skinName} • quà 500 nhận skin`,'transform',now,{transform:kind,skinName,jackpotSkin:true});}
+  return {qi,stones,herbs,skinName};
 }
 export const LIVE_ACTIVE_MS=5*60000;
 export function startOpportunity(w,now=Date.now()){
