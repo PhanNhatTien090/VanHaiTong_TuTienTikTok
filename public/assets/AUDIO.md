@@ -13,3 +13,10 @@ Validation: file generation, actual online TTS API returned an MP3, WAV MIME typ
 
 ## Nhạc nền v44 — 01/11/2026
 bgm-theme-c.mp3: bản theme_C_nghe.mp3 (90 giây, lặp) do người dùng cung cấp từ C:/WorkSpace/My First Game/The Rewriter/the-rewriter/AudioResearch/2026-10-21/. Thay meditation-loop.wav (file cũ vẫn giữ để quay lại nếu cần).
+
+## Nhạc nền danh sách phát — 08/11/2026 tối
+Phát lần lượt (bắt đầu ngẫu nhiên, hết bài sang bài kế), chuẩn hóa loudnorm -19 LUFS (bản cũ -23 LUFS → to hơn ~4 dB, user yêu cầu "nhạc to lên"):
+- `bgm-tu-tien-1.mp3`: bgm-theme-c.mp3 ở trên (người dùng cung cấp).
+- `bgm-tu-tien-2.mp3`: "Imperial China Cinematic" — Shane Ivers, https://www.silvermansound.com — CC BY 4.0.
+- `bgm-tu-tien-3.mp3`: "All The Tea In China" — Shane Ivers, https://www.silvermansound.com — CC BY 4.0.
+CC BY 4.0 cần ghi công: dán vào mô tả/giới thiệu LIVE: "Music: Imperial China Cinematic, All The Tea In China by Shane Ivers - https://www.silvermansound.com".

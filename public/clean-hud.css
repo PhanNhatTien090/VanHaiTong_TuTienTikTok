@@ -241,15 +241,16 @@ body.overlay .like-goal i.sect-bar{background:linear-gradient(90deg,#d2b77b,#fff
 /* v87: hồng bao rơi */
 .envelope-box,.quiz-box{display:none}
 body.overlay .envelope-box:not([hidden]){display:block;position:absolute;inset:0;z-index:12;pointer-events:none;overflow:hidden}
-.env-card{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);width:34%;max-width:320px;aspect-ratio:3/4;border-radius:18px;
+.env-card{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);width:34%;min-width:170px;max-width:320px;aspect-ratio:3/4;border-radius:18px;container-type:inline-size;
   background:linear-gradient(170deg,#e8323c,#a8101c 70%);box-shadow:0 0 30px 8px #ff4a4a66,inset 0 0 0 3px #ffd76a;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:.3em;padding:0 6% 9%;
-  font-size:clamp(11px,2vw,22px);color:#fff1c0;text-align:center;text-shadow:0 1px 2px #5a0008;animation:envDrop .9s cubic-bezier(.2,1.5,.4,1) both,envSway 2.2s 1s ease-in-out infinite}
+  font-size:16px;line-height:1.25;color:#fff1c0;text-align:center;text-shadow:0 1px 2px #5a0008;animation:envDrop .9s cubic-bezier(.2,1.5,.4,1) both,envSway 2.2s 1s ease-in-out infinite}
 .env-top{position:absolute;top:0;left:0;right:0;height:38%;border-radius:18px 18px 50% 50%/18px 18px 30% 30%;background:linear-gradient(180deg,#c41a26,#8f0c16);box-shadow:0 4px 0 #ffd76a}
-.env-seal{position:absolute;top:28%;left:50%;transform:translateX(-50%);width:28%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff1c0,#e0a83a);color:#a8101c;display:grid;place-items:center;font:900 1.7em serif;box-shadow:0 0 14px #ffd76a}
-.env-card b{font-size:1.15em;letter-spacing:.04em}.env-card code{font-family:inherit;font-weight:900;color:#ffffff;background:#5a000855;padding:0 .3em;border-radius:5px}.env-card small{font-size:.75em;color:#ffe3c0}
+.env-seal{position:absolute;top:28%;left:50%;transform:translateX(-50%);width:28%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff1c0,#e0a83a);color:#a8101c;display:grid;place-items:center;font:900 15cqw serif;box-shadow:0 0 14px #ffd76a}
+.env-card b{font-size:8.5cqw;letter-spacing:.04em;white-space:nowrap}.env-card>span{font-size:6.6cqw}.env-card>span,.env-card>small{position:relative;max-width:100%}.env-card code{font-family:inherit;font-weight:900;color:#ffffff;background:#5a000855;padding:0 .3em;border-radius:5px}.env-card small{font-size:5.4cqw;color:#ffe3c0}
 .env-coin{position:absolute;top:-6%;left:var(--x);width:1.6vmin;height:1.6vmin;min-width:9px;min-height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff7d0,#e0a83a);box-shadow:0 0 6px #ffd76a;animation:envCoin 2.6s var(--d) linear infinite}
 @keyframes envDrop{from{transform:translate(-50%,-140%) rotate(-12deg)}to{transform:translate(-50%,-50%)}}@keyframes envSway{50%{transform:translate(-50%,-52%) rotate(2deg)}}
 @keyframes envCoin{to{transform:translateY(110vh) rotate(540deg)}}
+/* 08/11 tối: chữ hồng bao tính theo bề rộng chính cái bao (cqw), không theo cửa sổ — trước đây LIVE Studio hiện mỗi chữ một dòng, đè lên nắp bao. */
 /* v87: câu đố tu tiên */
 body.overlay .quiz-box:not([hidden]){display:block;position:absolute;left:50%;transform:translateX(-50%);top:16%;z-index:11;width:72%;max-width:640px;pointer-events:none;
   padding:9px 14px 10px;border-radius:14px;background:rgba(14,10,40,.78);box-shadow:0 0 0 2px #b9a2ff88,0 0 22px 6px rgba(80,50,180,.35);font-size:clamp(11px,2vw,22px);color:#f1eaff;text-shadow:0 1px 2px #000;animation:envDrop .7s cubic-bezier(.2,1.4,.4,1) both}

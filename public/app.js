@@ -34,7 +34,7 @@ import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
 import {Scene,portrait,symbols} from './scene.js';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
-import {IDLE_LINES,SCENE_ARRIVAL} from './idle-lines.js';
+import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
 import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js';
@@ -238,6 +238,7 @@ function showGiftReceipt(e){
 
 let arrivalPending=true;
 let lastVoiceAt=Date.now(),idleWait=100000,idleRecent=[],idleCount=0;
+let checkinAt=Date.now(),checkinWait=120000;
 async function idleLine(){
   const available=IDLE_LINES.map((l,i)=>i).filter(i=>!idleRecent.includes(i));const preferred=available.filter(i=>idleCount%3===2?IDLE_LINES[i].cta:!IDLE_LINES[i].cta);const pool=preferred.length?preferred:available;
   const i=pool[Math.floor(Math.random()*pool.length)]??0;
@@ -249,6 +250,7 @@ setInterval(()=>{
   if(!overlay)return;
   if(narrator.running||narrator.queue.length){lastVoiceAt=Date.now();return;}
   if(arrivalPending&&initialized&&cultivationAudio.enabled&&narrator.enabled){arrivalPending=false;if(!state?.environment?.ambience)narrator.idle(SCENE_ARRIVAL);lastVoiceAt=Date.now();return;}
+  if(mode==='live'&&Date.now()-lastVoiceAt>=8000&&Date.now()-checkinAt>=checkinWait){checkinAt=Date.now();checkinWait=240000+Math.random()*120000;narrator.idle(CHECKIN_REMINDER).then(()=>lastVoiceAt=Date.now());return;}
   if(idleOn&&Date.now()-lastVoiceAt>=idleWait)idleLine();
 },3000);
 // Tu tiên giả thường trú tự hoạt động 4–8 giây một lần: tung chiêu, lĩnh ngộ, chế tạo tinh thể, đột phá, đánh yêu thú.

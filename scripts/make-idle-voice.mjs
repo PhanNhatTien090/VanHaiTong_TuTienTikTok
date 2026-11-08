@@ -4,14 +4,14 @@ import path from 'node:path';
 import readline from 'node:readline';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {IDLE_LINES,SCENE_ARRIVAL} from '../public/idle-lines.js';
+import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from '../public/idle-lines.js';
 import {RESIDENT_VOICES} from '../public/resident-acts.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const vieneu=process.env.VAN_HAI_VIENEU_DIR||'C:\\WorkSpace\\TIKTOK\\tools\\vieneu';
 for(const d of ['idle','resident'])fs.mkdirSync(path.join(root,'public','assets',d),{recursive:true});
 const force=process.argv.includes('--force');
-const jobs=(process.argv.includes('--idle-only')?[...IDLE_LINES,SCENE_ARRIVAL]:[...IDLE_LINES,SCENE_ARRIVAL,...RESIDENT_VOICES]).map((l,i)=>({id:String(i),text:l.say||l.text,output:path.join(root,'public',l.file)})).filter(j=>force||!fs.existsSync(j.output));
+const jobs=(process.argv.includes('--idle-only')?[...IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER]:[...IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER,...RESIDENT_VOICES]).map((l,i)=>({id:String(i),text:l.say||l.text,output:path.join(root,'public',l.file)})).filter(j=>force||!fs.existsSync(j.output));
 if(!jobs.length){console.log('Đã có đủ file. Dùng --force để đọc lại.');process.exit(0);}
 const child=spawn(path.join(vieneu,'.venv','Scripts','python.exe'),[path.join(root,'scripts','vieneu_worker.py')],{cwd:vieneu,stdio:['pipe','pipe','inherit'],env:{...process.env,PYTHONIOENCODING:'utf-8',HF_HUB_OFFLINE:'1'}});
 let left=jobs.length,failed=0;

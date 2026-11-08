@@ -27,6 +27,8 @@ import {breakthroughRealm} from './breakthrough-fx.js';
 // 08/11: bo đỉnh mềm cuối chuỗi — dưới 0,8 giữ nguyên, trên đó uốn dần tới 0,98: không bao giờ cắt cứng (tiếng rẹt).
 export function softClipCurve(n=4096){const a=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1,m=Math.abs(x);a[i]=Math.sign(x)*(m<=.8?m:.8+.18*Math.tanh((m-.8)/.18));}return a;}
 function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.createWaveShaper();w.curve=softClipCurve();w.oversample='4x';return w;}
+// 08/11 tối: 3 bản nhạc nền tu tiên, chuẩn hóa -19 LUFS (to hơn bản cũ -23 LUFS ~4 dB). Nguồn + giấy phép: public/assets/AUDIO.md.
+export const BGM_TRACKS=Object.freeze(['/assets/bgm-tu-tien-1.mp3','/assets/bgm-tu-tien-2.mp3','/assets/bgm-tu-tien-3.mp3']);
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.3;this.ambient=.45;this.sfx=.75;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){
@@ -37,10 +39,12 @@ export class CultivationAudio {
     if(this.ctx.state!=='running')throw Error('Âm thanh đang bị chặn.');
     this.enabled=true;this.sync();
     if(typeof Audio!=='undefined'){
-      if(!this.music){this.music=new Audio('/assets/bgm-theme-c.mp3');this.music.loop=true;this.music.preload='auto';}
+      if(!this.music){this.track=Math.floor(Math.random()*BGM_TRACKS.length);this.music=new Audio(BGM_TRACKS[this.track]);this.music.loop=false;this.music.preload='auto';this.music.onended=()=>this.nextTrack();}
       this.sync();let musicTimer;try{await Promise.race([this.music.play(),new Promise((_,reject)=>{musicTimer=setTimeout(()=>reject(Error('Nhạc nền chưa phát được. Bấm thử âm lại.')),4000);})]);}catch(err){this.enabled=false;this.music.pause();await this.ctx.suspend();throw err;}finally{clearTimeout(musicTimer);}
     }else if(!this.timer)this.schedule();
   }
+  // 08/11 tối: hết bài thì sang bài kế (vòng lặp danh sách).
+  nextTrack(){if(!this.music)return;this.track=((this.track||0)+1)%BGM_TRACKS.length;this.music.src=BGM_TRACKS[this.track];this.sync();if(this.enabled)this.music.play()?.catch?.(()=>{});}
   init(){const C=globalThis.AudioContext||globalThis.webkitAudioContext;this.ctx=new C();const c=this.ctx;
     this.master=c.createGain();this.ambBus=c.createGain();this.fxBus=c.createGain();this.limiter=c.createDynamicsCompressor();
     this.limiter.threshold.value=-14;this.limiter.knee.value=12;this.limiter.ratio.value=4;this.limiter.attack.value=.01;this.limiter.release.value=.4;

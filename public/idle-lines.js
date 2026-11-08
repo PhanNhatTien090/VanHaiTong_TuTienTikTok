@@ -9,3 +9,6 @@ export const IDLE_LINES=Object.freeze([
 ].map((line,i)=>({...line,file:`/assets/idle/idle-v20-${String(i+1).padStart(2,'0')}.mp3`})).filter((line,i)=>i!==2));
 
 export const SCENE_ARRIVAL=Object.freeze({text:'Các đạo hữu, chúng ta đến Tụ Linh Đài, nơi linh khí hội tụ dồi dào nhất của tông môn.',file:'/assets/idle/arrival-tu-linh-dai-v20.mp3'});
+
+// 08/11 tối: nhắc điểm danh — phát riêng mỗi 4–6 phút trên overlay, kể cả khi tắt câu idle.
+export const CHECKIN_REMINDER=Object.freeze({text:'Các đạo hữu nhớ gõ điểm danh để nhận quà hằng ngày nhé.',file:'/assets/idle/idle-v20-07.mp3'});
