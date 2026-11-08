@@ -40,6 +40,10 @@ test('live keeps five stable rows (hearts + chat first), no admission command, w
  assert.match(simpleSteps({...s,raceStatus:{phase:'running'}}).hint,/thả tim/);
  assert.match(simpleSteps({...s,boss:{hp:10,endsAt:N+1000}}).hint,/thả tim/);
  assert.deepEqual(simpleSteps({...s,raceStatus:{phase:'running'}}).rows,base.rows);
+ // Xoay vòng: trang chính xen kẽ lệnh hằng ngày / đồng môn; trang nào cũng ≤5 dòng.
+ assert.deepEqual([0,1,2,3,4].map(i=>simpleSteps(s,i).title),['CÁCH CHƠI','LỆNH HẰNG NGÀY','CÁCH CHƠI','ĐỒNG MÔN','CÁCH CHƠI']);
+ assert.ok([1,3].every(i=>simpleSteps(s,i).rows.length<=5));
+ assert.ok(simpleSteps(s,1).rows.some(r=>r.cmd==='điểm danh')&&simpleSteps(s,3).rows.some(r=>r.cmd==='kết duyên + tên'));
 });
 
 test('a first intentional arrival gets a brief visible seat without displacing a protected presentation',()=>{

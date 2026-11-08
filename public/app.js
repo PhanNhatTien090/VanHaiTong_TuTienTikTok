@@ -27,7 +27,7 @@ import {railHTML} from './command-rail.js';
 import {skinGuideHTML,divinePreview} from './skin-guide.js';
 let skinGuideAt=0;function renderSkinGuide(force=false){const el=document.querySelector('#skinGuide');if(!el||!state||(!force&&Date.now()-skinGuideAt<3000))return;skinGuideAt=Date.now();const html=skinGuideHTML(state,esc);if(el._last!==html){el.innerHTML=html;el._last=html;}}
 // v42: bảng lệnh / trang bị dọc bên phải, đổi trang mỗi 12 giây.
-let railPage=0;function renderRail(){if(state)renderSimpleGuide(state,esc);const el=document.querySelector('#commandRail');if(!el||!state)return;const html=railHTML(state,railPage,esc);if(el._last!==html){el.innerHTML=html;el._last=html;}}
+let railPage=0;function renderRail(){if(state)renderSimpleGuide(state,esc,railPage);const el=document.querySelector('#commandRail');if(!el||!state)return;const html=railHTML(state,railPage,esc);if(el._last!==html){el.innerHTML=html;el._last=html;}}
 setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
