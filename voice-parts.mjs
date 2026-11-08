@@ -8,12 +8,14 @@ export function namePlan(p){const raw=sayName(p?.name);if(!raw)return null;const
 export function giftPlan(gift){const g=clean(gift);return g?[{voice:'tongsu',text:`tặng ${g}! Tu vi tăng mạnh!`}]:null;}
 // 08/11 tối: mảnh ghép hô chiến cho quà trong Chính Ma Đại Chiến (thay 'Đa tạ tâm ý').
 export const WAR_PUSH_PLANS=Object.freeze({chinh:Object.freeze([{voice:'tongsu',text:'phản công! Chính Đạo đẩy mạnh!'}]),ma:Object.freeze([{voice:'tongsu',text:'phản công! Ma Đạo đẩy mạnh!'}])});
+// 08/11 tối: tông chủ ban lễ — "<tên>" + "được Tông chủ ban <gói>!" làm sẵn để đọc ngay (câu đầy đủ mất ~10 s, trước đây bị bỏ).
+export const ADMIN_PLANS=Object.freeze(Object.fromEntries([['small','Tiểu Lễ'],['medium','Trung Lễ'],['large','Đại Lễ'],['buff','Phúc Duyên'],['breakthrough','Đột Phá Đan']].map(([k,n])=>[k,Object.freeze([{voice:'tongsu',text:`được Tông chủ ban ${n}!`}])])));
 export const THANKS_PLAN=Object.freeze([{voice:'tongsu',text:'tặng quà! Tu vi tăng mạnh!'}]);
 const ACTIVE_MS=20*60000;
 /** Mảnh còn thiếu cần làm tiếp (ưu tiên: câu cảm ơn chung → người vừa tương tác → quà vừa có → quà phổ biến). */
 export function nextMissingPart(w,cached,now=Date.now()){
   if(!cached(THANKS_PLAN))return THANKS_PLAN;
-  for(const plan of Object.values(WAR_PUSH_PLANS))if(!cached(plan))return plan;
+  for(const plan of [...Object.values(WAR_PUSH_PLANS),...Object.values(ADMIN_PLANS)])if(!cached(plan))return plan;
   const people=Object.values(w.players||{}).filter(p=>!p.resident&&!p.puppet&&now-(p.lastRealInteractionAt||p.lastActive||0)<ACTIVE_MS).sort((a,b)=>(b.giftCoins>0)-(a.giftCoins>0)||(b.lastRealInteractionAt||0)-(a.lastRealInteractionAt||0));
   for(const p of people.slice(0,200)){const plan=namePlan(p);if(plan&&!cached(plan))return plan;}
   const gifts=new Set([...(w.events||[]).filter(e=>e.gift&&Number(e.coins)>0).slice(-60).map(e=>e.gift),...COMMON_GIFTS]);

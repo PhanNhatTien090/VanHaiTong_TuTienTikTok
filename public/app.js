@@ -228,6 +228,9 @@ function renderLiveRanks(force=false){
   if(giftEl&&(force||giftHtml!==giftEl.dataset.html)){giftEl.innerHTML=giftHtml;giftEl.dataset.html=giftHtml;giftEl.hidden=!giftHtml;}
 }
 let giftReceiptTimer;
+// 08/11 tối: tông chủ ban lễ — thẻ thông báo hiện ngay (trước đây chỉ có hiệu ứng hoa sen, không chữ).
+function showAdminReceipt(e){const el=$('#giftReceipt');if(!el)return;const r=e.reward||{},parts=[r.qi&&'+'+fmt(r.qi)+' tu vi',r.stones&&'+'+fmt(r.stones)+' linh thạch',r.herbs&&'+'+fmt(r.herbs)+' linh thảo'].filter(Boolean);
+  el.innerHTML=`<strong>👑 Tông chủ ban ${esc(e.comboName||'phần thưởng')} · ${esc(e.name)}</strong>${parts.length?`<span>${parts.join(' · ')}</span>`:''}${e.buff?.mult?`<span>✦ Phúc duyên ×${String(e.buff.mult).replace('.',',')} trong ${e.buff.minutes} phút</span>`:''}`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,10000);}
 function showGiftReceipt(e){
   if(e.raceGift&&e.raceBoost){const el=$('#giftReceipt');if(!el)return;el.innerHTML=`<strong>⚡ ${esc(e.name)} · ${esc(e.gift||'Quà tặng')}${(Number(e.count)||1)>1?' ×'+e.count:''}</strong><span>Bứt tốc +${fmt(e.raceBoost)} trượng</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,6000);return;} // 07/11: đang đua chỉ báo bứt tốc
   const g=state?.gifts.find(g=>g.name===e.tier),count=Math.max(1,Number(e.count)||1),q=e.reward?.qi??Number(String(e.text).match(/\+(\d+) tu vi/)?.[1]||0),stones=e.reward?.stones??(g?.stones||0)*count,herbs=e.reward?.herbs??(g?.herbs||0)*count;
@@ -332,6 +335,7 @@ function enqueueReady(e){
   if(isArrivalWelcome(e)){arrivalWelcomes.add(e);return;}
   if(e.engagementAction){scene.noteEvent(e);narrator.add(e);const now=performance.now();if(now-engagementSoundAt>800){tone(e.engagementAction==='follow'?'petal':'lotus');engagementSoundAt=now;}return;}
   if(isEventAnnouncement(e)||e.gift)narrator.add(e);
+  if(e.adminGift)showAdminReceipt(e);
   if(e.gift&&!e.resident){e._arrivedAt??=Date.now();showGiftReceipt(e);if(busy&&current&&giftMayPreempt(current.e,e))interruptShow();}
   scene.noteEvent(e);if(!e.resident)pulse.push({t:Date.now(),e});
   if(e.resident&&!e.scheduled&&(busy||queue.length))return; // đột phá/nhập môn theo lịch của NPC không bị bỏ khi đang bận

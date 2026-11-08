@@ -4,9 +4,9 @@ export const VOICE_RATE=1.8;
 export const syntheticVoice=e=>!!(e.resident||e.actorKind==='npc'||e.simulated||e.autoRose||String(e.user||'').startsWith('puppet-'));
 export const raceOpeningVoice=e=>!!(e.raceEntry||e.effect==='race'&&/^VÂN HẢI PHI KIẾM|^Phi kiếm xuất phát/.test(e.text||''));
 export const realGiftVoice=e=>!!(e.gift&&Number(e.coins)>0&&!syntheticVoice(e));
-export function fastVoiceFile(e){const kind=realGiftVoice(e)?(e.eventRule||e.raceGift||e.warGift?null:'gift'):e.effect==='breakthrough'?'breakthrough':e.effect==='ready'?'ready':e.autoArrival||e.effect==='join'?null:e.effect==='attack'?'attack':e.effect==='gather'?'gather':e.effect==='learn'?'learn':['qi','petal','lotus','sword'].includes(e.effect)?'qi':null; /* 08/11: chào người vào không dùng câu dự phòng chung (bị lặp, nói cả với người cũ). 07/11: bỏ câu dự phòng 'Tông môn đã ghi nhận…' — nghe như cảm ơn quà khi không ai tặng */return kind?'/assets/voice-fast-v1/'+kind+'.mp3':null;}
+export function fastVoiceFile(e){const kind=e.adminGift?null:realGiftVoice(e)?(e.eventRule||e.raceGift||e.warGift?null:'gift'):e.effect==='breakthrough'?'breakthrough':e.effect==='ready'?'ready':e.autoArrival||e.effect==='join'?null:e.effect==='attack'?'attack':e.effect==='gather'?'gather':e.effect==='learn'?'learn':['qi','petal','lotus','sword'].includes(e.effect)?'qi':null; /* 08/11: chào người vào không dùng câu dự phòng chung (bị lặp, nói cả với người cũ). 07/11: bỏ câu dự phòng 'Tông môn đã ghi nhận…' — nghe như cảm ơn quà khi không ai tặng */return kind?'/assets/voice-fast-v1/'+kind+'.mp3':null;}
 // Tu tiên giả thường trú luôn xếp sau khách thật (0).
-export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
+export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.adminGift?5.5:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
 
 // 08/11/2026: GIẢM GIỌNG ĐỌC (chủ game: "đọc nhiều, lộn xộn, ồn quá"). Quà, Thiên Đạo, sự kiện lớn luôn đọc.
 // Câu thường (tu luyện, hái, đánh, nhắc lệnh, chào…) giãn ra: cả sân tối đa 1 câu / 12 s, mỗi người 1 câu / 90 s;
@@ -42,7 +42,7 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
 
 // 08/11/2026: CHỐNG GIỌNG TRỄ. Giọng đọc chậm sẽ nói điều không còn trên màn hình (TikTok có thể cảnh báo nội dung sai).
 // Câu nào tính từ lúc nhận sự kiện đã quá hạn thì bỏ hẳn, kể cả khi giọng vừa tạo xong.
-export function voiceMaxAgeMs(e){return e.heavenStrike?10000:realGiftVoice(e)?12000:raceOpeningVoice(e)?12000:isEventAnnouncement(e)?12000:e.autoArrival?6000:e.ceremony?15000:7000;}
+export function voiceMaxAgeMs(e){return e.adminGift?25000:e.heavenStrike?10000:realGiftVoice(e)?12000:raceOpeningVoice(e)?12000:isEventAnnouncement(e)?12000:e.autoArrival?6000:e.ceremony?15000:7000;}
 
 export class VoiceQueue {
   constructor({world,audio,onStart=()=>{},onStatus=()=>{},player=()=>null,calm=true}){this.world=world;this.audio=audio;this.player=player;this.calm=calm;this.calmLast={routine:-Infinity,breakthrough:-Infinity,arrival:-Infinity,users:new Map()};this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
@@ -82,7 +82,8 @@ export class VoiceQueue {
   }
   // Mảnh ghép làm sẵn cho lời cảm ơn quà; thiếu tên thì null (dùng đường cũ).
   giftParts(e){const base=`/api/voice-part?world=${this.world}`,get=q=>fetch(base+q,{signal:AbortSignal.timeout(1200)}).then(r=>r.ok?r.blob():null).catch(()=>null);
-    if(!e.user||e.eventRule&&!e.warGift||e.raceGift)return Promise.resolve(null); // 08/11 tối: quà trong sự kiện đọc đúng luật sự kiện, không ghép câu quà chung
+    if(!e.user||e.eventRule&&!e.warGift||e.raceGift)return Promise.resolve(null);
+    if(e.adminGift)return Promise.all([get('&kind=name&user='+encodeURIComponent(e.user)),get('&kind=admin&combo='+encodeURIComponent(e.adminGift))]).then(([n,g])=>n&&g?[n,g]:null); // 08/11 tối: tông chủ ban lễ // 08/11 tối: quà trong sự kiện đọc đúng luật sự kiện, không ghép câu quà chung
     // 08/11 tối: quà trong Chính Ma → "<tên> phản công! <phe> đẩy mạnh!" (không cảm ơn).
     const second=e.warGift?get('&kind=war&side='+encodeURIComponent(e.warGift)):get('&kind=gift&gift='+encodeURIComponent(e.gift||'')).then(b=>b||get('&kind=thanks'));
     return Promise.all([get('&kind=name&user='+encodeURIComponent(e.user)),second]).then(([n,g])=>n&&g?[n,g]:null);}
@@ -118,8 +119,8 @@ export class VoiceQueue {
       if(e.file){await this.play(e.file,e,generation);return;}
       this.onStatus('Đang chuẩn bị giọng đọc…');
       const pending=this.prepare(e);this.prepareQueued();
-      const fallback=fastVoiceFile(e),quick=realGiftVoice(e)?this.giftParts(e):null;let timer;const interrupted=new Promise((_,reject)=>{this.cancelPreparation=()=>reject(Object.assign(Error('Voice superseded'),{name:'AbortError'}));});
-      let blob;try{blob=await Promise.race([pending,interrupted,...(fallback||e.autoArrival?[new Promise(resolve=>{timer=setTimeout(()=>resolve(null),e.autoArrival?(this.arrivalWaitMs??1500):quick?(this.giftWaitMs??Math.min(700,this.prepareWaitMs??700)):(this.prepareWaitMs??1200));})]:[])]);}catch(err){if(err.name==='AbortError')throw err;if(!fallback)throw err;blob=null;}finally{clearTimeout(timer);this.cancelPreparation=null;}
+      const fallback=fastVoiceFile(e),quick=realGiftVoice(e)||e.adminGift?this.giftParts(e):null;let timer;const interrupted=new Promise((_,reject)=>{this.cancelPreparation=()=>reject(Object.assign(Error('Voice superseded'),{name:'AbortError'}));});
+      let blob;try{blob=await Promise.race([pending,interrupted,...(fallback||e.autoArrival||quick?[new Promise(resolve=>{timer=setTimeout(()=>resolve(null),e.autoArrival?(this.arrivalWaitMs??1500):quick?(this.giftWaitMs??Math.min(700,this.prepareWaitMs??700)):(this.prepareWaitMs??1200));})]:[])]);}catch(err){if(err.name==='AbortError')throw err;if(!fallback)throw err;blob=null;}finally{clearTimeout(timer);this.cancelPreparation=null;}
       if(generation!==this.generation)return;
       // 08/11: câu cảm ơn đầy đủ chưa kịp → ghép mảnh làm sẵn "Sư huynh <tên>" + "tặng <quà>! Tu vi tăng mạnh!" (vẫn giọng tông sư).
       if(!blob&&quick){let pt;const parts=await Promise.race([quick,new Promise(r=>{pt=setTimeout(()=>r(null),this.partsWaitMs??Math.min(400,this.prepareWaitMs??400));})]);clearTimeout(pt);if(generation!==this.generation)return;if(parts){if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;}this.noteLag(e,Date.now()-(receivedAt??Date.now()),false);this.quickParts=(this.quickParts||0)+1;for(const part of parts){const u=URL.createObjectURL(part);try{await this.play(u,e,generation);}finally{URL.revokeObjectURL(u);}if(generation!==this.generation)return;}return;}}

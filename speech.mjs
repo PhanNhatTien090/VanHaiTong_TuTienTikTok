@@ -74,7 +74,7 @@ export function createSpeech(root,dataDir){
   async function speech(e){
     if(engine==='off')throw Error('Giọng đọc đang tắt (VAN_HAI_TTS=off).');
     // v75: kế hoạch đọc nhiều đoạn, mỗi đoạn một giọng (tông sư / tiên nữ / trọng tài)
-    const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
+    const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||e.adminGift||isEventAnnouncement(e);
     return synthPlan(speechPlan(e),important,false);
   }
   // 08/11: dùng chung cho câu đầy đủ và mảnh ghép làm sẵn (tên người chơi, câu cảm ơn quà).

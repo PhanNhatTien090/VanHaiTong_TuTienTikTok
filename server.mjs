@@ -16,7 +16,7 @@ import {GIFT_POLICY_VERSION,GIFT_TIERS} from './public/gift-rewards.js';
 import {AssetCache} from './asset-cache.mjs';
 import http from 'node:http';
 import {createSpeech} from './speech.mjs';
-import {namePlan,giftPlan,THANKS_PLAN,WAR_PUSH_PLANS,nextMissingPart} from './voice-parts.mjs';
+import {namePlan,giftPlan,THANKS_PLAN,WAR_PUSH_PLANS,ADMIN_PLANS,nextMissingPart} from './voice-parts.mjs';
 import {skinFor} from './public/cosmetics.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -164,7 +164,7 @@ const server=http.createServer(async(req,res)=>{
       const result=liveTransfers.apply(JSON.parse(raw.toString()));payloadCache.clear();broadcast();json(res,result);return;
     }
     if(url.pathname==='/api/voice-latency'){json(res,voiceLatency);return;}
-    if(url.pathname==='/api/voice-part'){const kind=url.searchParams.get('kind'),p=kind==='name'?worlds[mode].players[url.searchParams.get('user')||'']:null,plan=kind==='name'?(p&&!p.resident&&!p.puppet?namePlan(p):null):kind==='gift'?giftPlan(url.searchParams.get('gift')):kind==='thanks'?THANKS_PLAN:kind==='war'?WAR_PUSH_PLANS[url.searchParams.get('side')]||null:null,file=plan&&synthesizeSpeech.cached(plan);if(!file){json(res,{ok:false},404);return;}res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=600'});fs.createReadStream(file).pipe(res);return;}
+    if(url.pathname==='/api/voice-part'){const kind=url.searchParams.get('kind'),p=kind==='name'?worlds[mode].players[url.searchParams.get('user')||'']:null,plan=kind==='name'?(p&&!p.resident&&!p.puppet?namePlan(p):null):kind==='gift'?giftPlan(url.searchParams.get('gift')):kind==='thanks'?THANKS_PLAN:kind==='war'?WAR_PUSH_PLANS[url.searchParams.get('side')]||null:kind==='admin'?ADMIN_PLANS[url.searchParams.get('combo')]||null:null,file=plan&&synthesizeSpeech.cached(plan);if(!file){json(res,{ok:false},404);return;}res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=600'});fs.createReadStream(file).pipe(res);return;}
     if(url.pathname==='/api/speech'&&req.method==='GET'){
       const id=url.searchParams.get('id');
       let event=worlds[mode].events.find(e=>e.id===id)||announcementHistory[mode].get(id);
@@ -178,7 +178,7 @@ const server=http.createServer(async(req,res)=>{
       if(mode==='live'&&!eventAllowedOnLive(event,worlds[mode].players)){json(res,{ok:false,message:'DEMO event unavailable on LIVE.'},404);return;}
       event=speechEventFor(mode,event);
       // 08/11: không tốn máy đọc cho sự kiện đã cũ — đọc trễ là nói sai với màn hình.
-      const voiceAge=Number.isFinite(event.at)?Date.now()-event.at:0,voiceLimit=event.heavenStrike?15000:event.gift&&Number(event.coins)>0?20000:isEventAnnouncement(event)?25000:10000;
+      const voiceAge=Number.isFinite(event.at)?Date.now()-event.at:0,voiceLimit=event.adminGift?25000:event.heavenStrike?15000:event.gift&&Number(event.coins)>0?20000:isEventAnnouncement(event)?25000:10000;
       if(mode==='live'&&!ids&&voiceAge>voiceLimit){voiceLatency.push({at:Date.now(),age:voiceAge,stale:1});if(voiceLatency.length>60)voiceLatency.shift();json(res,{ok:false,message:'Sự kiện đã cũ, bỏ giọng đọc.'},410);return;}
       try{const t0=Date.now(),file=await synthesizeSpeech(event);voiceLatency.push({at:t0,age:voiceAge,synthMs:Date.now()-t0,gift:event.gift?1:0});if(voiceLatency.length>60)voiceLatency.shift();res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=86400'});fs.createReadStream(file).pipe(res);}
       catch(e){json(res,{ok:false,message:e.message},503);}return;
