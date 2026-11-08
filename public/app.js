@@ -48,9 +48,11 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
 // All scene previews use the same HUD flow as the broadcast.
 {
   const root=$('.scene-shell');
+  // 08/11: TOP QUÀ tách khỏi bảng tu vi, sang đầu cột phải — cột trái đỡ dồn, cột phải đỡ trống.
+  if(root&&!root.querySelector('#giftRanks')){const g=document.createElement('div');g.id='giftRanks';g.className='live-ranks compact-ranks gift-ranks';g.hidden=true;root.appendChild(g);}
   for(const [id,selectors] of [
     ['phoneHudLeft',['#liveRanks','#bossHud','#opportunityHud','#visitorHud','#socialHud']],
-    ['phoneHudRight',['#giftBoard','#flowerHud','#commandRail']]
+    ['phoneHudRight',['#giftRanks','#giftBoard','#flowerHud','#commandRail']]
   ]){
     const rail=document.createElement('div');rail.id=id;rail.className='phone-hud-rail';
     for(const selector of selectors){const panel=root.querySelector(selector);if(panel)rail.appendChild(panel);}
@@ -216,8 +218,11 @@ function renderLiveRanks(force=false){
   const ranked=rookieTurn?rookies:[...state.players].filter(p=>!p.resident&&!p.puppet&&p.active).sort((a,b)=>b.totalQi-a.totalQi).slice(0,3);
   const short=s=>Array.from(s||'Đạo hữu').slice(0,11).join('');
   const leader=topPatron(state.players.filter(p=>p.active&&!p.resident&&!p.puppet),state.patronCurrent);
-  const html='<div class="qi-leaders"><b>'+(rookieTurn?'🌱 TÂN TÚ 24H':'TOP TU VI')+'</b>'+ranked.map((p,i)=>`<span>${i+1}. ${esc(short(p.name))} <strong>${fmt(p.totalQi)}</strong><small class="rank-realm">${esc(p.realmName||state.realms[p.realm]||'Phàm nhân')}</small></span>`).join('')+'</div>'+((state.topGifters||[]).length?'<div class="qi-leaders gift-leaders"><b>TOP QUÀ</b>'+state.topGifters.slice(0,3).map((g,i)=>{const av=safeAvatar(g.avatar);return `<span class="gift-top gift-top-${i+1}"><i class="gift-top-portrait"><em>${esc(Array.from(g.name||'Đ')[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<svg viewBox="${[1,2,0][i]*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.png" width="1536" height="512" preserveAspectRatio="none"/></svg></i><span class="gift-top-text"><small class="gift-top-title">${['ĐỆ NHẤT CUNG PHỤNG','NHỊ CUNG PHỤNG','TAM CUNG PHỤNG'][i]}</small>${esc(short(g.name))} <strong>${fmt(g.giftCoins)}</strong> coin</span></span>`;}).join('')+'</div>':(leader?`<div class="patron-leader"><b>${state.patronEnabled?'ĐẠI HỘ PHÁP':'TOP QUÀ'}</b> ${esc(short(leader.name))} · ${fmt(leader.giftCoins)} coin tích lũy</div>`:''));
+  const qiHtml='<div class="qi-leaders"><b>'+(rookieTurn?'🌱 TÂN TÚ 24H':'TOP TU VI')+'</b>'+ranked.map((p,i)=>`<span>${i+1}. ${esc(short(p.name))} <strong>${fmt(p.totalQi)}</strong><small class="rank-realm">${esc(p.realmName||state.realms[p.realm]||'Phàm nhân')}</small></span>`).join('')+'</div>';
+  const giftHtml=((state.topGifters||[]).length?'<div class="qi-leaders gift-leaders"><b>TOP QUÀ</b>'+state.topGifters.slice(0,3).map((g,i)=>{const av=safeAvatar(g.avatar);return `<span class="gift-top gift-top-${i+1}"><i class="gift-top-portrait"><em>${esc(Array.from(g.name||'Đ')[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<svg viewBox="${[1,2,0][i]*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.png" width="1536" height="512" preserveAspectRatio="none"/></svg></i><span class="gift-top-text"><small class="gift-top-title">${['ĐỆ NHẤT CUNG PHỤNG','NHỊ CUNG PHỤNG','TAM CUNG PHỤNG'][i]}</small><span class="gift-top-line">${esc(short(g.name))} · <strong>${fmt(g.giftCoins)}</strong> coin</span></span></span>`;}).join('')+'</div>':(leader?`<div class="patron-leader"><b>${state.patronEnabled?'ĐẠI HỘ PHÁP':'TOP QUÀ'}</b> ${esc(short(leader.name))} · ${fmt(leader.giftCoins)} coin tích lũy</div>`:''));
+  const giftEl=$('#giftRanks'),html=giftEl?qiHtml:qiHtml+giftHtml;
   if(force||html!==lastRanksHTML){el.innerHTML=html;lastRanksHTML=html;}
+  if(giftEl&&(force||giftHtml!==giftEl.dataset.html)){giftEl.innerHTML=giftHtml;giftEl.dataset.html=giftHtml;giftEl.hidden=!giftHtml;}
 }
 let giftReceiptTimer;
 function showGiftReceipt(e){
@@ -267,7 +272,7 @@ applyResidents();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
 if(overlay){let railTurn=0;setInterval(()=>{const rail=document.getElementById('phoneHudRight');if(!rail)return;
-  const extra=[...rail.children].filter(el=>el.id!=='giftBoard');for(const el of extra)el.classList.remove('rail-rotate-hide');
+  const extra=[...rail.children].filter(el=>el.id!=='giftBoard'&&el.id!=='giftRanks');for(const el of extra)el.classList.remove('rail-rotate-hide');
   const shown=extra.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none'&&el.textContent.trim());
   if(shown.length<2)return;railTurn=(railTurn+1)%shown.length;shown.forEach((el,i)=>{if(i!==railTurn)el.classList.add('rail-rotate-hide');});},8000);}
 // Lịch NPC: đúng mốc thì NPC đó đột phá (hiệu ứng + tiêu đề cảnh giới); đầu chu kỳ mới thì 3 NPC mới nhập môn.

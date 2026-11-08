@@ -178,7 +178,7 @@ export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active
   if(e.phase==='finished'){drawRaceAwards(scene,c,e,H,now,t);c.restore();return;}
   if(running){drawBoostLegend(c,H,false);drawRaceGiftBoard(c,e,H);
    // vạch tiến độ người dẫn đầu + số người đang đua
-   const k=clamp(lead/1000),count=(e.racers||[]).length,done=(e.racers||[]).filter(r=>r.finishAt).length;c.fillStyle='#0a2439c0';c.beginPath();c.roundRect(24,H*.112,460,12,6);c.fill();const g=c.createLinearGradient(24,0,484,0);g.addColorStop(0,'#9fe7ff');g.addColorStop(1,'#ffe7a0');c.fillStyle=g;c.beginPath();c.roundRect(24,H*.112,460*k,12,6);c.fill();
-   c.font='bold 16px Segoe UI';c.textAlign='left';c.lineWidth=4;c.strokeStyle='#04101c';const info='Dẫn đầu '+Math.round(lead)+'/1000 · '+count+' người đua'+(done?' · '+done+' về đích':'');c.strokeText(info,24,H*.112-8);c.fillStyle='#eafcff';c.fillText(info,24,H*.112-8);}
+   const k=clamp(lead/1000),count=(e.racers||[]).length,done=(e.racers||[]).filter(r=>r.finishAt).length;c.fillStyle='#0a2439c0';c.beginPath();c.roundRect(24,H*.158,460,12,6);c.fill();const g=c.createLinearGradient(24,0,484,0);g.addColorStop(0,'#9fe7ff');g.addColorStop(1,'#ffe7a0');c.fillStyle=g;c.beginPath();c.roundRect(24,H*.158,460*k,12,6);c.fill();
+   c.font='bold 16px Segoe UI';c.textAlign='left';c.lineWidth=4;c.strokeStyle='#04101c';const info='Dẫn đầu '+Math.round(lead)+'/1000 · '+count+' người đua'+(done?' · '+done+' về đích':'');c.strokeText(info,24,H*.158-8);c.fillStyle='#eafcff';c.fillText(info,24,H*.158-8);}
  }
  c.restore();}
