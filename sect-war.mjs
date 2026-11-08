@@ -51,8 +51,17 @@ function checkRescue(w,e,now,c){
  if(e.phase!=='running')return;
  for(const side of ['chinh','ma']){if(e.rescued[side])continue;const danger=side==='chinh'?e.line<=WAR.rescue.chinh:e.line>=100-WAR.rescue.ma;if(!danger)continue;
   e.rescued[side]=true;e.line=Math.max(0,Math.min(100,e.line+(side==='chinh'?WAR.rescuePush:-WAR.rescuePush)));e.boostUntil[side]=now+WAR.rescueBoostMs;
-  fx(e,now,{kind:'rescue',side});announce(w,null,SIDES[side].rescue.toUpperCase()+' • '+SIDES[side].name+' phản kích',now,c,{warRescue:side});}
+  e.lead=leadOf(e.line,e.lead);fx(e,now,{kind:'rescue',side});announce(w,null,SIDES[side].rescue.toUpperCase()+' • '+SIDES[side].name+' phản kích',now,c,{warRescue:side});}
 }
+// 08/11: theo dõi phe dẫn trước. Khi chiến tuyến vượt qua giữa (có vùng đệm 3 điểm) → "phản công"/"lật kèo".
+// Quà lật kèo: giọng nằm trong lời cảm ơn quà (warFlip trên sự kiện quà). Tim/chiêu lật kèo: thông báo riêng, tối đa 1 lần / 15 s.
+const LEAD_GAP=3,TURN_GAP_MS=15000;
+export function leadOf(line,prev=null){return line>=50+LEAD_GAP?'chinh':line<=50-LEAD_GAP?'ma':prev;}
+function noteLead(w,e,now,c,gift=null){
+ const prev=e.lead||null,lead=leadOf(e.line,prev);if(lead===prev)return false;e.lead=lead;if(!prev||e.phase!=='running')return false;
+ if(gift){fx(e,now,{kind:'flip',side:lead,user:gift.id,name:gift.name,value:gift.coins});return true;}
+ if(now-(e.turnAt||0)<TURN_GAP_MS)return false;e.turnAt=now;fx(e,now,{kind:'turn',side:lead});
+ announce(w,null,SIDES[lead].name.toUpperCase()+' PHẢN CÔNG • vượt lên dẫn trước',now,c,{warTurn:lead});return true;}
 function finishIfDone(w,e,now,c){
  if(e.phase!=='running')return;const timeUp=now>=e.endsAt;if(!(e.line>=100||e.line<=0||timeUp))return;
  const winner=e.line>=100||timeUp&&e.line>50+WAR.winGap?'chinh':e.line<=0||timeUp&&e.line<50-WAR.winGap?'ma':null;
@@ -78,6 +87,9 @@ export function tickWar(w,now,c){
  if(e.phase==='running'){
   if(now>=e.nextOmenAt&&now<e.endsAt-10000){const kinds=Object.entries(OMENS),total=kinds.reduce((a,[,o])=>a+o.weight,0);let r=Math.random()*total,kind=kinds[0][0];for(const [k,o] of kinds){r-=o.weight;if(r<=0){kind=k;break;}}
    e.omen={kind,until:now+WAR.omenMs};e.nextOmenAt=now+WAR.omenEveryMs;fx(e,now,{kind:'omen',omen:kind});announce(w,null,OMENS[kind].text,now,c,{warOmen:kind});}
+  if(e.phase==='running'){const left=e.endsAt-now;
+   if(left<=30500&&left>20000&&!e.said30){e.said30=true;fx(e,now,{kind:'final',left:30});announce(w,null,'30 GIÂY CUỐI • dồn hết sức',now,c,{warFinal:30});}
+   if(left<=10500&&left>0&&!e.said10){e.said10=true;fx(e,now,{kind:'final',left:10});announce(w,null,'10 GIÂY CUỐI • quyết chiến',now,c,{warFinal:10});}}
   if(e.phase==='running'){const dt=Math.min(3,Math.max(0,(now-(e.pullAt||now))/1000));e.pullAt=now;e.line+=(50-e.line)*(1-(1-WAR.pullBack)**dt);}
   checkRescue(w,e,now,c);finishIfDone(w,e,now,c);}
 }
@@ -88,7 +100,7 @@ export function warCommand(w,p,cmd,now,c){
  if(side){if(!real(p))return {ok:false,message:'NPC không ra trận.'};const m=e.members[p.id];if(m)return m.side===side?{ok:true,duplicate:true}:{ok:false,message:'Đã ở '+SIDES[m.side].name+' • không đổi phe giữa trận.'};join(w,e,p,side,now,c);return {ok:true};}
  if(cmd==='chien'||cmd==='danh'&&e.phase==='running'){const m=e.members[p.id];if(!m)return {ok:false,message:'Gõ chinh hoặc ma để chọn phe trước.'};if(e.phase!=='running')return {ok:false,message:'Chưa khai chiến.'};
   if(now-m.lastStrike<WAR.strikeCooldownMs)return {ok:false,message:'Xuất chiêu hồi sau 8 giây.'};m.lastStrike=now;warNoteFree(e,m.side,WAR.strikeUnits,now);const moved=push(w,e,m.side,WAR.strikeUnits,now,c);m.score+=WAR.strikeUnits;m.lastActAt=now;
-  fx(e,now,{kind:'strike',side:m.side,user:p.id});checkRescue(w,e,now,c);finishIfDone(w,e,now,c);return {ok:true,moved};}
+  fx(e,now,{kind:'strike',side:m.side,user:p.id});checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return {ok:true,moved};}
 }
 // Tim: người chưa chọn phe tự vào phe ít người (hòa → Chính Đạo). Giới hạn mỗi người theo cửa sổ 5 s.
 export function warHearts(w,p,count,now,c){
@@ -96,7 +108,7 @@ export function warHearts(w,p,count,now,c){
  let m=e.members[p.id];if(!m){const side=warCount(e,'ma')>warCount(e,'chinh')?'chinh':warCount(e,'chinh')>warCount(e,'ma')?'ma':'chinh';m=join(w,e,p,side,now,c,true);if(!m)return 0;}
  if(now-m.heartWindow>=WAR.heartWindowMs){m.heartWindow=now;m.heartUnits=0;}
  m.hearts+=count;const units=Math.min(WAR.heartCapUnits-m.heartUnits,Math.floor(m.hearts/WAR.heartsPerUnit));if(units<=0)return 0;
- m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units,now,c);checkRescue(w,e,now,c);finishIfDone(w,e,now,c);return moved;
+ m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units,now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return moved;
 }
 // Quà: luôn tung đại chiêu + tính điểm; đẩy đủ theo coin, trần 36 đơn vị (~12 coin) / phe / 30 s.
 export function warGift(w,p,coins,now,c,event={}){
@@ -107,7 +119,7 @@ export function warGift(w,p,coins,now,c,event={}){
  const allowance=WAR.giftCapUnits-giftUnits,pushed=Math.max(0,Math.min(units,allowance));
  e.gifts.push({at:now,side:m.side,pushed});m.score+=units;m.giftCoins=(m.giftCoins||0)+coins;m.lastActAt=now;m.lastGiftAt=now;
  const moved=push(w,e,m.side,pushed,now,c,true);fx(e,now,{kind:'gift',side:m.side,user:p.id,name:p.name,value:coins,capped:pushed<units});
- checkRescue(w,e,now,c);finishIfDone(w,e,now,c);return {moved,pushed,units,side:m.side};
+ checkRescue(w,e,now,c);const flip=noteLead(w,e,now,c,{id:p.id,name:p.name,coins})&&e.lead===m.side;finishIfDone(w,e,now,c);return {moved,pushed,units,side:m.side,flip,line:e.line};
 }
 // Ghi nhận lực đẩy không-quà theo cửa sổ trượt 30 s để tính hạn mức quà.
 export function warNoteFree(e,side,units,now){e.freeLog=(e.freeLog||[]).filter(x=>now-x.at<WAR.giftWindowMs);if(units>0)e.freeLog.push({at:now,side,units});if(e.freeLog.length>400)e.freeLog.splice(0,e.freeLog.length-400);e.freeUnits={chinh:0,ma:0};for(const x of e.freeLog)e.freeUnits[x.side]+=x.units;}
@@ -125,5 +137,5 @@ export function warView(w,now){
  return {id:e.id,phase:e.phase,active:warVisible(w,now),line:Math.round((e.line??50)*10)/10,registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,podiumUntil:e.podiumUntil,finishedAt:e.finishedAt,
   counts:{chinh:warCount(e,'chinh'),ma:warCount(e,'ma')},top:{chinh:warTop(e,'chinh'),ma:warTop(e,'ma')},roster:{chinh:roster('chinh'),ma:roster('ma')},
   mult:{chinh:Math.round(warMultiplier(e,'chinh',now)*100)/100,ma:Math.round(warMultiplier(e,'ma',now)*100)/100},
-  omen:e.omen&&now<e.omen.until?e.omen:null,rescued:e.rescued,boostUntil:e.boostUntil,fx:(e.fx||[]).filter(x=>now-x.at<15000),result:e.result||null};
+  omen:e.omen&&now<e.omen.until?e.omen:null,rescued:e.rescued,boostUntil:e.boostUntil,lead:e.lead||null,fx:(e.fx||[]).filter(x=>now-x.at<15000),result:e.result||null};
 }

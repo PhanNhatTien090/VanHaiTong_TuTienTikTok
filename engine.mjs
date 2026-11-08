@@ -498,7 +498,7 @@ function actionCore(w,input,now) {
     if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;if(racing)giftEvent.text=`${gift||tier.name}${count>1?` ×${count}`:''} • BỨT TỐC +${giftEvent.raceBoost} trượng • cảm ơn đạo hữu`;
       // v65: ghi lại để cảnh vẽ hiệu ứng quà theo nấc
       const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';}}
-    if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;}}
+    if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;if(war.flip)giftEvent.warFlip=true;}}
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
     recordEventGiftFx(w,p,giftEvent,now);
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}

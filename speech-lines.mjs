@@ -40,6 +40,12 @@ function giftLines(e,who,Who,t,seed){
  const buff=e.buff?.mult?' Phúc duyên gấp '+multWord(e.buff.mult)+(e.firstGift?' suốt hai mươi phút.':' trong mười phút.'):'';
  const race=e.raceBoost?' Phi kiếm lao vọt '+viNumber(e.raceBoost)+' trượng!':'';
  const master=Who+(rewards?' nhận '+rewards+'!':' được tông môn ghi nhận tâm ý!')+buff+race;
+ // 08/11: quà giữa Chính Ma Đại Chiến — hô to quà lật kèo / đại chiêu, rồi mới cảm ơn.
+ if(e.warGift){const S=e.warGift==='chinh'?'Chính Đạo':'Ma Đạo',value=(Number(e.coins)||0)*(Number(e.count)||1);
+  const hype=e.warFlip?pickBy(seed,[`${Who} tặng quà lớn, lật kèo rồi! ${S} vượt lên!`,`Lật kèo! ${Who} một quà đảo chiều chiến trận!`,`${Who} ra tay, ${S} lật ngược thế cờ!`])
+   :value>=99?pickBy(seed,[`${Who} tung tuyệt kỹ! ${S} đẩy phăng chiến tuyến!`,`Đại chiêu của ${who}! ${S} càn quét!`,`${Who} ra đòn chí mạng cho ${S}!`])
+   :pickBy(seed,[`${Who} tiếp sức cho ${S}!`,`${S} đẩy mạnh nhờ ${who}!`,`${Who} tung chiêu, ${S} tiến lên!`]);
+  return [say('trongtai',hype),say('tongsu',master)];}
  if(e.firstGift)return [say('tiennu','Chào mừng Tân Hộ Pháp '+who+'!'),say('tongsu',master)];
  return (Number(e.coins)||0)*(Number(e.count)||1)>=99?[say('tiennu','Vinh danh '+who+'!'),say('tongsu',master)]:[say('tongsu',master)];
 }
@@ -154,8 +160,14 @@ export function speechPlan(e){
     if(e.warStart)return [say('trongtai','Chính Ma Đại Chiến mở tuyển quân! Gõ chính để vào Chính Đạo, gõ ma để vào Ma Đạo!')];
     if(e.warBattle)return [say('tongsu','Khai chiến! Thả tim đẩy chiến tuyến, gõ chiến để xuất chiêu!')];
     if(e.warOmen)return [say('tiennu',text.replace(/•/g,'. '))];
-    if(e.warRescue)return [say('tongsu',(e.warRescue==='chinh'?'Hạo Nhiên Chính Khí! Chính Đạo':'Ma Hồn Bất Diệt! Ma Đạo')+' phản kích!')];
-    if(e.warEnd)return [say('trongtai',e.warEnd==='draw'?'Bất phân thắng bại! Hai phe cùng nhận thưởng!':(e.warEnd==='chinh'?'Chính Đạo':'Ma Đạo')+' đại thắng!'),...(e.warEnd!=='draw'&&e.warLead?[say('tongsu',`Vinh danh ${sayName(e.warLead)||'đạo hữu'} dẫn đầu phe thắng! Cả phe nhận tu vi và linh thạch, phe thua cũng được ban thưởng an ủi!`)]:[])];
+    // 08/11: lời đọc vui, nhiều biến thể (không lặp y hệt).
+    if(e.warRescue)return [say('tongsu',pickBy(seed,e.warRescue==='chinh'?['Hạo Nhiên Chính Khí! Chính Đạo phản công rồi!','Chính Đạo chưa chịu thua đâu! Phản kích!','Trời giúp Chính Đạo! Đẩy ngược lại nào!']:['Ma Hồn Bất Diệt! Ma Đạo vùng lên rồi!','Ma Đạo hồi sinh! Phản kích!','Ma khí cuồn cuộn! Ma Đạo đẩy ngược lại rồi!']))];
+    if(e.warTurn){const S=e.warTurn==='chinh'?'Chính Đạo':'Ma Đạo',O=e.warTurn==='chinh'?'Ma Đạo':'Chính Đạo';return [say('trongtai',pickBy(seed,[`${S} phản công rồi!`,`${S} lật kèo! Vượt lên dẫn trước!`,`Ồ! ${S} đè ngược lại rồi!`,`${S} vùng lên! Chiến tuyến đổi chiều!`])),say('tongsu',pickBy(seed+'o',[`${O} đâu, thả tim mau!`,`${O} ơi, đừng để thua!`,`${O} còn kịp lật lại đó!`]))];}
+    if(e.warFinal===30)return [say('trongtai',pickBy(seed,['Ba mươi giây cuối! Dồn hết sức nào!','Còn ba mươi giây! Thả tim, tặng quà, quyết thắng!','Ba mươi giây cuối cùng! Ai sẽ thắng đây!']))];
+    if(e.warFinal===10)return [say('trongtai',pickBy(seed,['Mười giây cuối! Quyết chiến!','Còn mười giây! Dốc toàn lực!','Mười giây! Tất cả xông lên!']))];
+    if(e.warEnd){if(e.warEnd==='draw')return [say('trongtai',pickBy(seed,['Bất phân thắng bại! Hai phe cùng nhận thưởng!','Hòa rồi! Hai phe ngang tài ngang sức!']))];
+      const S=e.warEnd==='chinh'?'Chính Đạo':'Ma Đạo',O=e.warEnd==='chinh'?'Ma Đạo':'Chính Đạo';
+      return [say('trongtai',pickBy(seed,[`${S} đại thắng!`,`${S} thắng rồi! ${O} về luyện thêm nhé!`,`Chiến thắng thuộc về ${S}!`,`${S} đè bẹp ${O}!`])),...(e.warLead?[say('tongsu',`Vinh danh ${sayName(e.warLead)||'đạo hữu'} dẫn đầu phe thắng! Cả phe nhận tu vi và linh thạch, phe thua cũng được ban thưởng an ủi!`)]:[])];}
     if(e.warGeneral)return [say('tongsu',`${Who} là ${e.warGeneral==='chinh'?'Chính Đạo Minh Chủ':'Ma Đạo Tôn Chủ'}!`)];
     if(e.warJoin)return [];
   }
