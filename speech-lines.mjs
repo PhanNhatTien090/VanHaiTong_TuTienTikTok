@@ -118,7 +118,7 @@ export function speechPlan(e){
     if(qi>=needQi&&st>=needSt)return [say('tongsu',`${Who}, ${realm}, đã đủ điều kiện. Gõ đột phá ngay!`)];
     const lack=[qi<needQi&&`${roundSay(needQi-qi)} tu vi`,st<needSt&&`${viNumber(needSt-st)} linh thạch`].filter(Boolean).join(' và ');
     const how=st<needSt&&qi>=needQi?'Gõ hái hoặc điểm danh để có linh thạch.':st<needSt?'Tu luyện để tăng tu vi, gõ hái để có linh thạch.':'Thả tim để vận công, trò chuyện cùng đồng môn để luận đạo.';
-    if(e.missing==='stones')return [say('tongsu',`${Who} đủ tu vi rồi, chỉ còn thiếu ${viNumber(needSt-st)} linh thạch để đột phá! ${how}`)];
+    if(e.missing==='stones')return [say('tongsu',`${Who} thiếu linh thạch, gõ hái để lấy linh thạch!`)]; // 08/11: chủ game muốn ngắn gọn
     return [say('tongsu',`${Who}, cảnh giới ${realm}. Còn thiếu ${lack}. ${how}`)];
   }
   if(text.startsWith('Kích hoạt '))return [say('tongsu',`${Who} kích hoạt ${cutWords(head.replace('Kích hoạt ',''),30)} trong trò chơi, tu vi tăng vọt!`)];

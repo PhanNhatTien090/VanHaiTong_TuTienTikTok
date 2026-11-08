@@ -760,7 +760,10 @@ export function tick(w,now=Date.now()) {
   // A transferred player must not receive automatic/group rewards on LIVE.
   return protectTransferred(w,()=>tickCore(w,now));
 }
+// 08/11: mỗi 6 s tìm 1 người đang có mặt (hoạt động ≤10 phút) đủ tu vi mà thiếu linh thạch để nhắc — không chờ họ thả tim/gõ lệnh.
+function stoneHintTick(w,now){if(now-(w.stoneScanAt||0)<6000)return;w.stoneScanAt=now;for(const p of Object.values(w.players)){if(now-(p.lastActive||0)>600000||w.playTransfers?.[p.id]?.phase==='web')continue;if(missingStones(w,p,now))return;}}
 function tickCore(w,now) {
+ stoneHintTick(w,now);
  ensurePeriods(w,now); // 07/11: sang ngày/tuần mới → chốt bảng cũ, mở kỳ mới
  automaticEventsPaused(w,now);
  tickLantern(w,now,companionContext);tickCompanions(w,now,companionContext);

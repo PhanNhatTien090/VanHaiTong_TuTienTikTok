@@ -52,7 +52,7 @@ for ($attempt=0; $attempt -lt 30; $attempt++) {
 }
 if (!$ready) { throw "Server did not start. Check data/server-stone-hint-$stamp-error.log" }
 Write-Host "Server ready, PID $($process.Id). Open $base/?world=live#events and reload the LIVE Studio Link source."
-Write-Host "Updated: enough qi but missing stones -> voice + "Go hai" bubble, repeats every 3 min."
+Write-Host "Updated: enough qi but missing stones -> voice + "Go hai" bubble, repeats every 3 min, also for idle players, short voice."
 
 } finally {
  if (Test-Path -LiteralPath $pauseFile) { Remove-Item -LiteralPath $pauseFile }
