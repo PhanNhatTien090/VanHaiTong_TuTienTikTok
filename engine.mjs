@@ -487,18 +487,19 @@ function actionCore(w,input,now) {
     const firstGift=!p.giftCoins&&!p.puppet&&!p.resident,vipBefore=vipTier(p.giftCoins); // v86: lễ quà đầu tiên → phúc duyên ≥×5 trong 20 phút
     // 07/11/2026: đang đua phi kiếm → quà chỉ để BỨT TỐC, không cộng tu vi.
     const racing=w.race?.phase==='running'&&now<w.race.endsAt&&w.race.racers.some(r=>r.id===p.id&&!r.finishAt);
-    const q=gain(w,p,racing?0:award.qi*count,award.stones*count,award.herbs*count,now,false,'gift');
-    const items=[];if(tier.artifact&&!p.artifacts.includes(tier.artifact)){p.artifacts.push(tier.artifact);items.push(tier.artifact);const value=id=>{const a=CATALOG.find(x=>x.id===id);return (a?.damage||0)+(a?.bonus||0)*100;};if(value(tier.artifact)>value(p.equipped))p.equipped=tier.artifact;}
-    if(tier.skin){p.rewardSkins??=[];if(!p.rewardSkins.includes(tier.skin)){p.rewardSkins.push(tier.skin);if(autoSkinChoiceAllowed(p)){p.skinChoice=tier.skin;p.skinChoiceSource='gift';}}}
+    // 08/11 tối (chủ game): đang có sự kiện có luật quà riêng → CHỈ áp dụng luật sự kiện (đua: bứt tốc, Chính Ma: đẩy, …), không cộng quà mặc định.
+    const eventRule=giftEventRule(w,now),defaults=!eventRule,award0={qi:defaults?award.qi*count:0,stones:defaults?award.stones*count:0,herbs:defaults?award.herbs*count:0};
+    const q=defaults?gain(w,p,award0.qi,award0.stones,award0.herbs,now,false,'gift'):0;
+    const items=[];if(defaults&&tier.artifact&&!p.artifacts.includes(tier.artifact)){p.artifacts.push(tier.artifact);items.push(tier.artifact);const value=id=>{const a=CATALOG.find(x=>x.id===id);return (a?.damage||0)+(a?.bonus||0)*100;};if(value(tier.artifact)>value(p.equipped))p.equipped=tier.artifact;}
+    if(defaults&&tier.skin){p.rewardSkins??=[];if(!p.rewardSkins.includes(tier.skin)){p.rewardSkins.push(tier.skin);if(autoSkinChoiceAllowed(p)){p.skinChoice=tier.skin;p.skinChoiceSource='gift';}}}
     const itemNames=items.map(id=>CATALOG.find(x=>x.id===id).name);
     if(!input.simulated&&!input.autoRose)creditMasterGift(w,p,input.coins*count);
     p.giftCoins+=input.coins*count;w.totalGifts+=input.coins*count;sectBuild(w,p,input.coins*count,now,engageCtx);
     // Quà có tên nhận diện được → sự kiện riêng (hoa hồng, mèo, sư tử…); không thì theo mốc coin.
     const kind=giftKind(input.giftName),gift=input.giftName?giftNameVi(input.giftName,kind):null;
     // Phúc duyên: sau khi tặng quà, chơi tay (tu luyện, hái, bình luận, đánh) được nhân thưởng trong 10 phút.
-    const mult=Math.max(giftBuff(input.coins*count),firstGift?5:1,p.buffUntil>now?p.buffMult||1:1);p.buffMult=mult;p.buffUntil=now+(firstGift?2:1)*GIFT_BUFF_MS;
-    const buff={mult,minutes:(firstGift?2:1)*GIFT_BUFF_MS/60000};
-    const giftEvent=emit(w,p,`${gift||tier.name}${count>1?` ×${count}`:''} • +${q} tu vi • phúc duyên ×${String(mult).replace('.',',')} 10 phút • cảm ơn đạo hữu`,tier.effect,now,{kind,gift,count,tier:tier.name,coins:input.coins,comboKey:input.comboKey,comboFinal:input.comboFinal,buff,firstGift,reward:{qi:q,stones:award.stones*count,herbs:award.herbs*count,items,itemNames}});
+    let buff=null;if(defaults){const mult=Math.max(giftBuff(input.coins*count),firstGift?5:1,p.buffUntil>now?p.buffMult||1:1);p.buffMult=mult;p.buffUntil=now+(firstGift?2:1)*GIFT_BUFF_MS;buff={mult,minutes:(firstGift?2:1)*GIFT_BUFF_MS/60000};}
+    const giftEvent=emit(w,p,defaults?`${gift||tier.name}${count>1?` ×${count}`:''} • +${q} tu vi • phúc duyên ×${String(buff.mult).replace('.',',')} 10 phút • cảm ơn đạo hữu`:`${gift||tier.name}${count>1?` ×${count}`:''} • ${eventRule} • cảm ơn đạo hữu`,tier.effect,now,{kind,gift,count,tier:tier.name,coins:input.coins,comboKey:input.comboKey,comboFinal:input.comboFinal,buff,firstGift,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});
     if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now,input.coins)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;}
     if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t});} // v86
     if(['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
@@ -509,7 +510,7 @@ function actionCore(w,input,now) {
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
     recordEventGiftFx(w,p,giftEvent,now);
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
-    p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,reward:{qi:q,stones:award.stones*count,herbs:award.herbs*count,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
+    p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
     reconcilePatron(w,now);
     const visitorReward=creditVisitorGift(w,p,input.coins*count,now);
     items.push(...visitorReward.items);itemNames.push(...visitorReward.itemNames);
@@ -523,6 +524,16 @@ function actionCore(w,input,now) {
     flowerScore(w,p,input.coins*count*100,now); // v59: 1 coin quà = 100 điểm sự kiện
   }
   p.interactions++;w.totalInteractions++;return {ok:true,playerId:p.id};
+}
+// Sự kiện đang mở có LUẬT QUÀ RIÊNG (tên hiển thị) → quà không cộng phần mặc định. Yêu thú/tỷ thí/kết duyên không có luật quà → vẫn quà mặc định.
+export function giftEventRule(w,now){
+ if(['registration','running'].includes(w.race?.phase))return 'đua phi kiếm';
+ if(w.sectWar?.phase==='running')return 'chính ma đại chiến';
+ if(['opening','brewing','tribulation'].includes(w.alchemy?.phase))return 'lò luyện đan';
+ if(w.visitor&&!w.visitor.closedAt&&now>=(w.visitor.startedAt||0)&&now<w.visitor.endsAt)return 'tiên nhân truyền đạo';
+ if(w.opportunity&&!w.opportunity.closedAt&&now>=(w.opportunity.startedAt||0)&&now<w.opportunity.endsAt)return 'cơ duyên';
+ if(w.flowerEvent&&now>=(w.flowerEvent.startedAt||0)&&now<w.flowerEvent.endsAt)return w.flowerEvent.kind==='meteor'?'sao băng':'mưa hoa';
+ return null;
 }
 // 08/11 tối (chủ game): tặng từ 500 coin một lần lúc KHÔNG có sự kiện → thưởng ngay 50% tu vi hiện tại,
 // 1 skin sự kiện ngẫu nhiên chưa có (bộ giá ≤200 coin) và thêm linh thạch + linh thảo.
