@@ -71,3 +71,18 @@ html body.overlay #giftRanks .gift-top-line{display:block;white-space:nowrap;ove
 html body.overlay #giftRanks .gift-top-portrait,html body.overlay #giftRanks .gift-top-1 .gift-top-portrait{width:1.75em;height:1.75em}
 html body.overlay #giftRanks .gift-top-1 .gift-top-portrait::after{display:none}
 body.sword-race #giftRanks,body.abyss-fight #giftRanks,body.alchemy-on #giftRanks,body.performance-solo #giftRanks{display:none!important}
+
+/* 08/11/2026: bảng PHÁP BẢO & TRANG BỊ dưới TOP TU VI (public/gear-guide.js) — chỉ hiện khi cột trái không có bảng sự kiện. */
+html body #phoneHudLeft>#gearGuide{position:relative;width:auto;max-width:100%;align-self:flex-start;box-sizing:border-box;padding:5px 8px 6px;
+ background:linear-gradient(145deg,#07192f38,#102e3926);border:1px solid #9dd9ce30;border-radius:10px;color:#f0fbff;text-align:left;pointer-events:none;
+ text-shadow:0 1px 2px #000,0 0 5px #000,0 0 10px #000a;font-size:clamp(9px,1.6cqw,18px);line-height:1.25;animation:gearIn .5s ease}
+#gearGuide[hidden]{display:none!important}
+#gearGuide>b{display:block;color:#ffe08a;font-size:.9em;letter-spacing:.04em;margin-bottom:2px}
+#gearGuide ol{margin:0;padding:0;list-style:none}
+#gearGuide li{display:flex;flex-direction:column;margin:2px 0}
+#gearGuide code{font-family:inherit;font-weight:800;color:#9ff0d0;white-space:nowrap}
+#gearGuide span{font-size:.78em;color:#d5dccf}
+#gearGuide small{display:block;margin-top:2px;font-size:.72em;color:#e8cf9a}#gearGuide small i{font-style:normal;color:#9ff0d0}
+@keyframes gearIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+body.sword-race #gearGuide,body.abyss-fight #gearGuide,body.alchemy-on #gearGuide,body.performance-solo #gearGuide,body.social-stage #gearGuide,body:not(.overlay) #gearGuide{display:none!important}
+@media(prefers-reduced-motion:reduce){#gearGuide{animation:none}}

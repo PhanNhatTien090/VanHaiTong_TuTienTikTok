@@ -40,6 +40,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
+import {mountGearGuide,renderGearGuide} from './gear-guide.js';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
 const cultivationAudio=new CultivationAudio();
@@ -61,6 +62,7 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   const dock=document.createElement('div');dock.className='scene-guide-dock';
   for(const selector of ['#honorBanner']){const panel=root.querySelector(selector);if(panel)dock.appendChild(panel);}
   root.appendChild(dock);
+  mountGearGuide(root.querySelector('#phoneHudLeft'));
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
 }
@@ -271,6 +273,7 @@ applyResidents();
 })();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
+if(overlay)setInterval(()=>renderGearGuide(state,esc),1000);
 if(overlay){let railTurn=0;setInterval(()=>{const rail=document.getElementById('phoneHudRight');if(!rail)return;
   const extra=[...rail.children].filter(el=>el.id!=='giftBoard'&&el.id!=='giftRanks');for(const el of extra)el.classList.remove('rail-rotate-hide');
   const shown=extra.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none'&&el.textContent.trim());
