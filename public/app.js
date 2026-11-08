@@ -83,7 +83,8 @@ scene.onGiftSound=kind=>cultivationAudio.play(kind);
 if(overlay)mountRitualHud($('.scene-shell'),scene);
 scene.onRitualAudio=(event,elapsed)=>cultivationAudio.ritual(event,elapsed);
 scene.onRitualSound=kind=>cultivationAudio.play(kind.startsWith('qi-')?kind:kind==='gather'?'qi':kind==='reveal'?'victory':kind==='surge'?'ascension-charge':kind==='echo'?'ascension-echo':kind==='rush'?'ascension-rush':kind==='screen-impact'?'ascension-screen-impact':'impact');
-const narrator=new VoiceQueue({world:mode,audio:cultivationAudio,onStatus:text=>$('#audioStatus').textContent=text,onStart:(e,duration)=>{
+let voicePlayers={src:null,map:new Map()};const voicePlayer=id=>{if(voicePlayers.src!==state?.players)voicePlayers={src:state?.players,map:new Map((state?.players||[]).map(p=>[p.id,p]))};return voicePlayers.map.get(id)||null;}; // 08/11: giảm giọng đọc theo người chơi
+const narrator=new VoiceQueue({world:mode,audio:cultivationAudio,player:voicePlayer,onStatus:text=>$('#audioStatus').textContent=text,onStart:(e,duration)=>{
   if(arrivalWelcomes.spoken(e,duration))return;
   if(shouldFocusEvent(e))scene.focus(e.user,duration+900);
   const caption=$('#voiceCaption');caption.textContent=e.name+' · '+e.text.split('•')[0];caption.hidden=false;

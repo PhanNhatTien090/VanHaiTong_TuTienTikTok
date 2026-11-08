@@ -64,7 +64,7 @@ export function speechPlan(e){
   if(e.gift&&text.includes('cảm ơn đạo hữu'))return giftLines(e,who,Who,t,seed);
   // ----- người chơi -----
   if(e.vipReturn){const n=['','Bạc','Vàng','Kim Cương'][e.vipReturn];return [say('tiennu',`Hộ Pháp ${n} ${raw||''} đã trở lại tông môn!`),say('tongsu','Cả tông môn hoan nghênh, phúc khí tràn đầy!')];} // v86
-  if(e.autoArrival)return [say('tongsu',`Chào mừng ${who}${e.returning?' trở lại':' đến với'} Vân Hải Tông! Thả tim để vận công, trò chuyện cùng đồng môn nhé!`)];
+  if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông! Thả tim để vận công nhé!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
   if(e.effect==='join')return [say('tongsu',pickBy(seed,[`Chào mừng ${who} gia nhập Vân Hải Tông! Thả tim để thử vận công nhé!`,`${Who} gia nhập Vân Hải Tông! Bước đầu chỉ cần thả tim!`,`Hoan nghênh ${who} gia nhập Vân Hải Tông! Thả tim, nhân vật của bạn sẽ vận công.`]))];
   // v87: hồng bao · câu đố · chuỗi điểm danh · nhiệm vụ ngày · tông môn kiến tạo
   if(e.envelopeStart)return [say('tiennu',pickBy(seed,['Hồng bao rơi! Gõ nhận trong hai mươi giây!','Trời mưa hồng bao! Gõ nhận ngay, chậm là hết!']))];

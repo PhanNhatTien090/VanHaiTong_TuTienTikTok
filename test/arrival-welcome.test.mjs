@@ -9,10 +9,10 @@ test('arrival appears and focuses immediately while speech prepares; voice start
 test('muted or failed speech still welcomes, stale entrances expire and queues stay bounded',()=>{
  let now=0,shown=0;const timers=[],voice={enabled:false,audio:{enabled:false},add(){throw Error('muted')}};
  const w=new ArrivalWelcomes({voice,show:()=>shown++,now:()=>now,schedule:fn=>timers.push(fn)});w.add(e);assert.equal(shown,1);
- voice.enabled=true;voice.audio.enabled=true;voice.add=()=>{};for(let i=0;i<40;i++)w.add({...e,id:'join'+i});assert.ok(w.pending.size<=12);now=16000;for(const fn of timers)fn();assert.equal(shown,41);
+ voice.enabled=true;voice.audio.enabled=true;voice.add=()=>{};for(let i=0;i<40;i++)w.add({...e,id:'join'+i,user:'viewer'+i}); /* 08/11: mỗi người 1 lần / 30 phút → dùng 40 người khác nhau */assert.ok(w.pending.size<=12);now=16000;for(const fn of timers)fn();assert.equal(shown,41);
 });
 test('spoken welcomes outrank cultivation, never outrank real gifts, cap at three waiting and deduplicate playback',()=>{
  assert.ok(priority(e)>priority({effect:'qi'}));assert.ok(priority(e)<priority({gift:'Hoa hồng',coins:1}));
- const q=new VoiceQueue({world:'demo',audio:{enabled:true,duck(){}}});q.running=true;q.prepare=()=>Promise.resolve(new Blob());
+ const q=new VoiceQueue({world:'demo',calm:false,audio:{enabled:true,duck(){}}});q.running=true;q.prepare=()=>Promise.resolve(new Blob());
  for(let i=0;i<20;i++)q.add({...e,id:'arrival'+i,user:'p'+i});assert.equal(q.queue.filter(x=>x.e.autoArrival).length,3);q.add({...e,id:'arrival0',user:'p0'});assert.equal(q.queue.length,3);q.stop();
 });

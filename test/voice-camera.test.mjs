@@ -12,7 +12,7 @@ test('announcements describe identity and action rather than reading raw chat',(
 });
 
 test('voice flood stays bounded and protects important events; mute clears pending actions',()=>{
-  const audio={enabled:true,duck(){}};const q=new VoiceQueue({world:'demo',audio});q.running=true;
+  const audio={enabled:true,duck(){}};const q=new VoiceQueue({world:'demo',audio,calm:false}) /* 08/11: luật giảm giọng có test riêng (voice-calm) */;q.running=true;
   q.add({id:'gift',user:'giver',effect:'dragon',text:'cảm ơn đạo hữu'});
   for(let i=0;i<30;i++)q.add({id:String(i),user:String(i),effect:'qi'});
   assert.equal(q.queue.length,2,'important voice plus only the latest routine response wait');assert.ok(q.queue.some(x=>x.e.id==='gift'));
