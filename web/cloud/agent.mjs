@@ -51,7 +51,8 @@ export function createSyncAgent(config) {
       wantsLive=Object.entries(raw.playTransfers||{}).filter(([,l])=>l?.phase==='web'&&Date.now()-(Number(l.wantsLiveAt)||0)<120000).map(([id])=>id).slice(0,500);
       const {players,meta}=projectWorld(raw),hashes=Object.fromEntries(players.map(p=>[p.id,digest(p)]));
       const deleted=Object.keys(state.hashes).filter(id=>!Object.hasOwn(hashes,id));
-      if(deleted.length>Math.max(100,Object.keys(state.hashes).length*.2) && !config.allowLargeDeletion)throw Error('Large deletion blocked; verify the source world before allowing it');
+      // Owner prunes inactive profiles routinely; only block when the source export looks nearly empty/broken.
+      if(deleted.length>Math.max(100,Object.keys(state.hashes).length*.9) && !config.allowLargeDeletion)throw Error('Large deletion blocked; verify the source world before allowing it');
       const full=!state.seq || Date.now()-state.fullAt>5*60000;
       const batch={schema:SCHEMA_VERSION,agentId:state.agentId,id:crypto.randomUUID(),seq:state.seq+1,sourceAt:Date.now(),full,players:full?players:players.filter(p=>state.hashes[p.id]!==hashes[p.id]),deleted,meta};
       state.pending={batch,hashes,fullAt:full?Date.now():state.fullAt};save();await flushPending();
