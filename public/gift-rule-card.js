@@ -16,7 +16,7 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
   ?{kind:'race',title:'ĐUA PHI KIẾM',tone:'sky',rows:[[1,`+${RACE_TRUONG_PER_COIN} trượng bứt tốc`],[30,`+${fmt(30*RACE_TRUONG_PER_COIN)} trượng`],[100,`+${fmt(100*RACE_TRUONG_PER_COIN)} trượng`]],note:'quà của người đang bay · top quà nhận vật cưỡi'}
   :{kind:'race',title:'ĐUA PHI KIẾM · TUYỂN',tone:'sky',rows:[[1,'cộng điểm quà đua'],[100,'top 3 quà nhận vật cưỡi']],note:'gõ bay để vào đường đua'};
  if(war?.active&&war.phase==='running')return {kind:'war',title:'CHÍNH MA ĐẠI CHIẾN',tone:'war',rows:[[1,`đẩy ~${WAR_TRUONG_PER_COIN} trượng`],[5,`đẩy ~${fmt(5*WAR_TRUONG_PER_COIN)} trượng`],[99,'sóng thần năng lượng']],note:'mỗi phe tối đa ~612 trượng quà / 30 giây'};
- if(war?.active&&war.phase==='registration')return {kind:'war',title:'CHÍNH MA · TUYỂN QUÂN',tone:'war',rows:[],note:'gõ chinh hoặc ma để vào phe · quà đẩy khi khai chiến'};
+ if(war?.active&&war.phase==='registration')return null;
  if(alc?.active&&alc.phase==='opening')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN · MỞ LÒ',tone:'fire',rows:[[1,'góp dược liệu vào lò']],note:'quà góp càng nhiều, đan càng tốt'};
  if(alc?.active&&alc.phase==='brewing')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN',tone:'fire',rows:[[1,'hạ nhiệt lò'],[20,'thêm linh dược'],[99,'đại hỏa 10 giây']],note:'giữ lửa trong vùng xanh'};
  if(alc?.active&&alc.phase==='tribulation')return {kind:'alchemy',title:'ĐAN KIẾP',tone:'fire',rows:[[1,'dựng khiên chắn kiếp'],[20,'khiên dày hơn']],note:'giữ khiên tới khi kiếp tan'};
@@ -29,6 +29,6 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi · phúc duyên'],[99,'+pháp bảo Tụ Linh'],[500,'Phượng hoàng · ĐẠI LỄ'],[2000,'TÔNG CHỦ · mở hết đồ']],note:'Đại lễ: +50% tu vi + skin · Tông chủ: 1 món, không cộng dồn'};
 }
 export function giftRuleHTML(r,art){
- if(!r)return '';
- return `<b class="grc-title">${esc(r.title)}</b>${r.rows.map(([coins,text])=>`<span class="grc-row"><span class="grc-gift">${giftTokenHTML(art,coins)}</span><i>→</i><em>${esc(text)}</em></span>`).join('')}${r.note?`<small>${esc(r.note)}</small>`:''}`;
+ if(!r||!r.rows.length)return ''; // 08/11 tối: thẻ chỉ ảnh quà → kết quả, không ghi chú (chủ game: đơn giản, ai hỏi thì trả lời)
+ return `<b class="grc-title">${esc(r.title)}</b>${r.rows.map(([coins,text])=>`<span class="grc-row"><span class="grc-gift">${giftTokenHTML(art,coins)}</span><i>→</i><em>${esc(text)}</em></span>`).join('')}`;
 }
