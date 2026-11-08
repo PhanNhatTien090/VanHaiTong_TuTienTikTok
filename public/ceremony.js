@@ -15,7 +15,7 @@ export function showCeremony(root,e){
   const L=e.ceremony,order=[2,1,0].filter(i=>L[i]);
   root.innerHTML=`<div class="cer-veil"></div><div class="cer-rays"></div><div class="cer-sparks">${Array.from({length:28},(_,i)=>`<i style="--x:${(i*37)%100}%;--d:${(i%7)*.35}s;--s:${.6+(i%5)*.25}"></i>`).join('')}</div>
     <div class="cer-head"><span>✦ VÂN HẢI TÔNG ✦</span><h2>ĐẠI ĐIỂN VINH DANH</h2><p>Tôn phong hộ pháp trước toàn tông môn</p></div>
-    <div class="cer-stage">${order.map(i=>seat(L[i],i)).join('')}</div>`;
+    <div class="cer-stage cer-n${order.length}">${order.map(i=>seat(L[i],i)).join('')}</div>`;
   root.hidden=false;root.classList.remove('cer-on');void root.offsetWidth;root.classList.add('cer-on');
   timer=setTimeout(()=>{root.classList.add('cer-out');setTimeout(()=>{root.hidden=true;root.classList.remove('cer-on','cer-out');},700);},CEREMONY_MS-700);
 }

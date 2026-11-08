@@ -192,7 +192,7 @@ body.overlay .basic-commands{bottom:7%}
 .puppet-card .puppet-last{margin:0;padding:5px 8px;border-radius:7px;background:#2a2410;color:#ffe7a0;font-size:.86em;border:1px solid #ffd76a44}
 
 /* v84: ĐẠI ĐIỂN VINH DANH */
-.ceremony{position:absolute;inset:0;z-index:20;pointer-events:none;overflow:hidden;font-size:clamp(10px,2vw,24px);color:#fff4d6;text-align:center}
+.ceremony{position:absolute;inset:0;z-index:20;pointer-events:none;overflow:hidden;container-type:inline-size;font-size:16px;color:#fff4d6;text-align:center}
 .ceremony[hidden]{display:none}
 .cer-veil{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(40,24,4,.55),rgba(4,6,14,.88) 70%);opacity:0;animation:cerFade .8s ease forwards}
 .cer-rays{position:absolute;left:50%;top:46%;width:180vmax;height:180vmax;margin:-90vmax 0 0 -90vmax;opacity:0;
@@ -460,3 +460,9 @@ html body.overlay .visitor-hud span.vh-buy small.vh-tang{font-size:.62em!importa
 html body.overlay .visitor-hud span.vh-buy img.gift-ico{height:2.7em;margin:-.35em .05em;filter:drop-shadow(0 0 4px #ffd76a) drop-shadow(0 1px 2px #000)}
 body.overlay .visitor-hud .vh-arrow{color:#ffd76a}
 body.overlay .visitor-hud .vh-what{color:#fff6c8;font-weight:900}
+
+/* 08/11 tối: chữ đại điển theo bề rộng sân khấu (cqw), không theo cửa sổ — LIVE Studio từng tràn thẻ phải, tiêu đề xuống dòng. Tên dài rút gọn …; 1–2 người thì xếp cân giữa. */
+.cer-head,.cer-stage{font-size:2.3cqw}
+.cer-seat{min-width:0;max-width:100%}
+.cer-stage.cer-n2{left:20%;right:20%;grid-template-columns:1fr 1.3fr;grid-template-areas:"l c"}
+.cer-stage.cer-n1{left:30%;right:30%;grid-template-columns:1fr;grid-template-areas:"c"}
