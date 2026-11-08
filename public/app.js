@@ -41,6 +41,7 @@ import {CultivationAudio} from './audio.js';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js';
+import {giftTokenHTML} from './gift-icons.js';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
 const cultivationAudio=new CultivationAudio();
@@ -364,7 +365,7 @@ function playNext(){
  const luxury=luxuryTier(e),duration=presentationDuration(e);
  if(e.petAward){const el=$('#giftReceipt');el.innerHTML=`<strong>${esc(e.name)} · Linh thú đồng hành</strong><span>${esc((e.petNames||[]).join(' · '))}</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,duration);}
  if(e.gift)showGiftReceipt(e);
- if(e.visitorProgress){const r=VISITOR_GIFT_REWARDS[e.visitorProgress.kind];$('#giftReceipt').insertAdjacentHTML('beforeend',`<span>✦ ${esc(r.skinName)}: ${fmt(e.visitorProgress.coins)} coin · ${r.skinCoins||100}: skin · ${r.artifactCoins||500}: ${esc(r.artifactName)}</span>`);}
+ if(e.visitorProgress){const r=VISITOR_GIFT_REWARDS[e.visitorProgress.kind];$('#giftReceipt').insertAdjacentHTML('beforeend',`<span>✦ ${esc(r.skinName)}: đã góp ${Math.min(100,Math.round(e.visitorProgress.coins/(r.artifactCoins||500)*100))}% · ${giftTokenHTML(state.giftArt,r.skinCoins||100)} → skin · ${giftTokenHTML(state.giftArt,r.artifactCoins||500)} → ${esc(r.artifactName)}</span>`);}
  if(e.loyaltyAward||e.visitorAward){const el=$('#giftReceipt');el.innerHTML=`<strong>Tri ân ${esc(e.name)}</strong><span>${esc(e.itemNames.join(' · '))}</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,duration);}
  scene.addEffect(e);honorUI.show(e);if(e.effect!=='breakthrough'||![1,2,3,4,5,6,7,8,9,10].includes(breakthroughRealm(e)))tone(e.effect==='breakthrough'?'qi':e.technique?({thunder:'boss',soul:'dragon',lotus:'lotus',stars:'petal',celestial:'breakthrough',bamboo:'sword',vortex:'qi',frost:'sword',flame:'dragon',bell:'boss',dragon:'dragon',petal:'petal',meteor:'boss',flowersword:'petal',peachfan:'petal',flowercage:'lotus',starmirror:'breakthrough',stararrow:'sword',sevenstars:'boss',stardust:'qi'})[e.technique.id]||'attack':e.effect);narrator.add(e);
  if(shouldFocusEvent(e)&&!scene.raceStatus?.active&&!scene.socialStage?.length)scene.focus(e.user,duration);
@@ -479,7 +480,7 @@ window.addEventListener('storage',e=>{if(e.key?.startsWith('vanhai-life-'))syncL
 
 function renderVisitorHud(){const el=$('#visitorHud'),e=state?.visitor;if(!el)return;el.hidden=!e||state.serverNow>=e.endsAt;if(el.hidden)return;const cfg=VISITORS[e.kind],seconds=Math.max(0,Math.ceil((e.endsAt-state.serverNow)/1000)),clock=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'),phase=Math.floor(state.serverNow/6000)%2;const reward=VISITOR_GIFT_REWARDS[e.kind];el.classList.toggle('skin-event',!!reward);// v88: 2 dòng cố định, không luân phiên — dòng quà skin luôn thấy
  // 07/11: một dòng luân phiên mỗi 4 s — cơ duyên miễn phí → mốc skin → mốc skin + pháp bảo.
- const free=e.completed?'Đã mở thưởng · gõ coduyen nhận quà':['hanlap','shende','hailam','doraemon','tudo','khuyniet'].includes(e.kind)?'Gõ coduyen để nhận quà':'Gõ coduyen · truyền đạo '+e.points+'/'+e.goal,lines=reward?[free,`🎁 ${reward.skinCoins||100} coin: được skin`,`🎁 ${reward.artifactCoins||500} coin: skin + ${reward.artifactName}`]:[free],line=lines[Math.floor(state.serverNow/4000)%lines.length];setHUD(el,'<b>'+esc(cfg.name.toUpperCase())+' <small>'+clock+'</small></b><span class="vh-gift">'+esc(line)+'</span>');}
+ const free=e.completed?'Đã mở thưởng · gõ coduyen nhận quà':['hanlap','shende','hailam','doraemon','tudo','khuyniet'].includes(e.kind)?'Gõ coduyen để nhận quà':'Gõ coduyen · truyền đạo '+e.points+'/'+e.goal,lines=reward?[esc(free),'🎁 '+giftTokenHTML(state.giftArt,reward.skinCoins||100)+': được skin','🎁 '+giftTokenHTML(state.giftArt,reward.artifactCoins||500)+': skin + '+esc(reward.artifactName)]:[esc(free)],line=lines[Math.floor(state.serverNow/4000)%lines.length];setHUD(el,'<b>'+esc(cfg.name.toUpperCase())+' <small>'+clock+'</small></b><span class="vh-gift">'+line+'</span>');}
 
 // v73: tab Tu sĩ giả
 var puppetUI=initPuppetUI({root:document.getElementById('puppetPanel'),post,toast,getState:()=>state,openPlayer:id=>{tab('scene');selectPlayer(id);renderEditor(true);}});

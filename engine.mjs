@@ -1,4 +1,5 @@
 import {creditMasterGift,unlockMasterLoadout,resetHistoricMasters} from './master-rewards.mjs';
+import {safeGiftUrl} from './public/gift-icons.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand} from './rebirth.mjs';
 import {capturePeriodBase,ensurePeriods} from './period-tops.mjs';
@@ -861,6 +862,8 @@ export function ingest(w,event,now=Date.now()) {
   if(event.event!=='gift')return {ok:true,ignored:true};
   const gift=d.gift||{};const coins=Number(d.diamondCount??gift.diamondCount??gift.diamond_count);
   if(!Number.isSafeInteger(coins)||coins<1)return fail('Quà thiếu giá trị coin; không tự đoán.');
+  // 08/11: ghi ảnh thật của món quà (để bảng sự kiện hiện ảnh quà thay số coin). Giữ tối đa 40 món gần nhất.
+  {const name=String(d.giftName||gift.name||'').normalize('NFC').slice(0,40),url=safeGiftUrl(d.giftPictureUrl||gift.giftPictureUrl);if(name&&url){w.giftArt??={};w.giftArt[name]={coins,url,at:now};const keys=Object.keys(w.giftArt);if(keys.length>40)delete w.giftArt[keys.sort((a,b)=>w.giftArt[a].at-w.giftArt[b].at)[0]];}}
   const total=Number(d.repeatCount??1);if(!Number.isSafeInteger(total)||total<1||total>1000)return fail('Combo không hợp lệ.');
   const streak=Number(d.giftType??gift.giftType??gift.type)===1;
   let count=total; const group=d.groupId||d.giftGroupId;
