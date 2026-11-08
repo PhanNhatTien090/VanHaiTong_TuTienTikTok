@@ -203,7 +203,7 @@ body.overlay .basic-commands{bottom:7%}
 .cer-head span{letter-spacing:.3em;font-size:.75em;color:#ffd76a}
 .cer-head h2{margin:.15em 0;font-size:2.3em;letter-spacing:.08em;font-weight:900;background:linear-gradient(180deg,#fff7d6,#ffd76a 55%,#c98a1a);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 .08em .12em #000) drop-shadow(0 0 .4em #ffb84a88)}
 .cer-head p{margin:0;font-size:.85em;color:#f3e2b8;text-shadow:0 1px 3px #000}
-.cer-stage{position:absolute;left:3%;right:3%;top:30%;display:grid;grid-template-columns:1fr 1.3fr 1fr;grid-template-areas:"l c r";align-items:end;gap:2%}
+.cer-stage{position:absolute;left:13%;right:13%;top:30%;display:grid;grid-template-columns:1fr 1.3fr 1fr;grid-template-areas:"l c r";align-items:end;gap:2%}
 .cer-seat{display:flex;flex-direction:column;align-items:center;gap:.15em;opacity:0;transform:translateY(1.5em) scale(.7);text-shadow:0 2px 4px #000,0 0 8px #000}
 .cer-second{grid-area:l;animation:cerRise .8s 1.7s cubic-bezier(.2,1.5,.4,1) forwards}
 .cer-first{grid-area:c;animation:cerRise 1s 2.8s cubic-bezier(.2,1.6,.4,1) forwards}

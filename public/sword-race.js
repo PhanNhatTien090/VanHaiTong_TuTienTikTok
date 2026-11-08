@@ -114,7 +114,8 @@ function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-P
   c.fillStyle='#030a14'+hexA(Math.min(.62,age/600*.62));c.fillRect(0,0,900,H);
   c.textAlign='center';c.lineWidth=7;c.strokeStyle='#1d1206';c.font='900 42px Segoe UI';c.fillStyle='#ffe7a0';c.strokeText('TRAO THƯỞNG PHI KIẾM',450,H*.12);c.fillText('TRAO THƯỞNG PHI KIẾM',450,H*.12);
   c.font='bold 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';const sub=top.length?'Top 3 tặng quà nhận skin phi kiếm vĩnh viễn':'Lượt này chưa ai tặng quà · tặng quà để nhận skin phi kiếm';c.strokeText(sub,450,H*.12+32);c.fillStyle='#eafcff';c.fillText(sub,450,H*.12+32);
-  const slots=[{rank:1,x:450,y:H*.40,k:1.18,at:1300},{rank:2,x:160,y:H*.44,k:.92,at:800},{rank:3,x:740,y:H*.44,k:.92,at:300}];
+  // 08/11: 3 thẻ gom vào vùng an toàn 14–86% bề ngang — trên điện thoại cột nút TikTok bên phải che mất thẻ hạng 3.
+  const slots=[{rank:1,x:450,y:H*.40,k:1,at:1300},{rank:2,x:222,y:H*.44,k:.78,at:800},{rank:3,x:678,y:H*.44,k:.78,at:300}];
   for(const sl of slots){const winner=top[sl.rank-1],pz=PRIZE_VIEW[sl.rank-1],skin=RACE_SWORD_SKINS.find(s=>s.id===pz.skin),u=clamp((age-sl.at)/650);if(!winner||!skin||u<=0)continue;
     const e2=1-(1-u)**3,w=250*sl.k,h=430*sl.k,x=sl.x,y=sl.y-(1-e2)*120;c.save();c.globalAlpha=e2;
     c.fillStyle='#0a1a2ce8';c.strokeStyle=sl.rank===1?'#ffd76a':skin.color;c.lineWidth=sl.rank===1?4:3;c.beginPath();c.roundRect(x-w/2,y-h/2,w,h,16);c.fill();c.stroke();
