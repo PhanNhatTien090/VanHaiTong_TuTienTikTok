@@ -19,7 +19,7 @@ test('tuvi shows progress on stream; failed dotpha explains what is missing, bot
   const w=createWorld('live');let now=1e6;
   action(w,{type:'chat',userId:'b',name:'Minh',text:'nhapmon nam'},now);
   action(w,{type:'chat',userId:'b',name:'Minh',text:'tuvi'},now+=1000);
-  const s=w.events.at(-1);assert.equal(s.effect,'status');assert.match(s.text,/^Tu vi 0\/150 • Linh thạch 30\/30 • Phàm nhân$/);
+  const s=w.events.at(-1);assert.equal(s.effect,'status');assert.match(s.text,/^Tu vi 0\/150 • Linh thạch 30\/30 • Phàm nhân • thiếu 150 tu vi · gõ tu luyện$/);
   assert.equal(action(w,{type:'chat',userId:'b',name:'Minh',text:'tuvi'},now+=1000).ok,false);
   const n=w.events.length;action(w,{type:'chat',userId:'b',name:'Minh',text:'dotpha'},now+=20000);
   assert.equal(w.events.length,n+1);assert.equal(w.events.at(-1).effect,'status');

@@ -25,6 +25,7 @@ export function bubbleText(e){
   if(e.introSpark)return 'Mình biết tu luyện rồi!';
   if(e.gift)return 'Tặng '+e.gift+(e.count>1?' ×'+e.count:'');
   if(e.effect==='join')return 'Nhập môn!';
+  if(e.missing==='stones')return 'Gõ hái để lấy linh thạch!'; // 08/11: đủ tu vi, thiếu linh thạch
   if(['status','hint','ready','title'].includes(e.effect))return null;
   const s=String(e.text||'').split('•')[0].trim();return s?Array.from(s).slice(0,24).join(''):null;
 }
