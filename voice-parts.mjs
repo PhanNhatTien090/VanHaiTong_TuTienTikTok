@@ -6,11 +6,14 @@ export const COMMON_GIFTS=Object.freeze(['Hoa hồng','TikTok','Tim','Kem ốc q
 const clean=s=>String(s||'').normalize('NFC').replace(/[^\p{L}\p{N}\s]/gu,' ').replace(/\d+/g,' ').replace(/\s+/g,' ').trim().slice(0,30);
 export function namePlan(p){const raw=sayName(p?.name);if(!raw)return null;const t=p.gender==='nam'?'Sư huynh':p.gender==='nu'?'Sư tỷ':'Đạo hữu';return [{voice:'tongsu',text:`${t} ${raw}`}];}
 export function giftPlan(gift){const g=clean(gift);return g?[{voice:'tongsu',text:`tặng ${g}! Đa tạ tâm ý!`}]:null;}
+// 08/11 tối: mảnh ghép hô chiến cho quà trong Chính Ma Đại Chiến (thay 'Đa tạ tâm ý').
+export const WAR_PUSH_PLANS=Object.freeze({chinh:Object.freeze([{voice:'tongsu',text:'phản công! Chính Đạo đẩy mạnh!'}]),ma:Object.freeze([{voice:'tongsu',text:'phản công! Ma Đạo đẩy mạnh!'}])});
 export const THANKS_PLAN=Object.freeze([{voice:'tongsu',text:'Đa tạ tâm ý của đạo hữu!'}]);
 const ACTIVE_MS=20*60000;
 /** Mảnh còn thiếu cần làm tiếp (ưu tiên: câu cảm ơn chung → người vừa tương tác → quà vừa có → quà phổ biến). */
 export function nextMissingPart(w,cached,now=Date.now()){
   if(!cached(THANKS_PLAN))return THANKS_PLAN;
+  for(const plan of Object.values(WAR_PUSH_PLANS))if(!cached(plan))return plan;
   const people=Object.values(w.players||{}).filter(p=>!p.resident&&!p.puppet&&now-(p.lastRealInteractionAt||p.lastActive||0)<ACTIVE_MS).sort((a,b)=>(b.giftCoins>0)-(a.giftCoins>0)||(b.lastRealInteractionAt||0)-(a.lastRealInteractionAt||0));
   for(const p of people.slice(0,200)){const plan=namePlan(p);if(plan&&!cached(plan))return plan;}
   const gifts=new Set([...(w.events||[]).filter(e=>e.gift&&Number(e.coins)>0).slice(-60).map(e=>e.gift),...COMMON_GIFTS]);

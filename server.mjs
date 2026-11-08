@@ -16,7 +16,7 @@ import {GIFT_POLICY_VERSION,GIFT_TIERS} from './public/gift-rewards.js';
 import {AssetCache} from './asset-cache.mjs';
 import http from 'node:http';
 import {createSpeech} from './speech.mjs';
-import {namePlan,giftPlan,THANKS_PLAN,nextMissingPart} from './voice-parts.mjs';
+import {namePlan,giftPlan,THANKS_PLAN,WAR_PUSH_PLANS,nextMissingPart} from './voice-parts.mjs';
 import {skinFor} from './public/cosmetics.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -164,7 +164,7 @@ const server=http.createServer(async(req,res)=>{
       const result=liveTransfers.apply(JSON.parse(raw.toString()));payloadCache.clear();broadcast();json(res,result);return;
     }
     if(url.pathname==='/api/voice-latency'){json(res,voiceLatency);return;}
-    if(url.pathname==='/api/voice-part'){const kind=url.searchParams.get('kind'),p=kind==='name'?worlds[mode].players[url.searchParams.get('user')||'']:null,plan=kind==='name'?(p&&!p.resident&&!p.puppet?namePlan(p):null):kind==='gift'?giftPlan(url.searchParams.get('gift')):kind==='thanks'?THANKS_PLAN:null,file=plan&&synthesizeSpeech.cached(plan);if(!file){json(res,{ok:false},404);return;}res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=600'});fs.createReadStream(file).pipe(res);return;}
+    if(url.pathname==='/api/voice-part'){const kind=url.searchParams.get('kind'),p=kind==='name'?worlds[mode].players[url.searchParams.get('user')||'']:null,plan=kind==='name'?(p&&!p.resident&&!p.puppet?namePlan(p):null):kind==='gift'?giftPlan(url.searchParams.get('gift')):kind==='thanks'?THANKS_PLAN:kind==='war'?WAR_PUSH_PLANS[url.searchParams.get('side')]||null:null,file=plan&&synthesizeSpeech.cached(plan);if(!file){json(res,{ok:false},404);return;}res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=600'});fs.createReadStream(file).pipe(res);return;}
     if(url.pathname==='/api/speech'&&req.method==='GET'){
       const id=url.searchParams.get('id');
       let event=worlds[mode].events.find(e=>e.id===id)||announcementHistory[mode].get(id);

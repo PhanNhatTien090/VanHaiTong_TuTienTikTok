@@ -44,8 +44,10 @@ function giftLines(e,who,Who,t,seed){
  if(e.warGift){const S=e.warGift==='chinh'?'Chính Đạo':'Ma Đạo',value=(Number(e.coins)||0)*(Number(e.count)||1);
   const hype=e.warFlip?pickBy(seed,[`${Who} tặng quà lớn, lật kèo rồi! ${S} vượt lên!`,`Lật kèo! ${Who} một quà đảo chiều chiến trận!`,`${Who} ra tay, ${S} lật ngược thế cờ!`])
    :value>=99?pickBy(seed,[`${Who} tung tuyệt kỹ! ${S} đẩy phăng chiến tuyến!`,`Đại chiêu của ${who}! ${S} càn quét!`,`${Who} ra đòn chí mạng cho ${S}!`])
-   :pickBy(seed,[`${Who} tiếp sức cho ${S}!`,`${S} đẩy mạnh nhờ ${who}!`,`${Who} tung chiêu, ${S} tiến lên!`]);
-  return [say('trongtai',hype),say('tongsu',master)];}
+   :value>=10?pickBy(seed,[`${Who} phản công! ${S} đẩy mạnh!`,`${Who} tung chiêu! ${S} ép tới!`,`${Who} ra đòn, ${S} đẩy mạnh chiến tuyến!`])
+   :pickBy(seed,[`${Who} phản công! ${S} đẩy mạnh!`,`${Who} đẩy mạnh cho ${S}!`,`${Who} tung chiêu, ${S} tiến lên!`]);
+  // 08/11 tối: trong đại chiến chỉ hô chiến — không 'đa tạ tâm ý', không đọc phần thưởng (chủ game yêu cầu).
+  return [say('trongtai',hype)];}
  if(e.firstGift)return [say('tiennu','Chào mừng Tân Hộ Pháp '+who+'!'),say('tongsu',master)];
  return (Number(e.coins)||0)*(Number(e.count)||1)>=99?[say('tiennu','Vinh danh '+who+'!'),say('tongsu',master)]:[say('tongsu',master)];
 }

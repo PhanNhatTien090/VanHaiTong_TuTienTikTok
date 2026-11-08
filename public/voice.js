@@ -83,7 +83,9 @@ export class VoiceQueue {
   // Mảnh ghép làm sẵn cho lời cảm ơn quà; thiếu tên thì null (dùng đường cũ).
   giftParts(e){const base=`/api/voice-part?world=${this.world}`,get=q=>fetch(base+q,{signal:AbortSignal.timeout(1200)}).then(r=>r.ok?r.blob():null).catch(()=>null);
     if(!e.user)return Promise.resolve(null);
-    return Promise.all([get('&kind=name&user='+encodeURIComponent(e.user)),get('&kind=gift&gift='+encodeURIComponent(e.gift||'')).then(b=>b||get('&kind=thanks'))]).then(([n,g])=>n&&g?[n,g]:null);}
+    // 08/11 tối: quà trong Chính Ma → "<tên> phản công! <phe> đẩy mạnh!" (không cảm ơn).
+    const second=e.warGift?get('&kind=war&side='+encodeURIComponent(e.warGift)):get('&kind=gift&gift='+encodeURIComponent(e.gift||'')).then(b=>b||get('&kind=thanks'));
+    return Promise.all([get('&kind=name&user='+encodeURIComponent(e.user)),second]).then(([n,g])=>n&&g?[n,g]:null);}
   // Đo độ trễ thật: từ lúc nhận sự kiện tới lúc bắt đầu đọc; gửi lên trạng thái client để kiểm tra trên LIVE.
   noteLag(e,ms,dropped){const row={k:realGiftVoice(e)?'gift':e.autoArrival?'arrival':isEventAnnouncement(e)?'event':e.heavenStrike?'heaven':'other',ms:Math.round(ms),d:dropped?1:0,at:Date.now()};(this.lags??=[]).push(row);if(this.lags.length>40)this.lags.shift();if(dropped)this.staleDropped=(this.staleDropped||0)+1;}
   lagStats(){const quick=this.quickParts||0,rows=(this.lags||[]).filter(r=>!r.d).map(r=>r.ms).sort((a,b)=>a-b),q=f=>rows.length?rows[Math.min(rows.length-1,Math.floor(rows.length*f))]:null;return {n:rows.length,p50:q(.5),p90:q(.9),max:rows.at(-1)??null,stale:this.staleDropped||0,quick,last:(this.lags||[]).slice(-8)};}

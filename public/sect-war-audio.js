@@ -24,6 +24,10 @@ export function playWarSound(c,out,kind,side='chinh',strength=1){
  else if(kind==='turn'){hiss(c,out,t,.4,500,4200,.12,p,.8);tone(c,out,t+.3,.6,side==='chinh'?660:165,side==='chinh'?990:110,.09,side==='chinh'?'triangle':'sawtooth',p);tone(c,out,t+.3,.5,85,32,.35,'sine',p);}
  else if(kind==='tick'){const hi=k>=1.5;tone(c,out,t,.09,hi?1800:1300,hi?1700:1250,hi?.2:.13,'square');tone(c,out,t,.06,hi?3600:2600,hi?3400:2500,.05,'sine');if(hi){tone(c,out,t,.45,110,40,.45,'sine');hiss(c,out,t,.12,2000,300,.12);}}
  else if(kind==='final'){[0,.04].forEach(d=>tone(c,out,t+d,3.2,98,92,.16*k,'sine'));tone(c,out,t,3,196,190,.07*k,'triangle');tone(c,out,t,2.6,294,290,.05*k,'sine');hiss(c,out,t,1.2,800,120,.12*k,0,.5);tone(c,out,t,.8,70,30,.4*k);}
+ else if(kind==='cast'){ // 08/11 tối: tung chiêu — tiếng vút lao tới (0,45 s) rồi cú nổ đẩy; quà càng to càng dày, càng trầm
+  hiss(c,out,t,.45,side==='chinh'?500:250,side==='chinh'?5200:2600,.1+.08*k,-p,.7);tone(c,out,t,.45,side==='chinh'?330:110,side==='chinh'?1320:330,.04*k,side==='chinh'?'triangle':'sawtooth',-p);
+  tone(c,out,t+.45,.6+.3*k,90,26,.32*Math.min(1.6,k),'sine',p*.4);hiss(c,out,t+.45,.25+.15*k,3800,180,.16*Math.min(1.6,k),p*.4,.6);
+  if(k>1.2)[.62,.8].forEach((d,i)=>tone(c,out,t+d,.7,70-i*12,24,.3*(k-.9),'sine',(i?1:-1)*.3));}
  else if(kind==='push'){hiss(c,out,t,.28,side==='chinh'?700:400,side==='chinh'?3600:1800,.13*k,p,.9);tone(c,out,t+.05,.3,70,34,.22*k,'sine',p);}
  else if(kind==='win'){const base=side==='ma'?[146.8,174.6,220]:[261.6,329.6,392];base.forEach((f,i)=>{tone(c,out,t+i*.12,2.2,f,f,.07,'sawtooth',(i-1)*.3);tone(c,out,t+i*.12,2.2,f*2,f*2,.04,'triangle');});tone(c,out,t,1.4,90,30,.4);[0,.25,.5].forEach(d=>hiss(c,out,t+d,.08,1800,300,.1));}
 }

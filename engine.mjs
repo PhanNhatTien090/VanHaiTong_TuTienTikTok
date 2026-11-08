@@ -22,7 +22,7 @@ import {tickPuppetRoses} from './puppet-auto-rose.mjs';
 import {recordEventGiftFx} from './event-gift-fx.mjs';
 import {flowerHearts,finishFlowerHearts,bossHearts} from './heart-events.mjs';
 import {raceHearts} from './sword-race.mjs';
-import {startWar as beginWar,stopWar as endWar,tickWar,warCommand,warHearts,warGift,warView,warStageIds} from './sect-war.mjs';
+import {warActive,startWar as beginWar,stopWar as endWar,tickWar,warCommand,warHearts,warGift,warView,warStageIds} from './sect-war.mjs';
 import {startAlchemy as beginAlchemy,stopAlchemy as endAlchemy,tickAlchemy,alchemyCommand,alchemyHearts,alchemyGift,alchemyView,alchemyStageIds,alchemyActive} from './alchemy.mjs';
 import {DIVINE_ROLES,rankDivineRoles} from './public/divine-wardrobe.js';
 import {honorRoll,honorTitle,eventAvatar,safeAvatar} from './public/honors.js';
@@ -462,6 +462,8 @@ function actionCore(w,input,now) {
     const wait=cooldown(p,'pill',3000,now);if(wait)return fail(`Đang hấp thu đan dược • ${wait}s.`);
     p.pills[item.id]--;const q=gain(w,p,item.qi,0,0,now);emit(w,p,`Dùng ${item.name} • +${q} tu vi`,'lotus',now);
   } else if(type==='breakthrough') {
+    // 08/11 tối: đang Chính Ma Đại Chiến thì tạm ngưng đột phá (màn đột phá che chiến trường, lời đọc chen hô chiến).
+    if(warActive(w))return fail('Chính Ma Đại Chiến đang diễn ra • tạm ngưng đột phá, dồn sức đẩy chiến tuyến!');
     if(p.realm>=REALMS.length-1)return fail('Đã đạt '+REALMS.at(-1)+'. Hãy hỗ trợ đồng môn!');
     if(!finalRealmEligible(p)){const message='Tiên Đế cần tổng quà ít nhất 100 coin • hiện '+(p.giftCoins||0)+' coin';if(!cooldown(p,'final-realm',15000,now))emit(w,p,message,'status',now);return fail(message);}
     if(p.qi<requiredQi(p)||p.stones<requiredStones(p)){const onlyStones=p.qi>=requiredQi(p);if(!cooldown(p,'status',15000,now)){emit(w,p,statusText(p,w,now),'status',now,onlyStones?{missing:'stones'}:{});if(onlyStones)p.stoneHintAt=now;}return fail(`Chưa đủ đột phá: ${missingText(p)}.`);}
@@ -761,7 +763,7 @@ export function tick(w,now=Date.now()) {
   return protectTransferred(w,()=>tickCore(w,now));
 }
 // 08/11: mỗi 6 s tìm 1 người đang có mặt (hoạt động ≤10 phút) đủ tu vi mà thiếu linh thạch để nhắc — không chờ họ thả tim/gõ lệnh.
-function stoneHintTick(w,now){if(now-(w.stoneScanAt||0)<6000)return;w.stoneScanAt=now;for(const p of Object.values(w.players)){if(now-(p.lastActive||0)>600000||w.playTransfers?.[p.id]?.phase==='web')continue;if(missingStones(w,p,now))return;}}
+function stoneHintTick(w,now){if(warActive(w)||now-(w.stoneScanAt||0)<6000)return;w.stoneScanAt=now;for(const p of Object.values(w.players)){if(now-(p.lastActive||0)>600000||w.playTransfers?.[p.id]?.phase==='web')continue;if(missingStones(w,p,now))return;}}
 function tickCore(w,now) {
  stoneHintTick(w,now);
  ensurePeriods(w,now); // 07/11: sang ngày/tuần mới → chốt bảng cũ, mở kỳ mới
