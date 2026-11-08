@@ -1,7 +1,8 @@
 export const QUALITY={
-  audience10:{seats:48,width:1080,fps:30,poseFps:8,mesh:3,spriteScale:2.5,atmosphereFps:5,effects:3},
-  audience15:{seats:48,width:1080,fps:30,poseFps:7,mesh:2,spriteScale:2.5,atmosphereFps:4,effects:2},
-  audience20:{seats:48,width:1080,fps:26,poseFps:6,mesh:2,spriteScale:2.5,atmosphereFps:3,effects:2},
+  // 08/11: LIVE Studio + mã hóa dùng chung GPU tích hợp → khi có khán giả chỉ nhắm 24 FPS, bớt nền/hiệu ứng phụ (nhân vật, cánh giữ nguyên).
+  audience10:{seats:48,width:1080,fps:24,poseFps:8,mesh:2,spriteScale:2.5,atmosphereFps:4,effects:2},
+  audience15:{seats:48,width:1080,fps:24,poseFps:7,mesh:2,spriteScale:2.5,atmosphereFps:3,effects:2},
+  audience20:{seats:48,width:1080,fps:24,poseFps:6,mesh:2,spriteScale:2.5,atmosphereFps:3,effects:2},
   crowded:{seats:32,width:1080,fps:24,poseFps:5,mesh:1,spriteScale:2.5,atmosphereFps:2,effects:1},
   light:{seats:32,width:1080,fps:24,poseFps:8,mesh:2,spriteScale:2.5,atmosphereFps:4,effects:2},
   balanced:{seats:48,width:1080,fps:30,poseFps:10,mesh:3,spriteScale:2.5,atmosphereFps:6,effects:4},
