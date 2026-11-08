@@ -63,3 +63,15 @@ test('the same viewer re-entering is welcomed once per 30 minutes',()=>{
  w.add({id:'e1',user:'u1',autoArrival:true});t=60000;w.add({id:'e2',user:'u1',autoArrival:true});
  assert.equal(shown,1);t=31*60000;w.add({id:'e3',user:'u1',autoArrival:true});assert.equal(shown,2);
 });
+// 08/11: giọng trễ → bỏ, không đọc điều đã qua trên màn hình.
+import {voiceMaxAgeMs} from '../public/voice.js';
+test('stale lines are dropped even after their clip is ready',async()=>{
+ const audio={enabled:true,duck(){}};const played=[];const q=new VoiceQueue({world:'demo',audio,calm:false});q.play=async(_u,e)=>{played.push(e.id);};
+ const old=globalThis.fetch;globalThis.fetch=async()=>({ok:true,blob:async()=>new Blob(['x'])});
+ try{q.queue=[{e:{...gift,id:'late'},at:Date.now()-voiceMaxAgeMs(gift)-500}];await q.next();assert.deepEqual(played,[]);assert.equal(q.lagStats().stale,1);
+  q.queue=[{e:{...gift,id:'fresh'},at:Date.now()-1000}];await q.next();assert.deepEqual(played,['fresh']);assert.equal(q.lagStats().n,1);}
+ finally{q.stop();globalThis.fetch=old;}
+});
+test('max ages stay short: routine 7 s, arrival 6 s, gift 12 s',()=>{
+ assert.equal(voiceMaxAgeMs({effect:'qi'}),7000);assert.equal(voiceMaxAgeMs({autoArrival:true}),6000);assert.equal(voiceMaxAgeMs(gift),12000);
+});

@@ -8,7 +8,7 @@ import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
 import {controlLanternEvent} from './engine.mjs';
 import {controlPetEvent} from './engine.mjs';
-import {EventAnnouncementHistory} from './public/event-announcements.js';
+import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
 import {GIFT_POLICY_VERSION,GIFT_TIERS} from './public/gift-rewards.js';
 import {AssetCache} from './asset-cache.mjs';
@@ -60,6 +60,7 @@ for(const [mode,w]of Object.entries(worlds)){
  if(repairs.length)console.log(`[${mode}] Đối soát và bù ${repairs.length} lượt thưởng tiên nhân.`);
 }
 if(fs.existsSync(visitorRecovery))fs.renameSync(visitorRecovery,visitorRecovery+'.applied-'+Date.now());
+const voiceLatency=[]; // 08/11: đo thời gian tạo giọng (ms) và tuổi sự kiện khi client xin giọng
 const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
@@ -141,6 +142,7 @@ const server=http.createServer(async(req,res)=>{
       if(req.headers.origin&&req.headers.origin!==`http://${host}`){json(res,{ok:false,message:'Origin không hợp lệ.'},403);return;}
       if(!String(req.headers['content-type']).startsWith('application/json')){json(res,{ok:false,message:'Cần JSON.'},415);return;}
     }
+    if(url.pathname==='/api/voice-latency'){json(res,voiceLatency);return;}
     if(url.pathname==='/api/speech'&&req.method==='GET'){
       const id=url.searchParams.get('id');
       let event=worlds[mode].events.find(e=>e.id===id)||announcementHistory[mode].get(id);
@@ -153,7 +155,10 @@ const server=http.createServer(async(req,res)=>{
       if(!event){json(res,{ok:false,message:'Sự kiện không còn trong hàng đợi.'},404);return;}
       if(mode==='live'&&!eventAllowedOnLive(event,worlds[mode].players)){json(res,{ok:false,message:'DEMO event unavailable on LIVE.'},404);return;}
       event=speechEventFor(mode,event);
-      try{const file=await synthesizeSpeech(event);res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=86400'});fs.createReadStream(file).pipe(res);}
+      // 08/11: không tốn máy đọc cho sự kiện đã cũ — đọc trễ là nói sai với màn hình.
+      const voiceAge=Number.isFinite(event.at)?Date.now()-event.at:0,voiceLimit=event.heavenStrike?15000:event.gift&&Number(event.coins)>0?20000:isEventAnnouncement(event)?25000:10000;
+      if(mode==='live'&&!ids&&voiceAge>voiceLimit){voiceLatency.push({at:Date.now(),age:voiceAge,stale:1});if(voiceLatency.length>60)voiceLatency.shift();json(res,{ok:false,message:'Sự kiện đã cũ, bỏ giọng đọc.'},410);return;}
+      try{const t0=Date.now(),file=await synthesizeSpeech(event);voiceLatency.push({at:t0,age:voiceAge,synthMs:Date.now()-t0,gift:event.gift?1:0});if(voiceLatency.length>60)voiceLatency.shift();res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=86400'});fs.createReadStream(file).pipe(res);}
       catch(e){json(res,{ok:false,message:e.message},503);}return;
     }
     if(url.pathname==='/api/client-status'&&req.method==='POST'){const b=await body(req);const id=String(b.id||'').slice(0,40);if(id){clientStatus.set(id,{...b,at:Date.now()});if(clientStatus.size>30)clientStatus.delete(clientStatus.keys().next().value);}json(res,{ok:true});return;}
