@@ -42,7 +42,7 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
 
 // 08/11/2026: CHỐNG GIỌNG TRỄ. Giọng đọc chậm sẽ nói điều không còn trên màn hình (TikTok có thể cảnh báo nội dung sai).
 // Câu nào tính từ lúc nhận sự kiện đã quá hạn thì bỏ hẳn, kể cả khi giọng vừa tạo xong.
-export function voiceMaxAgeMs(e){return e.heavenStrike?10000:realGiftVoice(e)?12000:raceOpeningVoice(e)?12000:isEventAnnouncement(e)?20000:e.autoArrival?6000:e.ceremony?15000:7000;}
+export function voiceMaxAgeMs(e){return e.heavenStrike?10000:realGiftVoice(e)?12000:raceOpeningVoice(e)?12000:isEventAnnouncement(e)?12000:e.autoArrival?6000:e.ceremony?15000:7000;}
 
 export class VoiceQueue {
   constructor({world,audio,onStart=()=>{},onStatus=()=>{},player=()=>null,calm=true}){this.world=world;this.audio=audio;this.player=player;this.calm=calm;this.calmLast={routine:-Infinity,breakthrough:-Infinity,arrival:-Infinity,users:new Map()};this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
