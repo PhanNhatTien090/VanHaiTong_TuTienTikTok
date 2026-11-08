@@ -54,15 +54,20 @@ html body.overlay .scene-shell .visitor-hud.skin-event :is(b,span){text-shadow:0
 @keyframes vhPulse{0%,100%{opacity:0}50%{opacity:.8}}
 @media (prefers-reduced-motion:reduce){html body.overlay .scene-shell .visitor-hud.skin-event{animation:none}}
 
-/* 08/11/2026: TOP QUÀ sang cột phải (bên trái chỉ còn TOP TU VI + bảng sự kiện).
-   Cột phải bắt đầu dưới widget mục tiêu quà của LIVE Studio (góc trên phải, ~13–22% chiều cao). */
-html body.overlay #phoneHudRight{top:23%}
-html body.overlay #phoneHudRight>#giftRanks{width:auto!important;max-width:100%!important;align-self:flex-end;padding:5px 8px!important;
- background:linear-gradient(145deg,#07192f38,#102e3926)!important;border:1px solid #9dd9ce30!important;border-radius:10px!important;box-shadow:none!important;
- text-shadow:0 1px 2px #000,0 0 5px #000,0 0 10px #000a!important;font-size:clamp(9px,1.75cqw,20px)!important;text-align:left}
+/* 08/11/2026: TOP QUÀ ở góc trên phải, nằm TRÊN widget mục tiêu quà của LIVE Studio (widget bắt đầu ~13% chiều cao, kéo xuống ~41%).
+   Vùng trống chỉ cao ~7% nên mỗi người 1 dòng, khung chân dung nhỏ. Các bảng phụ cột phải bắt đầu dưới widget. */
+html body.overlay #phoneHudRight{top:42%}
+html body.overlay .scene-shell>#giftRanks{position:absolute!important;top:5.6%!important;right:var(--phone-hud-edge)!important;left:auto!important;bottom:auto!important;z-index:5;
+ width:auto!important;max-width:33%!important;max-height:7.2%;overflow:hidden;padding:2px 7px 3px!important;margin:0;
+ background:linear-gradient(145deg,#07192f38,#102e3926)!important;border:1px solid #9dd9ce30!important;border-radius:9px!important;box-shadow:none!important;
+ text-shadow:0 1px 2px #000,0 0 5px #000,0 0 10px #000a!important;font-size:clamp(9px,1.65cqw,18px)!important;line-height:1.1;text-align:left}
 html body.overlay #giftRanks[hidden]{display:none!important}
 html body.overlay #giftRanks *{text-shadow:inherit}
-html body.overlay #giftRanks .gift-leaders{margin:0;padding:0;border:0}
-html body.overlay #giftRanks .gift-top-line{display:block;white-space:nowrap}
-html body.overlay #giftRanks .gift-top-title{display:block}
+html body.overlay #giftRanks .gift-leaders{margin:0;padding:0;border:0;gap:0!important}
+html body.overlay #giftRanks .gift-leaders>b{font-size:.85em;line-height:1.2}
+html body.overlay #giftRanks .gift-top{gap:4px}
+html body.overlay #giftRanks .gift-top-title{display:none}
+html body.overlay #giftRanks .gift-top-line{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.overlay #giftRanks .gift-top-portrait,html body.overlay #giftRanks .gift-top-1 .gift-top-portrait{width:1.75em;height:1.75em}
+html body.overlay #giftRanks .gift-top-1 .gift-top-portrait::after{display:none}
 body.sword-race #giftRanks,body.abyss-fight #giftRanks,body.alchemy-on #giftRanks,body.performance-solo #giftRanks{display:none!important}

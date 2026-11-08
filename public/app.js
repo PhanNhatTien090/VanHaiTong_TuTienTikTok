@@ -48,11 +48,11 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
 // All scene previews use the same HUD flow as the broadcast.
 {
   const root=$('.scene-shell');
-  // 08/11: TOP QUÀ tách khỏi bảng tu vi, sang đầu cột phải — cột trái đỡ dồn, cột phải đỡ trống.
+  // 08/11: TOP QUÀ là bảng riêng ở góc trên phải, phía trên widget mục tiêu quà của LIVE Studio (CSS trong moon-jade-theme.css).
   if(root&&!root.querySelector('#giftRanks')){const g=document.createElement('div');g.id='giftRanks';g.className='live-ranks compact-ranks gift-ranks';g.hidden=true;root.appendChild(g);}
   for(const [id,selectors] of [
     ['phoneHudLeft',['#liveRanks','#bossHud','#opportunityHud','#visitorHud','#socialHud']],
-    ['phoneHudRight',['#giftRanks','#giftBoard','#flowerHud','#commandRail']]
+    ['phoneHudRight',['#giftBoard','#flowerHud','#commandRail']]
   ]){
     const rail=document.createElement('div');rail.id=id;rail.className='phone-hud-rail';
     for(const selector of selectors){const panel=root.querySelector(selector);if(panel)rail.appendChild(panel);}
