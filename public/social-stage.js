@@ -7,9 +7,11 @@ export function syncSocialStage(scene,state){
  if(kind===scene.socialArtKind)return;scene.socialArtKind=kind;scene.socialArt=null;if(!kind)return;
  const image=new Image();image.onload=()=>{if(scene.socialArtKind!==kind)return;const size=scene.budget?.level==='light'?256:384,frames=[];for(let i=0;i<6;i++){const frame=makeSurface(size,size);if(!frame)continue;frame.getContext('2d').drawImage(image,i%3*image.naturalWidth/3,Math.floor(i/3)*image.naturalHeight/2,image.naturalWidth/3,image.naturalHeight/2,0,0,size,size);frames.push(frame);}scene.socialArt=frames;};image.src='/assets/events-v1/'+kind+'-effects.png';
 }
+// 08/11: nền Luận Kiếm mới (maps-v3/tournament-arena.png) có mặt sàn ~66–92% chiều cao — đứng ở 78% để chân chạm sàn, không lơ lửng.
+const TOURNAMENT_FLOOR=.78;
 export function socialTargets(scene,ordered,H){
  const pair=ordered.length===2,kind=scene.socialScene;
- return ordered.map((p,i)=>({id:p.id,player:p,x:pair?(kind==='bond'?315+i*270:225+i*450):450,y:H*(kind==='bond'?.57:.55),scale:pair?2.25:2.6,lift:0,baseY:H*.57}));
+ return ordered.map((p,i)=>({id:p.id,player:p,x:pair?(kind==='bond'?315+i*270:225+i*450):450,y:H*(kind==='bond'?.57:TOURNAMENT_FLOOR),scale:pair?2.25:2.6,lift:0,baseY:H*(kind==='bond'?.57:TOURNAMENT_FLOOR)}));
 }
 export function drawSocialStage(scene,c,t,layer,solo){
  if(solo||!scene.socialScene)return;const art=scene.socialArt,H=scene.height,s=scene.socialStatus,now=Date.now(),match=s?.tournament?.current,ceremony=s?.ceremony;
