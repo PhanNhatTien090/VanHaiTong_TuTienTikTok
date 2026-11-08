@@ -10,6 +10,8 @@ export const WAR=Object.freeze({registerMs:30000,battleMs:120000,podiumMs:20000,
  unit:.85,heartsPerUnit:10,heartCapUnits:4,heartWindowMs:5000,strikeUnits:1.5,strikeCooldownMs:8000,giftUnitsPerCoin:3,giftWindowMs:30000,giftCapUnits:36,
  chinhBonus:1.05,maxSizeBonus:1.2,rescue:{chinh:20,ma:15},rescuePush:15,rescueBoostMs:20000,rescueBoost:1.6,
  omenEveryMs:40000,omenMs:15000,winGap:2,reward:{win:300,lose:90,draw:150,stones:30,top:[400,250,150]},titleMs:24*3600000});
+// 08/11 tối: bản đồ Vạn Lý Chiến Đạo — 1 điểm chiến tuyến = 20 trượng (cả đường 2.000 trượng, mỗi phe 1.000 trượng tới sơn môn đối phương).
+export const TRUONG_PER_POINT=20;
 export const SIDES=Object.freeze({chinh:{name:'Chính Đạo',general:'Chính Đạo Minh Chủ',rescue:'Hạo Nhiên Chính Khí'},ma:{name:'Ma Đạo',general:'Ma Đạo Tôn Chủ',rescue:'Ma Hồn Bất Diệt'}});
 export const OMENS=Object.freeze({'golden-sun':{name:'Kim Dương',text:'KIM DƯƠNG CHIẾU RỌI • Chính Đạo mạnh lên',chinh:1.3,ma:1,weight:35},'blood-moon':{name:'Huyết Nguyệt',text:'HUYẾT NGUYỆT TREO CAO • Ma Đạo mạnh lên',chinh:1,ma:1.3,weight:25},chaos:{name:'Hỗn Chiến',text:'HỖN CHIẾN • cả hai phe lực đẩy gấp đôi',chinh:2,ma:2,weight:25},mist:{name:'Sương Mù',text:'SƯƠNG MÙ PHỦ CHIẾN TRƯỜNG • không thấy chiến tuyến',chinh:1,ma:1,weight:15}});
 const CHINH=['chinh','chinhdao','cd','chinhphai'],MA=['ma','madao','md','maphai'];
@@ -118,8 +120,8 @@ export function warGift(w,p,coins,now,c,event={}){
  warNoteFree(e,m.side,0,now);const giftUnits=e.gifts.filter(g=>g.side===m.side).reduce((a,g)=>a+g.pushed,0);
  const allowance=WAR.giftCapUnits-giftUnits,pushed=Math.max(0,Math.min(units,allowance));
  e.gifts.push({at:now,side:m.side,pushed});m.score+=units;m.giftCoins=(m.giftCoins||0)+coins;m.lastActAt=now;m.lastGiftAt=now;
- const moved=push(w,e,m.side,pushed,now,c,true);fx(e,now,{kind:'gift',side:m.side,user:p.id,name:p.name,value:coins,capped:pushed<units});
- checkRescue(w,e,now,c);const flip=noteLead(w,e,now,c,{id:p.id,name:p.name,coins})&&e.lead===m.side;finishIfDone(w,e,now,c);return {moved,pushed,units,side:m.side,flip,line:e.line};
+ const moved=push(w,e,m.side,pushed,now,c,true);fx(e,now,{kind:'gift',side:m.side,user:p.id,name:p.name,value:coins,capped:pushed<units,truong:Math.round(moved*TRUONG_PER_POINT)});
+ checkRescue(w,e,now,c);const flip=noteLead(w,e,now,c,{id:p.id,name:p.name,coins})&&e.lead===m.side;finishIfDone(w,e,now,c);return {moved,pushed,units,side:m.side,flip,line:e.line,truong:Math.round(moved*TRUONG_PER_POINT)};
 }
 // Ghi nhận lực đẩy không-quà theo cửa sổ trượt 30 s để tính hạn mức quà.
 export function warNoteFree(e,side,units,now){e.freeLog=(e.freeLog||[]).filter(x=>now-x.at<WAR.giftWindowMs);if(units>0)e.freeLog.push({at:now,side,units});if(e.freeLog.length>400)e.freeLog.splice(0,e.freeLog.length-400);e.freeUnits={chinh:0,ma:0};for(const x of e.freeLog)e.freeUnits[x.side]+=x.units;}

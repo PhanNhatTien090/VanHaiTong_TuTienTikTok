@@ -57,3 +57,20 @@ test('lời đọc: có câu cho mở trận/khai chiến/cứu nguy/kết quả
  for(const e of [{effect:'war',warStart:true,text:'x'},{effect:'war',warBattle:true,text:'x'},{effect:'war',warRescue:'chinh',text:'x'},{effect:'war',warEnd:'ma',text:'x'},{effect:'war',warEnd:'draw',text:'x'}]){const line=speechPlan(e).map(x=>x.text).join(' ');assert.ok(line.length>5);assert.doesNotMatch(line,/coin|\d/);}
  assert.deepEqual(speechPlan({effect:'war',warJoin:'chinh',text:'Gia nhập Chính Đạo',user:'a',name:'A'}),[]);
 });
+
+test('08/11 tối: Vạn Lý Chiến Đạo — mỗi quà ghi số trượng đẩy được, giọng đọc nói trượng, bản đồ quy đổi đúng', async () => {
+  const E = await import('../engine.mjs'); const { speechPlan } = await import('../speech-lines.mjs');
+  const { truongOf, warCamera, screenX, TRUONG_PER_POINT } = await import('../public/war-road.js');
+  const N = 1800000000000; let k = 0;
+  const say = (w, id, c, t) => E.ingest(w, { event: 'chat', data: { userId: id, uniqueId: id, nickname: 'P' + id, comment: c, msgId: 'm' + (k++) } }, t);
+  const w = E.createWorld('live'); for (const id of ['a', 'b', 'c', 'd']) say(w, id, 'nhap mon nam', N);
+  E.startWar(w, N + 10); ['a', 'b'].forEach(id => say(w, id, 'chinh', N + 20)); ['c', 'd'].forEach(id => say(w, id, 'ma', N + 20));
+  for (let t = N; t <= N + 35000; t += 500) E.tick(w, t);
+  assert.equal(w.sectWar.phase, 'running');
+  E.ingest(w, { event: 'gift', data: { userId: 'a', uniqueId: 'a', nickname: 'Pa', giftName: 'Rose', diamondCount: 1, repeatCount: 1, giftType: 1, repeatEnd: true, msgId: 'g1' } }, N + 35500);
+  const ev = w.events.findLast(e => e.gift), f = w.sectWar.fx.findLast(x => x.kind === 'gift');
+  assert.ok(ev.warTruong > 0 && f.truong === ev.warTruong); assert.match(ev.text, /trượng/);
+  assert.match(speechPlan(ev).map(x => x.text).join(' '), /trượng/);
+  assert.equal(TRUONG_PER_POINT, 20); assert.equal(truongOf(100), 1000); assert.equal(truongOf(0), -1000);
+  assert.equal(screenX(0, warCamera(0)), 450); assert.ok(screenX(1000, warCamera(1000)) < 900, 'sơn môn cuối đường vẫn trong màn hình');
+});
