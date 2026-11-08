@@ -57,6 +57,11 @@ for realm, slug in REALMS:
             shutil.copy2(src, target)
     manifest[realm] = frames
 
+# 08/11/2026: skin TẠM realm 22–24 = Thần Quân đổi màu (scripts/recolor-than-quan.mjs). Giữ lại tới khi có ảnh riêng được duyệt.
+for temp_realm, temp_slug in ((22, 'ma-than'), (23, 'thien-ma-thanh-de'), (24, 'diet-the-chi-ton')):
+    if temp_realm not in manifest and 16 in manifest and (ROOT / 'public/assets/realm-skins-v3' / temp_slug).exists():
+        manifest[temp_realm] = {k: {**v, 'url': v['url'].replace('/than-quan/', f'/{temp_slug}/')} for k, v in manifest[16].items()}
+
 content = 'export const REALM_SKIN_IMAGES=Object.freeze('+json.dumps(manifest,ensure_ascii=False,separators=(',',':'))+');\n'
 data = ROOT / 'public/realm-skins-v2-data.js'
 changed = not data.exists() or data.read_text(encoding='utf-8') != content
