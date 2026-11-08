@@ -91,8 +91,12 @@ export function speechPlan(e){
   if(e.ceremony){const L=e.ceremony,n=x=>sayName(x.name)||'đạo hữu';return [say('tiennu',pickBy(seed,['Đại điển vinh danh! Tông môn tôn phong hộ pháp!','Chuông vàng ngân vang! Đại điển vinh danh bắt đầu!'])),say('tongsu',[L[0]&&`Thái Thượng Hộ Pháp ${n(L[0])}`,L[1]&&`Tả Hộ Pháp ${n(L[1])}`,L[2]&&`Hữu Hộ Pháp ${n(L[2])}`].filter(Boolean).join(', ')+'. Tông môn khắc ghi đại ân!')];}
   // 07/11/2026: THIÊN ĐẠO giáng lôi — đọc như thiên kiếp ngẫu nhiên giáng xuống tông môn.
   if(e.heavenStrike)return [say('tiennu',pickBy(seed,['Thiên kiếp giáng xuống tông môn!','Trời đất biến sắc! Thiên kiếp giáng xuống tông môn!','Lôi vân cuồn cuộn! Thiên kiếp giáng xuống tông môn!','Cửu thiên lôi kiếp giáng xuống tông môn!'])),say('tongsu',pickBy(seed+'t',[`Thiên lôi đánh trúng ${who}! Tu vi tổn thất hai mươi phần trăm, kinh mạch tê liệt năm phút!`,`Lôi phạt trúng vào ${who}! Mất hai mươi phần trăm tu vi, năm phút không thể tu luyện!`,`Thiên đạo chọn trúng ${who}! Hai mươi phần trăm tu vi tan biến, choáng váng năm phút!`,`Ầm! Thiên lôi giáng thẳng xuống ${who}! Tu vi hao tổn hai mươi phần trăm, năm phút không vận công được!`]))];
-  // v80: tông sư ban thưởng (nút của người điều hành)
-  if(e.adminGift){const r=e.reward||{},m=e.buff?.mult;return [say('tiennu',pickBy(seed,[`Tông sư ban ${e.comboName} cho ${who}!`,`Thiên ân giáng xuống ${who}!`,`Tông sư để mắt tới ${who}!`])),say('tongsu',e.adminGift==='breakthrough'?`Đủ tu vi rồi, gõ đột phá ngay!`:[r.qi&&`Nhận ${roundSay(r.qi)} tu vi`,m&&`phúc duyên gấp ${multWord(m)} mười phút`].filter(Boolean).map((x,i)=>i?x:cap(x)).join(', ')+'!')];}
+  // 08/11: Tông chủ (người điều hành) ban thưởng — giọng luôn nói rõ Tông chủ để ý ai, ban cho ai, ban gì, nhận được gì.
+  if(e.adminGift){const r=e.reward||{},m=e.buff?.mult,custom=e.adminGift==='custom',gift=custom?'phần thưởng riêng':(e.comboName||'phần thưởng');
+    const got=[Number(r.qi)>0&&roundSay(r.qi)+' tu vi',Number(r.stones)>0&&viNumber(r.stones)+' linh thạch',Number(r.herbs)>0&&viNumber(r.herbs)+' linh thảo',m&&'phúc duyên gấp '+multWord(m)+' trong '+viNumber(e.buff.minutes||10)+' phút'].filter(Boolean);
+    const head=pickBy(seed,[`Tông chủ ban ${gift} cho ${who}!`,`Tông chủ để ý đến ${who}, ban ${gift}!`,`Tông chủ để mắt tới ${who}, ban tặng ${gift}!`]);
+    const tail=e.adminGift==='breakthrough'?`${Who} đã đủ tu vi, gõ đột phá ngay!`:got.length?`${Who} nhận ${list2(got)}!`:`${Who} hãy tạ ơn Tông chủ!`;
+    return [say('tiennu',head),say('tongsu',tail)];}
   // v79: hướng dẫn người mới từng bước
   if(e.guide==='checkin')return [say('tongsu',pickBy(seed,[`${Who}, gõ điểm danh để nhận linh thạch khởi đầu nhé!`,`${Who} ơi, bước một: gõ điểm danh nhận quà mỗi ngày!`]))];
   if(e.guide==='cultivate')return [say('tongsu',pickBy(seed,[`Tốt lắm ${who}! Giờ thả tim để tăng tu vi.`,`${Who}, chỉ cần thả tim để thử vận công nhé!`]))];

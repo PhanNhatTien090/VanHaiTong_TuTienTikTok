@@ -1008,7 +1008,7 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   if(c.buff){p.buffMult=Math.max(c.buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=now+GIFT_BUFF_MS;}
   p.lastActive=Math.max(p.lastActive||0,now);
   const parts=[got&&`+${got} tu vi`,c.stones&&!c.fill&&`+${c.stones} linh thạch`,c.herbs&&`+${c.herbs} linh thảo`,c.buff&&`phúc duyên ×${c.buff} 10 phút`,c.fill&&(readyToBreak(p,w,now)?'đủ điều kiện đột phá':'đủ tu vi và linh thạch, chờ lượt đột phá ngày sau')].filter(Boolean);
-  emit(w,p,`Tông sư ban ${c.name} • ${parts.join(' • ')}`,'lotus',now,{adminGift:combo,comboName:c.name,reward:{qi:got,stones:c.stones,herbs:c.herbs},buff:c.buff?{mult:c.buff,minutes:10}:null});
+  emit(w,p,`Tông chủ ban ${c.name} cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{adminGift:combo,comboName:c.name,reward:{qi:got,stones:c.stones,herbs:c.herbs},buff:c.buff?{mult:c.buff,minutes:10}:null});
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['ban '+c.name]});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:c.name,qi:got};
 }
@@ -1041,7 +1041,7 @@ export function adminCustomGift(w,id,custom={},now=Date.now()){
   if(buff){p.buffMult=Math.max(buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=Math.max(p.buffUntil>now?p.buffUntil:0,now+minutes*60000);}
   p.lastActive=Math.max(p.lastActive||0,now);
   const parts=[qi&&`+${qi} tu vi`,stones&&`+${stones} linh thạch`,herbs&&`+${herbs} linh thảo`,buff&&`phúc duyên ×${buff} ${minutes} phút`].filter(Boolean);
-  emit(w,p,`Tông sư ban thưởng riêng • ${parts.join(' • ')}`,'lotus',now,{adminGift:'custom',comboName:'Thưởng Riêng',reward:{qi,stones,herbs},buff:buff?{mult:buff,minutes}:null});
+  emit(w,p,`Tông chủ ban thưởng riêng cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{adminGift:'custom',comboName:'Thưởng Riêng',reward:{qi,stones,herbs},buff:buff?{mult:buff,minutes}:null});
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['thưởng riêng: '+parts.join(', ')]});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:'Thưởng Riêng',qi};
 }
