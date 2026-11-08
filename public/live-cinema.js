@@ -5,8 +5,8 @@ import {ritualAppearance,ritualAppearanceFrame,drawRitualAppearance,drawRitualWe
 const FULL_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
 export function drawRitual(scene,...args){
  const [c,e,t,H]=args,a=scene.ritualVariantsEnabled===false?null:ritualAppearance(e),restorePalette=beginRitualPalette(a?.palette||null);
- const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
- Object.assign(scene,{budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
+ const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,minimalCrowd:scene.minimalCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
+ Object.assign(scene,{budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,minimalCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
  if(a&&typeof saved.onRitualFrame==='function')scene.onRitualFrame=ui=>saved.onRitualFrame.call(scene,ritualAppearanceFrame(ui,a));
  // 07/11: lật trái/phải + khung zoom khác nhau cho mỗi lần (chỉ cảnh giới đầu). Chữ HUD là DOM nên không bị lật.
  const framed=!!(a?.zoom&&(a.mirror||a.zoom!==1||a.dy));
