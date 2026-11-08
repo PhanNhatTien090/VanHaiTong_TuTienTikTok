@@ -1,5 +1,4 @@
 import {drawRaceSword,raceSwordFor,RACE_SWORD_SKINS,drawSwordSparkle} from './race-sword-skins.js';
-import {raceMountFor,drawRaceMount} from './race-mounts.js';
 import {drawPrestigeSword,swordPrestige} from './sword-prestige.js';
 import {makeSurface} from './performance.js';
 // v88: đua phi kiếm "máy quay bám ĐOÀN CHÍNH".
@@ -156,7 +155,8 @@ export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active
    drawMiniRacers(scene,c,e,H,now,t);
   }
   // Một thanh phi kiếm cho mỗi người được vẽ đầy đủ; không pháp bảo bay quanh, hào quang hay vòng xung kích.
-  for(const a of scene.targets){const skin=raceSwordFor(a.player);if(skin)drawRaceSword(scene,c,a,t);else{const mount=raceMountFor(scene,a.player);if(mount&&drawRaceMount(scene,c,a,t,mount))continue;const v=swordPrestige(a.player);drawPrestigeSword(scene,c,v.cell,a.x,a.y+32*(a.scale/1.5),160*(a.scale/1.5),Math.PI/2,v.color);}}
+  // 08/11: skin/vật cưỡi mới CHỈ dành cho người đã đoạt top 1–3 (raceSwordSkins); người thường bay kiếm mặc định, không rút ngẫu nhiên vật cưỡi.
+  for(const a of scene.targets){const skin=raceSwordFor(a.player);if(skin)drawRaceSword(scene,c,a,t);else{const v=swordPrestige(a.player);drawPrestigeSword(scene,c,v.cell,a.x,a.y+32*(a.scale/1.5),160*(a.scale/1.5),Math.PI/2,v.color);}}
  }else{
   // Small textual feedback keeps gifts readable without covering racers.
   for(const a of scene.targets)if(a.kick>0){c.save();c.font='900 18px Segoe UI';c.textAlign='center';c.fillStyle='#ffe7a0';c.strokeStyle='#09263d';c.lineWidth=4;const text=a.gift?'BỨT TỐC +'+a.gift.boost:'BỨT TỐC';c.strokeText(text,a.x,a.y+75);c.fillText(text,a.x,a.y+75);c.restore();}
