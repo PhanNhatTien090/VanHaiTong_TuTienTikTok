@@ -1,6 +1,14 @@
 import {artworkCrop} from './courtyard-layout.js';
 import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
+import {safeAvatar} from './honors.js';
+// 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.
+const AVATARS=new Map();
+function avatarImage(url){if(!url||typeof Image==='undefined')return null;let e=AVATARS.get(url);if(e&&e.failed&&Date.now()<e.retry)return null;if(!e||e.failed){if(AVATARS.size>40)AVATARS.delete(AVATARS.keys().next().value);const img=new Image();img.referrerPolicy='no-referrer';img.decoding='async';e={img,ready:false,failed:false};img.onload=()=>{e.ready=true;};img.onerror=()=>{e.failed=true;e.retry=Date.now()+60000;};img.src=url;AVATARS.set(url,e);}return e.ready?e.img:null;}
+function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar)),ring=i===0?'#ffd76a':'#cfe6ff';c.save();c.translate(0,y);
+ c.shadowColor='#000a';c.shadowBlur=8;c.fillStyle='#183843';c.beginPath();c.arc(0,0,r+5,0,Math.PI*2);c.fill();c.shadowBlur=0;
+ c.save();c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();if(img)c.drawImage(img,-r,-r,r*2,r*2);else{c.fillStyle='#ffe7a0';c.font='900 30px Georgia';c.textAlign='center';c.textBaseline='middle';c.fillText(Array.from(p.name||'Đ')[0]||'Đ',0,2);}c.restore();
+ c.lineWidth=4;c.strokeStyle=ring;c.beginPath();c.arc(0,0,r+2,0,Math.PI*2);c.stroke();c.restore();}
 export function sectHallTargets(players,H){
  const n=players.length,cols=n<=3?Math.max(1,n):n<=12?4:n<=24?6:8,rows=Math.ceil(n/cols);
  const scale=n<=3?2.9:n<=4?2.7:n<=8?2.35:n<=12?2.05:n<=24?1.5:1.05;
@@ -47,7 +55,8 @@ export function drawSectCourt(scene,c,t){
   const x=i===0?260:640;c.save();c.translate(x,y);c.fillStyle='#122e35e8';c.strokeStyle='#bda466';c.lineWidth=2;
   c.beginPath();c.moveTo(-44,-5);c.lineTo(-44,-70);c.quadraticCurveTo(0,-98,44,-70);c.lineTo(44,-5);c.closePath();c.fill();c.stroke();
   c.fillStyle='#25444b';c.fillRect(-50,0,100,15);c.strokeRect(-50,0,100,15);c.fillStyle='#bda466';c.fillRect(-45,15,6,15);c.fillRect(39,15,6,15);
-  c.font='700 14px Georgia';c.textAlign='center';c.fillStyle='#efd49a';c.fillText(i===0?'ĐẠI TRƯỞNG LÃO':'NHỊ TRƯỞNG LÃO',0,-115,180);c.restore();
+  // nhãn chữ cũ ở -115 bị tóc nhân vật che (lòi mảnh chữ); chức vị đã hiện dưới chân nên bỏ.
+  drawElderAvatar(c,p,i,-178);c.restore();
  }
  drawSectMaster(scene,c,t);
 }
