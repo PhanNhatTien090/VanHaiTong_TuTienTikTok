@@ -146,6 +146,7 @@ export function speechPlan(e){
     return [say('trongtai',`${name||'Yêu thú'} đã rút lui. Chư vị tiếp tục tu luyện.`)];}
   if(e.effect==='attack')return [say('trongtai',e.technique?.name?`${Who} thi triển ${e.technique.name}!`:`${Who} xuất chiêu!`)];
   // ----- đua phi kiếm -----
+  if(e.effect==='race'&&e.raceFinishRank){const rank=['','nhất','nhì','ba'][e.raceFinishRank];return [say('tiennu',`${Who} về đích hạng ${rank}!`),say('tongsu',`Trao vật cưỡi ${e.mountName}${e.raceSwordSkin?' và kiếm '+e.itemNames[0]:''} vĩnh viễn!`)];}
   if(e.effect==='race'&&e.raceGiftRank){const rank=['','nhất','nhì','ba','tư','năm'][e.raceGiftRank]||e.raceGiftRank;return [say('tiennu',`Quà đua hạng ${rank} thuộc về ${who}!`),say('tongsu',`${e.raceMount&&e.mountName?'Trao vật cưỡi '+e.mountName+(e.raceSwordSkin?', skin phi kiếm '+e.itemNames[0]:'')+' vĩnh viễn, cùng ':e.raceSwordSkin?'Trao skin phi kiếm '+e.itemNames[0]+' vĩnh viễn, cùng ':'Ban '}${roundSay(e.reward?.qi)} tu vi!`)];}
   // ----- Khai Lò Cửu Chuyển (08/11): chỉ đọc 4 mốc, câu ngắn; còn lại để hình tự nói -----
   if(e.effect==='alchemy'){

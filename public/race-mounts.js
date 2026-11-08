@@ -24,7 +24,7 @@ function sheets(scene){
  return art;
 }
 // 08/11: chỉ người đã đoạt top quà đua mới có vật cưỡi (p.raceMounts). Có nhiều con thì cưỡi con đẹp nhất theo MOUNT_RANK.
-export const MOUNT_RANK=Object.freeze(['fox','koi','crane']);
+export const MOUNT_RANK=Object.freeze(['fox','koi','lotus','crane','gourd','boat']);
 export function raceMountFor(scene,player){
  if(!player)return null;const own=player.raceMounts||[],id=MOUNT_RANK.find(m=>own.includes(m))||own[0];if(!id)return null;const m=RACE_MOUNTS.find(x=>x.id===id);if(!m)return null;const art=sheets(scene);return art[m.sheet]?m:null;
 }

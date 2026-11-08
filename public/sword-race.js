@@ -129,7 +129,7 @@ function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-P
   let y=H*.66;c.font='800 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';
   for(let i=3;i<5;i++){const w=top[i];if(!w||age<1900)continue;const line=['④','⑤'][i-3]+' '+Array.from(w.name||'').slice(0,14).join('')+' · +'+VIFMT.format(PRIZE_VIEW[i].qi)+' tu vi';c.strokeText(line,450,y);c.fillStyle='#d9f6ff';c.fillText(line,450,y);y+=30;}
   const champ=(e.results||[])[0];if(champ&&age>2200){y+=14;c.font='900 26px Segoe UI';const line='⚔ VÂN HẢI KIẾM VƯƠNG · '+Array.from(champ.name||'').slice(0,16).join('');c.strokeText(line,450,y);c.fillStyle='#ffd76a';c.fillText(line,450,y);y+=30;
-    c.font='700 18px Segoe UI';const rest=(e.results||[]).slice(1,5).map((r,i)=>(i+2)+'. '+Array.from(r.name||'').slice(0,10).join('')).join('   ');c.strokeText(rest,450,y);c.fillStyle='#eafcff';c.fillText(rest,450,y);}
+    c.font='700 18px Segoe UI';const rest=(e.results||[]).slice(1,5).map((r,i)=>(i+2)+'. '+Array.from(r.name||'').slice(0,10).join('')).join('   ');c.strokeText(rest,450,y);c.fillStyle='#eafcff';c.fillText(rest,450,y);if((e.results||[]).length>=4){y+=28;c.font='800 17px Segoe UI';const pr='Về đích: ① Hỏa Liên + kiếm Cửu Thiên · ② Hồ Lô · ③ Tiên Hạc';c.strokeText(pr,450,y);c.fillStyle='#ffd7a0';c.fillText(pr,450,y);}}
   if(e.repeat!==false){c.font='bold 20px Segoe UI';const nx='Lượt đua mới sau '+left+' giây · gõ bay để ghi danh';c.strokeText(nx,450,H-40);c.fillStyle='#fff1ae';c.fillText(nx,450,H-40);}
   c.restore();}
 export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active)return;const H=scene.height,now=serverNow(scene,t),running=e.phase==='running',moving=running&&scene.motion,light=scene.budget?.level==='light';
