@@ -25,7 +25,8 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  const pe=s.petEvent;if(pe?.active){const paid=(pe.rules||[]).filter(r=>r.coins>0).slice(-2);return {kind:'pets',title:'LINH THÚ CỐC',tone:'jade',rows:paid.map(r=>[r.coins,'kết bạn '+r.name]),note:'thả tim cũng mở linh thú thường'};}
  if(live(s.visitor,now))return null; // bảng tiên nhân đã có ảnh quà → skin riêng
  // không sự kiện: quà mặc định
- return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi · phúc duyên ×3'],[99,'+pháp bảo Tụ Linh Bình'],[500,'ĐẠI LỄ: +50% tu vi + skin']],note:''};
+ // 2000 = 1 món Vương miện 2000 coin: Tông chủ cần MỘT món ≥2000 (master-rewards.mjs), không cộng dồn. Ảnh thật tự thay khi kênh nhận quà này (giftArt theo tên+giá).
+ return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi · phúc duyên'],[99,'+pháp bảo Tụ Linh'],[500,'Phượng hoàng · ĐẠI LỄ'],[2000,'TÔNG CHỦ · mở hết đồ']],note:'Đại lễ: +50% tu vi + skin · Tông chủ: 1 món, không cộng dồn'};
 }
 export function giftRuleHTML(r,art){
  if(!r)return '';

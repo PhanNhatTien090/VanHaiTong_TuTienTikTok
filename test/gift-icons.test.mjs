@@ -12,5 +12,6 @@ test('bảng sự kiện dùng ảnh quà thật × số lượng, không ghi s�
 });
 test('quà từ TikFinity được ghi ảnh vào thế giới và gửi xuống overlay',()=>{
  const w=createWorld('live');ingest(w,{event:'gift',data:{userId:'u1',uniqueId:'u1',nickname:'A',giftName:'Trái tim',diamondCount:100,repeatCount:1,giftType:2,giftPictureUrl:U,msgId:'m1'}},N);
- assert.equal(w.giftArt?.['Trái tim']?.url,U);assert.equal(snapshot(w,N).giftArt?.['Trái tim']?.coins,100);
+ assert.equal(w.giftArt?.['Trái tim|100']?.url,U);assert.equal(snapshot(w,N).giftArt?.['Trái tim|100']?.coins,100);
+ ingest(w,{event:'gift',data:{userId:'u2',uniqueId:'u2',nickname:'B',giftName:'Trái tim',diamondCount:199,repeatCount:1,giftType:2,giftPictureUrl:U+'?b',msgId:'m2'}},N+1);assert.equal(w.giftArt['Trái tim|100'].url,U,'quà cùng tên khác giá không đè ảnh');assert.equal(giftFor(w.giftArt,100).name,'Trái tim');
 });
