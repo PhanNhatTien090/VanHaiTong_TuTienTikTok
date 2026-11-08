@@ -226,6 +226,7 @@ export async function runBattle(host, { info, stats, sceneState, onFinish, onExi
     sound.sfx(crit ? 'impact' : 'attack', 60);
     if (boss.hp <= 0) killBoss();
     else if (!boss.enraged && boss.hp < boss.maxHp * 0.4) { boss.enraged = true; banner(`${boss.name} nổi giận!`); }
+    return dmg;
   }
   function inFront(range, depth = 120) {
     const dx = (boss.x - player.x) * player.face;
@@ -301,6 +302,8 @@ export async function runBattle(host, { info, stats, sceneState, onFinish, onExi
   }
   function hurtPlayer(amount) {
     if (player.dead || now() < player.invulnUntil) return;
+    // 08/11 tối: giáp linh thú hút sát thương trước
+    if (player.shield > 0 && now() < player.shieldUntil) { const soak = Math.min(player.shield, amount); player.shield -= soak; amount -= soak; floatText(player.x, player.y - 300, 'Giáp -' + Math.round(soak).toLocaleString('vi-VN'), 0x8fd8ff, 30); if (amount <= 0) { player.invulnUntil = now() + 0.5; sound.sfx('sword', 200); return; } }
     player.hp = Math.max(0, player.hp - amount);
     player.invulnUntil = now() + 0.5;
     actor.hurt();
@@ -381,17 +384,59 @@ export async function runBattle(host, { info, stats, sceneState, onFinish, onExi
       } };
     }
   }
+  // ---------- 08/11 tối: KỸ NĂNG LINH THÚ (hồi máu, giáp, thiêu đốt, đại chiêu, choáng, hút máu) ----------
+  const petTimers = [];
+  function floatText(x, y, text, fill, size = 34) {
+    const t = new Text({ text, style: { fontFamily: 'Noto Serif, Georgia, serif', fontWeight: '900', fontSize: size, fill, stroke: { color: 0x10141c, width: 6 }, dropShadow: { color: 0x000000, alpha: 0.6, blur: 4, distance: 3 } } });
+    t.anchor.set(0.5); t.position.set(x, y);
+    addFx(t, 1.3, (f, dt) => { t.y -= 60 * dt; t.alpha = f < 0.75 ? 1 : 1 - (f - 0.75) / 0.25; t.scale.set(f < 0.1 ? 0.5 + f * 5 : 1); });
+  }
+  function healPlayer(amount, quiet = false) {
+    amount = Math.round(Math.min(amount, player.maxHp - player.hp)); if (amount <= 0) return;
+    player.hp += amount; damageNumber(player.x + rand(-30, 30), player.y - 270, amount, { heal: true });
+    if (!quiet) { sound.sfx('qi', 150); for (let i = 0; i < 10; i++) { const p = new Sprite(glowTex); p.anchor.set(0.5); p.blendMode = 'add'; p.tint = 0x8dffb0; const ox = rand(-70, 70); p.position.set(player.x + ox, player.y - rand(0, 40)); addFx(p, rand(0.7, 1.1), (f, dt) => { p.y -= 160 * dt; p.scale.set(0.16 * (1 - f)); p.alpha = 1 - f; }); } }
+  }
+  const shieldG = new Graphics(); shieldG.blendMode = 'add'; fxLayer.addChild(shieldG);
+  function updateShield(t) {
+    shieldG.clear(); if (!(player.shield > 0) || t >= player.shieldUntil || player.dead) { if (t >= player.shieldUntil) player.shield = 0; return; }
+    const k = Math.min(1, player.shield / (player.shieldMax || 1)), ds = depthScale(player.y), r = 120 * ds + Math.sin(t * 5) * 4, cy = player.y - 130 * ds, col = pet.skill?.hot ? 0xffa64a : 0x8fd8ff;
+    shieldG.ellipse(player.x, cy, r, r * 1.25).fill({ color: col, alpha: 0.10 + 0.12 * k }).stroke({ color: col, width: 4, alpha: 0.5 + 0.4 * k });
+    for (let i = 0; i < 6; i++) { const a = t * 1.6 + i * 1.047; shieldG.circle(player.x + Math.cos(a) * r, cy + Math.sin(a) * r * 1.25, 5).fill({ color: 0xffffff, alpha: 0.6 * k }); }
+  }
+  function lightning(x1, y1, x2, y2, tint) {
+    const g = new Graphics(); g.blendMode = 'add'; const pts = [[x1, y1]]; for (let i = 1; i < 8; i++) pts.push([x1 + (x2 - x1) * i / 8 + rand(-40, 40), y1 + (y2 - y1) * i / 8]); pts.push([x2, y2]);
+    const path = () => { g.moveTo(pts[0][0], pts[0][1]); for (const p of pts.slice(1)) g.lineTo(p[0], p[1]); };
+    addFx(g, 0.35, (f) => { g.clear(); path(); g.stroke({ color: tint, width: 12 * (1 - f), alpha: 1 - f }); path(); g.stroke({ color: 0xffffff, width: 4 * (1 - f), alpha: 1 - f }); });
+  }
+  function castPetSkill(t, s) {
+    const k = pet.skill, tint = parseInt(pet.color.slice(1), 16), py = s.y + (pet.flying ? -110 : 0);
+    floatText(s.x, py - 120, '✦ ' + k.name, tint, 36); spark(s.x, py - 60, tint, 1.6); shake = Math.max(shake, 6);
+    if (k.strike) {
+      if (k.stun) { lightning(boss.x + rand(-60, 60), boss.y - 900, boss.x, boss.y - 120, 0xb9a2ff); sound.sfx('boss', 0); }
+      else if (pet.id === 'van-thu') { lightning(s.x, py - 60, boss.x, boss.y - 150, 0xff4d6d); sound.sfx('impact', 0); }
+      else { for (let i = 0; i < 3; i++) setTimeout(() => spark(boss.x + rand(-80, 80), boss.y - 160 + rand(-60, 60), tint, 1.8), i * 90); sound.sfx('dragon', 0); }
+      hitBoss(k.strike, { crit: false, knock: 18, tint, gainQi: false });
+    }
+    if (k.stun) { boss.stunUntil = Math.max(boss.stunUntil || 0, t + k.stun); floatText(boss.x, boss.y - 380, 'Choáng!', 0xd9c2ff, 40); }
+    if (k.burn) { sound.sfx('lotus', 0); for (let i = 0; i < k.burn.ticks; i++) petTimers.push({ at: t + 0.5 + i * 0.5, fn: () => { hitBoss(k.burn.mult, { crit: false, knock: 0, tint: 0xff7a2a, gainQi: false }); spark(boss.x + rand(-60, 60), boss.y - rand(60, 260), 0xff7a2a, 1.1); } }); }
+    if (k.heal) healPlayer(player.maxHp * k.heal);
+    if (k.hot) { const n = k.hot.secs * 2, per = player.maxHp * k.hot.total / n; for (let i = 1; i <= n; i++) petTimers.push({ at: t + i * 0.5, fn: () => healPlayer(per, i % 2 === 0) }); }
+    if (k.shield) { const amt = Math.round(player.maxHp * k.shield); player.shield = Math.max(player.shield || 0, amt); player.shieldMax = player.shield; player.shieldUntil = t + 6; floatText(player.x, player.y - 330, 'Giáp +' + amt.toLocaleString('vi-VN'), 0x8fd8ff, 32); sound.sfx('skin', 0); }
+  }
   // Linh thú: theo sau lưng chủ, cứ ~1,5 giây lao tới cắn boss rồi quay về.
   function updatePet(t, dt) {
     const s = petState, fly = pet.flying ? -110 : 0;
     s.t += dt;
+    for (let i = petTimers.length - 1; i >= 0; i--) if (t >= petTimers[i].at) { const job = petTimers.splice(i, 1)[0]; if (!player.dead && !boss.dead) job.fn(); }
+    if (pet.skill && !boss.dead && !player.dead && boss.state !== 'intro' && t >= (s.skillAt ??= t + 4)) { s.skillAt = t + pet.skill.every; castPetSkill(t, s); }
+    updateShield(t);
     let tx = player.x - player.face * 95, ty = player.y + 14;
     if (s.mode === 'follow' && !boss.dead && boss.state !== 'intro' && s.t >= s.nextAt && Math.abs(boss.x - player.x) < 900) { s.mode = 'dash'; s.t = 0; }
     if (s.mode === 'dash') {
       tx = boss.x - Math.sign(boss.x - s.x || 1) * 90; ty = boss.y + 10;
       if (Math.abs(s.x - tx) < 30 || s.t > 0.6) {
         s.mode = 'back'; s.t = 0;
-        if (!boss.dead) hitBoss(pet.mult, { knock: 4, tint: parseInt(pet.color.slice(1), 16), gainQi: false, sparkAt: { x: boss.x - Math.sign(boss.x - s.x) * 60, y: boss.y - 120 } });
+        if (!boss.dead) { const dmg = hitBoss(pet.mult, { knock: 4, tint: parseInt(pet.color.slice(1), 16), gainQi: false, sparkAt: { x: boss.x - Math.sign(boss.x - s.x) * 60, y: boss.y - 120 } }); if (dmg && pet.skill?.leech) healPlayer(dmg * pet.skill.leech, true); }
       }
     } else if (s.mode === 'back' && s.t > 0.35) { s.mode = 'follow'; s.t = 0; s.nextAt = 1.5; }
     const speed = s.mode === 'dash' ? 14 : 5;
@@ -502,7 +547,7 @@ export async function runBattle(host, { info, stats, sceneState, onFinish, onExi
 
   function renderUi(t) {
     $('.b-hp i').style.width = (player.hp / player.maxHp * 100) + '%';
-    $('.b-hp span').textContent = `${Math.round(player.hp).toLocaleString('vi-VN')} / ${player.maxHp.toLocaleString('vi-VN')}`;
+    $('.b-hp span').textContent = `${Math.round(player.hp).toLocaleString('vi-VN')} / ${player.maxHp.toLocaleString('vi-VN')}` + (player.shield > 0 && t < player.shieldUntil ? ` · 🛡 ${Math.round(player.shield).toLocaleString('vi-VN')}` : '');
     $('.b-qi i').style.width = (player.qi / player.maxQi * 100) + '%';
     $('.b-boss-bar i').style.width = (boss.hp / boss.maxHp * 100) + '%';
     $('.b-boss-bar em').textContent = `${Math.round(boss.hp).toLocaleString('vi-VN')} / ${boss.maxHp.toLocaleString('vi-VN')}`;

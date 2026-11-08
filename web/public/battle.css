@@ -110,6 +110,8 @@
 .gp-pet { text-align: center; padding: 10px; border-radius: 14px; border: 1px solid var(--line); background: radial-gradient(100% 80% at 50% 25%, color-mix(in srgb, var(--c) 30%, #0d2423), #08181a); display: flex; flex-direction: column; gap: 4px; }
 .gp-pet.on { border-color: var(--gold); box-shadow: 0 0 18px #e8c97744; }
 .gp-pet.locked { filter: grayscale(.85) brightness(.65); }
+.gp-skill { margin: 6px 0 4px; padding: 5px 7px; border-radius: 9px; background: color-mix(in srgb, var(--c) 18%, #0000); font-size: 12px; line-height: 1.35; color: #f3ead2; }
+.gp-skill b { color: var(--c); }
 .gp-pet h3 { margin: 2px 0 0; font-size: 15px; font-family: "Noto Serif", Georgia, serif; }
 .gp-pet small { color: var(--muted); }
 .gp-pet .row { display: flex; gap: 6px; margin-top: 4px; }

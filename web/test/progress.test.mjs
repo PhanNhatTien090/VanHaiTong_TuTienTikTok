@@ -101,3 +101,18 @@ test('Tháp Trấn Yêu: leo từng tầng, thua tốn lượt, hết 10 lượt
   assert.equal(d.startTower(w, p, t0 + 900000).ok, false);
   assert.equal(towerRanking(Object.values(w.players))[0].floor, 1);
 });
+
+test('08/11: thần thú (Kỳ Lân, Lôi Oa, Văn Thú) hiện trên web khi sở hữu, có kỹ năng trợ chiến mạnh theo cấp', async () => {
+  const { petView, petCombat, petExtraDps, PET_SKILLS } = await import('../progress.mjs');
+  const { ALL_PETS } = await import('../../public/spirit-pets.js');
+  for (const x of ALL_PETS) assert.ok(PET_SKILLS[x.id], 'thiếu kỹ năng cho ' + x.id);
+  const p = { id: 'u', spiritPets: ['ky-lan', 'loi-oa', 'van-thu'], spiritPet: 'ky-lan', web: {} };
+  const v = petView(p), ids = v.pets.map(x => x.id);
+  assert.ok(['ky-lan', 'loi-oa', 'van-thu'].every(id => ids.includes(id)));
+  assert.ok(v.pets.find(x => x.id === 'ky-lan').skill.name.length > 0);
+  const c1 = petCombat(p); assert.ok(c1.skill.shield > 0 && c1.skill.hot && c1.skill.burn && c1.mult >= 0.85);
+  p.web.petLv = { 'ky-lan': 11 }; const c11 = petCombat(p); assert.ok(c11.skill.shield > c1.skill.shield);
+  p.spiritPet = 'loi-oa'; assert.ok(petCombat(p).skill.stun > 0 && petExtraDps(petCombat(p)) > 0);
+  p.spiritPet = 'van-thu'; const vt = petCombat(p); assert.ok(vt.flying && vt.skill.leech > 0);
+  const stranger = { id: 's', spiritPets: [], web: {} }; assert.ok(!petView(stranger).pets.some(x => x.id === 'ky-lan'));
+});

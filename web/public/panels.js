@@ -41,12 +41,12 @@ export function createPanels({ api, toast, refresh, startEventBattle, openRankin
     if (!d.pets) return toast(d.message || 'Không mở được Linh Thú Cốc.', true);
     open('pets', 'Linh Thú Cốc');
     body.innerHTML = `<div class="gp-mats"><span><img src="${MAT_ICON('linh-qua')}" alt="">Linh Quả <b>${fmt(d.food)}</b></span></div>
-      <p class="gp-note">Linh thú đồng hành sẽ theo bạn vào bí cảnh và lao vào cắn boss. Linh thú mở trên LIVE (thả tim/tặng quà trong sự kiện Linh Thú Cốc); trên web cho ăn để lên cấp.</p>
+      <p class="gp-note">Linh thú đồng hành theo bạn vào bí cảnh, lao vào cắn boss và tung kỹ năng riêng (hồi máu, tạo giáp, thiêu đốt, choáng…), cấp càng cao càng mạnh. Linh thú mở trên LIVE (thả tim/tặng quà trong sự kiện Linh Thú Cốc); trên web cho ăn để lên cấp.</p>
       <div class="gp-pets">${d.pets.map(p => `
         <article class="gp-pet ${p.owned ? '' : 'locked'} ${d.chosen === p.id ? 'on' : ''}" style="--c:${esc(p.color)}">
           <div class="pet-art" style="background-image:url(/assets/spirit-pets-v1/${esc(p.id)}.png)"></div>
           <h3>${esc(p.name)}</h3><small>${esc(p.rank)} · Cấp ${p.level}/${p.max}</small>
-          <div class="muted">Trợ chiến ${p.power}% sức mạnh</div>
+          <div class="muted">Trợ chiến ${p.power}% sức mạnh</div>${p.skill?`<div class="gp-skill"><b>✦ ${esc(p.skill.name)}</b> · mỗi ${p.skill.every}s<br>${esc(p.skill.desc)}</div>`:""}${p.rare&&p.flavor?`<div class="muted small">Thần thú · ${esc(p.flavor)}</div>`:""}
           ${p.owned ? `<div class="row">
               ${d.chosen === p.id ? '<button disabled>Đang đồng hành</button>' : `<button data-choose="${p.id}">Đồng hành</button>`}
               <button class="gp-go" data-feed="${p.id}" ${d.food >= p.feedCost && p.level < p.max ? '' : 'disabled'}>Cho ăn · ${p.feedCost}</button></div>`

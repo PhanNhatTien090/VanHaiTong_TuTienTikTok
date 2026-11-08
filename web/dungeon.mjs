@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 import { power, requiredQi, REALMS } from '../engine.mjs';
 import { vnDay } from './game-view.mjs';
-import { addMats, bumpQuest, enhanceBonus, petCombat } from './progress.mjs';
+import { addMats, bumpQuest, enhanceBonus, petCombat, petExtraDps } from './progress.mjs';
 
 export const STAMINA_MAX = 100;
 export const STAMINA_REGEN_MS = 5 * 60 * 1000; // hồi 1 thể lực mỗi 5 phút
@@ -173,7 +173,7 @@ export function createDungeon() {
     const id = crypto.randomBytes(12).toString('hex');
     const stats = combatStats(p);
     // Sát thương tối đa/giây khi đánh liên tục + chiêu thức; thời gian tối thiểu để hạ hết quái.
-    const maxDps = stats.attack * (6 + (stats.pet ? stats.pet.mult : 0));
+    const maxDps = stats.attack * (6 + (stats.pet ? stats.pet.mult + petExtraDps(stats.pet) : 0));
     battles.set(id, { id, playerId: p.id, zoneId, stage: info.stage, startedAt: now, minMs: Math.max(4000, (info.totalHp / maxDps) * 1000 * 0.6) });
     return { ok: true, battleId: id, info, stats };
   }
@@ -184,7 +184,7 @@ export function createDungeon() {
     const info = towerInfo(t.best + 1);
     for (const [id, b] of battles) if (b.playerId === p.id) battles.delete(id);
     const id = crypto.randomBytes(12).toString('hex'), stats = combatStats(p);
-    const maxDps = stats.attack * (6 + (stats.pet ? stats.pet.mult : 0));
+    const maxDps = stats.attack * (6 + (stats.pet ? stats.pet.mult + petExtraDps(stats.pet) : 0));
     battles.set(id, { id, playerId: p.id, tower: info, startedAt: now, minMs: Math.max(4000, (info.totalHp / maxDps) * 1000 * 0.6) });
     return { ok: true, battleId: id, info, stats };
   }
@@ -213,7 +213,7 @@ export function createDungeon() {
     for (const [id, b] of battles) if (b.playerId === p.id) battles.delete(id);
     const id = crypto.randomBytes(12).toString('hex');
     const stats = combatStats(p);
-    const maxDps = stats.attack * (6 + (stats.pet ? stats.pet.mult : 0));
+    const maxDps = stats.attack * (6 + (stats.pet ? stats.pet.mult + petExtraDps(stats.pet) : 0));
     battles.set(id, { id, playerId: p.id, event: info, startedAt: now, minMs: Math.max(4000, (info.totalHp / maxDps) * 1000 * 0.6) });
     return { ok: true, battleId: id, info, stats };
   }
