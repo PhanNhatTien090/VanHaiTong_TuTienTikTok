@@ -105,8 +105,9 @@ function payload(mode,view='full'){
 }
 
 // Gộp gửi: dù TikTok bắn bao nhiêu tim/bình luận, mỗi trang nhận tối đa ~2,5 gói/giây (cách nhau ≥400 ms).
-let broadcastTimer=null,lastBroadcast=0;const BROADCAST_GAP=400;
-function broadcast(){rememberAnnouncements();payloadCache.clear();if(broadcastTimer)return;const wait=Math.max(50,BROADCAST_GAP-(Date.now()-lastBroadcast));broadcastTimer=setTimeout(()=>{broadcastTimer=null;lastBroadcast=Date.now();payloadCache.clear();const messages=new Map();for(const c of clients){if(c.res.writableLength>1024*1024){c.res.end();clients.delete(c);continue;}const key=c.mode+':'+c.view;if(!messages.has(key))messages.set(key,`data: ${JSON.stringify(payload(c.mode,c.view))}\n\n`);c.res.write(messages.get(key));}},wait);}
+let broadcastTimer=null,broadcastDue=0,lastBroadcast=0;const BROADCAST_GAP=400,BROADCAST_URGENT_GAP=120;
+// urgent (quà): gửi sau ~30 ms, cách lần trước ≥120 ms thay vì chờ nhịp gộp 400 ms; chỉ đổi thời điểm gửi.
+function broadcast(urgent=false){rememberAnnouncements();payloadCache.clear();const since=Date.now()-lastBroadcast,wait=urgent?Math.max(30,BROADCAST_URGENT_GAP-since):Math.max(50,BROADCAST_GAP-since);if(broadcastTimer){if(!urgent||broadcastDue<=Date.now()+wait)return;clearTimeout(broadcastTimer);}broadcastDue=Date.now()+wait;broadcastTimer=setTimeout(()=>{broadcastTimer=null;lastBroadcast=Date.now();payloadCache.clear();const messages=new Map();for(const c of clients){if(c.res.writableLength>1024*1024){c.res.end();clients.delete(c);continue;}const key=c.mode+':'+c.view;if(!messages.has(key))messages.set(key,`data: ${JSON.stringify(payload(c.mode,c.view))}\n\n`);c.res.write(messages.get(key));}},wait);}
 
 function connect(){
   if(!connection.enabled||closing)return;
@@ -119,7 +120,7 @@ function connect(){
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
       connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;
-      broadcast();
+      broadcast(event.event==='gift');
     }catch(e){connection.lastError=`Không đọc được sự kiện: ${e.message}`;}
   });
   bridge.on('error',()=>{connection.lastError='Chưa kết nối được TikFinity Desktop tại cổng 21213. Kiểm tra app và Event API.';});
