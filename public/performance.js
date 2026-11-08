@@ -13,10 +13,22 @@ export class RenderBudget{
   setCrowded(active,heavy=false){active=!!active;heavy=active&&!!heavy;if(active===!!this.crowded&&heavy===!!this.heavyCrowd)return false;if(active&&!this.crowded)this.beforeCrowd=this.level;this.crowded=active;this.heavyCrowd=heavy;this.level=active?'light':this.mode==='auto'?(this.beforeCrowd||'balanced'):this.mode;this.config=heavy?QUALITY.crowded:QUALITY[this.level];this.samples=0;this.mean=0;return true;}
   setAudience(count){const tier=count>20?21:count>=20?20:count>=15?15:count>=10?10:0;if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.samples=0;this.mean=0;return true;}
   sample(ms,t,fps=30){if(!Number.isFinite(ms))return false;this.mean=this.samples?this.mean*.94+ms*.06:ms;this.samples++;
+    // 08/11: FPS thật tụt (<15) thì hạ một bậc kể cả khi đặt cứng 'high' (LIVE Studio + GPU tích hợp). Vẫn 1080 px.
+    if(!this.crowded&&fps>0&&fps<15&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
     if(this.crowded||this.mode!=='auto'||this.samples<45||t-this.changedAt<10000)return false;
     if(this.level==='balanced'&&(this.mean>25||fps>0&&fps<18)){this.level='light';this.config=QUALITY.light;this.changedAt=t;return true;}
     if(this.level==='light'&&this.mean<11&&fps>=22&&t-this.changedAt>30000){this.level='balanced';this.config=QUALITY.balanced;this.changedAt=t;return true;}return false;
   }
+}
+// 08/11: đổi màu (hue-rotate) MỘT lần rồi giữ lại. Đặt c.filter mỗi khung bắt card đồ họa tích hợp
+// chạy bộ lọc cho từng lần drawImage (thần thể vẽ 7 dải/khung) → LIVE Studio tụt còn ~1 FPS. Hình y hệt.
+const tintCache=new WeakMap();
+export function tintedSurface(im,hue){
+  if(!im||!hue)return im;let byHue=tintCache.get(im);if(!byHue){byHue=new Map();tintCache.set(im,byHue);}
+  let out=byHue.get(hue);if(out)return out;
+  const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,s=makeSurface(w,h);if(!s)return im;
+  const x=s.getContext('2d');if(!x||!('filter' in x))return im;x.filter='hue-rotate('+hue+'deg)';x.drawImage(im,0,0,w,h);x.filter='none';
+  byHue.set(hue,s);return s;
 }
 export function makeSurface(w,h){
   if(typeof OffscreenCanvas!=='undefined')return new OffscreenCanvas(w,h);

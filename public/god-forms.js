@@ -2,7 +2,7 @@ import {drawRealmPresenceV3} from './realm-presence-v3.js';
 import {specialSkinFor} from './patrons.js';
 import {visualGender} from './cosmetics.js';
 import {loadSpiritBeasts,drawFlyingDragon} from './gift-spirit-beasts.js';
-import {makeSurface} from './performance.js';
+import {makeSurface,tintedSurface} from './performance.js';
 export function sliceGodAuraAtlas(im,factory=makeSurface,width=160){
  const frames=[],sw=(im.naturalWidth||im.width)/5,sh=im.naturalHeight||im.height;
  for(let i=0;i<5;i++){const f=factory(width,width*2);if(!f)continue;f.getContext('2d').drawImage(im,i*sw,0,sw,sh,3,3,width-6,width*2-6);frames.push(f);}return frames;
@@ -31,9 +31,9 @@ export function drawGodBody(scene,c,p,pose,t){
  const form=godFormFor(p);if(!form)return false;
  const art=scene.divineArt?.get(6),im=art?.frames[(visualGender(p)==='nu'?5:0)+(form.bodyCell??form.rank)],phase=scene.motion===false?0:t*.003;
  c.save();c.translate(0,(pose.lift||0)+(scene.motion===false?0:Math.sin(phase)*2));c.rotate((pose.lean||0)*.55);
- if(im){if(form.hue)c.filter='hue-rotate('+form.hue+'deg)';const bands=scene.budget?.level==='light'?4:7;
+ if(im){const src=form.hue?tintedSurface(im,form.hue):im;const bands=scene.budget?.level==='light'?4:7;
   for(let i=0;i<bands;i++){const wave=scene.motion===false?0:Math.sin(phase+i*.65)*.45;
-   c.drawImage(im,0,i*im.height/bands,im.width,im.height/bands,-66+wave,-109+i*150/bands,132,150/bands+.4);}
+   c.drawImage(src,0,i*src.height/bands,src.width,src.height/bands,-66+wave,-109+i*150/bands,132,150/bands+.4);}
   c.filter='none';
  }else{
   // An unclothed luminous divine silhouette while its PNG loads; no robe flash.
