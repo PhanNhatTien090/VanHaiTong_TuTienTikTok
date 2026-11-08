@@ -23,9 +23,10 @@ function sheets(scene){
  for(const [k,src] of Object.entries(SHEETS)){const img=new Image();img.decoding='async';img.onload=()=>{art[k]={img,rects:[0,1,2].map(i=>trim(img,i))};};img.src=src;}
  return art;
 }
+// 08/11: chỉ người đã đoạt top quà đua mới có vật cưỡi (p.raceMounts). Có nhiều con thì cưỡi con đẹp nhất theo MOUNT_RANK.
+export const MOUNT_RANK=Object.freeze(['fox','koi','crane']);
 export function raceMountFor(scene,player){
- const e=scene.raceStatus;if(!e||!player)return null;const art=sheets(scene),avail=RACE_MOUNTS.filter(m=>art[m.sheet]);if(!avail.length)return null;
- const h=hash((e.startedAt||e.registrationEndsAt||e.id||'race')+':'+player.id);if(h%10>=8)return null;return avail[(h>>>4)%avail.length];
+ if(!player)return null;const own=player.raceMounts||[],id=MOUNT_RANK.find(m=>own.includes(m))||own[0];if(!id)return null;const m=RACE_MOUNTS.find(x=>x.id===id);if(!m)return null;const art=sheets(scene);return art[m.sheet]?m:null;
 }
 export function drawRaceMount(scene,c,a,t,m){
  const art=sheets(scene)[m.sheet];if(!art)return false;const r=art.rects[m.cell],s=(a.scale||1.5)/1.5,w=m.width*s,h=w*r.h/r.w,seed=hash(a.id)%1000,motion=scene.motion!==false;

@@ -43,13 +43,13 @@ export function tickRace(w,now,c){const e=w.race;if(!e)return;if(e.phase==='queu
 }
 // Gifts during registration/racing: top 3 permanent cosmetics, top 5 cultivation, awarded once after a completed heat.
 export const RACE_GIFT_PRIZES=Object.freeze([
- {skin:'race-cuu-thien',name:'Cửu Thiên Lưu Ly Kiếm',qi:5000,stones:600},
- {skin:'race-moon',name:'Tinh Hà Nguyệt Kiếm',qi:3000,stones:300},
- {skin:'race-frost',name:'Băng Liên Thần Kiếm',qi:1500,stones:150},
+ {skin:'race-cuu-thien',name:'Cửu Thiên Lưu Ly Kiếm',mount:'fox',mountName:'Cửu Vĩ Hồ',qi:5000,stones:600},
+ {skin:'race-moon',name:'Tinh Hà Nguyệt Kiếm',mount:'koi',mountName:'Kim Lý',qi:3000,stones:300},
+ {skin:'race-frost',name:'Băng Liên Thần Kiếm',mount:'crane',mountName:'Tiên Hạc',qi:1500,stones:150},
  {qi:800,stones:80},{qi:500,stones:50}]);
 export function raceGiftTop(w){const g=w.race?.giftScores||{};return Object.entries(g).filter(([id,n])=>n>0&&w.players[id]&&!w.players[id].resident&&!w.players[id].puppet).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,5).map(([id,coins])=>({id,name:w.players[id].name,coins}));}
 // Ghi rõ skin của từng hạng quà; người không vào top 3 bay kiếm mặc định.
-export function racePrizeLine(){return RACE_GIFT_PRIZES.filter(p=>p.skin).map((p,i)=>'top '+(i+1)+' quà: '+p.name).join(' · ')+' (vĩnh viễn) • top 5 nhận tu vi';}
+export function racePrizeLine(){return RACE_GIFT_PRIZES.filter(p=>p.skin).map((p,i)=>'top '+(i+1)+' quà: '+(p.mountName?p.mountName+' + ':'')+p.name).join(' · ')+' (vĩnh viễn) • top 5 nhận tu vi';}
 export function raceEntryAnnouncement(w){const e=w.race;if(!['registration','running'].includes(e?.phase))return null;return {id:'race-entry:'+e.id+':'+e.phase,at:e.phase==='registration'?e.registrationEndsAt-45000:e.startedAt,name:'Vân Hải Tông',effect:'race',raceEntry:true,file:'/assets/voice-race-'+e.phase+'-v4.mp3',text:e.phase==='registration'?'VÂN HẢI PHI KIẾM • gõ bay để vào đường đua':'Phi kiếm xuất phát • '+racePrizeLine()};}
 export function raceView(w,now){const e=w.race;if(!e)return null;return {...e,entryAnnouncement:raceEntryAnnouncement(w),giftTop:raceGiftTop(w),racers:(e.racers||[]).map(r=>({...r,distance:raceDistance(r,now)})),results:(e.results||[]).map(r=>({id:r.id,name:r.name,finishAt:r.finishAt})),active:raceVisible(w,now)};}
 // Everyone races; only the camera is capped. Leaders + recent boosters + rotating participants.

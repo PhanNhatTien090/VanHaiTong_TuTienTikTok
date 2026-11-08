@@ -674,8 +674,10 @@ function autoCeremony(w,now){if(automaticEventsPaused(w,now))return;const every=
 function awardRaceGifts(w,now){const r=w.race;if(!r||r.giftAwarded||r.phase!=='finished'||!r.giftScores)return;r.giftAwarded=true;
   raceGiftTop(w).forEach((t,i)=>{const p=w.players[t.id],pz=RACE_GIFT_PRIZES[i];if(!p||!pz)return;
     if(pz.skin){p.raceSwordSkins??=[];if(!p.raceSwordSkins.includes(pz.skin))p.raceSwordSkins.push(pz.skin);p.raceSwordChoice=pz.skin;}
+    // 08/11: vật cưỡi đua (top 1 Cửu Vĩ Hồ, 2 Kim Lý, 3 Tiên Hạc) — vĩnh viễn, đua sau tự cưỡi con đẹp nhất đang có.
+    if(pz.mount){p.raceMounts??=[];if(!p.raceMounts.includes(pz.mount))p.raceMounts.push(pz.mount);}
     const qi=gain(w,p,pz.qi,pz.stones,0,now);
-    emit(w,p,`Quà đua hạng ${i+1} • ${pz.skin?'nhận skin '+pz.name+' vĩnh viễn • ':''}+${qi} tu vi`,'race',now,{raceGiftRank:i+1,itemNames:pz.skin?[pz.name]:[],raceSwordSkin:pz.skin||null,reward:{qi,stones:pz.stones}});
+    emit(w,p,`Quà đua hạng ${i+1} • ${pz.mount?'nhận vật cưỡi '+pz.mountName+' + ':''}${pz.skin?'skin '+pz.name+' vĩnh viễn • ':''}+${qi} tu vi`,'race',now,{raceGiftRank:i+1,itemNames:pz.skin?[pz.name]:[],mountName:pz.mountName||null,raceSwordSkin:pz.skin||null,raceMount:pz.mount||null,reward:{qi,stones:pz.stones}});
   });}
 // v86: TÂN THỦ LỆNH — người mới ở lại đủ 3 phút mà vẫn Phàm nhân → tự đột phá Luyện Khí (mỗi 6 giây tối đa 1 người để không loạn).
 function starterBoost(w,now){if(now-(w.lastStarterAt||0)<15000)return;

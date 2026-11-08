@@ -1,4 +1,5 @@
 import {drawRaceSword,raceSwordFor,RACE_SWORD_SKINS,drawSwordSparkle} from './race-sword-skins.js';
+import {raceMountFor,drawRaceMount,RACE_MOUNTS} from './race-mounts.js';
 import {drawPrestigeSword,swordPrestige} from './sword-prestige.js';
 import {makeSurface} from './performance.js';
 // v88: đua phi kiếm "máy quay bám ĐOÀN CHÍNH".
@@ -102,7 +103,7 @@ function drawMiniRacers(scene,c,e,H,now,t){if(e.phase!=='running')return;const s
   c.restore();}
 // v89: màn trao thưởng trong 12 giây sau khi đua xong — thẻ skin to cho top 3 quà, không còn khoảng chờ trống.
 // Bảng thưởng phải khớp RACE_GIFT_PRIZES trong sword-race.mjs (server).
-const PRIZE_VIEW=[{skin:'race-cuu-thien',qi:5000},{skin:'race-moon',qi:3000},{skin:'race-frost',qi:1500},{qi:800},{qi:500}];
+const PRIZE_VIEW=[{skin:'race-cuu-thien',mount:'fox',qi:5000},{skin:'race-moon',mount:'koi',qi:3000},{skin:'race-frost',mount:'crane',qi:1500},{qi:800},{qi:500}];
 const PODIUM_MS=12000;
 function drawAwardSword(scene,c,skin,x,y,size,t){const art=scene.prestigeSwords?.[skin.cell],bob=scene.motion?Math.sin(t*.002+skin.cell)*6:0;c.save();c.translate(x,y+bob);
   glow(c,0,0,size*.55,skin.color,.45);
@@ -113,16 +114,16 @@ function drawAwardSword(scene,c,skin,x,y,size,t){const art=scene.prestigeSwords?
 function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-PODIUM_MS),left=Math.max(0,Math.ceil(((e.podiumUntil||now)-now)/1000)),top=e.giftTop||[];c.save();
   c.fillStyle='#030a14'+hexA(Math.min(.62,age/600*.62));c.fillRect(0,0,900,H);
   c.textAlign='center';c.lineWidth=7;c.strokeStyle='#1d1206';c.font='900 42px Segoe UI';c.fillStyle='#ffe7a0';c.strokeText('TRAO THƯỞNG PHI KIẾM',450,H*.12);c.fillText('TRAO THƯỞNG PHI KIẾM',450,H*.12);
-  c.font='bold 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';const sub=top.length?'Top 3 tặng quà nhận skin phi kiếm vĩnh viễn':'Lượt này chưa ai tặng quà · tặng quà để nhận skin phi kiếm';c.strokeText(sub,450,H*.12+32);c.fillStyle='#eafcff';c.fillText(sub,450,H*.12+32);
+  c.font='bold 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';const sub=top.length?'Top 3 tặng quà nhận vật cưỡi + skin phi kiếm vĩnh viễn':'Lượt này chưa ai tặng quà · tặng quà để nhận skin phi kiếm';c.strokeText(sub,450,H*.12+32);c.fillStyle='#eafcff';c.fillText(sub,450,H*.12+32);
   // 08/11: 3 thẻ gom vào vùng an toàn 14–86% bề ngang — trên điện thoại cột nút TikTok bên phải che mất thẻ hạng 3.
   const slots=[{rank:1,x:450,y:H*.40,k:1,at:1300},{rank:2,x:222,y:H*.44,k:.78,at:800},{rank:3,x:678,y:H*.44,k:.78,at:300}];
   for(const sl of slots){const winner=top[sl.rank-1],pz=PRIZE_VIEW[sl.rank-1],skin=RACE_SWORD_SKINS.find(s=>s.id===pz.skin),u=clamp((age-sl.at)/650);if(!winner||!skin||u<=0)continue;
     const e2=1-(1-u)**3,w=250*sl.k,h=430*sl.k,x=sl.x,y=sl.y-(1-e2)*120;c.save();c.globalAlpha=e2;
     c.fillStyle='#0a1a2ce8';c.strokeStyle=sl.rank===1?'#ffd76a':skin.color;c.lineWidth=sl.rank===1?4:3;c.beginPath();c.roundRect(x-w/2,y-h/2,w,h,16);c.fill();c.stroke();
     c.font='900 '+Math.round(22*sl.k)+'px Segoe UI';c.fillStyle=sl.rank===1?'#ffd76a':'#d9f6ff';c.fillText((sl.rank===1?'👑 ':'')+'HẠNG '+sl.rank,x,y-h/2+34*sl.k);
-    drawAwardSword(scene,c,skin,x,y-18*sl.k,230*sl.k,t);
+    {const m0=RACE_MOUNTS.find(m=>m.id===pz.mount);if(!(m0&&drawRaceMount(scene,c,{x,y:y+10*sl.k,scale:1.5*sl.k*.62,id:'prize-'+sl.rank},t,m0)))drawAwardSword(scene,c,skin,x,y-18*sl.k,230*sl.k,t);}
     c.font='900 '+Math.round(24*sl.k)+'px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';const nm=fit(c,winner.name||'Đạo hữu',w-20);c.strokeText(nm,x,y+h/2-74*sl.k);c.fillStyle='#ffffff';c.fillText(nm,x,y+h/2-74*sl.k);
-    c.font='800 '+Math.round(18*sl.k)+'px Segoe UI';c.fillStyle=skin.color;c.fillText(skin.name,x,y+h/2-46*sl.k);
+    const mt=RACE_MOUNTS.find(m=>m.id===pz.mount);c.font='800 '+Math.round(18*sl.k)+'px Segoe UI';c.fillStyle=skin.color;c.fillText(fit(c,(mt?mt.name+' + ':'')+skin.name,w-16),x,y+h/2-46*sl.k);
     c.font='700 '+Math.round(16*sl.k)+'px Segoe UI';c.fillStyle='#ffe2a0';c.fillText('+'+VIFMT.format(pz.qi)+' tu vi',x,y+h/2-20*sl.k);c.restore();}
   // hạng 4–5 quà + Kiếm Vương + đếm ngược
   let y=H*.66;c.font='800 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';
@@ -157,7 +158,7 @@ export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active
   }
   // Một thanh phi kiếm cho mỗi người được vẽ đầy đủ; không pháp bảo bay quanh, hào quang hay vòng xung kích.
   // 08/11: skin/vật cưỡi mới CHỈ dành cho người đã đoạt top 1–3 (raceSwordSkins); người thường bay kiếm mặc định, không rút ngẫu nhiên vật cưỡi.
-  for(const a of scene.targets){const skin=raceSwordFor(a.player);if(skin)drawRaceSword(scene,c,a,t);else{const v=swordPrestige(a.player);drawPrestigeSword(scene,c,v.cell,a.x,a.y+32*(a.scale/1.5),160*(a.scale/1.5),Math.PI/2,v.color);}}
+  for(const a of scene.targets){const mount=raceMountFor(scene,a.player);if(mount&&drawRaceMount(scene,c,a,t,mount))continue;const skin=raceSwordFor(a.player);if(skin)drawRaceSword(scene,c,a,t);else{const v=swordPrestige(a.player);drawPrestigeSword(scene,c,v.cell,a.x,a.y+32*(a.scale/1.5),160*(a.scale/1.5),Math.PI/2,v.color);}}
  }else{
   // Small textual feedback keeps gifts readable without covering racers.
   for(const a of scene.targets)if(a.kick>0){c.save();c.font='900 18px Segoe UI';c.textAlign='center';c.fillStyle='#ffe7a0';c.strokeStyle='#09263d';c.lineWidth=4;const text=a.gift?'BỨT TỐC +'+a.gift.boost:'BỨT TỐC';c.strokeText(text,a.x,a.y+75);c.fillText(text,a.x,a.y+75);c.restore();}
