@@ -453,3 +453,10 @@ body.abyss-fight #liveRanks{display:none!important}
 /* 08/11/2026: Khai Lò Cửu Chuyển — dọn các bảng khác để giao diện lò (nhiệt kế, bảng lệnh, chú thích quà) không bị che */
 body.alchemy-on .like-goal,body.alchemy-on .live-disclosure,body.alchemy-on #liveRanks,body.alchemy-on #commandRail,body.alchemy-on .command-rail,body.alchemy-on .basic-commands,body.alchemy-on .scene-guide-dock,body.alchemy-on #basicCommands,body.alchemy-on .quiz-box,body.alchemy-on .envelope-box,body.alchemy-on #bossHud,body.alchemy-on .visitor-hud,body.alchemy-on .honor-banner,body.alchemy-on .gift-board,body.alchemy-on #spotlight{display:none!important}
 body.alchemy-on .scene-shell>#basicCommands.corner-command-guide{display:none!important}
+
+/* 08/11 tối: dòng mua skin — không hộp quà 🎁 (người xem tưởng miễn phí); ảnh quà to rõ + chữ nhỏ 'Tặng quà' → Skin / Skin + Pháp bảo. */
+html body.overlay .visitor-hud span.vh-buy{display:inline-flex!important;align-items:center;gap:.3em;white-space:nowrap!important;font-size:1em!important;line-height:1!important;padding:.15em 0}
+html body.overlay .visitor-hud span.vh-buy small.vh-tang{font-size:.62em!important;font-weight:700!important;color:#ffe3a6;letter-spacing:.02em}
+html body.overlay .visitor-hud span.vh-buy img.gift-ico{height:2.7em;margin:-.35em .05em;filter:drop-shadow(0 0 4px #ffd76a) drop-shadow(0 1px 2px #000)}
+body.overlay .visitor-hud .vh-arrow{color:#ffd76a}
+body.overlay .visitor-hud .vh-what{color:#fff6c8;font-weight:900}
