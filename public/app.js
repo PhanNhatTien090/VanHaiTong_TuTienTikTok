@@ -42,6 +42,7 @@ import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js';
 import {giftTokenHTML} from './gift-icons.js';
+import {giftRules,giftRuleHTML} from './gift-rule-card.js';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
 const cultivationAudio=new CultivationAudio();
@@ -393,6 +394,8 @@ function receive(s){
   scheduleRender();
 }
 let renderPending=false;function scheduleRender(){if(renderPending)return;renderPending=true;setTimeout(()=>{renderPending=false;render();},100);}
+// 08/11 tối: THẺ LUẬT QUÀ (ô #giftBoard cột phải) — ảnh quà thật → kết quả theo sự kiện đang mở.
+function renderGiftRules(){const el=$('#giftBoard');if(!el)return;const r=giftRules(state,state?.serverNow);setHUD(el,giftRuleHTML(r,state?.giftArt));el.hidden=!r;el.dataset.tone=r?.tone||'';el.classList.add('gift-rule-card');}
 function setHUD(el,html){if(el._lastHUD!==html){el.innerHTML=html;el._lastHUD=html;}}
 mountPetUI(post);
 function render(){if(!state)return;if(overlay){renderSimpleGuide(state,esc);renderCompanionHUD(state);renderLikeGoal();renderEngagement();}renderPetUI(state,!overlay);if(!overlay){renderScenePicker();renderQuickGift();renderLiveControls();renderHeavenPanel();}renderSocialUI(state,!overlay);if(overlay)renderVisitorHud();const p=player();scene.update(state,selected);if(overlay){if(!busy)playNext();renderFocus();}const active=state.players.filter(p=>p.active),counts=participantCounts(state.players);$('#statPlayers').textContent=fmt(counts.players);$('#statProfiles').textContent=`${fmt(state.playerCount??state.players.length)} hồ sơ được lưu`;$('#statQi').textContent=fmt(state.sectQi);$('#statInteractions').textContent=fmt(state.totalInteractions);$('#sceneCount').textContent=counts.players;$('#worldBadge').textContent=mode==='demo'?'THỬ NGHIỆM':'LIVE';$('#worldNote').textContent=mode==='demo'?'Dữ liệu thử · tách biệt LIVE':'Dữ liệu LIVE · lưu trên máy';$('#demoControls').hidden=mode!=='demo';$('#liveControlsNotice').hidden=mode==='demo';$('#simLabel').textContent=mode==='demo'?'KHÔNG DÙNG QUÀ THẬT':'ĐANG NHẬN SỰ KIỆN THẬT';
@@ -401,7 +404,7 @@ function render(){if(!state)return;if(overlay){renderSimpleGuide(state,esc);rend
   const remain=Math.max(0,Math.ceil(((state.boss?.endsAt||state.nextBossAt)-state.serverNow)/1000));$('#scenePhase').textContent=state.raceStatus?.active?'Vân Hải Thiên Lộ':state.socialScene?(state.socialScene==='tournament'?'Luận Kiếm':'Tam Sinh Ước'):state.boss?`Bí cảnh còn ${remain}s`:`♜ ${Math.floor(remain/60)}:${String(remain%60).padStart(2,'0')}`;
   const bh=$('#bossHud');bh.classList.toggle('visible',!!state.boss&&state.boss.species!=='abyss-dragon');document.body.classList.toggle('abyss-fight',state.boss?.species==='abyss-dragon'&&state.boss.hp>0); // 05/11: bảng yêu lực Ma Long vẽ trên canvas, ẩn bảng xếp hạng góc trái để không chồng
   if(state.boss)setHUD(bh,`<div class="boss-line"><span>♜ ${esc(state.boss.name)}</span><span>${fmt(state.boss.hp)} / ${fmt(state.boss.maxHp)}</span></div><div class="progress"><i style="width:${state.boss.hp/state.boss.maxHp*100}%"></i></div><small>Gõ <b>danh</b> · ${remain}s · ${esc(state.boss.encounter?.name||'Top công lực nhận thưởng')}</small>${Object.entries(state.boss.damage||{}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3).map(([id,d],i)=>`<small class="boss-rank">${i+1}. ${esc(state.players.find(p=>p.id===id)?.name||'Đạo hữu')} · ${fmt(d)} công lực</small>`).join('')}`);
-  if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();setHUD($('#giftBoard'),'');$('#giftBoard').hidden=true;}else syncAutoEvents();
+  if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();renderGiftRules();}else syncAutoEvents();
   const oh=$('#opportunityHud'),o=state.opportunity,seconds=o?Math.max(0,Math.ceil((o.endsAt-state.serverNow)/1000)):0;oh.hidden=!seconds;
   if(seconds){const offset=Math.floor(state.serverNow/7000)%2*4;setHUD(oh,`<b>CƠ DUYÊN · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}</b><span>${o.costs.slice(offset,offset+4).map((cost,i)=>`${esc(state.realms[offset+i])} ${cost} coin`).join(' · ')}</span><small>Từ Hóa Thần: tối đa 1 đại cảnh/ngày · tiến độ dư được giữ · gõ cơ duyên</small>`);}
   if(overlay)return;
