@@ -17,7 +17,7 @@ test('five new realms are reachable after save/reload with matching overlay, war
   assert.ok(realmDivineLook(p).color);assert.equal(ascensionProfile(r).realm,r);
   assert.ok(divineHaloProfile(r).orbs<=12);
  }
- assert.equal(REALMS.length,22);assert.equal(OPPORTUNITY_COSTS.length,21);
+ assert.equal(REALMS.length,25);assert.equal(OPPORTUNITY_COSTS.length,24);
  assert.equal(action(w,{type:'breakthrough',userId:p.id},NOW+2e6).ok,false);
 });
 test('slower costs preserve onboarding, and blessings cannot recycle stored qi into free levels',()=>{

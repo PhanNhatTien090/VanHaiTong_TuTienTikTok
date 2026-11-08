@@ -71,7 +71,7 @@ test('early onboarding stays fast while rebirth cannot refill the high-realm day
  const {w,p}=setup(0);p.qi=1e12;p.stones=1e6;
  for(let i=0;i<6;i++)assert.equal(act(w,'breakthrough',{},N+i).ok,true);assert.equal(p.realm,6);assert.equal(dailyAscensionView(w,p,N).used,1);
  assert.equal(act(w,'breakthrough',{},N+7).ok,false);
- p.realm=21;act(w,'chat',{text:'chuyensinh'},N+10);assert.equal(act(w,'chat',{text:'chuyensinh xac nhan'},N+11).reborn,true);assert.equal(p.realm,0);
+ p.realm=24;act(w,'chat',{text:'chuyensinh'},N+10);assert.equal(act(w,'chat',{text:'chuyensinh xac nhan'},N+11).reborn,true);assert.equal(p.realm,0);
  p.realm=5;assert.equal(dailyAscensionView(w,p,N+12).exhausted,true);
 });
 

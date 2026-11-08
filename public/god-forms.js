@@ -20,7 +20,11 @@ export const GOD_FORMS=Object.freeze([
  {name:'Vạn Giới Nhật Thần',color:'#ffe99a',dragon:2},
  {name:'Thần Tôn Thiên Quang',color:'#94fff0',dragon:0,bodyCell:4,hue:95},
  {name:'Thần Tổ Nguyên Thể',color:'#c9b4ff',dragon:1,bodyCell:2,hue:50},
- {name:'Hồng Mông Chí Tôn',color:'#fff1cf',dragon:2,bodyCell:4,hue:-15}
+ {name:'Hồng Mông Chí Tôn',color:'#fff1cf',dragon:2,bodyCell:4,hue:-15},
+ // 08/11: 3 cảnh giới mới — TẠM dùng thân thần có sẵn đổi tông màu tới khi có ảnh skin riêng (Codex vẽ sau 12/11).
+ {name:'Ma Thần Huyết Giáp',color:'#ff4a3a',dragon:2,bodyCell:3,hue:-28},
+ {name:'Thiên Ma Thánh Thể',color:'#a98bff',dragon:2,bodyCell:3,hue:255},
+ {name:'Diệt Thế Hư Không Thể',color:'#e9ecff',dragon:2,bodyCell:2,hue:-12}
 ]);
 export function godFormFor(p,{aura=false}={}){
  const rank=Math.trunc(Number(p.realm))-14;if(!Number.isInteger(rank)||p.resident||rank<0||rank>=GOD_FORMS.length)return null;

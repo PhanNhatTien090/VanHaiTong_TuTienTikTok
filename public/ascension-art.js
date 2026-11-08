@@ -12,11 +12,11 @@ import {makeSurface} from './performance.js';
 import {TRUC_CO_DURATION} from './truc-co-timeline.js';
 import {KIM_DAN_DURATION} from './kim-dan-timeline.js';
 import {NGUYEN_ANH_DURATION} from './nguyen-anh-timeline.js';
-const TITLES=['','Khí Hải Sơ Khai','Ngọc Cơ Thành Đạo','Kim Đan Diệu Nhật','Nguyên Thần Liên Sinh','Thần Niệm Chấn Thiên','Hư Không Khai Giới','Vạn Kiếm Triều Tông','Long Môn Đăng Tiên','Huyền Tinh Chuyển Mệnh','Kim Liên Bất Diệt','Thái Cực Khai Thiên','Đại La Pháp Tướng','Tiên Đế Đăng Cơ','Thái Sơ Khai Đạo','Cửu Thiên Quy Nhất','Hồng Mông Thần Hiện','Vạn Giới Triều Vương','Thần Đế Khai Thiên','Thần Tôn Ngự Thiên','Thần Tổ Khai Nguyên','Hồng Mông Quy Nhất'];
-const SHAPES=['','qi','foundation','core','spirit','thunder','rift','swords','gate','orrery','solar-lotus','taichi','qilin','emperor','orrery','taichi','solar-lotus','qilin','emperor','orrery','taichi','solar-lotus'];
-const COLORS=['','#8de9ba','#9eefff','#ffe098','#d8a9ff','#9bcfff','#b59aff','#e8ceff','#ffe7b0','#9dbcff','#ffdc78','#c9a3ff','#ffad7f','#fff1c7','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf'];
+const TITLES=['','Khí Hải Sơ Khai','Ngọc Cơ Thành Đạo','Kim Đan Diệu Nhật','Nguyên Thần Liên Sinh','Thần Niệm Chấn Thiên','Hư Không Khai Giới','Vạn Kiếm Triều Tông','Long Môn Đăng Tiên','Huyền Tinh Chuyển Mệnh','Kim Liên Bất Diệt','Thái Cực Khai Thiên','Đại La Pháp Tướng','Tiên Đế Đăng Cơ','Thái Sơ Khai Đạo','Cửu Thiên Quy Nhất','Hồng Mông Thần Hiện','Vạn Giới Triều Vương','Thần Đế Khai Thiên','Thần Tôn Ngự Thiên','Thần Tổ Khai Nguyên','Hồng Mông Quy Nhất','Ma Thần Giáng Thế','Thiên Ma Đăng Thánh','Diệt Thế Quy Hư'];
+const SHAPES=['','qi','foundation','core','spirit','thunder','rift','swords','gate','orrery','solar-lotus','taichi','qilin','emperor','orrery','taichi','solar-lotus','qilin','emperor','orrery','taichi','solar-lotus','thunder','emperor','rift'];
+const COLORS=['','#8de9ba','#9eefff','#ffe098','#d8a9ff','#9bcfff','#b59aff','#e8ceff','#ffe7b0','#9dbcff','#ffdc78','#c9a3ff','#ffad7f','#fff1c7','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf','#ff4a3a','#c07bff','#e9ecff'];
 // Authored early rituals have their own lengths; retain the spacing of later realms.
-const DURATIONS=[0,5200,6800,7200,7600,8000,8200,8400,8800,9000,9200,9400,9600,9800,10000,10200,10400,10600,10800,11000,11200,11400].map((ms,r)=>r===1?8800:r===2?TRUC_CO_DURATION:r===3?KIM_DAN_DURATION:r>=4?ms+2200+Math.round((r-1)*800/17)+(NGUYEN_ANH_DURATION-9941):0);
+const DURATIONS=[0,5200,6800,7200,7600,8000,8200,8400,8800,9000,9200,9400,9600,9800,10000,10200,10400,10600,10800,11000,11200,11400,11600,11800,12000].map((ms,r)=>r===1?8800:r===2?TRUC_CO_DURATION:r===3?KIM_DAN_DURATION:r>=4?ms+2200+Math.round((r-1)*800/17)+(NGUYEN_ANH_DURATION-9941):0);
 const afterHoa=DURATIONS.map((ms,r)=>r===5?HOA_THAN_DURATION:r>5?ms+(HOA_THAN_DURATION-DURATIONS[5]):ms);
 const afterLuyenHu=afterHoa.map((ms,r)=>r===6?LUYEN_HU_DURATION:r>6?ms+(LUYEN_HU_DURATION-afterHoa[6]):ms);
 const afterDaiThua=afterLuyenHu.map((ms,r)=>r===7?DAI_THUA_DURATION:r>7?ms+(DAI_THUA_DURATION-afterLuyenHu[7]):ms);
