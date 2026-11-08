@@ -20,10 +20,10 @@ test('no anonymous counters, exits, or profile guesses; returning players keep g
  assert.equal(ingest(w,{event:'member',data:{userId:'a'}},NOW+600003).duplicate,true);
 });
 
-test('arrival-only actors retire after 90 seconds; interaction keeps a seat and reentry is not blocked for ten minutes',()=>{
+test('arrival-only actors retire after 20 seconds; interaction keeps a seat and reentry is not blocked for ten minutes',()=>{
  const w=createWorld('live'),member={event:'member',data:{userId:'fresh',nickname:'Fresh'}};ingest(w,member,NOW);
- assert.equal(snapshot(w,NOW+89999).players.find(p=>p.id==='fresh').active,true);
- assert.equal(snapshot(w,NOW+90000).players.find(p=>p.id==='fresh').active,false);
+ assert.equal(snapshot(w,NOW+19999).players.find(p=>p.id==='fresh').active,true);
+ assert.equal(snapshot(w,NOW+20000).players.find(p=>p.id==='fresh').active,false);
  assert.equal(ingest(w,member,NOW+95000).autoArrival,true);
  action(w,{type:'like',userId:'fresh',count:1},NOW+96000);
  assert.equal(snapshot(w,NOW+190000).players.find(p=>p.id==='fresh').active,true);

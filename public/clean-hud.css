@@ -40,11 +40,13 @@ body.overlay .spotlight strong{color:#fff4cf!important}
 body.overlay .spotlight span,body.overlay .boss-hud,body.overlay .visitor-hud,body.overlay .opportunity-hud{color:#ffffff!important}
 
 /* v41c: bảng SỰ KIỆN nổi bật hơn bảng thường — nền đậm hơn, viền sáng theo màu sự kiện, phát sáng nhịp thở, tiêu đề to. */
-@keyframes eventGlow{0%,100%{box-shadow:0 0 14px 4px var(--ev-glow),0 0 0 1.5px var(--ev-line) inset}50%{box-shadow:0 0 26px 9px var(--ev-glow),0 0 0 1.5px var(--ev-line) inset}}
+/* 08/11: nhịp thở bằng opacity của lớp phủ (compositor) thay vì đổi box-shadow/filter mỗi khung — đổi bóng mờ bắt GPU tích hợp vẽ lại bảng ở 60 Hz trong LIVE Studio. */
+@keyframes eventGlow{0%,100%{opacity:0}50%{opacity:.75}}
+body.overlay .flower-hud::after,body.overlay .visitor-hud::after,body.overlay .opportunity-hud::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:0 0 26px 9px var(--ev-glow);opacity:0;animation:eventGlow 2.4s ease-in-out infinite;will-change:opacity}
 body.overlay .flower-hud,body.overlay .flower-hud.meteor,body.overlay .visitor-hud,body.overlay .opportunity-hud{
   --ev-bg:rgba(60,20,50,.58);--ev-glow:#ff86b088;--ev-line:#ffc2d9cc;--ev-title1:#fff0f6;--ev-title2:#ff9ec7;
   background:var(--ev-bg)!important;border-radius:14px!important;padding:10px 16px!important;
-  animation:eventGlow 2.4s ease-in-out infinite;font-size:calc(1em * 1.08)!important;
+  box-shadow:0 0 14px 4px var(--ev-glow),0 0 0 1.5px var(--ev-line) inset;font-size:calc(1em * 1.08)!important;
 }
 body.overlay .flower-hud.meteor{--ev-bg:rgba(18,16,72,.6);--ev-glow:#8fa8ff88;--ev-line:#cfdcffcc;--ev-title1:#ffffff;--ev-title2:#9fb4ff}
 body.overlay .visitor-hud{--ev-bg:rgba(40,22,8,.58);--ev-glow:#ffcf6a88;--ev-line:#ffe7a0cc;--ev-title1:#fff8e0;--ev-title2:#ffc24a}
@@ -100,12 +102,12 @@ body.performance-solo .command-rail{visibility:hidden}
 .gift-top-1 .gift-top-portrait{width:3.7em;height:3.7em}
 .gift-top-portrait em,.gift-top-portrait img{position:absolute;left:26%;top:26%;width:48%;height:48%;border-radius:50%;object-fit:cover;background:#183843;display:grid;place-items:center;font:bold .9em Georgia;font-style:normal;color:#ecd69e}
 .gift-top-portrait svg{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;filter:drop-shadow(0 0 4px #0008)}
-.gift-top-1 .gift-top-portrait svg{animation:giftTopGlow 2.4s ease-in-out infinite}
-@keyframes giftTopGlow{50%{filter:drop-shadow(0 0 7px #ffd76acc)}}
+.gift-top-1 .gift-top-portrait::after{content:'';position:absolute;inset:-6%;border-radius:50%;pointer-events:none;background:radial-gradient(circle,transparent 52%,#ffd76a66 62%,transparent 72%);opacity:0;animation:giftTopGlow 2.4s ease-in-out infinite;will-change:opacity}
+@keyframes giftTopGlow{50%{opacity:1}}
 .gift-top-text{display:flex;flex-direction:column;line-height:1.15;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .gift-top-title{font-size:.62em;letter-spacing:.06em;font-weight:700}
 .gift-top-1 .gift-top-title{color:#ffd76a}.gift-top-2 .gift-top-title{color:#d9c2ff}.gift-top-3 .gift-top-title{color:#a9f1e0}
-@media(prefers-reduced-motion:reduce){.gift-top-1 .gift-top-portrait svg{animation:none}}
+@media(prefers-reduced-motion:reduce){.gift-top-1 .gift-top-portrait::after{animation:none}}
 
 /* v66: bảng TẶNG QUÀ NHẬN GÌ — mỗi phần thưởng là một nhãn màu */
 .gift-board .gift-board-row{align-items:flex-start!important}

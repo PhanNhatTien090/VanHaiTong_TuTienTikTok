@@ -3,7 +3,7 @@
 export const SEATS=16;          // Giới hạn mặc định cho chế độ Nhẹ; không vẽ hàng trăm người.
 export const MIN_STAY=20000;    // ngồi ít nhất 20 giây rồi mới có thể bị thay
 export const SWAPS_PER_SEC=2;   // tối đa 2 lượt thay người mỗi giây
-const RECENT=30000,WAIT_MAX=10000,RESIDENT_LIMIT=24; // 3/11: NPC ở lại tới khi có 24 người thật (trước 10), ngồi các ghế cuối
+const RECENT=30000,WAIT_MAX=10000,RESIDENT_LIMIT=15; // 08/11: từ 15 người thật thì 3 NPC rời sân (trước 24) cho đỡ tải
 
 import {VIP_TIERS,vipTier,isNewbie} from './vip.js';
 // Nhân vật do người điều hành tạo: thường trú (resident) và tu sĩ giả (puppet).

@@ -575,7 +575,7 @@ export function awardLoyalty(w,now=Date.now(),limit=3){
 }
 export function currentParticipant(w,p,now=Date.now()){
   // Vế rẻ nhất, loại nhiều nhất (đa số ~8k hồ sơ đã rời LIVE) đứng trước; mọi vế là boolean không tác dụng phụ nên kết quả không đổi.
-  return now-p.lastActive<LIVE_ACTIVE_MS&&w.liveSession?.active!==false&&p.lastActive>=(w.liveSession?.startedAt||0)&&!p.resident&&w.playTransfers?.[p.id]?.phase!=='web'&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=90000);
+  return now-p.lastActive<LIVE_ACTIVE_MS&&w.liveSession?.active!==false&&p.lastActive>=(w.liveSession?.startedAt||0)&&!p.resident&&w.playTransfers?.[p.id]?.phase!=='web'&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=20000); // 08/11: chỉ ghé vào (chưa tim/chat/quà) thì rời sân sau 20 s (trước 90 s)
 }
 export function markLiveSession(w,isLive,now=Date.now()){
   if(isLive){if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};}

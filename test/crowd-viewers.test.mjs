@@ -12,7 +12,9 @@ test('fresh TikFinity audience overrides retained active profiles, including zer
  assert.deepEqual([9,10,14,15,19,20,21].map(audienceTier),[0,10,10,15,15,20,21]);
 });
 test('audience rises and falls through 10, 15, 20 without lowering output sharpness',()=>{
- const b=new RenderBudget();for(const n of [9,10,15,20,25,20,15,10,9]){b.setAudience(n);assert.equal(b.config.width,1080);assert.ok(b.config.spriteScale>=2.5);assert.equal(b.audienceTier,audienceTier(n));}assert.equal(b.level,'balanced');
+ const b=new RenderBudget();for(const n of [9,10,15,20,25,17,11,6]){b.setAudience(n);assert.equal(b.config.width,1080);assert.ok(b.config.spriteScale>=2.5);assert.equal(b.audienceTier,audienceTier(n));}assert.equal(b.level,'balanced');
+ // Đệm 3 người khi hạ bậc: dao động 9↔10 không đổi bậc (đổi bậc xóa cache ảnh nhân vật).
+ const h=new RenderBudget();h.setAudience(10);assert.equal(h.setAudience(9),false);assert.equal(h.audienceTier,10);assert.equal(h.setAudience(7),false);assert.equal(h.setAudience(6),true);assert.equal(h.audienceTier,0);
 });
 test('wings draw at the strongest crowd level',()=>{
  let drawn=0;const scene={heavyCrowd:true,crowded:true,compact:false,motion:false,arenaArt:{wings:{complete:true,naturalWidth:400,naturalHeight:200}}},c={save(){},restore(){},translate(){},scale(){},drawImage(){drawn++;}};drawWings(scene,c,{x:200,y:300,scale:1,player:{id:'a',giftCoins:1}},0);assert.equal(drawn,1);

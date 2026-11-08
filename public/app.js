@@ -569,4 +569,5 @@ function renderEngagement(){const g=state.engagement||{},env=document.getElement
   clearTimeout(engageTimer);if(g.envelope||g.quiz)engageTimer=setTimeout(renderEngagement,500);}
 
 // Refresh a deployed UI update after the current presentation, keeping event data on the server.
-if(overlay){let loadedBuild=null;setInterval(async()=>{try{const r=await fetch('/index.html',{method:'HEAD',cache:'no-store'}),etag=r.headers.get('ETag');if(!r.ok||!etag)return;if(!loadedBuild){loadedBuild=etag;return;}if(etag!==loadedBuild&&(!busy||!(scene.presentation?.until>performance.now()))&&!scene.effects?.some(e=>e.effect==='breakthrough'&&performance.now()-e.start<e.duration))location.reload();}catch{}},10000);}
+// 08/11: overlay có tiếng thì KHÔNG tự nạp lại — LIVE Studio chặn tự phát âm thanh sau reload (mất tiếng giữa LIVE). Bản mới lên khi làm mới nguồn Link.
+if(overlay&&params.get('sound')!=='1'){let loadedBuild=null;setInterval(async()=>{try{const r=await fetch('/index.html',{method:'HEAD',cache:'no-store'}),etag=r.headers.get('ETag');if(!r.ok||!etag)return;if(!loadedBuild){loadedBuild=etag;return;}if(etag!==loadedBuild&&(!busy||!(scene.presentation?.until>performance.now()))&&!scene.effects?.some(e=>e.effect==='breakthrough'&&performance.now()-e.start<e.duration))location.reload();}catch{}},10000);}

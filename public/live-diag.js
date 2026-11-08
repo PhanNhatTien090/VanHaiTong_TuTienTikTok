@@ -13,10 +13,12 @@ export function startLiveDiag(){
   lastTick=performance.now();setInterval(()=>{const now=performance.now();W.lagMax=Math.max(W.lagMax,now-lastTick-100);lastTick=now;},100);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)hiddenAt=performance.now();else if(hiddenAt){W.hiddenMs+=performance.now()-hiddenAt;hiddenAt=0;}});
 }
+// GPU thật của trang (WebGL renderer). "SwiftShader"/"no-webgl" = LIVE Studio vẽ bằng CPU → canvas raster mềm.
+let GPU=null;function gpuInfo(){if(GPU)return GPU;try{const c=document.createElement('canvas'),g=c.getContext('webgl')||c.getContext('experimental-webgl');if(!g)return GPU='no-webgl';const e=g.getExtension('WEBGL_debug_renderer_info');GPU=String(e?g.getParameter(e.UNMASKED_RENDERER_WEBGL):g.getParameter(g.RENDERER)).slice(0,120);g.getExtension('WEBGL_lose_context')?.loseContext();}catch(err){GPU='err:'+String(err?.message||err).slice(0,60);}return GPU;}
 export function liveDiagSnapshot(){
   const now=performance.now(),sec=Math.max(.001,(now-W.since)/1000),r=n=>Math.round(n);
   const top=[...W.scripts].sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,ms])=>[k,r(ms)]);
-  const out={win:+sec.toFixed(1),rafFps:+(W.raf/sec).toFixed(1),rafGapMax:r(W.rafGapMax),longN:W.longN,longMs:r(W.longMs),longMax:r(W.longMax),loafN:W.loafN,loafMs:r(W.loafMs),blockMs:r(W.blockMs),styleMs:r(W.styleMs),lagMax:r(W.lagMax),hidden:document.hidden,vis:document.visibilityState,hiddenMs:r(W.hiddenMs+(hiddenAt?now-hiddenAt:0)),heapMiB:performance.memory?r(performance.memory.usedJSHeapSize/1048576):null,top};
+  const out={win:+sec.toFixed(1),rafFps:+(W.raf/sec).toFixed(1),rafGapMax:r(W.rafGapMax),longN:W.longN,longMs:r(W.longMs),longMax:r(W.longMax),loafN:W.loafN,loafMs:r(W.loafMs),blockMs:r(W.blockMs),styleMs:r(W.styleMs),lagMax:r(W.lagMax),hidden:document.hidden,vis:document.visibilityState,hiddenMs:r(W.hiddenMs+(hiddenAt?now-hiddenAt:0)),heapMiB:performance.memory?r(performance.memory.usedJSHeapSize/1048576):null,gpu:gpuInfo(),dpr:devicePixelRatio,top};
   Object.assign(W,{raf:0,rafGapMax:0,longMs:0,longN:0,longMax:0,loafMs:0,loafN:0,blockMs:0,styleMs:0,lagMax:0,hiddenMs:0,since:now});W.scripts.clear();if(hiddenAt)hiddenAt=now;
   return out;
 }

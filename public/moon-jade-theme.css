@@ -44,11 +44,12 @@ html body .ritual-hud[data-appearance] .ritual-sub{color:var(--ritual-accent)!im
 /* v88: bảng hướng dẫn sự kiện skin nổi bật — khung vàng đậm, chữ to, 2 dòng cố định. */
 html body.overlay .scene-shell .visitor-hud.skin-event{
  background:linear-gradient(150deg,#3a2306ee,#14202ee6)!important;border:2px solid #ffd76a!important;border-radius:14px!important;
- box-shadow:0 0 0 1px #2a1604,0 0 22px #ffc24a99,0 6px 18px #000a!important;padding:8px 12px!important;animation:vhPulse 2.6s ease-in-out infinite}
+ box-shadow:0 0 0 1px #2a1604,0 0 22px #ffc24a99,0 6px 18px #000a!important;padding:8px 12px!important}
+html body.overlay .scene-shell .visitor-hud.skin-event::after{box-shadow:0 0 30px #ffd76acc;animation:vhPulse 2.6s ease-in-out infinite}
 html body.overlay .scene-shell .visitor-hud.skin-event>b{font-size:clamp(16px,3cqw,32px)!important;font-weight:900!important;color:#ffe7a0!important;letter-spacing:.03em;line-height:1.25!important}
 html body.overlay .scene-shell .visitor-hud.skin-event>b small{font-size:.75em!important;color:#fff7dc!important}
 html body.overlay .scene-shell .visitor-hud.skin-event span.vh-gift{font-size:clamp(15px,2.8cqw,30px)!important;font-weight:900!important;color:#ffffff!important;margin-top:2px}
 html body.overlay .scene-shell .visitor-hud.skin-event span.vh-free{font-size:clamp(13px,2.3cqw,25px)!important;font-weight:800!important;color:#c8fff0!important}
 html body.overlay .scene-shell .visitor-hud.skin-event :is(b,span){text-shadow:0 2px 3px #000,1px 0 3px #000,-1px 0 3px #000,0 0 8px #000!important}
-@keyframes vhPulse{0%,100%{box-shadow:0 0 0 1px #2a1604,0 0 14px #ffc24a77,0 6px 18px #000a}50%{box-shadow:0 0 0 1px #2a1604,0 0 30px #ffd76acc,0 6px 18px #000a}}
+@keyframes vhPulse{0%,100%{opacity:0}50%{opacity:.8}}
 @media (prefers-reduced-motion:reduce){html body.overlay .scene-shell .visitor-hud.skin-event{animation:none}}

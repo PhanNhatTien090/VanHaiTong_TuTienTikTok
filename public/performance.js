@@ -11,7 +11,10 @@ export class RenderBudget{
   constructor(mode='auto'){this.set(mode);this.mean=0;this.samples=0;this.changedAt=0;}
   set(mode){this.mode=['light','balanced','high'].includes(mode)?mode:'auto';this.level=this.mode==='auto'?'balanced':this.mode;if(this.crowded){this.beforeCrowd=this.level;this.level='light';}this.config=this.heavyCrowd?QUALITY.crowded:QUALITY[this.level];}
   setCrowded(active,heavy=false){active=!!active;heavy=active&&!!heavy;if(active===!!this.crowded&&heavy===!!this.heavyCrowd)return false;if(active&&!this.crowded)this.beforeCrowd=this.level;this.crowded=active;this.heavyCrowd=heavy;this.level=active?'light':this.mode==='auto'?(this.beforeCrowd||'balanced'):this.mode;this.config=heavy?QUALITY.crowded:QUALITY[this.level];this.samples=0;this.mean=0;return true;}
-  setAudience(count){const tier=count>20?21:count>=20?20:count>=15?15:count>=10?10:0;if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.samples=0;this.mean=0;return true;}
+  setAudience(count){let tier=count>20?21:count>=20?20:count>=15?15:count>=10?10:0;
+    // 08/11: chỉ hạ bậc khi số người tụt hẳn (đệm 3 người) — đổi bậc xóa cache ảnh nhân vật, dao động 9↔10 người làm khựng liên tục.
+    if(this.audienceTier&&tier<this.audienceTier&&count>=this.audienceTier-3)tier=this.audienceTier;
+    if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.samples=0;this.mean=0;return true;}
   sample(ms,t,fps=30){if(!Number.isFinite(ms))return false;this.mean=this.samples?this.mean*.94+ms*.06:ms;this.samples++;
     // 08/11: FPS thật tụt (<15) thì hạ một bậc kể cả khi đặt cứng 'high' (LIVE Studio + GPU tích hợp). Vẫn 1080 px.
     if(!this.crowded&&fps>0&&fps<15&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
