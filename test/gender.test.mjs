@@ -26,7 +26,7 @@ test('sect master addresses sư huynh / sư tỷ / đạo hữu',()=>{
   assert.match(announcement({...e,gender:'nu'}),/sư tỷ Lam Phong gia nhập/i);
   assert.match(announcement(e),/đạo hữu Lam Phong gia nhập/i);
   assert.match(announcement({...e,gender:'nu',effect:'qi',text:'Vận Thanh Tâm • +10 tu vi'}),/^Sư tỷ Lam Phong đang vận công/);
-  assert.match(announcement({...e,gender:'nam',effect:'petal',text:'Linh hoa ×3 • cảm ơn đạo hữu'}),/^Đa tạ sư huynh Lam Phong/);
+  assert.match(announcement({...e,gender:'nam',effect:'petal',text:'Linh hoa ×3 • cảm ơn đạo hữu'}),/^Sư huynh Lam Phong tặng quà/);
   assert.match(announcement({...e,gender:'nu',effect:'title'}),/gọi là sư tỷ Lam Phong/);
   assert.match(announcement({...e,gender:'nam',effect:'petal',text:'Kết duyên tiên môn • +20 tu vi, +10 linh thạch'}),/^Đa tạ sư huynh Lam Phong đã theo dõi Vân Hải Tông/);
 });

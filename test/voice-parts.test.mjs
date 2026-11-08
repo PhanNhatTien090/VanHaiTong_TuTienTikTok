@@ -1,16 +1,16 @@
-// 08/11/2026: ghép giọng làm sẵn cho lời cảm ơn quà (tên + "tặng <quà>! Đa tạ tâm ý!").
+// 08/11/2026: ghép giọng làm sẵn cho lời cảm ơn quà (tên + "tặng <quà>! Tu vi tăng mạnh!"; 08/11 tối bỏ 'Đa tạ tâm ý').
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {namePlan,giftPlan,THANKS_PLAN,WAR_PUSH_PLANS,nextMissingPart} from '../voice-parts.mjs';
 import {VoiceQueue} from '../public/voice.js';
 test('name and gift parts read cleanly and address by gender',()=>{
  assert.deepEqual(namePlan({name:'🐠༺Huy༻🐠',gender:'nu'}),[{voice:'tongsu',text:'Sư tỷ Huy'}]);
  assert.equal(namePlan({name:'An',gender:'nam'})[0].text,'Sư huynh An');assert.equal(namePlan({name:'An'})[0].text,'Đạo hữu An');
- assert.equal(giftPlan('Hoa hồng')[0].text,'tặng Hoa hồng! Đa tạ tâm ý!');assert.equal(namePlan({name:'🐠🐠'}),null);
+ assert.equal(giftPlan('Hoa hồng')[0].text,'tặng Hoa hồng! Tu vi tăng mạnh!');assert.doesNotMatch(THANKS_PLAN[0].text,/Đa tạ|tâm ý/);assert.equal(namePlan({name:'🐠🐠'}),null);
 });
 test('warm order: generic thanks, then recently active givers, then gifts; skips residents and idle viewers',()=>{
  const now=1e10,w={players:{a:{id:'a',name:'An',lastRealInteractionAt:now-1000},b:{id:'b',name:'Bình',giftCoins:5,lastRealInteractionAt:now-5000},r:{id:'r',name:'NPC',resident:true,lastRealInteractionAt:now},old:{id:'old',name:'Cũ',lastRealInteractionAt:now-3600e3}},events:[{gift:'Kem',coins:1}]};
  const done=new Set(),cached=p=>done.has(JSON.stringify(p)),take=()=>{const p=nextMissingPart(w,cached,now);if(p)done.add(JSON.stringify(p));return p?.[0].text;};
- assert.equal(take(),THANKS_PLAN[0].text);assert.equal(take(),WAR_PUSH_PLANS.chinh[0].text);assert.equal(take(),WAR_PUSH_PLANS.ma[0].text);assert.equal(take(),'Đạo hữu Bình');assert.equal(take(),'Đạo hữu An');assert.equal(take(),'tặng Kem! Đa tạ tâm ý!');
+ assert.equal(take(),THANKS_PLAN[0].text);assert.equal(take(),WAR_PUSH_PLANS.chinh[0].text);assert.equal(take(),WAR_PUSH_PLANS.ma[0].text);assert.equal(take(),'Đạo hữu Bình');assert.equal(take(),'Đạo hữu An');assert.equal(take(),'tặng Kem! Tu vi tăng mạnh!');
  const rest=[];let t;while((t=take()))rest.push(t);assert.ok(!rest.some(x=>/NPC|Cũ/.test(x)));
 });
 test('gift thanks plays prebuilt parts at once when the full line is still being synthesised',async()=>{

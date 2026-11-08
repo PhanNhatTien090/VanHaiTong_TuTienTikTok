@@ -29,7 +29,7 @@ export function sayName(raw){
 const cutWords=(s,n)=>{s=String(s||'').trim();if(s.length<=n)return s;const c=s.slice(0,n);return c.slice(0,Math.max(c.lastIndexOf(' '),Math.floor(n*.6))).trim();};
 // Không đọc giá hay mốc coin, kể cả thông báo hệ thống được chuyển thẳng vào TTS.
 export const withoutCoinSpeech=text=>String(text).split(/(?<=[.!?;…])\s*|[•\n]+/u).filter(part=>!/(?:\bcoins?\b|(?<!\p{L})xu(?!\p{L}))/iu.test(part)).join(' ').trim();
-const say=(voice,text)=>({voice,text:cutWords((withoutCoinSpeech(text)||'Tông môn ghi nhận tâm ý của đạo hữu.').replace(/%/g,' phần trăm').replace(/\b\d{1,9}\b/g,n=>viNumber(n)).replace(/\s+/g,' ').trim(),200)});
+const say=(voice,text)=>({voice,text:cutWords((withoutCoinSpeech(text)||'Linh khí dâng trào!').replace(/%/g,' phần trăm').replace(/\b\d{1,9}\b/g,n=>viNumber(n)).replace(/\s+/g,' ').trim(),200)});
 const titleCase=s=>String(s).toLowerCase().replace(/(^|\s)(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
 const list2=a=>a.length<=1?a.join(''):a.slice(0,-1).join(', ')+' và '+a.at(-1);
 
@@ -39,7 +39,9 @@ function giftLines(e,who,Who,t,seed){
  const rewards=[itemTxt,Number(r.qi)>0?qi+' tu vi':''].filter(Boolean).join(' và ');
  const buff=e.buff?.mult?' Phúc duyên gấp '+multWord(e.buff.mult)+(e.firstGift?' suốt hai mươi phút.':' trong mười phút.'):'';
  const race=e.raceBoost?' Phi kiếm lao vọt '+viNumber(e.raceBoost)+' trượng!':'';
- const master=Who+(rewards?' nhận '+rewards+'!':' được tông môn ghi nhận tâm ý!')+buff+race;
+ // 08/11 tối (chủ game): KHÔNG cảm ơn / 'đa tạ tâm ý' — chỉ nói điều vừa xảy ra (tu vi, skin, luật sự kiện).
+ const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`}[rule];
+ const master=(skins?'Chúc mừng '+who+' nhận '+rewards+'!':rewards?Who+' nhận '+rewards+'!':ruleLine||Who+' tặng quà!')+buff+race;
  // 08/11: quà giữa Chính Ma Đại Chiến — hô to quà lật kèo / đại chiêu, rồi mới cảm ơn.
  if(e.warGift){const S=e.warGift==='chinh'?'Chính Đạo':'Ma Đạo',value=(Number(e.coins)||0)*(Number(e.count)||1);
   const hype=e.warFlip?pickBy(seed,[`${Who} tặng quà lớn, lật kèo rồi! ${S} vượt lên!`,`Lật kèo! ${Who} một quà đảo chiều chiến trận!`,`${Who} ra tay, ${S} lật ngược thế cờ!`])
@@ -73,7 +75,7 @@ export function speechPlan(e){
   if(e.petEnd)return [say('tiennu','Linh Thú Cốc đã khép lại. Các linh thú đã kết bạn vẫn đồng hành cùng đạo hữu.')];
   if(e.petAward)return [say('tiennu',Who+' kết bạn thành công với '+(e.petNames||[]).join(', ')+'.')];
   // ----- quà -----
-  if(e.gift&&text.includes('cảm ơn đạo hữu'))return giftLines(e,who,Who,t,seed);
+  if(e.gift&&(e.reward||text.includes('cảm ơn đạo hữu')))return giftLines(e,who,Who,t,seed);
   // ----- người chơi -----
   if(e.vipReturn){const n=['','Bạc','Vàng','Kim Cương'][e.vipReturn];return [say('tiennu',`Hộ Pháp ${n} ${raw||''} đã trở lại tông môn!`),say('tongsu','Cả tông môn hoan nghênh, phúc khí tràn đầy!')];} // v86
   if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông! Thả tim để vận công nhé!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
@@ -203,7 +205,7 @@ export function speechPlan(e){
     const lm=text.match(/^(.+?) đã rời tiên môn/);if(lm)return [say('tiennu',`${lm[1]} đã rời tiên môn. Hẹn gặp lại chư vị!`)];
   }
   // ----- tương tác thường -----
-  if(text.includes('cảm ơn đạo hữu'))return [say('tongsu',`Đa tạ ${who}! Tông môn ghi nhận tâm ý của đạo hữu.`)];
+  if(text.includes('cảm ơn đạo hữu'))return [say('tongsu',`${Who} tặng quà! Linh khí dâng trào!`)];
   if(text.startsWith('Kết duyên'))return [say('tongsu',`Đa tạ ${who} đã theo dõi Vân Hải Tông! Kết duyên tiên môn!`)];
   if(text.startsWith('Tụ linh'))return [say('tongsu',`${Who} thả tim, linh khí tăng lên.`)];
   if(text.startsWith('Luận đạo'))return [say('tongsu',`${Who} vừa luận đạo cùng đồng môn.`)];

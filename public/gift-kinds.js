@@ -18,7 +18,7 @@ export const NAMES={
 export const KINDS={
   rose:     {re:/\bros(e|es|a)\b|hoa h[oồ]ng/i, label:'Hoa hồng', line:'Hoa hồng nở rộ khắp Vân Hải Tông!'},
   flower:   {re:/flower|bouquet|tulip|sunflower|lily|blossom|\bhoa\b/i, label:'Bó hoa', line:'Trăm hoa đua nở, linh khí ngát hương!'},
-  heart:    {re:/heart|love|\btim\b|kiss/i, label:'Trái tim', line:'Tâm ý tương thông, linh khí hội tụ!'},
+  heart:    {re:/heart|love|\btim\b|kiss/i, label:'Trái tim', line:'Trái tim rực sáng, linh khí hội tụ!'},
   cat:      {re:/\bcat|meow|kitty|kitten|m[eè]o|paw/i, label:'Mèo', line:'Linh miêu giáng thế, đến bầu bạn tu luyện!'},
   dog:      {re:/corgi|\bdog|pupp|shiba|husky|c[uú]n/i, label:'Cún', line:'Linh khuyển chạy tới hộ pháp!'},
   food:     {re:/donut|doughnut|ice cream|cake|candy|coffee|tea|pizza|burger|cookie|lollipop|b[aá]nh|kem/i, label:'Linh quả', line:'Món quà kích hoạt ánh sáng và cộng điểm cho nhân vật trong game!'},
