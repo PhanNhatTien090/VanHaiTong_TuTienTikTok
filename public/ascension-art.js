@@ -2,6 +2,9 @@ import {MAX_REALM} from './progression.js';
 import {KIM_TIEN_TIMELINE} from './kim-tien-timeline.js';
 import {HUYEN_TIEN_TIMELINE} from './huyen-tien-timeline.js';
 import {DAI_THUA_DURATION} from './dai-thua-awakening.js';
+import {THAI_AT_DURATION} from './thai-at-awakening.js';
+import {DAI_LA_DURATION} from './dai-la-awakening.js';
+import {TIEN_DE_DURATION} from './tien-de-awakening.js';
 import {CHAN_TIEN_DURATION} from './chan-tien-awakening.js';
 import {LUYEN_HU_DURATION} from './luyen-hu-awakening.js';
 import {HOA_THAN_DURATION} from './hoa-than-awakening.js';
@@ -18,7 +21,7 @@ const afterHoa=DURATIONS.map((ms,r)=>r===5?HOA_THAN_DURATION:r>5?ms+(HOA_THAN_DU
 const afterLuyenHu=afterHoa.map((ms,r)=>r===6?LUYEN_HU_DURATION:r>6?ms+(LUYEN_HU_DURATION-afterHoa[6]):ms);
 const afterDaiThua=afterLuyenHu.map((ms,r)=>r===7?DAI_THUA_DURATION:r>7?ms+(DAI_THUA_DURATION-afterLuyenHu[7]):ms);
 const finalDurations=afterDaiThua.map((ms,r)=>r===8?CHAN_TIEN_DURATION:r>8?ms+(CHAN_TIEN_DURATION-afterDaiThua[8]):ms);
-export const ASCENSIONS=Object.freeze(TITLES.map((title,realm)=>realm?Object.freeze({realm,title,id:realm>13?'transcendent-'+realm:SHAPES[realm],shape:SHAPES[realm],color:COLORS[realm],duration:realm>18?finalDurations[18]+(36000-finalDurations[9])+(realm-18)*2000:realm===10?KIM_TIEN_TIMELINE.duration:realm===9?HUYEN_TIEN_TIMELINE.duration:realm>9?finalDurations[realm]+(36000-finalDurations[9]):finalDurations[realm],group:realm>=8?'high':'mid',cell:realm>=8?Math.min(5,realm-8):Math.max(0,realm-2),burst:realm===13?5:realm===12?3:realm===11||realm===6?2:realm>=8||realm===3?1:0,layers:2+Math.floor(realm/2)}):null));
+export const ASCENSIONS=Object.freeze(TITLES.map((title,realm)=>realm?Object.freeze({realm,title,id:realm>13?'transcendent-'+realm:SHAPES[realm],shape:SHAPES[realm],color:COLORS[realm],duration:realm>18?finalDurations[18]+(36000-finalDurations[9])+(realm-18)*2000:realm===10?KIM_TIEN_TIMELINE.duration:realm===9?HUYEN_TIEN_TIMELINE.duration:realm===11?THAI_AT_DURATION:realm===12?DAI_LA_DURATION:realm===13?TIEN_DE_DURATION:realm>13?finalDurations[realm]+(36000-finalDurations[9])+(DAI_LA_DURATION-(finalDurations[12]+(36000-finalDurations[9])))+(TIEN_DE_DURATION-(finalDurations[13]+(36000-finalDurations[9])+(DAI_LA_DURATION-(finalDurations[12]+(36000-finalDurations[9]))))):realm>9?finalDurations[realm]+(36000-finalDurations[9]):finalDurations[realm],group:realm>=8?'high':'mid',cell:realm>=8?Math.min(5,realm-8):Math.max(0,realm-2),burst:realm===13?5:realm===12?3:realm===11||realm===6?2:realm>=8||realm===3?1:0,layers:2+Math.floor(realm/2)}):null));
 export const ascensionProfile=realm=>ASCENSIONS[Math.max(1,Math.min(MAX_REALM,Number(realm)||1))];
 export function sliceAscensionAtlas(im,size=320,factory=makeSurface){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,frames=[];for(let i=0;i<6;i++){const f=factory(size,size);if(!f)continue;f.getContext('2d').drawImage(im,i%3*w/3,Math.floor(i/3)*h/2,w/3,h/2,2,2,size-4,size-4);frames.push(f);}return frames;}
 export function prepareAscensionArt(scene,realm){if(typeof Image==='undefined')return;const p=ascensionProfile(realm);scene.ascensionArt??={};scene.ascensionLoading??=new Set();scene.ascensionRetry??={};for(const group of [p.group,'bursts']){if(scene.ascensionArt[group]||scene.ascensionLoading.has(group)||scene.ascensionRetry[group]>Date.now())continue;scene.ascensionLoading.add(group);let im=new Image();im.onload=()=>{scene.ascensionArt[group]=sliceAscensionAtlas(im,group==='high'?384:256);scene.ascensionLoading.delete(group);im=null;};im.onerror=()=>{scene.ascensionLoading.delete(group);scene.ascensionRetry[group]=Date.now()+15000;};im.src='/assets/breakthrough-v2/'+group+'.png';}}

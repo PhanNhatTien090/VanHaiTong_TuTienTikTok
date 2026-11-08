@@ -1,0 +1,24 @@
+/* 07/11: Bảng xếp hạng ngày / tuần — trang quản lý */
+.period-tops{margin-top:22px;padding:14px;border:1px solid #cfb77b55;border-radius:10px;background:#0f1f2a}
+body.overlay .period-tops{display:none!important}
+.period-tops:empty{display:none}
+.pt-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pt-head h2{font:22px var(--serif);color:#dfd1ab;margin:0;font-weight:400;flex:1 1 260px}
+.pt-head h2 small{display:block;font:12px var(--sans,inherit);color:var(--muted);margin-top:3px}
+.pt-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.pt-tabs button{background:#0c1d19;border:1px solid #ffffff22;color:#d9e3da;padding:7px 12px;border-radius:999px;font:inherit;font-size:12px;cursor:pointer}
+.pt-tabs button:hover{border-color:#ffd76acc}
+.pt-tabs button.on{background:#3a2f12;border-color:#ffd76a;color:#ffe7a3}
+.pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pt-card{background:#071520;border:1px solid #ffffff14;border-radius:8px;padding:10px 12px;min-width:0}
+.pt-card h3{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#f1d28a;display:flex;gap:6px;align-items:center}
+.pt-card ol{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.pt-card li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;align-items:baseline;font-size:12.5px;padding:3px 4px;border-radius:4px}
+.pt-card li b{color:var(--muted);text-align:right;font-weight:600}
+.pt-card li .pt-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e8eddc}
+.pt-card li .pt-name small{color:var(--muted)}
+.pt-card li strong{color:#f3e2b3;font-weight:600;white-space:nowrap}
+.pt-card li strong small{color:var(--muted);font-weight:400;font-size:10.5px}
+.pt-card li.pt-podium{background:#ffffff08}
+.pt-card li.pt-r1 b{color:#ffd76a}.pt-card li.pt-r2 b{color:#d7e1ea}.pt-card li.pt-r3 b{color:#e0a46c}
+.pt-empty{margin:4px 0;color:var(--muted);font-size:12px}

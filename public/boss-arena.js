@@ -19,7 +19,10 @@ export function arenaOn(scene) {
   return !!scene.boss && !scene.raceStatus?.active && !scene.socialScene && !scene.socialStage?.length;
 }
 export const ARENA_BOSS_Y = .22; // tỷ lệ chiều cao: yêu thú ở trên cao
-export function arenaBackground(scene, fallback) { const a = arenaArt(scene); return arenaOn(scene) && ready(a.bg) ? a.bg : fallback; }
+// 08/11/2026: mỗi yêu thú một chiến trường riêng (maps-v3); chưa tải xong thì dùng nền cũ.
+const MAP_SPECIES = new Set(['storm-tiger','astral-tortoise','rebirth-phoenix','azure-dragon','sky-kun','moon-fox','abyss-dragon']);
+function speciesMap(scene) { const s = scene.boss?.species; if (!MAP_SPECIES.has(s)) return null; scene.arenaMaps ??= {}; return scene.arenaMaps[s] ??= load('/assets/maps-v3/boss-' + s + '.png'); }
+export function arenaBackground(scene, fallback) { if (!arenaOn(scene)) return fallback; const m = speciesMap(scene); if (ready(m)) return m; const a = arenaArt(scene); return ready(a.bg) ? a.bg : fallback; }
 
 /** Tu sĩ xếp thành các hàng ở nửa dưới, hàng trước to hơn, so le để không che nhau. */
 export function arenaTargets(players, H) {

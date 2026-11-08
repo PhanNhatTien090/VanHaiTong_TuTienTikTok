@@ -218,7 +218,7 @@ export function createDungeon() {
     return { ok: true, battleId: id, info, stats };
   }
 
-  function finish(w, p, body, now = Date.now()) {
+  function finish(w, p, body, now = Date.now(), { noReward = false } = {}) {
     const b = battles.get(String(body.battleId || ''));
     if (!b || b.playerId !== p.id) return { ok: false, message: 'Trận đánh không hợp lệ hoặc đã kết thúc.' };
     battles.delete(b.id);
@@ -238,8 +238,8 @@ export function createDungeon() {
     const first = info.stage > prog.cleared;
     prog.cleared = Math.max(prog.cleared, info.stage);
     prog.stars[info.stage] = Math.max(prog.stars[info.stage] || 0, stars);
-    const reward = rewardFor(p, info, s, first);
-    grant(w, p, reward, s);
+    const reward = noReward ? { qi: 0, stones: 0, herbs: 0, mats: {}, capped: false, trial: true } : rewardFor(p, info, s, first);
+    if (!noReward) grant(w, p, reward, s);
     bumpQuest(p, 'clear', 1, now);
     if (stars === 3) bumpQuest(p, 'star3', 1, now);
     p.lastWebAt = now; // KHÔNG đổi lastActive: người chơi web không hiện lên LIVE

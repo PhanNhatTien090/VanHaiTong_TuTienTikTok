@@ -1,4 +1,6 @@
 import {giftMasterView} from './master-rewards.mjs';
+import {createLiveTransfers} from './web/cloud/live-transfers.mjs';
+import {authenticate} from './web/cloud/protocol.mjs';
 import {raceEntryAnnouncement} from './sword-race.mjs';
 import {createSectMaster} from './sect-master.mjs';
 import {observeViewerCount} from './public/crowd-policy.js';
@@ -6,7 +8,7 @@ import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
-import {controlLanternEvent} from './engine.mjs';
+import {startWar,stopWar,startAlchemy,stopAlchemy,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent} from './engine.mjs';
 import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
@@ -22,6 +24,7 @@ import {fileURLToPath} from 'node:url';
 import {WebSocket} from 'ws';
 import {streamState,eventAllowedOnLive,isNPC,actorLabel} from './public/live-integrity.js';
 import {priority as voicePriority} from './public/voice.js';
+import {periodTopsView,backfillPeriodCoins,readGiftAudit} from './period-tops.mjs';
 import {monitorEventLoopDelay,performance as perfHooks} from 'node:perf_hooks';
 // Đo độ trễ vòng sự kiện (server bị chặn bao lâu) để soi lag khi LIVE: GET /api/perf. Chỉ đọc, không đổi gameplay.
 const loopDelay=monitorEventLoopDelay({resolution:20});loopDelay.enable();let lastElu=perfHooks.eventLoopUtilization();
@@ -31,6 +34,8 @@ import {startNextCompetition,engageNow,honorCeremony,adminGift,heavenStrike,pupp
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dataDir=process.env.VAN_HAI_DATA_DIR||path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
 const runtimeLog=installRuntimeLog(dataDir);
+// Secret chuyển nhân vật với bản web: ưu tiên biến môi trường; thiếu thì đọc file cấu hình riêng của agent, để mọi script restart đều giữ được kết nối.
+function webSyncSecret(){if(process.env.WEB_SYNC_SECRET)return process.env.WEB_SYNC_SECRET;try{const s=JSON.parse(fs.readFileSync(path.join(dataDir,'web-cloud-agent.json'),'utf8')).secret;return typeof s==='string'?s:'';}catch{return '';}}
 const sectMaster=createSectMaster(dataDir);
 const auditStorage=createAuditStorage(dataDir);
 const synthesizeSpeech=createSpeech(root,dataDir);
@@ -48,6 +53,8 @@ function load(mode) {
 {const probePort=Number(process.env.PORT??4317);if(probePort){try{const r=await fetch(`http://127.0.0.1:${probePort}/api/state?world=demo`,{signal:AbortSignal.timeout(1500)});if(r.ok&&(await r.text()).includes('sectQi')){console.error(`Đã có máy chủ Vân Hải Tông đang chạy ở cổng ${probePort}. Không mở thêm máy chủ thứ hai để tránh ghi đè dữ liệu.`);process.exit(1);}}catch{}}}
 const worlds={demo:load('demo'),live:load('live')};for(const w of Object.values(worlds)){prepareSocial(w);migrateDivineWardrobe(w);migrateSectMasters(w);}
 (worlds.live.settings??={}).heartGate??=true; // 07/11/2026: chống tự thả tim (ngầm); đặt false trong settings để tắt
+// 07/11: top ngày/tuần — lần đầu dựng lại coin quà trong tuần từ sổ quà.
+for(const [mode,w] of Object.entries(worlds))if(!w.periodStats){try{console.log('Top ngày/tuần: dựng lại quà cho',backfillPeriodCoins(w,readGiftAudit(fs,path,dataDir,mode),Date.now()),'mục',mode);}catch(e){console.error('Top ngày/tuần backfill lỗi:',e.message);}}
 // Giờ vàng tân thủ chỉ bật trên thế giới LIVE thật (tắt bằng settings.goldenHour=false trong live.json).
 worlds.live.settings??={};worlds.live.settings.goldenHour??=true;
 // Real, faster progression for the ascension stage; existing resources are preserved.
@@ -61,6 +68,12 @@ for(const [mode,w]of Object.entries(worlds)){
  if(repairs.length)console.log(`[${mode}] Đối soát và bù ${repairs.length} lượt thưởng tiên nhân.`);
 }
 if(fs.existsSync(visitorRecovery))fs.renameSync(visitorRecovery,visitorRecovery+'.applied-'+Date.now());
+function persistPlayTransfer(){
+  persist(true);
+  const fd=fs.openSync(path.join(dataDir,'live.json'),'r+');try{fs.fsyncSync(fd);}finally{fs.closeSync(fd);}
+  if(process.platform!=='win32'){const dir=fs.openSync(dataDir,'r');try{fs.fsyncSync(dir);}finally{fs.closeSync(dir);}}
+}
+const liveTransfers=createLiveTransfers({world:worlds.live,save:persistPlayTransfer});
 const voiceLatency=[]; // 08/11: đo thời gian tạo giọng (ms) và tuổi sự kiện khi client xin giọng
 const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
@@ -84,7 +97,7 @@ function payload(mode,view='full'){
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
   let value;
   if(view==='overlay'){
-    const full=payload(mode),fields=['puppet','resident','id','name','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','sectMasterUnlocked'];
+    const full=payload(mode),fields=['puppet','resident','id','name','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','sectMasterUnlocked','sectMasterGiftAt'];
     // Cảnh LIVE chỉ cần: người đang hoạt động (sân khấu) + top 10 (bảng xếp hạng nhỏ) + 30 sự kiện mới nhất.
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
@@ -120,7 +133,7 @@ function connect(){
     try{const event=JSON.parse(raw.toString());if(event.event==='config')return;
       observeViewerCount(connection,event);sectMaster.observe(event);connection.received++;connection.lastEvent=Date.now();
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
-      connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
+      connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.queuedGift)persistPlayTransfer();if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;
       broadcast(event.event==='gift');
     }catch(e){connection.lastError=`Không đọc được sự kiện: ${e.message}`;}
@@ -142,6 +155,13 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='POST'){
       if(req.headers.origin&&req.headers.origin!==`http://${host}`){json(res,{ok:false,message:'Origin không hợp lệ.'},403);return;}
       if(!String(req.headers['content-type']).startsWith('application/json')){json(res,{ok:false,message:'Cần JSON.'},415);return;}
+    }
+    if(url.pathname==='/internal/play-transfer'&&req.method==='POST'){
+      const secret=webSyncSecret();
+      const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>1024*1024){json(res,{ok:false},413);return;}chunks.push(chunk);}
+      const raw=Buffer.concat(chunks);
+      if(!secret||secret.length<48||!authenticate(req,url.pathname,raw,secret)){json(res,{ok:false},401);return;}
+      const result=liveTransfers.apply(JSON.parse(raw.toString()));payloadCache.clear();broadcast();json(res,result);return;
     }
     if(url.pathname==='/api/voice-latency'){json(res,voiceLatency);return;}
     if(url.pathname==='/api/voice-part'){const kind=url.searchParams.get('kind'),p=kind==='name'?worlds[mode].players[url.searchParams.get('user')||'']:null,plan=kind==='name'?(p&&!p.resident&&!p.puppet?namePlan(p):null):kind==='gift'?giftPlan(url.searchParams.get('gift')):kind==='thanks'?THANKS_PLAN:null,file=plan&&synthesizeSpeech.cached(plan);if(!file){json(res,{ok:false},404);return;}res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=600'});fs.createReadStream(file).pipe(res);return;}
@@ -168,6 +188,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/sect-master'&&req.method==='GET'){json(res,sectMaster.view());return;}
     if(url.pathname==='/api/sect-master'&&req.method==='POST'){try{const config=sectMaster.configure(await body(req));payloadCache.clear();broadcast();json(res,{ok:true,...config});}catch(e){json(res,{ok:false,message:e.message},400);}return;}
     if(url.pathname==='/api/bridge-samples'){json(res,bridgeSamples);return;}
+    if(url.pathname==='/api/period-tops'){json(res,periodTopsView(worlds[mode],Date.now(),Math.min(50,Math.max(3,Number(url.searchParams.get('limit'))||10))));return;} // 07/11: top ngày / tuần (chỉ trang quản lý)
     if(url.pathname==='/api/perf'){json(res,perfView());return;}
     if(url.pathname==='/api/state'){json(res,payload(mode));return;}
     if(url.pathname==='/api/events'){
@@ -186,6 +207,10 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='stop-bond-festival')result=stopBondFestival(w,now);
       else if(b.action==='start-race')result=startRace(w,now);
       else if(b.action==='stop-race')result=stopRace(w,now);
+      else if(b.action==='start-war')result=startWar(w,now);
+      else if(b.action==='stop-war')result=stopWar(w,now);
+      else if(b.action==='start-alchemy')result=startAlchemy(w,now);
+      else if(b.action==='stop-alchemy')result=stopAlchemy(w,now);
       else if(b.action==='start-tournament')result=startTournament(w,now);
       else if(b.action==='stop-tournament')result=stopTournament(w,now);
       else if(b.action==='bond-enabled'&&typeof b.enabled==='boolean'){w.settings.bondEnabled=b.enabled;result={ok:true};}
@@ -200,7 +225,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/heaven-strike'&&req.method==='POST'){const b=await body(req);const result=heavenStrike(worlds[mode],b.id,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/admin-gift'&&req.method==='POST'){const b=await body(req);const result=adminGift(worlds[mode],b.id,b.combo,Date.now(),b.custom);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/puppet'&&req.method==='POST'){const b=await body(req);const result=puppetControl(worlds[mode],b,Date.now());if(result.ok&&b.op!=='list'){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
-    if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const result=adminEditPlayer(worlds[mode],b.id,b.patch||{},Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
+    if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const patch={...(b.patch||{})};if(b.base&&typeof b.base==='object')for(const k of Object.keys(patch))if(Object.hasOwn(b.base,k)&&patch[k]===b.base[k])delete patch[k];/* 08/11: bỏ ô không đổi so với lúc mở form */const result=adminEditPlayer(worlds[mode],b.id,patch,Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/lantern-event'&&req.method==='POST'){const b=await body(req);const r=controlLanternEvent(worlds[mode],b.action,Date.now());if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/pet-event'&&req.method==='POST'){const b=await body(req);const r=controlPetEvent(worlds[mode],b.action,Date.now(),b.minutes??5);if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/flower-event'&&req.method==='POST'){const b=await body(req);const result=startFlowerEvent(worlds[mode],Date.now(),b.minutes,b.kind||'flower');if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}

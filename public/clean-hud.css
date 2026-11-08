@@ -447,3 +447,6 @@ body.abyss-fight #liveRanks{display:none!important}
 @keyframes hvPulse{to{box-shadow:0 0 14px #ff6a4a}}
 .heaven-panel .hv-stunned{margin-top:6px;color:#cbbcf2;font-size:.85em}
 .heaven-panel .hv-stun{display:inline-block;margin:2px 4px;padding:2px 8px;border-radius:10px;background:#2a1f4d}
+/* 08/11/2026: Khai Lò Cửu Chuyển — dọn các bảng khác để giao diện lò (nhiệt kế, bảng lệnh, chú thích quà) không bị che */
+body.alchemy-on .like-goal,body.alchemy-on .live-disclosure,body.alchemy-on #liveRanks,body.alchemy-on #commandRail,body.alchemy-on .command-rail,body.alchemy-on .basic-commands,body.alchemy-on .scene-guide-dock,body.alchemy-on #basicCommands,body.alchemy-on .quiz-box,body.alchemy-on .envelope-box,body.alchemy-on #bossHud,body.alchemy-on .visitor-hud,body.alchemy-on .honor-banner,body.alchemy-on .gift-board,body.alchemy-on #spotlight{display:none!important}
+body.alchemy-on .scene-shell>#basicCommands.corner-command-guide{display:none!important}

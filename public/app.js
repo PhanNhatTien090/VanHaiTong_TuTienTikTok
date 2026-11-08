@@ -78,7 +78,7 @@ qualitySelect.onchange=e=>{scene.setQuality(e.target.value);try{localStorage.set
 window.addEventListener('storage',e=>{if(e.key==='vanhai-quality'&&!params.has('quality')){scene.setQuality(e.newValue||'auto');qualitySelect.value=scene.budget.mode;}});
 
 let voiceCaptionTimer;
-scene.onSpectacleImpact=()=>cultivationAudio.play('impact');
+scene.onWarSound=(kind,side,strength)=>cultivationAudio.war(kind,side,strength);scene.onAlchemySound=(kind,strength)=>cultivationAudio.alchemy(kind,strength);scene.onSpectacleImpact=()=>cultivationAudio.play('impact');
 scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);
 scene.onGiftSound=kind=>cultivationAudio.play(kind);
 if(overlay)mountRitualHud($('.scene-shell'),scene);
@@ -142,7 +142,9 @@ function renderEditor(force=false){
   <div class="editor-items"><b>Skin sở hữu</b>${(p.rewardSkins||[]).length?p.rewardSkins.map(id=>`<span>${esc(SPECIAL_SKINS.find(s=>s.id===id)?.name||id)}${id===p.skinChoice?' ✓':''} <button data-unskin="${esc(id)}" title="Gỡ skin">✕</button></span>`).join(''):'<small>Chưa có skin đặc biệt.</small>'}<b>Đồ đang có</b>${owned.length?owned.map(id=>`<span>${esc(name(id))} <button data-remove="${esc(id)}" title="Gỡ">✕</button></span>`).join(''):'<small>Chưa có bí pháp / pháp bảo.</small>'}${Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>`<span>${esc(name(id))} ×${n}</span>`).join('')}
   <div class="editor-give"><select id="edGive">${giveable.map(i=>`<option value="${esc(i.id)}">${esc(i.name)} · ${{manual:'bí pháp',artifact:'pháp bảo',pill:'đan'}[i.type]||i.type}</option>`).join('')}</select><button type="button" id="edGiveBtn" class="soft-button">＋ Trao</button></div></div>
   <small class="muted">Chỉnh tay ghi vào dữ liệu ${mode==='live'?'LIVE':'thử'} ngay lập tức và được lưu nhật ký.</small></details>`;
-  const send=async(patch,msg)=>{const r=await post('/api/player',{id:p.id,patch,announce:$('#edAnnounce')?.checked});if(r.ok){toast(r.changes?.length?msg+': '+r.changes.join(', '):'Không có gì thay đổi.');await refresh();renderEditor(true);}};
+  // 08/11: chỉ gửi ô thực sự đổi (kèm số lúc mở form) — trước đây gửi cả form làm lùi tu vi người chơi kiếm được trong lúc đang sửa.
+  const base={name:p.name,gender:p.gender||null,realm:p.realm,qi:p.qi,stones:p.stones,herbs:p.herbs,giftCoins:p.giftCoins,equipped:p.equipped||null,skinChoice:p.skinChoice||null,divineRoleHidden:!!p.divineRoleHidden};
+  const send=async(patch,msg)=>{const changed=Object.fromEntries(Object.entries(patch).filter(([k,v])=>!(k in base)||v!==base[k]));const r=await post('/api/player',{id:p.id,patch:changed,base,announce:$('#edAnnounce')?.checked});if(r.ok){toast(r.changes?.length?msg+': '+r.changes.join(', '):'Không có gì thay đổi.');await refresh();renderEditor(true);}};
   $('#editForm').onsubmit=e=>{e.preventDefault();send({name:$('#edName').value,gender:$('#edGender').value||null,realm:Number($('#edRealm').value),qi:Number($('#edQi').value),stones:Number($('#edStones').value),herbs:Number($('#edHerbs').value),giftCoins:Number($('#edCoins').value),equipped:$('#edEquip').value||null,skinChoice:$('#edSkin').value||null,divineRoleHidden:!$('#edHonorWardrobe').checked},'Đã lưu');};
   $('#edReset').onclick=()=>renderEditor(true);
   $('#edCooldown').onclick=()=>send({resetCooldowns:true},'Đã xóa thời gian hồi');
@@ -467,7 +469,9 @@ function syncLife(){scene.worldLife??={};for(const [key,id]of Object.entries(lif
 for(const [key,id]of Object.entries(lifeKeys))$('#'+id).onchange=e=>{localStorage.setItem('vanhai-life-'+key,String(e.target.checked));syncLife();};
 window.addEventListener('storage',e=>{if(e.key?.startsWith('vanhai-life-'))syncLife();});syncLife();
 
-function renderVisitorHud(){const el=$('#visitorHud'),e=state?.visitor;if(!el)return;el.hidden=!e||state.serverNow>=e.endsAt;if(el.hidden)return;const cfg=VISITORS[e.kind],seconds=Math.max(0,Math.ceil((e.endsAt-state.serverNow)/1000)),clock=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'),phase=Math.floor(state.serverNow/6000)%2;const reward=VISITOR_GIFT_REWARDS[e.kind];const line=phase?`${reward?.skinCoins||100} coin: skin · ${reward?.artifactCoins||500} coin: cả skin + pháp bảo`:e.completed?'Đã mở thưởng · gõ coduyen':['hanlap','shende','hailam'].includes(e.kind)?'Gõ coduyen · nhận cơ duyên miễn phí':'Gõ coduyen · truyền đạo '+e.points+'/'+e.goal;setHUD(el,'<b>'+esc(cfg.name.toUpperCase())+' <small>'+clock+'</small></b><span>'+esc(line)+'</span>');}
+function renderVisitorHud(){const el=$('#visitorHud'),e=state?.visitor;if(!el)return;el.hidden=!e||state.serverNow>=e.endsAt;if(el.hidden)return;const cfg=VISITORS[e.kind],seconds=Math.max(0,Math.ceil((e.endsAt-state.serverNow)/1000)),clock=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'),phase=Math.floor(state.serverNow/6000)%2;const reward=VISITOR_GIFT_REWARDS[e.kind];el.classList.toggle('skin-event',!!reward);// v88: 2 dòng cố định, không luân phiên — dòng quà skin luôn thấy
+ // 07/11: một dòng luân phiên mỗi 4 s — cơ duyên miễn phí → mốc skin → mốc skin + pháp bảo.
+ const free=e.completed?'Đã mở thưởng · gõ coduyen nhận quà':['hanlap','shende','hailam','doraemon','tudo','khuyniet'].includes(e.kind)?'Gõ coduyen để nhận quà':'Gõ coduyen · truyền đạo '+e.points+'/'+e.goal,lines=reward?[free,`🎁 ${reward.skinCoins||100} coin: được skin`,`🎁 ${reward.artifactCoins||500} coin: skin + ${reward.artifactName}`]:[free],line=lines[Math.floor(state.serverNow/4000)%lines.length];setHUD(el,'<b>'+esc(cfg.name.toUpperCase())+' <small>'+clock+'</small></b><span class="vh-gift">'+esc(line)+'</span>');}
 
 // v73: tab Tu sĩ giả
 var puppetUI=initPuppetUI({root:document.getElementById('puppetPanel'),post,toast,getState:()=>state,openPlayer:id=>{tab('scene');selectPlayer(id);renderEditor(true);}});

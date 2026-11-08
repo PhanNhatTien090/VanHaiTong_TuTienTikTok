@@ -3,6 +3,8 @@ set -euo pipefail
 umask 077
 [[ $EUID -eq 0 ]] || { echo 'Run as root or sudo'; exit 1; }
 domain=${1:?Usage: install.sh game.example.com}
+defer_nginx=0
+if [[ ${2:-} == --defer-nginx ]]; then defer_nginx=1; elif [[ -n ${2:-} ]]; then echo 'Unknown install option'; exit 1; fi
 [[ $domain =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ && $domain == *.* && ${#domain} -le 253 ]] || { echo 'Invalid domain'; exit 1; }
 release=$(cd -- "$(dirname -- "$0")/../.." && pwd)
 [[ $release == /opt/van-hai-web/releases/* ]] || { echo 'Extract under /opt/van-hai-web/releases/<version> first'; exit 1; }
@@ -14,18 +16,31 @@ command -v certbot >/dev/null || { echo 'Install certbot and python3-certbot-ngi
 id vanhai-web >/dev/null 2>&1 || useradd --system --home-dir /var/lib/van-hai-web --create-home --shell /usr/sbin/nologin vanhai-web
 install -d -m 700 -o vanhai-web -g vanhai-web /var/lib/van-hai-web
 cd "$release"
-npm ci --omit=dev --ignore-scripts
+(umask 022; npm ci --omit=dev --ignore-scripts)
 node web/deploy/verify-bundle.mjs
 sync_secret=$(openssl rand -hex 32)
 printf 'WEB_CLOUD_DATA_DIR=/var/lib/van-hai-web\nWEB_PORT=4320\nWEB_SYNC_SECRET=%s\n' "$sync_secret" >/etc/van-hai-web.env
 chmod 600 /etc/van-hai-web.env
 ln -s "$release" /opt/van-hai-web/current
 install -m 644 web/deploy/van-hai-web.service /etc/systemd/system/van-hai-web.service
-sed "s/__DOMAIN__/$domain/g" web/deploy/nginx.conf >/etc/nginx/sites-available/van-hai-web
-[[ ! -e /etc/nginx/sites-enabled/van-hai-web ]] && ln -s /etc/nginx/sites-available/van-hai-web /etc/nginx/sites-enabled/van-hai-web
+if [[ $defer_nginx -eq 1 ]]; then
+  # Keep the existing HTTPS waiting page until the real accounts are imported.
+  sed "s/__DOMAIN__/$domain/g" web/deploy/nginx.conf >/etc/nginx/sites-available/van-hai-web.pending
+  install -m 600 /dev/null /var/lib/van-hai-web/.migration-pending
+  install -d -m 755 /etc/systemd/system/van-hai-web.service.d
+  printf '[Unit]\nConditionPathExists=!/var/lib/van-hai-web/.migration-pending\n' >/etc/systemd/system/van-hai-web.service.d/migration.conf
+  chmod 644 /etc/systemd/system/van-hai-web.service.d/migration.conf
+else
+  sed "s/__DOMAIN__/$domain/g" web/deploy/nginx.conf >/etc/nginx/sites-available/van-hai-web
+  [[ ! -e /etc/nginx/sites-enabled/van-hai-web ]] && ln -s /etc/nginx/sites-available/van-hai-web /etc/nginx/sites-enabled/van-hai-web
+fi
 nginx -t
 systemctl daemon-reload
 echo 'Installed but NOT started. Import the existing private account snapshot before starting the service.'
+if [[ $defer_nginx -eq 1 ]]; then
+  echo 'Migration guard is active. Keep the HTTPS waiting page; activate only after the real account import.'
+  exit 0
+fi
 echo 'Then: systemctl enable --now van-hai-web; systemctl reload nginx'
 echo 'After DNS points here: certbot --nginx -d <domain> --redirect'
 echo 'Keep /etc/van-hai-web.env private; use its secret in the local agent configuration.'

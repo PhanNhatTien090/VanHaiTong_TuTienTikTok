@@ -1,22 +1,44 @@
+// Đại Thừa v2 — Kiếm Trủng Triều Tông · Đại Đạo Kim Kiều (07/11/2026). Bản cũ sao lưu ở data/backups.
 import {makeSurface} from './performance.js';
-import {TAU,clamp,ease,ring,glow,backdrop,actor,ritualHUD} from './ascension-primitives.js';
-export const DAI_THUA_DURATION=22800,DAI_THUA_REVEAL=19.3;
-export function daiThuaState(k,H=1600,motion=true){const seconds=clamp(k)*22.8;return {k:clamp(k),seconds,feet:H*.69,center:H*.44,awaken:ease((seconds-2)/3.5),orbit:ease((seconds-5.5)/1.8),gate:ease((seconds-8.8)/2),giant:ease((seconds-11.8)/2),merge:ease((seconds-15)/2.8),burst:ease((seconds-19)/.16)*(1-ease((seconds-19.4)/1.4)),revealed:seconds>=DAI_THUA_REVEAL,fade:1-ease((seconds-21.5)/1.3),phase:seconds<2?'still':seconds<5.5?'awaken':seconds<8.8?'orbit':seconds<11.8?'gate':seconds<15?'giant':seconds<17.8?'merge':seconds<19?'compress':seconds<19.3?'burst':'reveal',motion};}
+import {setFxPalette,qiVariant,qiRemap,pushFxCamera,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
+import {DT_TIMING as T,DT_STRIKES,prepareDaiThuaWorld,daiThuaFormationState,drawDtWorld,drawDtSwords,drawDtRoad,drawDtTrial,drawDtDive,drawDtBody,drawDtBreak,drawDtSalute,drawDtEdges} from './dai-thua-formation.js';
+export const DAI_THUA_DURATION=22800,DAI_THUA_REVEAL=T.reveal;
+const DT_PALETTE={main:'#ffd98a',main2:'#cfe3ff',soft:'#fff6e4',gold:'#ffe7b0'};
+const clamp=x=>Math.max(0,Math.min(1,x));
+export function daiThuaState(k,H=1600,motion=true){const seconds=clamp(k)*T.duration;return {k:clamp(k),seconds,feet:H*.78,motion,revealed:seconds>=T.reveal,burst:seconds<T.impact?0:Math.exp(-(seconds-T.impact)*2.2),fade:1-clamp((seconds-T.fade)/1.2)};}
+// Bộ kiếm prestige dùng chung với Huyền Tiên — giữ nguyên API.
 export function sliceRitualSwords(im,factory=makeSurface){const w=(im.naturalWidth||im.width)/3,h=im.naturalHeight||im.height;return Array.from({length:3},(_,i)=>{const f=factory(512,1024);f?.getContext('2d').drawImage(im,i*w,0,w,h,0,0,512,1024);return f;});}
-export function prepareDaiThuaArt(scene){if(scene.ritualSwords||scene.ritualSwordsLoading||scene.ritualSwordsRetry>Date.now()||typeof Image==='undefined')return;scene.ritualSwordsLoading=true;const im=new Image();im.onload=()=>{scene.ritualSwords=sliceRitualSwords(im);scene.ritualSwordsLoading=false;};im.onerror=()=>{scene.ritualSwordsLoading=false;scene.ritualSwordsRetry=Date.now()+15000;};im.src='/assets/events-v1/prestige-swords-v1.png';}
-function blade(scene,c,x,y,length,angle,alpha,cell=0){if(alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(angle);const im=scene.ritualSwords?.[cell];if(im){c.globalCompositeOperation='screen';c.drawImage(im,-length*.25,-length*.5,length*.5,length);}else{const g=c.createLinearGradient(-8,0,8,0);g.addColorStop(0,'#8d92bc');g.addColorStop(.5,'#f9edda');g.addColorStop(1,'#859abd');c.fillStyle=g;c.beginPath();c.moveTo(0,-length*.5);c.lineTo(length*.06,-length*.34);c.lineTo(length*.04,length*.28);c.lineTo(-length*.04,length*.28);c.lineTo(-length*.06,-length*.34);c.closePath();c.fill();c.fillStyle='#d4be78';c.fillRect(-length*.12,length*.24,length*.24,length*.035);c.fillRect(-length*.02,length*.26,length*.04,length*.19);}c.restore();}
-export function swordPoint(s,i,count){const group=i%3,index=Math.floor(i/3),per=Math.ceil(count/3),clock=s.motion?s.seconds:0,u=ease((s.seconds-2-group*.6-index*.035)/.9),angle=index*TAU/per+group*.45+clock*(.14+group*.045)*s.orbit,r=(200+group*75)*(1-s.merge*.98),x=450+Math.cos(angle)*r,y=(s.center+Math.sin(angle)*r*.56)*(1-s.merge)+(s.feet-150)*s.merge;return {x,y,z:Math.sin(angle),angle:angle+Math.PI/2,alpha:u*(1-s.merge)*s.fade,length:80+group*13};}
-function swords(scene,c,s,front){const count=scene.budget?.level==='light'?24:72;for(let i=0;i<count;i++){const p=swordPoint(s,i,count);if((p.z>=0)!==front)continue;blade(scene,c,p.x,p.y,p.length,p.angle,p.alpha*.85,i%3===2?1:0);}}
-function gate(c,s,clock){if(!s.gate)return;const fade=s.gate*(1-ease((s.seconds-17)/2))*s.fade,x=450,y=s.center-70,r=215*(1-s.merge*.8);c.save();c.globalAlpha=fade;c.strokeStyle='#f2d69b';c.lineWidth=3;for(let i=0;i<3;i++)ring(c,x,y,r+i*17,(r+i*17)*1.05,i%2?'#a7d7ff':'#ead4a5',i?1.5:3);for(let i=0;i<12;i++){const a=i*TAU/12+clock*.08,draw=ease((s.seconds-9-i*.12)/.6);c.save();c.translate(x+Math.cos(a)*r,y+Math.sin(a)*r*1.05);c.rotate(a);c.globalAlpha=fade*draw;c.fillStyle=i%2?'#d5b8fb':'#e9dbac';c.fillRect(-8,-3,16,6);c.restore();}c.restore();}
-function swordIntent(c,s,clock,light){if(s.seconds<12)return;c.save();c.globalCompositeOperation='screen';const n=light?12:32,power=s.giant*(1-ease((s.seconds-19.2)/1))*s.fade;for(let i=0;i<n;i++){const u=(clock*.7+i/n)%1,a=i*2.399,r=(1-u)*330*(1-s.merge*.65),x=450+Math.cos(a)*r,y=s.feet-150+Math.sin(a)*r*.8;c.globalAlpha=Math.sin(u*Math.PI)*power*.8;c.strokeStyle=i%3?'#d0baf8':'#ffe9b5';c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(450+(x-450)*.78,s.feet-150+(y-(s.feet-150))*.78);c.stroke();}c.restore();}
-export function drawDaiThuaAwakening(scene,c,e,t,H){prepareDaiThuaArt(scene);const s=daiThuaState((t-e.start)/e.duration,H,scene.motion!==false),clock=s.motion?s.seconds:0,light=scene.budget?.level==='light';c.save();backdrop(c,H,['#060916','#1c1730','#0e1625']);const shake=s.motion&&scene.cameraEnabled!==false?s.burst*13:0;c.translate(Math.sin(clock*89)*shake,Math.cos(clock*77)*shake*.5);
- glow(c,450,s.center,500,'#9071c65c',s.awaken*.65);
- for(let i=0;i<3;i++){c.save();c.globalAlpha=ease((s.seconds-i*.3)/1.4)*s.fade*.55;ring(c,450,s.feet+40,190+i*67,45+i*16,i%2?'#ffe0a2':'#b9b2ef',2);c.restore();}
- gate(c,s,clock);swords(scene,c,s,false);
- // The central sword descends only after the three flights have completed their circuit.
- const giant=s.giant*(1-s.merge)*s.fade,gy=(s.center-80)*(1-s.merge)+(s.feet-150)*s.merge;
- if(giant>0){glow(c,450,gy,300,'#c4a8ef',giant*.25);blade(scene,c,450,gy,570*(1-s.merge*.9),Math.PI,giant,1);}
- actor(scene,c,e,7,s.revealed,s.feet);swords(scene,c,s,true);swordIntent(c,s,clock,light);
- if(s.merge>0&&!s.revealed)glow(c,450,s.feet-150,95+s.merge*70,'#e9d8ff',s.merge*.65);
- if(s.seconds>=19){const reduce=s.motion?1:.25;glow(c,450,s.feet-165,210+s.burst*360,'#f5eaff',s.burst*.8*reduce);for(let i=0;i<9;i++){const u=clamp((s.seconds-19-i*.09)/1.8);if(u<=0||u>=1)continue;c.save();c.globalAlpha=(1-u)*(.85-i*.065)*reduce;ring(c,450,i%2?s.feet+35:s.feet-165,60+ease(u)*680,(60+ease(u)*680)*(i%2?.25:.8),i%2?'#efd5a3':'#c6b7ff',5*(1-u)+1);c.restore();}}
- c.restore();return ritualHUD(scene,c,e,s,H,7,'Đại Thừa','#edd8ff',shake);}
+export function prepareDaiThuaArt(scene){if(scene.ritualSwords||scene.ritualSwordsLoading||scene.ritualSwordsRetry>Date.now()||typeof Image==='undefined')return;scene.ritualSwordsLoading=true;const im=new Image();im.onload=()=>{scene.ritualSwords=sliceRitualSwords(im);scene.ritualSwordsLoading=false;scene.daiThuaAssets=null;};im.onerror=()=>{scene.ritualSwordsLoading=false;scene.ritualSwordsRetry=Date.now()+15000;};im.src='/assets/events-v1/prestige-swords-v1.png';}
+export function daiThuaActorImage(scene,p,e){
+ if(scene.daiThuaActor?.event!==e)scene.daiThuaActor={event:e,frames:new Map()};
+ const cache=scene.daiThuaActor.frames;if(cache.has(p))return cache.get(p);
+ const im=makeSurface(640,760);if(!im)return null;const c=im.getContext('2d'),saved={targets:scene.targets,compact:scene.compact,ritualDrawing:scene.ritualDrawing,cinematicPose:scene.cinematicPose,characterFrames:scene.characterFrames};
+ Object.assign(scene,{targets:[{id:p.id,player:p,x:320,y:590,scale:4.2}],compact:true,ritualDrawing:true,characterFrames:null,cinematicPose:{stand:1,mode:'dai-thua-ritual',energy:0,left:0,right:0,lift:0,cloth:0,lean:0,head:0}});
+ try{scene.drawPlayer(c,p,320,590,0);}finally{Object.assign(scene,saved);}
+ cache.set(p,im);return im;
+}
+const snapshots=new WeakMap();
+export function daiThuaPlayers(scene,e){
+ if(snapshots.has(e))return snapshots.get(e);
+ const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user)||{id:e.user,name:e.name,giftCoins:0};
+ const pair={from:structuredClone(e.visualFrom||{...live,realm:6}),to:structuredClone(e.visualTo||{...live,realm:7})};snapshots.set(e,pair);return pair;
+}
+export function drawDaiThuaAwakening(scene,c,e,t,H){
+ prepareDaiThuaArt(scene);prepareDaiThuaWorld(scene);const s=daiThuaState((t-e.start)/e.duration,H,scene.motion!==false),sec=s.seconds,st=daiThuaFormationState(sec,H,s.motion);
+ const {from,to}=daiThuaPlayers(scene,e),p=s.revealed?to:from,v=qiVariant(e),kq=qiRemap(s.k,T.impact/T.duration),origin={x:450,y:st.belly};
+ const image=daiThuaActorImage(scene,p,e);
+ c.save();setFxPalette(DT_PALETTE);drawDtWorld(scene,c,st);
+ pushFxCamera(scene,c,kq,v,s.feet);
+ const strike=DT_STRIKES.reduce((m,a)=>Math.max(m,sec>=a?Math.exp(-(sec-a)*10)*3.5:0),0),shake=s.motion&&scene.cameraEnabled!==false?st.quake*5+strike+s.burst*9:0;
+ c.translate(Math.sin(sec*83)*shake,Math.cos(sec*71)*shake*.55);
+ drawDtRoad(scene,c,st,v);drawDtSalute(scene,c,st,v);drawDtSwords(scene,c,st,v,'back');
+ drawQiAura(scene,c,kq,origin,s.feet);drawQiImpact(scene,c,kq,H,origin,s.feet);drawDtBreak(scene,c,st,v);
+ // Nhân vật sau lớp nổ chung để mặt không bị phủ trắng.
+ if(image){c.save();c.globalAlpha=clamp(sec/.12);c.drawImage(image,130,s.feet-590);c.restore();}else scene.drawPlayer?.(c,p,450,s.feet,0);
+ drawDtSwords(scene,c,st,v,'front');drawDtTrial(scene,c,st,v);drawDtDive(scene,c,st);drawDtBody(scene,c,st);drawQiCompression(c,kq,origin);
+ c.restore();drawQiMotes(scene,c,kq,H);drawDtEdges(scene,c,st);c.restore();
+ const phase=s.revealed?'reveal':sec<T.river?'awaken':sec<T.bow?'river':sec<T.road?'homage':sec<T.trial?'road':sec<T.tower?'trial':sec<T.contract?'tower':'compression';
+ const ui={k:s.k,realm:7,phase,revealed:s.revealed,color:scene.ritualAppearance?.title||'#ffe2a8',title:'Đại Thừa',subtitle:'Vạn Kiếm Triều Tông',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake};
+ if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.textAlign='center';c.font='600 26px Arial';c.fillStyle='#fff1d6';c.fillText(ui.name,450,H*.1);if(s.revealed){c.font='700 44px Arial';c.fillText('ĐẠI THỪA',450,H*.145);}}
+ return ui;
+}

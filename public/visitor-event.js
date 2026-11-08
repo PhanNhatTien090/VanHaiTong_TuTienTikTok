@@ -1,10 +1,12 @@
 import {drawShendeVisitor} from './shende-art.js';
 export const VISITORS=Object.freeze({
- hailam:{name:'Long Duệ Hải Lam',title:'LONG DUỆ HẢI LAM GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên nhận miễn phí · cộng dồn 100 coin mở skin Hải Lam vĩnh viễn · 300 coin nhận Hải Lam Long Tâm',color:'#69dcff'},
- doraemon:{name:'Doraemon',title:'DORAEMON GHÉ THĂM TÔNG MÔN',cell:3,how:'coduyen nhận bảo bối miễn phí · tổng 100 coin skin, 300 coin thêm Cánh Cửa Thần Kỳ',color:'#7de7ff'},
- shende:{name:'Thần Đế',title:'THẦN ĐẾ GIÁNG LÂM',cell:2,how:'Quà cộng dồn: 100 coin skin · 300 coin cả skin và Đạo Ấn · coduyen nhận cơ duyên miễn phí',color:'#ffd49a'},
- hanlap:{name:'Hàn Lập',title:'HÀN LẬP BAN CƠ DUYÊN',cell:1,how:'Gõ coduyen · nhận 1 pháp bảo miễn phí',color:'#a5f0cf'},
- vuonglam:{name:'Vương Lâm',title:'VƯƠNG LÂM TRUYỀN ĐẠO',cell:0,how:'Gõ coduyen rồi cùng tu luyện, thả tim để mở thưởng',color:'#d4c2ff'}
+ hailam:{name:'Long Duệ Hải Lam',title:'LONG DUỆ HẢI LAM GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#69dcff'},
+ doraemon:{name:'Doraemon',title:'DORAEMON GHÉ THĂM TÔNG MÔN',cell:3,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#7de7ff'},
+ shende:{name:'Thần Đế',title:'THẦN ĐẾ GIÁNG LÂM',cell:2,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ffd49a'},
+ hanlap:{name:'Hàn Lập',title:'HÀN LẬP BAN CƠ DUYÊN',cell:1,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#a5f0cf'},
+ tudo:{name:'Tư Đồ Ma Tôn',title:'TƯ ĐỒ MA TÔN GIÁNG THẾ',cell:2,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff6a5a'},
+ khuyniet:{name:'Khuy Niết Lôi Tôn',title:'KHUY NIẾT LÔI TÔN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#c69bff'},
+ vuonglam:{name:'Vương Lâm',title:'VƯƠNG LÂM TRUYỀN ĐẠO',cell:0,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#d4c2ff'}
 });
 export const VISITOR_RELICS=Object.freeze([
  {id:'visitor-jade-sword',name:'Thanh Trúc Phi Kiếm',cell:0,damage:36,bonus:.22},

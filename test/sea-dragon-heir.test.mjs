@@ -15,7 +15,7 @@ test('Hải Lam is a five-minute event: free claim, exact fixed gift thresholds,
 });
 test('owned skin respects manual outfit choice, excludes simulated NPCs and ends without accepting late gifts',()=>{
  const w=createWorld('live');const p=ensurePlayer(w,'a','An',N);p.skinChoice='ivory-celestial';p.skinChoiceSource='manual';startVisitor(w,'hailam',N);
- action(w,{type:'gift',userId:'a',gift:'Rose',coins:100,count:1,eventId:'g'},N+1000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(p.skinChoice,'ivory-celestial');
+ action(w,{type:'gift',userId:'a',gift:'Rose',coins:100,count:1,eventId:'g'},N+1000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(p.skinChoice,SEA_SKIN,'mua skin sự kiện thì mặc ngay');
  const b=ensurePlayer(w,'b','B',N);action(w,{type:'gift',userId:'b',gift:'Rose',coins:100,count:1,eventId:'late'},N+300001);assert.ok(!(b.rewardSkins||[]).includes(SEA_SKIN));
 });
 test('four real alpha sprites, cloth motion, glints and the miniature orbit render without player mutation',async()=>{

@@ -39,3 +39,10 @@ test('HUD updates colors for another variant of the same named person and clears
  const old=globalThis.document,nodes={'.ritual-name':{},h2:{},'.ritual-sub':{}},values={},hud={dataset:{},style:{setProperty(k,v){values[k]=v;}},querySelector:k=>nodes[k]};globalThis.document={createElement:()=>hud};
  try{const scene={};mountRitualHud({appendChild(){}},scene);scene.onRitualFrame({name:'A',revealed:true,title:'Kim Đan',realm:3,color:'#aabbcc',accent:'#ffeedd',appearanceKey:'first'});assert.equal(hud.dataset.appearance,'first');scene.onRitualFrame({name:'A',revealed:true,title:'Kim Đan',realm:3,color:'#bbccdd',accent:'#ddccbb',appearanceKey:'second'});assert.equal(hud.dataset.appearance,'second');assert.equal(values['--ritual-color'],'#bbccdd');scene.onRitualFrame({name:'A',revealed:true,title:'Luyện Hư',realm:6,color:'#ffffff'});assert.equal(hud.dataset.appearance,undefined);}finally{globalThis.document=old;}
 });
+test('early realms (Luyện Khí–Kim Đan) never repeat backdrop, grade, weather or accent back to back, and cover many combinations',()=>{
+ for(const realm of [1,2,3]){const list=Array.from({length:40},(_,i)=>ritualAppearance({id:'early-'+realm+'-'+i,user:'u'+i,toRealm:realm}));
+  for(let i=1;i<list.length;i++){const a=list[i-1],b=list[i];assert.notEqual(a.backdropIndex,b.backdropIndex);assert.notEqual(a.grade,b.grade);assert.notEqual(a.weather,b.weather);assert.notEqual(a.audio.accent,b.audio.accent);assert.notEqual(a.colorIndex,b.colorIndex);}
+  assert.ok(new Set(list.map(a=>a.backdropIndex)).size>=8);assert.ok(new Set(list.map(a=>a.grade)).size>=8);assert.ok(new Set(list.map(a=>a.mirror)).size===2);
+  for(const a of list){assert.ok(a.zoom>=1&&a.zoom<=1.1);assert.ok(Math.abs(a.dy)<=(a.zoom-1)*1600*.36+1e-9);assert.ok(a.audio.gain>1);}}
+ const later=ritualAppearance({id:'later',user:'x',toRealm:4});assert.equal(later.backdropIndex,undefined);assert.equal(later.mirror,undefined);
+});

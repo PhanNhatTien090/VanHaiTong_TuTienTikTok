@@ -28,7 +28,7 @@ export function raceBoost(w,p,now,units,c,source='free'){if(!Number.isSafeIntege
  if(source==='gift'){const d=Math.min(GIFT_RACE_MAX-(r.giftDist||0),Math.round(Math.max(0,Number(units)||0)*GIFT_RACE_PER_COIN));if(d<=0)return 0;r.giftDist=(r.giftDist||0)+d;r.giftBoosts=Math.round(r.giftDist/GIFT_RACE_STEP);r.bonus+=d;r.boostUntil=now+6000;r.lastBoostAt=now;settle(r,now);return d;}const n=Math.max(0,Math.floor(Number(units)||0));if(!n)return 0;r.boosts+=n;r.bonus+=n*18;r.boostUntil=now+4200;r.lastBoostAt=now;settle(r,now);return n;}
 function settle(r,now){if(!r.finishAt&&(now-r.startedAt)/1000*r.speed+r.bonus>=1000)r.finishAt=Math.max(r.lastBoostAt||r.startedAt,r.startedAt+(1000-r.bonus)/r.speed*1000);}
 export function raceCommand(w,p,cmd,now,c,rest=''){
- if(cmd==='phikiem'){const skin=RACE_SWORD_SKINS[Number(rest)-1];if(!skin||!p.raceSwordSkins?.includes(skin.id))return {ok:false,message:'Gõ phi kiếm 1 / 2 / 3 để chọn skin Thương Long / Tinh Hà / Băng Liên đã sở hữu.'};p.raceSwordChoice=skin.id;announce(w,p,'Đã chọn skin phi kiếm '+skin.name,now,c);return {ok:true};}
+ if(cmd==='phikiem'){const skin=RACE_SWORD_SKINS[Number(rest)-1];if(!skin||!p.raceSwordSkins?.includes(skin.id))return {ok:false,message:'Gõ phi kiếm 1 / 2 / 3 / 4 để chọn skin Thương Long / Tinh Hà / Băng Liên / Cửu Thiên đã sở hữu.'};p.raceSwordChoice=skin.id;announce(w,p,'Đã chọn skin phi kiếm '+skin.name,now,c);return {ok:true};}
 
  if(!['dua','duakiem','bay','baykiem','tangtoc'].includes(cmd)&&!(cmd==='danh'&&w.race?.phase==='running'))return;
  // v65: lệnh chính là "bay" (dua vẫn dùng được). "bay" là từ thường nên ngoài lúc tuyển thì bỏ qua, không báo lỗi.
@@ -43,7 +43,7 @@ export function tickRace(w,now,c){const e=w.race;if(!e)return;if(e.phase==='queu
 }
 // Gifts during registration/racing: top 3 permanent cosmetics, top 5 cultivation, awarded once after a completed heat.
 export const RACE_GIFT_PRIZES=Object.freeze([
- {skin:'race-emperor',name:'Thương Long Đế Kiếm',qi:5000,stones:600},
+ {skin:'race-cuu-thien',name:'Cửu Thiên Lưu Ly Kiếm',qi:5000,stones:600},
  {skin:'race-moon',name:'Tinh Hà Nguyệt Kiếm',qi:3000,stones:300},
  {skin:'race-frost',name:'Băng Liên Thần Kiếm',qi:1500,stones:150},
  {qi:800,stones:80},{qi:500,stones:50}]);

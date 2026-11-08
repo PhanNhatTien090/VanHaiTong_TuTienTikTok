@@ -25,7 +25,7 @@ export function honorRoll(world,players=Object.values(world.players||{})){
 }
 export function honorTitle(p,roll=[]){
  if(p.resident||p.puppet)return null;
- if(p.sectMasterUnlocked)return {title:'TÔNG CHỦ',frame:1,rank:30,role:'sect-master'};
+ if(p.sectMasterUnlocked&&p.sectMasterGiftAt)return {title:'TÔNG CHỦ',frame:1,rank:30,role:'sect-master'};
  const h=roll.find(h=>h.id===p.id);if(h)return h;
  // v56: danh hiệu đa dạng theo cảnh giới và coin quà tích lũy — lấy cái cao hơn (quà lớn thắng cảnh giới thấp).
  const g=Number(p.giftCoins)||0,r=Number(p.realm)||0;

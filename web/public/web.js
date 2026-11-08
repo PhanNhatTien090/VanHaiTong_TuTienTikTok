@@ -25,6 +25,10 @@ async function api(path, body) {
   try { data = await res.json(); } catch {}
   if (!res.ok && data.ok === undefined) data.ok = false;
   data.status = res.status;
+  if(data.code==='PLAY_SESSION_CONFLICT'&&session?.user){
+    clearInterval(pollTimer);updateStream?.close();
+    show('#authView');$('#authError').textContent=data.message;
+  }
   return data;
 }
 
@@ -45,6 +49,7 @@ function show(id) {
 async function boot() {
   session = await api('/api/session');
   route();
+  if(session.code==='PLAY_SESSION_CONFLICT')$('#authError').textContent=session.message;
 }
 function route() {
   clearInterval(pollTimer);
@@ -225,7 +230,7 @@ async function startGame() {
   pollTimer = setInterval(()=>{if(!document.hidden && (!updateStream || Date.now()-streamAt>30000)){refresh();refreshPlaza();refreshLiveFeed();}},15000);
   document.body.classList.toggle('profile-only',!!session.readOnly);
   if(!$('#webStatus')){const status=document.createElement('div');status.id='webStatus';status.className='web-status';$('#gameView').appendChild(status);}
-  $('#webStatus').textContent=session.readOnly?'Đang mở chế độ xem hồ sơ':'';
+  $('#webStatus').textContent=session.readOnly?'Đang mở chế độ xem hồ sơ':'Đang chơi web · LIVE tạm khóa nhân vật. Đăng xuất để trở lại LIVE.';
 }
 
 // Trang chủ tông môn (PixiJS). Bấm công trình → mở đúng khu.
@@ -510,7 +515,7 @@ async function refresh() {
   me = r;
 
   render();
-  if($('#webStatus')){const s=await api('/api/site-status');$('#webStatus').textContent=s.cloud?(s.liveConnected?'Đang xem hồ sơ · LIVE đang kết nối':`Đang xem hồ sơ · ${s.lastSyncAt?'Cập nhật '+new Date(s.lastSyncAt).toLocaleTimeString('vi-VN'):'Đang chờ dữ liệu LIVE'}`):'Đang mở chế độ xem hồ sơ';}
+  if($('#webStatus')){const s=await api('/api/site-status');$('#webStatus').textContent=!s.readOnly?'Đang chơi web · LIVE tạm khóa nhân vật. Đăng xuất để trở lại LIVE.':s.cloud?(s.liveConnected?'Đang xem hồ sơ · LIVE đang kết nối':`Đang xem hồ sơ · ${s.lastSyncAt?'Cập nhật '+new Date(s.lastSyncAt).toLocaleTimeString('vi-VN'):'Đang chờ dữ liệu LIVE'}`):'Đang mở chế độ xem hồ sơ';}
   })();
   try{return await refreshPromise;}finally{refreshPromise=null;}
 }
@@ -746,3 +751,6 @@ new MutationObserver(lockButtons).observe($('#profileSheet'),{childList:true,sub
 new MutationObserver(lockButtons).observe($('#gpBody'),{childList:true,subtree:true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden && me?.player){refresh();refreshPlaza();refreshLiveFeed();}});
 boot();
+
+// Closing/hiding the tab lets the exclusive play session time out safely.
+setInterval(()=>{if(session?.user&&!session.readOnly&&!document.hidden)api('/api/play/heartbeat',{});},30000);

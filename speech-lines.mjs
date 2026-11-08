@@ -52,9 +52,11 @@ export function speechPlan(e){
   if(e.engagementAction==='follow')return [say('tongsu',Who+' vừa theo dõi tông môn. Chào mừng đồng môn!')];
   if(e.engagementAction==='share')return [say('tongsu','Cảm ơn '+who+' vừa chia sẻ buổi LIVE!')];
   const sys=!e.user;
-  if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ cơ duyên nhận quà miễn phí. Long bào Hải Lam rực sáng, tiểu long luôn bay quanh hộ thân.')];
-  if(e.visitorStart&&e.visitorKind==='doraemon')return [say('tiennu','Doraemon đã tới tông môn!'),say('tongsu','Gõ cơ duyên để nhận một bảo bối miễn phí. Cùng khám phá túi thần kỳ nhé!')];
-  if(e.visitorStart){const name=({hanlap:'Hàn Lập',vuonglam:'Vương Lâm',shende:'Thần Đế'})[e.visitorKind]||titleCase(head.replace(/BAN CƠ DUYÊN|TRUYỀN ĐẠO|GIÁNG LÂM/g,''));return [say('tiennu',name+' giáng lâm Vân Hải Tông!'),say('tongsu',e.visitorKind==='vuonglam'?'Gõ cơ duyên rồi cùng tu luyện, thả tim để mở truyền thừa.':'Gõ cơ duyên để nhận phần thưởng miễn phí trong sự kiện.')];}
+  if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='tudo')return [say('tiennu','Tư Đồ Ma Tôn giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='khuyniet')return [say('tiennu','Khuy Niết Lôi Tôn giáng thế, thiên lôi nổ vang!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='doraemon')return [say('tiennu','Doraemon đã tới tông môn!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart){const name=({hanlap:'Hàn Lập',vuonglam:'Vương Lâm',shende:'Thần Đế'})[e.visitorKind]||titleCase(head.replace(/BAN CƠ DUYÊN|TRUYỀN ĐẠO|GIÁNG LÂM/g,''));return [say('tiennu',name+' giáng lâm Vân Hải Tông!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];}
   if(e.lanternStart||e.lanternEnd||e.lanternLit||e.lanternBloom)return [say('tiennu',text.replace(/•/g,'. '))];
   if(e.togetherInvite||e.togetherStart||e.togetherDone||e.guardJoin||e.guardSuccess)return [say('tongsu',text.replace(/•/g,'. '))];
   if(e.petStart)return [say('tiennu','Linh Thú Cốc đã mở!'),say('tongsu','Thả một trăm tim kết bạn Ngọc Thố. Gõ thú để xem tiến độ, linh thú sẽ đồng hành cùng đạo hữu.')];
@@ -135,6 +137,24 @@ export function speechPlan(e){
   if(e.effect==='attack')return [say('trongtai',e.technique?.name?`${Who} thi triển ${e.technique.name}!`:`${Who} xuất chiêu!`)];
   // ----- đua phi kiếm -----
   if(e.effect==='race'&&e.raceGiftRank){const rank=['','nhất','nhì','ba','tư','năm'][e.raceGiftRank]||e.raceGiftRank;return [say('tiennu',`Quà đua hạng ${rank} thuộc về ${who}!`),say('tongsu',`${e.raceSwordSkin?'Trao skin phi kiếm '+e.itemNames[0]+' vĩnh viễn, cùng ': 'Ban '}${roundSay(e.reward?.qi)} tu vi!`)];}
+  // ----- Khai Lò Cửu Chuyển (08/11): chỉ đọc 4 mốc, câu ngắn; còn lại để hình tự nói -----
+  if(e.effect==='alchemy'){
+    const g=['','nhất phẩm','nhị phẩm','tam phẩm','tứ phẩm','ngũ phẩm','lục phẩm','thất phẩm','bát phẩm','cửu phẩm'];
+    if(e.alchemyStart)return [say('tongsu',pickBy(seed,['Khai lò luyện đan! Thả tim giữ lửa trong vùng vàng. Nóng quá thì tặng hoa hồng dập lửa!','Đan lô khai hỏa! Lửa vừa đủ thì đan thành, quá tay là nổ lò!','Luyện đan nào! Giữ lửa vùng vàng, sắp nổ thì hoa hồng cứu lò!']))];
+    if(e.alchemyTribStart)return [say('tiennu',pickBy(seed,['Đan kiếp giáng! Thả tim giữ đan!','Thiên lôi thử đan! Thả tim giữ kết giới!']))];
+    if(e.alchemyExplode){const n=sayName(e.alchemyCulprit);return [say('tongsu',n?pickBy(seed,[`Bùm! Nổ lò rồi! ${n} quạt tay quá!`,`Nổ lò! ${n} thổi lửa mạnh quá rồi!`]):'Bùm! Nổ lò rồi! Lần sau nhẹ tay nhé!')];}
+    if(e.alchemyEnd){const n=sayName(e.alchemyMaster);return [say('tongsu',`Đan thành, ${g[e.alchemyEnd]||'đan dược'}!`+(n?` Đan sư ${n}!`:''))];}
+    return [];
+  }
+  if(e.effect==='war'){
+    if(e.warStart)return [say('trongtai','Chính Ma Đại Chiến mở tuyển quân! Gõ chính để vào Chính Đạo, gõ ma để vào Ma Đạo!')];
+    if(e.warBattle)return [say('tongsu','Khai chiến! Thả tim đẩy chiến tuyến, gõ chiến để xuất chiêu!')];
+    if(e.warOmen)return [say('tiennu',text.replace(/•/g,'. '))];
+    if(e.warRescue)return [say('tongsu',(e.warRescue==='chinh'?'Hạo Nhiên Chính Khí! Chính Đạo':'Ma Hồn Bất Diệt! Ma Đạo')+' phản kích!')];
+    if(e.warEnd)return [say('trongtai',e.warEnd==='draw'?'Bất phân thắng bại! Hai phe cùng nhận thưởng!':(e.warEnd==='chinh'?'Chính Đạo':'Ma Đạo')+' đại thắng!'),...(e.warEnd!=='draw'&&e.warLead?[say('tongsu',`Vinh danh ${sayName(e.warLead)||'đạo hữu'} dẫn đầu phe thắng! Cả phe nhận tu vi và linh thạch, phe thua cũng được ban thưởng an ủi!`)]:[])];
+    if(e.warGeneral)return [say('tongsu',`${Who} là ${e.warGeneral==='chinh'?'Chính Đạo Minh Chủ':'Ma Đạo Tôn Chủ'}!`)];
+    if(e.warJoin)return [];
+  }
   if(e.effect==='race'){
     if(/^VÂN HẢI PHI KIẾM/.test(text))return [say('trongtai','Vân Hải Phi Kiếm mở tuyển! Gõ bay để lên đường đua, còn bốn mươi lăm giây! Top ba hộ pháp nhận skin phi kiếm vĩnh viễn, top năm nhận tu vi!')];
     if(/^Phi kiếm xuất phát/.test(text))return [say('trongtai','Phi kiếm xuất phát! Gõ đánh để bứt tốc, linh lực giúp phi kiếm lao vọt lên! Top ba hộ pháp nhận skin phi kiếm, top năm nhận tu vi!')];

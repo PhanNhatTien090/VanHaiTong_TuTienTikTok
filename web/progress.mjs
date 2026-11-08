@@ -2,7 +2,7 @@
 // Dữ liệu nằm trong player.web, không đổi các trường LIVE (trừ việc chọn linh thú đồng hành đã sở hữu,
 // vốn là lệnh có sẵn trên LIVE).
 import { CATALOG, power, REALMS } from '../engine.mjs';
-import { SPIRIT_PETS, petById } from '../public/spirit-pets.js';
+import { SPIRIT_PETS, ALL_PETS, petById } from '../public/spirit-pets.js';
 import { vnDay } from './game-view.mjs';
 
 export const MATS = {
@@ -64,7 +64,7 @@ export function petView(p) {
   return {
     chosen: p.spiritPet || null,
     food: mats(p)['linh-qua'] || 0,
-    pets: SPIRIT_PETS.map(x => ({ id: x.id, name: x.name, rank: x.rank, color: x.color, owned: owned.has(x.id), level: petLevel(p, x.id), max: PET_MAX, feedCost: petFeedCost(petLevel(p, x.id)), power: Math.round(((PET_RANK[x.id] || 0.25) + 0.02 * petLevel(p, x.id)) * 100), hearts: x.hearts, coins: x.coins })),
+    pets: ALL_PETS.filter(x => !x.rare || owned.has(x.id)).map(x => ({ id: x.id, name: x.name, rank: x.rank, color: x.color, owned: owned.has(x.id), level: petLevel(p, x.id), max: PET_MAX, feedCost: petFeedCost(petLevel(p, x.id)), power: Math.round(((PET_RANK[x.id] || 0.25) + 0.02 * petLevel(p, x.id)) * 100), hearts: x.hearts, coins: x.coins })),
   };
 }
 export function feedPet(p, id) {

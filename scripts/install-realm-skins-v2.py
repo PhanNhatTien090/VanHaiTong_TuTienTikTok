@@ -12,9 +12,9 @@ SOURCE = ROOT / 'output/realm-skins-v2'
 DEST = ROOT / 'public/assets/realm-skins-v2'
 REALMS = [(0,'pham-nhan'),(1,'luyen-khi'),(2,'truc-co'),(3,'kim-dan'),(4,'nguyen-anh'),(5,'hoa-than'),(14,'dao-to'),(15,'thien-ton'),(16,'than-quan'),(17,'than-vuong'),(18,'than-de'),(19,'than-ton'),(20,'than-to'),(21,'hong-mong-chi-ton')]
 VARIANTS = ['male-standing','female-standing','male-seated','female-seated']
-# Only the redesigned v3 Dragon Armor concept is approved for god realm 16.
-# Other v2 god drafts stay inactive until review.
-APPROVED_REALMS = {0, 1, 2, 3, 4, 5, 16}
+# User requested applying the redesigned god sets on 2026-11-06.
+# Only complete v3 sets may install; rejected v2 god drafts remain inactive.
+APPROVED_REALMS = {0, 1, 2, 3, 4, 5, 16, 17, 18, 19, 20, 21}
 
 def atomic_text(path, text):
     tmp = path.with_name(path.name + '.tmp')
@@ -32,7 +32,7 @@ manifest = {}
 for realm, slug in REALMS:
     if realm not in APPROVED_REALMS:
         continue
-    version = 'realm-skins-v3' if realm == 16 else 'realm-skins-v2'
+    version = 'realm-skins-v3' if realm >= 16 else 'realm-skins-v2'
     source = ROOT / 'output' / version
     dest = ROOT / 'public/assets' / version
     if not all((source / slug / (v+'-v1.png')).is_file() for v in VARIANTS):

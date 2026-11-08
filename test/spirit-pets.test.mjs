@@ -1,9 +1,9 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {createWorld,action,controlPetEvent,tick,snapshot} from '../engine.mjs';
-import {SPIRIT_PETS,petPose} from '../public/spirit-pets.js';
+import {SPIRIT_PETS,ALL_PETS,RARE_PETS,petPose} from '../public/spirit-pets.js';
 import {announcement} from '../speech.mjs';
 const N=1800000000000;
-function world(){const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});Object.assign(w.settings,{autoEvents:false,blessingMinutes:0,ceremony:false});w.nextBossAt=N+1e9;return w;}
+function world(){const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});Object.assign(w.settings,{autoEvents:false,blessingMinutes:0,ceremony:false,rarePets:false});w.nextBossAt=N+1e9;return w;}
 const like=(w,n,t=N+1)=>action(w,{type:'like',userId:'a',name:'An',count:n},t);
 const gift=(w,n,id='g',t=N+2)=>action(w,{type:'gift',userId:'a',name:'An',coins:n,eventId:id},t);
 test('event hearts accumulate through XP cooldown, unlock once and survive reload',()=>{
@@ -29,4 +29,20 @@ test('manual selection respects ownership and persists; unknown IDs cannot equip
  let w=world();controlPetEvent(w,'start',N);like(w,400);const chat=(text,t)=>action(w,{type:'chat',userId:'a',text},t);
  assert.equal(chat('thu 5',N+10000).ok,false);assert.equal(w.players.a.spiritPet,'ember-fox');assert.equal(chat('thu 1',N+20000).ok,true);w=JSON.parse(JSON.stringify(w));assert.equal(w.players.a.spiritPet,'jade-rabbit');chat('thu an',N+30000);assert.equal(w.players.a.spiritPet,null);
  assert.notDeepEqual(petPose(1000),petPose(2000));assert.deepEqual(petPose(1000,0,false),petPose(9000,0,false));assert.equal(SPIRIT_PETS.length,5);
+});
+test('each pet cove features one rare beast with art; Loi Oa costs 200 coin, equips first and is callable as pet 6',()=>{
+ const w=world();w.settings.rarePets=true;controlPetEvent(w,'start',N);const rare=w.petEvent.featured;assert.ok(RARE_PETS.some(p=>p.id===rare));const slot=String(ALL_PETS.findIndex(p=>p.id===rare)+1);
+ assert.ok(snapshot(w,N+1).petEvent.rules.some(p=>p.id===rare));
+ gift(w,199);assert.equal(w.players.a.spiritPets.includes(rare),false);gift(w,1,'g2');
+ assert.equal(w.players.a.spiritPet,rare);assert.ok(w.players.a.spiritPets.includes('astral-dragon'));
+ assert.equal(action(w,{type:'chat',userId:'a',text:'thu 5'},N+10000).ok,true);assert.equal(w.players.a.spiritPet,'astral-dragon');
+ assert.equal(action(w,{type:'chat',userId:'a',text:'thu '+slot},N+20000).ok,true);assert.equal(w.players.a.spiritPet,rare);
+});
+test('rare beasts can be switched off and never appear outside their own event',()=>{
+ const w=world();controlPetEvent(w,'start',N);assert.equal(w.petEvent.featured,null);gift(w,1000);assert.equal(w.players.a.spiritPets.includes('loi-oa'),false);
+});
+test('quản lý gỡ linh thú: removePets gỡ đúng con, linh thú đang dẫn chuyển sang con còn lại',async()=>{
+ const {createWorld,ensurePlayer,adminEditPlayer}=await import('../engine.mjs');const w=createWorld('live');const p=ensurePlayer(w,'u1','A',1e12);
+ p.spiritPets=['jade-rabbit','loi-oa','van-thu','ky-lan'];p.spiritPet='van-thu';const r=adminEditPlayer(w,'u1',{removePets:['loi-oa','van-thu']},1e12);
+ assert.equal(r.ok,true);assert.deepEqual(p.spiritPets,['jade-rabbit','ky-lan']);assert.equal(p.spiritPet,'ky-lan');
 });

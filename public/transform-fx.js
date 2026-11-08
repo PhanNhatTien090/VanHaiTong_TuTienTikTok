@@ -6,7 +6,7 @@ const TAU=Math.PI*2;
 const clamp=v=>Math.max(0,Math.min(1,v)),ease=k=>1-(1-clamp(k))**3;
 const hex=a=>Math.round(255*clamp(a)).toString(16).padStart(2,'0');
 const rnd=i=>{const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);};
-const STYLE={hailam:{a:'#4fcaff',b:'#e1fbff',dark:'#07142f',mist:'#184b79'},doraemon:{a:'#61dbff',b:'#fff6bb',dark:'#061a31',mist:'#164a6d'},shende:{a:'#ffb15d',b:'#fff2c6',dark:'#260b13',mist:'#633123'},vuonglam:{a:'#a46bff',b:'#efe2ff',dark:'#1a0b2e',mist:'#3a1d63'},hanlap:{a:'#4fe0a0',b:'#eafff4',dark:'#06281c',mist:'#164a37'}};
+const STYLE={khuyniet:{a:'#a45bff',b:'#ffe7a0',dark:'#0e0418',mist:'#2c1050'},tudo:{a:'#ff3b2f',b:'#ffd0a8',dark:'#1a0306',mist:'#5c0a14'},hailam:{a:'#4fcaff',b:'#e1fbff',dark:'#07142f',mist:'#184b79'},doraemon:{a:'#61dbff',b:'#fff6bb',dark:'#061a31',mist:'#164a6d'},shende:{a:'#ffb15d',b:'#fff2c6',dark:'#260b13',mist:'#633123'},vuonglam:{a:'#a46bff',b:'#efe2ff',dark:'#1a0b2e',mist:'#3a1d63'},hanlap:{a:'#4fe0a0',b:'#eafff4',dark:'#06281c',mist:'#164a37'}};
 function glow(c,x,y,r,color,a){if(r<=0||a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+hex(a));g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
 function leaf(c,len,w,color){c.fillStyle=color;c.beginPath();c.moveTo(0,-len/2);c.quadraticCurveTo(w,0,0,len/2);c.quadraticCurveTo(-w,0,0,-len/2);c.fill();}
 function sword(c,len,color){c.fillStyle=color;c.beginPath();c.moveTo(-1.6,-len*.55);c.lineTo(1.6,-len*.55);c.lineTo(2.2,len*.3);c.lineTo(0,len*.45);c.lineTo(-2.2,len*.3);c.closePath();c.fill();c.fillRect(-5,-len*.38,10,1.8);}
@@ -46,5 +46,17 @@ export function drawTransform(c,e,t,k,p,H,layer='front'){
   // vệt kiếm / hồn phiên bắn tỏa sau khi lộ hình
   if(k>REVEAL_AT){const w=ease((k-REVEAL_AT)/.35);for(let i=0;i<12;i++){const a=i*TAU/12,R=(60+w*220)*sc;c.save();c.translate(x+Math.cos(a)*R,cy+Math.sin(a)*R*.7);c.rotate(a+Math.PI/2);c.globalAlpha=fade*(1-w)*.9;
     if(kind==='hanlap')sword(c,46*sc,s.b);else{c.fillStyle=s.a;c.fillRect(-3*sc,-24*sc,6*sc,48*sc);c.fillStyle=s.b;c.fillRect(-1*sc,-24*sc,2*sc,48*sc);}c.restore();}}
+  if(kind==='khuyniet')drawKhuyDescent(c,t,k,x,cy,feet,sc,H,fade);
   c.restore();
+}
+// Khuy Niết Lôi Tôn giáng thế: màn chia đôi vàng (Dương Thực) / tím (Âm Hư), thiên lôi dồn xuống người, chữ lớn hai nhịp.
+function drawKhuyDescent(c,t,k,x,cy,feet,sc,H,fade){
+  c.save();c.globalCompositeOperation='screen';const split=k<REVEAL_AT?ease(k/.15):1-ease((k-REVEAL_AT)/.4);
+  c.fillStyle='#ffb53a'+hex(.22*split);c.fillRect(0,0,450,H);c.fillStyle='#9a4dff'+hex(.26*split);c.fillRect(450,0,450,H);
+  // thiên lôi: mỗi 0,06 k một tia, trái vàng phải tím; dày đặc nhất ngay trước lúc lộ hình
+  if(k<REVEAL_AT+.1){const key=Math.floor(k*50);c.lineCap='round';for(let j=0;j<3;j++){const seed=key*3+j,left=seed%2===0,sx=x+(rnd(seed)-.5)*500,col=left?'#ffc23a':'#b06bff';let px=sx,py=0;c.strokeStyle=col+hex(.9*fade);c.lineWidth=(5+rnd(seed+1)*4)*sc*.6;c.beginPath();c.moveTo(px,py);
+    for(let i=1;i<=10;i++){px=sx+(x-sx)*i/10+(rnd(seed*11+i)-.5)*70;py=(cy-30*sc)*i/10;c.lineTo(px,py);}c.stroke();c.strokeStyle='#ffffff'+hex(.9*fade);c.lineWidth=2*sc*.6;c.stroke();}}
+  c.restore();
+  const word=(txt,a,b,y,size,col)=>{if(k<a||k>b)return;const u=clamp((k-a)/.05),f=1-clamp((k-b+.06)/.06);c.save();c.globalAlpha=fade*f;c.textAlign='center';c.textBaseline='middle';c.translate(450,y);c.scale(1.6-.6*u,1.6-.6*u);c.font='900 '+size+'px "Times New Roman", serif';c.lineWidth=9;c.strokeStyle='#14051f';c.strokeText(txt,0,0);c.fillStyle=col;c.fillText(txt,0,0);c.restore();};
+  word('ÂM HƯ – DƯƠNG THỰC',.06,REVEAL_AT,H*.2,58,'#ffd36a');word('KHUY NIẾT',REVEAL_AT,.92,H*.17,104,'#d9b8ff');word('LÔI TÔN GIÁNG THẾ',REVEAL_AT+.04,.92,H*.17+92,50,'#ffe7a0');
 }

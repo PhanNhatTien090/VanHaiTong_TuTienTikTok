@@ -17,7 +17,7 @@ export function railPages(s){
   pages.push({title:'LỆNH KHÁC',rows:[
     {cmd:'tu vi',text:s.settings?.ascensionShowcase===true?'Xem điều kiện đột phá · không cần quà':'Xem tu vi còn thiếu · Tiên Đế cần tổng quà 100 coin'},{cmd:'gợi ý',text:'Tông sư chỉ việc tiếp theo'},{cmd:'giới tính nam/nữ',text:'Đổi xưng hô'},
     {cmd:'cơ duyên',text:'Xem tiến độ cơ duyên'},{cmd:'skin + tên · skin mặc định',text:'Mặc skin đã có · về áo cảnh giới'}]});
-  if(s.petEvent?.active)pages.unshift({title:'LINH THÚ CỐC',rows:[{cmd:'thú',text:'Xem tiến độ và thú đã có'},{cmd:'thú 1–5',text:'Đổi linh thú đã mở khóa'},{cmd:'thú ẩn',text:'Cho linh thú nghỉ ngơi'}]});
+  if(s.petEvent?.active)pages.unshift({title:'LINH THÚ CỐC',rows:[{cmd:'thú',text:'Xem tiến độ và thú đã có'},{cmd:'thú 1–'+(s.petEvent?.featured?8:5),text:'Đổi linh thú đã mở khóa'},{cmd:'thú ẩn',text:'Cho linh thú nghỉ ngơi'}]});
   // v53: các mốc cảnh giới — tu vi + linh thạch cần để lên, và áo/hào quang đi kèm.
   const short=n=>n>=1e6?(n/1e6).toFixed(n>=1e7?0:1).replace('.',',')+' triệu':n>=1e4?Math.round(n/1e3)+'K':new Intl.NumberFormat('vi-VN').format(n);
   const LOOK=['','','','Áo vàng','Áo vàng','Áo đỏ Xích Phượng','Áo đỏ Xích Phượng','Áo Thương Long','Thương Long','+ vầng sáng sau đầu','+ đài sen vàng','+ cánh ánh sáng','+ 6 phi kiếm hộ thân','+ thiên quang chín màu'];

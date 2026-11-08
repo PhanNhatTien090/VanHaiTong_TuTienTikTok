@@ -77,9 +77,9 @@ function startQuiz(w,now,c){const used=w.quizUsed||[];let pool=QUIZ_BANK.map((_,
 function answerQuiz(w,p,text,now){const z=w.quiz;if(!z||z.closedAt||now>=z.endsAt||!z.riddle)return null;
   if(z.answers[p.id])return null;z.tries=(z.tries||0)+1;
   // Câu có a/b/c: gõ một chữ cái là chốt luôn (chỉ một lần), chọn sai thì không được đoán lại.
-  if(z.options){const pick=['a','b','c'].indexOf(String(text).trim().toLowerCase());if(pick>=0){if(z.locked?.[p.id])return {ok:true,quiz:true,duplicate:true};(z.locked??={})[p.id]=true;if(pick!==z.answer)return {ok:true,quiz:true,correct:false};z.answers[p.id]=true;z.order.push(p.id);p.interactions++;w.totalInteractions++;return {ok:true,quiz:true,correct:true};}if(z.locked?.[p.id])return null;}
+  if(z.options){const pick=['a','b','c'].indexOf(String(text).trim().toLowerCase());if(pick>=0){if(z.locked?.[p.id])return {ok:true,quiz:true,duplicate:true};(z.locked??={})[p.id]=true;if(pick!==z.answer)return {ok:true,quiz:true,correct:false};z.answers[p.id]=true;z.order.push(p.id);p.quizSolved=(p.quizSolved||0)+1;p.interactions++;w.totalInteractions++;return {ok:true,quiz:true,correct:true};}if(z.locked?.[p.id])return null;}
   if(!quizMatch(text,z.accepted||[]))return null;
-  z.answers[p.id]=true;z.order.push(p.id);p.interactions++;w.totalInteractions++;return {ok:true,quiz:true,correct:true};}
+  z.answers[p.id]=true;z.order.push(p.id);p.quizSolved=(p.quizSolved||0)+1;p.interactions++;w.totalInteractions++;return {ok:true,quiz:true,correct:true};}
 function closeQuiz(w,now,c){const z=w.quiz;if(!z||z.closedAt||now<z.endsAt)return;z.closedAt=now;
   const right=z.order.filter(id=>z.answers[id]&&w.players[id]);
   right.forEach((id,i)=>{const p=w.players[id];c.gain(w,p,pct(c,p,i<3?.12:.06),i<3?40:20,i<3?3:1,now);if(i<3)buff(p,3,10*60000,now);});

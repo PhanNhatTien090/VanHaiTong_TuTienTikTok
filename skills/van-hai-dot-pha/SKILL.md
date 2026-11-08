@@ -170,3 +170,56 @@ Chủ game yêu cầu cảnh tiếp khác toàn bộ concept/hình/nền và ch�
 ## Hóa Thần v2 · 05/11/2026
 
 Theo yêu cầu mới, nâng từ Hóa Thần trở lên từng cảnh một, hiện chỉ làm realm 5. Bản Thần Niệm Chấn Thiên 17,6s giữ mốc nổ14,4/reveal14,65; thêm module hoa-than-formation.js và nền storm-world.png riêng. Sét0,16s → biển khí đảo chiều → xuất hồn2s → sáu thiên ấn4,4s → sáu lôi khảo7,6..9,8s → CHÍNH thần hồn lớn thành pháp tướng10,5s → thu ấn12,8s → nhập thể xong14,25s → nổ → đổi skin. Không dựng hai pháp tướng độc lập. Cache ảnh LIVE gốc riêng cho realm5 (nam/nữ/skin sự kiện), stand1, restore toàn bộ flags, không sửa helper actorImage dùng bởi realm6/8. Nhân vật vẽ sau lớp nổ chung để mặt không bị cột sáng phủ trắng. Nhạc B thứ→Rê trưởng, trống/sét gần-xa/ấn đồng/đàn/dây riêng theo cue, cộng impact chung. Có video trước/sau30fps kèm tiếng, kiểm khung sát nhau, ba vòng sửa + vòng chốt. Xem HOA-THAN-V2-2026-11-05.md về số đo và giới hạn; chưa được chủ game duyệt, chưa tự gọi đẹp/âm hay. Dừng để báo cáo, chưa triển khai Luyện Hư.
+
+## Luyện Hư v2 · 07/11/2026
+
+Realm 6 nâng lên "Hư Không Khai Giới · Vạn Kính Quy Nhất" (20,8 s, nổ 17,25, đổi skin 17,55): thiên đài nứt như gương → vỡ lộ hư không → vòm 8 gương phản chiếu → phân thân → 4 nhát rách → hư nhãn → tua ngược ghép lại → kính nhập thể → nổ. Module `luyen-hu-formation.js`, âm `luyen-hu-audio.js`, ghi chú LUYEN-HU-V2-2026-11-07.md. Công cụ: `scripts/render-luyen-hu-v2.mjs` (nạp ảnh nền thật; biến SECONDS=1.5,7 để dựng khung chọn lọc), `scripts/contact-sheet.mjs` (thay montage), `scripts/render-luyen-hu-audio.mjs` (Chrome OfflineAudioContext). Chưa được chủ game duyệt; chưa nghe bằng tai. Tiếp theo: 7 Đại Thừa phải vượt Luyện Hư v2 (motif gợi ý: vạn kiếm/đại đạo; không dùng lại gương/hư không làm chủ đạo).
+
+## Đại Thừa v2 · 07/11/2026
+
+Realm 7 nâng lên "Kiếm Trủng Triều Tông · Đại Đạo Kim Kiều" (22,8 s, nổ 19,0, đổi skin 19,3): nền mới `assets/dai-thua-v2/sword-valley.png`; vạn kiếm rút khỏi núi → sông kiếm → 3 đợt cúi chào → Đại Đạo + 9 đạo bia → 3 kiếm ý → tháp xoắn → kiếm quang nhập thể → nổ → kiếm cắm lại núi hành lễ. Module `dai-thua-formation.js`, âm `dai-thua-audio.js` (dùng chung bộ máy cue với Luyện Hư v2). `prepareDaiThuaArt`/`sliceRitualSwords` vẫn dùng chung với Huyền Tiên — đừng xoá. Công cụ âm chung: `scripts/render-ritual-audio.mjs` (trong Git Bash đặt MSYS_NO_PATHCONV=1). Chưa được chủ game duyệt; chưa nghe bằng tai. Tiếp theo: 8 Chân Tiên.
+
+## Chân Tiên v4 · 07/11/2026
+
+Realm 8 làm lại "Cửu Kiếp Phi Thăng · Tiên Môn Khai Thiên" (31,6 s, nổ 27,35, đổi skin 27,6): nền `assets/chan-tien-v4/tribulation-peak.png`, 3 đợt kiếp lôi, ngũ linh căn, Tiên Môn, phi thăng, thế giới tiên + rồng + tiên châu. Module `chan-tien-formation.js`; âm sinh từ `scripts/chan-tien-score.txt`. Âm của 6/7/8 đã ×2 (hằng LOUD, hợp xướng/kèn/sub, limiter −6 dB). Lưu ý: lệnh thoát sớm trong hàm vẽ có thể làm mất lớp vẽ chung hàm — kiểm khung từng mốc trên Chrome thật. Chưa được chủ game duyệt.
+
+## Thái Ất v1 · 07/11/2026
+
+Realm 11 "Lưỡng Nghi Định Thiên" 30 s (nổ 26,0, đổi skin 26,3); realm 12–18 dịch theo, vẫn dùng nhánh chung. Mỗi cảnh sau chỉ dài hơn cảnh trước 1–2 s theo chủ game. Xem THAI-AT-V1-2026-11-07.md. Tiếp theo: 12 Đại La (kế hoạch: Vạn Ảnh Chứng Đạo — tránh trùng gương/phân thân của Luyện Hư v2).
+
+## Thái Ất v2 (duyệt) + Đại La v1 · 07/11/2026
+
+Chủ game DUYỆT Thái Ất v2 và chốt chuẩn mới: dồn dập — cứ 0,25–2 s một cú có tiếng bùm (sub + trống + crack + chuông), chớp và rung; cấu trúc rõ (ví dụ 8 mảnh Bát Quái bay vào từng cú rồi mới thành thái cực), có linh thú (rồng/phượng asset gift-beasts) và trống trận dồn suốt cảnh. Cảnh sau phải hoành tráng hơn. Đại La v1 "Chu Thiên Tinh Đấu · Tứ Tượng Triều Nguyên" 32 s (nổ 28, đổi skin 28,3): thiên thạch → 28 tinh tú → Bắc Đẩu → Tứ Tượng (rồng/phượng asset + hổ, rùa-rắn vẽ chòm sao) → tia hội tụ + ngân hà → mưa sao băng → Thiên Ấn giáng → Tứ Tượng nhập thể → siêu tân tinh. Nền assets/dai-la-v1/star-heaven.png. File: public/dai-la-awakening.js, dai-la-audio.js (từ scripts/dai-la-score.txt). Realm 13–18 dịch theo (13: 32,25 s). Tiếp theo: 13 Tiên Đế.
+
+## Đại La v2 "Nhất Niệm Vạn Giới" · 07/11/2026
+
+Chủ game chê Đại La v1: "giống cảnh giới trước quá, không có gì mới mẻ sáng tạo". **Luật mới:** mỗi cảnh giới phải có cơ chế và cấu trúc mới thật sự (đạo cụ, nhịp, bố cục, âm thanh), không được chỉ đổi màu hay đổi hình từ cảnh trước. Bản v1 lưu ở `data/backups/dai-la-awakening.js.v1-20261107`.
+v2 (32 s, nổ ở 28 s, đổi skin ở 28,3 s), theo thứ tự:
+- Giọt sáng thành cột sáng, chớp trắng, 3 vòng gợn.
+- 9 tiểu thế giới phóng lên, mỗi cái một âm sắc riêng.
+- Mô hình vũ trụ quỹ đạo nghiêng.
+- Thiên Đạo Chi Nhãn bắn 5 tia vào khiên lục giác.
+- Bàn cờ vây phối cảnh với 12 quân cờ.
+- THỜI GIAN NGƯNG: màn xám, đồng hồ; âm hạ bus còn 12%, chỉ nghe tích tắc.
+- Búng tay, 9 thế giới đâm vào lõi; lõi rơi vào đan điền.
+- Tối hẳn, rồi khai thiên cầu vồng.
+- 3 quả cầu xoay sau lưng.
+Âm thanh sinh từ `scripts/dai-la-score.txt` và ghi ra `public/dai-la-audio.js`.
+
+## Tiên Đế v1 "Tiên Đế Đăng Cơ · Vạn Tiên Triều Bái" + tăng âm realm ≥6 · 07/11/2026
+
+Đại La v2 được chủ game chấp nhận ("cũng tạm được").
+**Tiên Đế:** 34 s, nổ ở 30 s, đổi skin ở 30,3 s. File `public/tien-de-awakening.js`; âm `scripts/tien-de-score.txt`, sinh ra `public/tien-de-audio.js`; nền `public/assets/tien-de-v1/heaven-court.png` (Codex). Chủ đề lễ đăng cơ, theo thứ tự:
+- Cổng Nam Thiên Môn che kín màn hình, gõ 3 lần rồi mở.
+- 9 bậc thềm ngọc bay vào.
+- 8 hàng thiên binh giáng bằng cột sáng, quỳ bái 6 làn sóng, chữ "VẠN TIÊN TRIỀU BÁI".
+- Cửu Đỉnh rơi và bốc lửa.
+- Thánh chỉ đóng chữ "PHỤNG THIÊN THỪA VẬN"; ngọc tỷ đóng ấn "TIÊN ĐẾ".
+- Ngai vàng trồi lên, 12 tia hào quang; mũ miện hạ xuống.
+- Hô "VẠN TUẾ" ×3, lửa bị hút vào người, tối.
+- Nổ hình ấn vuông xoay, mưa cánh hoa.
+Nối vào: `ascension-art.js` (realm 13 = TIEN_DE_DURATION, realm 14+ dịch theo), `live-cinema.js`, `audio.js` (IMPACT_LAYERS 13:[30,34,55]), `scene.js` (realm ≤13 dùng âm riêng). Render: `FRAMES=... node scripts/render-tien-de.mjs <dir> 13`. Dùng FRAMES, không dùng SECONDS (SECONDS là biến đặc biệt của bash).
+**Tăng âm realm ≥6** (`public/ritual-boost-audio.js`):
+- Bus khuếch đại ×1,45·k, compressor, makeup ×1,5, limiter −2 dB; k tăng 0,07 mỗi cảnh giới.
+- Thêm lớp chung: trống trận dồn tới lúc nổ, gió cuộn và trống lăn 2 s trước nổ, nổ trầm + xoảng, hợp âm kèn khi hiện thân.
+- RMS tăng khoảng 2,2–2,6 lần. Đo bằng `BOOST=<realm> node scripts/render-boost-audio.mjs ...`.

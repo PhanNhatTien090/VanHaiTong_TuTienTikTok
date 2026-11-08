@@ -71,7 +71,7 @@ Tiến trình khi đang chạy: `server.mjs` (node), `scripts/server-watchdog.mj
 - `web/` — bản web (README.md, HOSTING.md, `server.mjs`, `game-view.mjs`, `dungeon.mjs`…). Cloud: `web/cloud/server.mjs` (VPS), `agent.mjs` (máy LIVE), `play-sessions.mjs` (phiên web, tự trả về LIVE khi web im 45 s nếu LIVE xin / 2 phút), `live-transfers.mjs` (khóa bàn giao trong `live.json`; không cần `roilive` nếu 60 s không tương tác LIVE). `web/error-log.mjs` + `web/public/error-report.js` ghi lỗi vào `<data>/logs/web-errors.jsonl`. Chế độ thử: `WEB_CLOUD_TRIAL` trong `web/app.mjs`. Hướng dẫn deploy: `web/deploy/PRODUCTION.md`.
 - `scripts/restart-cloud-sync.ps1` — restart LIVE + watchdog kèm secret; `scripts/xem-log-web.ps1` — gom log VPS + agent.
 - `test/` — test Node. `scripts/` — QA (`qa-*.mjs`), render xem thử, restart. `render-*.mjs` ở gốc — xuất ảnh/clip review vào `output/`.
-- Ghi chú theo chủ đề: các file `*.md` viết hoa ở gốc (vd. `LIVE-LATENCY-CROWD-2026-11-06.md`). **README chỉ ghi tới v18, code đã đi xa hơn nhiều; tin code và ghi chú mới hơn README.**
+- Ghi chú theo chủ đề: các file `*.md` viết hoa ở gốc (vd. `LIVE-LATENCY-CROWD-2026-11-06.md`). **Giảm lag 07–08/11: `LIVE-LAG-2026-11-08.md`** (đo gì, đã sửa gì, vì sao không làm WebGL/delta, `/api/perf`, `diag` trong `/api/client-status`, script `prune-inactive.mjs`). **README chỉ ghi tới v18, code đã đi xa hơn nhiều; tin code và ghi chú mới hơn README.**
 - `skills/van-hai-dot-pha/SKILL.md` — skill cho Codex về đột phá.
 - **`SOI-BAT-THUONG.md` — user hỏi ai gian lận/dùng tool/lên nhanh bất thường thì làm theo file này** (cách tra bằng dữ liệu đang có + kế hoạch bộ log phát hiện bất thường, chưa cài).
 
@@ -79,6 +79,7 @@ Tiến trình khi đang chạy: `server.mjs` (node), `scripts/server-watchdog.mj
 
 - Trả lời tiếng Việt, ngắn gọn. Làm thật, tự xem hình/chuyển động; **test đạt không có nghĩa là đẹp**.
 - **Không restart kiểu thô** (đã được thay bằng quy tắc dòng dưới: xong việc tự restart an toàn). Sửa frontend thì trang tự nạp lại. Restart backend chỉ bằng script restart an toàn; chỉ kill `server.mjs` khi watchdog đang chạy, không mở thêm `start.cmd`.
+- **⚠ ƯU TIÊN CAO NHẤT (user nhắc lại 08/11):** xong việc là test → commit → push → restart an toàn ngay, **kể cả đang LIVE, không hỏi, không dừng chờ**. Lệnh restart chạy đúng dạng `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\restart-<tên>.ps1` (khớp quyền trong `.claude/settings.local.json`, user tự thêm). Nếu vẫn bị chặn thì đưa user lệnh `! powershell ...` ngay.
 - **Làm xong là tự up lên LIVE (user dặn 07/11, tối):** sửa backend thì tự chạy script restart an toàn (mẫu `scripts/restart-khuy-niet.ps1`), kể cả đang LIVE, rồi kiểm connection/watchdog. User chỉ load lại live, không phải tự chạy lệnh.
 - Không sửa giá quà, dữ liệu người chơi, lịch sự kiện khi không được yêu cầu.
 - **Không hiệu ứng toàn màn hình nào lặp y hệt**: mọi cảnh lặp phải có biến thể và giãn cách. TikTok đã khóa quà 3 lần vì "reproduced content". Màn đột phá toàn cảnh tối đa 1 lần / 60 giây.

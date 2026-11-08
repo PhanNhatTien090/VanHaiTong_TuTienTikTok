@@ -1,5 +1,14 @@
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
+# Cloud web: nạp WEB_SYNC_SECRET từ file cấu hình riêng (không ghi secret ở đây) để server và watchdog nhận chuyển nhân vật; bật agent đồng bộ (tự bỏ qua nếu đã chạy).
+$cloudConfig = Join-Path $project 'data/web-cloud-agent.json'
+if (Test-Path -LiteralPath $cloudConfig) {
+ try {
+  $cloud = Get-Content -LiteralPath $cloudConfig -Raw -Encoding UTF8 | ConvertFrom-Json
+  if ($cloud.secret -and $cloud.secret.Length -ge 48) { $env:WEB_SYNC_SECRET = $cloud.secret }
+  powershell.exe -NoProfile -File (Join-Path $PSScriptRoot 'start-web-cloud-agent.ps1') -ConfigFile $cloudConfig
+ } catch { Write-Host "Cloud agent not started: $($_.Exception.Message)" }
+}
 $entry = [IO.Path]::GetFullPath((Join-Path $project 'server.mjs'))
 $servers = @(Get-CimInstance Win32_Process -Filter "name = 'node.exe'" | Where-Object { $_.CommandLine -and $_.CommandLine.Replace('/','\').IndexOf($entry,[StringComparison]::OrdinalIgnoreCase) -ge 0 })
 if ($servers.Count -gt 1) { throw 'Multiple game servers found; inspect before enabling watchdog.' }

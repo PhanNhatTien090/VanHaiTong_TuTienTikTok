@@ -16,7 +16,7 @@ export function createSyncAgent(config) {
   fs.mkdirSync(config.dataDir,{recursive:true,mode:0o700});
   const file=path.join(config.dataDir,'checkpoint.json');
   let state=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{agentId:crypto.randomUUID(),seq:0,hashes:{},fullAt:0,links:[]};
-  let stopped=false,timer=null,bridge=null,busy=false,failures=0;
+  let stopped=false,timer=null,bridge=null,busy=false,failures=0,wantsLive=[];
   function save(){const tmp=file+'.tmp';fs.writeFileSync(tmp,JSON.stringify(state),{mode:0o600});fs.renameSync(tmp,file);}
   save();
   async function post(route,data){
@@ -28,14 +28,27 @@ export function createSyncAgent(config) {
     if(!state.pending)return;
     const result=await post('/internal/sync',state.pending.batch);
     if(!result.ok || result.seq!==state.pending.batch.seq)throw Error('Cloud acknowledgement mismatch');
-    state.seq=state.pending.batch.seq;state.hashes=state.pending.hashes;state.fullAt=state.pending.fullAt;delete state.pending;save();
+    state.playSessions=result.playSessions===true;state.seq=state.pending.batch.seq;state.hashes=state.pending.hashes;state.fullAt=state.pending.fullAt;delete state.pending;save();
+  }
+  async function controls(){
+    if(!state.playSessions)return;
+    const response=await post('/internal/play/control',{agentId:state.agentId,wantsLive});
+    for(const command of response.commands||[]){
+      const raw=Buffer.from(JSON.stringify(command)),at=String(Date.now()),url=new URL('/internal/play-transfer',source);
+      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-VH-Time':at,'X-VH-Signature':signature(config.secret,'POST',url.pathname,at,raw)},body:raw,signal:AbortSignal.timeout(10000)});
+      if(!res.ok)throw Error('Local play transfer failed: '+res.status);
+      const result=await res.json();
+      await post('/internal/play/ack',{agentId:state.agentId,command:{id:command.id,playerId:command.playerId,kind:command.kind},result});
+    }
   }
   async function once(){
     if(busy)return;busy=true;
     try {
       await flushPending();
+      await controls();
       const response=await fetch(source,{signal:AbortSignal.timeout(10000)});if(!response.ok)throw Error('Local LIVE export unavailable');
       const raw=await response.json();if(raw.mode!=='live')throw Error('Refusing to synchronize a non-LIVE world');
+      wantsLive=Object.entries(raw.playTransfers||{}).filter(([,l])=>l?.phase==='web'&&Date.now()-(Number(l.wantsLiveAt)||0)<120000).map(([id])=>id).slice(0,500);
       const {players,meta}=projectWorld(raw),hashes=Object.fromEntries(players.map(p=>[p.id,digest(p)]));
       const deleted=Object.keys(state.hashes).filter(id=>!Object.hasOwn(hashes,id));
       if(deleted.length>Math.max(100,Object.keys(state.hashes).length*.2) && !config.allowLargeDeletion)throw Error('Large deletion blocked; verify the source world before allowing it');
@@ -66,11 +79,12 @@ export function createSyncAgent(config) {
     bridge.on('message',raw=>{try{observe(JSON.parse(raw.toString()));}catch(e){console.error('[agent] Link queue:',e.message);}});
     bridge.on('error',()=>{});bridge.on('close',()=>{if(!stopped)setTimeout(connect,5000).unref();});
   }
+  let nextSnapshot=0;
   async function cycle(){
     if(stopped)return;
-    try{const r=await once();if(r?.full)console.log(`[agent] Synchronized ${r.profiles} profiles; sequence ${r.seq}`);}
+    try{if(Date.now()>=nextSnapshot){const r=await once();nextSnapshot=Date.now()+10000;if(r?.full)console.log(`[agent] Synchronized ${r.profiles} profiles; sequence ${r.seq}`);}else await controls();failures=0;}
     catch(e){failures++;console.error('[agent]',e.message);}
-    if(!stopped)timer=setTimeout(cycle,Math.min(60000,10000*2**Math.min(failures,3)) + Math.floor(Math.random()*1000));
+    if(!stopped)timer=setTimeout(cycle,Math.min(60000,(state.playSessions?1000:10000)*2**Math.min(failures,6)) + Math.floor(Math.random()*1000));
   }
   return {once,observe,start(){connect();cycle();},stop(){stopped=true;clearTimeout(timer);bridge?.close();},get state(){return structuredClone(state);}};
 }

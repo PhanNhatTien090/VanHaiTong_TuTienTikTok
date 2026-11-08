@@ -9,7 +9,7 @@ export function scheduleImpactLayers(c,destination,{elapsed=0,at,duration,scale=
  const none={stop(){},endAt:now};
  if(!Number.isFinite(at)||elapsed>(at+.3)*scale)return none;
  const bus=c.createGain();bus.gain.value=level;graph.push(bus);
- if(c.createDynamicsCompressor){const k=c.createDynamicsCompressor();k.threshold.value=-9;k.knee.value=6;k.ratio.value=6;k.attack.value=.003;k.release.value=.2;bus.connect(k);k.connect(destination);graph.push(k);}else bus.connect(destination);
+ if(c.createDynamicsCompressor){const k=c.createDynamicsCompressor();k.threshold.value=-9;k.knee.value=6;k.ratio.value=1;k.attack.value=.003;k.release.value=.2;bus.connect(k);k.connect(destination);graph.push(k);}else bus.connect(destination);
  const dispose=()=>graph.forEach(n=>n.disconnect?.());const release=ms=>{clearTimeout(timer);timer=setTimeout(dispose,ms);timer.unref?.();};
  const track=(o,parts)=>{active++;o.onended=()=>{parts.forEach(n=>n?.disconnect?.());if(--active===0)release(stopped?0:900);};nodes.push(o);};
  function voice(t0,len,lv,from,to,{isNoise=false,kind='sine',attack=.01,hold=.1,filter='lowpass',fixed=false}={}){

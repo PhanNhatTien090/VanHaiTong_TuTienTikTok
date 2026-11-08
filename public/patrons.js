@@ -8,6 +8,8 @@ export function hasPatronSet(p){return p?.rewardSkins?.includes(PATRON_SKIN.id)=
 
 export const SPECIAL_SKINS=[PATRON_SKIN,
  {id:'sea-dragon-heir',name:'Long Duệ Hải Lam',aliases:['long due hai lam','hailam','hai lam'],level:4,color:'#55cfff',trim:'#d8fcff',robe:'#173d8c',vfx:'Vảy long lân · ngân tuyến · tiểu long bay quanh',atlas:0},
+ {id:'tudo-ma-ton',name:'Tư Đồ Ma Tôn',aliases:['tu do ma ton','tudo','tu do','ma ton'],level:4,color:'#ff6a5a',trim:'#ffc2a0',robe:'#2a0b10',vfx:'Huyết Sát Ma Đao · ma diễm · phù văn',atlas:0},
+ {id:'khuy-niet-loi-ton',name:'Khuy Niết Lôi Tôn',aliases:['khuy niet loi ton','khuy niet','loi ton','khuyniet'],level:4,color:'#c69bff',trim:'#ffd36a',robe:'#1c0a33',vfx:'Sét Âm Hư – Dương Thực · Tử Lôi Long · thiên lôi',atlas:0},
  {id:'doraemon-avatar',name:'Doraemon',aliases:['doraemon','doremon','dora'],level:4,color:'#66dbff',trim:'#fff3b4',robe:'#128acc',vfx:'Túi thần kỳ · tinh quang',atlas:0,visitorCell:3},
  {id:'shende-avatar',name:'Thần Đế',level:4,color:'#ffb778',trim:'#ffe7a2',robe:'#34202a',vfx:'Đế khí · kim hỏa',atlas:0,visitorCell:2},
  {id:'hanlap-avatar',name:'Hàn Lập',level:4,color:'#8ff1c5',trim:'#d3ffb2',robe:'#184e43',vfx:'Thanh Trúc kiếm trận',atlas:0,visitorCell:1},

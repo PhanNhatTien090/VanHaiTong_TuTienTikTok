@@ -6,7 +6,7 @@ test('random mode picks varied events, never repeats the last one, and never ove
  const seen=[];w.nextAutoEventAt=now;w.nextBossAt=now+1e12;
  for(let i=0;i<40;i++){for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'tuvi'},now);const before=w.lastRandomEvent;tick(w,now);if(w.lastRandomEvent!==before||i===0&&w.lastRandomEvent){if(seen.length)assert.notEqual(w.lastRandomEvent,seen.at(-1));seen.push(w.lastRandomEvent);}
   now+=20*60000;w.nextAutoEventAt=Math.min(w.nextAutoEventAt,now);if(w.boss)w.boss=null;}
- assert.ok(new Set(seen).size>=5,'varied: '+seen.join(','));assert.equal(RANDOM_EVENTS.length,10);
+ assert.ok(new Set(seen).size>=5,'varied: '+seen.join(','));assert.equal(RANDOM_EVENTS.length,12,'10 sự kiện cũ + Chính Ma Đại Chiến + Khai Lò');
 });
 test('shuffle-bag: every 10 successful picks cover all 10 events (bond, race, tournament included)',()=>{
  const w=createWorld('live');let now=1e7;for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'nhapmon'},now);

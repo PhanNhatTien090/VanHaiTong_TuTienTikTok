@@ -1,8 +1,9 @@
 import {petById,petPose} from './spirit-pets.js';
+import {drawPetBolt,drawRareFx} from './spirit-pet-art.js';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-(1-clamp(v))**3;
 export function petArrivalProfile(e){
  if(!e?.petAward)return null;const pet=petById(e.petId);if(!pet)return null;
- const mythic=pet.id==='astral-dragon',vip=mythic||pet.id==='sun-phoenix';return {pet,vip,mythic,duration:mythic?7500:vip?6000:2600};
+ const mythic=pet.id==='astral-dragon'||!!pet.rare,vip=mythic||pet.id==='sun-phoenix';return {pet,vip,mythic,duration:mythic?7500:vip?6000:2600};
 }
 export function petArrivalPath(k,target,mythic=false,motion=true){
  const scale=target.scale||1.4,end={x:target.x+30*scale,y:target.y-8*scale},start={x:target.x+(mythic?-105:100),y:target.y-170};
@@ -30,6 +31,9 @@ export function drawPetArrival(scene,c,e,t,target,H,layer){
   for(let i=0;i<n;i++){const a=i*2.399+phase*TAU,r=25+((i*31+phase*160)%135),x=target.x+Math.cos(a)*r*scale,y=target.y-60-Math.sin(a)*r*.5*scale-phase*35;
    c.globalAlpha=alpha*(.3+.6*(1-(r-25)/135));c.save();c.translate(x,y);c.rotate(a);if(pet.id==='sun-phoenix'){c.beginPath();c.ellipse(0,0,2.4,9,0,0,TAU);c.fill();}else{c.fillRect(-1.5,-4,3,8);c.fillRect(-4,-1,8,2);}c.restore();}
   c.globalAlpha=alpha;
+  // Lôi Oa giáng thế: 3 nhịp sét đánh xuống chỗ linh thú, mỗi nhịp hình khác nhau.
+  if(pet.fx==='lightning'){const beat=Math.floor(k*9),local=k*9-beat;if(beat%3===0&&local<.45&&k<.75){c.globalAlpha=alpha*(1-local/.45);for(let i=0;i<(light?1:3);i++)drawPetBolt(c,path.x+(i-1)*70+(beat*37%60)-30,path.y-260,path.x+(i-1)*14,path.y-20,(e.start|0)+beat*7+i,i===1?'#d4c8ff':'#8f7bff',i===1?3:1.8);c.globalAlpha=alpha;}}
+  else if(pet.fx&&motion){c.save();c.translate(path.x,path.y);drawRareFx(c,pet,path.size*.9,t,(e.start|0),light?1.2:2.2);c.restore();c.globalAlpha=alpha;}
   if(frames?.[pose.frame]){c.save();c.translate(path.x,path.y);c.rotate(motion?Math.sin(phase*TAU*2)*.08:0);c.drawImage(frames[pose.frame],-path.size/2,-path.size/2,path.size,path.size);c.restore();}
  }
  c.restore();return true;
