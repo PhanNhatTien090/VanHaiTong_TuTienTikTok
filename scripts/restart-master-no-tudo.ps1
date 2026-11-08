@@ -52,7 +52,7 @@ for ($attempt=0; $attempt -lt 30; $attempt++) {
 }
 if (!$ready) { throw "Server did not start. Check data/server-master-no-tudo-$stamp-error.log" }
 Write-Host "Server ready, PID $($process.Id). Open $base/?world=live#events and reload the LIVE Studio Link source."
-Write-Host "Updated: Sect Master no longer gets Tu Do Ma Ton."
+Write-Host "Updated: Sect Master no longer gets event-only skins."
 
 } finally {
  if (Test-Path -LiteralPath $pauseFile) { Remove-Item -LiteralPath $pauseFile }

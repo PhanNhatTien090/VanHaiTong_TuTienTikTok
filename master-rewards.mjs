@@ -2,8 +2,8 @@ import {SPECIAL_SKINS} from './public/patrons.js';
 import {ALL_PETS} from './public/spirit-pets.js';
 import {RACE_SWORD_SKINS} from './public/race-sword-skins.js';
 export const MASTER_COINS=2000;
-// 08/11/2026 (chủ game): Tư Đồ Ma Tôn là skin sự kiện khách quý, chỉ nhận qua sự kiện — Tông chủ không được cấp kèm.
-export const MASTER_EXCLUDED_SKINS=new Set(['tudo-ma-ton']);
+// 08/11/2026 (chủ game): skin mua trong sự kiện chỉ nhận qua sự kiện — Tông chủ không được cấp kèm.
+export const MASTER_EXCLUDED_SKINS=new Set(['tudo-ma-ton','doraemon-avatar','sea-dragon-heir','khuy-niet-loi-ton']);
 const real=p=>p&&!p.puppet&&!p.resident&&!p.webOnly&&!String(p.id).startsWith('puppet-');
 export function masterGiftTotal(w,p){
  if(!real(p))return 0;if(Number.isFinite(p.masterGiftTotal))return p.masterGiftTotal;
