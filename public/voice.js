@@ -80,9 +80,13 @@ export class VoiceQueue {
     if(!syntheticVoice(e)&&this.running&&((this.activePriority??9)===0||priority(e)>2&&(this.activePriority??9)<=2||realGiftVoice(e)&&(this.activePriority??9)<6)){this.cancelPreparation?.();this.cancelPlayback?.();} // 07/11: quà cắt câu thường/đột phá để cảm ơn đúng lúc
     this.next();
   }
+  // Mảnh ghép làm sẵn cho lời cảm ơn quà; thiếu tên thì null (dùng đường cũ).
+  giftParts(e){const base=`/api/voice-part?world=${this.world}`,get=q=>fetch(base+q,{signal:AbortSignal.timeout(1200)}).then(r=>r.ok?r.blob():null).catch(()=>null);
+    if(!e.user)return Promise.resolve(null);
+    return Promise.all([get('&kind=name&user='+encodeURIComponent(e.user)),get('&kind=gift&gift='+encodeURIComponent(e.gift||'')).then(b=>b||get('&kind=thanks'))]).then(([n,g])=>n&&g?[n,g]:null);}
   // Đo độ trễ thật: từ lúc nhận sự kiện tới lúc bắt đầu đọc; gửi lên trạng thái client để kiểm tra trên LIVE.
   noteLag(e,ms,dropped){const row={k:realGiftVoice(e)?'gift':e.autoArrival?'arrival':isEventAnnouncement(e)?'event':e.heavenStrike?'heaven':'other',ms:Math.round(ms),d:dropped?1:0,at:Date.now()};(this.lags??=[]).push(row);if(this.lags.length>40)this.lags.shift();if(dropped)this.staleDropped=(this.staleDropped||0)+1;}
-  lagStats(){const rows=(this.lags||[]).filter(r=>!r.d).map(r=>r.ms).sort((a,b)=>a-b),q=f=>rows.length?rows[Math.min(rows.length-1,Math.floor(rows.length*f))]:null;return {n:rows.length,p50:q(.5),p90:q(.9),max:rows.at(-1)??null,stale:this.staleDropped||0,last:(this.lags||[]).slice(-8)};}
+  lagStats(){const quick=this.quickParts||0,rows=(this.lags||[]).filter(r=>!r.d).map(r=>r.ms).sort((a,b)=>a-b),q=f=>rows.length?rows[Math.min(rows.length-1,Math.floor(rows.length*f))]:null;return {n:rows.length,p50:q(.5),p90:q(.9),max:rows.at(-1)??null,stale:this.staleDropped||0,quick,last:(this.lags||[]).slice(-8)};}
   // Màn đột phá đang chiếu (không tính lời của chính màn đó).
   ritualBusy(e){const session=this.audio?.qiSession;return !!(this.calm&&session&&session.event?.id!==e?.id);}
   prepareQueued(){
@@ -112,9 +116,11 @@ export class VoiceQueue {
       if(e.file){await this.play(e.file,e,generation);return;}
       this.onStatus('Đang chuẩn bị giọng đọc…');
       const pending=this.prepare(e);this.prepareQueued();
-      const fallback=fastVoiceFile(e);let timer;const interrupted=new Promise((_,reject)=>{this.cancelPreparation=()=>reject(Object.assign(Error('Voice superseded'),{name:'AbortError'}));});
-      let blob;try{blob=await Promise.race([pending,interrupted,...(fallback||e.autoArrival?[new Promise(resolve=>{timer=setTimeout(()=>resolve(null),e.autoArrival?(this.arrivalWaitMs??1500):(this.prepareWaitMs??1200));})]:[])]);}catch(err){if(err.name==='AbortError')throw err;if(!fallback)throw err;blob=null;}finally{clearTimeout(timer);this.cancelPreparation=null;}
+      const fallback=fastVoiceFile(e),quick=realGiftVoice(e)?this.giftParts(e):null;let timer;const interrupted=new Promise((_,reject)=>{this.cancelPreparation=()=>reject(Object.assign(Error('Voice superseded'),{name:'AbortError'}));});
+      let blob;try{blob=await Promise.race([pending,interrupted,...(fallback||e.autoArrival?[new Promise(resolve=>{timer=setTimeout(()=>resolve(null),e.autoArrival?(this.arrivalWaitMs??1500):quick?(this.giftWaitMs??Math.min(700,this.prepareWaitMs??700)):(this.prepareWaitMs??1200));})]:[])]);}catch(err){if(err.name==='AbortError')throw err;if(!fallback)throw err;blob=null;}finally{clearTimeout(timer);this.cancelPreparation=null;}
       if(generation!==this.generation)return;
+      // 08/11: câu cảm ơn đầy đủ chưa kịp → ghép mảnh làm sẵn "Sư huynh <tên>" + "tặng <quà>! Đa tạ tâm ý!" (vẫn giọng tông sư).
+      if(!blob&&quick){let pt;const parts=await Promise.race([quick,new Promise(r=>{pt=setTimeout(()=>r(null),this.partsWaitMs??Math.min(400,this.prepareWaitMs??400));})]);clearTimeout(pt);if(generation!==this.generation)return;if(parts){if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;}this.noteLag(e,Date.now()-(receivedAt??Date.now()),false);this.quickParts=(this.quickParts||0)+1;for(const part of parts){const u=URL.createObjectURL(part);try{await this.play(u,e,generation);}finally{URL.revokeObjectURL(u);}if(generation!==this.generation)return;}return;}}
       if(!blob){if(!fallback)return;if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;} /* 08/11: lời chào chưa kịp tạo trong 1,5 s thì bỏ, không chắn hàng giọng */await this.play(fallback,{...e,voiceFallback:true},generation);return;}
       if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;}
       this.noteLag(e,Date.now()-(receivedAt??Date.now()),false);url=URL.createObjectURL(blob);await this.play(url,e,generation);

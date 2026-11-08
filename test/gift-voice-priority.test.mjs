@@ -5,7 +5,7 @@ test('real gifts outrank breakthroughs and lifecycle; puppet gifts stay below vi
  assert.equal(priority(gift()),6);assert.ok(priority(gift())>priority({effect:'visitor',visitorStart:true}));assert.equal(priority({...gift(),user:'puppet-demo'}),0);assert.equal(priority({...gift(),simulated:true}),0);
 });
 test('gift voice prepares immediately, reuses clip and never repeats when its visual turn arrives',async()=>{
- const old=globalThis.fetch;let requests=0,played=0;globalThis.fetch=async()=>{requests++;return {ok:true,blob:async()=>new Blob(['clip'])};};
+ const old=globalThis.fetch;let requests=0,played=0;globalThis.fetch=async url=>{if(String(url).startsWith('/api/speech'))requests++;return {ok:true,blob:async()=>new Blob(['clip'])};}; /* 08/11: chỉ đếm câu đầy đủ, không đếm mảnh ghép */
  const q=new VoiceQueue({world:'demo',audio});q.running=true;q.play=async()=>{played++;};
  try{q.add(gift());assert.equal(requests,1,'TTS begins before the visual queue is released');q.add(gift());assert.equal(q.queue.length,1);q.running=false;await q.next();q.add(gift());await new Promise(r=>setImmediate(r));assert.equal(requests,1);assert.equal(played,1);assert.equal(q.queue.length,0);}finally{q.stop();globalThis.fetch=old;}
 });

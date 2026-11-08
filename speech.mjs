@@ -74,12 +74,17 @@ export function createSpeech(root,dataDir){
   async function speech(e){
     if(engine==='off')throw Error('Giọng đọc đang tắt (VAN_HAI_TTS=off).');
     // v75: kế hoạch đọc nhiều đoạn, mỗi đoạn một giọng (tông sư / tiên nữ / trọng tài)
-    const plan=speechPlan(e),text=plan.map(x=>x.text).join(' '),key=createHash('sha256').update(engine+'|v3|'+JSON.stringify(plan)).digest('hex');
+    const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
+    return synthPlan(speechPlan(e),important);
+  }
+  // 08/11: dùng chung cho câu đầy đủ và mảnh ghép làm sẵn (tên người chơi, câu cảm ơn quà).
+  async function synthPlan(plan,important=false){
+    if(engine==='off')throw Error('Giọng đọc đang tắt (VAN_HAI_TTS=off).');
+    const text=plan.map(x=>x.text).join(' '),key=createHash('sha256').update(engine+'|v3|'+JSON.stringify(plan)).digest('hex');
     const output=path.join(dir,key+'.mp3');
     if(fs.existsSync(output))return output;
     if(jobs.has(key))return jobs.get(key);
     // 07/11/2026: quà thật và thông báo sự kiện được xếp hàng chờ (tối đa 3) thay vì bị trả 'đang bận' → không còn đọc câu chung chung.
-    const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
     if(active>=(important?3:1))throw Error('Giọng đọc đang bận; dùng phản hồi nhanh.');
     active++;
     const tmp=output+'.tmp';
@@ -91,12 +96,14 @@ export function createSpeech(root,dataDir){
       }catch(err){fs.rmSync(tmp,{force:true});throw Error('Không tạo được giọng đọc. '+err.message);}
     })().finally(()=>{active--;jobs.delete(key);});
     jobs.set(key,promise);
-    // Giới hạn cache: giữ 400 clip mới nhất.
+    // Giới hạn cache: giữ 900 clip mới nhất (08/11: thêm mảnh ghép tên + quà).
     if(Date.now()-lastClean>60000){lastClean=Date.now();const files=fs.readdirSync(dir).filter(f=>f.endsWith('.mp3')).map(f=>({f,t:fs.statSync(path.join(dir,f)).mtimeMs})).sort((a,b)=>b.t-a.t);
-    for(const {f}of files.slice(399))fs.rmSync(path.join(dir,f),{force:true});
+    for(const {f}of files.slice(899))fs.rmSync(path.join(dir,f),{force:true});
     }
     return promise;
   }
+  speech.plan=synthPlan;
+  speech.cached=plan=>{const key=createHash('sha256').update(engine+'|v3|'+JSON.stringify(plan)).digest('hex'),file=path.join(dir,key+'.mp3');return fs.existsSync(file)?file:null;};
   speech.warm=()=>vieneu?.warm();
   speech.stop=()=>vieneu?.stop();
   speech.engine=engine;

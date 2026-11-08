@@ -14,6 +14,7 @@ import {GIFT_POLICY_VERSION,GIFT_TIERS} from './public/gift-rewards.js';
 import {AssetCache} from './asset-cache.mjs';
 import http from 'node:http';
 import {createSpeech} from './speech.mjs';
+import {namePlan,giftPlan,THANKS_PLAN,nextMissingPart} from './voice-parts.mjs';
 import {skinFor} from './public/cosmetics.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -143,6 +144,7 @@ const server=http.createServer(async(req,res)=>{
       if(!String(req.headers['content-type']).startsWith('application/json')){json(res,{ok:false,message:'Cần JSON.'},415);return;}
     }
     if(url.pathname==='/api/voice-latency'){json(res,voiceLatency);return;}
+    if(url.pathname==='/api/voice-part'){const kind=url.searchParams.get('kind'),p=kind==='name'?worlds[mode].players[url.searchParams.get('user')||'']:null,plan=kind==='name'?(p&&!p.resident&&!p.puppet?namePlan(p):null):kind==='gift'?giftPlan(url.searchParams.get('gift')):kind==='thanks'?THANKS_PLAN:null,file=plan&&synthesizeSpeech.cached(plan);if(!file){json(res,{ok:false},404);return;}res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=600'});fs.createReadStream(file).pipe(res);return;}
     if(url.pathname==='/api/speech'&&req.method==='GET'){
       const id=url.searchParams.get('id');
       let event=worlds[mode].events.find(e=>e.id===id)||announcementHistory[mode].get(id);
@@ -247,7 +249,11 @@ if(process.env.VAN_HAI_RECOVERY_FILE){
 }
 // 4/11/2026: tạo sẵn giọng cho sự kiện quan trọng (quà, sự kiện, đột phá…) ngay khi xảy ra → trang hỏi tới là có file, giọng đến trước chữ.
 const prewarmed=new Set(),bootAt=Date.now();
-function prewarmSpeech(){try{if(synthesizeSpeech.busy)return;for(const e of worlds.live.events.slice(-15).sort((a,b)=>voicePriority(b)-voicePriority(a))){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||voicePriority(e)<3||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});break;}}catch{}}
+// 08/11: chỉ tạo sẵn câu chắc chắn được đọc (quà thật, Thiên Đạo, thông báo sự kiện) và còn mới; câu thường/đột phá trang có thể bỏ → không tốn máy.
+// Máy rảnh thì làm mảnh ghép (tên người đang có mặt, câu cảm ơn quà) để lời cảm ơn quà phát ngay.
+const surelySpoken=e=>(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
+function prewarmSpeech(){try{if(synthesizeSpeech.busy)return;const now=Date.now();for(const e of worlds.live.events.slice(-15).sort((a,b)=>voicePriority(b)-voicePriority(a))){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||now-(e.at||0)>10000||!surelySpoken(e)||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});return;}
+  const part=nextMissingPart(worlds.live,plan=>!!synthesizeSpeech.cached(plan),now);if(part)synthesizeSpeech.plan(part,false).catch(()=>{});}catch{}}
 setInterval(()=>{tick(worlds.demo);tick(worlds.live);prewarmSpeech();broadcast();},1000).unref();
 setInterval(persist,3000).unref();
 // v54: sao lưu tự động thế giới LIVE mỗi 30 phút vào data/backups, giữ 48 bản mới nhất (~24 giờ).

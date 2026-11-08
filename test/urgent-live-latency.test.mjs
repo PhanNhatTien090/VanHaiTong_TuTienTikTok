@@ -12,7 +12,7 @@ test('blocked synthesis starts same-voice prerecorded response by deadline, neve
 });
 test('important event interrupts pending routine synthesis before audio exists',async()=>{
  const original=globalThis.fetch;globalThis.fetch=()=>new Promise(()=>{});const played=[],q=new VoiceQueue({world:'live',audio});q.prepareWaitMs=15;q.play=async(url,e)=>played.push(e.id);
- try{q.add({id:'ordinary',effect:'qi',user:'a'});q.add({id:'gift',effect:'petal',gift:'Hoa',coins:1,user:'b'});await new Promise(r=>setTimeout(r,40));assert.deepEqual(played,['gift']);}finally{q.stop();globalThis.fetch=original;}
+ try{q.add({id:'ordinary',effect:'qi',user:'a'});q.add({id:'gift',effect:'petal',gift:'Hoa',coins:1,user:'b'});await new Promise(r=>setTimeout(r,90)); /* 08/11: quà thử mảnh ghép trước (thêm ≤15 ms) */assert.deepEqual(played,['gift']);}finally{q.stop();globalThis.fetch=original;}
 });
 test('crowd quality remains light under sustained fast frames and restores requested quality on exit',()=>{
  const b=new RenderBudget('high');assert.equal(b.setCrowded(true),true);assert.equal(b.level,'light');for(let i=0;i<100;i++)b.sample(2,100000+i*100,30);assert.equal(b.level,'light');assert.equal(b.setCrowded(false),true);assert.equal(b.level,'high');
