@@ -278,7 +278,7 @@ const prewarmed=new Set(),bootAt=Date.now();
 // Máy rảnh thì làm mảnh ghép (tên người đang có mặt, câu cảm ơn quà) để lời cảm ơn quà phát ngay.
 const surelySpoken=e=>(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
 function prewarmSpeech(){try{if(synthesizeSpeech.busy)return;const now=Date.now();for(const e of worlds.live.events.slice(-15).sort((a,b)=>voicePriority(b)-voicePriority(a))){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||now-(e.at||0)>10000||!surelySpoken(e)||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});return;}
-  const part=nextMissingPart(worlds.live,plan=>!!synthesizeSpeech.cached(plan),now);if(part)synthesizeSpeech.plan(part,false).catch(()=>{});}catch{}}
+  if(now-synthesizeSpeech.lastForegroundAt<15000)return;const part=nextMissingPart(worlds.live,plan=>!!synthesizeSpeech.cached(plan),now);if(part)synthesizeSpeech.prewarmPart(part).catch(()=>{});}catch{}}
 setInterval(()=>{tick(worlds.demo);tick(worlds.live);prewarmSpeech();broadcast();},1000).unref();
 setInterval(persist,3000).unref();
 // v54: sao lưu tự động thế giới LIVE mỗi 30 phút vào data/backups, giữ 48 bản mới nhất (~24 giờ).

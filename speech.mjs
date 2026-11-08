@@ -70,23 +70,26 @@ export function createSpeech(root,dataDir){
   const engine=(process.env.VAN_HAI_TTS||'vieneu').toLowerCase();
   const dir=path.join(dataDir,'speech');fs.mkdirSync(dir,{recursive:true});
   const vieneu=engine==='vieneu'?vieneuWorker(root):null;
-  const jobs=new Map();let active=0,lastClean=0;
+  const jobs=new Map();let active=0,background=0,lastClean=0,lastForegroundAt=0;
   async function speech(e){
     if(engine==='off')throw Error('Giọng đọc đang tắt (VAN_HAI_TTS=off).');
     // v75: kế hoạch đọc nhiều đoạn, mỗi đoạn một giọng (tông sư / tiên nữ / trọng tài)
     const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
-    return synthPlan(speechPlan(e),important);
+    return synthPlan(speechPlan(e),important,false);
   }
   // 08/11: dùng chung cho câu đầy đủ và mảnh ghép làm sẵn (tên người chơi, câu cảm ơn quà).
-  async function synthPlan(plan,important=false){
+  // 08/11 tối: isBackground=true là dựng trước mảnh ghép (tên/quà) lúc rảnh — không được chiếm chỗ của câu thật.
+  async function synthPlan(plan,important=false,isBackground=false){
     if(engine==='off')throw Error('Giọng đọc đang tắt (VAN_HAI_TTS=off).');
     const text=plan.map(x=>x.text).join(' '),key=createHash('sha256').update(engine+'|v3|'+JSON.stringify(plan)).digest('hex');
     const output=path.join(dir,key+'.mp3');
+    if(!isBackground)lastForegroundAt=Date.now();
     if(fs.existsSync(output))return output;
     if(jobs.has(key))return jobs.get(key);
     // 07/11/2026: quà thật và thông báo sự kiện được xếp hàng chờ (tối đa 3) thay vì bị trả 'đang bận' → không còn đọc câu chung chung.
-    if(active>=(important?3:1))throw Error('Giọng đọc đang bận; dùng phản hồi nhanh.');
-    active++;
+    if(isBackground&&active>0)throw Error('Giọng đọc đang bận.');
+    if(active-background>=(important?3:1))throw Error('Giọng đọc đang bận; dùng phản hồi nhanh.');
+    active++;if(isBackground)background++;
     const tmp=output+'.tmp';
     const promise=(async()=>{
       try{
@@ -94,15 +97,17 @@ export function createSpeech(root,dataDir){
         else await edgeSynth(root,text,tmp);
         fs.renameSync(tmp,output);return output;
       }catch(err){fs.rmSync(tmp,{force:true});throw Error('Không tạo được giọng đọc. '+err.message);}
-    })().finally(()=>{active--;jobs.delete(key);});
+    })().finally(()=>{active--;if(isBackground)background--;jobs.delete(key);});
     jobs.set(key,promise);
-    // Giới hạn cache: giữ 900 clip mới nhất (08/11: thêm mảnh ghép tên + quà).
+    // Giới hạn cache: giữ 1500 clip mới nhất (08/11 tối: 900 không đủ cho mảnh tên + quà, bị xóa rồi dựng lại mãi).
     if(Date.now()-lastClean>60000){lastClean=Date.now();const files=fs.readdirSync(dir).filter(f=>f.endsWith('.mp3')).map(f=>({f,t:fs.statSync(path.join(dir,f)).mtimeMs})).sort((a,b)=>b.t-a.t);
-    for(const {f}of files.slice(899))fs.rmSync(path.join(dir,f),{force:true});
+    for(const {f}of files.slice(1500))fs.rmSync(path.join(dir,f),{force:true});
     }
     return promise;
   }
   speech.plan=synthPlan;
+  speech.prewarmPart=plan=>synthPlan(plan,false,true);
+  Object.defineProperty(speech,'lastForegroundAt',{get:()=>lastForegroundAt});
   speech.cached=plan=>{const key=createHash('sha256').update(engine+'|v3|'+JSON.stringify(plan)).digest('hex'),file=path.join(dir,key+'.mp3');return fs.existsSync(file)?file:null;};
   speech.warm=()=>vieneu?.warm();
   speech.stop=()=>vieneu?.stop();
