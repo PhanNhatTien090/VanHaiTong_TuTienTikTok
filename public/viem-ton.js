@@ -60,32 +60,32 @@ function palmFlames(scene,c,pal,clock,seed,stand,boost){const pts=stand>.5?[[-24
   c.globalAlpha=.95;if(hotDot)c.drawImage(hotDot,x-r*.8,y-r*.8,r*1.6,r*1.6);}
  c.restore();}
 // Một cây dao phay mũi nhọn: chuôi gỗ + khâu vàng; LƯỠI LÀ NGUYÊN KHÍ LỬA (trong suốt, chảy dọc thân, lõi vàng trắng).
-const qiBlade=c=>{c.beginPath();c.moveTo(-4,0);c.lineTo(-4,-74);c.quadraticCurveTo(-3.5,-90,3,-100);c.bezierCurveTo(16,-84,23,-56,21,-3);c.closePath();};
+const qiBlade=c=>{c.beginPath();c.moveTo(-4,0);c.lineTo(-4,-37);c.quadraticCurveTo(-3.5,-46,2,-54);c.bezierCurveTo(9,-46,20,-30,19,-2);c.closePath();};
 function cleaver(scene,c,pal,clock,k,light){
  c.save();c.globalCompositeOperation='source-over';
  // chuôi gỗ + khâu
  const hg=c.createLinearGradient(-4,0,4,0);hg.addColorStop(0,'#5a3a22');hg.addColorStop(.5,'#a07a52');hg.addColorStop(1,'#4a2e1a');c.fillStyle=hg;c.beginPath();c.moveTo(-3.6,2);c.lineTo(3.6,2);c.lineTo(4.4,26);c.quadraticCurveTo(0,30,-4.4,26);c.closePath();c.fill();
  c.fillStyle='#e8c46a';c.fillRect(-5,-1,10,5);c.fillStyle='#fff0b8';c.fillRect(-5,-1,10,1.2);
  // hào quang lửa quanh lưỡi
- c.globalCompositeOperation='lighter';const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);for(let i=0;i<(light?4:7);i++){const u=i/((light?4:7)-1),y=-6-u*86,x=8-u*3,r=20-u*8;c.globalAlpha=.22;if(red)c.drawImage(red,x-r,y-r,r*2,r*2);}
+ c.globalCompositeOperation='lighter';const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);for(let i=0;i<(light?3:4);i++){const u=i/((light?3:4)-1),y=-5-u*40,x=8-u*3,r=18-u*6;c.globalAlpha=.22;if(red)c.drawImage(red,x-r,y-r,r*2,r*2);}
  // thân lưỡi: khí lửa bán trong suốt
  const g=c.createLinearGradient(-4,0,22,0);g.addColorStop(0,'#7a0a02e8');g.addColorStop(.35,pal.red+'e0');g.addColorStop(.72,pal.orange+'d8');g.addColorStop(1,pal.gold+'f0');
  c.globalCompositeOperation='source-over';qiBlade(c);c.globalAlpha=.75;c.strokeStyle='#2a0402';c.lineWidth=3;c.stroke();c.globalAlpha=.92;c.fillStyle=g;c.fill();c.globalCompositeOperation='lighter';
  // khí chảy dọc lưỡi (vệt sáng trôi từ chuôi lên mũi) + lõi sáng
- c.save();qiBlade(c);c.clip();const n=light?4:7;for(let i=0;i<n;i++){const u=((clock*.0011+i/n+rnd(i,k)*.1)%1),y=-u*100,x=2+rnd(i+3,k)*12,h=16+rnd(i+5,k)*12;c.globalAlpha=Math.sin(u*Math.PI)*.55;if(gold)c.drawImage(gold,x-5,y-h/2,10,h);}
- c.globalAlpha=.6;c.strokeStyle=pal.gold;c.lineWidth=1.4;c.lineCap='round';c.beginPath();c.moveTo(4,-4);c.quadraticCurveTo(8,-60,3,-94);c.stroke();c.restore();
+ c.save();qiBlade(c);c.clip();const n=light?4:7;for(let i=0;i<n;i++){const u=((clock*.0011+i/n+rnd(i,k)*.1)%1),y=-u*50,x=2+rnd(i+3,k)*12,h=10+rnd(i+5,k)*7;c.globalAlpha=Math.sin(u*Math.PI)*.55;if(gold)c.drawImage(gold,x-5,y-h/2,10,h);}
+ c.globalAlpha=.6;c.strokeStyle=pal.gold;c.lineWidth=1.4;c.lineCap='round';c.beginPath();c.moveTo(4,-3);c.quadraticCurveTo(8,-30,3,-47);c.stroke();c.restore();
  // viền lưỡi trắng vàng + sống đỏ
- c.lineCap='round';for(const [w,col,a] of [[3,pal.gold,.5],[1.2,pal.hot,.95]]){c.strokeStyle=col;c.globalAlpha=a;c.lineWidth=w;c.beginPath();c.moveTo(3,-100);c.bezierCurveTo(16,-84,23,-56,21,-3);c.stroke();}
- c.globalCompositeOperation='source-over';c.strokeStyle='#5a0602';c.globalAlpha=.9;c.lineWidth=1.6;c.beginPath();c.moveTo(-4,-2);c.lineTo(-4,-74);c.quadraticCurveTo(-3.5,-90,3,-100);c.stroke();
+ c.lineCap='round';for(const [w,col,a] of [[3,pal.gold,.5],[1.2,pal.hot,.95]]){c.strokeStyle=col;c.globalAlpha=a;c.lineWidth=w;c.beginPath();c.moveTo(2,-54);c.bezierCurveTo(9,-46,20,-30,19,-2);c.stroke();}
+ c.globalCompositeOperation='source-over';c.strokeStyle='#5a0602';c.globalAlpha=.9;c.lineWidth=1.6;c.beginPath();c.moveTo(-4,-2);c.lineTo(-4,-37);c.quadraticCurveTo(-3.5,-46,2,-54);c.stroke();
  // lửa liếm ra từ lưỡi + tia lửa ở mũi
- c.globalCompositeOperation='lighter';const fl=flameSprite(scene,pal.red,true),fh=flameSprite(scene,pal.orange,true),m=light?3:6;for(let i=0;i<m;i++){const u=(i+.5)/m,y=-4-u*80,x=21-u*u*10,sw=Math.sin(clock*.012+i*1.9+k)*.25;flame(c,i%2?fh:fl,x,y,10,16+rnd(i,k)*12+Math.sin(clock*.01+i)*4,.7,Math.PI/2+.4+sw);}
- const hot=dotSprite(scene,pal.hot);c.globalAlpha=.7+Math.sin(clock*.02+k)*.3;if(hot)c.drawImage(hot,-3,-106,12,12);
+ c.globalCompositeOperation='lighter';const fl=flameSprite(scene,pal.red,true),fh=flameSprite(scene,pal.orange,true),m=light?2:4;for(let i=0;i<m;i++){const u=(i+.5)/m,y=-3-u*40,x=21-u*u*10,sw=Math.sin(clock*.012+i*1.9+k)*.25;flame(c,i%2?fh:fl,x,y,10,16+rnd(i,k)*12+Math.sin(clock*.01+i)*4,.7,Math.PI/2+.4+sw);}
+ const hot=dotSprite(scene,pal.hot);c.globalAlpha=.7+Math.sin(clock*.02+k)*.3;if(hot)c.drawImage(hot,-4,-60,12,12);
  c.restore();}
 function drawBlades(scene,c,bp,pal,clock,seed,light){const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);
  for(const side of [-1,1]){const base=.28+bp.sway*side,rot=side*(base+bp.slash*1.1);c.save();c.translate(side*bp.x,bp.y);c.scale(.66,.66);
   // vệt lửa cung chém (phía ngoài)
-  if(bp.slash>.1){c.save();c.globalCompositeOperation='lighter';const n=light?8:16;for(let i=0;i<n;i++){const u=i/(n-1),a=-Math.PI/2+side*(base+bp.slash*1.1*u),r=62,x=Math.cos(a)*r,y=Math.sin(a)*r,s=(8+u*10)*bp.slash;c.globalAlpha=u*bp.slash*.85;if(red)c.drawImage(red,x-s*1.6,y-s*1.6,s*3.2,s*3.2);if(gold)c.drawImage(gold,x-s*.8,y-s*.8,s*1.6,s*1.6);}c.restore();}
-  c.save();c.globalCompositeOperation='lighter';c.rotate(rot);if(red){c.globalAlpha=.45+bp.slash*.4;c.drawImage(red,(side>0?-6:-30),-82,40,84);}c.restore();
+  if(bp.slash>.1){c.save();c.globalCompositeOperation='lighter';const n=light?8:16;for(let i=0;i<n;i++){const u=i/(n-1),a=-Math.PI/2+side*(base+bp.slash*1.1*u),r=40,x=Math.cos(a)*r,y=Math.sin(a)*r,s=(8+u*10)*bp.slash;c.globalAlpha=u*bp.slash*.85;if(red)c.drawImage(red,x-s*1.6,y-s*1.6,s*3.2,s*3.2);if(gold)c.drawImage(gold,x-s*.8,y-s*.8,s*1.6,s*1.6);}c.restore();}
+  c.save();c.globalCompositeOperation='lighter';c.rotate(rot);if(red){c.globalAlpha=.45+bp.slash*.4;c.drawImage(red,(side>0?-6:-30),-46,40,48);}c.restore();
   c.rotate(rot);c.translate(0,-12);c.scale(side,1);cleaver(scene,c,pal,clock,side+seed,light);c.restore();}}
 export function drawViemAdornment(scene,c,target,t,layer='front'){
  const p=target.player,worn=viemWorn(p),orb=p?.equipped===VIEM_BLADES||(worn&&p.artifacts?.includes?.(VIEM_BLADES))||!!target.showBlades;
