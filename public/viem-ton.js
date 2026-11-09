@@ -4,7 +4,7 @@ import {sliceTudoSkin} from './tudo-ma-ton.js';
 // tóc đỏ rực, áo đỏ thẫm viền vàng, cầu lửa trong lòng bàn tay. Hiệu ứng: biển lửa dưới chân, áo choàng lửa sau lưng,
 // 2 dải hỏa long quấn thân, trận Liệt Dương xoay dưới đất, tro lửa bay, mỗi ~9 s cột lửa Phần Thiên phun lên trời.
 // Pháp bảo (500c): Song Đao Liệt Diễm — 2 đao chặt heo bản to nung đỏ chéo sau lưng, ~7 s vung chém ra 2 bên.
-// Ảnh thân hiện là ẢNH TẠM: đổi màu từ Khuy Niết (tóc bạc→đỏ, áo tím→đỏ thẫm). Codex vẽ ảnh thật sau 12/11.
+// Ảnh đứng là ảnh thật; ảnh ngồi còn tạm (đổi màu Khuy Niết). Chỉ có dạng nam.
 export const VIEM_SKIN='phan-thien-viem-ton',VIEM_BLADES='phan-thien-song-dao';
 export const viemWorn=p=>p?.skinChoice===VIEM_SKIN&&p.rewardSkins?.includes(VIEM_SKIN);
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
@@ -23,14 +23,21 @@ export function recolorToFire(im,factory=makeSurface){const w=im.naturalWidth||i
   else if(s<.2&&l<=.42&&l>.1)o=hsl2rgb(355,.35,l*.9);                                // đen/xám áo → đỏ đen
   if(o){d[i]=o[0];d[i+1]=o[1];d[i+2]=o[2];}}
  q.putImageData(img,0,0);return f;}
+// Cắt sát viền alpha rồi đặt vào khung 384×512 chân chạm đáy (cùng chuẩn sliceTudoSkin).
+export function fitFrame(im,factory=makeSurface){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,raw=factory(w,h);if(!raw)return null;const q=raw.getContext('2d');q.drawImage(im,0,0);const d=q.getImageData(0,0,w,h).data;
+ let x0=w,y0=h,x1=0,y1=0;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>35){x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+ const f=factory(384,512);if(!f||x1<=x0)return null;const cw=x1-x0+5,ch=y1-y0+5,k=Math.min(370/cw,498/ch);f.getContext('2d').drawImage(raw,x0-2,y0-2,cw,ch,(384-cw*k)/2,506-ch*k,cw*k,ch*k);return f;}
+// Ảnh: đứng = ảnh thật (assets/viem-ton-v1/stand.png, ChatGPT vẽ theo mẫu chủ kênh); ngồi = TẠM đổi màu Khuy Niết cho tới khi có ảnh ngồi. Chỉ dạng nam.
 export function loadViemArt(scene){
- if(typeof Image==='undefined'||scene.viemSkinArt||scene.viemSkinLoading)return;scene.viemSkinLoading=true;const im=new Image();
- im.onload=()=>{scene.viemSkinArt=sliceTudoSkin(recolorToFire(im));scene.characterFrames?.clear?.();};im.onerror=()=>scene.viemSkinLoading=false;im.src='/assets/khuy-niet-v1/skin.png';}
+ if(typeof Image==='undefined'||scene.viemSkinArt||scene.viemSkinLoading)return;scene.viemSkinLoading=true;let stand=null,seat=null;
+ const done=()=>{if(stand&&seat){scene.viemSkinArt=[stand,stand,seat,seat];scene.characterFrames?.clear?.();}};
+ const a=new Image();a.onload=()=>{stand=fitFrame(a);done();};a.onerror=()=>scene.viemSkinLoading=false;a.src='/assets/viem-ton-v1/stand.png';
+ const b=new Image();b.onload=()=>{seat=sliceTudoSkin(recolorToFire(b))[2];done();};b.onerror=()=>scene.viemSkinLoading=false;b.src='/assets/khuy-niet-v1/skin.png';}
 function poseFrame(c,im,top,height,clock,alpha){if(!im||alpha<=.001)return;c.save();c.globalAlpha*=alpha;const bands=12;
  for(let i=0;i<bands;i++){const u=i/bands,shift=Math.sin(clock*.0024-u*2.8)*1.8*u*u;c.drawImage(im,0,i*im.height/bands,im.width,im.height/bands,-57+shift,top+i*height/bands,114,height/bands+.25);}c.restore();}
 export function drawViemBody(scene,c,p,pose,t){
  if(!viemWorn(p))return false;loadViemArt(scene);if(!scene.viemSkinArt)return false;
- const gender=p.gender==='nu'?1:0,stand=clamp(pose.stand??1),clock=scene.motion===false?0:t;
+ const gender=0,stand=clamp(pose.stand??1),clock=scene.motion===false?0:t;
  c.save();c.translate(0,pose.lift||0);c.rotate((pose.lean||0)*.5);
  poseFrame(c,scene.viemSkinArt[gender+2],-91,120,clock,1-stand);poseFrame(c,scene.viemSkinArt[gender],-116,144,clock,stand);c.restore();return true;}
 // ---- nhịp ----
@@ -39,7 +46,7 @@ export function viemBurst(t,seed=0,motion=true){if(!motion)return {burst:0,flash
  return {phase:ph,burst:k>0?Math.sin(Math.min(1,k*2.2)*Math.PI/2)*(1-Math.max(0,(k-.45)/.55)):0,flash:k>0&&k<.25?1-k/.25:0};}
 // Song Đao: treo chéo sau lưng, lắc nhẹ; ~7 s vung chém ra 2 bên (không chém qua mặt).
 export function viemBladePose(t,seed=0,motion=true,stand=1){const clock=motion?t:0,period=7000+seed%1400,ph=((clock+seed*29)%period)/period,slash=motion&&ph>.84?Math.sin((ph-.84)/.16*Math.PI):0;
- return {x:stand>.5?30:40,y:(stand>.5?-26:-6)+Math.sin(clock*.0017+seed)*2.5,sway:Math.sin(clock*.0013+seed)*.05,slash};}
+ return {x:stand>.5?21:40,y:(stand>.5?-25:-6)+Math.sin(clock*.0017+seed)*2.5,sway:Math.sin(clock*.0013+seed)*.05,slash};}
 // ---- sprite dùng chung (vẽ 1 lần) ----
 function flameSprite(scene,color,hot){const cache=scene.viemFlames??=new Map(),key=color+(hot?'+':'');if(cache.has(key))return cache.get(key);const f=(scene.surfaceFactory||makeSurface)(72,192);cache.set(key,f||null);if(!f)return null;
  const c=f.getContext('2d');c.globalCompositeOperation=hot?'lighter':'source-over';for(let k=0;k<30;k++){const u=k/29,y=178-u*166,r=(hot?16:25)*Math.pow(1-u,.8)+2,x=36+Math.sin(u*6)*6*u,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+(hot?'b0':'90'));g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}return f;}
@@ -50,11 +57,11 @@ function flame(c,im,x,y,w,h,a,rot=0){if(!im||a<=0||h<=0)return;c.globalAlpha=a;i
 // Dải hỏa long quấn thân: điểm thứ j trên xoắn ốc, z>0 là phía trước thân.
 function ribbonPoint(clock,i,j,seed,stand){const u=j/22,a=clock*.0034*(i?1:-1)+i*Math.PI-u*3.6+seed,top=stand>.5?-128:-96,y=24+(top-24)*((u+clock*.00045+i*.5)%1);return {x:Math.cos(a)*(40+8*Math.sin(u*9+i)),y,z:Math.sin(a),w:1-u};}
 function drawRibbons(scene,c,pal,clock,seed,stand,front,light){const core=dotSprite(scene,pal.gold),outer=dotSprite(scene,pal.red),hot=dotSprite(scene,pal.hot);c.save();c.globalCompositeOperation='lighter';
- for(let i=0;i<2;i++)for(let j=0;j<(light?14:22);j++){const q=ribbonPoint(clock,i,j*(light?22/14:1),seed,stand);if((q.z>=0)!==front)continue;const r=(6+q.w*10)*(.8+q.z*.2);const fd=Math.hypot(q.x,q.y-(stand>.5?-92:-74)),face=front?clamp((fd-r*1.6-14)/22)*.9+.1:1;
+ for(let i=0;i<2;i++)for(let j=0;j<(light?14:22);j++){const q=ribbonPoint(clock,i,j*(light?22/14:1),seed,stand);if((q.z>=0)!==front)continue;const r=(6+q.w*10)*(.8+q.z*.2);const fd=Math.hypot(q.x,q.y-(stand>.5?-76:-74)),face=front?clamp((fd-r*1.6-14)/22)*.9+.1:1;
   c.globalAlpha=.55*q.w*face;if(outer)c.drawImage(outer,q.x-r*1.8,q.y-r*1.8,r*3.6,r*3.6);c.globalAlpha=.7*q.w*face;if(core)c.drawImage(core,q.x-r,q.y-r,r*2,r*2);if(j<4&&hot){c.globalAlpha=.8*face;c.drawImage(hot,q.x-r*.7,q.y-r*.7,r*1.4,r*1.4);}}
  c.restore();}
 // Hai cầu lửa trong lòng bàn tay (đứng: ngang hông; ngồi: trên đầu gối).
-function palmFlames(scene,c,pal,clock,seed,stand,boost){const pts=stand>.5?[[-24,-30],[24,-30]]:[[-30,-8],[30,-8]],dot=dotSprite(scene,pal.orange),hotDot=dotSprite(scene,pal.hot),fl=flameSprite(scene,pal.orange,true),fh=flameSprite(scene,pal.gold,true);
+function palmFlames(scene,c,pal,clock,seed,stand,boost){const pts=stand>.5?[[-19,-29],[22,-29]]:[[-30,-8],[30,-8]],dot=dotSprite(scene,pal.orange),hotDot=dotSprite(scene,pal.hot),fl=flameSprite(scene,pal.orange,true),fh=flameSprite(scene,pal.gold,true);
  c.save();c.globalCompositeOperation='lighter';for(const [k,[x,y]] of pts.entries()){const b=.85+Math.sin(clock*.009+k*2+seed)*.15+boost*.4,r=11*b;
   c.globalAlpha=.6;if(dot)c.drawImage(dot,x-r*2.2,y-r*2.2,r*4.4,r*4.4);for(let f=0;f<3;f++){const sw=Math.sin(clock*.012+f*2.1+k)*.25;flame(c,f%2?fh:fl,x+(f-1)*3,y+3,12*b,(26+f*6)*b,.75,sw);}
   c.globalAlpha=.95;if(hotDot)c.drawImage(hotDot,x-r*.8,y-r*.8,r*1.6,r*1.6);}

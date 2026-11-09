@@ -1,9 +1,9 @@
 // Ảnh kiểm tra Phần Thiên Viêm Tôn (offline, không dùng Chrome): node scripts/render-viem.mjs [out.png]
 import fs from 'node:fs';import {createCanvas,loadImage} from '@napi-rs/canvas';
-import {drawViemBody,drawViemAdornment,viemBurst,viemBladePose,recolorToFire,VIEM_SKIN,VIEM_BLADES} from '../public/viem-ton.js';
+import {drawViemBody,drawViemAdornment,viemBurst,viemBladePose,recolorToFire,fitFrame,VIEM_SKIN,VIEM_BLADES} from '../public/viem-ton.js';
 import {sliceTudoSkin} from '../public/tudo-ma-ton.js';
 const out=process.argv[2]||'output/viem-ton-v1/review.png';fs.mkdirSync(out.replace(/[\\/][^\\/]*$/,''),{recursive:true});
-const skin=sliceTudoSkin(recolorToFire(await loadImage('public/assets/khuy-niet-v1/skin.png'),createCanvas),createCanvas),bg=await loadImage('public/assets/worlds-v2/jade-palace.png');
+const seat=sliceTudoSkin(recolorToFire(await loadImage('public/assets/khuy-niet-v1/skin.png'),createCanvas),createCanvas)[2],st=fitFrame(await loadImage('public/assets/viem-ton-v1/stand.png'),createCanvas),skin=[st,st,seat,seat],bg=await loadImage('public/assets/worlds-v2/jade-palace.png');
 const scene={motion:true,budget:{level:'balanced'},viemSkinArt:skin,surfaceFactory:(w,h)=>createCanvas(w,h)};
 const seedOf=id=>{let h=2166136261;for(const ch of String(id))h=Math.imul(h^ch.codePointAt(0),16777619);return (h>>>0)%100000;};
 const draw=(c,p,x,y,scale,stand,t)=>{const target={id:p.id,player:p,x,y,scale,pose:{stand}};drawViemAdornment(scene,c,target,t,'back');c.save();c.translate(x,y);c.scale(scale,scale);drawViemBody(scene,c,p,{stand},t);c.restore();drawViemAdornment(scene,c,target,t,'front');};
