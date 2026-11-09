@@ -49,6 +49,18 @@ export function crowdTargets(players,H,centerY=H*.62){const n=players.length;if(
  const gap=rows<=1?0:Math.min(rows<=3?205:175,H*.42/(rows-1)),top=Math.max(H*.30,Math.min(H*.80-(rows-1)*gap,centerY-(rows-1)*gap/2));
  const out=[];let i=0;for(let r=0;r<rows;r++){const len=base+(r<extra?1:0);for(let k=0;k<len;k++,i++)out.push({id:players[i].id,player:players[i],x:450+(k-(len-1)/2)*pitch,y:top+r*gap,scale,lift:0});}
  return out;}
+// 09/11: GHẾ CỐ ĐỊNH — sân có sẵn PLAZA_CAPACITY ghế so le (hàng 7 xen hàng 6, 52 ghế, dùng tối đa 50 — giữ luật >30 người 50 ghế), nhân vật nhỏ, rải đều sân.
+// Ai đã ngồi thì giữ nguyên ghế (không xếp lại cả sân khi có người vào/ra, đổi map cũng giữ). Người mới lấy ghế trống
+// gần giữa sân nhất; NPC/tu sĩ giả lấy ghế rìa nhưng vẫn trong vùng sân (rank ≤ 1). seats: Map id → số ghế, sống cùng Scene.
+export const PLAZA_ROWS=8,PLAZA_SCALE=.82,PLAZA_CAPACITY=50;
+export function plazaSlots(H,centerY){const top=H*.43,bottom=H*.85,pitch=(bottom-top)/(PLAZA_ROWS-1),step=112,cy=Math.max(top+pitch,Math.min(bottom-pitch,centerY??(top+bottom)/2)),out=[];
+ for(let r=0;r<PLAZA_ROWS;r++){const len=r%2?6:7;for(let k=0;k<len;k++){const x=450+(k-(len-1)/2)*step,y=top+r*pitch;out.push({i:out.length,x,y,rank:Math.hypot((x-450)/390,(y-cy)/((bottom-top)/2))});}}
+ return out;}
+export function stableTargets(seats,players,H,isFake=()=>false,centerY){const slots=plazaSlots(H,centerY),best=[...slots].sort((a,b)=>a.rank-b.rank||a.i-b.i).map(s=>s.i),edge=[...slots.filter(s=>s.rank<=1).sort((a,b)=>b.rank-a.rank),...slots.filter(s=>s.rank>1).sort((a,b)=>a.rank-b.rank)].map(s=>s.i);
+ const ids=new Set(players.map(p=>p.id));for(const id of [...seats.keys()])if(!ids.has(id))seats.delete(id);
+ const used=new Set(seats.values());
+ for(const p of players){if(seats.has(p.id))continue;const pick=(isFake(p)?edge:best).find(i=>!used.has(i));if(pick==null||used.size>=PLAZA_CAPACITY)continue;seats.set(p.id,pick);used.add(pick);}
+ return players.filter(p=>seats.has(p.id)).map(p=>{const s=slots[seats.get(p.id)];return {id:p.id,player:p,x:s.x,y:s.y,scale:PLAZA_SCALE,lift:0};}).sort((a,b)=>a.y-b.y||a.x-b.x);}
 // Fewer bodies animate on the plaza; ritual gets a single full-detail actor.
 // 3/11: cảnh LIVE luôn ở chế độ gọn (bỏ hào quang/vòng sáng thường trực của từng người) cho mượt, kể cả lúc ít người hay đang trình diễn.
 // Hiệu ứng hành động (đột phá, quà, chiêu thức…) vẫn chạy bình thường. Đua phi kiếm / tỷ thí / kết duyên giữ nguyên đầy đủ.

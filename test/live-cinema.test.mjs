@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createCanvas} from '@napi-rs/canvas';
-import {smallGift,shouldFocusEvent,ritualState,crowdTargets,drawRitual} from '../public/live-cinema.js';
+import {smallGift,shouldFocusEvent,ritualState,crowdTargets,drawRitual,stableTargets,PLAZA_CAPACITY} from '../public/live-cinema.js';
 import {Scene} from '../public/scene.js';
 import {PresentationQueue} from '../public/presentation.js';
 
@@ -42,4 +42,13 @@ test('plaza rows are balanced (no lone last row) and share one column pitch',()=
   const rows=new Map();for(const a of t)rows.set(a.y,(rows.get(a.y)||0)+1);const counts=[...rows.values()];
   assert.ok(Math.max(...counts)-Math.min(...counts)<=1,n+': '+counts);
   for(const a of t)assert.ok(a.x-60*a.scale>0&&a.x+60*a.scale<900);}
+});
+test('fixed plaza seats: seated players never move when others join/leave; newcomers fill free seats',()=>{
+ const seats=new Map(),mk=(p,n)=>Array.from({length:n},(_,i)=>({id:p+i}));let players=mk('a',13);
+ const first=new Map(stableTargets(seats,players,1600).map(t=>[t.id,[t.x,t.y]]));assert.equal(first.size,13);
+ players=players.filter((p,i)=>i!==2&&i!==7).concat(mk('b',4));const next=stableTargets(seats,players,1600);
+ assert.equal(next.length,15);for(const t of next)if(first.has(t.id))assert.deepEqual([t.x,t.y],first.get(t.id));
+ assert.equal(new Set(next.map(t=>t.x+','+t.y)).size,15);
+ const full=stableTargets(new Map(),mk('c',60),1600);assert.equal(full.length,PLAZA_CAPACITY);
+ for(const t of full)assert.ok(t.x-60*t.scale>0&&t.x+60*t.scale<900&&t.y<1400);
 });
