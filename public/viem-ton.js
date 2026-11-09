@@ -3,7 +3,7 @@ import {sliceTudoSkin} from './tudo-ma-ton.js';
 // Phần Thiên Viêm Tôn (09/11/2026, BẢN DEMO): skin lửa ngang tầm Khuy Niết. Thiết kế tự sáng tác theo gợi ý của chủ kênh:
 // tóc đỏ rực, áo đỏ thẫm viền vàng, cầu lửa trong lòng bàn tay. Hiệu ứng: biển lửa dưới chân, áo choàng lửa sau lưng,
 // 2 dải hỏa long quấn thân, trận Liệt Dương xoay dưới đất, tro lửa bay, mỗi ~9 s cột lửa Phần Thiên phun lên trời.
-// Pháp bảo (500c): Song Đao Liệt Diễm — 2 đao chặt heo bản to nung đỏ chéo sau lưng, ~7 s vung chém ra 2 bên.
+// Pháp bảo (500c): Song Đao Liệt Diễm — 2 dao phay lưỡi nguyên khí lửa, đứng cầm chĩa xuống đất, ~9 s bay vòng quanh thân.
 // Ảnh đứng + ngồi là ảnh thật (assets/viem-ton-v1). Chỉ có dạng nam.
 export const VIEM_SKIN='phan-thien-viem-ton',VIEM_BLADES='phan-thien-song-dao';
 export const viemWorn=p=>p?.skinChoice===VIEM_SKIN&&p.rewardSkins?.includes(VIEM_SKIN);
@@ -45,9 +45,15 @@ export function drawViemBody(scene,c,p,pose,t){
 // Phần Thiên: mỗi 9–11 s cột lửa phun từ đất lên trời (0,6 s dâng, 1,2 s tắt).
 export function viemBurst(t,seed=0,motion=true){if(!motion)return {burst:0,flash:0,phase:0};const period=9000+seed%2000,ph=((t+seed*47)%period)/period,k=(ph-.86)/.14;
  return {phase:ph,burst:k>0?Math.sin(Math.min(1,k*2.2)*Math.PI/2)*(1-Math.max(0,(k-.45)/.55)):0,flash:k>0&&k<.25?1-k/.25:0};}
-// Song Đao: treo chéo sau lưng, lắc nhẹ; ~7 s vung chém ra 2 bên (không chém qua mặt).
-export function viemBladePose(t,seed=0,motion=true,stand=1){const clock=motion?t:0,period=7000+seed%1400,ph=((clock+seed*29)%period)/period,slash=motion&&ph>.84?Math.sin((ph-.84)/.16*Math.PI):0;
- return {x:stand>.5?21:44,y:(stand>.5?-25:-6)+Math.sin(clock*.0017+seed)*2.5,sway:Math.sin(clock*.0013+seed)*.05,slash};}
+// Song Đao: đứng thì cầm chĩa mũi xuống đất, ngồi thì dựng trên lòng bàn tay; mỗi ~9 s rời tay bay vòng quanh thân ~3,4 s
+// (mũi đao đi trước, kéo vệt lửa; nửa vòng sau lưng vẽ sau thân) rồi bay về tay.
+export function viemBladePose(t,seed=0,motion=true,stand=1){const clock=motion?t:0,period=9000+seed%1400,ph=((clock+seed*29)%period)/period,fly=motion&&ph>.62?(ph-.62)/.38:0;
+ return {x:stand>.5?20:44,y:(stand>.5?-25:-6)+Math.sin(clock*.0017+seed)*1.5,sway:Math.sin(clock*.0013+seed)*.04,fly,stand};}
+const smooth=k=>{k=clamp(k);return k*k*(3-2*k);};
+function bladeState(bp,side,f){const down=bp.stand>.5,hold={x:side*bp.x,y:bp.y,rot:down?Math.PI-side*(.12+bp.sway):side*(.28+bp.sway),mirror:down?-side:side,z:1};
+ if(!(f>0))return {...hold,k:0};const k=smooth(Math.min(f/.16,(1-f)/.16)),th=(side<0?Math.PI:0)+f*TAU*1.5,cy=down?-62:-40,rx=64,ry=22,
+  ox=Math.cos(th)*rx,oy=cy+Math.sin(th)*ry,tx=-Math.sin(th)*rx,ty=Math.cos(th)*ry,orot=Math.atan2(ty,tx)+Math.PI/2;
+ let dr=((orot-hold.rot)%TAU+TAU*1.5)%TAU-Math.PI;return {x:hold.x+(ox-hold.x)*k,y:hold.y+(oy-hold.y)*k,rot:hold.rot+dr*k,mirror:side,z:k>.5?Math.sin(th):1,k,th,cy,rx,ry};}
 // ---- sprite dùng chung (vẽ 1 lần) ----
 function flameSprite(scene,color,hot){const cache=scene.viemFlames??=new Map(),key=color+(hot?'+':'');if(cache.has(key))return cache.get(key);const f=(scene.surfaceFactory||makeSurface)(72,192);cache.set(key,f||null);if(!f)return null;
  const c=f.getContext('2d');c.globalCompositeOperation=hot?'lighter':'source-over';for(let k=0;k<30;k++){const u=k/29,y=178-u*166,r=(hot?16:25)*Math.pow(1-u,.8)+2,x=36+Math.sin(u*6)*6*u,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+(hot?'b0':'90'));g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}return f;}
@@ -89,12 +95,14 @@ function cleaver(scene,c,pal,clock,k,light){
  c.globalCompositeOperation='lighter';const fl=flameSprite(scene,pal.red,true),fh=flameSprite(scene,pal.orange,true),m=light?2:4;for(let i=0;i<m;i++){const u=(i+.5)/m,y=-3-u*40,x=21-u*u*10,sw=Math.sin(clock*.012+i*1.9+k)*.25;flame(c,i%2?fh:fl,x,y,10,16+rnd(i,k)*12+Math.sin(clock*.01+i)*4,.7,Math.PI/2+.4+sw);}
  const hot=dotSprite(scene,pal.hot);c.globalAlpha=.7+Math.sin(clock*.02+k)*.3;if(hot)c.drawImage(hot,-4,-60,12,12);
  c.restore();}
-function drawBlades(scene,c,bp,pal,clock,seed,light){const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);
- for(const side of [-1,1]){const base=.28+bp.sway*side,rot=side*(base+bp.slash*1.1);c.save();c.translate(side*bp.x,bp.y);c.scale(.66,.66);
-  // vệt lửa cung chém (phía ngoài)
-  if(bp.slash>.1){c.save();c.globalCompositeOperation='lighter';const n=light?8:16;for(let i=0;i<n;i++){const u=i/(n-1),a=-Math.PI/2+side*(base+bp.slash*1.1*u),r=40,x=Math.cos(a)*r,y=Math.sin(a)*r,s=(8+u*10)*bp.slash;c.globalAlpha=u*bp.slash*.85;if(red)c.drawImage(red,x-s*1.6,y-s*1.6,s*3.2,s*3.2);if(gold)c.drawImage(gold,x-s*.8,y-s*.8,s*1.6,s*1.6);}c.restore();}
-  c.save();c.globalCompositeOperation='lighter';c.rotate(rot);if(red){c.globalAlpha=.45+bp.slash*.4;c.drawImage(red,(side>0?-6:-30),-46,40,48);}c.restore();
-  c.rotate(rot);c.translate(0,-12);c.scale(side,1);cleaver(scene,c,pal,clock,side+seed,light);c.restore();}}
+function drawBlades(scene,c,bp,pal,clock,seed,light,front){const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold),hot=dotSprite(scene,pal.hot);
+ for(const side of [-1,1]){const st=bladeState(bp,side,bp.fly);if((st.z>=0)!==front)continue;
+  // vệt lửa theo quỹ đạo bay
+  if(st.k>.3){c.save();c.globalCompositeOperation='lighter';const n=light?7:14;for(let i=1;i<=n;i++){const th=st.th-i*.07,x=Math.cos(th)*st.rx,y=st.cy+Math.sin(th)*st.ry,u=1-i/n,r=(5+u*7)*st.k;c.globalAlpha=u*.8*st.k;if(red)c.drawImage(red,x-r*1.8,y-r*1.8,r*3.6,r*3.6);if(gold)c.drawImage(gold,x-r*.8,y-r*.8,r*1.6,r*1.6);}c.restore();}
+  c.save();c.translate(st.x,st.y);c.scale(.66,.66);
+  c.save();c.globalCompositeOperation='lighter';c.rotate(st.rot);if(red){c.globalAlpha=.4+st.k*.3;c.drawImage(red,-22,-46,44,48);}c.restore();
+  c.rotate(st.rot);c.translate(0,-12);c.scale(st.mirror,1);cleaver(scene,c,pal,clock,side+seed,light);c.restore();
+  if(st.k>.3&&hot){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=st.k*.6;c.drawImage(hot,st.x-8,st.y-8,16,16);c.restore();}}}
 export function drawViemAdornment(scene,c,target,t,layer='front'){
  const p=target.player,worn=viemWorn(p),orb=p?.equipped===VIEM_BLADES||(worn&&p.artifacts?.includes?.(VIEM_BLADES))||!!target.showBlades;
  if(!worn&&!orb)return;if(worn)loadViemArt(scene);
@@ -129,9 +137,10 @@ export function drawViemAdornment(scene,c,target,t,layer='front'){
    // 6) Tro lửa bay lên (xoáy nhẹ)
    {c.save();c.globalCompositeOperation='lighter';const m=light?10:24,ember=dotSprite(scene,pal.gold),ember2=dotSprite(scene,pal.orange);for(let i=0;i<m;i++){const life=motion?((clock*.00045+rnd(i,seed))%1):rnd(i,seed),x=(rnd(i+9,seed)-.5)*130+Math.sin(life*7+i)*10,y=24-life*(200+rnd(i+4,seed)*80),a=Math.sin(life*Math.PI),r=1.6+rnd(i+2,seed)*2.4;c.globalAlpha=a;const im=i%3?ember:ember2;if(im)c.drawImage(im,x-r*2,y-r*2,r*4,r*4);}c.restore();}
   }
+  if(orb)drawBlades(scene,c,bp,pal,clock,seed,light,false);
  }else{
-  // 7) Song Đao Liệt Diễm cầm 2 tay (cả khi chỉ trang bị pháp bảo)
-  if(orb)drawBlades(scene,c,bp,pal,clock,seed,light);
+  // 7) Song Đao Liệt Diễm: cầm 2 tay / nửa vòng bay phía trước (cả khi chỉ trang bị pháp bảo)
+  if(orb)drawBlades(scene,c,bp,pal,clock,seed,light,true);
   if(worn){
   drawRibbons(scene,c,pal,clock,seed,stand,true,light);
   palmFlames(scene,c,pal,clock,seed,stand,b.burst);

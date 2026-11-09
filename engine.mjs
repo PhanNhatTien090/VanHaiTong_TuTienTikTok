@@ -2,6 +2,9 @@ import {creditMasterGift,unlockMasterLoadout,resetHistoricMasters} from './maste
 import {safeGiftUrl} from './public/gift-icons.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand} from './rebirth.mjs';
+// 09/11: skin Phần Thiên Viêm Tôn (public/viem-ton.js) — lệnh luyencong.
+export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
+const viemWorn=p=>p?.skinChoice===VIEM_SKIN_ID&&p.rewardSkins?.includes(VIEM_SKIN_ID);
 import {capturePeriodBase,ensurePeriods} from './period-tops.mjs';
 import {dailyPracticeView,creditDailyPractice,dailyAscensionView,recordDailyAscension,practiceDay} from './daily-practice.mjs';
 import {bondVipInfo} from './public/bond-policy.js';
@@ -66,7 +69,7 @@ export const CATALOG = [
 ];
 export const DEFAULT_GIFTS=GIFT_TIERS;
 // Passive rewards unlock outfits without replacing an explicit choice or visitor costume.
-const autoSkinChoiceAllowed=p=>!['manual','admin'].includes(p.skinChoiceSource)&&!['hanlap-avatar','vuonglam-avatar','shende-avatar','doraemon-avatar','tudo-ma-ton','khuy-niet-loi-ton'].includes(p.skinChoice);
+const autoSkinChoiceAllowed=p=>!['manual','admin'].includes(p.skinChoiceSource)&&!['hanlap-avatar','vuonglam-avatar','shende-avatar','doraemon-avatar','tudo-ma-ton','khuy-niet-loi-ton','phan-thien-viem-ton'].includes(p.skinChoice);
 
 export function createWorld(mode='demo') {
   return {version:1,giftPolicyVersion:GIFT_POLICY_VERSION, mode, players:{}, feed:[], events:[], seen:{}, giftCounts:{}, gifts:structuredClone(DEFAULT_GIFTS), nextBossAt:0, boss:null, totalGifts:0, totalInteractions:0, sectQi:0, settings:{bossInterval:240}, createdAt:Date.now()};
@@ -156,7 +159,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen'];
+const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -372,6 +375,8 @@ function actionCore(w,input,now) {
     }
     // 05/11: lệnh tiếp linh lực khi lên đài luận kiếm (vẫn nhận 'danh' như cũ). Ngoài giải, 'kiem' là lời trò chuyện bình thường.
     if(cmd==='kiem'&&tournamentActive(w))return action(w,{...input,type:'attack'},now);
+    // 09/11: skin Phần Thiên Viêm Tôn — gõ luyencong = vận công ×1,5 (chung hồi 10 s với tuluyen/tim, nên không cộng dồn).
+    if(cmd==='luyencong')return action(w,{...input,type:'cultivate',luyencong:true},now);
     const commands={nhapmon:'join',tuluyen:'cultivate',dotpha:'breakthrough',hai:'gather',diemdanh:'checkin',danh:'attack',hoc:'learn',ren:'craft',luyendan:'brew',dung:'use',trangbi:'equip'};
     if(commands[cmd]) {
       const wanted=CATALOG.find(x=>normalize(x.name)===rest||normalize(gameText(x.name))===rest||x.id===rest);
@@ -391,9 +396,11 @@ function actionCore(w,input,now) {
   }
   if(type==='join')return {ok:true,playerId:p.id};
   if(['cultivate','gather','attack','use','breakthrough'].includes(type)&&heavenStunned(p,now)){const left=Math.ceil((p.stunUntil-now)/1000),msg=`Đang bị Thiên Lôi trấn áp • kinh mạch tê liệt, chưa tu luyện được • còn ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(!cooldown(p,'stun-msg',20000,now))emit(w,p,msg,'status',now,{heavenStunned:true});return fail(msg);}
-  if(type==='cultivate') {p.cultivatedAt??=now;
+  if(type==='cultivate') {const viem=input.luyencong===true;
+    if(viem&&!viemWorn(p))return fail('Lệnh luyencong chỉ dành cho người đang mặc skin Phần Thiên Viêm Tôn.');
+    p.cultivatedAt??=now;
     const wait=cooldown(p,'cultivate',10000,now);if(wait)return fail(`Đang vận công • còn ${wait}s.`);
-    const q=gain(w,p,6,1,0,now,'cultivate');emit(w,p,`Vận Thanh Tâm • +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}`,'qi',now);
+    const q=gain(w,p,viem?VIEM_LUYENCONG_QI:6,1,0,now,'cultivate');emit(w,p,`${viem?'Phần Thiên Luyện Công':'Vận Thanh Tâm'} • +${q} tu vi${viem?' • Viêm Tôn ×1,5':''}${buffTag(p,now)}${practiceTag(w,p,now)}`,'qi',now,viem?{luyencong:true}:undefined);
   } else if(type==='like') {
     const count=Number(input.count);if(!Number.isFinite(count)||count<1)return fail('Số tim không hợp lệ.');
     // 4/11/2026 heartPlay (mặc định bật trên LIVE): tim là cách chơi chính — tim = vận công (chung hồi 10 s với tuluyen),
