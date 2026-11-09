@@ -13,6 +13,7 @@ function shadowOf(world, p) {
   s.settings = { ...(world.settings || {}), residents: false };
   s.social = world.social; // chỉ đọc mã xã hội có sẵn của nhân vật
   s.nextBossAt = Number.MAX_SAFE_INTEGER;
+  s.webShadow = true; // 09/11: engine bỏ qua Đạo tâm (chống auto tim LIVE) cho người chơi web
   return s;
 }
 

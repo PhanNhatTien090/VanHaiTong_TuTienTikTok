@@ -13,20 +13,20 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  if(!s)return null;
  const race=s.raceStatus,war=s.sectWar,alc=s.alchemy;
  if(race&&['registration','running'].includes(race.phase))return race.phase==='running'
-  ?{kind:'race',title:'ĐUA PHI KIẾM',tone:'sky',rows:[[1,`+${RACE_TRUONG_PER_COIN} trượng bứt tốc`],[30,`+${fmt(30*RACE_TRUONG_PER_COIN)} trượng`],[100,`+${fmt(100*RACE_TRUONG_PER_COIN)} trượng`]],note:'quà của người đang bay · top quà nhận vật cưỡi'}
-  :{kind:'race',title:'ĐUA PHI KIẾM · TUYỂN',tone:'sky',rows:[[1,'cộng điểm quà đua'],[100,'top 3 quà nhận vật cưỡi']],note:'gõ bay để vào đường đua'};
- if(war?.active&&war.phase==='running')return {kind:'war',title:'CHÍNH MA ĐẠI CHIẾN',tone:'war',rows:[[1,`đẩy ~${WAR_TRUONG_PER_COIN} trượng`],[5,`đẩy ~${fmt(5*WAR_TRUONG_PER_COIN)} trượng`],[99,'sóng thần năng lượng']],note:'mỗi phe tối đa ~612 trượng quà / 30 giây'};
+  ?{kind:'race',title:'ĐUA PHI KIẾM',tone:'sky',rows:[[1,`+${RACE_TRUONG_PER_COIN} trượng`],[100,`+${fmt(100*RACE_TRUONG_PER_COIN)} trượng`]]}
+  :{kind:'race',title:'ĐUA PHI KIẾM · TUYỂN',tone:'sky',rows:[[1,'điểm đua'],[100,'top nhận thú cưỡi']]};
+ if(war?.active&&war.phase==='running')return {kind:'war',title:'CHÍNH MA ĐẠI CHIẾN',tone:'war',rows:[[1,`đẩy ${WAR_TRUONG_PER_COIN} trượng`],[99,'sóng năng lượng']]};
  if(war?.active&&war.phase==='registration')return null;
- if(alc?.active&&alc.phase==='opening')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN · MỞ LÒ',tone:'fire',rows:[[1,'góp dược liệu vào lò']],note:'quà góp càng nhiều, đan càng tốt'};
- if(alc?.active&&alc.phase==='brewing')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN',tone:'fire',rows:[[1,'hạ nhiệt lò'],[20,'thêm linh dược'],[99,'đại hỏa 10 giây']],note:'giữ lửa trong vùng xanh'};
- if(alc?.active&&alc.phase==='tribulation')return {kind:'alchemy',title:'ĐAN KIẾP',tone:'fire',rows:[[1,'dựng khiên chắn kiếp'],[20,'khiên dày hơn']],note:'giữ khiên tới khi kiếp tan'};
- if(live(s.flowerEvent,now)){const meteor=s.flowerEvent.kind==='meteor';return {kind:'flower',title:meteor?'SAO BĂNG':'MƯA HOA',tone:meteor?'sky':'pink',rows:[[1,'+100 điểm'],[30,'+3.000 điểm']],note:'top 3 nhận pháp bảo'};}
- if(live(s.opportunity,now)){const cost=s.opportunity.costs?.[0]||10;return {kind:'opportunity',title:'CƠ DUYÊN',tone:'gold',rows:[[1,'+1 điểm cơ duyên'],[cost,'đủ điểm tự đột phá']],note:'điểm dư được giữ qua ngày'};}
- const pe=s.petEvent;if(pe?.active){const paid=(pe.rules||[]).filter(r=>r.coins>0).slice(-2);return {kind:'pets',title:'LINH THÚ CỐC',tone:'jade',rows:paid.map(r=>[r.coins,'kết bạn '+r.name]),note:'thả tim cũng mở linh thú thường'};}
+ if(alc?.active&&alc.phase==='opening')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN · MỞ LÒ',tone:'fire',rows:[[1,'góp dược liệu']]};
+ if(alc?.active&&alc.phase==='brewing')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN',tone:'fire',rows:[[1,'hạ nhiệt'],[20,'+linh dược'],[99,'đại hỏa']]};
+ if(alc?.active&&alc.phase==='tribulation')return {kind:'alchemy',title:'ĐAN KIẾP',tone:'fire',rows:[[1,'khiên chắn'],[20,'khiên dày']]};
+ if(live(s.flowerEvent,now)){const meteor=s.flowerEvent.kind==='meteor';return {kind:'flower',title:meteor?'SAO BĂNG':'MƯA HOA',tone:meteor?'sky':'pink',rows:[[1,'+100 điểm'],[30,'+3.000 điểm']]};}
+ if(live(s.opportunity,now)){const cost=s.opportunity.costs?.[0]||10;return {kind:'opportunity',title:'CƠ DUYÊN',tone:'gold',rows:[[1,'+1 điểm'],[cost,'tự đột phá']]};}
+ const pe=s.petEvent;if(pe?.active){const paid=(pe.rules||[]).filter(r=>r.coins>0).slice(-2);return {kind:'pets',title:'LINH THÚ CỐC',tone:'jade',rows:paid.map(r=>[r.coins,r.name])};}
  if(live(s.visitor,now))return null; // bảng tiên nhân đã có ảnh quà → skin riêng
  // không sự kiện: quà mặc định
  // 2000 = 1 món Vương miện 2000 coin: Tông chủ cần MỘT món ≥2000 (master-rewards.mjs), không cộng dồn. Ảnh thật tự thay khi kênh nhận quà này (giftArt theo tên+giá).
- return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi · phúc duyên'],[99,'+pháp bảo Tụ Linh'],[500,'ĐẠI LỄ'],[2000,'TÔNG CHỦ · mở hết đồ']],note:'Đại lễ: +50% tu vi + skin · Tông chủ: 1 món, không cộng dồn'};
+ return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi'],[99,'+pháp bảo'],[500,'ĐẠI LỄ'],[2000,'TÔNG CHỦ']]};
 }
 export function giftRuleHTML(r,art){
  if(!r||!r.rows.length)return ''; // 08/11 tối: thẻ chỉ ảnh quà → kết quả, không ghi chú (chủ game: đơn giản, ai hỏi thì trả lời)

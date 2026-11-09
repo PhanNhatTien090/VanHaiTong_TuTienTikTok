@@ -262,6 +262,19 @@ function protectTransferred(w,fn){
 export function action(w,input,now=Date.now()) {return protectTransferred(w,()=>unlockedAction(w,input,now));}
 // 07/11/2026: CHỐNG TỰ THẢ TIM. Tim tính điểm sự kiện tối đa ~2 tim/giây mỗi người (dồn được 120 tim cho lúc thả dồn dập).
 // Thả liên tục trung bình >1,5 tim/giây (đo ~5 phút) → tim tụ linh hồi 30 giây thay vì 10 giây. Không phát thông báo nào.
+// 09/11/2026 ĐẠO TÂM — chống auto tim / spam lệnh trên LIVE. Mốc "tham gia thật" (engagedAt) chỉ làm mới khi: trò chuyện,
+// gõ lệnh sự kiện / lệnh khác ngoài nhóm cày (tuluyen, luyencong, hai, diemdanh, dotpha) và nhóm xem thông tin, đánh yêu thú, tặng quà thật.
+// Thả tim và nhóm lệnh cày KHÔNG làm mới. Quá 15 phút không tham gia thật → cảnh báo; quá 20 phút → tim / tuluyen / luyencong / hai
+// không cộng tu vi (nhắc lại tối đa 5 phút/lần) tới khi người chơi trò chuyện hoặc tham gia sự kiện. Không áp cho web, NPC, puppet.
+export const DAO_TAM=Object.freeze({warnMs:15*60000,blockMs:20*60000,noticeMs:5*60000});
+const FARM_CMDS=new Set(['tuluyen','luyencong','hai','diemdanh','dotpha']),INFO_CMDS=new Set(['xem','tuvi','thongtin','giup','lenh','huongdan','goiy']);
+const noteEngaged=(p,now)=>{p.engagedAt=now;p.daoTamWarnedAt=0;};
+function daoTamBlocked(w,p,now){
+ if(w.webShadow||p.resident||p.puppet||p.actorKind==='npc')return false;
+ p.engagedAt??=now;const idle=now-p.engagedAt;
+ if(idle>=DAO_TAM.blockMs){if(now-(p.daoTamNoticeAt||0)>=DAO_TAM.noticeMs){p.daoTamNoticeAt=now;emit(w,p,'Đạo tâm trì trệ • chỉ thả tim / gõ lệnh lặp lại nên tạm ngừng tăng tu vi • trò chuyện hoặc tham gia sự kiện để tu tiếp','status',now,{daoTam:'blocked'});}return true;}
+ if(idle>=DAO_TAM.warnMs&&!p.daoTamWarnedAt){p.daoTamWarnedAt=now;emit(w,p,'Đạo tâm sắp trì trệ • 5 phút nữa chưa trò chuyện hoặc tham gia sự kiện sẽ ngừng tăng tu vi','status',now,{daoTam:'warn'});}
+ return false;}
 export const HEART_GATE=Object.freeze({refillPerSec:2,burst:120,tauSec:300,heavyRate:1.5,heavyCooldownMs:30000});
 export function heartGate(p,count,now=Date.now()){const g=HEART_GATE,f=p.heartFlow&&Number.isFinite(p.heartFlow.at)?p.heartFlow:{at:now,rate:0,tokens:g.burst},dt=Math.max(0,(now-f.at)/1000);
   const rate=f.rate*Math.exp(-dt/g.tauSec)+count/g.tauSec,tokens=Math.min(g.burst,f.tokens+dt*g.refillPerSec),eff=Math.max(0,Math.min(count,Math.floor(tokens)));
@@ -319,6 +332,7 @@ function actionCore(w,input,now) {
   const gender=genderCmd?parseGender(rest):type==='join'&&input.gender?parseGender(input.gender):null;
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;
   const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;
+  if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now);
     if(result.reborn)emit(w,p,result.message,'skin',now,{rebirth:true,transform:true,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});
@@ -398,6 +412,7 @@ function actionCore(w,input,now) {
   if(['cultivate','gather','attack','use','breakthrough'].includes(type)&&heavenStunned(p,now)){const left=Math.ceil((p.stunUntil-now)/1000),msg=`Đang bị Thiên Lôi trấn áp • kinh mạch tê liệt, chưa tu luyện được • còn ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(!cooldown(p,'stun-msg',20000,now))emit(w,p,msg,'status',now,{heavenStunned:true});return fail(msg);}
   if(type==='cultivate') {const viem=input.luyencong===true;
     if(viem&&!viemWorn(p))return fail('Lệnh luyencong chỉ dành cho người đang mặc skin Tần Mục Hỏa Thần.');
+    if(daoTamBlocked(w,p,now))return fail('Đạo tâm trì trệ • trò chuyện hoặc tham gia sự kiện để tu tiếp.');
     p.cultivatedAt??=now;
     const wait=cooldown(p,'cultivate',10000,now);if(wait)return fail(`Đang vận công • còn ${wait}s.`);
     const q=gain(w,p,viem?VIEM_LUYENCONG_QI:6,1,0,now,'cultivate');emit(w,p,`${viem?'Hỏa Thần Luyện Công':'Vận Thanh Tâm'} • +${q} tu vi${viem?' • Hỏa Thần ×1,5':''}${buffTag(p,now)}${practiceTag(w,p,now)}`,'qi',now,viem?{luyencong:true}:undefined);
@@ -419,10 +434,12 @@ function actionCore(w,input,now) {
     flowerScore(w,p,count,now); // Điểm sự kiện luôn nhận, độc lập hồi thưởng tu vi.
     if(heartLive){if(p.resident||p.puppet)return {ok:true,likes:count};
       if(heavenStunned(p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,stunned:true};}
+      if(daoTamBlocked(w,p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,daoTam:true};}
       const wait=cooldown(p,'cultivate',w.settings?.heartGate===true&&heartHeavy(p)?HEART_GATE.heavyCooldownMs:10000,now);if(wait){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,xpCooldown:wait};}
       p.cultivatedAt??=now;const q=gain(w,p,6,1,0,now,'cultivate');emit(w,p,`Tim tụ linh • vận công +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}${talking(p,now)?' • luận đạo +20%':''}`,'qi',now,{heartCultivate:true});
       p.interactions++;w.totalInteractions++;return {ok:true,likes:count,heartCultivated:true};
     }
+    if(daoTamBlocked(w,p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,daoTam:true};}
     const wait=cooldown(p,'like',15000,now);if(wait){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,xpCooldown:wait};}
     const q=gain(w,p,Math.min(3,Math.ceil(count/10)),0,0,now,true);emit(w,p,`Tụ linh từ lượt thích • +${q} tu vi`,'petal',now);
   } else if(type==='follow'||type==='share') {
@@ -443,7 +460,7 @@ function actionCore(w,input,now) {
     const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
     if(p.day===day)return fail('Hôm nay đã điểm danh. Hẹn đạo hữu ngày mai!');
     p.day=day;const got=gain(w,p,25,20,3,now);emit(w,p,`Điểm danh • +${got} tu vi, +20 linh thạch, +3 linh thảo`,'petal',now);checkinStreak(w,p,day,now,engageCtx);
-  } else if(type==='gather') {p.gatheredAt??=now;
+  } else if(type==='gather') {if(daoTamBlocked(w,p,now))return fail('Đạo tâm trì trệ • trò chuyện hoặc tham gia sự kiện để tu tiếp.');p.gatheredAt??=now;
     const wait=cooldown(p,'gather',30000,now);if(wait)return fail(`Linh thảo đang mọc • còn ${wait}s.`);
     const beforeStones=p.stones,q=gain(w,p,3,2,3,now,'gather');emit(w,p,`Hái linh thảo • +3 linh thảo, +${p.stones-beforeStones} linh thạch, +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}`,'petal',now);
   } else if(['learn','craft','brew'].includes(type)) {
@@ -816,7 +833,7 @@ function tickCore(w,now) {
   reconcilePatron(w,now);
 
   if(w.visitor&&now>=w.visitor.endsAt&&!w.visitor.closedAt){w.visitor.closedAt=now;archiveVisitor(w);auditRecord(w,'visitor-end',now,{eventId:w.visitor.id,kind:w.visitor.kind});emit(w,null,VISITORS[w.visitor.kind].name+' đã rời tiên môn • giữ nguyên quà đã nhận','visitor',now,{visitorEnd:true});}
-  autoSkyEvent(w,now);autoCeremony(w,now);tickEngagement(w,now,engageCtx);
+  autoSkyEvent(w,now);visitorRotation(w,now);autoCeremony(w,now);tickEngagement(w,now,engageCtx);
   if(w.opportunity){
     preserveOpportunityCredit(w,w.opportunity);
     if(!w.opportunity.closedAt&&now<w.opportunity.endsAt&&w.opportunity.creditClaimDay!==practiceDay(now)){
@@ -957,6 +974,20 @@ function autoSkyEvent(w,now){
   const kinds=Object.keys(SKY_EVENTS),kind=kinds[(w.autoEventSeq||0)%kinds.length];w.autoEventSeq=(w.autoEventSeq||0)+1;
   startFlowerEvent(w,now,w.settings?.autoEventLength??2,kind);w.nextAutoEventAt=now+every;
 }
+// 09/11: KHÁCH MỜI SKIN LUÂN PHIÊN — cứ 10 phút (tính từ lượt khách mời trước, kể cả lượt mở tay) một vị, bốc ngẫu nhiên
+// có trọng số: skin 300 coin (Khuy Niết, Tần Mục) trọng số 1, các vị khác 2; không bao giờ trùng vị vừa rồi. Sân bận thì thử lại sau 30 s.
+// Tắt bằng settings.visitorRotation=false. Khi bật, túi sự kiện ngẫu nhiên không còn tự mở khách mời nữa.
+export const VISITOR_ROTATION_MS=10*60000;
+export function visitorRotationWeights(){return Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k)).map(k=>[k,(VISITOR_GIFT_REWARDS[k].skinCoins||100)>=300?1:2]);}
+export function pickRotationVisitor(last,rand=Math.random){const pool=visitorRotationWeights().filter(([k])=>k!==last),total=pool.reduce((n,[,x])=>n+x,0);let r=rand()*total;for(const [k,x] of pool)if((r-=x)<0)return k;return pool.at(-1)?.[0]||null;}
+const rotationOn=w=>w.settings?.visitorRotation!==false;
+function visitorRotation(w,now){
+  if(!rotationOn(w)||w.settings?.autoEvents===false||automaticEventsPaused(w,now))return;
+  if(!w.nextVisitorAt){w.nextVisitorAt=Math.max(now+60000,(w.lastVisitorStartAt||0)+VISITOR_ROTATION_MS);return;}
+  if(now<w.nextVisitorAt)return;
+  const active=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&now-p.lastActive<5*60000).length;if(active<2){w.nextVisitorAt=now+60000;return;}
+  const kind=pickRotationVisitor(w.lastVisitorKind);if(!kind||!startVisitor(w,kind,now).ok)w.nextVisitorAt=now+30000;
+}
 // v74: RANDOM mọi sự kiện — bốc ngẫu nhiên (không lặp lại cái vừa chạy); cái nào không mở được thì thử cái khác.
 export const RANDOM_EVENTS=Object.freeze([
   ['flower','Thiên Hoa Vũ',(w,now)=>startFlowerEvent(w,now,w.settings?.autoEventLength??2,'flower')],
@@ -975,7 +1006,7 @@ export const RANDOM_EVENTS=Object.freeze([
 // v77: "xào bài" — trộn đủ 10 sự kiện, rút lần lượt; hết túi mới trộn lại → 10 lượt liên tiếp chắc chắn có đủ kết duyên, phi kiếm, tỷ thí…
 function randomEvent(w,now){if(['registration','running'].includes(w.race?.phase))return null;
   // Chính Ma Đại Chiến chỉ vào túi ngẫu nhiên khi bật settings.sectWarAuto (mặc định tắt tới khi xong phần hình).
-  const allowed=RANDOM_EVENTS.map(([id])=>id).filter(id=>!(id==='war'&&w.settings?.sectWarAuto!==true)&&!(id==='alchemy'&&w.settings?.alchemyAuto!==true)).filter(id=>!(w.settings?.visitorEveryFive&&['visitor-vuonglam','visitor-shende'].includes(id))&&!(w.settings?.randomExclude||[]).includes(id)&&!(w.settings?.eventSpacing&&id==='boss')&&!(w.settings?.scheduledCompetitions&&['race','tournament'].includes(id)));
+  const allowed=RANDOM_EVENTS.map(([id])=>id).filter(id=>!(id==='war'&&w.settings?.sectWarAuto!==true)&&!(id==='alchemy'&&w.settings?.alchemyAuto!==true)).filter(id=>!(rotationOn(w)&&id.startsWith('visitor-'))&&!(w.settings?.visitorEveryFive&&['visitor-vuonglam','visitor-shende'].includes(id))&&!(w.settings?.randomExclude||[]).includes(id)&&!(w.settings?.eventSpacing&&id==='boss')&&!(w.settings?.scheduledCompetitions&&['race','tournament'].includes(id)));
   w.randomBag=(w.randomBag||[]).filter(id=>allowed.includes(id));
   if(!w.randomBag.length){const bag=[...allowed];for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}
     if(bag.length>1&&bag[0]===w.lastRandomEvent)bag.push(bag.shift());w.randomBag=bag;}
@@ -1149,6 +1180,7 @@ export function startVisitor(w,kind='hanlap',now=Date.now()){
  if(w.opportunity&&now<w.opportunity.endsAt)return fail('Chờ sự kiện cơ duyên hiện tại kết thúc để tránh trùng lệnh.');
  const active=Object.values(w.players).filter(p=>currentParticipant(w,p,now)).length;
  archiveVisitor(w);
+ w.lastVisitorStartAt=now;w.lastVisitorKind=kind;w.nextVisitorAt=now+VISITOR_ROTATION_MS;
  w.visitor={id:'visitor-'+now,kind,startedAt:now,endsAt:now+(VISITORS[kind].duration||180000),players:{},points:0,goal:Math.min(200,Math.max(20,active*8)),bag:[],completed:false};
  if(w.settings?.visitorEveryFive&&['vuonglam','shende'].includes(kind)){const v=w.scheduledVariety??={};v.majorSinceVisitor=0;v.nextVisitor=kind==='vuonglam'?'shende':'vuonglam';v.lastVisitorAt=now;}
  for(const p of Object.values(w.players))if(currentParticipant(w,p,now))noteVisitorParticipant(w,p,now);

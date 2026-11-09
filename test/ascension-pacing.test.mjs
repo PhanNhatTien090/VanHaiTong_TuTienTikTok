@@ -7,7 +7,7 @@ function world(){const w=createWorld('live');w.settings.ascensionShowcase=true;w
 test('real free progression reaches every realm at a bounded, progressively slower cadence',()=>{
  const w=world(),p=w.players.a,milestones=[],breaks=new Set();w.settings.dailyPracticeLimit=0;w.settings.dailyRealmLimit=0;let now=N;
  for(let r=0;r<REALMS.length-1;r++){
-  let count=0;while(!readyToBreak(p)){assert.equal(action(w,{type:'cultivate',userId:p.id},now).ok,true);now+=10000;assert.ok(++count<=ASCENSION_PRACTICE_STEPS[r]);}
+  let count=0;while(!readyToBreak(p)){p.engagedAt=now; /* 09/11: người chơi thật có trò chuyện → Đạo tâm không chặn */assert.equal(action(w,{type:'cultivate',userId:p.id},now).ok,true);now+=10000;assert.ok(++count<=ASCENSION_PRACTICE_STEPS[r]);}
   const qi=p.qi,stones=p.stones,needQi=requiredQi(p),needStones=requiredStones(p);
   assert.equal(action(w,{type:'breakthrough',userId:p.id},now-1).ok,true);assert.equal(p.realm,r+1);breaks.add(w.events.findLast(e=>e.effect==='breakthrough').id);
   assert.equal(p.qi,qi-needQi);assert.equal(p.stones,stones-needStones);milestones.push({realm:p.realm,seconds:(now-N)/1000,actions:count});
