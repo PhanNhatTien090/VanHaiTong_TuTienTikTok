@@ -1,4 +1,5 @@
 import {makeSurface} from './performance.js';
+import {ownsGear} from './skin-gear.js';
 import {sliceTudoSkin} from './tudo-ma-ton.js';
 // Tần Mục Hỏa Thần (09/11/2026, BẢN DEMO): skin lửa ngang tầm Khuy Niết. Thiết kế tự sáng tác theo gợi ý của chủ kênh:
 // tóc đỏ rực, áo đỏ thẫm viền vàng, cầu lửa trong lòng bàn tay. Hiệu ứng: biển lửa dưới chân, áo choàng lửa sau lưng,
@@ -104,7 +105,7 @@ function drawBlades(scene,c,bp,pal,clock,seed,light,front){const red=dotSprite(s
   c.rotate(st.rot);c.translate(0,-12);c.scale(st.mirror,1);cleaver(scene,c,pal,clock,side+seed,light);c.restore();
   if(st.k>.3&&hot){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=st.k*.6;c.drawImage(hot,st.x-8,st.y-8,16,16);c.restore();}}}
 export function drawViemAdornment(scene,c,target,t,layer='front'){
- const p=target.player,worn=viemWorn(p),orb=p?.equipped===VIEM_BLADES||(worn&&p.artifacts?.includes?.(VIEM_BLADES))||!!target.showBlades;
+ const p=target.player,worn=viemWorn(p),orb=ownsGear(p,VIEM_BLADES)||!!target.showBlades;
  if(!worn&&!orb)return;if(worn)loadViemArt(scene);
  const sc=target.scale||1.4,motion=scene.motion!==false,clock=motion?t:0,seed=seedOf(p.id),pal=PALETTES[seed%PALETTES.length],light=scene.budget?.level==='light'||scene.crowded,
   pose=target.pose||scene.animator?.pose?.(p,clock,motion)||{},stand=pose.stand??1,up=-stand*13,b=viemBurst(clock,seed,motion),bp=viemBladePose(t,seed,motion,stand);

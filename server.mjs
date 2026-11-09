@@ -26,6 +26,7 @@ import {streamState,eventAllowedOnLive,isNPC,actorLabel} from './public/live-int
 import {priority as voicePriority} from './public/voice.js';
 import {periodTopsView,backfillPeriodCoins,readGiftAudit} from './period-tops.mjs';
 import {monitorEventLoopDelay,performance as perfHooks} from 'node:perf_hooks';
+import {SKIN_GEAR} from './public/skin-gear.js';
 // Đo độ trễ vòng sự kiện (server bị chặn bao lâu) để soi lag khi LIVE: GET /api/perf. Chỉ đọc, không đổi gameplay.
 const loopDelay=monitorEventLoopDelay({resolution:20});loopDelay.enable();let lastElu=perfHooks.eventLoopUtilization();
 function perfView(){const ms=n=>Math.round(n/1e4)/100,elu=perfHooks.eventLoopUtilization(lastElu);lastElu=perfHooks.eventLoopUtilization();const v={loopDelayMs:{p50:ms(loopDelay.percentile(50)),p99:ms(loopDelay.percentile(99)),max:ms(loopDelay.max)},busy:Math.round(elu.utilization*1000)/1000,clients:clients.size,heapMiB:Math.round(process.memoryUsage().heapUsed/1048576),at:Date.now()};loopDelay.reset();return v;}
@@ -103,7 +104,7 @@ function payload(mode,view='full'){
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
     for(const p of [...full.players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);
     if(full.patronCurrent)top.add(full.patronCurrent);for(const h of full.honors||[])top.add(h.id);for(const id of [...(full.socialStage||[]),...(full.raceStage||[])])top.add(id);
-    value={...full,players:full.players.filter(p=>p.active||top.has(p.id)).map(p=>Object.fromEntries(fields.map(k=>[k,p[k]]))),events:[...new Map([...full.events.slice(-30),...announcementHistory[mode].recent().slice(-16)].map(e=>[e.id,e])).values()].sort((a,b)=>a.at-b.at),feed:[],seen:undefined,giftCounts:undefined,adminLog:undefined};
+    value={...full,players:full.players.filter(p=>p.active||top.has(p.id)).map(p=>({...Object.fromEntries(fields.map(k=>[k,p[k]])),skinGear:(p.artifacts||[]).filter(id=>SKIN_GEAR.includes(id))})),events:[...new Map([...full.events.slice(-30),...announcementHistory[mode].recent().slice(-16)].map(e=>[e.id,e])).values()].sort((a,b)=>a.at-b.at),feed:[],seen:undefined,giftCounts:undefined,adminLog:undefined};
   }else{
     // Chọn trước người sẽ gửi (đang hoạt động + top) để snapshot không phải dựng đủ ~8k hồ sơ mỗi 400 ms.
     let playerTotal=0;

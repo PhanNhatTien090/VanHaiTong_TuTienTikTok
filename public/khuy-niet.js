@@ -1,11 +1,12 @@
 import {makeSurface} from './performance.js';
+import {ownsGear} from './skin-gear.js';
 import {sliceTudoSkin,trimBlade} from './tudo-ma-ton.js';
 // Khuy Niết Lôi Tôn (07/11/2026): thiết kế tự sáng tác lấy cảm hứng "Âm Hư – Dương Thực": tóc bạc, vòng trán vàng,
 // vân nứt vàng trên da. Hiệu ứng thời gian thực mạnh hơn Tư Đồ: hào quang chia đôi (trái sét vàng Dương Thực, phải sét tím
 // Âm Hư), sét chạy quanh thân, mặt đất nứt vàng, thiên lôi giáng định kỳ; pháp bảo Tử Lôi Long cuộn sau vai, gầm phun sét.
 export const KHUY_SKIN='khuy-niet-loi-ton',KHUY_DRAGON='khuy-niet-tu-loi-long';
 export const khuyWorn=p=>p?.skinChoice===KHUY_SKIN&&p.rewardSkins?.includes(KHUY_SKIN);
-const dragonOnly=p=>!khuyWorn(p)&&p?.equipped===KHUY_DRAGON;
+const dragonOnly=p=>!khuyWorn(p)&&ownsGear(p,KHUY_DRAGON);
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
 const seedOf=id=>{let h=2166136261;for(const ch of String(id||''))h=Math.imul(h^ch.codePointAt(0),16777619);return (h>>>0)%100000;};
 const rnd=(i,s)=>{const x=Math.sin(i*127.1+s*.311)*43758.5453;return x-Math.floor(x);};
@@ -48,7 +49,7 @@ function flameSprite(scene,color,hot){const cache=scene.khuyFlames??=new Map(),k
 export function khuyOrbs(t,seed=0,motion=true,stand=1){const clock=motion?t:0,a=clock*.0021*(seed%2?1:-1)+seed;return [0,1].map(i=>{const ang=a+i*Math.PI;return {x:Math.cos(ang)*58,y:(stand>.5?-62:-30)+Math.sin(ang*2)*6+Math.sin(ang)*14,z:Math.sin(ang),yang:i===0};});}
 function drawOrb(c,o,pal,clock,i){const col=o.yang?pal.yang:pal.yin,deep=o.yang?pal.yangDeep:pal.yinDeep,r=5.5+o.z*1.2;c.save();c.globalCompositeOperation='screen';glowBlob(c,o.x,o.y,r*3,r*3,col,.45);c.globalCompositeOperation='source-over';const g=c.createRadialGradient(o.x-r*.35,o.y-r*.35,0,o.x,o.y,r);g.addColorStop(0,'#ffffff');g.addColorStop(.35,col);g.addColorStop(1,deep);c.fillStyle=g;c.beginPath();c.arc(o.x,o.y,r,0,TAU);c.fill();c.restore();}
 export function drawKhuyAdornment(scene,c,target,t,layer='front'){
- const p=target.player,worn=khuyWorn(p),dragon=p?.equipped===KHUY_DRAGON||(worn&&p.artifacts?.includes?.(KHUY_DRAGON))||!!target.showDragon;
+ const p=target.player,worn=khuyWorn(p),dragon=ownsGear(p,KHUY_DRAGON)||!!target.showDragon;
  if(!worn&&!dragon)return;loadKhuyArt(scene);
  const sc=target.scale||1.4,motion=scene.motion!==false,clock=motion?t:0,seed=seedOf(p.id),pal=PALETTES[seed%PALETTES.length],light=scene.budget?.level==='light'||scene.crowded,
   pose=target.pose||scene.animator?.pose?.(p,clock,motion)||{},stand=pose.stand??1,up=-stand*13,strike=khuyStrike(clock,seed,motion),key=Math.floor(clock/90);

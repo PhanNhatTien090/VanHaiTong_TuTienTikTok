@@ -1,9 +1,10 @@
 import {makeSurface} from './performance.js';
+import {ownsGear} from './skin-gear.js';
 // Tư Đồ Ma Tôn (07/11/2026): thiết kế tự sáng tác — ma tu áo đỏ-đen, đại đao Huyết Sát lơ lửng sau vai.
 // Thân nhân vật là ảnh tĩnh (4 ô như Hải Lam); mọi hiệu ứng là lớp vẽ thời gian thực, có biến thể theo từng người.
 export const TUDO_SKIN='tudo-ma-ton',TUDO_BLADE='tudo-huyet-dao';
 export const tudoWorn=p=>p?.skinChoice===TUDO_SKIN&&p.rewardSkins?.includes(TUDO_SKIN);
-const bladeOnly=p=>!tudoWorn(p)&&p?.equipped===TUDO_BLADE;
+const bladeOnly=p=>!tudoWorn(p)&&ownsGear(p,TUDO_BLADE);
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
 const seedOf=id=>{let h=2166136261;for(const ch of String(id||''))h=Math.imul(h^ch.codePointAt(0),16777619);return (h>>>0)%100000;};
 const rnd=(i,s)=>{const x=Math.sin(i*127.1+s*.311)*43758.5453;return x-Math.floor(x);};
