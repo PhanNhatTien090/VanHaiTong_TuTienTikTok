@@ -46,3 +46,11 @@ test('quản lý gỡ linh thú: removePets gỡ đúng con, linh thú đang d�
  p.spiritPets=['jade-rabbit','loi-oa','van-thu','ky-lan'];p.spiritPet='van-thu';const r=adminEditPlayer(w,'u1',{removePets:['loi-oa','van-thu']},1e12);
  assert.equal(r.ok,true);assert.deepEqual(p.spiritPets,['jade-rabbit','ky-lan']);assert.equal(p.spiritPet,'ky-lan');
 });
+test('quản lý chọn linh thú: spiritPet cấp quyền nếu chưa có, null cất linh thú, id sai bị từ chối',async()=>{
+ const {createWorld,ensurePlayer,adminEditPlayer}=await import('../engine.mjs');const w=createWorld('live');const p=ensurePlayer(w,'u1','A',1e12);
+ p.spiritPets=['jade-rabbit'];p.spiritPet='jade-rabbit';
+ let r=adminEditPlayer(w,'u1',{spiritPet:'ky-lan'},1e12);assert.equal(r.ok,true);assert.deepEqual(p.spiritPets,['jade-rabbit','ky-lan']);assert.equal(p.spiritPet,'ky-lan');
+ r=adminEditPlayer(w,'u1',{spiritPet:'jade-rabbit'},1e12);assert.equal(p.spiritPet,'jade-rabbit');assert.equal(p.spiritPets.length,2);
+ r=adminEditPlayer(w,'u1',{spiritPet:null},1e12);assert.equal(p.spiritPet,null);assert.equal(p.spiritPets.length,2);
+ r=adminEditPlayer(w,'u1',{spiritPet:'khong-co'},1e12);assert.equal(r.ok,false);
+});

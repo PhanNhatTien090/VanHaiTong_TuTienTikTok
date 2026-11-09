@@ -10,6 +10,7 @@ import {renderSimpleGuide} from './simple-guide.js';
 import {GiftComboBuffer} from './gift-combos.js';
 import {renderCompanionHUD} from './companion-fx.js';
 import {mountPetUI,renderPetUI} from './spirit-pet-ui.js';
+import {ALL_PETS,petById} from './spirit-pets.js';
 import {isEventAnnouncement} from './event-announcements.js';
 import {heartHUD} from './heart-hud.js';
 import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
@@ -141,20 +142,22 @@ function renderEditor(force=false){
   ${num('edQi','Tu vi hiện tại',p.qi)}${num('edStones','Linh thạch',p.stones)}${num('edHerbs','Linh thảo',p.herbs)}${num('edCoins','Coin quà (skin)',p.giftCoins)}
   <label class="wide">Đang trang bị<select id="edEquip"><option value="">— Không —</option>${p.artifacts.map(id=>`<option value="${esc(id)}" ${id===p.equipped?'selected':''}>${esc(name(id))}</option>`).join('')}</select></label>
   <label class="wide">Skin đang mặc<select id="edSkin"><option value="">Áo theo cảnh giới (mặc định)</option>${SPECIAL_SKINS.map(s=>`<option value="${esc(s.id)}" ${s.id===p.skinChoice?'selected':''}>${esc(s.name)}${p.rewardSkins?.includes(s.id)?'':' · cấp mới'}</option>`).join('')}</select></label>
+  <label class="wide">Linh thú đồng hành<select id="edPet"><option value="">— Không dẫn linh thú —</option>${ALL_PETS.map(x=>`<option value="${esc(x.id)}" ${x.id===p.spiritPet?'selected':''}>${esc(x.name)} · ${esc(x.rank)}${p.spiritPets?.includes(x.id)?'':' · cấp mới'}</option>`).join('')}</select></label>
   <label class="wide check"><input id="edHonorWardrobe" type="checkbox" ${!p.divineRoleHidden?'checked':''}> Khi mặc áo tự động: dùng thần trang nếu đang giữ danh hiệu</label>
   <label class="wide check"><input id="edAnnounce" type="checkbox" checked> Hiện hiệu ứng + giọng đọc khi nâng cảnh giới</label>
   <div class="editor-actions wide"><button type="submit" class="gold-button">Lưu thay đổi</button><button type="button" id="edReset" class="soft-button">Hoàn tác</button><button type="button" id="edCooldown" class="soft-button">Xóa thời gian hồi</button></div>
   </form>
-  <div class="editor-items"><b>Skin sở hữu</b>${(p.rewardSkins||[]).length?p.rewardSkins.map(id=>`<span>${esc(SPECIAL_SKINS.find(s=>s.id===id)?.name||id)}${id===p.skinChoice?' ✓':''} <button data-unskin="${esc(id)}" title="Gỡ skin">✕</button></span>`).join(''):'<small>Chưa có skin đặc biệt.</small>'}<b>Đồ đang có</b>${owned.length?owned.map(id=>`<span>${esc(name(id))} <button data-remove="${esc(id)}" title="Gỡ">✕</button></span>`).join(''):'<small>Chưa có bí pháp / pháp bảo.</small>'}${Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>`<span>${esc(name(id))} ×${n}</span>`).join('')}
+  <div class="editor-items"><b>Linh thú sở hữu</b>${(p.spiritPets||[]).length?p.spiritPets.map(id=>`<span>${esc(petById(id)?.name||id)}${id===p.spiritPet?' ✓':''} <button data-unpet="${esc(id)}" title="Gỡ linh thú">✕</button></span>`).join(''):'<small>Chưa có linh thú.</small>'}<b>Skin sở hữu</b>${(p.rewardSkins||[]).length?p.rewardSkins.map(id=>`<span>${esc(SPECIAL_SKINS.find(s=>s.id===id)?.name||id)}${id===p.skinChoice?' ✓':''} <button data-unskin="${esc(id)}" title="Gỡ skin">✕</button></span>`).join(''):'<small>Chưa có skin đặc biệt.</small>'}<b>Đồ đang có</b>${owned.length?owned.map(id=>`<span>${esc(name(id))} <button data-remove="${esc(id)}" title="Gỡ">✕</button></span>`).join(''):'<small>Chưa có bí pháp / pháp bảo.</small>'}${Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>`<span>${esc(name(id))} ×${n}</span>`).join('')}
   <div class="editor-give"><select id="edGive">${giveable.map(i=>`<option value="${esc(i.id)}">${esc(i.name)} · ${{manual:'bí pháp',artifact:'pháp bảo',pill:'đan'}[i.type]||i.type}</option>`).join('')}</select><button type="button" id="edGiveBtn" class="soft-button">＋ Trao</button></div></div>
   <small class="muted">Chỉnh tay ghi vào dữ liệu ${mode==='live'?'LIVE':'thử'} ngay lập tức và được lưu nhật ký.</small></details>`;
   // 08/11: chỉ gửi ô thực sự đổi (kèm số lúc mở form) — trước đây gửi cả form làm lùi tu vi người chơi kiếm được trong lúc đang sửa.
-  const base={name:p.name,gender:p.gender||null,realm:p.realm,qi:p.qi,stones:p.stones,herbs:p.herbs,giftCoins:p.giftCoins,equipped:p.equipped||null,skinChoice:p.skinChoice||null,divineRoleHidden:!!p.divineRoleHidden};
+  const base={name:p.name,gender:p.gender||null,realm:p.realm,qi:p.qi,stones:p.stones,herbs:p.herbs,giftCoins:p.giftCoins,equipped:p.equipped||null,skinChoice:p.skinChoice||null,spiritPet:p.spiritPet||null,divineRoleHidden:!!p.divineRoleHidden};
   const send=async(patch,msg)=>{const changed=Object.fromEntries(Object.entries(patch).filter(([k,v])=>!(k in base)||v!==base[k]));const r=await post('/api/player',{id:p.id,patch:changed,base,announce:$('#edAnnounce')?.checked});if(r.ok){toast(r.changes?.length?msg+': '+r.changes.join(', '):'Không có gì thay đổi.');await refresh();renderEditor(true);}};
-  $('#editForm').onsubmit=e=>{e.preventDefault();send({name:$('#edName').value,gender:$('#edGender').value||null,realm:Number($('#edRealm').value),qi:Number($('#edQi').value),stones:Number($('#edStones').value),herbs:Number($('#edHerbs').value),giftCoins:Number($('#edCoins').value),equipped:$('#edEquip').value||null,skinChoice:$('#edSkin').value||null,divineRoleHidden:!$('#edHonorWardrobe').checked},'Đã lưu');};
+  $('#editForm').onsubmit=e=>{e.preventDefault();send({name:$('#edName').value,gender:$('#edGender').value||null,realm:Number($('#edRealm').value),qi:Number($('#edQi').value),stones:Number($('#edStones').value),herbs:Number($('#edHerbs').value),giftCoins:Number($('#edCoins').value),equipped:$('#edEquip').value||null,skinChoice:$('#edSkin').value||null,spiritPet:$('#edPet').value||null,divineRoleHidden:!$('#edHonorWardrobe').checked},'Đã lưu');};
   $('#edReset').onclick=()=>renderEditor(true);
   $('#edCooldown').onclick=()=>send({resetCooldowns:true},'Đã xóa thời gian hồi');
   $('#edGiveBtn').onclick=()=>send({addItems:[$('#edGive').value]},'Đã trao');
+  el.querySelectorAll('[data-unpet]').forEach(b=>b.onclick=()=>{if(confirm('Gỡ linh thú khỏi '+p.name+'?'))send({removePets:[b.dataset.unpet]},'Đã gỡ linh thú');});
   el.querySelectorAll('[data-unskin]').forEach(b=>b.onclick=()=>{if(confirm('Gỡ skin khỏi '+p.name+'?'))send({removeSkins:[b.dataset.unskin]},'Đã gỡ skin');});
   el.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{if(confirm('Gỡ '+name(b.dataset.remove)+' khỏi '+p.name+'?'))send({removeItems:[b.dataset.remove]},'Đã gỡ');});
 }

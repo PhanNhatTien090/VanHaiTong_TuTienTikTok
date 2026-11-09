@@ -37,7 +37,7 @@ test('live keeps five stable rows (hearts + chat first), no admission command, w
  assert.deepEqual(base.rows.map(r=>r.cmd),['❤ thả tim','💬 trò chuyện','đột phá','học · rèn','giới tính nam/nữ']);
  assert.equal(base.rows.length,5);assert.ok(base.rows.every(r=>!r.cmd.includes('nhapmon')));
  assert.match(simpleSteps({...s,raceStatus:{phase:'registration'}}).hint,/gõ bay/);
- assert.match(simpleSteps({...s,raceStatus:{phase:'running'}}).hint,/thả tim/);
+ assert.match(simpleSteps({...s,raceStatus:{phase:'running'}}).hint,/phi kiếm/);
  assert.match(simpleSteps({...s,boss:{hp:10,endsAt:N+1000}}).hint,/thả tim/);
  assert.deepEqual(simpleSteps({...s,raceStatus:{phase:'running'}}).rows,base.rows);
  // Xoay vòng: trang chính xen kẽ lệnh hằng ngày / đồng môn; trang nào cũng ≤5 dòng.

@@ -1154,6 +1154,10 @@ export function adminEditPlayer(w,id,patch={},now=Date.now(),{announce=false}={}
       p.rewardSkins??=[];if(skin&&!p.rewardSkins.includes(id)){p.rewardSkins.push(id);changes.push('cấp skin '+skin.name);}
       if((p.skinChoice||null)!==id){changes.push('mặc '+(skin?skin.name:'áo theo bậc'));p.skinChoice=id;p.skinChoiceSource='admin';p.divineRoleHidden=id===null;}}
     if(patch.divineRoleHidden!==undefined){if(typeof patch.divineRoleHidden!=='boolean')throw Error('Chế độ thần trang không hợp lệ.');if(!!p.divineRoleHidden!==patch.divineRoleHidden){p.divineRoleHidden=patch.divineRoleHidden;changes.push(p.divineRoleHidden?'dùng áo cảnh giới':'dùng thần trang khi giữ danh hiệu');}}
+    // 09/11: chọn linh thú đồng hành từ trang quản lý (tự cấp quyền sở hữu nếu chưa có); null = cất linh thú.
+    if(patch.spiritPet!==undefined){const id=patch.spiritPet||null,pet=id&&ALL_PETS.find(x=>x.id===id);if(id&&!pet)throw Error('Linh thú không tồn tại.');
+      p.spiritPets??=[];if(pet&&!p.spiritPets.includes(id)){p.spiritPets.push(id);changes.push('cấp linh thú '+pet.name);}
+      if((p.spiritPet||null)!==id){p.spiritPet=id;changes.push(pet?'đồng hành '+pet.name:'cất linh thú');}}
     // 08/11: gỡ linh thú (thu hồi thần thú nhận nhầm theo luật Tông chủ cũ); linh thú đang dẫn bị gỡ thì đổi sang con mạnh nhất còn lại.
     for(const id of [].concat(patch.removePets||[])){const i=(p.spiritPets||[]).indexOf(id);if(i>=0){p.spiritPets.splice(i,1);if(p.spiritPet===id)p.spiritPet=[...ALL_PETS].reverse().find(x=>p.spiritPets.includes(x.id))?.id||null;changes.push('gỡ linh thú '+(ALL_PETS.find(x=>x.id===id)?.name||id));}}
     for(const id of [].concat(patch.removeSkins||[])){const i=(p.rewardSkins||[]).indexOf(id);if(i>=0){p.rewardSkins.splice(i,1);if(p.skinChoice===id)p.skinChoice=null;changes.push('gỡ skin '+(SPECIAL_SKINS.find(s=>s.id===id)?.name||id));}}
