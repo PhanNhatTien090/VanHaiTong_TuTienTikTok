@@ -90,3 +90,9 @@ body.sword-race #gearGuide,body.abyss-fight #gearGuide,body.alchemy-on #gearGuid
 /* 08/11/2026: ảnh món quà thật thay số coin trên bảng sự kiện skin (public/gift-icons.js). */
 .gift-ico{height:1.55em;width:auto;vertical-align:middle;margin:0 .12em;filter:drop-shadow(0 1px 2px #000)}
 .gift-ico-name{color:#ffe08a}
+
+/* 09/11/2026: thẻ luật quà không che người — cột phải bám NGAY DƯỚI bảng TOP QUÀ (app.js đặt top theo vị trí #giftRanks),
+   thẻ gọn: chữ nhỏ, rộng vừa nội dung, tối đa bằng bề ngang TOP QUÀ. */
+html body.overlay #phoneHudRight{width:33%;max-height:none}
+html body.overlay #phoneHudRight #giftBoard.gift-board.gift-rule-card:not([hidden]){display:flex!important;width:auto!important;max-width:100%!important;font-size:clamp(8px,1.35cqw,15px)!important;padding:3px 7px 4px!important;gap:1px;border-radius:9px}
+html body.overlay #phoneHudRight #giftBoard.gift-rule-card .grc-gift .gift-ico{height:1.7em}

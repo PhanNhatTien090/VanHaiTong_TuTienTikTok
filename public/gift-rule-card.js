@@ -26,7 +26,7 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  if(live(s.visitor,now))return null; // bảng tiên nhân đã có ảnh quà → skin riêng
  // không sự kiện: quà mặc định
  // 2000 = 1 món Vương miện 2000 coin: Tông chủ cần MỘT món ≥2000 (master-rewards.mjs), không cộng dồn. Ảnh thật tự thay khi kênh nhận quà này (giftArt theo tên+giá).
- return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi · phúc duyên'],[99,'+pháp bảo Tụ Linh'],[500,'Phượng hoàng · ĐẠI LỄ'],[2000,'TÔNG CHỦ · mở hết đồ']],note:'Đại lễ: +50% tu vi + skin · Tông chủ: 1 món, không cộng dồn'};
+ return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi · phúc duyên'],[99,'+pháp bảo Tụ Linh'],[500,'ĐẠI LỄ'],[2000,'TÔNG CHỦ · mở hết đồ']],note:'Đại lễ: +50% tu vi + skin · Tông chủ: 1 món, không cộng dồn'};
 }
 export function giftRuleHTML(r,art){
  if(!r||!r.rows.length)return ''; // 08/11 tối: thẻ chỉ ảnh quà → kết quả, không ghi chú (chủ game: đơn giản, ai hỏi thì trả lời)

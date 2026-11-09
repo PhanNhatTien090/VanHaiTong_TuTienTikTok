@@ -10,5 +10,5 @@ test('thẻ luật quà: đúng sự kiện, số khớp server, ảnh quà th�
   if(r.rows.length)assert.match(html,/<img class="gift-ico" src="\/assets\/gifts\/[a-z-]+\.png"/);assert.doesNotMatch(html,/coin/i);}
  assert.equal(giftRules({visitor:{startedAt:0,endsAt:2e12},serverNow:now}),null,'tiên nhân đã có bảng skin riêng');
  const d=giftRules({sectWar:{active:false,phase:'finished'},serverNow:now});assert.equal(d.kind,'default');
- const {MASTER_COINS}=await import('../master-rewards.mjs');const master=d.rows.find(r=>/TÔNG CHỦ/.test(r[1]));assert.ok(master&&master[0]>=MASTER_COINS);assert.match(giftRuleHTML(d,{}),/crown.png/);assert.doesNotMatch(giftRuleHTML(d,{}),/×4/);assert.ok(d.rows.some(r=>r[0]>=500&&/Phượng hoàng/.test(r[1])));
+ const {MASTER_COINS}=await import('../master-rewards.mjs');const master=d.rows.find(r=>/TÔNG CHỦ/.test(r[1]));assert.ok(master&&master[0]>=MASTER_COINS);assert.match(giftRuleHTML(d,{}),/crown.png/);assert.doesNotMatch(giftRuleHTML(d,{}),/×4/);assert.ok(d.rows.some(r=>r[0]>=500&&/ĐẠI LỄ/.test(r[1])));assert.ok(!d.rows.some(r=>/Phượng hoàng/.test(r[1])),'09/11: bỏ chữ Phượng hoàng cho thẻ gọn');
 });

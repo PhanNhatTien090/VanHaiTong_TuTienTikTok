@@ -281,6 +281,10 @@ applyResidents();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
 if(overlay)setInterval(()=>renderGearGuide(state,esc),1000);
+// 09/11: thẻ luật quà (cột phải) bám NGAY DƯỚI bảng TOP QUÀ để không che người giữa sân; TOP QUÀ ẩn thì lên sát góc trên.
+if(overlay){const placeRail=()=>{const shell=document.querySelector('.scene-shell'),rail=document.getElementById('phoneHudRight'),top=document.getElementById('giftRanks');if(!shell||!rail)return;
+  let y='5.6%';if(top&&!top.hidden&&getComputedStyle(top).display!=='none'){const a=shell.getBoundingClientRect(),b=top.getBoundingClientRect();if(b.height>0)y=Math.round(b.bottom-a.top+Math.max(3,a.height*.004))+'px';}
+  if(rail.style.top!==y)rail.style.setProperty('top',y);};placeRail();setInterval(placeRail,1000);addEventListener('resize',placeRail);}
 if(overlay){let railTurn=0;setInterval(()=>{const rail=document.getElementById('phoneHudRight');if(!rail)return;
   const extra=[...rail.children].filter(el=>el.id!=='giftBoard'&&el.id!=='giftRanks');for(const el of extra)el.classList.remove('rail-rotate-hide');
   const shown=extra.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none'&&el.textContent.trim());
