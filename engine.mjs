@@ -2,7 +2,7 @@ import {creditMasterGift,unlockMasterLoadout,resetHistoricMasters} from './maste
 import {safeGiftUrl} from './public/gift-icons.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand} from './rebirth.mjs';
-// 09/11: skin Phần Thiên Viêm Tôn (public/viem-ton.js) — lệnh luyencong.
+// 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
 const viemWorn=p=>p?.skinChoice===VIEM_SKIN_ID&&p.rewardSkins?.includes(VIEM_SKIN_ID);
 import {capturePeriodBase,ensurePeriods} from './period-tops.mjs';
@@ -375,7 +375,7 @@ function actionCore(w,input,now) {
     }
     // 05/11: lệnh tiếp linh lực khi lên đài luận kiếm (vẫn nhận 'danh' như cũ). Ngoài giải, 'kiem' là lời trò chuyện bình thường.
     if(cmd==='kiem'&&tournamentActive(w))return action(w,{...input,type:'attack'},now);
-    // 09/11: skin Phần Thiên Viêm Tôn — gõ luyencong = vận công ×1,5 (chung hồi 10 s với tuluyen/tim, nên không cộng dồn).
+    // 09/11: skin Tần Mục Hỏa Thần — gõ luyencong = vận công ×1,5 (chung hồi 10 s với tuluyen/tim, nên không cộng dồn).
     if(cmd==='luyencong')return action(w,{...input,type:'cultivate',luyencong:true},now);
     const commands={nhapmon:'join',tuluyen:'cultivate',dotpha:'breakthrough',hai:'gather',diemdanh:'checkin',danh:'attack',hoc:'learn',ren:'craft',luyendan:'brew',dung:'use',trangbi:'equip'};
     if(commands[cmd]) {
@@ -397,10 +397,10 @@ function actionCore(w,input,now) {
   if(type==='join')return {ok:true,playerId:p.id};
   if(['cultivate','gather','attack','use','breakthrough'].includes(type)&&heavenStunned(p,now)){const left=Math.ceil((p.stunUntil-now)/1000),msg=`Đang bị Thiên Lôi trấn áp • kinh mạch tê liệt, chưa tu luyện được • còn ${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;if(!cooldown(p,'stun-msg',20000,now))emit(w,p,msg,'status',now,{heavenStunned:true});return fail(msg);}
   if(type==='cultivate') {const viem=input.luyencong===true;
-    if(viem&&!viemWorn(p))return fail('Lệnh luyencong chỉ dành cho người đang mặc skin Phần Thiên Viêm Tôn.');
+    if(viem&&!viemWorn(p))return fail('Lệnh luyencong chỉ dành cho người đang mặc skin Tần Mục Hỏa Thần.');
     p.cultivatedAt??=now;
     const wait=cooldown(p,'cultivate',10000,now);if(wait)return fail(`Đang vận công • còn ${wait}s.`);
-    const q=gain(w,p,viem?VIEM_LUYENCONG_QI:6,1,0,now,'cultivate');emit(w,p,`${viem?'Phần Thiên Luyện Công':'Vận Thanh Tâm'} • +${q} tu vi${viem?' • Viêm Tôn ×1,5':''}${buffTag(p,now)}${practiceTag(w,p,now)}`,'qi',now,viem?{luyencong:true}:undefined);
+    const q=gain(w,p,viem?VIEM_LUYENCONG_QI:6,1,0,now,'cultivate');emit(w,p,`${viem?'Hỏa Thần Luyện Công':'Vận Thanh Tâm'} • +${q} tu vi${viem?' • Hỏa Thần ×1,5':''}${buffTag(p,now)}${practiceTag(w,p,now)}`,'qi',now,viem?{luyencong:true}:undefined);
   } else if(type==='like') {
     const count=Number(input.count);if(!Number.isFinite(count)||count<1)return fail('Số tim không hợp lệ.');
     // 4/11/2026 heartPlay (mặc định bật trên LIVE): tim là cách chơi chính — tim = vận công (chung hồi 10 s với tuluyen),
@@ -1167,7 +1167,7 @@ function claimVisitor(w,p,now){
  if(e.players[p.id])return {ok:true,duplicate:true};
  if(Object.keys(e.players).length>=10000)return fail('Sự kiện đã đủ người.');
  e.players[p.id]={joinedAt:now,awarded:false,lastPointAt:0};
- if(e.kind==='hanlap'||e.kind==='shende'||e.kind==='doraemon'||e.kind==='hailam'||e.kind==='tudo'||e.kind==='khuyniet'||e.completed)awardVisitor(w,p,e,now);
+ if(e.kind==='hanlap'||e.kind==='shende'||e.kind==='doraemon'||e.kind==='hailam'||e.kind==='tudo'||e.kind==='khuyniet'||e.kind==='viemton'||e.completed)awardVisitor(w,p,e,now);
  else emit(w,p,'Đã nhập trận truyền đạo • cùng tu luyện và thả tim','visitor',now,{visitorKind:e.kind});
  return {ok:true};
 }

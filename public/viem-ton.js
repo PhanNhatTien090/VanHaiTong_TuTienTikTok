@@ -1,6 +1,6 @@
 import {makeSurface} from './performance.js';
 import {sliceTudoSkin} from './tudo-ma-ton.js';
-// Phần Thiên Viêm Tôn (09/11/2026, BẢN DEMO): skin lửa ngang tầm Khuy Niết. Thiết kế tự sáng tác theo gợi ý của chủ kênh:
+// Tần Mục Hỏa Thần (09/11/2026, BẢN DEMO): skin lửa ngang tầm Khuy Niết. Thiết kế tự sáng tác theo gợi ý của chủ kênh:
 // tóc đỏ rực, áo đỏ thẫm viền vàng, cầu lửa trong lòng bàn tay. Hiệu ứng: biển lửa dưới chân, áo choàng lửa sau lưng,
 // 2 dải hỏa long quấn thân, trận Liệt Dương xoay dưới đất, tro lửa bay, mỗi ~9 s cột lửa Phần Thiên phun lên trời.
 // Pháp bảo (500c): Song Đao Liệt Diễm — 2 dao phay lưỡi nguyên khí lửa, đứng cầm chĩa xuống đất, ~9 s bay vòng quanh thân.
@@ -151,3 +151,9 @@ export function drawViemAdornment(scene,c,target,t,layer='front'){
   }
  }
  c.restore();}
+// NPC khi sự kiện mở: Tần Mục Hỏa Thần lớn giữa sân, cầm song đao, cột lửa bùng lên lúc xuất hiện.
+export function drawViemVisitor(scene,c,e,t,H){
+ if(e?.kind!=='viemton'||Date.now()>=e.endsAt)return false;loadViemArt(scene);if(!scene.viemSkinArt)return true;
+ const p={id:'viem-visitor',gender:'nam',realm:1,skinChoice:VIEM_SKIN,rewardSkins:[VIEM_SKIN],equipped:VIEM_BLADES},age=Date.now()-e.startedAt,rise=clamp(age/1500),target={id:p.id,player:p,x:450,y:H*.46+(1-rise)*-60,scale:2.1,pose:{stand:1}};
+ c.save();if(age<1600){const k=1-age/1600;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=k*.5;c.fillStyle='#ff6a1c';c.fillRect(0,0,900,H);c.restore();}
+ c.globalAlpha*=rise;drawViemAdornment(scene,c,target,t,'back');c.save();c.translate(target.x,target.y);c.scale(target.scale,target.scale);poseFrame(c,scene.viemSkinArt[0],-116,144,scene.motion?t:0,1);c.restore();drawViemAdornment(scene,c,target,t,'front');c.restore();return true;}

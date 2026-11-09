@@ -9,5 +9,5 @@ function frame(t){canvas.width=540;canvas.height=960;c.setTransform(.6,0,0,.6,0,
  const k=descent<0?-1:(t-descent)/TRANSFORM_MS,ev={transform:'viemton'},pos={x:450,y:1210,scale:6.4},show=k<0||k>=1||k>REVEAL_AT;if(k>=0&&k<1)drawTransform(c,ev,t,k,pos,1600,'back');
  const target={id:p.id,player:p,x:450,y:1210,scale:6.4,pose:{stand}};if(show)drawViemAdornment(scene,c,target,t,'back');c.save();c.translate(target.x,target.y);c.scale(target.scale,target.scale);if(show)drawViemBody(scene,c,p,{stand},t);c.restore();if(show)drawViemAdornment(scene,c,target,t,'front');
  if(k>=0&&k<1)drawTransform(c,ev,t,k,pos,1600,'front');
- c.textAlign='center';c.fillStyle='#ffe6cc';c.font='bold 36px Arial';c.fillText('PHẦN THIÊN VIÊM TÔN',450,140);c.font='22px Arial';c.fillText('300 coin skin · 500 coin thêm Song Đao Liệt Diễm',450,185);requestAnimationFrame(frame);}
+ c.textAlign='center';c.fillStyle='#ffe6cc';c.font='bold 36px Arial';c.fillText('TẦN MỤC HỎA THẦN',450,140);c.font='22px Arial';c.fillText('300 coin skin · 500 coin thêm Song Đao Liệt Diễm',450,185);requestAnimationFrame(frame);}
 requestAnimationFrame(frame);

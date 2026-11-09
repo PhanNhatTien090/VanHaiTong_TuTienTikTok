@@ -5,9 +5,10 @@ export const VISITOR_GIFT_REWARDS=Object.freeze({
  hanlap:{skin:'hanlap-avatar',skinName:'Hàn Lập',cell:1,skinCoins:100,artifactCoins:200,artifact:'hanlap-bamboo-swords',artifactName:'Thanh Trúc Phong Vân Kiếm'},
  tudo:{skin:'tudo-ma-ton',skinName:'Tư Đồ Ma Tôn',cell:2,skinCoins:200,artifactCoins:300,artifact:'tudo-huyet-dao',artifactName:'Huyết Sát Ma Đao'},
  khuyniet:{skin:'khuy-niet-loi-ton',skinName:'Khuy Niết Lôi Tôn',cell:0,skinCoins:300,artifactCoins:500,artifact:'khuy-niet-tu-loi-long',artifactName:'Tử Lôi Long'},
+ viemton:{skin:'phan-thien-viem-ton',skinName:'Tần Mục Hỏa Thần',cell:0,skinCoins:300,artifactCoins:500,artifact:'phan-thien-song-dao',artifactName:'Song Đao Liệt Diễm',icon:'sword'},
  vuonglam:{skin:'vuonglam-avatar',skinName:'Vương Lâm / Lý Mộ Uyển',cell:0,skinCoins:200,artifactCoins:300,artifact:'vuonglam-soul-banner',artifactName:'Hồn Phiên'}
 });
-export const SIGNATURE_ARTIFACTS=Object.values(VISITOR_GIFT_REWARDS).map(r=>({id:r.artifact,name:r.artifactName,type:'artifact',icon:r.cell===1?'sword':'orb',tier:0,price:0,herbs:0,damage:80,bonus:.45,exclusive:true,eventReward:r.skinName+' · tích lũy '+(r.artifactCoins||500)+' coin trong lượt xuất hiện',description:'Pháp bảo truyền thừa: +80 công lực, +45% tu vi khi trang bị. Trao cố định ở mốc '+(r.artifactCoins||500)+' coin sự kiện.'}));
+export const SIGNATURE_ARTIFACTS=Object.values(VISITOR_GIFT_REWARDS).map(r=>({id:r.artifact,name:r.artifactName,type:'artifact',icon:r.icon||(r.cell===1?'sword':'orb'),tier:0,price:0,herbs:0,damage:80,bonus:.45,exclusive:true,eventReward:r.skinName+' · tích lũy '+(r.artifactCoins||500)+' coin trong lượt xuất hiện',description:'Pháp bảo truyền thừa: +80 công lực, +45% tu vi khi trang bị. Trao cố định ở mốc '+(r.artifactCoins||500)+' coin sự kiện.'}));
 export function visitorSkinCell(p){
  const r=Object.values(VISITOR_GIFT_REWARDS).find(r=>r.skin===p.skinChoice&&p.rewardSkins?.includes(r.skin));return r?.cell??null;
 }

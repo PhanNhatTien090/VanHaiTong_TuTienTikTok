@@ -6,6 +6,7 @@ export const VISITORS=Object.freeze({
  hanlap:{name:'Hàn Lập',title:'HÀN LẬP BAN CƠ DUYÊN',cell:1,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#a5f0cf'},
  tudo:{name:'Tư Đồ Ma Tôn',title:'TƯ ĐỒ MA TÔN GIÁNG THẾ',cell:2,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff6a5a'},
  khuyniet:{name:'Khuy Niết Lôi Tôn',title:'KHUY NIẾT LÔI TÔN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#c69bff'},
+ viemton:{name:'Tần Mục Hỏa Thần',title:'TẦN MỤC HỎA THẦN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff7a2a'},
  vuonglam:{name:'Vương Lâm',title:'VƯƠNG LÂM TRUYỀN ĐẠO',cell:0,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#d4c2ff'}
 });
 export const VISITOR_RELICS=Object.freeze([

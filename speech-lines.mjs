@@ -67,6 +67,7 @@ export function speechPlan(e){
   const sys=!e.user;
   if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='tudo')return [say('tiennu','Tư Đồ Ma Tôn giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='viemton')return [say('tiennu','Tần Mục Hỏa Thần giáng thế, biển lửa đốt trời!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='khuyniet')return [say('tiennu','Khuy Niết Lôi Tôn giáng thế, thiên lôi nổ vang!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='doraemon')return [say('tiennu','Doraemon đã tới tông môn!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart){const name=({hanlap:'Hàn Lập',vuonglam:'Vương Lâm',shende:'Thần Đế'})[e.visitorKind]||titleCase(head.replace(/BAN CƠ DUYÊN|TRUYỀN ĐẠO|GIÁNG LÂM/g,''));return [say('tiennu',name+' giáng lâm Vân Hải Tông!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];}

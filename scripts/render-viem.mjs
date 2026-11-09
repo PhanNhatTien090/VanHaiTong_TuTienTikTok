@@ -1,4 +1,4 @@
-// Ảnh kiểm tra Phần Thiên Viêm Tôn (offline, không dùng Chrome): node scripts/render-viem.mjs [out.png]
+// Ảnh kiểm tra Tần Mục Hỏa Thần (offline, không dùng Chrome): node scripts/render-viem.mjs [out.png]
 import fs from 'node:fs';import {createCanvas,loadImage} from '@napi-rs/canvas';
 import {drawViemBody,drawViemAdornment,viemBurst,viemBladePose,recolorToFire,fitFrame,VIEM_SKIN,VIEM_BLADES} from '../public/viem-ton.js';
 import {sliceTudoSkin} from '../public/tudo-ma-ton.js';
@@ -17,3 +17,8 @@ draw(c,pe,1130,720,3.4,1,tb-3000);label('Thường',1070,780);draw(c,pe,1530,720
 draw(c,pe,1130,1450,3.4,1,to);label('Song Đao bay',1030,1510);
 draw(c,{id:'f6',gender:'nam',equipped:VIEM_BLADES},1530,1450,3.4,1,2000);label('Chỉ pháp bảo',1440,1510);
 fs.writeFileSync(out,cv.toBuffer('image/png'));console.log('ok burst',tb,'blast',to,out);
+// Thẻ dashboard 240×320 (public/assets/viem-ton-v1/card.png)
+{const card=createCanvas(240,320),k=card.getContext('2d');const g=k.createLinearGradient(0,0,0,320);g.addColorStop(0,'#4a1206');g.addColorStop(1,'#140402');k.fillStyle=g;k.fillRect(0,0,240,320);
+ const p={id:'card',gender:'nam',skinChoice:VIEM_SKIN,rewardSkins:[VIEM_SKIN],equipped:VIEM_BLADES},target={id:'card',player:p,x:120,y:300,scale:1.85,pose:{stand:1}};
+ drawViemAdornment(scene,k,target,2000,'back');k.save();k.translate(120,300);k.scale(1.85,1.85);drawViemBody(scene,k,p,{stand:1},2000);k.restore();drawViemAdornment(scene,k,target,2000,'front');
+ fs.writeFileSync('public/assets/viem-ton-v1/card.png',card.toBuffer('image/png'));}

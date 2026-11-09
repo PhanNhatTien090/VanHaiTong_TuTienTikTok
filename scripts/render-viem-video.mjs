@@ -1,4 +1,4 @@
-// Video demo Phần Thiên Viêm Tôn (offline): node scripts/render-viem-video.mjs <thư mục khung>
+// Video demo Tần Mục Hỏa Thần (offline): node scripts/render-viem-video.mjs <thư mục khung>
 import fs from 'node:fs';import {createCanvas,loadImage} from '@napi-rs/canvas';
 const R=process.cwd().split(String.fromCharCode(92)).join('/')+'/';
 const {drawViemBody,drawViemAdornment,viemBurst,recolorToFire,fitFrame,VIEM_SKIN,VIEM_BLADES}=await import('file:///'+R+'public/viem-ton.js');
@@ -16,6 +16,6 @@ for(let f=0;f<FPS*DUR;f++){const s=f/FPS,t=T0+s*1000;
  if(k>=0)drawTransform(c,ev,t,k,pos,1600,'back');const target={id,player:p,x:450,y:1210,scale:6.4,pose:{stand}};
  if(show){drawViemAdornment(scene,c,target,t,'back');c.save();c.translate(450,1210);c.scale(6.4,6.4);drawViemBody(scene,c,p,{stand},t);c.restore();drawViemAdornment(scene,c,target,t,'front');}
  if(k>=0)drawTransform(c,ev,t,k,pos,1600,'front');
- c.textAlign='center';c.fillStyle='#ffe6cc';c.font='bold 36px Arial';c.fillText('PHẦN THIÊN VIÊM TÔN',450,140);c.font='22px Arial';c.fillText('DEMO · ảnh thật · 500c có Song Đao Liệt Diễm',450,185);
+ c.textAlign='center';c.fillStyle='#ffe6cc';c.font='bold 36px Arial';c.fillText('TẦN MỤC HỎA THẦN',450,140);c.font='22px Arial';c.fillText('DEMO · ảnh thật · 500c có Song Đao Liệt Diễm',450,185);
  fs.writeFileSync(`${out}/f${String(f).padStart(4,'0')}.png`,cv.toBuffer('image/png'));}
 console.log('frames',FPS*DUR,'burst at',(tb-T0)/1000);
