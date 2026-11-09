@@ -59,27 +59,28 @@ function palmFlames(scene,c,pal,clock,seed,stand,boost){const pts=stand>.5?[[-24
   c.globalAlpha=.6;if(dot)c.drawImage(dot,x-r*2.2,y-r*2.2,r*4.4,r*4.4);for(let f=0;f<3;f++){const sw=Math.sin(clock*.012+f*2.1+k)*.25;flame(c,f%2?fh:fl,x+(f-1)*3,y+3,12*b,(26+f*6)*b,.75,sw);}
   c.globalAlpha=.95;if(hotDot)c.drawImage(hotDot,x-r*.8,y-r*.8,r*1.6,r*1.6);}
  c.restore();}
-// Một cây đao chặt heo: lưỡi to bản sắt đen, sống thẳng, lưỡi cong nung đỏ rực, lỗ treo, chuôi quấn vải đỏ + khoen vàng.
+// Một cây dao phay mũi nhọn: chuôi gỗ + khâu vàng; LƯỠI LÀ NGUYÊN KHÍ LỬA (trong suốt, chảy dọc thân, lõi vàng trắng).
+const qiBlade=c=>{c.beginPath();c.moveTo(-4,0);c.lineTo(-4,-74);c.quadraticCurveTo(-3.5,-90,3,-100);c.bezierCurveTo(16,-84,23,-56,21,-3);c.closePath();};
 function cleaver(scene,c,pal,clock,k,light){
  c.save();c.globalCompositeOperation='source-over';
- // chuôi
- c.fillStyle='#3a0c06';c.fillRect(-3.4,0,6.8,22);c.strokeStyle='#7a1a0a';c.lineWidth=1;for(let y=2;y<22;y+=4){c.beginPath();c.moveTo(-3.4,y);c.lineTo(3.4,y+2.5);c.stroke();}
- c.strokeStyle='#ffcc4a';c.lineWidth=1.6;c.beginPath();c.arc(0,25,3.2,0,TAU);c.stroke();c.fillStyle='#d99a2a';c.fillRect(-6,-2,12,3.4);
- // lưỡi
- const blade=()=>{c.beginPath();c.moveTo(-5,-1);c.lineTo(-5,-66);c.lineTo(24,-71);c.quadraticCurveTo(31,-36,27,-3);c.closePath();};
- const g=c.createLinearGradient(-5,0,28,0);g.addColorStop(0,'#2a2426');g.addColorStop(.3,'#6e6668');g.addColorStop(.55,'#9a9092');g.addColorStop(.8,'#8a3a1a');g.addColorStop(1,pal.orange);
- blade();c.fillStyle=g;c.fill();c.strokeStyle='#0c0604';c.lineWidth=1.2;c.stroke();
- // sống đao + lỗ treo
- c.strokeStyle='#7a5a4a';c.lineWidth=1.4;c.beginPath();c.moveTo(-3.6,-3);c.lineTo(-3.6,-64);c.stroke();
- c.globalCompositeOperation='destination-out';c.beginPath();c.arc(4,-58,3.6,0,TAU);c.fill();c.globalCompositeOperation='source-over';c.strokeStyle='#ffb43a';c.lineWidth=.9;c.beginPath();c.arc(4,-58,3.6,0,TAU);c.stroke();
- // vân dung nham trên thân đao
- c.save();blade();c.clip();c.globalCompositeOperation='lighter';c.lineCap='round';const pulse=.55+Math.sin(clock*.006+k*2)*.35;
- for(let i=0;i<4;i++){c.strokeStyle=i%2?pal.orange:pal.gold;c.globalAlpha=pulse;c.lineWidth=1.1;c.beginPath();let x=24,y=-12-i*15;c.moveTo(x,y);for(let s=1;s<4;s++){x-=6+rnd(i*4+s,k)*4;y+=(rnd(i*4+s+9,k)-.5)*9;c.lineTo(x,y);}c.stroke();}c.restore();
- // lưỡi nung trắng vàng
- c.save();c.globalCompositeOperation='lighter';c.lineCap='round';for(const [w,col,a] of [[5,pal.red,.6],[2.6,pal.gold,.9],[1,pal.hot,1]]){c.strokeStyle=col;c.globalAlpha=a;c.lineWidth=w;c.beginPath();c.moveTo(24,-71);c.quadraticCurveTo(31,-36,27,-3);c.stroke();}
- // lửa liếm ra từ lưỡi
- const fl=flameSprite(scene,pal.orange,true),fh=flameSprite(scene,pal.gold,true),n=light?3:6;for(let i=0;i<n;i++){const u=(i+.5)/n,y=-3-u*66,x=27+Math.sin(u*Math.PI)*3.5,sw=Math.sin(clock*.012+i*1.9+k)*.25;flame(c,i%2?fh:fl,x,y,10,18+rnd(i,k)*14+Math.sin(clock*.01+i)*4,.75,Math.PI/2+.5+sw);}
- c.restore();c.restore();}
+ // chuôi gỗ + khâu
+ const hg=c.createLinearGradient(-4,0,4,0);hg.addColorStop(0,'#5a3a22');hg.addColorStop(.5,'#a07a52');hg.addColorStop(1,'#4a2e1a');c.fillStyle=hg;c.beginPath();c.moveTo(-3.6,2);c.lineTo(3.6,2);c.lineTo(4.4,26);c.quadraticCurveTo(0,30,-4.4,26);c.closePath();c.fill();
+ c.fillStyle='#e8c46a';c.fillRect(-5,-1,10,5);c.fillStyle='#fff0b8';c.fillRect(-5,-1,10,1.2);
+ // hào quang lửa quanh lưỡi
+ c.globalCompositeOperation='lighter';const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);for(let i=0;i<(light?4:7);i++){const u=i/((light?4:7)-1),y=-6-u*86,x=8-u*3,r=20-u*8;c.globalAlpha=.22;if(red)c.drawImage(red,x-r,y-r,r*2,r*2);}
+ // thân lưỡi: khí lửa bán trong suốt
+ const g=c.createLinearGradient(-4,0,22,0);g.addColorStop(0,'#7a0a02e8');g.addColorStop(.35,pal.red+'e0');g.addColorStop(.72,pal.orange+'d8');g.addColorStop(1,pal.gold+'f0');
+ c.globalCompositeOperation='source-over';qiBlade(c);c.globalAlpha=.75;c.strokeStyle='#2a0402';c.lineWidth=3;c.stroke();c.globalAlpha=.92;c.fillStyle=g;c.fill();c.globalCompositeOperation='lighter';
+ // khí chảy dọc lưỡi (vệt sáng trôi từ chuôi lên mũi) + lõi sáng
+ c.save();qiBlade(c);c.clip();const n=light?4:7;for(let i=0;i<n;i++){const u=((clock*.0011+i/n+rnd(i,k)*.1)%1),y=-u*100,x=2+rnd(i+3,k)*12,h=16+rnd(i+5,k)*12;c.globalAlpha=Math.sin(u*Math.PI)*.55;if(gold)c.drawImage(gold,x-5,y-h/2,10,h);}
+ c.globalAlpha=.6;c.strokeStyle=pal.gold;c.lineWidth=1.4;c.lineCap='round';c.beginPath();c.moveTo(4,-4);c.quadraticCurveTo(8,-60,3,-94);c.stroke();c.restore();
+ // viền lưỡi trắng vàng + sống đỏ
+ c.lineCap='round';for(const [w,col,a] of [[3,pal.gold,.5],[1.2,pal.hot,.95]]){c.strokeStyle=col;c.globalAlpha=a;c.lineWidth=w;c.beginPath();c.moveTo(3,-100);c.bezierCurveTo(16,-84,23,-56,21,-3);c.stroke();}
+ c.globalCompositeOperation='source-over';c.strokeStyle='#5a0602';c.globalAlpha=.9;c.lineWidth=1.6;c.beginPath();c.moveTo(-4,-2);c.lineTo(-4,-74);c.quadraticCurveTo(-3.5,-90,3,-100);c.stroke();
+ // lửa liếm ra từ lưỡi + tia lửa ở mũi
+ c.globalCompositeOperation='lighter';const fl=flameSprite(scene,pal.red,true),fh=flameSprite(scene,pal.orange,true),m=light?3:6;for(let i=0;i<m;i++){const u=(i+.5)/m,y=-4-u*80,x=21-u*u*10,sw=Math.sin(clock*.012+i*1.9+k)*.25;flame(c,i%2?fh:fl,x,y,10,16+rnd(i,k)*12+Math.sin(clock*.01+i)*4,.7,Math.PI/2+.4+sw);}
+ const hot=dotSprite(scene,pal.hot);c.globalAlpha=.7+Math.sin(clock*.02+k)*.3;if(hot)c.drawImage(hot,-3,-106,12,12);
+ c.restore();}
 function drawBlades(scene,c,bp,pal,clock,seed,light){const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);
  for(const side of [-1,1]){const base=.28+bp.sway*side,rot=side*(base+bp.slash*1.1);c.save();c.translate(side*bp.x,bp.y);c.scale(.66,.66);
   // vệt lửa cung chém (phía ngoài)
