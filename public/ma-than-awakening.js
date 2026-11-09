@@ -194,4 +194,9 @@ export function drawMaThanAwakening(scene,c,e,t,H){
  drawQiMotes(scene,c,kq,H);
  if(a.vignette)c.drawImage(a.vignette,0,0,900,H);
  c.restore();
+ // Trả khung HUD cho scene (tên cảnh giới + phát nhạc riêng). Thiếu dòng này thì LIVE lỗi mỗi khung, mất chữ và mất nhạc.
+ const phase=s.revealed?'reveal':T<MT.cracks?'eclipse':T<MT.chains?'cracks':T<MT.face?'chains':T<MT.snap?'face':T<MT.halberd?'snap':T<MT.shards?'halberd':T<MT.horns?'armor':T<MT.dive?'horns':T<MT.dark?'dive':'void';
+ const ui={k:s.k,realm:22,phase,revealed:s.revealed,color:scene.ritualAppearance?.title||'#ffc8b8',title:'Ma Thần',subtitle:'Ma Thần Giáng Thế',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake};
+ if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.textAlign='center';c.font='600 26px Arial';c.fillStyle='#ffe8e0';c.fillText(ui.name,450,H*.06);if(s.revealed){c.font='700 44px Arial';c.fillText('MA THẦN',450,H*.1);}}
+ return ui;
 }
