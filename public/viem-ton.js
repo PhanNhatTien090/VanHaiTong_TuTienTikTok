@@ -3,9 +3,9 @@ import {sliceTudoSkin} from './tudo-ma-ton.js';
 // Phần Thiên Viêm Tôn (09/11/2026, BẢN DEMO): skin lửa ngang tầm Khuy Niết. Thiết kế tự sáng tác theo gợi ý của chủ kênh:
 // tóc đỏ rực, áo đỏ thẫm viền vàng, cầu lửa trong lòng bàn tay. Hiệu ứng: biển lửa dưới chân, áo choàng lửa sau lưng,
 // 2 dải hỏa long quấn thân, trận Liệt Dương xoay dưới đất, tro lửa bay, mỗi ~9 s cột lửa Phần Thiên phun lên trời.
-// Pháp bảo (500c): Kim Viêm Long Châu — hỏa châu lõi vàng có rồng vàng quấn, bay cạnh vai, ~7 s phun một luồng lửa.
+// Pháp bảo (500c): Song Đao Liệt Diễm — 2 đao chặt heo bản to nung đỏ chéo sau lưng, ~7 s vung chém ra 2 bên.
 // Ảnh thân hiện là ẢNH TẠM: đổi màu từ Khuy Niết (tóc bạc→đỏ, áo tím→đỏ thẫm). Codex vẽ ảnh thật sau 12/11.
-export const VIEM_SKIN='phan-thien-viem-ton',VIEM_ORB='phan-thien-kim-viem-chau';
+export const VIEM_SKIN='phan-thien-viem-ton',VIEM_BLADES='phan-thien-song-dao';
 export const viemWorn=p=>p?.skinChoice===VIEM_SKIN&&p.rewardSkins?.includes(VIEM_SKIN);
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
 const seedOf=id=>{let h=2166136261;for(const ch of String(id||''))h=Math.imul(h^ch.codePointAt(0),16777619);return (h>>>0)%100000;};
@@ -37,9 +37,9 @@ export function drawViemBody(scene,c,p,pose,t){
 // Phần Thiên: mỗi 9–11 s cột lửa phun từ đất lên trời (0,6 s dâng, 1,2 s tắt).
 export function viemBurst(t,seed=0,motion=true){if(!motion)return {burst:0,flash:0,phase:0};const period=9000+seed%2000,ph=((t+seed*47)%period)/period,k=(ph-.86)/.14;
  return {phase:ph,burst:k>0?Math.sin(Math.min(1,k*2.2)*Math.PI/2)*(1-Math.max(0,(k-.45)/.55)):0,flash:k>0&&k<.25?1-k/.25:0};}
-// Long Châu: bồng bềnh cạnh vai phải, ~7 s phồng lên phun lửa.
-export function viemOrbPose(t,seed=0,motion=true,stand=1){const clock=motion?t:0,period=7000+seed%1400,ph=((clock+seed*29)%period)/period,blast=motion&&ph>.82?Math.sin((ph-.82)/.18*Math.PI):0;
- return {x:54+Math.sin(clock*.0012+seed)*4,y:(stand>.5?-92:-58)+Math.sin(clock*.0017+seed)*6,spin:clock*.0016,scale:1+Math.sin(clock*.003)*.03+blast*.18,blast};}
+// Song Đao: treo chéo sau lưng, lắc nhẹ; ~7 s vung chém ra 2 bên (không chém qua mặt).
+export function viemBladePose(t,seed=0,motion=true,stand=1){const clock=motion?t:0,period=7000+seed%1400,ph=((clock+seed*29)%period)/period,slash=motion&&ph>.84?Math.sin((ph-.84)/.16*Math.PI):0;
+ return {x:stand>.5?30:40,y:(stand>.5?-26:-6)+Math.sin(clock*.0017+seed)*2.5,sway:Math.sin(clock*.0013+seed)*.05,slash};}
 // ---- sprite dùng chung (vẽ 1 lần) ----
 function flameSprite(scene,color,hot){const cache=scene.viemFlames??=new Map(),key=color+(hot?'+':'');if(cache.has(key))return cache.get(key);const f=(scene.surfaceFactory||makeSurface)(72,192);cache.set(key,f||null);if(!f)return null;
  const c=f.getContext('2d');c.globalCompositeOperation=hot?'lighter':'source-over';for(let k=0;k<30;k++){const u=k/29,y=178-u*166,r=(hot?16:25)*Math.pow(1-u,.8)+2,x=36+Math.sin(u*6)*6*u,g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+(hot?'b0':'90'));g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}return f;}
@@ -59,29 +59,38 @@ function palmFlames(scene,c,pal,clock,seed,stand,boost){const pts=stand>.5?[[-24
   c.globalAlpha=.6;if(dot)c.drawImage(dot,x-r*2.2,y-r*2.2,r*4.4,r*4.4);for(let f=0;f<3;f++){const sw=Math.sin(clock*.012+f*2.1+k)*.25;flame(c,f%2?fh:fl,x+(f-1)*3,y+3,12*b,(26+f*6)*b,.75,sw);}
   c.globalAlpha=.95;if(hotDot)c.drawImage(hotDot,x-r*.8,y-r*.8,r*1.6,r*1.6);}
  c.restore();}
-function drawOrb(scene,c,op,pal,clock,seed,small,light){const s=(small?.75:1)*op.scale;c.save();c.translate(op.x,op.y);c.scale(s,s);
- const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold),hot=dotSprite(scene,pal.hot),fl=flameSprite(scene,pal.orange,true);
- c.globalCompositeOperation='lighter';c.globalAlpha=.55+op.blast*.35;if(red)c.drawImage(red,-46,-46,92,92);
- // đuôi lửa bốc lên
- for(let f=0;f<(light?3:5);f++){const sw=Math.sin(clock*.01+f*1.7)*.3;flame(c,fl,(f-2)*4,2,16,40+f%2*10+op.blast*20,.6,sw);}
- // 2 vòng kim luân mảnh xoay chéo + 4 vây lửa vàng; nửa sau vòng vẽ trước lõi, nửa trước vẽ sau lõi
- c.globalCompositeOperation='source-over';c.lineCap='round';const rings=[[.5,op.spin],[-.5,-op.spin*1.3]];
- const ring=(tilt,rot,front)=>{c.save();c.rotate(tilt);for(const [w,col,al] of [[3.2,'#7a3a04',.9],[1.8,'#ffd45a',1],[.7,'#fff4c8',1]]){c.strokeStyle=col;c.lineWidth=w;c.globalAlpha=al*(front?1:.5);c.beginPath();c.ellipse(0,0,25,8,0,front?0:Math.PI,front?Math.PI:TAU);c.stroke();}
-  for(let k=0;k<3;k++){const a=rot+k*TAU/3,z=Math.sin(a);if((z>=0)!==front)continue;c.fillStyle='#ffe27a';c.globalAlpha=front?1:.5;c.beginPath();c.arc(Math.cos(a)*25,z*8,2.3,0,TAU);c.fill();}c.restore();};
- for(let k=0;k<4;k++){c.save();c.globalAlpha=1;c.rotate(k*TAU/4+op.spin*.4);c.fillStyle='#f2b432';c.strokeStyle='#7a3a04';c.lineWidth=.8;c.beginPath();c.moveTo(14,-4);c.quadraticCurveTo(22,-6,30,-1);c.quadraticCurveTo(24,0,26,5);c.quadraticCurveTo(20,2,14,4);c.closePath();c.fill();c.stroke();c.restore();}
- for(const [tl,rt] of rings)ring(tl,rt,false);
- c.globalAlpha=1;const g=c.createRadialGradient(-5,-5,0,0,0,17);g.addColorStop(0,pal.hot);g.addColorStop(.4,pal.gold);g.addColorStop(.8,pal.orange);g.addColorStop(1,pal.red);c.fillStyle=g;c.beginPath();c.arc(0,0,17,0,TAU);c.fill();
- for(const [tl,rt] of rings)ring(tl,rt,true);
- c.globalCompositeOperation='lighter';c.globalAlpha=.85;if(hot)c.drawImage(hot,-9,-9,18,18);
- // phun hỏa: luồng lửa xiên lên phía trước
- if(op.blast>.15){const n=light?7:12;for(let k=0;k<n;k++){const u=k/n,x=u*60*op.blast+Math.sin(clock*.02+k)*3,y=-u*150*op.blast,r=(10+u*22)*op.blast;c.globalAlpha=(1-u)*.85;if(red)c.drawImage(red,x-r*1.4,y-r*1.4,r*2.8,r*2.8);if(gold)c.drawImage(gold,x-r*.8,y-r*.8,r*1.6,r*1.6);}
-  c.globalAlpha=op.blast;if(hot)c.drawImage(hot,-22,-22,44,44);}
- c.restore();}
+// Một cây đao chặt heo: lưỡi to bản sắt đen, sống thẳng, lưỡi cong nung đỏ rực, lỗ treo, chuôi quấn vải đỏ + khoen vàng.
+function cleaver(scene,c,pal,clock,k,light){
+ c.save();c.globalCompositeOperation='source-over';
+ // chuôi
+ c.fillStyle='#3a0c06';c.fillRect(-3.4,0,6.8,22);c.strokeStyle='#7a1a0a';c.lineWidth=1;for(let y=2;y<22;y+=4){c.beginPath();c.moveTo(-3.4,y);c.lineTo(3.4,y+2.5);c.stroke();}
+ c.strokeStyle='#ffcc4a';c.lineWidth=1.6;c.beginPath();c.arc(0,25,3.2,0,TAU);c.stroke();c.fillStyle='#d99a2a';c.fillRect(-6,-2,12,3.4);
+ // lưỡi
+ const blade=()=>{c.beginPath();c.moveTo(-5,-1);c.lineTo(-5,-66);c.lineTo(24,-71);c.quadraticCurveTo(31,-36,27,-3);c.closePath();};
+ const g=c.createLinearGradient(-5,0,28,0);g.addColorStop(0,'#2a2426');g.addColorStop(.3,'#6e6668');g.addColorStop(.55,'#9a9092');g.addColorStop(.8,'#8a3a1a');g.addColorStop(1,pal.orange);
+ blade();c.fillStyle=g;c.fill();c.strokeStyle='#0c0604';c.lineWidth=1.2;c.stroke();
+ // sống đao + lỗ treo
+ c.strokeStyle='#7a5a4a';c.lineWidth=1.4;c.beginPath();c.moveTo(-3.6,-3);c.lineTo(-3.6,-64);c.stroke();
+ c.globalCompositeOperation='destination-out';c.beginPath();c.arc(4,-58,3.6,0,TAU);c.fill();c.globalCompositeOperation='source-over';c.strokeStyle='#ffb43a';c.lineWidth=.9;c.beginPath();c.arc(4,-58,3.6,0,TAU);c.stroke();
+ // vân dung nham trên thân đao
+ c.save();blade();c.clip();c.globalCompositeOperation='lighter';c.lineCap='round';const pulse=.55+Math.sin(clock*.006+k*2)*.35;
+ for(let i=0;i<4;i++){c.strokeStyle=i%2?pal.orange:pal.gold;c.globalAlpha=pulse;c.lineWidth=1.1;c.beginPath();let x=24,y=-12-i*15;c.moveTo(x,y);for(let s=1;s<4;s++){x-=6+rnd(i*4+s,k)*4;y+=(rnd(i*4+s+9,k)-.5)*9;c.lineTo(x,y);}c.stroke();}c.restore();
+ // lưỡi nung trắng vàng
+ c.save();c.globalCompositeOperation='lighter';c.lineCap='round';for(const [w,col,a] of [[5,pal.red,.6],[2.6,pal.gold,.9],[1,pal.hot,1]]){c.strokeStyle=col;c.globalAlpha=a;c.lineWidth=w;c.beginPath();c.moveTo(24,-71);c.quadraticCurveTo(31,-36,27,-3);c.stroke();}
+ // lửa liếm ra từ lưỡi
+ const fl=flameSprite(scene,pal.orange,true),fh=flameSprite(scene,pal.gold,true),n=light?3:6;for(let i=0;i<n;i++){const u=(i+.5)/n,y=-3-u*66,x=27+Math.sin(u*Math.PI)*3.5,sw=Math.sin(clock*.012+i*1.9+k)*.25;flame(c,i%2?fh:fl,x,y,10,18+rnd(i,k)*14+Math.sin(clock*.01+i)*4,.75,Math.PI/2+.5+sw);}
+ c.restore();c.restore();}
+function drawBlades(scene,c,bp,pal,clock,seed,light){const red=dotSprite(scene,pal.red),gold=dotSprite(scene,pal.gold);
+ for(const side of [-1,1]){const base=.28+bp.sway*side,rot=side*(base+bp.slash*1.1);c.save();c.translate(side*bp.x,bp.y);c.scale(.66,.66);
+  // vệt lửa cung chém (phía ngoài)
+  if(bp.slash>.1){c.save();c.globalCompositeOperation='lighter';const n=light?8:16;for(let i=0;i<n;i++){const u=i/(n-1),a=-Math.PI/2+side*(base+bp.slash*1.1*u),r=62,x=Math.cos(a)*r,y=Math.sin(a)*r,s=(8+u*10)*bp.slash;c.globalAlpha=u*bp.slash*.85;if(red)c.drawImage(red,x-s*1.6,y-s*1.6,s*3.2,s*3.2);if(gold)c.drawImage(gold,x-s*.8,y-s*.8,s*1.6,s*1.6);}c.restore();}
+  c.save();c.globalCompositeOperation='lighter';c.rotate(rot);if(red){c.globalAlpha=.45+bp.slash*.4;c.drawImage(red,(side>0?-6:-30),-82,40,84);}c.restore();
+  c.rotate(rot);c.translate(0,-12);c.scale(side,1);cleaver(scene,c,pal,clock,side+seed,light);c.restore();}}
 export function drawViemAdornment(scene,c,target,t,layer='front'){
- const p=target.player,worn=viemWorn(p),orb=p?.equipped===VIEM_ORB||(worn&&p.artifacts?.includes?.(VIEM_ORB))||!!target.showOrb;
+ const p=target.player,worn=viemWorn(p),orb=p?.equipped===VIEM_BLADES||(worn&&p.artifacts?.includes?.(VIEM_BLADES))||!!target.showBlades;
  if(!worn&&!orb)return;if(worn)loadViemArt(scene);
  const sc=target.scale||1.4,motion=scene.motion!==false,clock=motion?t:0,seed=seedOf(p.id),pal=PALETTES[seed%PALETTES.length],light=scene.budget?.level==='light'||scene.crowded,
-  pose=target.pose||scene.animator?.pose?.(p,clock,motion)||{},stand=pose.stand??1,up=-stand*13,b=viemBurst(clock,seed,motion),op=viemOrbPose(t,seed,motion,stand);
+  pose=target.pose||scene.animator?.pose?.(p,clock,motion)||{},stand=pose.stand??1,up=-stand*13,b=viemBurst(clock,seed,motion),bp=viemBladePose(t,seed,motion,stand);
  c.save();c.translate(target.x,target.y);c.scale(sc,sc);c.translate(0,(pose.lift||0)+up);
  if(layer==='back'){
   if(worn){
@@ -111,14 +120,16 @@ export function drawViemAdornment(scene,c,target,t,layer='front'){
    // 6) Tro lửa bay lên (xoáy nhẹ)
    {c.save();c.globalCompositeOperation='lighter';const m=light?10:24,ember=dotSprite(scene,pal.gold),ember2=dotSprite(scene,pal.orange);for(let i=0;i<m;i++){const life=motion?((clock*.00045+rnd(i,seed))%1):rnd(i,seed),x=(rnd(i+9,seed)-.5)*130+Math.sin(life*7+i)*10,y=24-life*(200+rnd(i+4,seed)*80),a=Math.sin(life*Math.PI),r=1.6+rnd(i+2,seed)*2.4;c.globalAlpha=a;const im=i%3?ember:ember2;if(im)c.drawImage(im,x-r*2,y-r*2,r*4,r*4);}c.restore();}
   }
-  // 7) Kim Viêm Long Châu sau vai (cả khi chỉ trang bị pháp bảo)
-  if(orb)drawOrb(scene,c,op,pal,clock,seed,!worn,light);
- }else if(worn){
+ }else{
+  // 7) Song Đao Liệt Diễm cầm 2 tay (cả khi chỉ trang bị pháp bảo)
+  if(orb)drawBlades(scene,c,bp,pal,clock,seed,light);
+  if(worn){
   drawRibbons(scene,c,pal,clock,seed,stand,true,light);
   palmFlames(scene,c,pal,clock,seed,stand,b.burst);
   // lửa liếm quanh gấu áo phía trước (che chân một chút)
   {c.save();c.globalCompositeOperation='lighter';const im=flameSprite(scene,pal.orange,true),n=light?4:7;for(let i=0;i<n;i++){const u=i/(n-1)-.5,fl=motion?Math.sin(clock*.011+i*2.3+seed)*.5+.5:.6;flame(c,im,u*70,30,22,(22+fl*22)*(1+b.burst*.6),.45);}c.restore();}
   // chớp sáng lúc Phần Thiên phun
   if(b.flash>0){c.save();c.globalCompositeOperation='lighter';blob(c,0,-60,110,150,pal.hot,b.flash*.45);c.restore();}
+  }
  }
  c.restore();}
