@@ -27,7 +27,7 @@ test('Tinh Hà Lưu Tinh scores comments (rate-limited) and grants its own artif
   const {announcement}=await import('../speech.mjs');
   const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});let now=2e7;
   for(const id of ['a','b','c'])action(w,{type:'chat',userId:id,name:id.toUpperCase(),text:'nhapmon'},now);
-  assert.equal(startFlowerEvent(w,now,2,'meteor').ok,true);assert.match(announcement(w.events.at(-1)),/Tinh Hà Lưu Tinh giáng thế .*Thả tim nhận thưởng mốc/);
+  assert.equal(startFlowerEvent(w,now,2,'meteor').ok,true);assert.match(announcement(w.events.at(-1)),/Tinh Hà Lưu Tinh giáng thế /);assert.doesNotMatch(announcement(w.events.at(-1)),/thả tim|tim/i);
   action(w,{type:'chat',userId:'a',name:'A',text:'hello'},now+=1000);action(w,{type:'chat',userId:'a',name:'A',text:'hi'},now+=1000);
   assert.equal(w.flowerEvent.scores.a,5,'3-second limit per viewer');
   action(w,{type:'chat',userId:'a',name:'A',text:'tuluyen'},now+=3000);assert.equal(w.flowerEvent.scores.a,10,'commands count too');

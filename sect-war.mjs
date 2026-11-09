@@ -40,7 +40,7 @@ function join(w,e,p,side,now,c,auto=false){
  if(!real(p))return null;if(e.members[p.id])return e.members[p.id];
  const m=e.members[p.id]={side,name:p.name,at:now,score:0,hearts:0,heartWindow:0,heartUnits:0,lastStrike:0};
  p.interactions=(p.interactions||0)+1;w.totalInteractions=(w.totalInteractions||0)+1;
- announce(w,p,(auto?'Tự gia nhập ':'Gia nhập ')+SIDES[side].name+' • thả tim để đẩy chiến tuyến',now,c,{warJoin:side});return m;
+ announce(w,p,(auto?'Tự gia nhập ':'Gia nhập ')+SIDES[side].name,now,c,{warJoin:side});return m;
 }
 // Đẩy chiến tuyến; trả về số điểm chiến tuyến thực sự dịch chuyển.
 function push(w,e,side,units,now,c,gift=false){

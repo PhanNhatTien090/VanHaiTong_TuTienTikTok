@@ -272,7 +272,7 @@ const noteEngaged=(p,now)=>{p.engagedAt=now;p.daoTamWarnedAt=0;};
 function daoTamBlocked(w,p,now){
  if(w.webShadow||p.resident||p.puppet||p.actorKind==='npc')return false;
  p.engagedAt??=now;const idle=now-p.engagedAt;
- if(idle>=DAO_TAM.blockMs){if(now-(p.daoTamNoticeAt||0)>=DAO_TAM.noticeMs){p.daoTamNoticeAt=now;emit(w,p,'Đạo tâm trì trệ • chỉ thả tim / gõ lệnh lặp lại nên tạm ngừng tăng tu vi • trò chuyện hoặc tham gia sự kiện để tu tiếp','status',now,{daoTam:'blocked'});}return true;}
+ if(idle>=DAO_TAM.blockMs){if(now-(p.daoTamNoticeAt||0)>=DAO_TAM.noticeMs){p.daoTamNoticeAt=now;emit(w,p,'Đạo tâm trì trệ • chỉ gõ lệnh lặp lại nên tạm ngừng tăng tu vi • trò chuyện hoặc tham gia sự kiện để tu tiếp','status',now,{daoTam:'blocked'});}return true;}
  if(idle>=DAO_TAM.warnMs&&!p.daoTamWarnedAt){p.daoTamWarnedAt=now;emit(w,p,'Đạo tâm sắp trì trệ • 5 phút nữa chưa trò chuyện hoặc tham gia sự kiện sẽ ngừng tăng tu vi','status',now,{daoTam:'warn'});}
  return false;}
 export const HEART_GATE=Object.freeze({refillPerSec:2,burst:120,tauSec:300,heavyRate:1.5,heavyCooldownMs:30000});
@@ -311,7 +311,7 @@ function unlockedAction(w,input,now) {
   if(result.chatOnly){const p=w.players[clean(input.userId,80)];if(p)newbieGuide(w,p,now);return result;}
   // In LIVE, platform metrics are acknowledgements unless the operator explicitly opts in.
   if(w.mode==='live'&&w.settings?.engagementRewards!==true&&['like','follow','share'].includes(input.type)&&!(input.type==='like'&&result.heartCultivated)){if(input.type==='like'&&result.ok&&!result.duplicate){const petPlayer=w.players[clean(input.userId,80)];if(petPlayer)petActivity(w,petPlayer,input,now,emit);}return result;}
-  const introPlayer=w.players[clean(input.userId,80)];if(introPlayer){const stage=trackIntro(w,introPlayer,result.heartCultivated?{...input,type:'cultivate'}:input,result,now);if(stage==='started'){const arrival=w.events.findLast(e=>e.user===introPlayer.id&&e.effect==='join'&&e.at===now)||emit(w,introPlayer,'Chào đồng môn mới • thả tim để vận công, trò chuyện cùng đồng môn','join',now);arrival.newcomerWelcome=true;}if(stage==='cultivated')emit(w,introPlayer,'Linh khí đã khai mở • tiếp tục tuluyen, hoặc cungtu để tìm bạn','lotus',now,{introSpark:true});}
+  const introPlayer=w.players[clean(input.userId,80)];if(introPlayer){const stage=trackIntro(w,introPlayer,result.heartCultivated?{...input,type:'cultivate'}:input,result,now);if(stage==='started'){const arrival=w.events.findLast(e=>e.user===introPlayer.id&&e.effect==='join'&&e.at===now)||emit(w,introPlayer,'Chào đồng môn mới • trò chuyện cùng đồng môn','join',now);arrival.newcomerWelcome=true;}if(stage==='cultivated')emit(w,introPlayer,'Linh khí đã khai mở • tiếp tục tuluyen, hoặc cungtu để tìm bạn','lotus',now,{introSpark:true});}
   if(result.ok&&!result.duplicate&&!result.pending&&w.mode==='live'&&w.settings?.engagementRewards!==true&&w.settings?.heartPlay===false&&['cultivate','gather','attack'].includes(input.type)&&introPlayer&&!introPlayer.puppet&&!introPlayer.resident){
     flowerScore(w,introPlayer,5,now);festivalActivity(w,introPlayer,input,now,socialContext);
   }
@@ -453,8 +453,8 @@ function actionCore(w,input,now) {
     else{p.lastShareAt=now;p.shareEvents=(p.shareEvents||0)+1;if(awarded)p.shareRewardDay=day;}
     // Thanks only by default: a risk-reduction choice, not a blanket policy interpretation.
     if(awarded&&w.settings?.engagementRewards===true){stones=type==='follow'?10:5;qi=gain(w,p,type==='follow'?20:15,stones,0,now);}
-    const verb=type==='follow'?'Kết duyên tiên môn • đã theo dõi':'Hạc truyền tin • đã chia sẻ LIVE';
-    emit(w,p,verb+(awarded&&qi>0?` • +${qi} tu vi, +${stones} linh thạch`:awarded?' • cảm ơn đồng môn':type==='follow'?' • cảm ơn đồng môn, đã ghi nhận theo dõi trước đó':' • cảm ơn đồng môn, thưởng hôm nay đã nhận'),'petal',now,{engagementAction:type,engagementReward:{qi,stones},rewarded:awarded});
+    const verb=type==='follow'?'Kết duyên tiên môn':'Hạc truyền tin';
+    emit(w,p,verb+(awarded&&qi>0?` • +${qi} tu vi, +${stones} linh thạch`:''),'petal',now,{engagementAction:type,engagementReward:{qi,stones},rewarded:awarded});
     auditRecord(w,'engagement',now,{id:input.eventId,user:p.id,name:p.name,action:type,awarded,qi,stones});
   } else if(type==='checkin') {
     const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
@@ -699,7 +699,7 @@ export function openBoss(w,now=Date.now(),species=null) {
   const baseHp=active?Math.max(480+Math.min(active,40)*100,strongest*6):120; // 4/11: giảm ~40% máu để trận nhanh hơn (trước 800+160/người)
   const variant=species?BOSSES.find(b=>b.species===species):BOSSES[(w.bossSequence||0)%BOSSES.length];w.bossSequence=(w.bossSequence||0)+1;
   const hp=baseHp*(variant.hpMultiplier||1);
-  w.boss={id:'raid-'+now,kind:'raid',species:variant.species,name:variant.name,startedAt:now,hp,maxHp:hp,endsAt:now+(variant.duration||120000),participants:{},damage:{},worldBoss:!!variant.worldBoss};emit(w,null,`${variant.name} giáng thế${variant.worldBoss?' • yêu lực ×10 • hạ quái: cả tông môn nhận 500 tu vi cơ bản, 200 linh thạch, 15 linh thảo':''} • thả tim nạp kiếm trận • gõ đánh • Top công lực nhận ${CATALOG.find(a=>a.id===variant.reward)?.name||'Lôi Hổ Thần Chung'} khi hạ quái`,'boss',now,{bossName:variant.name});return {ok:true};
+  w.boss={id:'raid-'+now,kind:'raid',species:variant.species,name:variant.name,startedAt:now,hp,maxHp:hp,endsAt:now+(variant.duration||120000),participants:{},damage:{},worldBoss:!!variant.worldBoss};emit(w,null,`${variant.name} giáng thế${variant.worldBoss?' • yêu lực ×10 • hạ quái: cả tông môn nhận 500 tu vi cơ bản, 200 linh thạch, 15 linh thảo':''} • gõ đánh • Top công lực nhận ${CATALOG.find(a=>a.id===variant.reward)?.name||'Lôi Hổ Thần Chung'} khi hạ quái`,'boss',now,{bossName:variant.name});return {ok:true};
 }
 // Sự kiện "Thiên Đạo Ban Phúc": linh khí bộc phát, tối đa `count` người đang hoạt động (gần đủ tu vi nhất)
 // Chỉ chọn người đủ điều kiện và trừ tài nguyên như đột phá thường; không tạo cấp miễn phí.
@@ -905,7 +905,7 @@ export function ingest(w,event,now=Date.now()) {
     if(prior&&(now-(prior.lastAutoArrivalAt||0)<15000))return {ok:true,duplicate:true};
     const p=ensurePlayer(w,base.userId,base.name,now);if(base.avatar)p.avatar=base.avatar;p.lastAutoArrivalAt=now;p.leftLiveAt=null;
     const arrival=!prior?w.events.findLast(e=>e.user===p.id&&e.effect==='join'&&e.at===now):null;
-    Object.assign(arrival||emit(w,p,'Chào đạo hữu trở lại • thả tim để cùng vận công','join',now),{autoArrival:true,newcomerWelcome:true,returning:!!prior});
+    Object.assign(arrival||emit(w,p,'Chào đạo hữu trở lại','join',now),{autoArrival:true,newcomerWelcome:true,returning:!!prior});
     // Arrival itself grants no tu vi, gift credit or task progress. The first
     // real cultivation starts the newcomer journey and remembers chosen gender.
     return {ok:true,playerId:p.id,autoArrival:true};

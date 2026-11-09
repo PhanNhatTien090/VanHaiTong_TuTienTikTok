@@ -120,7 +120,7 @@ export function tickAlchemy(w,now,c){
  if(e.phase==='brewing'){
   simulate(e,now);resolveQuiz(e,now);tickIncident(e,now);
   if(e.overSince&&now-e.overSince>=ALC.explodeHoldMs){explode(w,e,now,c);return;}
-  if(now>=e.roundEndsAt){resolveQuiz(e,e.quiz?.endsAt||now);if(e.round>=ALC.rounds){e.grade=gradeOf(e.points);if(e.grade>=ALC.tribGrade){startTrib(e,now);announce(w,null,'ĐAN KIẾP GIÁNG • thả tim giữ đan',now,c,{alchemyTribStart:true});}else finish(w,e,now,c);}else startRound(e,now);}
+  if(now>=e.roundEndsAt){resolveQuiz(e,e.quiz?.endsAt||now);if(e.round>=ALC.rounds){e.grade=gradeOf(e.points);if(e.grade>=ALC.tribGrade){startTrib(e,now);announce(w,null,'ĐAN KIẾP GIÁNG • giữ vững đan lô',now,c,{alchemyTribStart:true});}else finish(w,e,now,c);}else startRound(e,now);}
   return;}
  if(e.phase==='tribulation'){
   e.shield=Math.max(0,e.shield-dtSince(e,now)*2);

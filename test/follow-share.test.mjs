@@ -10,7 +10,7 @@ const packet=(event,id='one')=>({event,data:{user:{userId:'123',nickname:'An'},m
 test('follow has an explicit wave, voice and one permanent reward across replay and restart',()=>{
  let w=createWorld();assert.equal(ingest(w,packet('follow'),N).ok,true);
  let p=w.players['123'];assert.equal(p.qi,0,'3/11: không thưởng follow');assert.equal(p.stones,30);assert.equal(p.giftCoins,0);
- const e=w.events.find(e=>e.engagementAction==='follow');assert.ok(e);assert.equal(actionPose(e),'wave');assert.match(announcement(e),/An.*theo dõi/);
+ const e=w.events.find(e=>e.engagementAction==='follow');assert.ok(e);assert.equal(actionPose(e),'wave');assert.doesNotMatch(announcement(e),/theo dõi|cảm ơn/i);
  w=JSON.parse(JSON.stringify(w));ingest(w,packet('follow'),N+1000);ingest(w,packet('follow','different'),N+10000);
  p=w.players['123'];assert.equal(p.qi,0);assert.equal(w.events.filter(e=>e.engagementAction).length,1);
  ingest(w,packet('follow','returning'),N+6*60000);assert.equal(p.qi,0);assert.equal(w.events.findLast(e=>e.engagementAction).rewarded,false);
@@ -22,7 +22,7 @@ test('share packets are accepted, have once-daily rewards and bounded repeat vis
  ingest(w,packet('share','spam'),N+70002);assert.equal(w.events.filter(e=>e.engagementAction).length,2);
  w=JSON.parse(JSON.stringify(w));ingest(w,packet('share','tomorrow'),N+2*3600000);
  p=w.players['123'];assert.equal(p.qi,0,'3/11: share không thưởng');assert.equal(p.giftCoins,0);
- assert.match(announcement(w.events.findLast(e=>e.engagementAction)),/An.*chia sẻ/);
+ assert.doesNotMatch(announcement(w.events.findLast(e=>e.engagementAction)),/chia sẻ|cảm ơn/i);
  assert.equal(w.auditOutbox.filter(e=>e.type==='engagement').length,3);
 });
 test('typed follow/share text and NPC events do not qualify for genuine engagement rewards',()=>{

@@ -26,7 +26,7 @@ export function simpleSteps(s={},page=0){
   {cmd:'giới tính nam/nữ',text:'đổi nam/nữ'}
  ];
  const race=s.raceStatus,t=s.socialStatus?.tournament;
- const hint=race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: thả tim tăng tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':'';
+ const hint=race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':'';
  if(pick)return {...GUIDE_PAGES[pick-1],hint};
  return {title:'CÁCH CHƠI',rows,hint};
 }

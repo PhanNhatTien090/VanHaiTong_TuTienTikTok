@@ -15,7 +15,7 @@ export function flowerHearts(w,p,count,now,c){
   let level=own(claims,p.id),qi=0,stones=0;
   while(level<HEART_STEPS.length&&score>=HEART_STEPS[level]){qi+=[20,40,80][level];stones+=[5,10,20][level];level++;}
   if(qi){put(claims,p.id,level);const got=c.gain(w,p,qi,stones,0,now);
-    c.emit(w,p,`MỐC TIM ${HEART_STEPS[level-1]} • +${got} tu vi, ${stones} linh thạch`,'petal',now,{heartMilestone:HEART_STEPS[level-1],reward:{qi:got,stones}});}
+    c.emit(w,p,`LINH KHÍ TỤ HỘI • +${got} tu vi, ${stones} linh thạch`,'petal',now,{heartMilestone:HEART_STEPS[level-1],reward:{qi:got,stones}});}
   if(!e.heartBloom&&e.heartTotal>=e.heartTarget){
     e.heartBloom=true;
     for(const id of Object.keys(scores)){const q=w.players[id];if(q)c.gain(w,q,60,15,2,now);}
@@ -27,7 +27,7 @@ export function finishFlowerHearts(w,e,now,c){
   e.heartResults=Object.entries(e.heartScores||{}).filter(([id,n])=>w.players[id]&&!w.players[id].resident&&!w.players[id].puppet&&n>=50)
     .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3).map(([id,count],i)=>{
       const p=w.players[id],qi=c.gain(w,p,[300,180,100][i],[60,40,25][i],3,now);
-      c.emit(w,p,`HỘ PHÁP TIM hạng ${i+1} • ${count} tim • +${qi} tu vi`,'flower',now,{heartRank:i+1,heartCount:count,reward:{qi},eventKind:e.kind});
+      c.emit(w,p,`HỘ PHÁP LINH KHÍ hạng ${i+1} • +${qi} tu vi`,'flower',now,{heartRank:i+1,heartCount:count,reward:{qi},eventKind:e.kind});
       return {id,name:p.name,count,qi};
     });
 }

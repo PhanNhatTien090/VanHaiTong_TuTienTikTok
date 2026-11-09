@@ -58,12 +58,12 @@ function giftLines(e,who,Who,t,seed){
 }
 
 export function speechPlan(e){
-  if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới! Thả tim để bắt đầu vận công.`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
+  if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới đến Vân Hải Tông!`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
   if(e.sectMasterAward)return [say('tongsu',`Tông môn tôn phong ${who} làm Tông chủ! Toàn bộ pháp bảo, bí pháp và trang phục đã khai mở!`)];
-  if(e.engagementAction==='follow')return [say('tongsu',Who+' vừa theo dõi tông môn. Chào mừng đồng môn!')];
-  if(e.engagementAction==='share')return [say('tongsu','Cảm ơn '+who+' vừa chia sẻ buổi LIVE!')];
+  if(e.engagementAction==='follow')return [];
+  if(e.engagementAction==='share')return [];
   const sys=!e.user;
   if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='tudo')return [say('tiennu','Tư Đồ Ma Tôn giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
@@ -80,8 +80,8 @@ export function speechPlan(e){
   if(e.gift&&(e.reward||text.includes('cảm ơn đạo hữu')))return giftLines(e,who,Who,t,seed);
   // ----- người chơi -----
   if(e.vipReturn){const n=['','Bạc','Vàng','Kim Cương'][e.vipReturn];return [say('tiennu',`Hộ Pháp ${n} ${raw||''} đã trở lại tông môn!`),say('tongsu','Cả tông môn hoan nghênh, phúc khí tràn đầy!')];} // v86
-  if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông! Thả tim để vận công nhé!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
-  if(e.effect==='join')return [say('tongsu',pickBy(seed,[`Chào mừng ${who} gia nhập Vân Hải Tông! Thả tim để thử vận công nhé!`,`${Who} gia nhập Vân Hải Tông! Bước đầu chỉ cần thả tim!`,`Hoan nghênh ${who} gia nhập Vân Hải Tông! Thả tim, nhân vật của bạn sẽ vận công.`]))];
+  if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
+  if(e.effect==='join')return [say('tongsu',pickBy(seed,[`Chào mừng ${who} gia nhập Vân Hải Tông!`,`${Who} gia nhập Vân Hải Tông! Tiên lộ bắt đầu!`,`Hoan nghênh ${who} gia nhập Vân Hải Tông!`]))];
   // v87: hồng bao · câu đố · chuỗi điểm danh · nhiệm vụ ngày · tông môn kiến tạo
   if(e.envelopeStart)return [say('tiennu',pickBy(seed,['Hồng bao rơi! Gõ nhận trong hai mươi giây!','Trời mưa hồng bao! Gõ nhận ngay, chậm là hết!']))];
   if(e.envelopeLucky)return [say('tongsu',`${Who} trúng ${e.envelopeLucky} trong hồng bao!`)];
@@ -96,7 +96,7 @@ export function speechPlan(e){
   if(e.starter)return [say('tiennu','Tân thủ lệnh!'),say('tongsu',pickBy(seed,[`${Who} đột phá Luyện Khí! Tân đệ tử tiến bộ thần tốc!`,`Chúc mừng ${who} bước vào Luyện Khí! Cứ tu luyện là mạnh lên!`]))];
   if(e.vipUp){const n=['','Bạc','Vàng','Kim Cương'][e.vipUp],pct=['','mười','hai mươi','ba mươi'][e.vipUp];return [say('tiennu',`${Who} thăng VIP ${n}!`),say('tongsu',`Từ nay tu luyện thêm ${pct} phần trăm, luôn có chỗ trên quảng trường!`)];}
   if(e.likeGoal)return [say('tiennu',`Cả tông môn đạt ${viNumber(e.likeGoal)} tim!`),say('tongsu',`Thiên đạo ban phúc ${viNumber(e.count)} đồng môn, phúc duyên gấp hai!`)];
-  if(e.heartStrike)return [say('tongsu',`Kiếm trận tim xuất kích! Gây ${viNumber(e.damage)} công lực. Tiếp tục thả tim tiếp sức đồng môn!`)];
+  if(e.heartStrike)return [say('tongsu',`Kiếm trận tim xuất kích! Gây ${viNumber(e.damage)} công lực!`)];
   if(e.heartMilestone)return [say('tiennu',`${Who} đạt ${viNumber(e.heartMilestone)} tim, nhận tu vi và linh thạch!`)];
   if(e.heartRank)return [say('tongsu',`${Who} là hộ pháp tim hạng ${viNumber(e.heartRank)}, với ${viNumber(e.heartCount)} tim!`)];
   if(e.heartBloom)return [say('tiennu','Hoa tâm khai nở! Tất cả đạo hữu đã góp tim nhận tu vi, linh thạch và linh thảo!')];
@@ -113,8 +113,8 @@ export function speechPlan(e){
     return [say('tiennu',head),say('tongsu',tail)];}
   // v79: hướng dẫn người mới từng bước
   if(e.guide==='checkin')return [say('tongsu',pickBy(seed,[`${Who}, gõ điểm danh để nhận linh thạch khởi đầu nhé!`,`${Who} ơi, bước một: gõ điểm danh nhận quà mỗi ngày!`]))];
-  if(e.guide==='cultivate')return [say('tongsu',pickBy(seed,[`Tốt lắm ${who}! Giờ thả tim để tăng tu vi.`,`${Who}, chỉ cần thả tim để thử vận công nhé!`]))];
-  if(e.guide==='gather')return [say('tongsu',pickBy(seed,[`${Who}, gõ hái để hái linh thảo. Thả tim cũng được cộng tu vi!`,`Bước ba nè ${who}: gõ hái nhận linh thạch, thả tim để tu vi tăng thêm!`]))];
+  if(e.guide==='cultivate')return [say('tongsu',pickBy(seed,[`Tốt lắm ${who}! Đạo cơ đã vững.`,`${Who} đã bước vào tiên lộ!`]))];
+  if(e.guide==='gather')return [say('tongsu',pickBy(seed,[`${Who}, gõ hái để hái linh thảo.`,`Bước ba nè ${who}: gõ hái nhận linh thạch!`]))];
   if(e.effect==='hint'){const cmd=cutWords(gameText(e.say||''),40),why=cutWords(gameText(e.why||'').split('.')[0],60);return [say('tongsu',`${Who}, hãy gõ ${cmd}. ${why}.`)];}
   if(e.effect==='blessing'){const n=Number(e.count);return [say('tiennu',`Thiên đạo ban phúc! ${n>0?cap(viNumber(n))+' vị đồng môn':'Đồng môn'} được đột phá cảnh giới!`)];}
   if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ đột phá ngay.`)];
@@ -125,7 +125,7 @@ export function speechPlan(e){
     if(qi>=needQi&&st>=needSt&&text.includes('đạo cơ đang lắng đọng'))return [say('tongsu',`${Who}, ${realm}, đạo cơ đang lắng đọng. Tiếp tục tu luyện, thiên kiếp sẽ sớm tới!`)];
     if(qi>=needQi&&st>=needSt)return [say('tongsu',`${Who}, ${realm}, đã đủ điều kiện. Gõ đột phá ngay!`)];
     const lack=[qi<needQi&&`${roundSay(needQi-qi)} tu vi`,st<needSt&&`${viNumber(needSt-st)} linh thạch`].filter(Boolean).join(' và ');
-    const how=st<needSt&&qi>=needQi?'Gõ hái hoặc điểm danh để có linh thạch.':st<needSt?'Tu luyện để tăng tu vi, gõ hái để có linh thạch.':'Thả tim để vận công, trò chuyện cùng đồng môn để luận đạo.';
+    const how=st<needSt&&qi>=needQi?'Gõ hái hoặc điểm danh để có linh thạch.':st<needSt?'Tu luyện để tăng tu vi, gõ hái để có linh thạch.':'Trò chuyện cùng đồng môn để luận đạo.';
     if(e.missing==='stones')return [say('tongsu',`${Who} thiếu linh thạch, gõ hái để lấy linh thạch!`)]; // 08/11: chủ game muốn ngắn gọn
     return [say('tongsu',`${Who}, cảnh giới ${realm}. Còn thiếu ${lack}. ${how}`)];
   }
@@ -139,8 +139,8 @@ export function speechPlan(e){
   if(e.effect==='breakthrough'){const to=titleCase(head.replace(/^đột phá\s*/i,''));return [say('tongsu',pickBy(seed,[`Chúc mừng ${who} đột phá ${to}! Đạo hạnh thăng tiến!`,`Thiên môn khai mở! ${Who} bước vào ${to}!`,`${Who} đột phá ${to}, linh khí chấn động!`]))];}
   if(e.transform)return [say('tiennu',`${Who} nhận truyền thừa ${e.skinName||'tiên nhân'}!`),say('tongsu',`${e.transform==='hanlap'?'Trúc kiếm cuồng phong':e.transform==='shende'?'Đế khí bùng nổ':e.skinName==='Lý Mộ Uyển'?'Thanh quang tỏa sáng':'Tử khí cuộn trào'}, biến hình thành ${e.skinName||'tiên nhân'}!`)];
   // ----- sự kiện trời -----
-  if(e.flowerStart&&e.eventKind==='meteor')return [say('tiennu',`Tinh Hà Lưu Tinh giáng thế ${viNumber(e.minutes)} phút! Thả tim nhận thưởng mốc năm mươi, một trăm năm mươi và ba trăm tim! Có bảng hộ pháp tim riêng. Bình luận vẫn bắt sao, quà vẫn nhận điểm!`)];
-  if(e.flowerStart)return [say('tiennu',`Thiên Hoa Vũ giáng thế ${viNumber(e.minutes)} phút! Thả tim làm hoa nở! Đạt năm mươi, một trăm năm mươi và ba trăm tim nhận quà riêng, top tim còn có thưởng!`)];
+  if(e.flowerStart&&e.eventKind==='meteor')return [say('tiennu',`Tinh Hà Lưu Tinh giáng thế ${viNumber(e.minutes)} phút! Sao băng rơi khắp tông môn, bình luận để bắt sao!`)];
+  if(e.flowerStart)return [say('tiennu',`Thiên Hoa Vũ giáng thế ${viNumber(e.minutes)} phút! Linh hoa nở khắp tông môn!`)];
   if(e.flowerRank){const ev=e.eventKind==='meteor'?'Tinh Hà Lưu Tinh':'Thiên Hoa Vũ',rank=['','nhất','nhì','ba'][e.flowerRank];return [say('tiennu',`${ev}, hạng ${rank} thuộc về ${who} với ${roundSay(e.score)} điểm!`),say('tongsu',`Ban ${list2((e.itemNames||[]).slice(0,1))||'pháp bảo'} cùng ${roundSay(e.reward?.qi)} tu vi!`)];}
   if(e.flowerEnd){const ev=e.eventKind==='meteor'?'Tinh Hà Lưu Tinh':'Thiên Hoa Vũ',n=Number(e.count)||0;return [say('tiennu',n?`${ev} kết thúc. ${cap(viNumber(n))} vị đồng môn tham gia. Đa tạ chư vị!`:`${ev} kết thúc. Lần sau chư vị nhớ tham gia nhé!`)];}
   if(e.opportunityStart)return [say('tiennu','Thiên Đạo Cơ Duyên mở năm phút!'),say('tongsu','Từ Hóa Thần, mỗi ngày tối đa một lần đột phá đại cảnh. Tiến độ dư được giữ qua lần mở sau. Gõ cơ duyên để sử dụng.')];
@@ -150,7 +150,7 @@ export function speechPlan(e){
   if(e.bossChampion){const prize=(text.match(/nhận ([^•]+)/)||[])[1]?.trim();return [say('trongtai',`${Who} dẫn đầu với ${roundSay(e.damage)} công lực!`),say('tongsu',`Ban ${prize?cutWords(prize,40):'bảo vật yêu thú'} cùng tu vi và tài nguyên!`)];}
   if(e.effect==='victory')return [say('trongtai',pickBy(seed,['Yêu thú đã bị phong ấn! Chư vị đồng môn uy vũ!','Thắng lợi! Bí cảnh hoàn tất, mọi người tham chiến đều có thưởng!']))];
   if(e.effect==='boss'){const name=e.bossName||(head.match(/^(.+?) giáng/)||[])[1]||(text.startsWith('Bí cảnh mở')?'Huyền Giao':null);const prize=(text.match(/nhận ([^•]+?) khi/)||[])[1];
-    if(name&&!/trở về|rời/.test(text))return [say('trongtai',`${name} giáng thế! Thả tim nạp kiếm trận, gõ đánh để hàng yêu${prize?`, top công lực nhận ${cutWords(prize,30)}`:''}!`)];
+    if(name&&!/trở về|rời/.test(text))return [say('trongtai',`${name} giáng thế! Gõ đánh để hàng yêu${prize?`, top công lực nhận ${cutWords(prize,30)}`:''}!`)];
     return [say('trongtai',`${name||'Yêu thú'} đã rút lui. Chư vị tiếp tục tu luyện.`)];}
   if(e.effect==='attack')return [say('trongtai',e.technique?.name?`${Who} thi triển ${e.technique.name}!`:`${Who} xuất chiêu!`)];
   // ----- đua phi kiếm -----
@@ -159,20 +159,20 @@ export function speechPlan(e){
   // ----- Khai Lò Cửu Chuyển (08/11): chỉ đọc 4 mốc, câu ngắn; còn lại để hình tự nói -----
   if(e.effect==='alchemy'){
     const g=['','nhất phẩm','nhị phẩm','tam phẩm','tứ phẩm','ngũ phẩm','lục phẩm','thất phẩm','bát phẩm','cửu phẩm'];
-    if(e.alchemyStart)return [say('tongsu',pickBy(seed,['Khai lò luyện đan! Thả tim giữ lửa trong vùng vàng. Nóng quá thì tặng hoa hồng dập lửa!','Đan lô khai hỏa! Lửa vừa đủ thì đan thành, quá tay là nổ lò!','Luyện đan nào! Giữ lửa vùng vàng, sắp nổ thì hoa hồng cứu lò!']))];
-    if(e.alchemyTribStart)return [say('tiennu',pickBy(seed,['Đan kiếp giáng! Thả tim giữ đan!','Thiên lôi thử đan! Thả tim giữ kết giới!']))];
+    if(e.alchemyStart)return [say('tongsu',pickBy(seed,['Khai lò luyện đan! Giữ lửa trong vùng vàng!','Đan lô khai hỏa! Lửa vừa đủ thì đan thành, quá tay là nổ lò!','Luyện đan nào! Giữ lửa vùng vàng!']))];
+    if(e.alchemyTribStart)return [say('tiennu',pickBy(seed,['Đan kiếp giáng! Giữ vững đan lô!','Thiên lôi thử đan! Giữ vững kết giới!']))];
     if(e.alchemyExplode){const n=sayName(e.alchemyCulprit);return [say('tongsu',n?pickBy(seed,[`Bùm! Nổ lò rồi! ${n} quạt tay quá!`,`Nổ lò! ${n} thổi lửa mạnh quá rồi!`]):'Bùm! Nổ lò rồi! Lần sau nhẹ tay nhé!')];}
     if(e.alchemyEnd){const n=sayName(e.alchemyMaster);return [say('tongsu',`Đan thành, ${g[e.alchemyEnd]||'đan dược'}!`+(n?` Đan sư ${n}!`:''))];}
     return [];
   }
   if(e.effect==='war'){
     if(e.warStart)return [say('trongtai','Chính Ma Đại Chiến mở tuyển quân! Gõ chính để vào Chính Đạo, gõ ma để vào Ma Đạo!')];
-    if(e.warBattle)return [say('tongsu','Khai chiến! Thả tim đẩy chiến tuyến, gõ chiến để xuất chiêu!')];
+    if(e.warBattle)return [say('tongsu','Khai chiến! Gõ chiến để xuất chiêu!')];
     if(e.warOmen)return [say('tiennu',text.replace(/•/g,'. '))];
     // 08/11: lời đọc vui, nhiều biến thể (không lặp y hệt).
     if(e.warRescue)return [say('tongsu',pickBy(seed,e.warRescue==='chinh'?['Hạo Nhiên Chính Khí! Chính Đạo phản công rồi!','Chính Đạo chưa chịu thua đâu! Phản kích!','Trời giúp Chính Đạo! Đẩy ngược lại nào!']:['Ma Hồn Bất Diệt! Ma Đạo vùng lên rồi!','Ma Đạo hồi sinh! Phản kích!','Ma khí cuồn cuộn! Ma Đạo đẩy ngược lại rồi!']))];
-    if(e.warTurn){const S=e.warTurn==='chinh'?'Chính Đạo':'Ma Đạo',O=e.warTurn==='chinh'?'Ma Đạo':'Chính Đạo';return [say('trongtai',pickBy(seed,[`${S} phản công rồi!`,`${S} lật kèo! Vượt lên dẫn trước!`,`Ồ! ${S} đè ngược lại rồi!`,`${S} vùng lên! Chiến tuyến đổi chiều!`])),say('tongsu',pickBy(seed+'o',[`${O} đâu, thả tim mau!`,`${O} ơi, đừng để thua!`,`${O} còn kịp lật lại đó!`]))];}
-    if(e.warFinal===30)return [say('trongtai',pickBy(seed,['Ba mươi giây cuối! Dồn hết sức nào!','Còn ba mươi giây! Thả tim, tặng quà, quyết thắng!','Ba mươi giây cuối cùng! Ai sẽ thắng đây!']))];
+    if(e.warTurn){const S=e.warTurn==='chinh'?'Chính Đạo':'Ma Đạo',O=e.warTurn==='chinh'?'Ma Đạo':'Chính Đạo';return [say('trongtai',pickBy(seed,[`${S} phản công rồi!`,`${S} lật kèo! Vượt lên dẫn trước!`,`Ồ! ${S} đè ngược lại rồi!`,`${S} vùng lên! Chiến tuyến đổi chiều!`])),say('tongsu',pickBy(seed+'o',[`${O} đâu, phản công mau!`,`${O} ơi, đừng để thua!`,`${O} còn kịp lật lại đó!`]))];}
+    if(e.warFinal===30)return [say('trongtai',pickBy(seed,['Ba mươi giây cuối! Dồn hết sức nào!','Còn ba mươi giây! Quyết chiến!','Ba mươi giây cuối cùng! Ai sẽ thắng đây!']))];
     if(e.warFinal===10)return [say('trongtai',pickBy(seed,['Mười giây cuối! Quyết chiến!','Còn mười giây! Dốc toàn lực!','Mười giây! Tất cả xông lên!']))];
     if(e.warEnd){if(e.warEnd==='draw')return [say('trongtai',pickBy(seed,['Bất phân thắng bại! Hai phe cùng nhận thưởng!','Hòa rồi! Hai phe ngang tài ngang sức!']))];
       const S=e.warEnd==='chinh'?'Chính Đạo':'Ma Đạo',O=e.warEnd==='chinh'?'Ma Đạo':'Chính Đạo';
@@ -208,8 +208,8 @@ export function speechPlan(e){
   }
   // ----- tương tác thường -----
   if(text.includes('cảm ơn đạo hữu'))return [say('tongsu',`${Who} tặng quà! Linh khí dâng trào!`)];
-  if(text.startsWith('Kết duyên'))return [say('tongsu',`Đa tạ ${who} đã theo dõi Vân Hải Tông! Kết duyên tiên môn!`)];
-  if(text.startsWith('Tụ linh'))return [say('tongsu',`${Who} thả tim, linh khí tăng lên.`)];
+  if(text.startsWith('Kết duyên'))return [say('tongsu',`${Who} kết duyên tiên môn!`)];
+  if(text.startsWith('Tụ linh'))return [say('tongsu',`${Who} vận công, linh khí tăng lên.`)];
   if(text.startsWith('Luận đạo'))return [say('tongsu',`${Who} vừa luận đạo cùng đồng môn.`)];
   if(text.startsWith('Vận Thanh'))return [say('tongsu',`${Who} đang vận công tu luyện.`)];
   if(text.startsWith('Trang bị '))return [say('tongsu',`${Who} trang bị ${cutWords(head.replace('Trang bị ',''),30)}.`)];
