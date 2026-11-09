@@ -56,10 +56,21 @@ export const PLAZA_ROWS=8,PLAZA_SCALE=.82,PLAZA_CAPACITY=50;
 export function plazaSlots(H,centerY){const top=H*.43,bottom=H*.85,pitch=(bottom-top)/(PLAZA_ROWS-1),step=112,cy=Math.max(top+pitch,Math.min(bottom-pitch,centerY??(top+bottom)/2)),out=[];
  for(let r=0;r<PLAZA_ROWS;r++){const len=r%2?6:7;for(let k=0;k<len;k++){const x=450+(k-(len-1)/2)*step,y=top+r*pitch;out.push({i:out.length,x,y,rank:Math.hypot((x-450)/390,(y-cy)/((bottom-top)/2))});}}
  return out;}
-export function stableTargets(seats,players,H,isFake=()=>false,centerY){const slots=plazaSlots(H,centerY),best=[...slots].sort((a,b)=>a.rank-b.rank||a.i-b.i).map(s=>s.i),edge=[...slots.filter(s=>s.rank<=1).sort((a,b)=>b.rank-a.rank),...slots.filter(s=>s.rank>1).sort((a,b)=>a.rank-b.rank)].map(s=>s.i);
+// 09/11: người mặc skin lớn (lửa/rồng/đao bay — isBig) giữ trống 2 ghế bên cạnh + 2 ghế ngay phía sau (bị che);
+// ai đang ngồi trong vùng đó được dời sang ghế trống khác — trường hợp duy nhất có người bị đổi chỗ.
+export function stableTargets(seats,players,H,isFake=()=>false,centerY,isBig=()=>false){const slots=plazaSlots(H,centerY),best=[...slots].sort((a,b)=>a.rank-b.rank||a.i-b.i).map(s=>s.i),edge=[...slots.filter(s=>s.rank<=1).sort((a,b)=>b.rank-a.rank),...slots.filter(s=>s.rank>1).sort((a,b)=>a.rank-b.rank)].map(s=>s.i);
+ const pitch=slots.length>7?slots[7].y-slots[0].y:1,zone=i=>slots.filter(o=>o.i!==i&&((Math.abs(o.y-slots[i].y)<1&&Math.abs(o.x-slots[i].x)<=120)||(Math.abs(o.y-(slots[i].y-pitch))<1&&Math.abs(o.x-slots[i].x)<=60))).map(o=>o.i);
  const ids=new Set(players.map(p=>p.id));for(const id of [...seats.keys()])if(!ids.has(id))seats.delete(id);
- const used=new Set(seats.values());
- for(const p of players){if(seats.has(p.id))continue;const pick=(isFake(p)?edge:best).find(i=>!used.has(i));if(pick==null||used.size>=PLAZA_CAPACITY)continue;seats.set(p.id,pick);used.add(pick);}
+ const byId=new Map(players.map(p=>[p.id,p])),blocked=new Set(),owner=new Map([...seats].map(([id,i])=>[i,id]));
+ const block=i=>{for(const j of zone(i)){blocked.add(j);const who=owner.get(j);if(who!=null&&!isBig(byId.get(who))){seats.delete(who);owner.delete(j);}}};
+ for(const [id,i] of [...seats])if(isBig(byId.get(id)))block(i);
+ const free=i=>!owner.has(i)&&!blocked.has(i),take=(p,i)=>{seats.set(p.id,i);owner.set(i,p.id);};
+ const queue=[...players.filter(p=>isBig(p)),...players.filter(p=>!isBig(p))];
+ for(const p of queue){if(seats.has(p.id))continue;if(seats.size>=PLAZA_CAPACITY)break;const order=isFake(p)?edge:best;
+  if(isBig(p)){const pick=order.find(i=>free(i)&&zone(i).every(j=>!owner.has(j)))??order.find(free);if(pick==null)continue;take(p,pick);block(pick);continue;}
+  const pick=order.find(free);if(pick==null)continue;take(p,pick);}
+ // người bị dời khỏi vùng skin lớn ở trên được xếp lại ở vòng này (queue đã chạy qua họ sau khi block)
+ for(const p of players){if(seats.has(p.id)||seats.size>=PLAZA_CAPACITY)continue;const pick=(isFake(p)?edge:best).find(free);if(pick!=null)take(p,pick);}
  return players.filter(p=>seats.has(p.id)).map(p=>{const s=slots[seats.get(p.id)];return {id:p.id,player:p,x:s.x,y:s.y,scale:PLAZA_SCALE,lift:0};}).sort((a,b)=>a.y-b.y||a.x-b.x);}
 // Fewer bodies animate on the plaza; ritual gets a single full-detail actor.
 // 3/11: cảnh LIVE luôn ở chế độ gọn (bỏ hào quang/vòng sáng thường trực của từng người) cho mượt, kể cả lúc ít người hay đang trình diễn.

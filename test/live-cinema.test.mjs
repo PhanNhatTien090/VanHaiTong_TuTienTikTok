@@ -52,3 +52,11 @@ test('fixed plaza seats: seated players never move when others join/leave; newco
  const full=stableTargets(new Map(),mk('c',60),1600);assert.equal(full.length,PLAZA_CAPACITY);
  for(const t of full)assert.ok(t.x-60*t.scale>0&&t.x+60*t.scale<900&&t.y<1400);
 });
+test('big-skin wearer keeps neighbours and the two seats behind clear; covered player moves, others stay',()=>{
+ const seats=new Map(),mk=(p,n)=>Array.from({length:n},(_,i)=>({id:p+i}));let players=mk('a',20);const big=new Set();const isBig=p=>big.has(p?.id);
+ const first=new Map(stableTargets(seats,players,1600,undefined,undefined,isBig).map(t=>[t.id,[t.x,t.y]]));
+ big.add('a0');const next=stableTargets(seats,players,1600,undefined,undefined,isBig);assert.equal(next.length,20);
+ const b=next.find(t=>t.id==='a0');const pitch=Math.min(...next.filter(t=>t.y>b.y+1).map(t=>t.y-b.y).concat([999]));
+ for(const t of next){if(t.id==='a0')continue;const sameRow=Math.abs(t.y-b.y)<1&&Math.abs(t.x-b.x)<=120,behind=t.y<b.y-1&&b.y-t.y<pitch+1&&Math.abs(t.x-b.x)<=60;assert.ok(!sameRow&&!behind,t.id+' still covered');}
+ const moved=next.filter(t=>first.has(t.id)&&String(first.get(t.id))!==String([t.x,t.y])).length;assert.ok(moved<=4,'only covered players move: '+moved);
+});
