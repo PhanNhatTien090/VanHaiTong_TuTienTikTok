@@ -27,6 +27,7 @@ import {priority as voicePriority} from './public/voice.js';
 import {periodTopsView,backfillPeriodCoins,readGiftAudit} from './period-tops.mjs';
 import {monitorEventLoopDelay,performance as perfHooks} from 'node:perf_hooks';
 import {SKIN_GEAR} from './public/skin-gear.js';
+import {applyMusicCommand} from './public/music-rotation.js';
 // Đo độ trễ vòng sự kiện (server bị chặn bao lâu) để soi lag khi LIVE: GET /api/perf. Chỉ đọc, không đổi gameplay.
 const loopDelay=monitorEventLoopDelay({resolution:20});loopDelay.enable();let lastElu=perfHooks.eventLoopUtilization();
 function perfView(){const ms=n=>Math.round(n/1e4)/100,elu=perfHooks.eventLoopUtilization(lastElu);lastElu=perfHooks.eventLoopUtilization();const v={loopDelayMs:{p50:ms(loopDelay.percentile(50)),p99:ms(loopDelay.percentile(99)),max:ms(loopDelay.max)},busy:Math.round(elu.utilization*1000)/1000,clients:clients.size,heapMiB:Math.round(process.memoryUsage().heapUsed/1048576),at:Date.now()};loopDelay.reset();return v;}
@@ -231,6 +232,8 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/pet-event'&&req.method==='POST'){const b=await body(req);const r=controlPetEvent(worlds[mode],b.action,Date.now(),b.minutes??5);if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/flower-event'&&req.method==='POST'){const b=await body(req);const result=startFlowerEvent(worlds[mode],Date.now(),b.minutes,b.kind||'flower');if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/world-scene'&&req.method==='POST'){const b=await body(req);if(b.scene!=='auto'&&!SCENES.some(s=>s.id===b.scene)){json(res,{ok:false,message:'Cảnh không hợp lệ.'},400);return;}worlds[mode].settings.sceneMode=b.scene;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,scene:b.scene});return;}
+    // 09/11: nhạc nền LIVE — 'auto' (tự đổi mỗi 30 phút), số thứ tự (giữ cố định), 'next' (bài kế).
+    if(url.pathname==='/api/music'&&req.method==='POST'){const b=await body(req),w=worlds[mode],next=applyMusicCommand(w.settings?.music,b.cmd,Date.now());if(!next){json(res,{ok:false,message:'Bài nhạc không hợp lệ.'},400);return;}w.settings??={};w.settings.music=next;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,music:next});return;}
     if(url.pathname==='/api/event-settings'&&req.method==='POST'){const b=await body(req);const result=setEventSettings(worlds[mode],b);if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/blessing'&&req.method==='POST'){const b=await body(req);const result=blessing(worlds[mode],Date.now(),Number(b.count)||3);broadcast();json(res,result);return;}
     if(url.pathname==='/api/opportunity'&&req.method==='POST'){const result=startOpportunity(worlds[mode]);persist(true);broadcast();json(res,result);return;}

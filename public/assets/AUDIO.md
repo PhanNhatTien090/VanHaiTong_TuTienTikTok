@@ -20,3 +20,12 @@ Phát lần lượt (bắt đầu ngẫu nhiên, hết bài sang bài kế), chu
 - `bgm-tu-tien-2.mp3`: "Imperial China Cinematic" — Shane Ivers, https://www.silvermansound.com — CC BY 4.0.
 - `bgm-tu-tien-3.mp3`: "All The Tea In China" — Shane Ivers, https://www.silvermansound.com — CC BY 4.0.
 CC BY 4.0 cần ghi công: dán vào mô tả/giới thiệu LIVE: "Music: Imperial China Cinematic, All The Tea In China by Shane Ivers - https://www.silvermansound.com".
+
+## Thêm 5 bài + đổi nhạc từ trang quản lý — 09/11/2026
+Danh sách + luật đổi bài: `public/music-rotation.js`. Mỗi bài lặp; mặc định tự đổi bài mỗi 30 phút; trang quản lý `#scene` → "🎵 Nhạc nền LIVE" chọn bài cố định / tự đổi / bài kế (`POST /api/music`). Chuẩn hóa loudnorm -19 LUFS, 128 kbps.
+- `bgm-tu-tien-4.mp3`: "Ishikari Lore" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
+- `bgm-tu-tien-5.mp3`: "Dream Culture" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
+- `bgm-tu-tien-6.mp3`: "Eastern Thought" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
+- `bgm-tu-tien-7.mp3`: "Lotus" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
+- `bgm-tu-tien-8.mp3`: "Teller of the Tales" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
+Ghi công dán vào mô tả LIVE: "Music: Imperial China Cinematic, All The Tea In China by Shane Ivers - silvermansound.com; Ishikari Lore, Dream Culture, Eastern Thought, Lotus, Teller of the Tales by Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/"
