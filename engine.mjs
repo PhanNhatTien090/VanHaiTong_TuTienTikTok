@@ -99,13 +99,15 @@ export const handQiMult=p=>HAND_QI_MULT[Math.min(HAND_QI_MULT.length-1,Math.max(
 export const GOLDEN_MS=30*60000;
 export const goldenHour=(p,now,w=null)=>!!p&&w?.settings?.goldenHour===true&&!p.resident&&!p.puppet&&now!=null&&(Number(p.realm)||0)<=2&&now-(Number(p.joinedAt)||0)<GOLDEN_MS;
 const qiBonus=p=>p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.bonus||0),0)+(CATALOG.find(x=>x.id===p.equipped)?.bonus||0)+extraStat(p,'bonus');
+export const EVENT_GEAR_SHARE=.5;
 const freeQiUnit=p=>Math.ceil(requiredQi(p)/ascensionPracticeReward(p.realm,'cultivate',requiredQi(p),requiredStones(p)).steps);
 function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   if(hand&&heavenStunned(p,now??Date.now()))return 0; // 07/11: Thiên Lôi trấn áp — không tu luyện được
   if(hand)qi*=handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
   if(hand&&talking(p,now))qi*=1.2; // 4/11: Luận Đạo — có trò chuyện thường trong 5 phút gần nhất
   if(hand&&goldenHour(p,now,w)){qi*=2;stones*=3;}
-  const bonus=qiBonus(p);
+  // 09/11 (chủ game): thưởng sự kiện (nguồn 'reward': câu đố, lì xì, nhiệm vụ, lò đan…) chỉ ăn một nửa hệ số pháp bảo/công pháp.
+  const bonus=qiBonus(p)*(source==='reward'?EVENT_GEAR_SHARE:1);
   // v33: Phúc duyên (buff sau khi tặng quà) nhân tu vi + linh thạch của hành động chơi tay trong thời gian hiệu lực.
   const buff=hand&&now!==null&&p.buffUntil>now?(p.buffMult||1):1;
   let amount=Math.round(qi*(1+bonus)*buff);stones=Math.round(stones*buff);

@@ -11,7 +11,7 @@ export const ALC=Object.freeze({openMs:12000,roundMs:32000,rounds:3,tribMs:12000
  roseMaxCoins:4,roseCool:12,roseCoolMax:45,herbMaxCoins:98,herbPoints:5,herbRoundCap:20,fireLockMs:10000,firePoints:10,
  quizAt:4000,quizMs:11000,quizRight:8,quizWrong:-4,quizShift:8,incidentAt:17000,incidentMs:9000,
  pointsFor9:90,tribGrade:7,tribStrikeEvery:3000,tribStrike:24,tribStart:60,
- reward:{pct:.008,stones:10,stonesPerGrade:2,top:[.5,.3,.2],consolationStones:8},titleMs:{master:24*3600000,fun:3600000}});
+ reward:{pct:.007,stones:10,stonesPerGrade:2,top:[.5,.3,.2],consolationStones:8,giftMult:[[99,3],[5,2],[1,1.5]]},titleMs:{master:24*3600000,fun:3600000}});
 // Mỗi chuyển: tâm vùng vàng, nửa bề rộng, biên độ trôi, chu kỳ trôi (ms).
 const ROUND_ZONES=[[{c:50,half:12,amp:0,period:1},{c:55,half:11,amp:8,period:16000},{c:60,half:9,amp:14,period:11000}],
  [{c:45,half:12,amp:6,period:20000},{c:62,half:10,amp:10,period:14000},{c:52,half:8,amp:18,period:9000}],
@@ -102,10 +102,12 @@ function finish(w,e,now,c){
  const top=e.result.top?.[0];announce(w,null,'ĐAN THÀNH • '+GRADE_NAMES[grade]+' • cả tông nhận đan dược',now,c,{alchemyEnd:grade,alchemyMaster:top?.name||null,alchemyTrib:e.tribResult||null});
  w.nextBossAt=Math.max(w.nextBossAt||0,now+(w.settings?.bossInterval??240)*1000);
 }
+// 09/11 (chủ game): giảm thưởng lò đan (0,8% → 0,7% tu vi cần mỗi phẩm); ai tặng quà trong lò nhân theo tổng coin đã góp: ≥1 ×1,5 · ≥5 ×2 · ≥99 ×3.
+export const alchemyGiftMult=coins=>ALC.reward.giftMult.find(([min])=>(coins||0)>=min)?.[1]||1;
 function award(w,e,grade,now,c){
  if(e.awarded)return;e.awarded=true;const R=ALC.reward,got={};
  for(const [id,m] of Object.entries(e.members)){const p=w.players[id];if(!real(p)||m.score<=0)continue;
-  const base=Math.max(10,Math.round((c.requiredQi?.(p)||300)*R.pct*grade));const qi=c.gain(w,p,base,R.stones+R.stonesPerGrade*grade,0,now);got[id]={qi,base};
+  const base=Math.max(10,Math.round((c.requiredQi?.(p)||300)*R.pct*grade*alchemyGiftMult(m.gift)));const qi=c.gain(w,p,base,R.stones+R.stonesPerGrade*grade,0,now);got[id]={qi,base};
   p.pills??={};const pill=grade>=4?'spirit-pill':'qi-pill';p.pills[pill]=(p.pills[pill]||0)+(grade>=7?2:1);}
  e.result.perPerson={pct:Math.round(R.pct*grade*1000)/10,pill:grade>=4?'Ngưng Thần Đan':'Tụ Khí Đan',count:grade>=7?2:1};
  e.result.top=alchemyTop(e,3).map((t,i)=>{const p=w.players[t.id];let extra=0;if(real(p)&&got[t.id])extra=c.gain(w,p,Math.round(got[t.id].base*R.top[i]),0,0,now);if(i===0&&real(p))p.alchemyTitle={name:'Đan Sư Tông Môn',until:now+ALC.titleMs.master};return {...t,qi:(got[t.id]?.qi||0)+(extra||0),title:i===0?'Đan Sư Tông Môn':null};});
