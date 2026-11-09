@@ -6,7 +6,7 @@ const TAU=Math.PI*2;
 const clamp=v=>Math.max(0,Math.min(1,v)),ease=k=>1-(1-clamp(k))**3;
 const hex=a=>Math.round(255*clamp(a)).toString(16).padStart(2,'0');
 const rnd=i=>{const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);};
-const STYLE={khuyniet:{a:'#a45bff',b:'#ffe7a0',dark:'#0e0418',mist:'#2c1050'},tudo:{a:'#ff3b2f',b:'#ffd0a8',dark:'#1a0306',mist:'#5c0a14'},hailam:{a:'#4fcaff',b:'#e1fbff',dark:'#07142f',mist:'#184b79'},doraemon:{a:'#61dbff',b:'#fff6bb',dark:'#061a31',mist:'#164a6d'},shende:{a:'#ffb15d',b:'#fff2c6',dark:'#260b13',mist:'#633123'},vuonglam:{a:'#a46bff',b:'#efe2ff',dark:'#1a0b2e',mist:'#3a1d63'},hanlap:{a:'#4fe0a0',b:'#eafff4',dark:'#06281c',mist:'#164a37'}};
+const STYLE={viemton:{a:'#ff5a14',b:'#ffe2a0',dark:'#1a0402',mist:'#5c1206'},khuyniet:{a:'#a45bff',b:'#ffe7a0',dark:'#0e0418',mist:'#2c1050'},tudo:{a:'#ff3b2f',b:'#ffd0a8',dark:'#1a0306',mist:'#5c0a14'},hailam:{a:'#4fcaff',b:'#e1fbff',dark:'#07142f',mist:'#184b79'},doraemon:{a:'#61dbff',b:'#fff6bb',dark:'#061a31',mist:'#164a6d'},shende:{a:'#ffb15d',b:'#fff2c6',dark:'#260b13',mist:'#633123'},vuonglam:{a:'#a46bff',b:'#efe2ff',dark:'#1a0b2e',mist:'#3a1d63'},hanlap:{a:'#4fe0a0',b:'#eafff4',dark:'#06281c',mist:'#164a37'}};
 function glow(c,x,y,r,color,a){if(r<=0||a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+hex(a));g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
 function leaf(c,len,w,color){c.fillStyle=color;c.beginPath();c.moveTo(0,-len/2);c.quadraticCurveTo(w,0,0,len/2);c.quadraticCurveTo(-w,0,0,-len/2);c.fill();}
 function sword(c,len,color){c.fillStyle=color;c.beginPath();c.moveTo(-1.6,-len*.55);c.lineTo(1.6,-len*.55);c.lineTo(2.2,len*.3);c.lineTo(0,len*.45);c.lineTo(-2.2,len*.3);c.closePath();c.fill();c.fillRect(-5,-len*.38,10,1.8);}
@@ -26,8 +26,8 @@ export function drawTransform(c,e,t,k,p,H,layer='front'){
       for(let i=0;i<16;i++){c.save();c.rotate(i*TAU/16);c.fillStyle=s.a;c.fillRect(R*.84,-3,R*.14,6);c.restore();}c.restore();}
     glow(c,x,feet,180*sc,s.a,.45);
     // hồn lửa (Vương Lâm) / phi kiếm trúc (Hàn Lập) xoay sau lưng
-    const n=kind==='vuonglam'?10:14;for(let i=0;i<n;i++){const a=i*TAU/n+t*.0016,R=95*sc*ease(k/.3),px=x+Math.cos(a)*R,py=cy+Math.sin(a)*R*.42;
-      if(kind==='vuonglam')ghostFlame(c,px,py,sc*1.1,s.a,t,i);else{c.save();c.translate(px,py);c.rotate(a+Math.PI/2);sword(c,40*sc,i%2?s.b:s.a);c.restore();}}
+    const n=kind==='vuonglam'||kind==='viemton'?10:14;for(let i=0;i<n;i++){const a=i*TAU/n+t*.0016,R=95*sc*ease(k/.3),px=x+Math.cos(a)*R,py=cy+Math.sin(a)*R*.42;
+      if(kind==='vuonglam'||kind==='viemton')ghostFlame(c,px,py,sc*1.1,s.a,t,i);else{c.save();c.translate(px,py);c.rotate(a+Math.PI/2);sword(c,40*sc,i%2?s.b:s.a);c.restore();}}
     c.restore();return;
   }
   // ---- lớp trước ----
