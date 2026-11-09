@@ -41,7 +41,14 @@ export const smallGift=e=>!!e?.gift&&giftValue(e)<=10;
 export function shouldFocusEvent(e){return !!e?.user&&!e.autoArrival&&!e.newcomerWelcome&&(e.effect==='breakthrough'||e.transform||!!e.gift||e.petAward||e.flowerRank);}
 export function ritualPhase(k){return k<.12?'arrival':k<.34?'gather':k<.59?'formation':k<.69?'surge':k<.76?'burst':k<.94?'reveal':'return';}
 export function ritualState(e,t,motion=true){const k=clamp((t-e.start)/e.duration),realm=breakthroughRealm(e),phase=ritualPhase(k),impact=clamp(1-Math.abs(k-.71)/.035);return {k,realm,phase,revealed:k>=.72,color:ascensionProfile(realm).color,title:REALM_NAMES[realm].normalize('NFC'),name:String(e.name||'Đạo hữu').normalize('NFC'),shake:motion?impact*breakthroughPower(realm).shake:0};}
-export function crowdTargets(players,H){const n=players.length,cols=n>40?8:n>24?7:n>12?6:4,rows=Math.ceil(n/cols),top=H*.40,bottom=H*.77,scale=Math.min(1.35,100/120,rows>1?(bottom-top)/(rows-1)/135:1.35);return players.map((player,i)=>{const row=Math.floor(i/cols),len=Math.min(cols,n-row*cols);return {id:player.id,player,x:450+(i%cols-(len-1)/2)*780/cols,y:rows===1?H*.62:top+row*(bottom-top)/(rows-1),scale,lift:0};});}
+// 09/11: lưới đều như sân Nguyệt Cung cho mọi map — chia đều người giữa các hàng (13 → 5/4/4, không còn 1 người lẻ hàng cuối),
+// cột cách đều, nhân vật to theo số người; cả khối căn giữa quanh centerY (nền của map).
+export function crowdTargets(players,H,centerY=H*.62){const n=players.length;if(!n)return [];
+ const cols=n<=4?n:n<=12?4:n<=24?6:n<=40?8:10,rows=Math.ceil(n/cols),base=Math.floor(n/rows),extra=n%rows;
+ const scale=n<=3?2.6:n<=4?2.4:n<=8?2.1:n<=12?1.9:n<=24?1.45:n<=40?1.05:.85,pitch=n<=4?190:n<=12?190:n<=24?135:n<=40?102:84;
+ const gap=rows<=1?0:Math.min(rows<=3?205:175,H*.42/(rows-1)),top=Math.max(H*.30,Math.min(H*.80-(rows-1)*gap,centerY-(rows-1)*gap/2));
+ const out=[];let i=0;for(let r=0;r<rows;r++){const len=base+(r<extra?1:0);for(let k=0;k<len;k++,i++)out.push({id:players[i].id,player:players[i],x:450+(k-(len-1)/2)*pitch,y:top+r*gap,scale,lift:0});}
+ return out;}
 // Fewer bodies animate on the plaza; ritual gets a single full-detail actor.
 // 3/11: cảnh LIVE luôn ở chế độ gọn (bỏ hào quang/vòng sáng thường trực của từng người) cho mượt, kể cả lúc ít người hay đang trình diễn.
 // Hiệu ứng hành động (đột phá, quà, chiêu thức…) vẫn chạy bình thường. Đua phi kiếm / tỷ thí / kết duyên giữ nguyên đầy đủ.

@@ -37,3 +37,9 @@ test('small gifts receive their own solo but cannot replace an active breakthrou
  for(let i=0;i<20;i++)s.addEffect({id:'r'+i,user:'a',gift:'Rose',coins:1,effect:'petal'});
  assert.equal(s.presentation.id,'b');assert.equal(s.effects[0].id,'break');assert.equal(s.effects.length,1);
 });
+test('plaza rows are balanced (no lone last row) and share one column pitch',()=>{
+ for(const n of [5,7,9,13,17,25,33,45]){const t=crowdTargets(Array.from({length:n},(_,i)=>({id:String(i)})),1600,1000);
+  const rows=new Map();for(const a of t)rows.set(a.y,(rows.get(a.y)||0)+1);const counts=[...rows.values()];
+  assert.ok(Math.max(...counts)-Math.min(...counts)<=1,n+': '+counts);
+  for(const a of t)assert.ok(a.x-60*a.scale>0&&a.x+60*a.scale<900);}
+});
