@@ -217,12 +217,12 @@ loadPrestigeArt(this);syncRace(this,state);syncWar(this,state);syncAlchemy(this,
     }
     this.ellipse(c,0,12,22,6,'#081c2770');this.drawSkinVFX(c,specialSkinFor(p)||skin,t,p);this.drawCharacterBody(c,p,skin,t);
   }
-  // Skin đặc biệt có ảnh riêng cho giới tính này không (Bạch Kim Tiên Đế chỉ có bản nam).
+  // Skin đặc biệt đang chọn luôn hiện (10/11: Bạch Kim Tiên Đế chỉ có bản nam → nữ chọn thì mặc luôn bản nam).
   // Ảnh + ô dùng để vẽ nhân vật; tự lùi về bộ ảnh cũ nếu sheet chưa tải xong.
   artFor(p){const sa=this.specialArtFor(p);let a=sa?{sheet:'special',cell:sa.atlas+(visualGender(p)==='nu'&&sa.atlas<4?1:0)}:outfitArt(p);
     if(a.sheet==='special'&&this.specialArt?.length!==2)a=null;else if(a.sheet==='robe'&&!this.robeArt)a=null;
     return a||{sheet:'legacy',cell:spriteCell(appearanceFor(p).level,visualGender(p))};}
-  specialArtFor(p){const s=specialSkinFor(p);return s&&!(s.atlas>=4&&visualGender(p)==='nu')?s:null;}
+  specialArtFor(p){return specialSkinFor(p)||null;}
   drawCharacterBody(c,p,skin,t){
     const special=specialSkinFor(p),oldStanding=this.standingArt,oldSeated=this.characterArt;
     // v48: skin đặc biệt đang chọn luôn thắng; không thì ảnh theo nấc áo cảnh giới (outfitArt).
