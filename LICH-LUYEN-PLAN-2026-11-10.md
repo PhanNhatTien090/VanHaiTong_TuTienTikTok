@@ -361,7 +361,7 @@ Quà TikTok → Tiên Ngọc; người chỉ web kiếm Tiên Ngọc trong game.
 
 ## 5. Phân thân
 
-- **Tạo:** "Đi lịch luyện" → phần Phàm nhân hướng dẫn khoảng 10 phút (đánh thử 3 class rồi mới chọn) → chọn đạo lộ → khai linh căn → rút khí vận → đặt tên.
+- **Tạo:** "Đi lịch luyện" → chọn đạo lộ (mỗi đạo lộ có **màn xem trước**: hình nhân vật + hoạt cảnh ngắn các chiêu chính, không đánh thử) → khai linh căn → rút khí vận → đặt tên → phần Phàm nhân hướng dẫn khoảng 10 phút bằng đạo lộ đã chọn.
 - Mỗi tài khoản **một phân thân** (kiến trúc vẫn cho mở thêm ô về sau).
 - **Ưu đãi bản thể / Đạo Nghiệp:** như mục 2.1.
 - **Dữ liệu web cũ** (cường hóa, cấp linh thú web, tầng tháp, vật liệu trong `p.web`) → đổi thành gói quà vào thư phân thân. Phần chơi cũ tắt khi Lịch luyện mở. Hồ sơ LIVE giữ nguyên.
@@ -426,11 +426,11 @@ Danh hiệu lên LIVE, đổi skin hồ sơ không mượn nhân vật (gỡ cơ
 
 ---
 
-## 8. Việc còn cần chủ game chốt (không chặn giai đoạn 0)
+## 8. Đã chốt thêm (10/11/2026)
 
-1. Tên 3 châu đầu và tên 2 nhánh mỗi đạo lộ (mình đề xuất ở trên, có thể đổi).
-2. Phần hướng dẫn Phàm nhân có cho **đánh thử cả 3 class** trước khi chọn không. Đề xuất: **có**.
-3. Có **tự động chiến đấu** (thưởng giảm còn 70%) cho người bận không. Đề xuất: **có, chỉ ở ải đã 3 sao**.
+1. Tên châu và tên nhánh: dùng tên đề xuất trong file, đổi được sau (chỉ là dữ liệu).
+2. **Không đánh thử** trước khi chọn class; chỉ có **màn xem trước** hình + hoạt cảnh chiêu.
+3. **Có tự động chiến đấu**, thưởng 70%, chỉ ở ải đã 3 sao.
 
 ---
 
