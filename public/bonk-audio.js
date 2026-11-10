@@ -33,6 +33,10 @@ export function playBonkSound(c,bus,kind,o={}){
   if(walk)steps(c,bus,now,impact-.32,k);
   slide(c,bus,impact-.3,500*k,1250*k,.26,.045);                // giơ búa: huýt sáo kéo lên
   HITS[(o.variant||0)%HITS.length](c,bus,impact,k);
+  const tier=o.hammer||0; /* búa xịn: 1 tiếng đồng ngân · 2 chuông ngọc + trống trầm · 3 sét nổ + sấm rền */
+  if(tier===1){[1,2.4,3.9].forEach((m,i)=>tone(c,bus,'sine',620*k*m,620*k*m*.99,impact+.01,.9-i*.2,.07/(1+i*2)));}
+  if(tier===2){tone(c,bus,'sine',90*k,45*k,impact,.45,.22);[1318.5,1760,2349.3].forEach((f,i)=>tone(c,bus,'sine',f*k,f*k,impact+.05+i*.07,.7,.04));noise(c,bus,impact,.3,.08,'bandpass',3000,2,900);}
+  if(tier===3){noise(c,bus,impact-.02,.12,.32,'highpass',2500,.7);noise(c,bus,impact+.05,1.4,.22,'lowpass',420,.8,70);tone(c,bus,'sawtooth',70,38,impact,.6,.08);tone(c,bus,'sine',55,30,impact+.02,1.1,.2);}
   sparkle(c,bus,impact+.12,k);
   for(let i=0;i<Math.min(3,o.stones||0);i++)clink(c,bus,impact+.2+i*.1,k);
   if(walk)steps(c,bus,impact+.42,impact+1.45,k*1.08,.8);       // chạy về, nhanh và nhẹ hơn

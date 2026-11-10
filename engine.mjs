@@ -28,7 +28,7 @@ import {flowerHearts,finishFlowerHearts,bossHearts} from './heart-events.mjs';
 import {raceHearts} from './sword-race.mjs';
 import {warActive,startWar as beginWar,stopWar as endWar,tickWar,warCommand,warHearts,warGift,warView,warStageIds} from './sect-war.mjs';
 import {teasePair as beginTease} from './tease.mjs';
-import {startBonk as beginBonk,stopBonk as endBonk,tickBonk,bonkCommand,bonkView} from './bonk.mjs';
+import {startBonk as beginBonk,stopBonk as endBonk,tickBonk,bonkCommand,bonkView,bonkGift,bonkOpen} from './bonk.mjs';
 import {startMaze as beginMaze,stopMaze as endMaze,tickMaze,mazeCommand,mazeGift,mazeView,mazeActive} from './maze.mjs';
 import {startAlchemy as beginAlchemy,stopAlchemy as endAlchemy,tickAlchemy,alchemyCommand,alchemyHearts,alchemyGift,alchemyView,alchemyStageIds,alchemyActive} from './alchemy.mjs';
 import {DIVINE_ROLES,rankDivineRoles} from './public/divine-wardrobe.js';
@@ -542,6 +542,7 @@ function actionCore(w,input,now) {
     if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;giftEvent.warTruong=war.truong;giftEvent.text+=' • đẩy '+war.truong+' trượng';if(war.flip)giftEvent.warFlip=true;}}
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
     if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext);if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
+    {const bk=bonkGift(w,p,input.coins*count,now);if(bk){giftEvent.bonkHammer=bk;giftEvent.text+=' • '+bk.text;}} // 10/11: Hội Gõ Đầu — quà = búa xịn
     recordEventGiftFx(w,p,giftEvent,now);
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
     p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
@@ -570,6 +571,7 @@ export function giftEventRule(w,now){
  if(w.sectWar?.phase==='running')return 'chính ma đại chiến';
  if(['opening','brewing','tribulation'].includes(w.alchemy?.phase))return 'lò luyện đan';
  if(['registration','running'].includes(w.maze?.phase))return 'bí cảnh mê cung';
+ if(bonkOpen(w,now))return 'hội gõ đầu';
  if(w.visitor&&!w.visitor.closedAt&&now>=(w.visitor.startedAt||0)&&now<w.visitor.endsAt)return 'tiên nhân truyền đạo';
  if(w.opportunity&&!w.opportunity.closedAt&&now>=(w.opportunity.startedAt||0)&&now<w.opportunity.endsAt)return 'cơ duyên';
  if(w.flowerEvent&&now>=(w.flowerEvent.startedAt||0)&&now<w.flowerEvent.endsAt)return w.flowerEvent.kind==='meteor'?'sao băng':'mưa hoa';

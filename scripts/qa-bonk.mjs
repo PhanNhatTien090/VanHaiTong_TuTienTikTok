@@ -1,7 +1,7 @@
 // 10/11/2026: QA Hội Gõ Đầu — tự bật server THỬ (cổng 4399, dữ liệu tạm riêng, thế giới demo), không đụng LIVE.
 // node scripts/qa-bonk.mjs [port]  → ảnh trong output/bonk/
 import {spawn} from 'node:child_process';import fs from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import WebSocket from 'ws';
-const port=Number(process.argv[2]||4399),base=`http://127.0.0.1:${port}`,out='output/bonk';await fs.mkdir(out,{recursive:true});
+const port=Number(process.argv[2]||4399),base=`http://127.0.0.1:${port}`,out='output/bonk'+(process.env.HAMMER_COINS?'-h'+process.env.HAMMER_COINS:'');await fs.mkdir(out,{recursive:true});
 const pause=ms=>new Promise(r=>setTimeout(r,ms));const data=await fs.mkdtemp(path.join(os.tmpdir(),'bonk-data-')),profile=await fs.mkdtemp(path.join(os.tmpdir(),'bonk-'));
 const srv=spawn(process.execPath,['server.mjs'],{env:{...process.env,PORT:String(port),VAN_HAI_DATA_DIR:data},stdio:'ignore',windowsHide:true});
 const post=(p,b)=>fetch(base+p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json());
@@ -22,6 +22,7 @@ try{for(let i=0;i<60;i++){try{if((await fetch(base+'/api/state?world=demo')).ok)
  for(const kind of ['boss','flowerEvent','visitor','opportunity'])await post('/api/social-control?world=demo',{action:'stop-current',kind});
  console.log('start',JSON.stringify(await post('/api/social-control?world=demo',{action:'start-bonk'})));
  for(const u of users)await act({type:'chat',userId:u.id,name:u.name,text:'tuluyen'});await pause(4000);await shot('00-open');
+ const tier=Number(process.env.HAMMER_COINS||0);if(tier)console.log('gift',JSON.stringify(await act({type:'gift',userId:'qa0',name:users[0].name,coins:tier,count:1,eventId:'qa-h'+Date.now()})));await pause(tier?2500:0);
  console.log('hit',JSON.stringify(await act({type:'chat',userId:'qa0',name:users[0].name,text:'go Hoàng Long'})));
  const t0=Date.now();for(const ms of [450,950,1300,1550,2100,2700]){await pause(Math.max(0,t0+ms-Date.now()));await shot('1-'+String(ms).padStart(4,'0'));}
  await act({type:'chat',userId:'qa2',name:users[2].name,text:'gõ đầu kim chi'});await act({type:'chat',userId:'qa6',name:users[6].name,text:'go'});await pause(1400);await shot('2-double');

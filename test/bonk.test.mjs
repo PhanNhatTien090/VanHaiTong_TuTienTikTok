@@ -39,3 +39,15 @@ test('dừng tay + có trong túi sự kiện ngẫu nhiên; "gõ đầu" gộp 
  const w=setup();startBonk(w,N);assert.ok(stopBonk(w,N+500).ok);assert.ok(w.bonkFest.closedAt);
  assert.ok(RANDOM_EVENTS.some(([id])=>id==='bonk'));assert.equal(commandWords('gõ đầu Lam')[0],'godau');
 });
+test('quà trong hội = búa xịn giữ vĩnh viễn, gõ rơi nhiều hơn; không cộng quà mặc định',async()=>{
+ const {HAMMERS}=await import('../bonk.mjs');const {giftEventRule}=await import('../engine.mjs');
+ const w=setup();startBonk(w,N);assert.equal(giftEventRule(w,N+1),'hội gõ đầu');
+ const gift=(id,coins,t)=>action(w,{type:'gift',userId:id,coins,count:1,eventId:'g'+t+id},t);
+ const qi0=w.players.p0.totalQi;gift('p0',1,N+100);assert.equal(w.players.p0.bonkHammer,1);assert.equal(w.players.p0.totalQi,qi0,'không quà mặc định');
+ gift('p0',19,N+200);assert.equal(w.players.p0.bonkHammer,2,'cộng dồn 20 coin');gift('p0',99,N+300);assert.equal(w.players.p0.bonkHammer,3);
+ const r=chat(w,'p0','go Người 1',N+400);assert.equal(r.hammer,3);assert.ok(r.stones>=HAMMERS[3].drop[0]&&r.stones<=HAMMERS[3].drop[1]);
+ assert.equal(snapshot(w,N+500).bonkFest.hits.at(-1).h,3);
+ let t=N+500;for(let i=0;i<12;i++){t+=HAMMERS[3].cd+10;chat(w,'p0','go Người 1',t);}assert.ok(100-w.players.p1.stones<=BONK.maxLossPremium);
+ tick(w,N+BONK.durationMs+1);gift('p2',500,N+BONK.durationMs+100);assert.equal(w.players.p2.bonkHammer,undefined,'ngoài hội tặng không ra búa');
+ startBonk(w,N+BONK.durationMs+60000);assert.equal(w.players.p0.bonkHammer,3,'lượt sau vẫn giữ búa');
+});

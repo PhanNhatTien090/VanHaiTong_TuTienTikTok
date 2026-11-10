@@ -42,11 +42,24 @@ export function applyBonkWalk(scene,t){
 function txt(c,s,x,y,font,fill,stroke=5,strokeColor='#1b0d04'){c.font=font;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=stroke;c.strokeStyle=strokeColor;c.strokeText(s,x,y);c.fillStyle=fill;c.fillText(s,x,y);}
 function star(c,x,y,r,fill){c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);}c.closePath();c.fillStyle=fill;c.fill();}
 function stone(c,x,y,r){c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r*.75,y);c.lineTo(x,y+r);c.lineTo(x-r*.75,y);c.closePath();c.fillStyle='#7ff0d8';c.fill();c.strokeStyle='#0c4a44';c.lineWidth=1.2;c.stroke();c.fillStyle='rgba(255,255,255,.75)';c.fillRect(x-r*.2,y-r*.55,r*.3,r*.4);}
-// Búa gỗ: cán nâu + đầu búa trụ, xoay quanh tay (px,py) góc ang.
-function mallet(c,px,py,ang,s){c.save();c.translate(px,py);c.rotate(ang);c.lineCap='round';
- c.strokeStyle='#3b2412';c.lineWidth=6*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-30*s);c.stroke();c.strokeStyle='#a8743c';c.lineWidth=3.6*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-30*s);c.stroke();
- c.fillStyle='#8a5a2b';c.strokeStyle='#2c1a0b';c.lineWidth=2;c.beginPath();c.roundRect?.(-14*s,-42*s,28*s,15*s,5*s);c.fill();c.stroke();
- c.fillStyle='#d9a35c';c.fillRect(-12*s,-40*s,24*s,3.5*s);c.fillStyle='#e8c27a';c.fillRect(-15*s,-41*s,3*s,13*s);c.fillRect(12*s,-41*s,3*s,13*s);c.restore();}
+// Búa theo bậc (bonk.mjs HAMMERS): 0 Búa Gỗ · 1 Búa Đồng · 2 Ngọc Bích Chùy · 3 Lôi Thần Chùy. Xoay quanh tay (px,py) góc ang.
+export const HAMMER_NAMES=['Búa Gỗ','Búa Đồng','Ngọc Bích Chùy','Lôi Thần Chùy'];
+const HAMMER_SKIN=[
+ {stick:'#a8743c',edge:'#3b2412',head:'#8a5a2b',band:'#e8c27a',shine:'#d9a35c',fx:'#ffd36b',size:1},
+ {stick:'#7a3b1c',edge:'#3a1a06',head:'#c8873a',band:'#ffe08a',shine:'#ffd27a',fx:'#ffcc55',size:1.08},
+ {stick:'#6b1f22',edge:'#0b3a2a',head:'#2fbf8a',band:'#ffd76a',shine:'#b8ffe0',fx:'#6dffc0',size:1.16},
+ {stick:'#2a2350',edge:'#120c2a',head:'#4a3a9a',band:'#8fe3ff',shine:'#d8f4ff',fx:'#8fd8ff',size:1.28}];
+function mallet(c,px,py,ang,s,tier=0,t=0){const K=HAMMER_SKIN[tier]||HAMMER_SKIN[0];s*=K.size;c.save();c.translate(px,py);c.rotate(ang);c.lineCap='round';
+ c.strokeStyle=K.edge;c.lineWidth=6*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-30*s);c.stroke();c.strokeStyle=K.stick;c.lineWidth=3.6*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-30*s);c.stroke();
+ if(tier>=2){c.fillStyle=K.band;c.fillRect(-2.4*s,-8*s,4.8*s,2.6*s);c.fillRect(-2.4*s,-18*s,4.8*s,2.6*s);}
+ if(tier>=2){c.globalAlpha=.35+.15*Math.sin(t*.012);c.fillStyle=K.fx;c.beginPath();c.ellipse(0,-34.5*s,20*s,12*s,0,0,TAU);c.fill();c.globalAlpha=1;} /* hào quang đầu búa (không dùng shadowBlur cho đỡ lag) */
+ c.fillStyle=K.head;c.strokeStyle=K.edge;c.lineWidth=2;c.beginPath();c.roundRect?.(-14*s,-42*s,28*s,15*s,5*s);c.fill();c.stroke();
+ c.fillStyle=K.shine;c.fillRect(-12*s,-40*s,24*s,3.5*s);c.fillStyle=K.band;c.fillRect(-15*s,-41*s,3*s,13*s);c.fillRect(12*s,-41*s,3*s,13*s);
+ if(tier===2){c.strokeStyle='#eafff4';c.lineWidth=1.2;c.beginPath();c.moveTo(-7*s,-34*s);c.lineTo(-3*s,-31*s);c.lineTo(1*s,-35*s);c.lineTo(5*s,-31*s);c.stroke();}
+ if(tier===3){c.strokeStyle=K.fx;c.lineWidth=1.6;for(let i=0;i<3;i++){const a=(t*.02+i*2.1)%TAU,x0=Math.cos(a)*16*s,y0=-34.5*s+Math.sin(a)*9*s;c.beginPath();c.moveTo(x0,y0);c.lineTo(x0*1.25+(i-1)*3,y0-5*s);c.lineTo(x0*1.5,y0+2*s);c.stroke();}
+  c.fillStyle='#ffffff';c.beginPath();c.moveTo(-3*s,-41*s);c.lineTo(2*s,-36*s);c.lineTo(-1*s,-35*s);c.lineTo(3*s,-29*s);c.lineTo(-3*s,-35*s);c.lineTo(0,-36*s);c.closePath();c.fill();}
+ c.restore();}
+function bolt(c,x0,y0,x1,y1,seed,col,w){c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(x0,y0);const n=7;for(let i=1;i<n;i++){const u=i/n,j=(Math.sin(seed*13.7+i*5.1)*.5)*28;c.lineTo(x0+(x1-x0)*u+j,y0+(y1-y0)*u);}c.lineTo(x1,y1);c.stroke();}
 
 export function drawBonk(scene,c,t){
  const b=scene.bonkFest;if(!b)return;const H=scene.height,nowMs=Date.now();
@@ -61,26 +74,31 @@ export function drawBonk(scene,c,t){
  const byId=new Map((scene.targets||[]).map(x=>[x.id,x]));
  const heard=scene.bonkHeard??=new Set();
  for(const {h,age} of live(scene,t)){const a=byId.get(h.a),v=byId.get(h.b);if(!v)continue;
-  if(!heard.has(h.id)){heard.add(h.id);if(heard.size>80)heard.delete(heard.values().next().value);if(age<IMPACT-.1)scene.onBonkSound?.('hit',{variant:h.v,stones:h.s,delay:IMPACT-age,walk:!!a});}
+  if(!heard.has(h.id)){heard.add(h.id);if(heard.size>80)heard.delete(heard.values().next().value);if(age<IMPACT-.1)scene.onBonkSound?.('hit',{variant:h.v,stones:h.s,delay:IMPACT-age,walk:!!a,hammer:h.h||0});}
   const s=v.scale||1.4,F=Math.max(1.5,s*1.9),hy=headY(v),col=COLORS[h.v%COLORS.length],side=a?(a.bonkFrom?.[0]??a.x)<=v.x?-1:1:-1;
   // búa: có người gõ trên sân thì cầm ở tay, không thì búa từ trời rơi xuống
   if(age>WALK-.15&&age<BACK){const k=clamp((age-(WALK-.15))/(IMPACT-(WALK-.15)));
    const L=40*F*.9,HIT=.78;
-   if(a){const dir=-side,sw=age>=IMPACT?HIT:k<.6?-.7*(k/.6):-.7+(HIT+.7)*((k-.6)/.4);mallet(c,v.x-dir*Math.sin(HIT)*L,hy-2+Math.cos(HIT)*L,dir*sw,F*.9);} /* trục búa đặt sao cho lúc bổ xuống đầu búa đúng đỉnh đầu */
-   else{const y0=hy-2+L-150+(age<IMPACT?k*k*150:150);mallet(c,v.x,y0,0,F*.9);}}
+   if(a){const dir=-side,sw=age>=IMPACT?HIT:k<.6?-.7*(k/.6):-.7+(HIT+.7)*((k-.6)/.4);mallet(c,v.x-dir*Math.sin(HIT)*L,hy-2+Math.cos(HIT)*L,dir*sw,F*.9,h.h||0,t);} /* trục búa đặt sao cho lúc bổ xuống đầu búa đúng đỉnh đầu */
+   else{const y0=hy-2+L-150+(age<IMPACT?k*k*150:150);mallet(c,v.x,y0,0,F*.9,h.h||0,t);}
+   if((h.h||0)>0&&age<IMPACT)txt(c,(h.h===3?'⚡ ':h.h===2?'✦ ':'')+HAMMER_NAMES[h.h],(a?a.x:v.x),(a?headY(a):hy)-40*F,'900 17px Segoe UI',HAMMER_SKIN[h.h].fx,5);}
   if(age>=IMPACT){const k=clamp((age-IMPACT)/(END-IMPACT)),fade=1-clamp((age-(END-.4))/.4);
    c.save();c.globalAlpha=fade;
    // chớp va chạm
    if(age<IMPACT+.25){const q=(age-IMPACT)/.25;c.strokeStyle=col;c.lineWidth=3;for(let i=0;i<8;i++){const ang=i*TAU/8+.2,r0=10*s+q*14*s,r1=r0+10*s;c.beginPath();c.moveTo(v.x+Math.cos(ang)*r0,hy-4*s+Math.sin(ang)*r0*.7);c.lineTo(v.x+Math.cos(ang)*r1,hy-4*s+Math.sin(ang)*r1*.7);c.stroke();}}
+   // búa xịn: 1 vòng tia vàng · 2 sóng ngọc lan ra · 3 sét đánh từ trời xuống + chớp trắng
+   {const tier=h.h||0,K=HAMMER_SKIN[tier];if(tier>=1&&age<IMPACT+.5){const q=(age-IMPACT)/.5;c.strokeStyle=K.fx;c.lineWidth=(4-q*3)*(tier>=2?1.4:1);c.beginPath();c.ellipse(v.x,hy,(12+q*40)*F*.5*(tier>=2?1.6:1),(5+q*16)*F*.5*(tier>=2?1.6:1),0,0,TAU);c.stroke();}
+    if(tier===2&&age<IMPACT+.8){for(let i=0;i<8;i++){const a2=i*TAU/8+h.v,d=(age-IMPACT)*90*F*.5;c.fillStyle=i%2?'#b8ffe0':'#2fbf8a';c.beginPath();c.ellipse(v.x+Math.cos(a2)*d,hy+Math.sin(a2)*d*.45-(age-IMPACT)*20,4*F*.5,2*F*.5,a2,0,TAU);c.fill();}}
+    if(tier===3&&age<IMPACT+.35){const q=(age-IMPACT)/.35;c.globalAlpha=fade*(1-q);bolt(c,v.x+20,0,v.x,hy-4,h.v+Math.floor(t/60),'#ffffff',4);bolt(c,v.x+20,0,v.x,hy-4,h.v+3+Math.floor(t/60),K.fx,2);c.fillStyle='rgba(220,240,255,.55)';c.beginPath();c.arc(v.x,hy,30*F*(.6+q),0,TAU);c.fill();c.globalAlpha=fade;}}
    // cục u + sao xoay quanh đầu
    c.fillStyle='#ffb3a0';c.beginPath();c.ellipse(v.x+2*F,hy-5*F-Math.min(1,k*6)*3*F,4*F*Math.min(1,k*6),3.2*F*Math.min(1,k*6),0,0,TAU);c.fill();
    for(let i=0;i<3;i++){const ang=age*5.5+i*TAU/3;star(c,v.x+Math.cos(ang)*13*F,hy-8*F+Math.sin(ang)*4*F,4.6*F,i%2?'#fff3b0':col);}
    // chữ BỐP + tên người gõ
-   const pop=age<IMPACT+.15?.6+(age-IMPACT)/.15*.6:1.2-Math.min(.2,(age-IMPACT-.15)*.5);txt(c,WORDS[h.v%WORDS.length],v.x-side*24*F,hy-14*F-k*10,`900 ${Math.round(36*pop)}px Segoe UI`,col,7);
+   const pop=age<IMPACT+.15?.6+(age-IMPACT)/.15*.6:1.2-Math.min(.2,(age-IMPACT-.15)*.5);txt(c,WORDS[h.v%WORDS.length],v.x-side*24*F,hy-14*F-k*10,`900 ${Math.round(36*pop*(1+(h.h||0)*.12))}px Segoe UI`,(h.h||0)>0?HAMMER_SKIN[h.h].fx:col,7);
    if(!a)txt(c,String(h.an).slice(0,12)+' gõ',v.x,hy-60*F,'800 14px Segoe UI','#fff',4);
    // linh thạch bay từ đầu người bị gõ sang người gõ (hoặc tỏa ra nếu người gõ không trên sân)
    if(h.s>0){for(let i=0;i<h.s;i++){const d=clamp((age-IMPACT-.08*i)/1.1);if(d<=0||d>=1)continue;const tx=a?a.x:v.x+(i-1)*30,ty=a?headY(a)+10*s:hy+40*s;const x=v.x+(tx-v.x)*d,y=hy+(ty-hy)*d-Math.sin(d*Math.PI)*36*F;stone(c,x,y,5*F);}
-    txt(c,'-'+h.s+' linh thạch',v.x+side*30*F,hy-6*F-k*16,'900 19px Segoe UI','#9ff5e2',5,'#04231f');}
+    txt(c,'-'+h.s+' linh thạch',v.x+side*30*F,hy-6*F-k*16,`900 ${19+(h.h||0)*3}px Segoe UI`,'#9ff5e2',5,'#04231f');}
    c.restore();}
  }
  c.restore();

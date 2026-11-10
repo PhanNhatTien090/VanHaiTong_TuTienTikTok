@@ -2,10 +2,20 @@
 // thì nhân vật đi bộ tới gõ đầu người kia; "go" không tên = gõ một người ngẫu nhiên đang ở LIVE.
 // Người bị gõ rơi ÍT linh thạch sang người gõ (1–3 viên/lần, tối đa BONK.maxLoss viên/người/lượt).
 // Chống spam: người gõ chờ BONK.cooldownMs; người vừa bị gõ được "u đầu" BONK.immuneMs không bị gõ tiếp.
-// Quà không đổi luật (giftEventRule không tính sự kiện này → quà mặc định như thường).
+// Quà (10/11, chủ game "ai nạp thì được skin búa xịn gõ đau hơn"): đang mở hội thì quà chỉ theo luật hội (không quà mặc định).
+// Cộng dồn coin tặng trong lượt: ≥1 Búa Đồng · ≥20 Ngọc Bích Chùy · ≥99 Lôi Thần Chùy — giữ VĨNH VIỄN (p.bonkHammer),
+// dùng cho mọi lượt Hội Gõ Đầu sau. Búa xịn rơi nhiều linh thạch hơn, tay đỡ mỏi hơn; người bị gõ bằng búa xịn mất tối đa
+// BONK.maxLossPremium viên/lượt (gõ tay không vẫn chỉ tới BONK.maxLoss).
 import {stageConflict} from './stage-lock.mjs';
 
-export const BONK=Object.freeze({durationMs:180000,cooldownMs:15000,immuneMs:8000,minDrop:1,maxDrop:3,maxLoss:15,showMs:3000,podiumMs:8000});
+export const BONK=Object.freeze({durationMs:180000,cooldownMs:15000,immuneMs:8000,minDrop:1,maxDrop:3,maxLoss:15,showMs:3000,podiumMs:8000,maxLossPremium:30});
+export const HAMMERS=Object.freeze([
+ {tier:0,name:'Búa Gỗ',min:0,drop:[1,3],cd:15000},
+ {tier:1,name:'Búa Đồng',min:1,drop:[2,4],cd:12000},
+ {tier:2,name:'Ngọc Bích Chùy',min:20,drop:[3,6],cd:10000},
+ {tier:3,name:'Lôi Thần Chùy',min:99,drop:[5,8],cd:8000}]);
+export const hammerOf=p=>HAMMERS[Math.max(0,Math.min(HAMMERS.length-1,Number(p?.bonkHammer)||0))];
+const tierFor=coins=>HAMMERS.reduce((t,h)=>coins>=h.min&&h.min>0?h.tier:t,0);
 export const BONK_COMMANDS=['go','godau'];
 const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const fail=message=>({ok:false,message});
@@ -15,7 +25,7 @@ export const bonkOpen=(w,now)=>!!w.bonkFest&&!w.bonkFest.closedAt&&now<w.bonkFes
 export function startBonk(w,now,c){
  if(bonkOpen(w,now))return fail('Hội Gõ Đầu đang mở.');
  const busy=stageConflict(w,now);if(busy)return fail('Sân đang có '+busy+', để sau.');
- w.bonkFest={id:'bonk-'+now,startedAt:now,endsAt:now+BONK.durationMs,hits:[],count:{},taken:{},lost:{},seq:0};
+ w.bonkFest={id:'bonk-'+now,startedAt:now,endsAt:now+BONK.durationMs,hits:[],count:{},taken:{},lost:{},seq:0,coins:{}};
  c.emit(w,null,'HỘI GÕ ĐẦU khai mạc 3 phút • gõ go kèm tên để đi gõ đầu đạo hữu • bị gõ rơi vài linh thạch','bonk',now,{bonkStart:true});
  return {ok:true,endsAt:w.bonkFest.endsAt};
 }
@@ -55,17 +65,27 @@ export function bonkCommand(w,p,cmd,text,now,c){
  if(p.resident||p.puppet)return fail('Gõ đầu dành cho người xem thật.');
  const e=w.bonkFest;e.immune??={};e.next??={};
  if(e.next[p.id]>now)return fail(`Tay còn mỏi • gõ tiếp sau ${Math.ceil((e.next[p.id]-now)/1000)}s`);
+ const H=hammerOf(p);
  const r=pickTarget(w,p,targetText(text),now,c.active);if(r.error)return fail(r.error);
  const t=r.target;
  if(e.immune[t.id]>now)return fail(`${t.name} vừa bị gõ, đầu còn u • chờ ${Math.ceil((e.immune[t.id]-now)/1000)}s`);
- const room=Math.max(0,BONK.maxLoss-(e.taken[t.id]||0)),want=BONK.minDrop+Math.floor(Math.random()*(BONK.maxDrop-BONK.minDrop+1));
+ const room=Math.max(0,(H.tier?BONK.maxLossPremium:BONK.maxLoss)-(e.taken[t.id]||0)),want=H.drop[0]+Math.floor(Math.random()*(H.drop[1]-H.drop[0]+1));
  const drop=Math.max(0,Math.min(want,room,Math.floor(t.stones||0)));
  t.stones-=drop;p.stones=(p.stones||0)+drop;
  e.taken[t.id]=(e.taken[t.id]||0)+drop;e.count[p.id]=(e.count[p.id]||0)+1;e.lost[t.id]=(e.lost[t.id]||0)+1;
- e.next[p.id]=now+BONK.cooldownMs;e.immune[t.id]=now+BONK.immuneMs;
- e.seq++;e.hits.push({id:e.id+':'+e.seq,a:p.id,b:t.id,an:p.name,bn:t.name,s:drop,at:now,v:Math.floor(Math.random()*4)});
+ e.next[p.id]=now+H.cd;e.immune[t.id]=now+BONK.immuneMs;
+ e.seq++;e.hits.push({id:e.id+':'+e.seq,a:p.id,b:t.id,an:p.name,bn:t.name,s:drop,at:now,v:Math.floor(Math.random()*4),h:H.tier});
  if(e.hits.length>40)e.hits.splice(0,e.hits.length-40);
- return {ok:true,bonk:t.id,stones:drop};
+ return {ok:true,bonk:t.id,stones:drop,hammer:H.tier};
+}
+
+// Quà trong lúc mở hội → lên búa (giữ vĩnh viễn). Trả null nếu hội không mở.
+export function bonkGift(w,p,coins,now){
+ if(!bonkOpen(w,now)||p.resident||p.puppet||!(coins>0))return null;const e=w.bonkFest;e.coins??={};
+ const total=(e.coins[p.id]=(e.coins[p.id]||0)+coins),tier=tierFor(total),had=Number(p.bonkHammer)||0;
+ if(tier>had)p.bonkHammer=tier;const H=hammerOf(p),next=HAMMERS[H.tier+1];
+ if(e.next)e.next[p.id]=0; /* tặng quà là gõ được ngay */
+ return {tier:H.tier,name:H.name,upgraded:tier>had,text:(tier>had?'nhận '+H.name:H.name)+' • gõ rơi '+H.drop[0]+'–'+H.drop[1]+' linh thạch'+(next?` • tổng ${next.min} coin lên ${next.name}`:'')};
 }
 
 export function bonkView(w,now){
