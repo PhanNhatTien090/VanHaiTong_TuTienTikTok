@@ -257,10 +257,14 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       // Keep the original authentication and TikTok-linking flow; only gameplay is paused.
       const accountRoutes=new Set(['POST /api/check','POST /api/register','POST /api/login','POST /api/logout','POST /api/link/start','POST /api/character']);
       if(profileOnly&&req.method!=='GET'&&!accountRoutes.has(route))return json(req,res,{ok:false,readOnly:true,message:'Tạm khóa tu luyện, bế quan và nhận thưởng trên web.'},403);
-      // Bản thử (WEB_CLOUD_TRIAL=1): khóa mọi thứ tăng sức mạnh; chỉ cho đánh ải đầu tiên, đánh xong không nhận thưởng.
-      if(trial&&req.method==='POST'&&!accountRoutes.has(route)&&route!=='POST /api/play/heartbeat'&&route!=='POST /api/dungeon/finish'){
+      // Bản thử (WEB_CLOUD_TRIAL=1): CHỈ khóa những gì ra tu vi — tu luyện, đột phá, bế quan, ải/tháp/sự kiện (riêng ải đầu được đánh thử, không thưởng).
+      // Trang bị, skin, pháp bảo, công pháp, cường hóa, linh thú, cửa hàng, thư, quà, nhiệm vụ vẫn dùng bình thường (chủ game chốt 10/11/2026).
+      const TRIAL_LOCKED=new Set(['POST /api/retreat/start','POST /api/retreat/claim','POST /api/dungeon/start','POST /api/dungeon/sweep','POST /api/tower/start','POST /api/event/start']);
+      if(trial&&req.method==='POST'&&(TRIAL_LOCKED.has(route)||route==='POST /api/act')){
         const b=await readBody(req)||{};
-        if(!(route==='POST /api/dungeon/start'&&String(b.zone||'')===ZONES[0].id&&Number(b.stage)===1))return json(req,res,{ok:false,trial:true,message:'Bản web đang thử nghiệm: tạm khóa tu luyện, bế quan, nâng cấp và nhận thưởng. Hiện chỉ mở đánh thử ải đầu tiên.'},403);
+        const lockedAct=route==='POST /api/act'&&['cultivate','breakthrough'].includes(String(b.type||''));
+        const firstStage=route==='POST /api/dungeon/start'&&String(b.zone||'')===ZONES[0].id&&Number(b.stage)===1;
+        if(lockedAct||(TRIAL_LOCKED.has(route)&&!firstStage))return json(req,res,{ok:false,trial:true,message:'Bản web đang thử nghiệm: tạm khóa tu luyện, đột phá và bế quan (tu vi lên ở LIVE). Trang bị, skin, pháp bảo vẫn dùng được; bí cảnh chỉ mở đánh thử ải đầu.'},403);
       }
 
       // ----- Quản trị: CHỈ trên máy này (qua tunnel/proxy luôn bị chặn). Xem hồ sơ bất kỳ người chơi, chỉ đọc. -----
