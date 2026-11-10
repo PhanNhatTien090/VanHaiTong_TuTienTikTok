@@ -190,7 +190,8 @@ async function enableAudio(on){
   $('#soundButton').innerHTML=`♫ <span>${sound?'Âm thanh bật':'Bật âm thanh'}</span>`;
   $('#audioStatus').textContent=sound?'Nhạc nền + hiệu ứng đã bật':'Âm thanh đang tắt';
 }
-$('#soundButton').onclick=async()=>{try{await enableAudio(!cultivationAudio.enabled);if(sound)cultivationAudio.play('join');}catch(err){$('#audioStatus').textContent=err.message;toast('Bấm ▶ Thử âm trên nguồn để cho phép phát.');}};
+let userMuted=false;
+$('#soundButton').onclick=async()=>{userMuted=cultivationAudio.enabled;try{await enableAudio(!cultivationAudio.enabled);if(sound)cultivationAudio.play('join');}catch(err){$('#audioStatus').textContent=err.message;toast('Bấm ▶ Thử âm trên nguồn để cho phép phát.');}};
 $('#audioTest').onclick=async()=>{try{await enableAudio(true);cultivationAudio.play('breakthrough');await narrator.sample();}catch(err){$('#audioStatus').textContent=err.message;toast('Nguồn chưa phát được âm thanh: '+err.message);}};
 narrator.enabled=params.has('voice')?params.get('voice')!=='0':localStorage.getItem('vanhai-voice-enabled')!=='false';$('#voiceToggle').checked=narrator.enabled;
 $('#voiceToggle').onchange=e=>{narrator.enabled=e.target.checked;if(!narrator.enabled)narrator.stop();localStorage.setItem('vanhai-voice-enabled',String(narrator.enabled));};
@@ -314,7 +315,8 @@ if(overlay&&params.get('sound')!=='0'){
   enableAudio(true).catch(()=>{showAudioUnlock();$('#audioStatus').textContent='Bị chặn tự phát · bấm Bật âm thanh';$('#soundButton').title='Bấm để cho phép phát âm';});
 }
 // A click inside the source unlocks playback when autoplay has been blocked.
-document.addEventListener('pointerdown',e=>{if(e.target.closest('#soundButton,#audioTest'))return;if(overlay&&params.get('sound')!=='0'&&!cultivationAudio.enabled)enableAudio(true).catch(()=>{});},{once:true});
+/* 10/11: không chỉ 1 lần — bấm/gõ phím lúc nào cũng thử mở lại; mỗi 5 s tự thử lại; đang bật mà nhạc/ctx bị dừng thì tự phát lại. */
+if(overlay&&params.get('sound')!=='0'){const unlock=e=>{if(e?.target?.closest?.('#soundButton,#audioTest'))return;if(!cultivationAudio.enabled&&!userMuted)enableAudio(true).then(()=>document.getElementById('audioUnlock')?.remove()).catch(()=>{});};for(const k of ['pointerdown','keydown','touchstart'])document.addEventListener(k,unlock,{capture:true});setInterval(()=>{if(!cultivationAudio.enabled)unlock(null);else cultivationAudio.keepAlive();},5000);}
 $('#audioSettings').onclick=()=>{$('#audioPanel').hidden=!$('#audioPanel').hidden;};$('#audioClose').onclick=()=>{$('#audioPanel').hidden=true;};
 function tone(type){cultivationAudio.play(type);}
 const isFollow=e=>String(e.text).startsWith('Kết duyên');

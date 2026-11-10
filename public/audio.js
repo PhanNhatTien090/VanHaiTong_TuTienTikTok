@@ -44,9 +44,12 @@ export class CultivationAudio {
     this.enabled=true;this.sync();
     if(typeof Audio!=='undefined'){
       if(!this.music){this.track=this.wantTrack??musicIndex(null,Date.now());this.music=new Audio(BGM_TRACKS[this.track]);this.music.loop=true;this.music.preload='auto';}
-      this.sync();let musicTimer;try{await Promise.race([this.music.play(),new Promise((_,reject)=>{musicTimer=setTimeout(()=>reject(Error('Nhạc nền chưa phát được. Bấm thử âm lại.')),4000);})]);}catch(err){this.enabled=false;this.music.pause();await this.ctx.suspend();throw err;}finally{clearTimeout(musicTimer);}
+      this.sync();let musicTimer;try{await Promise.race([this.music.play(),new Promise((_,reject)=>{musicTimer=setTimeout(()=>reject(Object.assign(Error('Nhạc nền chưa phát được. Bấm thử âm lại.'),{slowLoad:true})),4000);})]);}catch(err){if(!err?.slowLoad){this.enabled=false;this.music.pause();await this.ctx.suspend();throw err;}this.retryMusic();}finally{clearTimeout(musicTimer);} /* 10/11: bị chặn tự phát thì báo; chỉ nhạc tải chậm thì giữ hiệu ứng/giọng và thử phát nhạc lại sau */
     }else if(!this.timer)this.schedule();
   }
+  // 10/11: tự giữ tiếng — nhạc nền bị dừng ngoài ý muốn / AudioContext bị treo thì tự phát lại khi vẫn đang bật.
+  retryMusic(){clearTimeout(this.musicRetry);this.musicRetry=setTimeout(()=>{if(this.enabled&&this.music?.paused)this.music.play()?.catch?.(()=>this.retryMusic());},3000);}
+  keepAlive(){if(!this.enabled)return;if(this.ctx&&this.ctx.state!=='running'&&this.ctx.state!=='closed')this.ctx.resume().catch(()=>{});if(this.music?.paused)this.music.play()?.catch?.(()=>{});}
   // 08/11 tối: hết bài thì sang bài kế (vòng lặp danh sách).
   setTrack(i){if(!Number.isInteger(i)||i<0||i>=BGM_TRACKS.length)return;this.wantTrack=i;if(!this.music||this.track===i)return;this.track=i;this.music.src=BGM_TRACKS[i];this.music.loop=true;this.sync();if(this.enabled)this.music.play()?.catch?.(()=>{});}
   init(){const C=globalThis.AudioContext||globalThis.webkitAudioContext;this.ctx=new C();const c=this.ctx;
