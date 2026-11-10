@@ -14,7 +14,7 @@ function txt(c,s,x,y,font,fill,stroke=5,align='center'){c.font=font;c.textAlign=
 function pill(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 const wallE=(e,x,y)=>x>=e.cols-1||(Number(e.cells[y*e.cols+x])&1)!==0,wallS=(e,x,y)=>y>=e.rows-1||(Number(e.cells[y*e.cols+x])&2)!==0;
 // Lớp tường + nền đá (cache).
-function wallLayer(scene,e,H){const key=e.id+':'+Math.round(H);if(scene.mazeWalls?.key===key)return scene.mazeWalls;
+function wallLayer(scene,e,H){const key=e.id+':'+Math.round(H)+':'+e.cells;/* tường bị phá → vẽ lại */if(scene.mazeWalls?.key===key)return scene.mazeWalls;
  const L=mazeLayout(H,e.cols,e.rows),pad=24,s=makeSurface(Math.ceil(L.w+pad*2),Math.ceil(L.h+pad*2));if(!s)return null;const c=s.getContext('2d'),o=pad;
  // nền: phiến đá ngọc tối, ô so le sáng/tối nhẹ
  c.fillStyle='#0b1a1f';c.fillRect(o,o,L.w,L.h);
@@ -45,8 +45,9 @@ export function drawMaze(scene,c,t,layer){
   const [sx,sy]=cellXY(L,e.start.x,e.start.y);glow(c,sx,sy,L.cell*.9,'rgba(120,230,255,A)',.35+.15*pulse);
   c.strokeStyle='rgba(150,240,255,.85)';c.lineWidth=3;c.beginPath();c.arc(sx,sy,L.cell*.34,0,TAU);c.stroke();
   txt(c,'MỐC XUẤT PHÁT',sx,L.oy+L.h+24,'900 19px Segoe UI','#bdf3ff',5);
-  // soi đường của người vừa tặng quà
-  for(const r of e.runners||[])if(r.h?.length){const col=`hsl(${hue(r.id)},90%,70%)`;c.fillStyle=col;r.h.forEach(([x,y],i)=>{const [px,py]=cellXY(L,x,y),a=.85-i*.04+.15*Math.sin(t*.008-i*.7);c.globalAlpha=clamp(a);c.beginPath();c.moveTo(px,py-L.cell*.09);c.lineTo(px+L.cell*.07,py);c.lineTo(px,py+L.cell*.09);c.lineTo(px-L.cell*.07,py);c.closePath();c.fill();});c.globalAlpha=1;}
+  // 10/11: tường vừa bị phá — chớp sáng + mảnh đá văng (2,5 s)
+  for(const b of e.broken||[]){const k=clamp((now-b.at)/2500);if(k>=1)continue;const [px,py]=cellXY(L,b.x,b.y);glow(c,px,py,L.cell*(.6+k*.8),'rgba(255,190,90,A)',.75*(1-k));
+   c.fillStyle=`rgba(190,230,220,${(1-k).toFixed(2)})`;for(let i=0;i<7;i++){const a=i*.9+b.at%7,d=L.cell*(.1+k*.55);c.fillRect(px+Math.cos(a)*d-2,py+Math.sin(a)*d-2+k*k*L.cell*.3,4,4);}}
   return;}
  // ---------- front: người chạy + HUD ----------
  const tt=performance.now(),runners=e.runners||[],seen=new Map(),pos=[];
@@ -57,9 +58,9 @@ export function drawMaze(scene,c,t,layer){
  const dot=Math.max(7,L.cell*.12);
  // chỉ skin: bỏ pháp bảo, linh thú, hiệu ứng skin (minimalCrowd tắt VFX khi vẽ thân)
  const bare=pl=>({...pl,equipped:null,equippedExtra:[],relicVariant:null,spiritPet:null,skinGear:[],artifacts:[]});
-// 10/11 tối (chủ game): hiện SKIN thật của từng người (ảnh nhân vật cache, thu nhỏ vừa ô); quá 80 người thì người xếp sau là chấm sáng cho nhẹ.
+// 10/11 tối (chủ game): hiện SKIN thật của từng người (ảnh nhân vật cache, thu nhỏ vừa ô); quá 40 người (10/11: hạ từ 80 vì lag) thì người xếp sau là chấm sáng cho nhẹ.
  const sprite=L.cell/72*.4;let sprites=0;pos.sort((a,b)=>a.y-b.y);
- for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000,pl=sprites<80?scene.playerIndex?.get(r.id):null;
+ for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000,pl=sprites<40?scene.playerIndex?.get(r.id):null;
   if(p.moving&&p.dur>300){c.strokeStyle=`hsla(${h},95%,75%,.6)`;c.lineWidth=dot;c.lineCap='round';c.beginPath();c.moveTo(p.fx,p.fy);c.lineTo(x,y);c.stroke();}
   if(fresh)glow(c,x,y,dot*4,`hsla(${h},95%,70%,A)`,.6);
   if(pl){sprites++;c.save();c.translate(x,y+L.cell*.2);c.scale(sprite,sprite);const prev=scene.minimalCrowd;scene.minimalCrowd=true;try{scene.drawPlayer(c,bare(pl),0,0,t);}catch{}finally{scene.minimalCrowd=prev;}c.restore();continue;}
@@ -67,7 +68,7 @@ export function drawMaze(scene,c,t,layer){
  // tên: top 5 + người vừa đi/tặng quà gần nhất, tối đa 22
  // mỗi ô tối đa 1 tên (+số người cùng ô) để chữ không chồng nhau; ưu tiên top 5 rồi người vừa đi/tặng quà
  const want=[...runners.filter(r=>!r.f).slice(0,5),...[...runners].filter(r=>!r.f&&(now-r.m<2500||now-(r.g||0)<6000)).sort((a,b)=>Math.max(b.m,b.g||0)-Math.max(a.m,a.g||0))],byId=new Map(pos.map(o=>[o.r.id,o])),usedCell=new Set();let shown=0;
- for(const r of want){if(shown>=22)break;const k=r.x+','+r.y;if(usedCell.has(k)||usedCell.has((r.x-1)+','+r.y)||usedCell.has((r.x+1)+','+r.y))continue;const o=byId.get(r.id);if(!o)continue;usedCell.add(k);shown++;const more=(seen.get(k)||1)-1,[cx,cy]=cellXY(L,r.x,r.y);txt(c,String(r.n).slice(0,11)+(more?' +'+more:''),cx,cy-L.cell*.5+4,'800 14px Segoe UI','#ffffff',4);}
+ for(const r of want){if(shown>=22)break;const k=r.x+','+r.y;if(usedCell.has(k)||usedCell.has((r.x-1)+','+r.y)||usedCell.has((r.x+1)+','+r.y))continue;const o=byId.get(r.id);if(!o)continue;usedCell.add(k);shown++;const more=(seen.get(k)||1)-1,[cx,cy]=cellXY(L,r.x,r.y);txt(c,String(r.n).slice(0,11)+(more?' +'+more:'')+(r.k?' ⛏'+r.k:''),cx,cy-L.cell*.5+4,'800 14px Segoe UI','#ffffff',4);}
  drawHud(scene,c,e,t,H,now,L);
 }
 function fmtTime(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}

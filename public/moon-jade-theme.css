@@ -110,3 +110,9 @@ html body.overlay .scene-shell>#basicCommands.corner-command-guide span{display:
 html body.overlay .scene-shell:has(#honorBanner:not([hidden])) #basicCommands.corner-command-guide{left:48%!important;font-size:clamp(9px,2.05cqw,23px)!important}
 html body.overlay .scene-shell:has(#honorBanner:not([hidden])) #basicCommands.corner-command-guide span{display:none!important}
 html body.overlay .scene-shell:has(#honorBanner:not([hidden])) #basicCommands.corner-command-guide ol{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+/* 10/11 (chủ game: "tất cả bảng quà cho hiện to lên chút"): thẻ luật quà ~1,5×, TOP QUÀ ~1,15× (vùng trên widget LIVE Studio hẹp), chữ "Tặng quà" ở thẻ khách quý to hơn. */
+html body.overlay #phoneHudRight #giftBoard.gift-board.gift-rule-card:not([hidden]){font-size:clamp(10px,1.75cqw,20px)!important;padding:4px 8px 5px!important;line-height:1.12}
+html body.overlay #phoneHudRight #giftBoard.gift-rule-card .grc-title{font-size:.8em}
+html body.overlay .scene-shell>#giftRanks{font-size:clamp(10px,1.9cqw,21px)!important;max-height:7.6%}
+html body.overlay .visitor-hud span.vh-buy small.vh-tang{font-size:.78em!important}

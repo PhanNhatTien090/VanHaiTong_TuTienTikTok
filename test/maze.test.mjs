@@ -28,12 +28,15 @@ test('đi đúng đường ra cửa: hạng 1, kết thúc nhận thưởng + da
  tick(w,t+MAZE.runMs+1);assert.equal(e.phase,'finished');assert.ok(w.players.p0.totalQi>qi0,'có thưởng');assert.equal(w.players.p0.funTitle.name,'Mê Cung Chi Chủ');
  assert.equal(e.results[0].id,'p0');assert.ok(stageConflict(w,t+MAZE.runMs+2),'đang trao thưởng vẫn giữ sân');
 });
-test('quà: soi đường + dịch chuyển tiến theo đường ngắn nhất, không cộng quà mặc định',()=>{
- const w=setup(),t=running(w),e=w.maze,r=e.runners.find(x=>x.id==='p1'),d0=e.maze.dist[r.y*e.maze.cols+r.x];
+test('quà: phá tường (đâm tường là phá và bước qua), không soi đường, không cộng quà mặc định',()=>{
+ const w=setup(),t=running(w),e=w.maze,r=e.runners.find(x=>x.id==='p1');
  assert.equal(giftEventRule(w,t),'bí cảnh mê cung');const qi0=w.players.p1.totalQi;
- gift(w,'p1',1,t+100);assert.equal(r.steps,0);assert.equal(r.hint.cells.length,8);assert.equal(w.players.p1.totalQi,qi0,'quà không cộng tu vi mặc định');
- gift(w,'p1',20,t+200);assert.equal(e.maze.dist[r.y*e.maze.cols+r.x],d0-4);
- gift(w,'p3',99,t+300);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.steps===10,'người chưa vào tặng quà là vào luôn');
+ gift(w,'p1',1,t+100);assert.equal(r.steps,0);assert.equal(r.breaks,1);assert.equal(r.hint,undefined);assert.equal(w.players.p1.totalQi,qi0,'quà không cộng tu vi mặc định');
+ const dir=['up','left','right'].find(d=>!canMove(e.maze,r.x,r.y,d)&&!(d==='left'&&r.x===0)&&!(d==='right'&&r.x===e.maze.cols-1));assert.ok(dir,'mốc có tường cạnh');
+ const x0=r.x,y0=r.y;chat(w,'p1',{up:'len',left:'trai',right:'phai'}[dir],t+1000);assert.notDeepEqual([r.x,r.y],[x0,y0],'phá tường đi qua');assert.equal(r.breaks,0);assert.equal(e.broken.length,1);
+ assert.ok(canMove(e.maze,x0,y0,dir),'tường mất cho cả sân');
+ gift(w,'p1',20,t+2000);assert.equal(r.breaks,4);
+ gift(w,'p3',99,t+3000);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.breaks===10&&r3.steps===0,'người chưa vào tặng quà là vào luôn');
 });
 test('không ai vào thì khép lại; dừng tay được; snapshot gửi mê cung gọn',()=>{
  const w=setup();assert.ok(startMaze(w,N).ok);tick(w,N+MAZE.registerMs);assert.equal(w.maze.phase,'finished');

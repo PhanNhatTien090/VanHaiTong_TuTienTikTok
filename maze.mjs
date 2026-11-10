@@ -1,13 +1,14 @@
 // 10/11/2026 (chủ game): BÍ CẢNH MÊ CUNG — cả sân chung MỘT mê cung, ai cũng xuất phát ở mốc (giữa đáy),
 // mỗi người tự đi đường riêng bằng lệnh chat, MỖI TIN 1 BƯỚC: len / xuong / trai / phai (có dấu cũng được; l x t p khi đã vào).
 // Mở tay từ tab Sự kiện. Tuyển 40 s (gõ "mecung"; đang chạy gõ mecung hoặc lệnh đi đầy đủ là vào luôn từ mốc).
-// Quà = soi đường (hiện lối đi vài bước) / dịch chuyển tiến N bước theo đường ngắn nhất. Tim không có tác dụng (tránh mồi tương tác).
+// Quà = PHÁ TƯỜNG (10/11, chủ game: "đã dễ rồi còn hướng dẫn" → bỏ soi đường/dịch chuyển): mỗi quà cho N lượt phá,
+// đi đâm vào tường thì phá luôn và bước qua (tường mất cho cả sân). Tim không có tác dụng (tránh mồi tương tác).
 // Top 1–3 ra cửa nhận thưởng lớn, ai ra cửa cũng có thưởng; ai đi ≥10 bước nhận chút an ủi.
 import {stageConflict} from './stage-lock.mjs';
 
 // 10/11 tối (chủ game: "hơi dễ"): 11×15 ô, gần như không có đường vòng (3%), đường ngắn nhất ~85 bước, chạy 5 phút.
 export const MAZE=Object.freeze({cols:11,rows:15,registerMs:40000,runMs:300000,afterTop3Ms:30000,podiumMs:15000,moveGapMs:300,maxRunners:400,
- hint:[[500,16],[99,14],[20,12],[1,8]],jump:[[500,24],[99,10],[20,4]],hintMs:30000,braid:.03,targetDist:85,
+ breaks:[[500,25],[99,10],[20,4],[1,1]],braid:.03,targetDist:85,
  reward:{pct:[.04,.03,.02],finisherPct:.01,triedPct:.003,triedSteps:10,stones:[30,20,15],finisherStones:10,triedStones:3},titleMs:3600000});
 const real=p=>p&&!p.resident&&!p.puppet;
 export const mazeActive=w=>['queued','registration','running'].includes(w.maze?.phase);
@@ -22,6 +23,10 @@ function rng(seed){let s=seed>>>0||1;return ()=>{s^=s<<13;s>>>=0;s^=s>>17;s^=s<<
 // Ô (x,y) giữ 2 bit: 1 = tường phía đông, 2 = tường phía nam. Viền ngoài luôn là tường.
 export const wallE=(m,x,y)=>x>=m.cols-1||(m.cells[y*m.cols+x]&1)!==0;
 export const wallS=(m,x,y)=>y>=m.rows-1||(m.cells[y*m.cols+x]&2)!==0;
+// Phá tường giữa (x,y) và ô kế theo hướng dir (không phá viền ngoài). Trả về true nếu đã phá.
+export function breakWall(m,x,y,dir){const [dx,dy]=DIRS[dir];const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=m.cols||ny>=m.rows||canMove(m,x,y,dir))return false;
+ if(dx===1)m.cells[y*m.cols+x]&=~1;else if(dx===-1)m.cells[ny*m.cols+nx]&=~1;else if(dy===1)m.cells[y*m.cols+x]&=~2;else m.cells[ny*m.cols+nx]&=~2;
+ m.dist=distances(m);return true;}
 export function canMove(m,x,y,dir){const [dx,dy]=DIRS[dir];const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=m.cols||ny>=m.rows)return false;
  if(dx===1)return !wallE(m,x,y);if(dx===-1)return !wallE(m,nx,ny);if(dy===1)return !wallS(m,x,y);return !wallS(m,nx,ny);}
 // Mê cung hoàn hảo (đào ngẫu nhiên kiểu backtracker) rồi phá thêm ~3% tường để có ít vòng — lạc vẫn tìm lại được.
@@ -72,21 +77,20 @@ export function mazeCommand(w,p,cmd,now,c){
  if(r.finishAt)return {ok:true,duplicate:true};
  if(now-r.lastMoveAt<MAZE.moveGapMs)return {ok:true,duplicate:true};
  r.lastMoveAt=now;r.dir=dir;
- if(!canMove(e.maze,r.x,r.y,dir)){r.bumpAt=now;return {ok:true,blocked:true};}
+ if(!canMove(e.maze,r.x,r.y,dir)){
+  if(!(r.breaks>0)||!breakWall(e.maze,r.x,r.y,dir)){r.bumpAt=now;return {ok:true,blocked:true};}
+  r.breaks--;const [bx,by]=DIRS[dir];(e.broken??=[]).push({x:r.x+bx/2,y:r.y+by/2,at:now});if(e.broken.length>24)e.broken.shift();r.breakAt=now;}
  const [dx,dy]=DIRS[dir];r.x+=dx;r.y+=dy;r.steps++;r.moveAt=now;arrive(w,e,r,now,c);return {ok:true,maze:true};
 }
-// Quà lúc tuyển: vào mê cung. Lúc đang chạy: soi đường + (≥20 coin) dịch chuyển tiến theo đường ngắn nhất. Người chưa vào thì tặng quà là vào luôn.
+// Quà lúc tuyển: vào mê cung (+ lượt phá tường dùng khi chạy). Lúc đang chạy: thêm lượt phá tường. Người chưa vào thì tặng quà là vào luôn.
 export function mazeGift(w,p,coins,now,c){
  const e=w.maze;if(!real(p)||!(coins>0))return null;
- if(e?.phase==='registration'){const had=e.runners.some(r=>r.id===p.id);return addRunner(w,e,p,now)?{moved:0,hint:0,text:had?'đã ở trong mê cung':'vào mê cung'}:null;}
+ const add=tier(MAZE.breaks,coins);
+ if(e?.phase==='registration'){const had=e.runners.some(r=>r.id===p.id),r=addRunner(w,e,p,now);if(!r)return null;r.breaks=(r.breaks||0)+add;r.giftAt=now;return {breaks:add,text:(had?'':'vào mê cung • ')+`phá ${add} tường`};}
  if(e?.phase!=='running')return null;
  const r=addRunner(w,e,p,now);if(!r||r.finishAt)return null;
- const jump=tier(MAZE.jump,coins),hint=tier(MAZE.hint,coins);let moved=0;
- if(jump){const path=pathAhead(e.maze,r.x,r.y,jump);if(path.length){r.jumpFrom=[r.x,r.y];[r.x,r.y]=path[path.length-1];r.steps+=path.length;moved=path.length;r.moveAt=now;r.jumpAt=now;}}
- r.giftAt=now;r.giftCoins=coins;
- if(distOf(e,r)===0)arrive(w,e,r,now,c);
- else r.hint={cells:pathAhead(e.maze,r.x,r.y,hint),until:now+MAZE.hintMs};
- return {moved,hint:r.finishAt?0:hint,text:moved?`dịch chuyển ${moved} bước`+(r.finishAt?' • ra cửa':' • soi đường'):'soi đường '+hint+' bước'};
+ r.breaks=(r.breaks||0)+add;r.giftAt=now;r.giftCoins=coins;
+ return {breaks:add,text:`phá ${add} tường • đâm tường là phá`};
 }
 function award(w,e,now,c){if(e.awarded)return;e.awarded=true;const R=MAZE.reward;
  for(const r of e.runners){const p=w.players[r.id];if(!real(p))continue;const i=r.rank-1,fin=r.finishAt>0;
@@ -114,7 +118,7 @@ export function tickMaze(w,now,c){
 export function mazeView(w,now){
  const e=w.maze;if(!e||e.phase==='cancelled'||e.phase==='queued')return e?.phase==='queued'?{id:e.id,phase:'queued',active:false}:null;
  if(!mazeVisible(w,now))return null;const m=e.maze;
- const runners=mazeRanking(e).slice(0,300).map(r=>({id:r.id,n:r.name,x:r.x,y:r.y,s:r.steps,d:distOf(e,r),f:r.finishAt||0,r:r.rank||0,m:r.moveAt||0,b:r.bumpAt||0,g:r.giftAt||0,j:r.jumpAt||0,h:r.hint?.until>now?r.hint.cells:undefined}));
+ const runners=mazeRanking(e).slice(0,300).map(r=>({id:r.id,n:r.name,x:r.x,y:r.y,s:r.steps,d:distOf(e,r),f:r.finishAt||0,r:r.rank||0,m:r.moveAt||0,b:r.bumpAt||0,g:r.giftAt||0,k:r.breaks||0,bk:r.breakAt||0}));
  return {id:e.id,phase:e.phase,active:true,cols:m.cols,rows:m.rows,cells:m.cells.join(''),start:m.start,exit:m.exit,startDist:m.dist[m.start.y*m.cols+m.start.x],
-  registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,count:e.runners.length,finished:e.finished,runners,results:e.results||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil};
+  registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,count:e.runners.length,finished:e.finished,runners,broken:(e.broken||[]).filter(b=>now-b.at<2500),results:e.results||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil};
 }

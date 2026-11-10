@@ -15,9 +15,9 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  if(race&&['registration','running'].includes(race.phase))return race.phase==='running'
   ?{kind:'race',title:'ĐUA PHI KIẾM',tone:'sky',rows:[[1,`+${RACE_TRUONG_PER_COIN} trượng`],[100,`+${fmt(100*RACE_TRUONG_PER_COIN)} trượng`]]}
   :{kind:'race',title:'ĐUA PHI KIẾM · TUYỂN',tone:'sky',rows:[[1,'điểm đua'],[100,'top nhận thú cưỡi']]};
- // 10/11: mê cung (maze.mjs): lúc tuyển quà = vào; lúc chạy ≥1 soi đường · ≥20 tiến 4 bước · ≥99 tiến 10 bước
- const mz=s.maze;if(mz?.active&&mz.phase==='registration')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'vào mê cung']]};
- if(mz?.active&&mz.phase==='running')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'soi đường'],[20,'tiến 4 bước'],[99,'tiến 10 bước']]};
+ // 10/11: mê cung (maze.mjs): quà = lượt phá tường (≥1: 1 · ≥20: 4 · ≥99: 10), lúc tuyển tặng là vào luôn
+ const mz=s.maze;if(mz?.active&&mz.phase==='registration')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'vào + phá 1 tường'],[20,'phá 4 tường'],[99,'phá 10 tường']]};
+ if(mz?.active&&mz.phase==='running')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'phá 1 tường'],[20,'phá 4 tường'],[99,'phá 10 tường']]};
  if(war?.active&&war.phase==='running')return {kind:'war',title:'CHÍNH MA ĐẠI CHIẾN',tone:'war',rows:[[1,`đẩy ${WAR_TRUONG_PER_COIN} trượng`],[99,'sóng năng lượng']]};
  if(war?.active&&war.phase==='registration')return null;
  if(alc?.active&&alc.phase==='opening')return {kind:'alchemy',title:'LÒ LUYỆN ĐAN · MỞ LÒ',tone:'fire',rows:[[1,'góp dược liệu']]};
