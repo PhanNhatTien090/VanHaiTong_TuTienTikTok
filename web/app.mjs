@@ -93,7 +93,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
   function sessionPayload(user, now = Date.now()) {
     if (!user) return { user: null, devTools:profileOnly?false:devTools, readOnly:profileOnly };
     const p = playerOf(user);
-    return { admin: !!user.admin, user: { username: user.username, displayName: user.displayName, linkedTikTok: !!p && !p.webOnly }, player: p ? playerView(world, p, now) : null, pendingLink: accounts.pendingLink(user, now), devTools:profileOnly?false:devTools, readOnly:profileOnly };
+    return { admin: !!user.admin, ...(user.actingFor ? { adminView: { ...user.actingFor, acting: true } } : {}), user: { username: user.username, displayName: user.displayName, linkedTikTok: !!p && !p.webOnly }, player: p ? playerView(world, p, now) : null, pendingLink: accounts.pendingLink(user, now), devTools:profileOnly?false:devTools, readOnly:profileOnly };
   }
   // Dữ liệu cho bộ vẽ nhân vật của LIVE: chỉ nhân vật của mình (+ người LIVE khi cần vẽ quảng trường).
   function sceneState(p, now = Date.now(), withLive = false) {
@@ -232,7 +232,8 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       // Lịch luyện có bộ đọc body riêng (đầu vào trận lớn hơn giới hạn 8 KB chung) → xử lý trước khi web đọc body.
       if (lichLuyen && url.pathname.startsWith('/api/ll/')) return await lichLuyen.handle(req, res, url, accounts.userForSession(cookies(req).vh_session, now));
       if(playSessions&&req.method==='POST')req.playBody=await readBody(req);
-      const token = cookies(req).vh_session, user = accounts.userForSession(token, now), route = req.method + ' ' + url.pathname;
+      const token = cookies(req).vh_session, route = req.method + ' ' + url.pathname;
+      let user = accounts.userForSession(token, now);
 
       if(route==='GET /api/site-status')return json(req,res,{ok:true,mode:profileOnly?'profiles':'game',readOnly:profileOnly,trial:!profileOnly&&trial,loginRequired:true,updatedAt:now,...siteStatus()});
       // Lỗi phía trình duyệt người chơi (script hỏng, ảnh/âm thanh lỗi...). Giới hạn tần suất, cắt ngắn, không lưu IP.
@@ -260,7 +261,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       // Bản thử (WEB_CLOUD_TRIAL=1): CHỈ khóa những gì ra tu vi — tu luyện, đột phá, bế quan, ải/tháp/sự kiện (riêng ải đầu được đánh thử, không thưởng).
       // Trang bị, skin, pháp bảo, công pháp, cường hóa, linh thú, cửa hàng, thư, quà, nhiệm vụ vẫn dùng bình thường (chủ game chốt 10/11/2026).
       const TRIAL_LOCKED=new Set(['POST /api/retreat/start','POST /api/retreat/claim','POST /api/dungeon/start','POST /api/dungeon/sweep','POST /api/tower/start','POST /api/event/start']);
-      if(trial&&req.method==='POST'&&(TRIAL_LOCKED.has(route)||route==='POST /api/act')){
+      if(trial&&!adminUser&&req.method==='POST'&&(TRIAL_LOCKED.has(route)||route==='POST /api/act')){
         const b=await readBody(req)||{};
         const lockedAct=route==='POST /api/act'&&['cultivate','breakthrough'].includes(String(b.type||''));
         const firstStage=route==='POST /api/dungeon/start'&&String(b.zone||'')===ZONES[0].id&&Number(b.stage)===1;
@@ -269,7 +270,14 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
 
       // ----- Quản trị: CHỈ trên máy này (qua tunnel/proxy luôn bị chặn). Xem hồ sơ bất kỳ người chơi, chỉ đọc. -----
       const viewId = (!publicOnly && isLocal(req)) || adminUser ? cookies(req).vh_view : null;
-      const viewP = viewId && Object.hasOwn(world.players, viewId) ? world.players[viewId] : null;
+      const viewTarget = viewId && Object.hasOwn(world.players, viewId) ? world.players[viewId] : null;
+      // Tài khoản quản trị: đóng vai nhân vật đang xem và thao tác thay họ, qua đúng luồng bàn giao LIVE↔web như người chơi thật
+      // (LIVE tạm khóa nhân vật đó, xong thì tiến trình gửi về LIVE). Chế độ xem trên máy chủ (không đăng nhập quản trị) vẫn chỉ đọc.
+      const viewP = adminUser ? null : viewTarget;
+      if (adminUser && viewTarget) {
+        user = { id: 'qt-' + adminUser.id, username: adminUser.username, displayName: adminUser.displayName, playerId: viewTarget.id, admin: true, actingFor: { id: viewTarget.id, name: viewTarget.name } };
+        if (req.method === 'POST') errors.record('admin-act', { route, user: adminUser.username, player: viewTarget.id, name: viewTarget.name });
+      }
       if (url.pathname.startsWith('/admin/')) {
         if (!adminUser && (publicOnly || !isLocal(req))) return json(req, res, { ok: false, message: 'Không có quyền.' }, 403);
         if (route === 'GET /admin/players') {
@@ -284,6 +292,8 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         }
         if (route === 'GET /admin/view') {
           const id = String(url.searchParams.get('id') || '');
+          // Đổi người / thoát: trả ngay nhân vật đang thao tác thay về LIVE (không đợi hết 2 phút).
+          if (playSessions && adminUser && viewTarget && viewTarget.id !== id) playSessions.logout({ playerId: viewTarget.id }, token);
           const ok = id && Object.hasOwn(world.players, id);
           res.writeHead(302, { Location: ok ? '/' : '/quan-tri.html', 'Set-Cookie': `vh_view=${ok ? encodeURIComponent(id) : ''}; Path=/; HttpOnly; SameSite=Strict${secureCookie ? '; Secure' : ''}; Max-Age=${ok ? 86400 : 0}` });
           return res.end();

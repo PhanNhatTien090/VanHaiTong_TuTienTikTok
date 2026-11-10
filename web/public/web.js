@@ -55,7 +55,9 @@ function route() {
   clearInterval(pollTimer);
   if (session.adminView && !document.querySelector('#adminBar')) {
     const bar = document.createElement('div'); bar.id = 'adminBar';
-    bar.innerHTML = `QUẢN TRỊ · đang xem hồ sơ <b>${esc(session.adminView.name)}</b> (chỉ xem) <a href="/quan-tri.html">Đổi người</a> <a href="/api/quan-tri/view?id=">Thoát</a>`;
+    bar.innerHTML = session.adminView.acting
+      ? `TÔNG CHỦ · đang thao tác thay <b>${esc(session.adminView.name)}</b> (LIVE tạm khóa nhân vật này) <a href="/quan-tri.html">Đổi người</a> <a href="/api/quan-tri/view?id=">Thoát</a>`
+      : `QUẢN TRỊ · đang xem hồ sơ <b>${esc(session.adminView.name)}</b> (chỉ xem) <a href="/quan-tri.html">Đổi người</a> <a href="/api/quan-tri/view?id=">Thoát</a>`;
     document.body.appendChild(bar);
   }
   if (session.admin && !session.adminView && !document.querySelector('#adminBar')) {
