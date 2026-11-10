@@ -12,6 +12,8 @@ import { loadContent } from '../lich-luyen/content/index.js';
 import { createBattle, tick, battleResult } from '../lich-luyen/core/sim/battle.mjs';
 import { botInput } from '../lich-luyen/core/sim/bot.mjs';
 import { encodeInputs } from '../lich-luyen/core/sim/inputs.mjs';
+import { rollDrops } from '../lich-luyen/core/loot.mjs';
+import { addItems } from '../lich-luyen/service/inventory.mjs';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'll-api-'));
 let clock = Date.parse('2026-11-10T08:00:00Z');
@@ -56,10 +58,12 @@ test('vòng chơi đầy đủ: tạo phân thân → vào ải → đánh → s
   const c = client();
   assert.equal((await c('/api/register', { username: 'kiemkhach', password: 'matkhau123' })).ok, true);
   let s = await c('/api/ll/state');
-  assert.equal(s.ok, true); assert.equal(s.avatar, null); assert.equal(s.paths.length, 3); assert.equal(s.contentVersion, content.version);
+  assert.equal(s.ok, true); assert.equal(s.avatar, null); assert.equal(s.paths.length, 3); assert.equal(s.contentVersion, content.version); assert.equal(s.stages, undefined);
   assert.equal((await c('/api/ll/avatar', { pathId: 'path.khong-co' })).ok, false);
   const made = await c('/api/ll/avatar', { pathId: 'path.kiem-tu', name: 'Lưu Vân' });
   assert.equal(made.ok, true); assert.equal(made.avatar.label, 'Phàm Nhân'); assert.equal(made.avatar.name, 'Lưu Vân');
+  assert.equal(made.avatar.stages.list.length, 10); assert.equal(made.avatar.stages.list[0].unlocked, true); assert.equal(made.avatar.stages.list[1].unlocked, false);
+  assert.equal((await c('/api/ll/battle/start', { stageId: 'stage.thanh-van.2' })).code, 'LOCKED');
   assert.equal((await c('/api/ll/avatar', { pathId: 'path.the-tu' })).code, 'EXISTS');
 
   const start = await c('/api/ll/battle/start', { stageId: 'stage.thanh-van.1' });
@@ -77,7 +81,12 @@ test('vòng chơi đầy đủ: tạo phân thân → vào ải → đánh → s
   const done = await c('/api/ll/battle/finish', { battleId: start2.battleId, inputs: run2.inputs, hash: run2.local.hash });
   assert.equal(done.ok, true, done.message);
   assert.equal(done.result.hash, run2.local.hash); // server tính ra đúng kết quả trình duyệt
-  assert.ok(done.reward.stars >= 1); assert.ok(done.reward.qi > 0);
+  assert.ok(done.reward.stars >= 1); assert.ok(done.reward.qi > 0); assert.equal(done.reward.firstClear, true);
+  assert.equal(done.avatar.stages.list[0].stars, done.reward.stars); assert.equal(done.avatar.stages.list[0].clears, 1); assert.equal(done.avatar.stages.list[1].unlocked, true);
+  // Rơi đồ vào túi và tất định theo mã trận
+  const bag = Object.fromEntries(done.avatar.inventory.map(i => [i.id, i.count]));
+  for (const d of done.reward.drops) assert.equal(bag[d.id], d.count);
+  assert.deepEqual(rollDrops(content.byId.get('stage.thanh-van.1'), start2.battleId, { firstClear: true }), Object.fromEntries(done.reward.drops.map(d => [d.id, d.count])));
   assert.equal(done.avatar.balances['linh-thach'], done.reward.linhThach);
   // Phàm Nhân đầy tu vi thì dừng ở cổng, phải bấm đột phá (khai linh căn) mới lên Luyện Khí
   assert.equal(done.avatar.label, 'Phàm Nhân'); assert.equal(done.reward.ready, true);
@@ -143,4 +152,61 @@ test('sổ cái: không cho âm, ghi đủ dấu vết; migration ghi phiên b�
   assert.equal(balance(db, 'a1', 'linh-thach'), 50);
   assert.equal(db.prepare('SELECT COUNT(*) n FROM ll_ledger').get().n, 1);
   db.close();
+});
+
+async function freshAvatar(username, pathId = 'path.kiem-tu') {
+  const c = client();
+  await c('/api/register', { username, password: 'matkhau123' });
+  const made = await c('/api/ll/avatar', { pathId, name: username });
+  return { c, id: made.avatar.id };
+}
+
+test('quét ải: cần 3 sao, nhận 70%, vẫn rơi đồ, tối đa 20 lượt/ngày', async () => {
+  const { c, id } = await freshAvatar('quetai');
+  assert.equal((await c('/api/ll/battle/sweep', { stageId: 'stage.thanh-van.1' })).code, 'NEED_3_STARS');
+  const r = ll.db.prepare('SELECT payload FROM ll_avatars WHERE id=?').get(id);
+  const p = JSON.parse(r.payload); p.stages = { 'stage.thanh-van.1': { stars: 3, clears: 1 } };
+  ll.db.prepare('UPDATE ll_avatars SET payload=? WHERE id=?').run(JSON.stringify(p), id);
+  const s1 = await c('/api/ll/battle/sweep', { stageId: 'stage.thanh-van.1' });
+  assert.equal(s1.ok, true, s1.message);
+  const stage = content.byId.get('stage.thanh-van.1');
+  assert.equal(s1.reward.qi, Math.trunc(stage.rewards.qi * 70 / 100));
+  assert.equal(s1.reward.firstClear, false);
+  assert.equal(s1.avatar.stages.sweepsLeft, 19);
+  assert.equal(s1.avatar.stages.list[0].clears, 2);
+  for (let i = 0; i < 19; i++) assert.equal((await c('/api/ll/battle/sweep', { stageId: 'stage.thanh-van.1' })).ok, true);
+  assert.equal((await c('/api/ll/battle/sweep', { stageId: 'stage.thanh-van.1' })).code, 'SWEEP_LIMIT');
+  clock += 24 * 3600000; // sang ngày mới
+  assert.equal((await c('/api/ll/battle/sweep', { stageId: 'stage.thanh-van.1' })).ok, true);
+});
+
+test('đột phá Trúc Cơ: cần Trúc Cơ Đan; số loại vật phẩm nâng phẩm quyết định Phàm/Địa/Thiên; vật phẩm bị tiêu', async () => {
+  const L = ll.game.ladder, gate = L.findIndex(s => s.realmId === 'realm.luyen-khi' && s.gate);
+  const setFull = id => ll.db.prepare('UPDATE ll_avatars SET step=?, qi=? WHERE id=?').run(gate, L[gate].qi, id);
+
+  const a = await freshAvatar('dotpha1'); setFull(a.id);
+  let s = await a.c('/api/ll/state');
+  assert.equal(s.avatar.breakthrough.realmName, 'Trúc Cơ'); assert.equal(s.avatar.breakthrough.canBreak, false);
+  assert.equal((await a.c('/api/ll/breakthrough', {})).code, 'NEED_MATERIALS');
+  addItems(ll.db, a.id, { 'item.truc-co-dan': 1 }, content);
+  s = await a.c('/api/ll/state');
+  assert.equal(s.avatar.breakthrough.quality.id, 'pham'); assert.equal(s.avatar.breakthrough.canBreak, true);
+  const r1 = await a.c('/api/ll/breakthrough', {});
+  assert.equal(r1.ok, true, r1.message); assert.equal(r1.quality, 'pham'); assert.equal(r1.points, 12);
+  assert.equal(r1.avatar.label, 'Trúc Cơ Sơ Kỳ');
+  assert.equal(r1.avatar.inventory.find(i => i.id === 'item.truc-co-dan'), undefined); // đã tiêu
+
+  const b = await freshAvatar('dotpha3'); setFull(b.id);
+  addItems(ll.db, b.id, { 'item.truc-co-dan': 1, 'item.thanh-van-chi': 2, 'item.lang-vuong-nha': 1, 'item.huyen-giap-tam': 1, 'item.linh-thao': 5 }, content);
+  const r3 = await b.c('/api/ll/breakthrough', {});
+  assert.equal(r3.quality, 'thien'); assert.equal(r3.points, 20); assert.equal(r3.fatePicks, 3);
+  const bag = Object.fromEntries(r3.avatar.inventory.map(i => [i.id, i.count]));
+  assert.deepEqual(bag, { 'item.thanh-van-chi': 1, 'item.linh-thao': 5 }); // mỗi loại nâng phẩm tiêu 1, đồ khác giữ nguyên
+  assert.ok(r3.avatar.power > r1.avatar.power, 'phẩm Thiên phải mạnh hơn phẩm Phàm');
+
+  // Kim Đan cần Lôi Kiếp → chưa đột phá được (phần sau)
+  const kd = L.findIndex(s => s.realmId === 'realm.truc-co' && s.gate);
+  ll.db.prepare('UPDATE ll_avatars SET step=?, qi=? WHERE id=?').run(kd, L[kd].qi, b.id);
+  addItems(ll.db, b.id, { 'item.ket-dan-dan': 1 }, content);
+  assert.equal((await b.c('/api/ll/breakthrough', {})).code, 'NEED_TRIAL');
 });

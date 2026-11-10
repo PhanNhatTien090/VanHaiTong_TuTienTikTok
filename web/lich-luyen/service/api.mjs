@@ -35,9 +35,10 @@ export function createLichLuyen({ dataDir, enabled = false, beta = [], season = 
       if (!user) return send(res, 401, { ok: false, code: 'LOGIN', message: 'Đăng nhập để đi lịch luyện.' });
       if (!allowed(user)) return send(res, 403, { ok: false, code: 'BETA', message: 'Lịch luyện đang thử nghiệm.' });
       if (limited('u:' + user.id, 60, now)) return send(res, 429, { ok: false, message: 'Thao tác quá nhanh.' });
-      if (route === 'GET /api/ll/state') return send(res, 200, { ok: true, contentVersion: content.version, avatar: game.view(user.id), paths: game.paths(), stages: game.stages() });
+      if (route === 'GET /api/ll/state') return send(res, 200, { ok: true, contentVersion: content.version, avatar: game.view(user.id, now), paths: game.paths() });
       if (route === 'POST /api/ll/avatar') { const b = await body(req); const r = game.createAvatar(user, b, now); return send(res, r.ok ? 200 : 400, r); }
       if (route === 'POST /api/ll/breakthrough') { const r = game.breakthrough(user, now); return send(res, r.ok ? 200 : 400, r); }
+      if (route === 'POST /api/ll/battle/sweep') { const b = await body(req); const r = game.sweep(user, String(b.stageId || ''), now); return send(res, r.ok ? 200 : 400, r); }
       if (route === 'POST /api/ll/battle/start') {
         if (limited('start:' + user.id, 12, now)) return send(res, 429, { ok: false, message: 'Vào ải quá nhanh.' });
         const b = await body(req); const r = game.startBattle(user, String(b.stageId || ''), now); return send(res, r.ok ? 200 : 400, r);

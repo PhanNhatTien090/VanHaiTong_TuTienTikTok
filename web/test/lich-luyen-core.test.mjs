@@ -13,8 +13,10 @@ import skills from '../lich-luyen/content/skills.js';
 import monsters from '../lich-luyen/content/monsters.js';
 import stages from '../lich-luyen/content/stages.js';
 import { buildLadder, stepLabel, addQi, breakthrough, newCultivation } from '../lich-luyen/core/progression.mjs';
+import { rollDrops, starsFor, stageReward } from '../lich-luyen/core/loot.mjs';
+import items from '../lich-luyen/content/items.js';
 
-const raw = () => structuredClone({ realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages });
+const raw = () => structuredClone({ realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages, items });
 
 test('rng: cùng seed cùng dãy; giá trị vàng không đổi giữa các lần chạy/máy', () => {
   const a = createRng('battle:abc'), b = createRng('battle:abc');
@@ -112,7 +114,8 @@ test('đột phá: phẩm theo số loại vật phẩm, Kim Đan cần Lôi Ki�
   const lkFull = { step: L.findIndex(s => s.realmId === 'realm.luyen-khi' && s.gate), qi: 0 };
   lkFull.qi = L[lkFull.step].qi;
   assert.equal(breakthrough({ ...lkFull, qi: 0 }, L, c, { materialTypes: 3 }).code, 'NEED_QI');
-  assert.equal(breakthrough(lkFull, L, c, { materialTypes: 0 }).code, 'NEED_MATERIALS');
+  // Trúc Cơ: 0 loại nâng phẩm → Phàm (Trúc Cơ Đan bắt buộc do server kiểm trong túi đồ)
+  assert.equal(breakthrough(lkFull, L, c, { materialTypes: 0 }).quality, 'pham');
   const dia = breakthrough(lkFull, L, c, { materialTypes: 2 });
   assert.equal(dia.ok, true); assert.equal(dia.quality, 'dia'); assert.equal(dia.points, 16); assert.equal(dia.fatePicks, 2);
   assert.equal(stepLabel(c, L[dia.state.step]), 'Trúc Cơ Sơ Kỳ');
@@ -136,4 +139,29 @@ test('core/ và content/ chạy được trên trình duyệt: không import nod
     assert.doesNotMatch(src, /from ['"]node:/, f);
     assert.doesNotMatch(src, /Math\.random|Date\.now|new Date/, f);
   }
+});
+
+test('rơi đồ: tất định theo mã trận, đúng tỉ lệ, thưởng lần đầu chỉ khi firstClear', () => {
+  const c = loadContent(), st = c.byId.get('stage.thanh-van.10');
+  assert.deepEqual(rollDrops(st, 'bt_x'), rollDrops(st, 'bt_x'));
+  assert.equal(rollDrops(st, 'bt_y', { firstClear: true })['item.truc-co-dan'] >= 1, true);
+  let dan = 0, thao = 0; const N = 4000;
+  for (let i = 0; i < N; i++) { const d = rollDrops(st, 'n' + i); if (d['item.truc-co-dan']) dan++; if (d['item.linh-thao']) thao++; }
+  assert.ok(Math.abs(dan / N - 0.15) < 0.03, 'Trúc Cơ Đan ~15%: ' + dan / N);
+  assert.ok(Math.abs(thao / N - 0.8) < 0.03, 'Linh Thảo ~80%: ' + thao / N);
+  assert.equal(starsFor({ complete: true, victory: true, hpLeft: 600 }), 3);
+  assert.equal(starsFor({ complete: true, victory: true, hpLeft: 299 }), 1);
+  assert.equal(starsFor({ complete: false, victory: true, hpLeft: 999 }), 0);
+  assert.deepEqual(stageReward(st, 3, { sweep: true }), { qi: Math.trunc(st.rewards.qi * 0.7), linhThach: Math.trunc(st.rewards.linhThach * 0.7) });
+});
+
+test('bộ kiểm tra bắt lỗi vật phẩm, rơi đồ, yêu cầu đột phá', () => {
+  const bad = (mutate, re) => { const c = raw(); mutate(c); assert.throws(() => validateContent(c, vi), re); };
+  bad(c => { c.stages[2].drops.push({ item: 'item.khong-co', min: 1, max: 1, chance: 10 }); }, /vật phẩm không tồn tại/);
+  bad(c => { c.stages[0].drops[0].chance = 1500; }, /chance/);
+  bad(c => { c.stages[0].drops[0].max = 0; }, /min.max sai/);
+  bad(c => { c.stages[3].requires = 'stage.khong-co'; }, /requires ải/);
+  bad(c => { c.realms[2].boosts = c.realms[2].boosts.slice(0, 2); }, /phẩm cao nhất cần 3/);
+  bad(c => { c.realms[2].requires = [{ item: 'item.truc-co-dan', count: 0 }]; }, /requires.count/);
+  bad(c => { c.items[0].kind = 'vu-khi'; }, /kind lạ/);
 });

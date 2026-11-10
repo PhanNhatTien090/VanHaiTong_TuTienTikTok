@@ -2,31 +2,75 @@
 import crypto from 'node:crypto';
 import { tx } from './db.mjs';
 import { post, balances } from './ledger.mjs';
+import { stacks, countOf, addItems, removeItems } from './inventory.mjs';
 import { computeStats } from '../core/stats.mjs';
-import { buildLadder, addQi, stepLabel, breakthrough } from '../core/progression.mjs';
+import { buildLadder, addQi, stepLabel, breakthrough, qualityFor } from '../core/progression.mjs';
+import { starsFor, stageReward, rollDrops } from '../core/loot.mjs';
 import { TICK_RATE } from '../core/sim/inputs.mjs';
 import { t } from '../content/index.js';
 
 const fail = (code, message, extra = {}) => ({ ok: false, code, message, ...extra });
 // Trận không thể xong nhanh hơn thời gian thật: chơi 60 giây trong game thì phải mất ≥ 60×80% giây ngoài đời.
-// Chặn công cụ gửi đầu vào tự sinh hàng loạt. Tự động chiến đấu (sau này) do server chạy, không qua đây.
+// Chặn công cụ gửi đầu vào tự sinh hàng loạt. Quét ải do server tính, không qua đây.
 const REALTIME_SHARE = 80;
 const STALE_MS = 30 * 60000;
-const BT_MESSAGE = { NEED_QI: 'Chưa đủ tu vi.', NEED_MATERIALS: 'Thiếu vật phẩm đột phá.', NEED_TRIAL: 'Cần vượt thử thách đột phá.', SEASON_CAP: 'Đã chạm trần cảnh giới mùa này.', END: 'Đã đến tận cùng đại đạo.', NOT_GATE: 'Chưa tới Viên Mãn.' };
+const SWEEPS_PER_DAY = 20;
+const BT_MESSAGE = { NEED_QI: 'Chưa đủ tu vi.', NEED_MATERIALS: 'Thiếu vật phẩm đột phá.', NEED_TRIAL: 'Cần vượt thử thách đột phá.', SEASON_CAP: 'Đã chạm trần cảnh giới mùa này.', END: 'Đã đến tận cùng đại đạo.', NOT_GATE: 'Chưa tới Viên Mãn.', LOCKED: 'Cảnh giới này chưa mở.' };
+// Ngày theo giờ Việt Nam, đổi lúc 05:00 (giống LIVE).
+const vnDay = now => Math.floor((now + 7 * 3600000 - 5 * 3600000) / 86400000);
 
 export function createGame({ db, content, verifier, season = 1 }) {
   const ladder = buildLadder(content, season);
 
   const row = accountId => db.prepare('SELECT * FROM ll_avatars WHERE account_id=?').get(accountId);
-  const avatarModel = r => ({ pathId: r.path_id, cultivation: { step: r.step, qi: r.qi }, ...JSON.parse(r.payload) });
+  const byId = id => db.prepare('SELECT * FROM ll_avatars WHERE id=?').get(id);
+  const payloadOf = r => JSON.parse(r.payload);
+  const avatarModel = (r, payload = payloadOf(r)) => ({ pathId: r.path_id, cultivation: { step: r.step, qi: r.qi }, ...payload });
+  const itemView = (id, count) => { const it = content.byId.get(id); return { id, count, name: t(content, it.nameKey), desc: t(content, it.descKey), kind: it.kind, rarity: it.rarity }; };
 
-  function view(r) {
+  // Xem trước đột phá: cần gì, có gì, đạt phẩm nào.
+  function breakthroughPreview(r, inv) {
+    const step = ladder[r.step];
+    if (step.gate !== 'breakthrough') return { gate: step.gate };
+    const target = content.realms[step.realmIndex + 1];
+    if (!target.requires) return { gate: 'breakthrough', locked: true, realmName: t(content, target.nameKey) };
+    const requires = target.requires.map(q => ({ ...itemView(q.item, inv[q.item] || 0), need: q.count }));
+    const boosts = target.boosts.map(id => itemView(id, inv[id] || 0));
+    const types = boosts.filter(b => b.count > 0).length, quality = qualityFor(target, types);
+    return {
+      gate: 'breakthrough', realmName: t(content, target.nameKey), trial: target.trial ? t(content, target.trial) : null,
+      qiReady: r.qi >= step.qi, requires, boosts, materialTypes: types,
+      quality: quality ? { id: quality.id, name: t(content, quality.nameKey), points: quality.points, fatePicks: quality.fatePicks } : null,
+      qualities: target.qualities.map(q => ({ id: q.id, name: t(content, q.nameKey), materials: q.materials, points: q.points, fatePicks: q.fatePicks })),
+      canBreak: r.qi >= step.qi && requires.every(x => x.count >= x.need) && !!quality && !target.trial,
+    };
+  }
+
+  function stageView(payload, now) {
+    const prog = payload.stages || {};
+    const day = vnDay(now), sweeps = payload.sweepDay?.day === day ? payload.sweepDay.used : 0;
+    return {
+      sweepsLeft: Math.max(0, SWEEPS_PER_DAY - sweeps),
+      list: content.stages.map(s => {
+        const p = prog[s.id] || { stars: 0, clears: 0 };
+        const unlocked = !s.requires || (prog[s.requires]?.stars || 0) > 0;
+        return { id: s.id, name: t(content, s.nameKey), map: t(content, s.map), level: s.level, stars: p.stars, clears: p.clears, unlocked, sweepable: p.stars === 3, rewards: s.rewards,
+          drops: s.drops.map(d => ({ id: d.item, name: t(content, content.byId.get(d.item).nameKey), rarity: content.byId.get(d.item).rarity })) };
+      }),
+    };
+  }
+
+  function view(r, now = Date.now()) {
     if (!r) return null;
-    const a = avatarModel(r), s = computeStats(content, a), step = ladder[r.step];
+    const payload = payloadOf(r), a = avatarModel(r, payload), s = computeStats(content, a), step = ladder[r.step], inv = stacks(db, r.id);
     return {
       id: r.id, name: r.name, pathId: r.path_id, pathName: t(content, content.byId.get(r.path_id).nameKey),
       step: r.step, label: stepLabel(content, step), qi: r.qi, qiNeed: step.qi, gate: step.gate,
       stats: s.stats, power: s.power, balances: balances(db, r.id),
+      breakthroughs: (payload.breakthroughs || []).map(b => ({ realmName: t(content, content.byId.get(b.realmId).nameKey), quality: b.quality, points: b.points })),
+      inventory: Object.entries(inv).map(([id, n]) => itemView(id, n)).sort((x, y) => y.rarity - x.rarity || x.name.localeCompare(y.name, 'vi')),
+      breakthrough: breakthroughPreview(r, inv),
+      stages: stageView(payload, now),
     };
   }
 
@@ -39,14 +83,17 @@ export function createGame({ db, content, verifier, season = 1 }) {
     const id = 'av_' + crypto.randomBytes(9).toString('hex');
     const a = { pathId, cultivation: { step: 0, qi: 0 } }, power = computeStats(content, a).power;
     db.prepare('INSERT INTO ll_avatars(id,account_id,live_player_id,name,path_id,step,qi,power,season,payload,version,created,updated) VALUES(?,?,?,?,?,0,0,?,?,?,1,?,?)')
-      .run(id, user.id, user.playerId || null, clean, pathId, power, season, JSON.stringify({ breakthroughs: [] }), now, now);
-    return { ok: true, avatar: view(row(user.id)) };
+      .run(id, user.id, user.playerId || null, clean, pathId, power, season, JSON.stringify({ breakthroughs: [], stages: {} }), now, now);
+    return { ok: true, avatar: view(row(user.id), now) };
   }
+
+  const stageUnlocked = (payload, stage) => !stage.requires || ((payload.stages || {})[stage.requires]?.stars || 0) > 0;
 
   function startBattle(user, stageId, now = Date.now()) {
     const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
     const stage = content.byId.get(stageId);
     if (!stage?.waves) return fail('BAD_STAGE', 'Ải không tồn tại.');
+    if (!stageUnlocked(payloadOf(r), stage)) return fail('LOCKED', 'Hãy vượt ải trước đó.');
     const seed = crypto.randomBytes(12).toString('hex'), id = 'bt_' + crypto.randomBytes(12).toString('hex');
     const setup = { seed, stageId, player: { pathId: r.path_id, stats: computeStats(content, avatarModel(r)).stats } };
     tx(db, () => {
@@ -56,6 +103,22 @@ export function createGame({ db, content, verifier, season = 1 }) {
         .run(id, r.id, stageId, seed, content.version, JSON.stringify(setup), now);
     });
     return { ok: true, battleId: id, setup, contentVersion: content.version };
+  }
+
+  // Ghi thắng ải (gọi TRONG transaction): tu vi, linh thạch, rơi đồ, sao/số lần. Trả về phần thưởng đã phát.
+  function applyWin(cur, stage, stars, { sweep = false, ref, now }) {
+    const payload = payloadOf(cur), prog = payload.stages ??= {}, p = prog[stage.id] ??= { stars: 0, clears: 0 };
+    const firstClear = p.clears === 0;
+    const base = stageReward(stage, stars, { sweep }), drops = rollDrops(stage, ref, { firstClear });
+    p.clears++; if (stars > p.stars) p.stars = stars;
+    const grown = addQi({ step: cur.step, qi: cur.qi }, base.qi, ladder);
+    const power = computeStats(content, avatarModel({ ...cur, step: grown.state.step }, payload)).power;
+    const upd = db.prepare('UPDATE ll_avatars SET step=?, qi=?, power=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?')
+      .run(grown.state.step, grown.state.qi, power, JSON.stringify(payload), now, cur.id, cur.version);
+    if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
+    if (base.linhThach) post(db, { avatarId: cur.id, currency: 'linh-thach', delta: base.linhThach, reason: sweep ? 'stage-sweep' : 'stage-clear', ref, at: now });
+    if (Object.keys(drops).length) addItems(db, cur.id, drops, content);
+    return { stars, qi: base.qi, linhThach: base.linhThach, drops: Object.entries(drops).map(([id, n]) => itemView(id, n)), firstClear, advanced: grown.advanced, ready: grown.ready };
   }
 
   async function finishBattle(user, battleId, inputs, claimedHash, now = Date.now()) {
@@ -78,48 +141,74 @@ export function createGame({ db, content, verifier, season = 1 }) {
       db.prepare("UPDATE ll_battles SET status='rejected', finished=?, result=?, mismatch=? WHERE id=? AND status='running'").run(now, JSON.stringify({ ...result, error: 'too-fast' }), mismatch, b.id);
       return fail('TOO_FAST', 'Trận kết thúc nhanh bất thường.');
     }
-    const stage = content.byId.get(b.stage_id);
-    const win = result.complete && result.victory;
-    const stars = !win ? 0 : result.hpLeft >= 600 ? 3 : result.hpLeft >= 300 ? 2 : 1;
-    const share = [0, 60, 80, 100][stars];
-    const reward = { stars, qi: Math.trunc(stage.rewards.qi * share / 100), linhThach: Math.trunc(stage.rewards.linhThach * share / 100) };
+    const stage = content.byId.get(b.stage_id), stars = starsFor(result);
 
     const out = tx(db, () => {
       // Đánh dấu xong trước (WHERE status='running'): hai yêu cầu nộp cùng lúc chỉ một cái được thưởng.
       const done = db.prepare("UPDATE ll_battles SET status='done', finished=?, inputs=?, result=?, mismatch=? WHERE id=? AND status='running'")
-        .run(now, JSON.stringify(inputs), JSON.stringify({ ...result, reward }), mismatch, b.id);
+        .run(now, JSON.stringify(inputs), JSON.stringify({ ...result, stars }), mismatch, b.id);
       if (done.changes !== 1) return fail('DONE', 'Trận đã kết thúc.');
-      if (!win) return { ok: true, result, reward };
-      const cur = db.prepare('SELECT * FROM ll_avatars WHERE id=?').get(r.id);
-      const grown = addQi({ step: cur.step, qi: cur.qi }, reward.qi, ladder);
-      const power = computeStats(content, avatarModel({ ...cur, step: grown.state.step })).power;
-      const upd = db.prepare('UPDATE ll_avatars SET step=?, qi=?, power=?, version=version+1, updated=? WHERE id=? AND version=?').run(grown.state.step, grown.state.qi, power, now, cur.id, cur.version);
-      if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
-      if (reward.linhThach) post(db, { avatarId: cur.id, currency: 'linh-thach', delta: reward.linhThach, reason: 'stage-clear', ref: b.id, at: now });
-      return { ok: true, result, reward: { ...reward, advanced: grown.advanced, ready: grown.ready } };
+      if (!stars) return { ok: true, result, reward: { stars: 0, qi: 0, linhThach: 0, drops: [] } };
+      const reward = applyWin(byId(r.id), stage, stars, { ref: b.id, now });
+      db.prepare('UPDATE ll_battles SET result=? WHERE id=?').run(JSON.stringify({ ...result, stars, reward }), b.id);
+      return { ok: true, result, reward };
     });
-    return out.ok ? { ...out, avatar: view(row(user.id)) } : out;
+    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
   }
 
-  // Đột phá đại cảnh. Giai đoạn 0 chưa có túi đồ → số loại vật phẩm đột phá = 0: chỉ qua được cửa không cần vật phẩm
-  // (Phàm Nhân → Luyện Khí, "khai linh căn"). Túi đồ + Lôi Kiếp nối vào đây ở Giai đoạn 1.
+  // Quét: ải đã 3 sao, 70% thưởng, vẫn rơi đồ; tối đa 20 lượt/ngày. Server tính ngay, không cần mô phỏng.
+  function sweep(user, stageId, now = Date.now()) {
+    const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
+    const stage = content.byId.get(stageId);
+    if (!stage?.waves) return fail('BAD_STAGE', 'Ải không tồn tại.');
+    const out = tx(db, () => {
+      const cur = byId(r.id), payload = payloadOf(cur);
+      if ((payload.stages?.[stage.id]?.stars || 0) < 3) return fail('NEED_3_STARS', 'Cần đạt 3 sao mới quét được.');
+      const day = vnDay(now), used = payload.sweepDay?.day === day ? payload.sweepDay.used : 0;
+      if (used >= SWEEPS_PER_DAY) return fail('SWEEP_LIMIT', 'Hôm nay đã hết lượt quét.');
+      payload.sweepDay = { day, used: used + 1 };
+      // Ghi lượt dùng trước (cùng transaction với thưởng), applyWin sẽ đọc lại payload từ cur → gộp vào đây
+      const ref = 'sw_' + crypto.randomBytes(8).toString('hex');
+      const reward = applyWin({ ...cur, payload: JSON.stringify(payload) }, stage, 3, { sweep: true, ref, now });
+      return { ok: true, reward: { ...reward, sweep: true } };
+    });
+    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
+  }
+
+  // Đột phá đại cảnh: đủ tu vi + vật phẩm bắt buộc + (tùy) vật phẩm nâng phẩm. Tiêu vật phẩm trong cùng transaction.
   function breakthroughNow(user, now = Date.now()) {
     const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
-    const payload = JSON.parse(r.payload);
-    const out = breakthrough({ step: r.step, qi: r.qi }, ladder, content, { materialTypes: 0, trialPassed: false });
-    if (!out.ok) return fail(out.code, BT_MESSAGE[out.code] || 'Chưa đột phá được.', { need: out.need });
-    payload.breakthroughs = [...(payload.breakthroughs || []), { realmId: out.realmId, quality: out.quality, points: out.points, at: now }];
-    const power = computeStats(content, { pathId: r.path_id, cultivation: out.state, ...payload }).power;
-    const upd = db.prepare('UPDATE ll_avatars SET step=?, qi=?, power=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?')
-      .run(out.state.step, out.state.qi, power, JSON.stringify(payload), now, r.id, r.version);
-    if (upd.changes !== 1) return fail('RETRY', 'Phân thân vừa thay đổi, thử lại.');
-    return { ok: true, realmId: out.realmId, quality: out.quality, fatePicks: out.fatePicks, avatar: view(row(user.id)) };
+    const step = ladder[r.step];
+    if (step.gate === 'breakthrough') {
+      const target = content.realms[step.realmIndex + 1];
+      if (!target.requires) return fail('LOCKED', BT_MESSAGE.LOCKED);
+      if (target.trial) return fail('NEED_TRIAL', BT_MESSAGE.NEED_TRIAL, { trial: target.trial }); // Lôi Kiếp/Tâm Ma: làm ở phần sau
+    }
+    const out = tx(db, () => {
+      const cur = byId(r.id), payload = payloadOf(cur), inv = stacks(db, cur.id);
+      const target = content.realms[step.realmIndex + 1] || null;
+      const present = (target?.boosts || []).filter(id => inv[id] > 0);
+      const bt = breakthrough({ step: cur.step, qi: cur.qi }, ladder, content, { materialTypes: present.length, trialPassed: false });
+      if (!bt.ok) return fail(bt.code, BT_MESSAGE[bt.code] || 'Chưa đột phá được.', { need: bt.need });
+      const quality = target.qualities.find(q => q.id === bt.quality);
+      const consume = {};
+      for (const q of target.requires) consume[q.item] = (consume[q.item] || 0) + q.count;
+      for (const id of present.slice(0, quality.materials)) consume[id] = (consume[id] || 0) + 1;
+      try { if (Object.keys(consume).length) removeItems(db, cur.id, consume); }
+      catch (e) { if (e.code === 'INSUFFICIENT') return fail('NEED_MATERIALS', BT_MESSAGE.NEED_MATERIALS); throw e; }
+      payload.breakthroughs = [...(payload.breakthroughs || []), { realmId: bt.realmId, quality: bt.quality, points: bt.points, at: now }];
+      const power = computeStats(content, avatarModel({ ...cur, step: bt.state.step }, payload)).power;
+      const upd = db.prepare('UPDATE ll_avatars SET step=?, qi=?, power=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?')
+        .run(bt.state.step, bt.state.qi, power, JSON.stringify(payload), now, cur.id, cur.version);
+      if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
+      return { ok: true, realmId: bt.realmId, realmName: t(content, target.nameKey), quality: bt.quality, qualityName: t(content, quality.nameKey), points: bt.points, fatePicks: bt.fatePicks, consumed: Object.entries(consume).map(([id, n]) => itemView(id, n)) };
+    });
+    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
   }
 
   return {
-    ladder, view: accountId => view(row(accountId)),
-    createAvatar, startBattle, finishBattle, breakthrough: breakthroughNow,
+    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now),
+    createAvatar, startBattle, finishBattle, sweep, breakthrough: breakthroughNow,
     paths: () => content.paths.map(p => ({ id: p.id, name: t(content, p.nameKey), desc: t(content, p.descKey), kit: Object.fromEntries(Object.entries(p.kit).map(([slot, id]) => [slot, { id, name: t(content, id) }])), branches: p.branches.map(b => t(content, b.nameKey)) })),
-    stages: () => content.stages.map(s => ({ id: s.id, name: t(content, s.nameKey), map: t(content, s.map), level: s.level })),
   };
 }

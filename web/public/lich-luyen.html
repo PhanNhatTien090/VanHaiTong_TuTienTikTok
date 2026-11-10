@@ -37,6 +37,13 @@
   .stars { font-size:34px; color:var(--gold); letter-spacing:6px; }
   .rotate { display:none; position:absolute; inset:0; place-items:center; text-align:center; padding:24px; background:rgba(5,8,12,.9); font-size:17px; z-index:5; pointer-events:none; }
   @media (orientation: portrait) and (max-width: 700px) { #battle .rotate { display:grid; } }
+  .stage { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line); }
+  .stage.locked { opacity:.5; } .stage .acts { display:flex; gap:6px; flex-shrink:0; }
+  .stage button { padding:7px 12px; } button.ghost { background:transparent; color:var(--gold); border:1px solid var(--gold); }
+  .inv { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; margin-top:8px; }
+  .item { display:flex; justify-content:space-between; background:#0a0e14; border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; }
+  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--panel); border:1px solid var(--gold); border-radius:10px; padding:10px 16px; opacity:0; transition:.25s; pointer-events:none; text-align:center; max-width:90vw; }
+  .toast.on { opacity:1; transform:translateX(-50%); }
   .hint { position:absolute; left:16px; bottom:14px; font-size:12px; color:var(--muted); pointer-events:none; }
 </style>
 </head>
@@ -53,7 +60,10 @@
   <section class="screen" id="home">
     <h1 id="homeTitle">Lịch Luyện</h1>
     <div class="card"><div id="homeInfo"></div><div class="bar" style="margin:8px 0"><i id="qiBar"></i></div><div class="stats" id="homeStats"></div></div>
-    <div class="card"><b>Thanh Vân Châu</b><div id="stageList"></div></div>
+    <div class="card" id="breakBox" style="display:none"></div>
+    <div class="card"><b>Thanh Vân Châu</b> <span class="muted" id="sweepInfo"></span><div id="stageList"></div></div>
+    <div class="card"><b>Túi đồ</b><div id="invList" class="inv"></div></div>
+    <div id="toast" class="toast"></div>
     <p class="muted">Máy tính: WASD/mũi tên di chuyển · J đánh · K tuyệt kỹ · Space lướt.</p>
   </section>
   <section class="screen" id="battle">

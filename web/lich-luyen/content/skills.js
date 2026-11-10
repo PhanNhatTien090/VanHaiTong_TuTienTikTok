@@ -20,8 +20,8 @@ export default [
   S('skill.kiem.ngu-phong-bo', 'dash', 45, 0, { type: 'dash', ticks: 7, speed: 900, invuln: 7 }),
 
   // ── Thể tu ──
-  S('skill.the.bang-son-quyen', 'attack', 14, 0, { type: 'melee', offset: 40, radius: 55 }, [{ type: 'damage', mult: 135 }, { type: 'knockback', distance: 30 }, { type: 'heal', mult: 25 }]),
-  S('skill.the.chan-dia-chuong', 'special', 165, 30, { type: 'nova', radius: 130 }, [{ type: 'damage', mult: 160 }, { type: 'stun', ticks: 30 }]),
+  S('skill.the.bang-son-quyen', 'attack', 14, 0, { type: 'melee', offset: 40, radius: 55 }, [{ type: 'damage', mult: 135 }, { type: 'knockback', distance: 30 }, { type: 'heal', mult: 35 }]),
+  S('skill.the.chan-dia-chuong', 'special', 165, 30, { type: 'nova', radius: 130 }, [{ type: 'damage', mult: 160 }, { type: 'stun', ticks: 30 }, { type: 'heal', mult: 200 }]),
   S('skill.the.thiet-nguu-xung', 'dash', 50, 0, { type: 'dash', ticks: 8, speed: 800, invuln: 6 }),
 
   // ── Pháp tu ──

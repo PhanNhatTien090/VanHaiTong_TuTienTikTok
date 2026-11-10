@@ -7,6 +7,7 @@ import skills from './skills.js';
 import monsters from './monsters.js';
 import stages from './stages.js';
 import stats from './stats.js';
+import items from './items.js';
 import vi from './text/vi.js';
 
 const ID = /^[a-z]+(\.[a-z0-9]+(-[a-z0-9]+)*)+$/;
@@ -127,6 +128,38 @@ export function validateContent(c, text = vi) {
     });
   });
 
+  // Vật phẩm
+  const itemIds = new Set();
+  (c.items || []).forEach((it, i) => {
+    const w = `item[${i}] ${it.id}`;
+    checkId(w, it.id); checkText(w, it.nameKey); checkText(w, it.descKey); itemIds.add(it.id);
+    if (!ITEM_KINDS.has(it.kind)) err(w, `kind lạ "${it.kind}"`);
+    if (!Number.isSafeInteger(it.rarity) || it.rarity < 1 || it.rarity > 5) err(w, 'rarity phải trong 1..5');
+  });
+  const needItem = (w, id) => { if (!itemIds.has(id)) err(w, `vật phẩm không tồn tại "${id}"`); };
+  for (const r of c.realms) {
+    if (r.requires === undefined) continue;
+    const w = `realm ${r.id}`;
+    for (const q of r.requires) { needItem(w + ' requires', q.item); if (!Number.isSafeInteger(q.count) || q.count < 1) err(w, 'requires.count phải ≥ 1'); }
+    for (const id of r.boosts || []) needItem(w + ' boosts', id);
+    if (new Set(r.boosts || []).size !== (r.boosts || []).length) err(w, 'boosts trùng');
+    const top = Math.max(0, ...(r.qualities || []).map(q => q.materials));
+    if (top > (r.boosts || []).length) err(w, `phẩm cao nhất cần ${top} loại vật phẩm nhưng chỉ khai báo ${(r.boosts || []).length}`);
+    if ((r.qualities || [])[0]?.materials !== 0) err(w, 'phẩm thấp nhất phải đạt được khi không có vật phẩm nâng phẩm (materials 0)');
+  }
+  const stageIds = new Set((c.stages || []).map(s => s.id));
+  for (const st of c.stages || []) {
+    const w = `stage ${st.id}`;
+    if (st.requires !== null && st.requires !== undefined && !stageIds.has(st.requires)) err(w, `requires ải không tồn tại "${st.requires}"`);
+    if (st.requires === st.id) err(w, 'không tự yêu cầu chính mình');
+    for (const d of st.drops || []) {
+      needItem(w + ' drops', d.item);
+      if (!Number.isSafeInteger(d.min) || !Number.isSafeInteger(d.max) || d.min < 1 || d.max < d.min) err(w, `drops ${d.item}: min/max sai`);
+      if (!Number.isSafeInteger(d.chance) || d.chance < 1 || d.chance > 1000) err(w, `drops ${d.item}: chance phải 1..1000 (‰)`);
+    }
+    for (const f of st.firstClear || []) { needItem(w + ' firstClear', f.item); if (!Number.isSafeInteger(f.count) || f.count < 1) err(w, 'firstClear.count phải ≥ 1'); }
+  }
+
   // Chỉ số gốc
   for (const k of ['hp', 'mp', 'atk', 'def', 'spd', 'crit', 'critDmg']) nonNegInt('stats.base', k, c.stats?.base?.[k]);
   for (const [k, v] of Object.entries(c.stats?.growth || {})) if (!Number.isSafeInteger(v) || v < 100 || v > 130) err('stats.growth', `${k} phải trong 100..130`);
@@ -145,13 +178,14 @@ const ACTIONS = {
 };
 const EFFECTS = { damage: ['mult'], knockback: ['distance'], stun: ['ticks'], burn: ['ticks', 'period', 'mult'], heal: ['mult'] };
 const AIS = new Set(['chase', 'kite']);
+const ITEM_KINDS = new Set(['material', 'breakthrough', 'pill']);
 
-export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages, stats }, text = vi) {
-  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [], stats: raw.stats || stats });
+export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages, stats, items }, text = vi) {
+  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [], stats: raw.stats || stats, items: raw.items || items });
   validateContent(c, text);
   const version = fnv64(stableJson(c));
   const byId = new Map();
-  for (const list of [c.realms, c.paths, c.roots, c.skills, c.monsters, c.stages]) for (const x of list) byId.set(x.id, x);
+  for (const list of [c.realms, c.paths, c.roots, c.skills, c.monsters, c.stages, c.items]) for (const x of list) byId.set(x.id, x);
   return deepFreeze({ ...c, version, byId, text });
 }
 

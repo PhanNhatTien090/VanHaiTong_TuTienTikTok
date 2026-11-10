@@ -79,10 +79,48 @@ function renderHome() {
   $('qiBar').style.width = Math.min(100, a.qi * 100 / a.qiNeed) + '%';
   const s = a.stats;
   $('homeStats').innerHTML = [['Khí huyết', s.hp], ['Linh lực', s.mp], ['Công', s.atk], ['Thủ', s.def], ['Tốc', s.spd], ['Bạo kích', (s.crit / 10) + '%']].map(([k, v]) => `<div><span class="muted">${k}</span><br><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('');
-  if (a.gate === 'breakthrough' && a.qi >= a.qiNeed) { const bt = document.createElement('button'); bt.textContent = 'Đột phá'; bt.style.marginTop = '8px'; bt.onclick = async () => { const r = await api('breakthrough', {}); if (!r.ok) return alert(r.message); state.avatar = r.avatar; renderHome(); }; $('homeInfo').append(document.createElement('br'), bt); }
-  $('stageList').innerHTML = '';
-  for (const st of state.stages) { const b = document.createElement('button'); b.textContent = 'Vào ải · ' + st.name; b.style.marginTop = '8px'; b.onclick = () => startBattle(st.id); $('stageList').append(b); }
+  renderBreakthrough(a);
+  renderStages(a);
+  renderInventory(a);
   show('home');
+}
+const stars = n => '★'.repeat(n) + '☆'.repeat(3 - n);
+const RARITY = ['', '#b9b9b9', '#6fd36f', '#5aa9ff', '#c77dff', '#ffb347'];
+function renderBreakthrough(a) {
+  const box = $('breakBox'), p = a.breakthrough;
+  if (!p || p.gate !== 'breakthrough') { box.style.display = 'none'; return; }
+  box.style.display = '';
+  if (p.locked) { box.innerHTML = `<b>Đột phá ${p.realmName}</b><div class="muted">Cảnh giới này chưa mở trong mùa.</div>`; return; }
+  const need = p.requires.map(x => `<span style="color:${x.count >= x.need ? 'var(--ok)' : 'var(--hp)'}">${x.name} ${x.count}/${x.need}</span>`).join(' · ');
+  const boosts = p.boosts.map(x => `<span style="color:${x.count > 0 ? 'var(--ok)' : 'var(--muted)'}">${x.name}${x.count > 0 ? ' ✓' : ''}</span>`).join(' · ');
+  const q = p.quality ? `<b style="color:var(--gold)">${p.realmName} ${p.quality.name}</b> · +${p.quality.points} điểm · ${p.quality.fatePicks} lượt mệnh cách` : '';
+  const ladder = p.qualities.map(x => `${x.name}: ${x.materials} loại → +${x.points}`).join(' · ');
+  box.innerHTML = `<b>Đột phá ${p.realmName}</b><div style="margin:6px 0">${p.qiReady ? '<span style="color:var(--ok)">Tu vi đã Viên Mãn</span>' : '<span class="muted">Cần tu vi Viên Mãn</span>'} · Bắt buộc: ${need}</div><div class="muted" style="font-size:13px">Nâng phẩm (mỗi loại có là +1 bậc): ${boosts}<br>${ladder}</div><div style="margin-top:6px">${q}</div>${p.trial ? `<div class="muted">Thử thách: ${p.trial} (sắp có)</div>` : ''}`;
+  const bt = document.createElement('button'); bt.textContent = 'Đột phá'; bt.disabled = !p.canBreak; bt.style.marginTop = '8px';
+  bt.onclick = async () => { bt.disabled = true; const r = await api('breakthrough', {}); if (!r.ok) { alert(r.message); bt.disabled = false; return; } state.avatar = r.avatar; alert(`Đột phá thành công: ${r.realmName} ${r.qualityName} · +${r.points} điểm thuộc tính`); renderHome(); };
+  box.append(bt);
+}
+function renderStages(a) {
+  const list = $('stageList'); list.innerHTML = '';
+  $('sweepInfo').textContent = `Lượt quét hôm nay: ${a.stages.sweepsLeft}`;
+  for (const st of a.stages.list) {
+    const row = document.createElement('div'); row.className = 'stage' + (st.unlocked ? '' : ' locked');
+    row.innerHTML = `<div><b>${st.level}. ${st.name}</b> <span style="color:var(--gold)">${stars(st.stars)}</span><div class="muted" style="font-size:12px">+${st.rewards.qi} tu vi · +${st.rewards.linhThach} linh thạch · rơi: ${st.drops.map(d => `<span style="color:${RARITY[d.rarity]}">${d.name}</span>`).join(', ')}</div></div><div class="acts"></div>`;
+    const acts = row.querySelector('.acts');
+    if (st.unlocked) { const go = document.createElement('button'); go.textContent = 'Vào ải'; go.onclick = () => startBattle(st.id); acts.append(go); }
+    else { const lk = document.createElement('span'); lk.className = 'muted'; lk.textContent = '🔒'; acts.append(lk); }
+    if (st.sweepable && a.stages.sweepsLeft > 0) { const sw = document.createElement('button'); sw.textContent = 'Quét'; sw.className = 'ghost'; sw.onclick = async () => { sw.disabled = true; const r = await api('battle/sweep', { stageId: st.id }); if (!r.ok) { alert(r.message); sw.disabled = false; return; } state.avatar = r.avatar; showReward('Quét ' + st.name, r.reward); renderHome(); }; acts.append(sw); }
+    list.append(row);
+  }
+}
+function renderInventory(a) {
+  const box = $('invList');
+  box.innerHTML = a.inventory.length ? a.inventory.map(it => `<div class="item" title="${it.desc}"><span style="color:${RARITY[it.rarity]}">${it.name}</span><b>×${it.count}</b></div>`).join('') : '<span class="muted">Túi trống. Vượt ải để nhặt đồ.</span>';
+}
+function showReward(title, rw) {
+  const drops = (rw.drops || []).map(d => `<span style="color:${RARITY[d.rarity]}">${d.name} ×${d.count}</span>`).join(', ');
+  $('toast').innerHTML = `<b>${title}</b><br>+${fmt(rw.qi)} tu vi · +${fmt(rw.linhThach)} linh thạch${drops ? '<br>' + drops : ''}`;
+  $('toast').classList.add('on'); clearTimeout(showReward.t); showReward.t = setTimeout(() => $('toast').classList.remove('on'), 3500);
 }
 
 // ── Nhập liệu ──
@@ -147,7 +185,8 @@ async function finish() {
   if (!r.ok) { $('resultText').textContent = r.message || 'Không xác nhận được trận.'; return; }
   const rw = r.reward || {};
   $('resultStars').textContent = '★'.repeat(rw.stars || 0) + '☆'.repeat(3 - (rw.stars || 0));
-  $('resultText').innerHTML = rw.stars ? `+${fmt(rw.qi)} tu vi · +${fmt(rw.linhThach)} linh thạch${rw.advanced ? `<br>Lên ${rw.advanced} tiểu cảnh → <b>${r.avatar.label}</b>` : ''}${rw.ready ? '<br><b style="color:var(--gold)">Đủ tu vi đột phá</b>' : ''}` : 'Không nhận thưởng. Luyện thêm rồi thử lại.';
+  const drops = (rw.drops || []).map(d => `<span style="color:${RARITY[d.rarity]}">${d.name} ×${d.count}</span>`).join(', ');
+  $('resultText').innerHTML = rw.stars ? `+${fmt(rw.qi)} tu vi · +${fmt(rw.linhThach)} linh thạch${drops ? '<br>Nhặt được: ' + drops : ''}${rw.firstClear ? '<br><span style="color:var(--gold)">Lần đầu vượt ải</span>' : ''}${rw.advanced ? `<br>Lên ${rw.advanced} tiểu cảnh → <b>${r.avatar.label}</b>` : ''}${rw.ready ? '<br><b style="color:var(--gold)">Đủ tu vi đột phá</b>' : ''}` : 'Không nhận thưởng. Luyện thêm rồi thử lại.';
   state.avatar = r.avatar;
 }
 $('resultBtn').onclick = () => { run = null; renderHome(); };

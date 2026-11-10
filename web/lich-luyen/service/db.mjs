@@ -24,6 +24,9 @@ export const MIGRATIONS = [
       inputs TEXT, result TEXT, mismatch INTEGER NOT NULL DEFAULT 0);
     CREATE INDEX ll_battles_avatar ON ll_battles(avatar_id, started);
   ` },
+  { id: 2, name: 'inventory', sql: `
+    CREATE TABLE ll_stacks (avatar_id TEXT NOT NULL, item_id TEXT NOT NULL, count INTEGER NOT NULL CHECK (count >= 0), PRIMARY KEY (avatar_id, item_id));
+  ` },
 ];
 
 export function openDb(file, { now = Date.now(), migrations = MIGRATIONS } = {}) {

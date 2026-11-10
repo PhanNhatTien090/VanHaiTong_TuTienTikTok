@@ -8,6 +8,8 @@ import WebSocket from 'ws';
 import { createWebApp } from '../web/app.mjs';
 import { createWorld } from '../engine.mjs';
 import { createLichLuyen } from '../web/lich-luyen/service/api.mjs';
+import { addItems } from '../web/lich-luyen/service/inventory.mjs';
+import { loadContent } from '../web/lich-luyen/content/index.js';
 
 const out = path.resolve(process.argv[2] || 'output/qa-lich-luyen'), pathId = process.argv[3] || 'path.kiem-tu';
 await fs.mkdir(out, { recursive: true });
@@ -38,6 +40,15 @@ try {
   await shot('01-chon-dao-lo');
   await evalJs(`(()=>{const i=${JSON.stringify(['path.kiem-tu', 'path.the-tu', 'path.phap-tu'].indexOf(pathId))};document.querySelectorAll('.path')[i].click();document.getElementById('avatarName').value='Thử Kiếm';document.getElementById('createBtn').click();return 1})()`);
   await pause(1500); await shot('02-phan-than');
+  // Dựng sẵn: Luyện Khí Viên Mãn + Trúc Cơ Đan + 2/3 loại nâng phẩm + vài vật liệu, ải 1–3 đã qua → chụp bảng đột phá, túi đồ, danh sách ải
+  { const L = ll.game.ladder, g = L.findIndex(x => x.realmId === 'realm.luyen-khi' && x.gate), av = ll.db.prepare('SELECT id, payload FROM ll_avatars').get();
+    const p = JSON.parse(av.payload); p.stages = { 'stage.thanh-van.1': { stars: 3, clears: 4 }, 'stage.thanh-van.2': { stars: 2, clears: 1 }, 'stage.thanh-van.3': { stars: 1, clears: 1 } };
+    ll.db.prepare('UPDATE ll_avatars SET step=?, qi=?, payload=? WHERE id=?').run(g, L[g].qi, JSON.stringify(p), av.id);
+    addItems(ll.db, av.id, { 'item.truc-co-dan': 1, 'item.thanh-van-chi': 1, 'item.lang-vuong-nha': 1, 'item.linh-thao': 7, 'item.yeu-lang-bi': 3, 'item.doc-xa-dam': 1 }, loadContent()); }
+  await send('Page.reload'); await pause(2000); await shot('02b-dot-pha-tui-do');
+  await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await pause(600);
+  await shot('02c-dien-thoai-doc'); await evalJs('window.scrollTo(0,0);document.getElementById("home").scrollTop=900'); await pause(300); await shot('02d-dien-thoai-cuon');
+  await send('Emulation.setDeviceMetricsOverride', { width: 860, height: 400, deviceScaleFactor: 2, mobile: true }); await pause(600);
   await evalJs(`document.querySelector('#stageList button').click()`); await pause(1200);
   await shot('03-vao-tran');
   await key('keyDown', 'KeyJ', 'j');
