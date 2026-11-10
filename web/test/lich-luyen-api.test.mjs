@@ -268,3 +268,36 @@ test('Lôi Kiếp: không đủ điều kiện thì không vào; thất bại m�
   const kd = L.findIndex(x => x.realmId === 'realm.kim-dan' && x.gate);
   assert.equal(L[kd].gate, 'season');
 });
+
+test('mệnh cách: đột phá phẩm Thiên → 3 lượt chọn; chọn đúng thẻ trong lượt; chỉ số và tu vi nhận đổi theo', async () => {
+  const L = ll.game.ladder, gate = L.findIndex(x => x.realmId === 'realm.luyen-khi' && x.gate);
+  const { c, id } = await freshAvatar('menhcach', 'path.the-tu');
+  ll.db.prepare('UPDATE ll_avatars SET step=?, qi=? WHERE id=?').run(gate, L[gate].qi, id);
+  addItems(ll.db, id, { 'item.truc-co-dan': 1, 'item.thanh-van-chi': 1, 'item.lang-vuong-nha': 1, 'item.huyen-giap-tam': 1 }, content);
+  const bt = await c('/api/ll/breakthrough', {});
+  assert.equal(bt.quality, 'thien'); assert.equal(bt.fatePicks, 3);
+  let p = bt.avatar.pendingFates;
+  assert.equal(p.left, 3); assert.equal(p.offer.length, 3);
+  assert.equal((await c('/api/ll/fate', { fateId: 'fate.khong-co' })).code, 'BAD_FATE');
+  const seen = new Set();
+  const before = bt.avatar.power;
+  let last;
+  for (let i = 0; i < 3; i++) {
+    const offer = last ? last.avatar.pendingFates.offer : p.offer;
+    for (const f of offer) { assert.equal(seen.has(f.id), false, 'không lặp thẻ giữa các lượt'); seen.add(f.id); }
+    assert.ok(offer.every(f => !['fate.kiem-cot', 'fate.linh-dong'].includes(f.id)), 'không ra thẻ của đạo lộ khác');
+    last = await c('/api/ll/fate', { fateId: offer[0].id });
+    assert.equal(last.ok, true, last.message);
+  }
+  assert.equal(last.avatar.pendingFates, null); assert.equal(last.avatar.fates.length, 3);
+  assert.notEqual(last.avatar.power, before);
+  assert.equal((await c('/api/ll/fate', { fateId: 'fate.luc-si' })).code, 'NO_OFFER');
+
+  // Ngộ Tính + Thiên Đạo Thù Cần: tu vi nhận từ ải +26% (dùng lại phân thân này — web giới hạn số tài khoản đăng ký mỗi IP)
+  const cur = JSON.parse(ll.db.prepare('SELECT payload FROM ll_avatars WHERE id=?').get(id).payload);
+  cur.fates = ['fate.ngo-tinh', 'fate.thien-dao-thu-can']; cur.stages = { 'stage.thanh-van.1': { stars: 3, clears: 1 } };
+  ll.db.prepare('UPDATE ll_avatars SET payload=? WHERE id=?').run(JSON.stringify(cur), id);
+  const sw = await c('/api/ll/battle/sweep', { stageId: 'stage.thanh-van.1' });
+  const base = Math.trunc(content.byId.get('stage.thanh-van.1').rewards.qi * 70 / 100);
+  assert.equal(sw.reward.qi, Math.trunc(base * 1260 / 1000)); assert.equal(sw.avatar.qiGain, 260);
+});

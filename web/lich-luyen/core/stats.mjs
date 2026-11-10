@@ -2,6 +2,7 @@
 // avatar: { pathId, cultivation: { step }, breakthroughs: [{ realmId, quality, points }], modifiers?: [{ source, stat, flat?, permille? }] }
 // Sau này thêm: linh căn, trang bị, tâm pháp, mệnh cách, đạo tâm, động phủ, tông môn, ưu đãi bản thể/Đạo Nghiệp — đều là modifiers.
 import { mulDiv } from './fixed.mjs';
+import { fateModifiers } from './fates.mjs';
 
 export const STAT_KEYS = Object.freeze(['hp', 'mp', 'atk', 'def', 'spd', 'crit', 'critDmg']);
 
@@ -34,7 +35,7 @@ export function computeStats(content, avatar) {
   breakdown.push({ source: path.id });
 
   // 4+. Nguồn khác: cộng thẳng trước, rồi cộng ‰ (theo thứ tự trong danh sách)
-  const mods = avatar.modifiers || [];
+  const mods = [...fateModifiers(content, avatar.fates), ...(avatar.modifiers || [])];
   for (const m of mods) if (m.flat) { s[m.stat] += m.flat; breakdown.push({ source: m.source, stat: m.stat, flat: m.flat }); }
   for (const m of mods) if (m.permille) { s[m.stat] = mulDiv(s[m.stat], 1000 + m.permille, 1000); breakdown.push({ source: m.source, stat: m.stat, permille: m.permille }); }
 

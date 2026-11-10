@@ -6,6 +6,7 @@ import { stacks, countOf, addItems, removeItems } from './inventory.mjs';
 import { computeStats } from '../core/stats.mjs';
 import { buildLadder, addQi, stepLabel, breakthrough, qualityFor } from '../core/progression.mjs';
 import { starsFor, stageReward, rollDrops } from '../core/loot.mjs';
+import { rollFateOffers, fateQiGain } from '../core/fates.mjs';
 import { TICK_RATE } from '../core/sim/inputs.mjs';
 import { t } from '../content/index.js';
 
@@ -43,6 +44,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
     if (target.requires.some(q => (inv[q.item] || 0) < q.count)) return fail('NEED_MATERIALS', BT_MESSAGE.NEED_MATERIALS);
     return null;
   }
+  const fateView = id => { const f = content.byId.get(id); return { id, name: t(content, f.nameKey), rarity: f.rarity, effects: f.effects.map(e => `${t(content, 'stat.' + e.stat)} ${(e.flat ?? e.permille) > 0 ? '+' : ''}${e.flat !== undefined ? (e.stat === 'crit' ? e.flat / 10 + '%' : e.stat === 'critDmg' ? e.flat / 10 + '%' : e.flat) : e.permille / 10 + '%'}`) }; };
   const itemView = (id, count) => { const it = content.byId.get(id); return { id, count, name: t(content, it.nameKey), desc: t(content, it.descKey), kind: it.kind, rarity: it.rarity }; };
 
   // Xem trước đột phá: cần gì, có gì, đạt phẩm nào.
@@ -91,6 +93,9 @@ export function createGame({ db, content, verifier, season = 1 }) {
       breakthroughs: (payload.breakthroughs || []).map(b => ({ realmName: t(content, content.byId.get(b.realmId).nameKey), quality: b.quality, points: b.points })),
       inventory: Object.entries(inv).map(([id, n]) => itemView(id, n)).sort((x, y) => y.rarity - x.rarity || x.name.localeCompare(y.name, 'vi')),
       breakthrough: breakthroughPreview(r, inv),
+      fates: (payload.fates || []).map(fateView),
+      pendingFates: payload.pendingFates ? { realmName: t(content, content.byId.get(payload.pendingFates.realmId).nameKey), left: payload.pendingFates.offers.length, offer: payload.pendingFates.offers[0].map(fateView) } : null,
+      qiGain: fateQiGain(content, payload.fates),
       stages: stageView(payload, now, r.step),
     };
   }
@@ -132,6 +137,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
     const payload = payloadOf(cur), prog = payload.stages ??= {}, p = prog[stage.id] ??= { stars: 0, clears: 0 };
     const firstClear = p.clears === 0;
     const base = stageReward(stage, stars, { sweep }), drops = rollDrops(stage, ref, { firstClear });
+    const gain = fateQiGain(content, payload.fates); if (gain) base.qi = Math.trunc(base.qi * (1000 + gain) / 1000);
     p.clears++; if (stars > p.stars) p.stars = stars;
     const grown = addQi({ step: cur.step, qi: cur.qi }, base.qi, ladder);
     const power = computeStats(content, avatarModel({ ...cur, step: grown.state.step }, payload)).power;
@@ -242,6 +248,12 @@ export function createGame({ db, content, verifier, season = 1 }) {
       try { if (Object.keys(consume).length) removeItems(db, cur.id, consume); }
       catch (e) { if (e.code === 'INSUFFICIENT') return fail('NEED_MATERIALS', BT_MESSAGE.NEED_MATERIALS); throw e; }
       payload.breakthroughs = [...(payload.breakthroughs || []), { realmId: bt.realmId, quality: bt.quality, points: bt.points, at: now }];
+      if (bt.fatePicks > 0) {
+        // Thẻ chưa chọn của lần trước (nếu có) bị thay — mỗi lần đột phá chỉ giữ một bộ chờ chọn.
+        const qIndex = target.qualities.findIndex(q => q.id === bt.quality), luck = qIndex * 40;
+        const offers = rollFateOffers(content, { seed: cur.id + ':' + payload.breakthroughs.length, owned: payload.fates || [], pathId: cur.path_id, picks: bt.fatePicks, luck });
+        payload.pendingFates = offers.length ? { realmId: bt.realmId, offers } : null;
+      }
       const power = computeStats(content, avatarModel({ ...cur, step: bt.state.step }, payload)).power;
       const upd = db.prepare('UPDATE ll_avatars SET step=?, qi=?, power=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?')
         .run(bt.state.step, bt.state.qi, power, JSON.stringify(payload), now, cur.id, cur.version);
@@ -250,8 +262,25 @@ export function createGame({ db, content, verifier, season = 1 }) {
     }
   }
 
+  function chooseFate(user, fateId, now = Date.now()) {
+    const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
+    const out = tx(db, () => {
+      const cur = byId(r.id), payload = payloadOf(cur), pend = payload.pendingFates;
+      if (!pend?.offers?.length) return fail('NO_OFFER', 'Không có mệnh cách nào đang chờ chọn.');
+      if (!pend.offers[0].includes(fateId)) return fail('BAD_FATE', 'Thẻ này không có trong lượt chọn.');
+      payload.fates = [...(payload.fates || []), fateId];
+      pend.offers.shift();
+      if (!pend.offers.length) payload.pendingFates = null;
+      const power = computeStats(content, avatarModel(cur, payload)).power;
+      const upd = db.prepare('UPDATE ll_avatars SET power=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?').run(power, JSON.stringify(payload), now, cur.id, cur.version);
+      if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
+      return { ok: true, fate: fateView(fateId) };
+    });
+    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
+  }
+
   return {
-    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now),
+    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now), chooseFate,
     createAvatar, startBattle, finishBattle, sweep, breakthrough: breakthroughNow,
     paths: () => content.paths.map(p => ({ id: p.id, name: t(content, p.nameKey), desc: t(content, p.descKey), kit: Object.fromEntries(Object.entries(p.kit).map(([slot, id]) => [slot, { id, name: t(content, id) }])), branches: p.branches.map(b => t(content, b.nameKey)) })),
   };

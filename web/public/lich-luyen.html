@@ -39,11 +39,15 @@
   @media (orientation: portrait) and (max-width: 700px) { #battle .rotate { display:grid; } }
   .stage { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--line); }
   .stage.locked { opacity:.5; }
+  .fates { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .fate { border:1px solid; border-radius:8px; padding:4px 8px; font-size:13px; background:#0a0e14; }
+  .fatePick { position:fixed; inset:0; display:none; place-items:center; background:rgba(5,8,12,.82); z-index:20; padding:16px; } .fatePick.on { display:grid; }
+  .fatePick .card { max-width:720px; width:100%; text-align:center; } .fatePick .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin-top:12px; }
+  .fateCard { background:#0a0e14; color:var(--text); border:2px solid; border-radius:12px; padding:14px 10px; font-weight:400; line-height:1.6; } .fateCard b { font-size:17px; } .fateCard .r { letter-spacing:3px; font-size:12px; }
   .mapHead { margin-top:12px; color:var(--gold); font-weight:700; font-size:14px; letter-spacing:.3px; } .stage .acts { display:flex; gap:6px; flex-shrink:0; }
   .stage button { padding:7px 12px; } button.ghost { background:transparent; color:var(--gold); border:1px solid var(--gold); }
   .inv { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:6px; margin-top:8px; }
   .item { display:flex; justify-content:space-between; background:#0a0e14; border:1px solid var(--line); border-radius:8px; padding:6px 9px; font-size:13px; }
-  .toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--panel); border:1px solid var(--gold); border-radius:10px; padding:10px 16px; opacity:0; transition:.25s; pointer-events:none; text-align:center; max-width:90vw; }
+  .toast { position:fixed; z-index:30; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px); background:var(--panel); border:1px solid var(--gold); border-radius:10px; padding:10px 16px; opacity:0; transition:.25s; pointer-events:none; text-align:center; max-width:90vw; }
   .toast.on { opacity:1; transform:translateX(-50%); }
   .hint { position:absolute; left:16px; bottom:14px; font-size:12px; color:var(--muted); pointer-events:none; }
 </style>
@@ -61,7 +65,9 @@
   <section class="screen" id="home">
     <h1 id="homeTitle">Lịch Luyện</h1>
     <div class="card"><div id="homeInfo"></div><div class="bar" style="margin:8px 0"><i id="qiBar"></i></div><div class="stats" id="homeStats"></div></div>
+    <div class="card"><b>Mệnh cách</b><div id="fateList" class="fates"></div></div>
     <div class="card" id="breakBox" style="display:none"></div>
+    <div id="fatePick" class="fatePick"><div class="card"><div class="title" style="font-weight:700;color:var(--gold);font-size:18px"></div><div class="muted" style="font-size:13px">Chọn một thẻ. Mệnh cách đi theo phân thân suốt mùa.</div><div class="cards"></div></div></div>
     <div class="card"><b>Bản đồ lịch luyện</b> <span class="muted" id="sweepInfo"></span><div id="stageList"></div></div>
     <div class="card"><b>Túi đồ</b><div id="invList" class="inv"></div></div>
     <div id="toast" class="toast"></div>

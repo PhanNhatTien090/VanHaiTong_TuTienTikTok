@@ -47,7 +47,9 @@ try {
     addItems(ll.db, av.id, { 'item.truc-co-dan': 1, 'item.thanh-van-chi': 1, 'item.lang-vuong-nha': 1, 'item.linh-thao': 7, 'item.yeu-lang-bi': 3, 'item.doc-xa-dam': 1 }, loadContent()); }
   await send('Page.reload'); await pause(2000); await shot('02b-dot-pha-tui-do');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await pause(600);
-  await shot('02c-dien-thoai-doc'); await evalJs('window.scrollTo(0,0);document.getElementById("home").scrollTop=900'); await pause(300); await shot('02d-dien-thoai-cuon');
+  await shot('02c-dien-thoai-doc');
+  await evalJs("[...document.querySelectorAll('#breakBox button')].find(b=>b.textContent==='Đột phá').click()"); await pause(1500); await shot('02e-chon-menh-cach');
+  await evalJs("document.querySelector('.fateCard').click()"); await pause(1200); await shot('02f-sau-chon'); await evalJs('window.scrollTo(0,0);document.getElementById("home").scrollTop=900'); await pause(300); await shot('02d-dien-thoai-cuon');
   await send('Emulation.setDeviceMetricsOverride', { width: 860, height: 400, deviceScaleFactor: 2, mobile: true }); await pause(600);
   await evalJs(`document.querySelector('#stageList button').click()`); await pause(1200);
   await shot('03-vao-tran');

@@ -165,3 +165,19 @@ test('bộ kiểm tra bắt lỗi vật phẩm, rơi đồ, yêu cầu đột ph
   bad(c => { c.realms[2].requires = [{ item: 'item.truc-co-dan', count: 0 }]; }, /requires.count/);
   bad(c => { c.items[0].kind = 'vu-khi'; }, /kind lạ/);
 });
+
+test('mệnh cách: rút tất định, không trùng, đúng đạo lộ; phẩm cao dễ ra thẻ hiếm; bộ kiểm tra bắt lỗi', async () => {
+  const { rollFateOffers } = await import('../lich-luyen/core/fates.mjs');
+  const fates = (await import('../lich-luyen/content/fates.js')).default;
+  const c = loadContent();
+  const a = rollFateOffers(c, { seed: 'x', pathId: 'path.kiem-tu', picks: 3 });
+  assert.deepEqual(a, rollFateOffers(c, { seed: 'x', pathId: 'path.kiem-tu', picks: 3 }));
+  assert.equal(new Set(a.flat()).size, 9);
+  const rare = luck => { let n = 0; for (let i = 0; i < 600; i++) n += rollFateOffers(c, { seed: 's' + i, pathId: 'path.kiem-tu', picks: 1, luck })[0].filter(id => c.byId.get(id).rarity >= 3).length; return n; };
+  assert.ok(rare(160) > rare(0) * 1.4, 'phẩm cao phải ra thẻ hiếm nhiều hơn rõ rệt');
+  const bad = (mutate, re) => { const r = raw(); r.fates = structuredClone(fates); mutate(r); assert.throws(() => validateContent(r, vi), re); };
+  bad(r => { r.fates[0].effects = [{ stat: 'may-man', permille: 10 }]; }, /chỉ số lạ/);
+  bad(r => { r.fates[0].effects = [{ stat: 'hp', permille: 10, flat: 5 }]; }, /đúng một/);
+  bad(r => { r.fates[0].path = 'path.dao-tu'; }, /đạo lộ không tồn tại/);
+  bad(r => { r.fates = r.fates.slice(0, 5); }, /ít hơn 9 thẻ/);
+});

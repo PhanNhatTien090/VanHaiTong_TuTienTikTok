@@ -8,6 +8,7 @@ import monsters from './monsters.js';
 import stages from './stages.js';
 import stats from './stats.js';
 import items from './items.js';
+import fates from './fates.js';
 import vi from './text/vi.js';
 
 const ID = /^[a-z]+(\.[a-z0-9]+(-[a-z0-9]+)*)+$/;
@@ -176,6 +177,26 @@ export function validateContent(c, text = vi) {
     for (const f of st.firstClear || []) { needItem(w + ' firstClear', f.item); if (!Number.isSafeInteger(f.count) || f.count < 1) err(w, 'firstClear.count phải ≥ 1'); }
   }
 
+  // Mệnh cách
+  const pathIds = new Set(c.paths.map(p => p.id));
+  (c.fates || []).forEach((f, i) => {
+    const w = `fate[${i}] ${f.id}`;
+    checkId(w, f.id); checkText(w, f.nameKey);
+    if (!Number.isSafeInteger(f.rarity) || f.rarity < 1 || f.rarity > 5) err(w, 'rarity phải trong 1..5');
+    if (!Number.isSafeInteger(f.weight) || f.weight < 1) err(w, 'weight phải ≥ 1');
+    if (f.path !== undefined && !pathIds.has(f.path)) err(w, `đạo lộ không tồn tại "${f.path}"`);
+    if (!f.effects?.length) err(w, 'cần ít nhất một hiệu ứng');
+    for (const e of f.effects || []) {
+      if (!FATE_STATS.has(e.stat)) err(w, `chỉ số lạ "${e.stat}"`);
+      const v = e.flat ?? e.permille;
+      if ((e.flat === undefined) === (e.permille === undefined)) err(w, 'mỗi hiệu ứng dùng đúng một trong flat/permille');
+      else if (!Number.isSafeInteger(v) || v === 0 || v < -500 || v > 1000) err(w, 'giá trị phải là số nguyên khác 0 trong -500..1000');
+      if (e.stat === 'qiGain' && e.flat !== undefined) err(w, 'qiGain chỉ dùng permille');
+    }
+  });
+  // Mỗi đạo lộ phải đủ thẻ cho lượt chọn nhiều nhất (3 lượt × 3 thẻ, không trùng)
+  for (const p of c.paths) if ((c.fates || []).filter(f => !f.path || f.path === p.id).length < 9) err('fates', `đạo lộ ${p.id} có ít hơn 9 thẻ`);
+
   // Chỉ số gốc
   for (const k of ['hp', 'mp', 'atk', 'def', 'spd', 'crit', 'critDmg']) nonNegInt('stats.base', k, c.stats?.base?.[k]);
   for (const [k, v] of Object.entries(c.stats?.growth || {})) if (!Number.isSafeInteger(v) || v < 100 || v > 130) err('stats.growth', `${k} phải trong 100..130`);
@@ -195,13 +216,14 @@ const ACTIONS = {
 const EFFECTS = { damage: ['mult'], knockback: ['distance'], stun: ['ticks'], burn: ['ticks', 'period', 'mult'], heal: ['mult'] };
 const AIS = new Set(['chase', 'kite']);
 const ITEM_KINDS = new Set(['material', 'breakthrough', 'pill']);
+const FATE_STATS = new Set(['hp', 'mp', 'atk', 'def', 'spd', 'crit', 'critDmg', 'qiGain']);
 
-export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages, stats, items }, text = vi) {
-  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [], stats: raw.stats || stats, items: raw.items || items });
+export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages, stats, items, fates }, text = vi) {
+  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [], stats: raw.stats || stats, items: raw.items || items, fates: raw.fates || fates });
   validateContent(c, text);
   const version = fnv64(stableJson(c));
   const byId = new Map();
-  for (const list of [c.realms, c.paths, c.roots, c.skills, c.monsters, c.stages, c.items]) for (const x of list) byId.set(x.id, x);
+  for (const list of [c.realms, c.paths, c.roots, c.skills, c.monsters, c.stages, c.items, c.fates]) for (const x of list) byId.set(x.id, x);
   return deepFreeze({ ...c, version, byId, text });
 }
 

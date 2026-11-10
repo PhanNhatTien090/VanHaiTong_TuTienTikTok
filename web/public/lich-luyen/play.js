@@ -79,6 +79,7 @@ function renderHome() {
   $('qiBar').style.width = Math.min(100, a.qi * 100 / a.qiNeed) + '%';
   const s = a.stats;
   $('homeStats').innerHTML = [['Khí huyết', s.hp], ['Linh lực', s.mp], ['Công', s.atk], ['Thủ', s.def], ['Tốc', s.spd], ['Bạo kích', (s.crit / 10) + '%']].map(([k, v]) => `<div><span class="muted">${k}</span><br><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('');
+  renderFates(a);
   renderBreakthrough(a);
   renderStages(a);
   renderInventory(a);
@@ -86,6 +87,22 @@ function renderHome() {
 }
 const stars = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 const RARITY = ['', '#b9b9b9', '#6fd36f', '#5aa9ff', '#c77dff', '#ffb347'];
+function renderFates(a) {
+  const owned = $('fateList');
+  owned.innerHTML = a.fates.length ? a.fates.map(f => `<span class="fate" style="border-color:${RARITY[f.rarity]}" title="${f.effects.join(' · ')}"><b style="color:${RARITY[f.rarity]}">${f.name}</b> <span class="muted">${f.effects.join(' · ')}</span></span>`).join('') : '<span class="muted">Đột phá đại cảnh để nhận mệnh cách.</span>';
+  if (a.qiGain) owned.insertAdjacentHTML('beforeend', `<div class="muted" style="margin-top:6px">Tu vi nhận thêm: +${a.qiGain / 10}%</div>`);
+  const box = $('fatePick'), p = a.pendingFates;
+  if (!p) { box.classList.remove('on'); return; }
+  box.classList.add('on');
+  box.querySelector('.title').textContent = `Viết lại vận mệnh · ${p.realmName}${p.left > 1 ? ` · còn ${p.left} lượt` : ''}`;
+  const cards = box.querySelector('.cards'); cards.innerHTML = '';
+  for (const f of p.offer) {
+    const el = document.createElement('button'); el.className = 'fateCard'; el.style.borderColor = RARITY[f.rarity];
+    el.innerHTML = `<div class="r" style="color:${RARITY[f.rarity]}">${'◆'.repeat(f.rarity)}</div><b style="color:${RARITY[f.rarity]}">${f.name}</b><div>${f.effects.join('<br>')}</div>`;
+    el.onclick = async () => { for (const b of cards.children) b.disabled = true; const r = await api('fate', { fateId: f.id }); if (!r.ok) { say(r.message); for (const b of cards.children) b.disabled = false; return; } state.avatar = r.avatar; renderHome(); };
+    cards.append(el);
+  }
+}
 function renderBreakthrough(a) {
   const box = $('breakBox'), p = a.breakthrough;
   if (!p || p.gate !== 'breakthrough') { box.style.display = 'none'; return; }
@@ -98,7 +115,7 @@ function renderBreakthrough(a) {
   box.innerHTML = `<b>Đột phá ${p.realmName}</b><div style="margin:6px 0">${p.qiReady ? '<span style="color:var(--ok)">Tu vi đã Viên Mãn</span>' : '<span class="muted">Cần tu vi Viên Mãn</span>'} · Bắt buộc: ${need}</div><div class="muted" style="font-size:13px">Nâng phẩm (mỗi loại có là +1 bậc): ${boosts}<br>${ladder}</div><div style="margin-top:6px">${q}</div>${p.trial ? `<div style="margin-top:6px">Thử thách: <b>${p.trial}</b> · sống sót 48 giây dưới 9 đạo thiên lôi. Thất bại mất 10% tu vi, giữ vật phẩm.${p.trialFails ? ` <span class="muted">(đã thất bại ${p.trialFails} lần)</span>` : ''}</div>` : ''}`;
   if (p.trialStage) { const go = document.createElement('button'); go.textContent = 'Độ ' + p.trial; go.disabled = !p.trialReady; go.style.marginTop = '8px'; go.onclick = () => startBattle(p.trialStage); box.append(go); return; }
   const bt = document.createElement('button'); bt.textContent = 'Đột phá'; bt.disabled = !p.canBreak; bt.style.marginTop = '8px';
-  bt.onclick = async () => { bt.disabled = true; const r = await api('breakthrough', {}); if (!r.ok) { alert(r.message); bt.disabled = false; return; } state.avatar = r.avatar; alert(`Đột phá thành công: ${r.realmName} ${r.qualityName} · +${r.points} điểm thuộc tính`); renderHome(); };
+  bt.onclick = async () => { bt.disabled = true; const r = await api('breakthrough', {}); if (!r.ok) { say(r.message); bt.disabled = false; return; } state.avatar = r.avatar; say(`Đột phá thành công: ${r.realmName} ${r.qualityName} · +${r.points} điểm thuộc tính`); renderHome(); };
   box.append(bt);
 }
 function renderStages(a) {
@@ -112,7 +129,7 @@ function renderStages(a) {
     const acts = row.querySelector('.acts');
     if (st.unlocked) { const go = document.createElement('button'); go.textContent = 'Vào ải'; go.onclick = () => startBattle(st.id); acts.append(go); }
     else { const lk = document.createElement('span'); lk.className = 'muted'; lk.textContent = '🔒'; acts.append(lk); }
-    if (st.sweepable && a.stages.sweepsLeft > 0) { const sw = document.createElement('button'); sw.textContent = 'Quét'; sw.className = 'ghost'; sw.onclick = async () => { sw.disabled = true; const r = await api('battle/sweep', { stageId: st.id }); if (!r.ok) { alert(r.message); sw.disabled = false; return; } state.avatar = r.avatar; showReward('Quét ' + st.name, r.reward); renderHome(); }; acts.append(sw); }
+    if (st.sweepable && a.stages.sweepsLeft > 0) { const sw = document.createElement('button'); sw.textContent = 'Quét'; sw.className = 'ghost'; sw.onclick = async () => { sw.disabled = true; const r = await api('battle/sweep', { stageId: st.id }); if (!r.ok) { say(r.message); sw.disabled = false; return; } state.avatar = r.avatar; showReward('Quét ' + st.name, r.reward); renderHome(); }; acts.append(sw); }
     list.append(row);
   }
 }
@@ -120,6 +137,8 @@ function renderInventory(a) {
   const box = $('invList');
   box.innerHTML = a.inventory.length ? a.inventory.map(it => `<div class="item" title="${it.desc}"><span style="color:${RARITY[it.rarity]}">${it.name}</span><b>×${it.count}</b></div>`).join('') : '<span class="muted">Túi trống. Vượt ải để nhặt đồ.</span>';
 }
+// Thông báo nổi thay cho alert() (alert chặn trang, xấu trên điện thoại).
+function say(msg) { const el = $('toast'); el.textContent = msg; el.classList.add('on'); clearTimeout(showReward.t); showReward.t = setTimeout(() => el.classList.remove('on'), 3500); }
 function showReward(title, rw) {
   const drops = (rw.drops || []).map(d => `<span style="color:${RARITY[d.rarity]}">${d.name} ×${d.count}</span>`).join(', ');
   $('toast').innerHTML = `<b>${title}</b><br>+${fmt(rw.qi)} tu vi · +${fmt(rw.linhThach)} linh thạch${drops ? '<br>' + drops : ''}`;
@@ -159,7 +178,7 @@ function readInput() {
 let run = null;
 async function startBattle(stageId) {
   const r = await api('battle/start', { stageId });
-  if (!r.ok) return alert(r.message);
+  if (!r.ok) return say(r.message);
   const battle = createBattle(content, r.setup);
   run = { id: r.battleId, battle, frames: [], acc: 0, last: performance.now(), hp: new Map(), floats: [] };
   $('result').classList.remove('on'); $('hint').style.display = '';
