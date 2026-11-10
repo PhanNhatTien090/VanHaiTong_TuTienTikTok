@@ -97,3 +97,16 @@ html body.overlay #phoneHudRight{width:33%;max-height:none}
 html body.overlay #phoneHudRight #giftBoard.gift-board.gift-rule-card:not([hidden]){display:flex!important;width:auto!important;max-width:100%!important;font-size:clamp(7px,1.12cqw,13px)!important;padding:2px 6px 3px!important;gap:0;border-radius:8px;line-height:1.05}
 html body.overlay #phoneHudRight #giftBoard.gift-rule-card .grc-gift .gift-ico{height:1.9em}
 html body.overlay #phoneHudRight #giftBoard.gift-rule-card .grc-title{font-size:.72em}
+
+/* 10/11 (chủ game): bảng lệnh thành DẢI NGANG SÁT ĐÁY, 3 cột × 2 hàng, nằm dưới hàng ghế cuối (ghế tới 85% chiều cao) — không che ai.
+   Tiêu đề trang + gợi ý sự kiện nằm trên một dòng nhỏ. Bảng vinh danh (góc trái đáy) hiện thì dải thu vào nửa phải, 2 cột. */
+html body.overlay .scene-shell>#basicCommands.corner-command-guide{left:1.5%!important;right:1.5%!important;width:auto!important;max-width:none!important;bottom:.5%!important;max-height:11.5%;overflow:hidden;padding:6px 12px 7px!important;font-size:clamp(10px,2.25cqw,25px)!important;line-height:1.22!important;border-radius:10px}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide>b{display:block!important;margin:0 0 3px!important;font-size:.82em!important;color:#efd397!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide>b em{font-style:normal;color:#9fe8cf;font-weight:700}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide ol{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:2px 14px!important}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide li,html body.overlay .scene-shell>#basicCommands.corner-command-guide li:last-child{grid-column:auto!important;display:flex!important;gap:.4em;align-items:baseline;white-space:nowrap;overflow:hidden;border:0!important;padding:0!important}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide code{flex:0 0 auto;white-space:nowrap}
+html body.overlay .scene-shell>#basicCommands.corner-command-guide span{display:inline!important;font-size:.86em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;color:#fff6df}
+html body.overlay .scene-shell:has(#honorBanner:not([hidden])) #basicCommands.corner-command-guide{left:48%!important;font-size:clamp(9px,2.05cqw,23px)!important}
+html body.overlay .scene-shell:has(#honorBanner:not([hidden])) #basicCommands.corner-command-guide span{display:none!important}
+html body.overlay .scene-shell:has(#honorBanner:not([hidden])) #basicCommands.corner-command-guide ol{grid-template-columns:repeat(2,minmax(0,1fr))!important}

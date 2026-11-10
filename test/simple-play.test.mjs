@@ -34,15 +34,15 @@ test('waiting participants expire and old invitation can be accepted using one w
 });
 test('live keeps five stable rows (hearts + chat first), no admission command, with a short event hint',()=>{
  const s={players:[],realms:Array(19),serverNow:N},base=simpleSteps(s);
- assert.deepEqual(base.rows.map(r=>r.cmd),['❤ thả tim','💬 trò chuyện','đột phá','học · rèn','giới tính nam/nữ']);
- assert.equal(base.rows.length,5);assert.ok(base.rows.every(r=>!r.cmd.includes('nhapmon')));
+ assert.deepEqual(base.rows.map(r=>r.cmd),['❤ thả tim','💬 trò chuyện','đột phá','học · rèn','giới tính nam/nữ','trang bị']);
+ assert.equal(base.rows.length,6);assert.ok(base.rows.every(r=>!r.cmd.includes('nhapmon')));
  assert.match(simpleSteps({...s,raceStatus:{phase:'registration'}}).hint,/gõ bay/);
  assert.match(simpleSteps({...s,raceStatus:{phase:'running'}}).hint,/phi kiếm/);
  assert.match(simpleSteps({...s,boss:{hp:10,endsAt:N+1000}}).hint,/thả tim/);
  assert.deepEqual(simpleSteps({...s,raceStatus:{phase:'running'}}).rows,base.rows);
- // Xoay vòng: trang chính xen kẽ lệnh hằng ngày / đồng môn; trang nào cũng ≤5 dòng.
- assert.deepEqual([0,1,2,3,4].map(i=>simpleSteps(s,i).title),['CÁCH CHƠI','LỆNH HẰNG NGÀY','CÁCH CHƠI','ĐỒNG MÔN','CÁCH CHƠI']);
- assert.ok([1,3].every(i=>simpleSteps(s,i).rows.length<=5));
+ // Xoay vòng: trang chính xen kẽ lệnh hằng ngày / đồng môn / sự kiện; trang nào cũng ≤6 dòng (dải 3 cột × 2 hàng).
+ assert.deepEqual([0,1,2,3,4,5,6].map(i=>simpleSteps(s,i).title),['CÁCH CHƠI','LỆNH HẰNG NGÀY','CÁCH CHƠI','ĐỒNG MÔN','CÁCH CHƠI','SỰ KIỆN','CÁCH CHƠI']);
+ assert.ok([0,1,3,5].every(i=>simpleSteps(s,i).rows.length<=6));
  assert.ok(simpleSteps(s,1).rows.some(r=>r.cmd==='điểm danh')&&simpleSteps(s,3).rows.some(r=>r.cmd==='kết duyên + tên'));
 });
 
