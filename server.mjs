@@ -8,7 +8,7 @@ import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
-import {startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,controlLanternEvent} from './engine.mjs';
+import {startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent} from './engine.mjs';
 import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
@@ -213,6 +213,7 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='stop-war')result=stopWar(w,now);
       else if(b.action==='start-alchemy')result=startAlchemy(w,now);
       else if(b.action==='stop-alchemy')result=stopAlchemy(w,now);
+      else if(b.action==='tease-pair')result=teasePair(w,b.a,b.b,now); // 10/11: chọc ghẹo 2 người (chỉ hiệu ứng)
       else if(b.action==='start-maze')result=startMaze(w,now);
       else if(b.action==='stop-maze')result=stopMaze(w,now);
       else if(b.action==='start-tournament')result=startTournament(w,now);

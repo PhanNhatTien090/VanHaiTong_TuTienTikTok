@@ -27,6 +27,7 @@ import {recordEventGiftFx} from './event-gift-fx.mjs';
 import {flowerHearts,finishFlowerHearts,bossHearts} from './heart-events.mjs';
 import {raceHearts} from './sword-race.mjs';
 import {warActive,startWar as beginWar,stopWar as endWar,tickWar,warCommand,warHearts,warGift,warView,warStageIds} from './sect-war.mjs';
+import {teasePair as beginTease} from './tease.mjs';
 import {startMaze as beginMaze,stopMaze as endMaze,tickMaze,mazeCommand,mazeGift,mazeView,mazeActive} from './maze.mjs';
 import {startAlchemy as beginAlchemy,stopAlchemy as endAlchemy,tickAlchemy,alchemyCommand,alchemyHearts,alchemyGift,alchemyView,alchemyStageIds,alchemyActive} from './alchemy.mjs';
 import {DIVINE_ROLES,rankDivineRoles} from './public/divine-wardrobe.js';
@@ -1249,6 +1250,7 @@ export const stopAlchemy=(w,now=Date.now())=>endAlchemy(w,now);
 const mazeContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>requiredQi(p)/progressionMult(p)};
 export const startMaze=(w,now=Date.now())=>beginMaze(w,now,mazeContext);
 export const stopMaze=(w,now=Date.now())=>endMaze(w,now);
+export const teasePair=(w,a,b,now=Date.now())=>beginTease(w,a,b,now,{emit});
 export const stopRace=(w,now=Date.now())=>endRace(w,now,socialContext);
 
 export const startBondFestival=(w,now=Date.now())=>beginBondFestival(w,now,socialContext);

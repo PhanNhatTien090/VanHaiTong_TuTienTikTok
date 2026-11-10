@@ -61,6 +61,8 @@ export function speechPlan(e){
   if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới đến Vân Hải Tông!`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
+  // 10/11: chọc ghẹo (tease.mjs) — tông sư trêu, không phải kết duyên thật
+  if(e.teasePair){const [A,B]=(e.teaseNames||[]).map(n=>sayName(n)||'đạo hữu');return [say('tongsu',pickBy(seed,[`Ồ! ${A} với ${B} hình như có tình ý với nhau nha!`,`Tông môn đồn rằng ${A} để ý ${B} lâu rồi đó!`,`${A} với ${B}, nhìn xứng đôi ghê!`,`Có ai thấy ${A} cứ nhìn ${B} mãi không!`,`Trời se duyên rồi! ${A} và ${B} đó!`]))];}
   if(e.sectMasterAward)return [say('tongsu',`Tông môn tôn phong ${who} làm Tông chủ! Toàn bộ pháp bảo, bí pháp và trang phục đã khai mở!`)];
   if(e.engagementAction==='follow')return [];
   if(e.engagementAction==='share')return [];
