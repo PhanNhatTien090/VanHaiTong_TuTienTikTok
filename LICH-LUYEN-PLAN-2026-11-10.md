@@ -1,25 +1,53 @@
-# LỊCH LUYỆN — kế hoạch game web riêng (10/11/2026)
+# LỊCH LUYỆN — kế hoạch game web riêng (bản 2, 10/11/2026)
 
 Bản web tách thành hai phần:
 
-1. **Hồ sơ LIVE**: xem và tùy chỉnh nhân vật LIVE (skin, pháp bảo, linh thú…). Không cày tu vi ở đây.
-2. **Lịch luyện**: game tu tiên riêng của web. Người chơi bấm "Đi lịch luyện" thì tạo **phân thân**, chơi từ đầu, có cảnh giới, sức mạnh và trang bị riêng.
+1. **Hồ sơ LIVE**: xem và tùy chỉnh nhân vật LIVE (skin, pháp bảo, linh thú…). Không cày tu vi ở đây. Người chơi không dùng TikTok thì không thấy phần này.
+2. **Lịch luyện**: game tu tiên **đánh tay** riêng của web. Bấm "Đi lịch luyện" thì tạo **phân thân**, chơi từ đầu: cảnh giới, chiêu, đồ, tông môn riêng.
 
-Mục tiêu của tài liệu này là dựng **nền cứng**: sau này thêm đạo lộ (class), cảnh giới, bản đồ, quái, đồ… chủ yếu bằng **thêm dữ liệu**, không phải sửa lõi.
+Mục tiêu: dựng **nền cứng**. Sau này thêm class, cảnh giới, map, quái, chiêu, kỳ ngộ… chủ yếu bằng **thêm dữ liệu**, không sửa lõi.
+
+## 0. Những điều chủ game đã chốt
+
+| Điểm | Chốt |
+|---|---|
+| Kiểu đánh | **Đánh tay**: nút di chuyển + nút đánh + nút chiêu, như bí cảnh web hiện tại |
+| Class lúc ra mắt | **3 đạo lộ** |
+| Tên cảnh giới | **Theo LIVE**. Luyện Khí tầng 1 → tầng 9 → Viên Mãn; từ Trúc Cơ trở đi: Sơ kỳ → Trung kỳ → Hậu kỳ → Viên Mãn |
+| Mùa giải | **6 tuần** |
+| Người chơi không dùng TikTok | Chơi trọn vẹn, công bằng (mục 2.1) |
 
 ---
 
-## 1. Hiện trạng web và vấn đề
+## 1. Học từ Quỷ Cốc Bát Hoang
 
-| Hiện trạng | Vấn đề cho game riêng |
-|---|---|
-| Web mượn nhân vật LIVE qua lại (`web/cloud/play-sessions.mjs`, `live-transfers.mjs`: `acquire → web → release`) | Phức tạp, dễ kẹt; mỗi lần deploy phải chờ bàn giao xong |
-| Tu vi web cộng chung với LIVE; thưởng sự kiện LIVE đẩy tu vi rất nhanh | Người chơi chạm trần sớm, web không cân bằng được |
-| Trận đánh do trình duyệt tự báo thắng (`finishTower` chỉ kiểm thời gian tối thiểu) | Có xếp hạng là có gian lận |
-| Boss, vùng, tháp, vật liệu viết cứng trong `web/dungeon.mjs`, `web/progress.mjs` | Thêm class, map, cảnh giới phải sửa code rải rác |
-| Dữ liệu web nằm trong `p.web` của hồ sơ LIVE (JSON trong bảng `players`) | Không truy vấn, xếp hạng, giao dịch an toàn được |
+Mình đã đọc **bảng cấu hình gốc** của bản cài trên máy (`C:\GAME\quycocbathoang\…\Mod\modFQA\配置修改教程\配置（只读）Json格式`, 743 bảng JSON chính thức cho người làm mod). Đây là cách họ làm, không phải đoán.
 
-Giữ lại được: hạ tầng VPS + SQLite + deploy, tài khoản đăng nhập, giao diện PixiJS, đồ họa boss/linh thú, phần đánh bí cảnh (làm lớp hiển thị).
+### 1.1 Họ làm gì
+
+| Hệ thống | Cách Quỷ Cốc làm (số liệu từ bảng) | Lấy gì cho Lịch luyện |
+|---|---|---|
+| **Cảnh giới** (`RoleGrade`, 44 dòng) | 10 đại cảnh × Sơ/Trung/Hậu kỳ. Tu vi cần tăng khoảng 1,3–1,6 lần mỗi bậc. Lên đại cảnh tăng thọ nguyên, điểm thuộc tính | Bảng cảnh giới là dữ liệu; đường cong tăng đều |
+| **Phẩm chất đột phá** | Trúc Cơ có 3 phẩm (Phàm/Địa/Thiên), Kim Đan 5 phẩm, Nguyên Anh 3 phẩm. Gom **càng nhiều vật phẩm đột phá** thì phẩm càng cao → **nhiều điểm thuộc tính** (Trúc Cơ: 12 → 16 → 20) và **nhiều lượt chọn mệnh cách** (1 → 2 → 3) | **Lõi đáng học nhất.** Đột phá không chỉ "đủ tu vi là lên" mà là một mục tiêu phải chuẩn bị |
+| **Mệnh cách / khí vận** (`FateFeature` 201, `RoleCreateFeature` 1.148) | Mỗi lần đột phá đại cảnh chọn 1 trong vài **mệnh cách** ngẫu nhiên. Khí vận tiên thiên khi tạo nhân vật; khí vận hậu thiên có thời hạn, đến từ kỳ ngộ | Mỗi lần đột phá là một lần "viết lại vận mệnh"; hai người cùng class thành hai lối chơi |
+| **Ô chiêu** | **Võ kỹ** (đánh chính), **Tuyệt kỹ** (đặc biệt), **Thân pháp** (lướt né), **Thần thông** (tối thượng, mở muộn), **Tâm pháp** (bị động); 5 ô vật phẩm chiến đấu (đan, phù) | Dùng đúng bộ khung này; vừa với 4–5 nút trên điện thoại |
+| **Tiền tố bí tịch** (`BattleSkillPrefixValue` 1.657) | Mỗi cuốn bí tịch có **tiền tố ngẫu nhiên** theo phẩm, tỉ lệ khác nhau theo phẩm (11 phẩm), cần tư chất để mở. Cùng một chiêu mỗi cuốn mỗi khác | Vòng "săn bí tịch tốt" để lặp lại lâu không chán |
+| **Linh căn** | 6 hệ: Hỏa, Thủy, Lôi, Phong, Thổ, Mộc. Tư chất vũ khí: Kiếm, Đao, Thương, Quyền, Chưởng, Chỉ | Linh căn quyết định Tâm pháp hợp; tư chất vũ khí thay bằng đạo lộ |
+| **Đạo Tâm** (`TaoistHeart`, 21 loại) | Chọn một đạo tâm (Vô Danh, Ý Chí, Thuận Thiên, Thiện…). Mỗi đạo tâm có **luật cấm** (làm trái thì mất điểm), mở **nhóm mệnh cách riêng** khi đột phá; tăng bằng luận đạo, tỷ thí, song tu | Đạo Tâm ở Kim Đan: vừa là lựa chọn nhập vai, vừa là đường build |
+| **Kỳ ngộ** (`WorldFortuitousEventBase` 830 + `FortuitousEvent` 776) | Hàng nghìn sự kiện ngẫu nhiên khi đi trên bản đồ, có lựa chọn và kết quả | Nội dung rẻ (chữ + lựa chọn), làm thế giới sống; thêm bằng dữ liệu |
+| **Tông môn** | Bậc: Tân thủ → Ngoại môn → Đệ tử → Chân truyền → Trưởng lão → Đại trưởng lão → Tông chủ. **Lên chức bằng thách đấu người đang giữ chức**; nhiệm vụ tông (`SchoolTaskTypeBase` 241 loại) | Thang chức + thách đấu là cách giữ chân xã hội rất hay |
+| **Kỹ nghệ** | Luyện đan (168 công thức), luyện khí, họa phù, phong thủy, hái thuốc, khai khoáng | Thêm dần sau, cùng một khung "nghề" |
+| **Pháp bảo có khí linh** (`ArtifactSpriteTalent` 1.408) | Pháp bảo có linh, có thiên phú, có đối thoại | Ý tưởng cho pháp bảo cao cấp mùa sau |
+| **Cách làm nội dung** | Mọi thứ là **bảng Excel → JSON** có ID số; chữ hiển thị tách riêng một bảng `LocalText` (Trung/Phồn/Anh) | Nội dung là dữ liệu; chữ tách bảng riêng để sau dịch tiếng Anh |
+| **Chuỗi chiêu** | Chiêu → đòn → hiệu ứng → đạn bay/vệt (`BattleSkillBase → BattleSkillAttack → BattleSkillEffect → BattleMissile`) | Đúng mô hình "ghép khối" cho chiêu (mục 3.4) |
+
+Người chơi khen nhiều nhất: **đột phá như viết lại vận mệnh, build đa dạng, kỳ ngộ ngẫu nhiên nên chơi lại không chán**. Chỗ bị chê: chiến đấu chưa hay, đột phá về sau lâu.
+
+### 1.2 Không lấy
+
+- **Thọ nguyên đếm ngược và chết là hết.** Hợp game chơi một mình, không hợp game online có mùa.
+- **Thế giới NPC tự sống phức tạp.** Quá nặng cho VPS và cho một người làm; thay bằng kỳ ngộ + người chơi thật.
+- **Tên, nhân vật, hình ảnh của Quỷ Cốc.** Chỉ học cách thiết kế; mọi tên và hình tự sáng tác.
 
 ---
 
@@ -27,300 +55,358 @@ Giữ lại được: hạ tầng VPS + SQLite + deploy, tài khoản đăng nh�
 
 | Dữ liệu | Chủ | Ghi chú |
 |---|---|---|
-| Nhân vật LIVE (cảnh giới, tu vi, skin sở hữu, linh thú, quà) | **Máy LIVE** | Web chỉ đọc qua đồng bộ như hiện tại |
-| Lựa chọn trang phục của hồ sơ LIVE | Máy LIVE | Web gửi "yêu cầu đổi skin" nhỏ qua agent, không mượn cả nhân vật (giai đoạn 3) |
-| **Phân thân** (cấp, cảnh giới web, đạo lộ, linh căn, trang bị, túi đồ, tiền tệ web, tông môn web) | **Server web** | Chỉ server web ghi. Không cần chuyển quyền |
-| Tiên Ngọc (từ quà TikTok) | Tính từ LIVE, tiêu trên web | Giữ cách hiện tại: tổng coin quà − đã tiêu, có sổ cái |
-| Danh hiệu lịch luyện hiện trên LIVE | Web tạo, LIVE hiển thị | Gửi một chiều qua agent; chỉ trang trí, không cộng sức mạnh LIVE |
+| Nhân vật LIVE | **Máy LIVE** | Web chỉ đọc qua đồng bộ |
+| **Phân thân** và mọi thứ của Lịch luyện | **Server web** | Chỉ server web ghi; không mượn nhân vật qua lại |
+| Tiên Ngọc từ quà TikTok | Tính từ LIVE, tiêu trên web | Có sổ cái |
+| Danh hiệu lịch luyện hiện trên LIVE | Web tạo, LIVE hiển thị | Chỉ trang trí |
 
-Luật: **phân thân không bao giờ cộng tu vi cho LIVE, LIVE không cộng thẳng sức mạnh cho phân thân.** Ưu đãi cho người chơi LIVE lâu năm là **ưu đãi bản thể** (mục 5.3), có trần.
+Luật: **phân thân không cộng tu vi cho LIVE; LIVE không cộng thẳng sức mạnh cho phân thân.**
 
-### 2.1 Hai kiểu người chơi — Lịch luyện phải trọn vẹn cho cả hai
+### 2.1 Người chơi TikTok và người chơi chỉ web
 
-| | Người chơi TikTok (có hồ sơ LIVE) | Người chơi **chỉ web** (không dùng TikTok) |
+| | Có TikTok | Chỉ web |
 |---|---|---|
-| Đăng ký | Tài khoản web + liên kết TikTok (như hiện tại) | Tài khoản web thường (đã có: `webOnly`) |
-| Phần "Hồ sơ LIVE" | Có | **Ẩn**; chỉ có nút "Liên kết TikTok" (tùy chọn) |
-| Lịch luyện | Chơi đầy đủ | **Chơi đầy đủ, không thiếu tính năng nào** |
-| Ưu đãi bản thể | Có, trần +10% tu vi | Không có; bù bằng **Đạo Tâm** (mục 5.3) cùng trần |
-| Tiên Ngọc | Từ quà TikTok + kiếm trong game | **Kiếm trong game** (thành tựu, mốc cảnh giới, tháp, mùa giải, đăng nhập 7 ngày) |
-| Skin | Skin LIVE + skin phân thân | Skin phân thân (rơi, thành tựu, mùa giải, cửa hàng Tiên Ngọc) |
-| Xếp hạng, tông môn, Luận Kiếm | Chung một máy chủ, chung bảng | Chung một máy chủ, chung bảng |
+| Lịch luyện | Đầy đủ | **Đầy đủ** |
+| Hồ sơ LIVE | Có | Ẩn; nút "Liên kết TikTok" tùy chọn |
+| Ưu đãi | **Bản thể**: +1% tu vi mỗi 2 cảnh LIVE, tối đa +10% | **Đạo Nghiệp**: từ thành tựu, cùng trần +10% |
+| Tiên Ngọc | Quà TikTok + kiếm trong game | Kiếm trong game (có trần tuần) |
+| Skin | Skin LIVE + skin phân thân | Skin phân thân |
+| Máy chủ, xếp hạng, tông môn | Chung | Chung |
 
-Nguyên tắc thiết kế:
-
-- **Không có TikTok vẫn lên được đỉnh.** Mọi nội dung sức mạnh mở bằng chơi; TikTok chỉ cho thêm trang trí + tiện ích + chênh lệch nhỏ có trần.
-- **Không tính năng nào gọi bắt buộc tới hồ sơ LIVE.** Mã Lịch luyện coi `live_player_id` là có thể rỗng; test chạy cả hai trường hợp.
-- **Liên kết sau vẫn được.** Người chơi web liên kết TikTok về sau thì phân thân giữ nguyên, chỉ thêm skin LIVE + ưu đãi bản thể (không cộng dồn với Đạo Tâm, lấy cái cao hơn).
-- **Lịch luyện chạy được khi máy LIVE tắt hoàn toàn**: người chơi chỉ web không bị ảnh hưởng.
-- Đăng ký: tên tài khoản + mật khẩu như hiện tại; sau thêm đăng nhập Google để giảm quên mật khẩu (tùy chọn, giai đoạn 3). Chống tạo nhiều nick lấy quà tân thủ: giới hạn tạo tài khoản theo IP/ngày, quà tân thủ lớn mở dần theo ngày chơi.
+- Không TikTok vẫn lên đỉnh được. TikTok chỉ thêm trang trí, tiện ích và chênh lệch nhỏ có trần.
+- Có cả Bản thể lẫn Đạo Nghiệp thì lấy cái cao hơn, không cộng dồn.
+- Mã Lịch luyện coi liên kết LIVE là **có thể rỗng**; test chạy cả hai kiểu tài khoản.
+- Lịch luyện chạy được khi máy LIVE tắt.
+- Chống nick ảo: giới hạn tạo tài khoản theo IP mỗi ngày; quà tân thủ mở dần theo ngày chơi.
 
 ---
 
 ## 3. Kiến trúc kỹ thuật
 
-### 3.1 Thư mục và phân lớp
+### 3.1 Thư mục
 
 ```
 web/lich-luyen/
-  content/            ← DỮ LIỆU: cảnh giới, đạo lộ, chiêu, đồ, quái, map, rơi đồ, nhiệm vụ…
-    realms.js  paths.js  roots.js  skills.js  items.js  affixes.js
-    monsters.js  maps.js  drops.js  quests.js  buildings.js  seasons.js
-    index.js          ← gom + kiểm tra toàn bộ khi khởi động
-  core/               ← LUẬT CHƠI THUẦN (không đọc ghi đĩa, không Date.now, không Math.random)
-    stats.mjs  combat.mjs  rng.mjs  progression.mjs  loot.mjs
-    economy.mjs  idle.mjs  formulas.mjs
-  service/            ← giao tiếp DB + API
-    db.mjs  migrations/  avatars.mjs  inventory.mjs  ledger.mjs
-    battles.mjs  ranking.mjs  sect.mjs  mail.mjs  api.mjs
-  sim/                ← công cụ cân bằng
-    balance.mjs       ← giả lập người chơi 30–60 ngày
-web/public/lich-luyen/ ← giao diện (chỉ hiển thị + gửi lệnh)
-test/lich-luyen/      ← test
+  content/                 DỮ LIỆU (thêm nội dung = sửa ở đây)
+    realms.js              cảnh giới + tiểu cảnh + phẩm đột phá
+    paths.js               đạo lộ (class)
+    roots.js               linh căn
+    skills/                chiêu theo đạo lộ + tâm pháp + thần thông
+    prefixes.js            tiền tố bí tịch
+    fates.js               mệnh cách, khí vận
+    hearts.js              đạo tâm
+    items.js affixes.js sets.js
+    monsters.js            quái + AI hành vi
+    maps/                  mỗi châu một file: nút bản đồ, ải, boss, điểm khai thác
+    events/                kỳ ngộ (sự kiện có lựa chọn)
+    quests.js buildings.js seasons.js
+    text/vi.js             mọi câu chữ hiển thị (sau thêm en.js)
+    balance/*.csv          bảng số liệu cân bằng (mở được bằng Excel)
+    index.js               gom + kiểm tra toàn bộ
+  core/                    LUẬT CHƠI THUẦN, chạy được cả trình duyệt lẫn server
+    rng.mjs fixed.mjs      ngẫu nhiên có hạt giống, số học cố định
+    sim/                   MÔ PHỎNG TRẬN ĐÁNH (mục 3.3)
+    stats.mjs progression.mjs breakthrough.mjs loot.mjs
+    prefixes.mjs fates.mjs events.mjs economy.mjs idle.mjs
+  service/                 DB + API (chỉ server)
+    db.mjs migrations/ avatars.mjs inventory.mjs ledger.mjs
+    battles.mjs verify-worker.mjs ranking.mjs sect.mjs mail.mjs season.mjs api.mjs
+  sim-tools/               công cụ cân bằng
+web/public/lich-luyen/     giao diện: vẽ, âm thanh, nút bấm (dùng chung core/sim)
+test/lich-luyen/
 ```
 
-Ba nguyên tắc:
+Nguyên tắc:
 
-1. **Lõi thuần.** Mọi hàm trong `core/` nhận vào trạng thái + thời điểm + hạt giống ngẫu nhiên, trả ra kết quả. Nhờ vậy test được, giả lập cân bằng được, trận đánh tái lập được.
-2. **Lõi không import `engine.mjs` (LIVE).** Hai game tiến hóa độc lập; sửa LIVE không làm vỡ web và ngược lại.
-3. **Nội dung là dữ liệu.** Thêm đạo lộ, map, quái, cảnh giới = thêm mục trong `content/`. Lõi không có `if (path === 'kiem')`; khác biệt nằm ở dữ liệu (chỉ số, hệ số, chiêu, hiệu ứng).
+1. **`core/` thuần**: không đọc đĩa, không lấy giờ thật, không dùng `Math.random`. Cùng đầu vào → cùng kết quả.
+2. **Không import `engine.mjs` (LIVE)**. Hai game độc lập.
+3. **Không viết `if (class === 'kiem')` trong lõi.** Khác biệt giữa các class nằm ở dữ liệu.
+4. **ID chữ cố định, không bao giờ đổi hay tái dùng** (`skill.kiem.luu-van`, `map.thanh-van-chau`). Bỏ thì đánh dấu `retired`.
+5. **Mọi chữ hiển thị đi qua `text/`** (học `LocalText` của Quỷ Cốc), để sau dịch được.
 
-### 3.2 Hệ thống nội dung (content registry)
+### 3.2 Nội dung là dữ liệu + kiểm tra
 
-- Mỗi mục có **ID cố định** dạng chữ (`path.kiem-tu`, `realm.truc-co`, `map.thanh-van-son`). Không bao giờ đổi hay tái dùng ID; bỏ thì đánh dấu `retired`.
-- `content/index.js` **kiểm tra khi khởi động và trong test**: ID trùng, tham chiếu hỏng (quái rơi món không tồn tại), số âm, đường cong không tăng dần, chiêu thiếu hiệu ứng. Sai thì server không chạy.
-- **Hiệu ứng ghép từ khối nhỏ**, không viết code riêng cho từng chiêu:
-  `damage`, `dot` (đốt/độc), `heal`, `shield`, `stun`, `buff`, `debuff`, `lifesteal`, `summon`, `cleanse`.
-  Ví dụ chiêu: `{id:'skill.van-kiem-quy-tong', cost:30, cd:3, effects:[{type:'damage', scale:'atk', mult:2.2, hits:5, element:'kim'}]}`.
-  Thêm class mới = ghép khối mới; khối thật sự mới mới phải code (và test).
-- `contentVersion` lưu kèm mỗi bản ghi trận, để xem lại trận cũ đúng luật cũ.
+- `content/index.js` kiểm tra khi khởi động và khi chạy test: ID trùng, tham chiếu hỏng, số âm, đường cong không tăng, chiêu thiếu hiệu ứng, kỳ ngộ có lựa chọn dẫn vào ngõ cụt. **Sai là server không chạy và test đỏ.**
+- Số liệu cân bằng (tu vi từng bậc, chỉ số quái, tỉ lệ rơi) nằm trong **CSV**: chủ game mở Excel sửa được, như Quỷ Cốc dùng Excel.
+- `contentVersion` (mã băm nội dung) lưu kèm mỗi trận, để kiểm tra lại trận cũ đúng luật cũ.
 
-### 3.3 Cơ sở dữ liệu (SQLite trên VPS, cùng file `web.sqlite`, bảng mới tiền tố `ll_`)
+### 3.3 Trận đánh tay mà vẫn chống gian lận: mô phỏng tất định
 
-| Bảng | Nội dung chính |
+Đây là phần quan trọng nhất của nền.
+
+**Ý tưởng:** cùng một bộ mô phỏng trận (`core/sim/`) chạy **trong trình duyệt khi chơi** và **trên server khi kiểm tra**.
+
+1. Bắt đầu ải: server cấp `seed`, `battleId`, chỉ số phân thân, `contentVersion`.
+2. Người chơi đánh tay. Trình duyệt chạy mô phỏng **30 nhịp/giây cố định**, mỗi nhịp ghi **đầu vào**: hướng joystick (lượng tử 32 hướng) + các nút bấm. Đầu vào nén lại vài KB.
+3. Hết trận: gửi **đầu vào**, không gửi "tôi thắng".
+4. Server **chạy lại** mô phỏng với cùng seed + đầu vào → tự ra kết quả → phát thưởng. Kết quả khác trình duyệt báo = gian lận/lỗi → không thưởng, ghi log.
+
+**Luật để mô phỏng tất định** (nguồn tham khảo ở cuối):
+
+- Bước thời gian cố định; vẽ hình tách riêng (nội suy cho mượt 60 FPS).
+- Vị trí, máu, sát thương dùng **số nguyên** (vị trí đơn vị 1/100 px). Không dùng `Math.sin/cos/random` trong mô phỏng: hướng lấy từ **bảng 32/64 hướng viết sẵn**, ngẫu nhiên từ `rng.mjs`.
+- Duyệt thực thể theo thứ tự ID cố định. Không đọc giờ thật.
+- **Test vàng**: trận ghi sẵn (seed + đầu vào) phải ra đúng kết quả đã lưu, chạy trên Node và trên trình duyệt (Chrome headless).
+
+**Một bộ mô phỏng dùng cho mọi chế độ:**
+
+| Chế độ | Người chơi điều khiển bằng | Kiểm tra |
+|---|---|---|
+| Ải, boss, bí cảnh | Tay (joystick + nút) | Server chạy lại đầu vào |
+| Lôi kiếp, tâm ma | Tay | Server chạy lại |
+| Quét nhanh (ải đã 3 sao) | AI | Server tự chạy |
+| Luận Kiếm (PvP bất đồng bộ) | Tay, đấu với **AI điều khiển bản chụp** người khác | Server chạy lại |
+| Tông môn chiến | AI cả hai bên | Server tự chạy |
+| Tự động chiến đấu (tùy chọn, thưởng giảm) | AI | Server tự chạy |
+
+**Chi phí:** trận 3 phút = 5.400 nhịp × vài chục thực thể → khoảng vài chục ms trên server. Chạy kiểm tra trong **worker thread** + hàng đợi để không làm lag API. Giới hạn số trận mỗi phút mỗi người. Đo trên VPS ở giai đoạn 0.
+
+### 3.4 Chiêu thức ghép khối (theo chuỗi chiêu của Quỷ Cốc)
+
+```
+Chiêu (skill)  → thời gian vận, hồi chiêu, linh lực, nút
+  └ Đòn (action) theo dòng thời gian: lướt, vung, bắn, đặt trận…
+      └ Vùng trúng (hitbox) / Đạn bay (missile): hình dạng, tốc độ, xuyên, nảy
+          └ Hiệu ứng (effect): sát thương, đốt, độc, choáng, đẩy lùi, hút máu, khiên, hồi máu, buff, debuff, triệu hồi
+              └ Trạng thái (status): thời gian, cộng dồn, tick
+```
+
+- Thêm chiêu mới = ghép khối trong `content/skills/`. Khối thật sự mới mới phải viết code + test.
+- **Tiền tố bí tịch** gắn vào bất kỳ tầng nào: "+1 đạn bay", "trúng thì đốt", "lướt để lại kiếm khí", "hồi chiêu −15%".
+- Hiệu ứng hình và âm thanh là **lớp vẽ riêng**, tra theo ID, không nằm trong mô phỏng.
+
+### 3.5 Chỉ số
+
+Một hàm `computeStats(avatar)`, thứ tự cố định:
+
+1. Gốc theo cảnh giới + tiểu cảnh
+2. **Phẩm đột phá**
+3. Đạo lộ
+4. Linh căn
+5. Trang bị: cộng thẳng → cộng % → bộ đồ
+6. Tâm pháp
+7. Mệnh cách, đạo tâm
+8. Động phủ, tông môn
+9. Bản thể / Đạo Nghiệp (có trần)
+
+Mọi nguồn ghi `source` để giao diện hiện "chỉ số từ đâu".
+
+Bộ chỉ số cố định từ đầu: `hp, mp (linh lực), atk, def, spd (tốc di chuyển), crit, critDmg, dodge, cdr, elemAtk[6], elemRes[6], healPow, shieldPow`.
+
+### 3.6 Cơ sở dữ liệu (SQLite trên VPS, bảng tiền tố `ll_`)
+
+| Bảng | Nội dung |
 |---|---|
-| `ll_avatars` | `id`, `account_id`, `live_player_id`, `name`, `path`, `root`, `realm`, `sub_realm`, `level`, `exp`, `power` (cột để xếp hạng), `season`, `payload` JSON, `version`, `updated` |
-| `ll_items` | từng món có thuộc tính riêng: `id`, `avatar_id`, `item_id`, `rarity`, `level`, `affixes` JSON, `slot`/`equipped` |
-| `ll_stacks` | đồ chồng (vật liệu, đan): `avatar_id`, `item_id`, `count` |
-| `ll_ledger` | **sổ cái mọi thay đổi tiền tệ**: `avatar_id`, `currency`, `delta`, `balance_after`, `reason`, `ref`, `at` |
-| `ll_battles` | `id`, `avatar_id`, `kind`, `seed`, `content_version`, `input` JSON, `result` JSON, `at` (đủ để chạy lại kiểm tra) |
-| `ll_pvp` | điểm Luận Kiếm theo mùa, bản chụp đội hình phòng thủ |
-| `ll_sects`, `ll_sect_members` | tông môn web |
-| `ll_mail` | thư + quà đính kèm, nhận đúng một lần |
-| `ll_seasons`, `ll_rank_snapshots` | mùa giải, bảng xếp hạng chốt |
-| `ll_meta` | phiên bản schema |
+| `ll_avatars` | phân thân: tài khoản, liên kết LIVE (có thể rỗng), đạo lộ, linh căn, cảnh giới, tiểu cảnh, `power`, mùa, payload, `version` |
+| `ll_items` | đồ có thuộc tính riêng (trang bị, bí tịch kèm tiền tố) |
+| `ll_stacks` | đồ chồng (vật liệu, đan, phù) |
+| `ll_ledger` | sổ cái mọi thay đổi tiền tệ: ai, bao nhiêu, vì sao, lúc nào |
+| `ll_battles` | seed, contentVersion, đầu vào nén, kết quả, trạng thái kiểm tra |
+| `ll_breakthroughs` | lịch sử đột phá: phẩm, mệnh cách đã chọn |
+| `ll_events_seen` | kỳ ngộ đã gặp (tránh lặp, chuỗi kỳ ngộ) |
+| `ll_pvp`, `ll_sects`, `ll_sect_members`, `ll_mail`, `ll_seasons`, `ll_rank_snapshots`, `ll_meta` | |
 
-- **Migration đánh số** (`migrations/001-init.sql`, `002-…`). Server tự chạy migration chưa áp dụng, trong transaction, **sao lưu file DB trước**. Không bao giờ sửa migration đã chạy.
-- Ghi theo **transaction + khóa lạc quan** (`version`): hai tab cùng bấm không nhân đôi phần thưởng.
-- Payload JSON cho phần ít truy vấn; cột riêng cho phần cần xếp hạng/lọc.
+- **Migration đánh số**, tự sao lưu DB trước khi chạy, không sửa migration đã chạy.
+- Ghi bằng transaction + `version` (khóa lạc quan): hai tab cùng bấm không nhân đôi thưởng.
 
-### 3.4 Chỉ số (stat pipeline)
+### 3.7 Kinh tế, offline, thời gian
 
-Một hàm duy nhất `computeStats(avatar, content)` → chỉ số cuối. Thứ tự cố định:
+- Tiền tệ khai báo trong dữ liệu, mỗi loại có nguồn vào và chỗ tiêu. Mọi thay đổi đi qua `ledger`. Có trần ngày.
+- **Offline (bế quan, động phủ):** không chạy cron; khi mở game thì tính bù theo thời gian, có trần giờ.
+- Giờ Việt Nam, reset 05:00, tuần từ thứ Hai.
 
-1. Gốc theo cảnh giới + tiểu cảnh + cấp
-2. Hệ số đạo lộ (Kiếm tu nhiều công, Thể tu nhiều máu/thủ…)
-3. Linh căn (hệ ngũ hành + tốc độ tu)
-4. Trang bị: cộng thẳng → cộng % → bộ đồ
-5. Công pháp bị động, linh thú, động phủ, tông môn, ưu đãi bản thể (có trần)
-6. Chỉ số dẫn xuất: lực chiến (`power`) = công thức cố định để xếp hạng
+### 3.8 Cầu nối LIVE
 
-Mọi nguồn cộng chỉ số **khai báo `source`**, để giao diện hiện "chỉ số này từ đâu" và debug cân bằng. Danh sách chỉ số cố định từ đầu (thêm được, không đổi nghĩa): `hp, atk, def, spd, crit, critDmg, hit, dodge, elemAtk[5], elemRes[5], heal, shieldPow, cdr`.
+- **Vào:** đồng bộ có sẵn → cảnh giới LIVE (ưu đãi bản thể), skin sở hữu, coin quà (Tiên Ngọc).
+- **Ra (giai đoạn 4):** tin nhỏ `title` và `cosmetic` qua agent → danh hiệu lịch luyện hiện trên LIVE, đổi skin hồ sơ LIVE không cần mượn nhân vật. Khi đó **gỡ cơ chế mượn nhân vật cũ**.
+- **Sự kiện chéo:** LIVE mở boss thì web có boss tương ứng (đang có); quà LIVE không cộng sức mạnh web.
 
-### 3.5 Trận đánh: server quyết định
+### 3.9 Cân bằng, test, vận hành
 
-- **RNG có hạt giống** (`core/rng.mjs`, ví dụ mulberry32/xoshiro). Cùng trạng thái + cùng seed → cùng kết quả, chạy trên server hay máy nào cũng giống.
-- **Mô phỏng trận theo nhịp (tick)** trên server: hai bên, hàng chờ hành động theo tốc độ, chiêu theo hồi chiêu và ưu tiên do người chơi cài. Server trả về **kết quả + nhật ký từng nhịp**; trình duyệt chỉ phát lại thành hoạt cảnh (dùng lại đồ họa bí cảnh hiện có).
-- Hai kiểu chơi:
-  - **Tự động** cho tháp, Luận Kiếm, Tâm Ma Kiếp, quét ải, tông môn chiến: server mô phỏng toàn bộ, không gian lận được.
-  - **Thao tác tay** (joystick hiện tại) chỉ cho ải thường, là phần vui. Thưởng **có trần ngày** và kiểm tra hợp lý (sát thương/giây tối đa theo chỉ số server tính). Không dùng cho xếp hạng.
-- Trận lưu `seed + input + contentVersion` để **chạy lại kiểm tra** khi nghi gian lận hoặc khi người chơi khiếu nại.
-
-### 3.6 Kinh tế
-
-- Tiền tệ khai báo trong `content/` (`linh-thach`, `tien-ngoc`, `cong-hien`, `vinh-du`, `tinh-thach-thap`…), mỗi loại ghi rõ **nguồn vào** và **chỗ tiêu**.
-- **Mọi** thay đổi đi qua `ledger.mjs` (không ai sửa thẳng số dư) → soi gian lận và hoàn tác được.
-- Trần ngày cho nguồn vào chính; giả lập cân bằng (`sim/balance.mjs`) phải cho thấy không có vòng lặp tạo tiền vô hạn.
-- Tiên Ngọc chỉ mua **tiện ích + trang trí** (thể lực, lượt quét, skin phân thân, ô túi). Không bán thẳng cảnh giới hay đồ mạnh nhất.
-
-### 3.7 Treo máy (offline)
-
-Không chạy cron cho từng người. Lưu `lastTick`; khi người chơi mở game, tính bù `min(now − lastTick, trần giờ) × tốc độ`. Áp dụng cho tu luyện offline, động phủ sản xuất, thể lực hồi.
-
-### 3.8 Thời gian, sự kiện, mùa giải
-
-- Mọi luật thời gian dùng **giờ Việt Nam**, reset ngày 05:00, tuần từ thứ Hai (giống `period-tops.mjs`).
-- Lịch sự kiện web là dữ liệu (`content/seasons.js` + bảng `ll_seasons`), bật/tắt từ trang quản lý.
-
-### 3.9 Cầu nối LIVE
-
-- **Vào web:** đồng bộ hiện có đã mang hồ sơ LIVE lên VPS. Phân thân đọc từ đó: skin/linh thú sở hữu, cảnh giới LIVE (tính ưu đãi bản thể), coin quà (Tiên Ngọc).
-- **Ra LIVE (giai đoạn 3):** thêm loại tin nhỏ trong `web/cloud/protocol.mjs`: `title` (danh hiệu lịch luyện) và `cosmetic` (đổi skin đang mặc của hồ sơ LIVE). Agent chuyển về máy LIVE, LIVE tự áp dụng. Khi đó bỏ được cơ chế mượn cả nhân vật.
-- Lịch luyện **chạy được khi máy LIVE tắt** (chỉ không cập nhật Tiên Ngọc mới).
-
-### 3.10 Chống gian lận, giới hạn
-
-- Giới hạn tần suất theo tài khoản + IP cho mọi API ghi.
-- Mọi phần thưởng tính trên server; client không gửi số lượng thưởng.
-- Báo cáo bất thường: tốc độ lên cấp, lực chiến tăng đột biến, tiền tệ ngoài đường cong giả lập → thêm vào `SOI-BAT-THUONG.md`.
-
-### 3.11 Test và cân bằng
-
-- Test đơn vị cho mọi hàm `core/`.
-- **Test vàng cho trận đánh:** seed cố định → kết quả cố định; đổi công thức mà kết quả đổi thì test báo, người sửa phải xác nhận.
-- **Kiểm tra nội dung** chạy trong test.
-- **Giả lập cân bằng:** `node web/lich-luyen/sim/balance.mjs --days 60 --profile casual|active|whale` in ra đường cảnh giới theo ngày, tiền tệ tích lũy, ngày chạm trần. Mỗi lần thêm cảnh giới/nguồn thưởng phải chạy lại.
-- Chạy chung `npm run test:web`; workflow deploy đã chạy test trước khi lên prod.
-
-### 3.12 Công cụ vận hành
-
-Trang quản lý thêm mục Lịch luyện: tra phân thân, xem sổ cái, gửi thư bù, bật/tắt sự kiện, chốt mùa, cờ tính năng (`LICH_LUYEN=0/1`, `LICH_LUYEN_BETA=accountIds`).
+- **Giả lập người chơi** `sim-tools/balance.mjs --days 42 --profile casual|active|whale|webonly`: đường cảnh giới theo ngày, tiền tệ, ngày chạm trần mùa. Bắt buộc chạy trước khi mở cảnh giới hoặc thưởng mới.
+- **Giả lập trận**: cho AI của 3 class đánh nhau và đánh từng ải hàng nghìn lần → tỉ lệ thắng, thời gian hạ boss. Phát hiện class lệch.
+- Test đơn vị cho `core/`; test vàng cho mô phỏng; kiểm tra nội dung; test cả tài khoản TikTok lẫn chỉ web.
+- Trang quản lý: tra phân thân, sổ cái, trận nghi gian lận (chạy lại xem), gửi thư bù, cờ tính năng, chốt mùa.
+- Cờ: `LICH_LUYEN=0/1`, `LICH_LUYEN_BETA=<tài khoản>`.
 
 ---
 
 ## 4. Thiết kế game
 
-Tên riêng đều **tự sáng tác**. Không dùng nhân vật hay tên có chủ (Vương Lâm, Hàn Lập, Doraemon…) trong Lịch luyện.
+Mọi tên riêng **tự sáng tác**.
 
-### 4.1 Đường tu
+### 4.1 Cảnh giới (tên theo LIVE)
 
-- **Đại cảnh giới** × **4 tiểu cảnh** (Sơ kỳ → Trung kỳ → Hậu kỳ → Viên mãn) × **cấp** trong tiểu cảnh.
-- Lên tiểu cảnh: đủ tu vi. Lên đại cảnh: đủ tu vi + vật phẩm đột phá + **vượt Tâm Ma Kiếp** (trận tự động, đánh với "tâm ma" là bản sao của chính mình mạnh hơn một chút; thua thì mất một ít tu vi, có lượt thử lại).
-- Ra mắt với **6 đại cảnh** (Luyện Khí → Trúc Cơ → Kết Đan → Nguyên Anh → Hóa Thần → Luyện Hư). Danh sách là dữ liệu: mỗi mùa mở thêm 1–2 cảnh. Cảnh giới web **độc lập** với 24 cảnh giới LIVE.
-- Đường cong tu vi kéo dài ra bằng tiểu cảnh và Tâm Ma Kiếp, không bằng cách thêm cảnh giới vô tận.
-
-### 4.2 Đạo lộ (class)
-
-Chọn khi tạo phân thân; đổi được (tốn vật phẩm, có thời gian chờ).
-
-| Đạo lộ | Vai trò | Ra mắt |
+| Đại cảnh | Tiểu cảnh | Đột phá đại cảnh |
 |---|---|---|
-| **Kiếm tu** | Sát thương đơn mục tiêu, bạo kích | Giai đoạn 1 |
-| **Thể tu** | Máu, thủ, phản đòn, hút máu | Giai đoạn 1 |
-| Pháp tu | Sát thương nguyên tố diện rộng, đốt | Giai đoạn 4 |
-| Đan tu | Hồi máu, khiên, buff đồng đội (có ích trong tông môn chiến) | Giai đoạn 4 |
-| Trận/Phù tu | Khống chế, debuff, triệu hồi | Sau |
+| Phàm nhân | (phần hướng dẫn, khoảng 10 phút) | Khai linh căn |
+| **Luyện Khí** | **Tầng 1 → Tầng 9 → Viên Mãn** (10 bậc) | → Trúc Cơ |
+| **Trúc Cơ** | Sơ kỳ → Trung kỳ → Hậu kỳ → Viên Mãn | **Phẩm Trúc Cơ**: Phàm / Địa / Thiên |
+| **Kim Đan** | như trên | **Phẩm Kim Đan**: Ngũ → Tứ → Tam → Nhị → Nhất phẩm + **Lôi kiếp** (đánh tay: né sét) |
+| **Nguyên Anh** | như trên | Phẩm Nguyên Anh + **Tâm ma** (đánh với bản sao chính mình) |
+| Hóa Thần → … → Diệt Thế Chí Tôn | như trên | Mỗi đại cảnh một thử thách riêng (dữ liệu) |
 
-Mỗi đạo lộ là dữ liệu: hệ số chỉ số, loại vũ khí, cây công pháp (khoảng 12–20 nút), 6–8 chiêu chủ động, 1 tuyệt kỹ. Mỗi đạo lộ có 2 nhánh trong cây (ví dụ Kiếm tu: Vạn Kiếm / Nhất Kiếm), để cùng class vẫn có cách chơi khác nhau.
+- Đủ tu vi thì lên tiểu cảnh. Lên **đại cảnh** cần: tu vi Viên Mãn + **Đột phá đan** + **vật phẩm đột phá** gom từ map/boss/kỳ ngộ. Gom càng nhiều loại thì **phẩm càng cao** → nhiều điểm thuộc tính + nhiều lượt chọn mệnh cách. Học từ bảng `RoleGrade`: Trúc Cơ Phàm/Địa/Thiên cho 12/16/20 điểm và 1/2/3 lần chọn mệnh cách.
+- Người chơi có thể **đột phá sớm với phẩm thấp** hoặc **chờ gom đủ để lấy phẩm cao**. Đây là lựa chọn thật, không có đáp án đúng duy nhất.
+- Mỗi lần đột phá đại cảnh: **chọn 1 trong 3 mệnh cách** (số lượt theo phẩm). Mệnh cách có phẩm, có nhóm theo đạo lộ và đạo tâm.
+- Đường cong tu vi: mỗi bậc khoảng ×1,35, đại cảnh nhảy lớn hơn. Số thật nằm trong CSV và được kiểm bằng giả lập.
+- **Mở theo mùa** (mỗi mùa 6 tuần):
+  - Mùa 1: Luyện Khí → Kim Đan
+  - Mùa 2: Nguyên Anh, Hóa Thần
+  - Mùa 3: Luyện Hư, Đại Thừa
+  - …
+  Đủ đường cho nhiều năm, vì LIVE có 24 cảnh giới.
 
-### 4.3 Linh căn
+### 4.2 Ba đạo lộ ra mắt
 
-Ngẫu nhiên khi tạo: 1–3 hệ trong Kim, Mộc, Thủy, Hỏa, Thổ; hiếm có biến dị Lôi, Băng, Phong. Ảnh hưởng tốc độ tu, sát thương hệ, kháng hệ. Đổi bằng "Tẩy Tủy Đan" (rơi hoặc mua bằng Tiên Ngọc, có giới hạn). Ít linh căn thì tu nhanh hơn (đơn linh căn hiếm, mạnh), đúng chất tu tiên.
+| Đạo lộ | Vũ khí | Lối đánh tay | Hai nhánh |
+|---|---|---|---|
+| **Kiếm tu** | Kiếm | Tầm trung, combo nhanh, bạo kích; kiếm khí bay | **Phi Kiếm** (điều khiển kiếm bay, đánh từ xa an toàn) / **Kiếm Ý** (áp sát, chém liên hoàn, bạo kích lớn) |
+| **Thể tu** | Quyền / chưởng | Cận chiến, trâu, phản đòn, hút máu, đẩy lùi | **Kim Cương** (thủ, phản đòn, khiên) / **Cuồng Huyết** (máu càng ít đánh càng đau) |
+| **Pháp tu** | Pháp khí / phù | Đánh xa, diện rộng, nguyên tố, khống chế | **Ngũ Hành** (đổi hệ theo linh căn, đốt/đóng băng) / **Phù Trận** (đặt trận, triệu hồi, khống chế vùng) |
 
-### 4.4 Chiêu và công pháp
+- Mỗi đạo lộ khi ra mắt: **6 võ kỹ, 4 tuyệt kỹ, 3 thân pháp, 2 thần thông, 6 tâm pháp**. Phần lớn ghép từ khối có sẵn.
+- **Đổi đạo lộ được** (tốn "Chuyển Mạch Đan", chờ 7 ngày); đồ và cảnh giới giữ nguyên.
+- Đạo lộ thứ 4–5 (Đan tu hỗ trợ, Quỷ tu triệu hồi…) thêm theo mùa bằng dữ liệu + bộ khối.
 
-- 3 ô chiêu chủ động + 1 tuyệt kỹ + 2 ô bị động.
-- Người chơi cài **thứ tự ưu tiên** cho trận tự động.
-- Sách công pháp rơi từ map/tháp để mở nút trong cây.
+### 4.3 Ô chiêu và nút bấm (theo Quỷ Cốc, vừa điện thoại)
 
-### 4.5 Trang bị
+| Ô | Nút | Mở ở |
+|---|---|---|
+| **Võ kỹ** | Nút đánh (giữ để đánh liên tục) | Từ đầu |
+| **Tuyệt kỹ** | Nút chiêu 1 (giữ để vận lực) | Luyện Khí tầng 3 |
+| **Thân pháp** | Nút lướt (có khung bất tử ngắn) | Từ đầu |
+| **Thần thông** | Nút lớn, hồi chiêu dài, tốn linh lực | Kim Đan |
+| **Tâm pháp ×3** | Bị động | Trúc Cơ mở ô 2, Kim Đan mở ô 3 |
+| **Vật phẩm ×3** | Nút nhỏ (đan hồi máu/linh lực, phù) | Từ đầu |
 
-- 6 ô: vũ khí, giáp, mũ, giày, ngọc bội, pháp bảo.
-- Phẩm: Phàm → Linh → Huyền → Địa → Thiên → Tiên.
-- Mỗi món có 1–4 thuộc tính phụ ngẫu nhiên từ bảng (`content/affixes.js`); có bộ đồ 2/4 món.
-- Cường hóa +1 → +15 (đưa hệ +10 hiện tại vào đây), luyện hóa đồ thừa ra vật liệu (chỗ tiêu đồ).
-- **Skin chỉ là trang trí.** Skin từ LIVE mặc được cho phân thân nhưng không cộng chỉ số.
+Máy tính: WASD + chuột + phím số. Điện thoại: joystick trái + cụm nút phải, như `battle.js` hiện tại.
 
-### 4.6 Bản đồ
+### 4.4 Bí tịch và tiền tố (vòng build)
 
-- Mỗi đại cảnh mở 1–2 **vùng**: Thanh Vân Sơn, Hắc Phong Lĩnh, Vạn Thú Lâm…
-- Mỗi vùng có 10–15 ải, 1 boss vùng, điểm hái thảo/khai khoáng, quái riêng và bảng rơi.
-- Ải qua 3 sao thì mở **quét nhanh**.
-- Map là dữ liệu: nền, vị trí ải, quái, rơi đồ. Thêm map = ảnh nền + một mục dữ liệu.
+- Chiêu học từ **bí tịch**. Bí tịch có **phẩm** (Phàm → Linh → Huyền → Địa → Thiên → Tiên) và **1–5 tiền tố ngẫu nhiên** theo phẩm.
+- **Ngộ đạo:** dùng điểm ngộ đạo (từ tu luyện, kỳ ngộ) để **mở dần** tiền tố trên cuốn đang dùng. Cuốn tốt cần đầu tư.
+- Tiền tố có điều kiện linh căn/đạo lộ (như `basRequire` của Quỷ Cốc): "Hỏa linh căn ≥ 60 mới mở 'trúng thì đốt'".
+- **Dung hợp bí tịch** (mùa 2): hai cuốn cùng chiêu → giữ tiền tố chọn lọc.
+- Cùng một chiêu nhưng mỗi cuốn mỗi khác → lý do đi săn lặp lại.
 
-### 4.7 Nội dung lặp lại cuối game
+### 4.5 Linh căn, khí vận, đạo tâm
 
-- **Tháp Trấn Yêu:** vô hạn tầng (công thức tăng dần), mỗi 10 tầng có boss cơ chế; xếp hạng theo tuần; thưởng mốc.
-- **Luận Kiếm:** PvP bất đồng bộ, đánh với bản chụp đội hình người khác; điểm Elo; mùa 2 tuần; danh hiệu top hiện cả trên LIVE.
-- **Boss thế giới:** nối với boss LIVE như hiện tại; xếp hạng sát thương.
-- **Bí cảnh luân phiên:** mỗi tuần một luật đặc biệt (ví dụ "hỏa hệ ×2").
+- **Linh căn** (khi tạo phân thân): 6 hệ Hỏa, Thủy, Lôi, Phong, Thổ, Mộc với điểm tư chất. Đơn linh căn hiếm (tu nhanh, mạnh một hệ), ngũ linh căn tu chậm nhưng dùng được mọi tâm pháp. Đổi bằng Tẩy Tủy Đan (hiếm).
+- **Khí vận tiên thiên:** khi tạo, rút 6 thẻ, chọn 3, mỗi thẻ có điểm; được rút lại 1 lần. Ví dụ "Kiếm Cốt" (+tốc đánh kiếm), "Phúc Tinh" (+rơi đồ), "Bệnh Nhược" (điểm âm đổi lấy điểm cho thẻ khác).
+- **Khí vận hậu thiên:** từ kỳ ngộ, **có thời hạn** (vài ngày thật), như "Được cao nhân chỉ điểm: tu vi +15% trong 3 ngày".
+- **Đạo Tâm** (chọn khi lên Kim Đan, 6 loại ra mắt): mỗi loại có **một luật cấm** và mở **nhóm mệnh cách riêng**.
+  - Ví dụ: "Sát Phạt": thắng Luận Kiếm thì tăng đạo tâm; thua 5 trận liền thì giảm.
+  - Ví dụ: "Thanh Tĩnh": bế quan thì tăng; vào tông môn chiến thì giảm.
+  - Đạo tâm đầy thì lần đột phá sau có mệnh cách phẩm cao. Vừa nhập vai, vừa là build.
 
-### 4.8 Động phủ
+### 4.6 Thế giới và bản đồ
 
-Công trình sản xuất khi offline: Linh Điền (thảo), Linh Mạch (linh thạch), Đan Phòng (luyện đan), Luyện Khí Thất (đồ), Tụ Linh Trận (tu vi offline). Nâng cấp bằng tài nguyên. Là lý do vào game mỗi ngày mà không ép cày.
+- Mỗi đại cảnh mở một **châu** (học 10 vùng của Quỷ Cốc): Thanh Vân Châu (Luyện Khí), Lạc Hà Châu (Trúc Cơ), Xích Viêm Châu (Kim Đan)…
+- Bản đồ châu là **đồ thị nút**: ải (đánh tay), boss châu, điểm khai thác (hái thuốc/khoáng), thành (chợ, nhiệm vụ), động phủ, **nút kỳ ngộ ngẫu nhiên** đổi mỗi ngày.
+- Mỗi châu: 12–15 ải, 1 boss châu (cơ chế riêng), 2–3 quái tinh anh, bảng rơi riêng, **vật phẩm đột phá riêng** (lý do quay lại châu cũ để lấy phẩm cao).
+- Thêm châu = ảnh nền + một file `maps/<châu>.js`.
 
-### 4.9 Xã hội
+### 4.7 Kỳ ngộ (thế giới sống bằng dữ liệu)
 
-- **Tông môn web** (giai đoạn 3): lập/gia nhập, cống hiến, cửa hàng tông, bí cảnh tông, **tông môn chiến tuần** (trận tự động theo đội hình).
-- **Sư đồ:** sư phụ nhận thưởng khi đệ tử lên đại cảnh.
-- **Đạo lữ:** dùng lại ý tưởng LIVE, cộng chỉ số nhỏ khi cùng đánh.
+- Kỳ ngộ là **sự kiện chữ có lựa chọn**, có điều kiện (cảnh giới, linh căn, đạo tâm, đã gặp kỳ ngộ X), kết quả (đồ, tu vi, khí vận hậu thiên, mở ải ẩn, đánh một trận), và **chuỗi** nhiều bước.
+- Viết bằng ngôn ngữ dữ liệu đơn giản, kiểm tra tự động: không có nhánh cụt, không thưởng vượt trần.
+- Ra mắt khoảng **40 kỳ ngộ**, mỗi mùa thêm khoảng 30. Viết chữ là việc Claude/Codex làm nhanh, ảnh dùng lại.
 
-### 4.10 Mùa giải
+### 4.8 Trang bị
 
-- Mỗi mùa 6–8 tuần. Đầu mùa: mở cảnh giới hoặc vùng mới, luật mùa mới.
-- Cuối mùa: chốt bảng, phát danh hiệu/skin phân thân vĩnh viễn.
-- **Không xóa phân thân.** Người mới vào giữa mùa có tăng tốc bắt kịp (tu vi ×2 dưới mức trung bình máy chủ) để không bị bỏ quá xa.
+- Ô: vũ khí (theo đạo lộ), giáp, mũ, giày, nhẫn, ngọc bội, **pháp bảo** (có chiêu riêng).
+- Phẩm Phàm → Tiên; 1–4 thuộc tính phụ; bộ 2/4 món; cường hóa +1 → +15; luyện hóa đồ thừa.
+- **Skin chỉ trang trí**; skin LIVE mặc được cho phân thân.
 
-### 4.11 Thu nhập
+### 4.9 Nội dung lặp lại
 
-Giữ đường quà TikTok → Tiên Ngọc. Người chơi chỉ web kiếm Tiên Ngọc trong game (ít hơn, có trần tuần), nên mọi thứ bán bằng Tiên Ngọc phải là thứ **không có cũng chơi tốt**. Chưa mở cổng nạp trực tiếp. Game online thu tiền thật ở Việt Nam có thể phải xin giấy phép (Nghị định 147/2024, cần kiểm tra) — làm rõ trước khi mở nạp.
+- **Tháp Trấn Yêu:** đánh tay, vô hạn tầng, mỗi 10 tầng có boss cơ chế; xếp hạng tuần.
+- **Luận Kiếm:** đấu bản chụp người khác (AI điều khiển); điểm Elo; mùa 2 tuần (3 mùa nhỏ trong một mùa lớn).
+- **Bí cảnh tuần:** luật xoay vòng ("Hỏa ×2", "không được lướt", "quái nổ khi chết").
+- **Boss thế giới:** nối boss LIVE, xếp hạng sát thương.
+
+### 4.10 Động phủ và nghề
+
+- Động phủ: Linh Điền (thảo), Linh Mạch (linh thạch), Tụ Linh Trận (tu vi offline), Đan Phòng, Luyện Khí Thất.
+- Nghề (học Quỷ Cốc, thêm dần): Luyện đan (mùa 1, công thức là dữ liệu), Luyện khí (mùa 2), Họa phù (mùa 2), Phong thủy (bày trận động phủ, mùa 3).
+
+### 4.11 Tông môn (người chơi)
+
+- Lập/gia nhập; **thang chức theo Quỷ Cốc**: Tân thủ → Ngoại môn → Đệ tử → Chân truyền → Trưởng lão → Đại trưởng lão → Tông chủ.
+- **Lên chức bằng thách đấu** người đang giữ chức (đánh tay với bản chụp của họ); chức có giới hạn số người.
+- Cống hiến, cửa hàng tông, nhiệm vụ tông, bí cảnh tông.
+- **Tông môn chiến** mỗi tuần (AI cả hai bên, xem lại được).
+- Sư đồ, đạo lữ (cộng nhỏ khi cùng đánh boss).
+
+### 4.12 Mùa giải 6 tuần
+
+| Tuần | Nhịp |
+|---|---|
+| 1 | Mở mùa: cảnh giới/châu mới, sự kiện LIVE "Tu Tiên Giới khai mở" |
+| 2 | Luận Kiếm mùa nhỏ 1 chốt |
+| 3 | Sự kiện giữa mùa (kỳ ngộ đặc biệt, boss giới hạn) |
+| 4 | Luận Kiếm mùa nhỏ 2 chốt |
+| 5 | Tông môn chiến lớn |
+| 6 | Luận Kiếm mùa nhỏ 3 + chốt mùa: danh hiệu, skin, khung vĩnh viễn |
+
+- **Không xóa phân thân.** Người vào muộn có **tăng tốc bắt kịp** (tu vi ×2 khi dưới mức giữa của máy chủ).
+- Trần cảnh giới của mùa giữ mọi người không bỏ nhau quá xa; mùa sau mở trần mới.
+
+### 4.13 Thu nhập
+
+Quà TikTok → Tiên Ngọc; người chỉ web kiếm Tiên Ngọc trong game. Tiên Ngọc chỉ mua **trang trí + tiện ích** (thể lực, lượt quét, ô túi, đổi tên, skin phân thân). Chưa mở nạp trực tiếp; game thu tiền thật ở Việt Nam có thể cần giấy phép (Nghị định 147/2024, cần kiểm tra trước).
 
 ---
 
 ## 5. Phân thân
 
-### 5.1 Tạo
-
-Bấm **"Đi lịch luyện"** trên web → chọn đạo lộ → quay linh căn (một lần quay lại miễn phí) → đặt tên phân thân (mặc định theo tên LIVE) → nhận gói tân thủ qua thư.
-
-### 5.2 Một tài khoản một phân thân
-
-Một tài khoản một phân thân cho mỗi mùa. Kiến trúc vẫn để `avatar_id` riêng, sau này mở thêm ô nếu cần.
-
-### 5.3 Ưu đãi bản thể (cho người chơi LIVE lâu)
-
-Theo cảnh giới LIVE cao nhất, **có trần**:
-
-- Tu vi phân thân +1% mỗi 2 cảnh giới LIVE, tối đa +10%.
-- Danh hiệu "Bản thể <cảnh giới>" hiện cạnh tên phân thân.
-- Gói khởi đầu theo VIP (vật liệu, không phải đồ mạnh).
-
-Đủ để người chơi lâu thấy được ghi nhận, không đủ để họ vào là đứng đầu.
-
-**Đạo Tâm (cho người chơi chỉ web):** kiếm bằng thành tựu, mỗi mốc cộng tu vi phân thân, **cùng trần +10%** như ưu đãi bản thể. Ai có cả hai thì lấy cái cao hơn, không cộng dồn. Hai kiểu người chơi đứng trên cùng một vạch xuất phát về sức mạnh.
-
-### 5.4 Dữ liệu web cũ
-
-Những gì người chơi đã làm trên web (cường hóa, cấp linh thú web, tầng tháp, vật liệu trong `p.web`) đổi thành **gói quà đổi tương ứng** gửi vào thư phân thân. Hồ sơ LIVE giữ nguyên. Phần chơi cũ trên web tắt khi Lịch luyện mở, để không còn hai đường cày song song.
+- **Tạo:** "Đi lịch luyện" → phần Phàm nhân hướng dẫn khoảng 10 phút (đánh thử 3 class rồi mới chọn) → chọn đạo lộ → khai linh căn → rút khí vận → đặt tên.
+- Mỗi tài khoản **một phân thân** (kiến trúc vẫn cho mở thêm ô về sau).
+- **Ưu đãi bản thể / Đạo Nghiệp:** như mục 2.1.
+- **Dữ liệu web cũ** (cường hóa, cấp linh thú web, tầng tháp, vật liệu trong `p.web`) → đổi thành gói quà vào thư phân thân. Phần chơi cũ tắt khi Lịch luyện mở. Hồ sơ LIVE giữ nguyên.
 
 ---
 
 ## 6. Lộ trình
 
-Mỗi giai đoạn: chạy sau cờ tính năng → thử với vài tài khoản beta → mở cho tất cả. Thời gian là ước lượng.
+Mỗi giai đoạn chạy sau cờ tính năng, thử với vài tài khoản beta, rồi mới mở. Thời gian là ước lượng cho một người cùng AI.
 
-### Giai đoạn 0 — Nền (khoảng 1–1,5 tuần, chưa có gì để chơi)
+### Giai đoạn 0 — Nền (khoảng 2 tuần, chưa có gì cho người chơi)
 
-- Thư mục `web/lich-luyen/`; content registry + kiểm tra; 2 đạo lộ, 3 cảnh giới, 1 map **dữ liệu mẫu**
-- Migration `001` + bảng `ll_*` + sao lưu trước migration
-- `rng`, `stats`, `combat` (mô phỏng tick + nhật ký), `ledger`, `idle`
-- Test đơn vị, test vàng trận đánh, giả lập cân bằng chạy được
-- Cờ `LICH_LUYEN` (mặc định tắt trên prod)
+- Khung thư mục, `content/index.js` + kiểm tra, `text/vi.js`, CSV cân bằng
+- `rng`, `fixed`, **mô phỏng trận tất định** (di chuyển, va chạm, hitbox, đạn bay, hiệu ứng, trạng thái), bảng hướng
+- Ghi/nén đầu vào; server chạy lại trong worker; **test vàng Node + Chrome headless**
+- `computeStats`, `ledger`, migration `001`, cờ tính năng
+- Một ải mẫu: Kiếm tu + 2 loại quái, đánh tay trên trình duyệt, server xác nhận thưởng
+- Đo chi phí kiểm tra trận trên VPS thật
 
-**Xong khi:** giả lập 60 ngày ra đường cảnh giới hợp lý; cùng seed cho cùng trận; thêm một quái mới chỉ cần thêm dữ liệu.
+**Xong khi:** đánh tay một ải trên điện thoại, server chạy lại ra đúng kết quả; sửa một số đầu vào thì server phát hiện; thêm quái mới chỉ cần dữ liệu.
 
-### Giai đoạn 1 — Vòng chơi lõi (khoảng 2 tuần)
+### Giai đoạn 1 — Vòng chơi lõi (khoảng 3 tuần)
 
-- Tạo phân thân, Kiếm tu + Thể tu, linh căn
-- Tu luyện online/offline, 3 đại cảnh × 4 tiểu cảnh, Tâm Ma Kiếp
-- 2 vùng map; trang bị 6 ô + phẩm + thuộc tính phụ + cường hóa
-- Ải thao tác tay (dùng lại `battle.js` làm lớp hiển thị) + quét nhanh
-- Nhiệm vụ ngày, thư, gói đổi dữ liệu web cũ
-- Giao diện: nút "Đi lịch luyện", màn phân thân, túi đồ, bản đồ
+- Tạo phân thân, phần hướng dẫn Phàm nhân, **3 đạo lộ** (bộ chiêu đầu, mỗi đạo lộ 1 nhánh trước), linh căn, khí vận tiên thiên
+- Luyện Khí tầng 1 → Viên Mãn → Trúc Cơ (phẩm Phàm/Địa/Thiên, mệnh cách)
+- Thanh Vân Châu + Lạc Hà Châu, boss châu, vật phẩm đột phá
+- Bí tịch + tiền tố + ngộ đạo, trang bị cơ bản, bế quan offline
+- 20 kỳ ngộ, nhiệm vụ ngày, thư, gói đổi dữ liệu web cũ
+- Giả lập cân bằng 42 ngày cho 4 kiểu người chơi
 
-**Xong khi:** người chơi mới chơi được khoảng 1 tuần không hết việc; không API nào cho client tự báo thưởng; **một tài khoản chỉ web (không TikTok) chơi trọn vòng lõi** và test tự động chạy cả hai kiểu tài khoản.
+**Xong khi:** tài khoản TikTok và tài khoản chỉ web đều chơi trọn Luyện Khí → Trúc Cơ; 3 class qua boss châu với tỉ lệ thắng lệch nhau không quá 15%; không API nào nhận "tôi thắng" từ client.
 
-### Giai đoạn 2 — Lặp lại (khoảng 1,5–2 tuần)
+### Giai đoạn 2 — Kim Đan và lặp lại (khoảng 2–3 tuần) → **mở Mùa 1**
 
-Tháp Trấn Yêu (server mô phỏng), Luận Kiếm bất đồng bộ + mùa 2 tuần, động phủ (3 công trình), cảnh giới 4–6, vùng 3–4, bảng xếp hạng.
+- Kim Đan (5 phẩm, **Lôi kiếp** đánh tay), thần thông, Đạo Tâm, nhánh thứ 2 của mỗi đạo lộ
+- Xích Viêm Châu, Tháp Trấn Yêu, Luận Kiếm, động phủ, luyện đan
+- Thêm 20 kỳ ngộ, bảng xếp hạng, chốt mùa
 
-### Giai đoạn 3 — Xã hội và cầu nối LIVE (khoảng 2 tuần)
+### Giai đoạn 3 — Tông môn (khoảng 2 tuần, giữa Mùa 1)
 
-Tông môn web + tông môn chiến tuần, sư đồ, tin `title`/`cosmetic` qua agent (danh hiệu lên LIVE, đổi skin hồ sơ không cần mượn nhân vật), gỡ cơ chế mượn nhân vật cũ.
+Tông môn + thang chức thách đấu, tông môn chiến tuần, sư đồ, đạo lữ.
 
-### Giai đoạn 4 — Mùa 1 và mở rộng
+### Giai đoạn 4 — Cầu nối LIVE + chuẩn bị Mùa 2
 
-Pháp tu + Đan tu, bí cảnh luân phiên, chốt mùa và thưởng, sự kiện LIVE "Tu Tiên Giới khai mở".
+Danh hiệu lên LIVE, đổi skin hồ sơ không mượn nhân vật (gỡ cơ chế cũ), Nguyên Anh + Tâm ma, Hóa Thần, châu mới, luyện khí, họa phù, dung hợp bí tịch.
 
 ---
 
@@ -328,22 +414,29 @@ Pháp tu + Đan tu, bí cảnh luân phiên, chốt mùa và thưởng, sự ki�
 
 | Rủi ro | Giảm thiểu |
 |---|---|
+| Mô phỏng trình duyệt và server lệch nhau (trận đúng bị từ chối) | Chỉ số nguyên + bảng hướng + RNG riêng; test vàng hai môi trường; khi lệch thì **ghi log và cho thưởng tối thiểu**, không phạt người chơi, rồi sửa |
+| Đánh tay trên điện thoại yếu bị giật | Mô phỏng tách khỏi vẽ; hạ chất lượng hình như `crowd-policy.js`; giới hạn thực thể mỗi trận |
+| VPS 1 vCPU quá tải khi kiểm tra trận | Worker + hàng đợi; đo ở giai đoạn 0; trận dài có trần; nâng gói nếu cần |
+| Hết nội dung sớm lần nữa | Trần cảnh giới theo mùa; giả lập cân bằng bắt buộc; kỳ ngộ + tiền tố cho chiều sâu ngang |
+| 3 class lệch sức mạnh | Giả lập trận hàng nghìn lần mỗi lần đổi số; chỉnh bằng CSV |
 | Người chơi cũ thấy "phải chơi lại" | Hồ sơ LIVE giữ nguyên; ưu đãi bản thể; gói đổi dữ liệu web; giải thích "phân thân" trên LIVE |
-| Cân bằng sai làm hết nội dung sớm lần nữa | Giả lập cân bằng bắt buộc trước khi mở cảnh giới/thưởng mới; trần ngày |
-| VPS yếu (gói 1 vCPU) khi mô phỏng nhiều trận | Trận nhỏ (vài nghìn tick, vài ms); giới hạn tần suất; đo `/api/perf` trước mỗi giai đoạn |
-| Đổi schema làm hỏng dữ liệu | Migration đánh số + sao lưu tự động + test migration trên bản sao DB prod |
-| Nội dung (ảnh) chậm vì Codex hết hạn mức | Giai đoạn 0–1 dùng lại ảnh có sẵn; ảnh là dữ liệu, thay sau không đổi code |
-| Người chơi chỉ web thấy thiệt so với người có TikTok | Đạo Tâm cùng trần với ưu đãi bản thể; TikTok chỉ thêm trang trí + tiện ích; Tiên Ngọc kiếm được trong game |
-| Nick ảo lấy quà tân thủ | Giới hạn đăng ký theo IP/ngày; quà tân thủ mở dần theo ngày chơi |
-| Hai game cùng phát triển làm chậm LIVE | Lõi tách khỏi `engine.mjs`; sửa LIVE không chạm web và ngược lại |
+| Người chỉ web thấy thiệt | Đạo Nghiệp cùng trần; Tiên Ngọc kiếm được trong game |
+| Thiếu ảnh (Codex hết hạn mức) | Giai đoạn 0–1 dùng lại ảnh có sẵn; ảnh tra theo ID, thay sau không sửa code |
+| Làm game web làm chậm LIVE | Hai lõi tách hẳn |
 
 ---
 
-## 8. Cần chủ game chốt
+## 8. Việc còn cần chủ game chốt (không chặn giai đoạn 0)
 
-1. **Trận đánh:** tự động là chính (server quyết định) + ải thao tác tay cho vui. Đề xuất: **đồng ý**.
-2. **Ra mắt mấy đạo lộ:** 2 (Kiếm tu, Thể tu). Đề xuất: **2**, thêm dần theo mùa.
-3. **Tên cảnh giới web:** dùng 6 cảnh quen thuộc (Luyện Khí → Luyện Hư) hay bộ tên riêng.
-4. **Dữ liệu web cũ:** đổi thành gói quà rồi tắt phần chơi cũ. Đề xuất: **đồng ý**.
-5. **Độ dài mùa:** 6 hay 8 tuần.
-6. **Người chơi chỉ web:** chung máy chủ, chung bảng xếp hạng với người chơi TikTok. Đề xuất: **chung**.
+1. Tên 3 châu đầu và tên 2 nhánh mỗi đạo lộ (mình đề xuất ở trên, có thể đổi).
+2. Phần hướng dẫn Phàm nhân có cho **đánh thử cả 3 class** trước khi chọn không. Đề xuất: **có**.
+3. Có **tự động chiến đấu** (thưởng giảm còn 70%) cho người bận không. Đề xuất: **có, chỉ ở ải đã 3 sao**.
+
+---
+
+## Nguồn
+
+- Bảng cấu hình chính thức Quỷ Cốc Bát Hoang trên máy: `RoleGrade`, `FateFeature`, `RoleCreateFeature`, `BattleSkillPrefixValue`, `BattleSkillBase/Attack/Effect/Missile`, `TaoistHeart`, `WorldFortuitousEventBase`, `FortuitousEvent`, `SchoolTaskTypeBase`, `MakePillFormula`, `ArtifactSpriteTalent`, `LocalText`.
+- Đánh giá Tale of Immortal: https://gamegeeker.com/games/tale-of-immortal-1468810/review?market=US · https://vaporlens.app/app/1468810/鬼谷八荒_tale_of_immortal/stats · https://rpghq.org/forums/viewtopic.php?p=13501
+- Mô phỏng tất định / chạy lại đầu vào chống gian lận: https://media.gdcvault.com/gdc2024/Slides/GDC+slide+presentations/Pollard_Bradley_CrossPlatformDeterminism+2024-03-26+09.34.19.pdf · https://doc.photonengine.com/quantum/v2/manual/cheat-protection · https://bugnet.io/blog/how-to-make-a-game-simulation-deterministic-for-replays · https://forums.unrealengine.com/t/is-there-a-way-to-repeat-the-event-on-the-exact-same-timing/425586
+- Game cùng dòng (bản 1 kế hoạch): Tiên Nghịch Mobile, Nghịch Thủy Hàn, Nhất Niệm Tiêu Dao, Idle Xanxia, xiuzhen idle.
