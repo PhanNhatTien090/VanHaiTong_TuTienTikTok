@@ -9,9 +9,12 @@ import realms, { REALM_CURVE } from '../lich-luyen/content/realms.js';
 import paths from '../lich-luyen/content/paths.js';
 import roots from '../lich-luyen/content/roots.js';
 import vi from '../lich-luyen/content/text/vi.js';
+import skills from '../lich-luyen/content/skills.js';
+import monsters from '../lich-luyen/content/monsters.js';
+import stages from '../lich-luyen/content/stages.js';
 import { buildLadder, stepLabel, addQi, breakthrough, newCultivation } from '../lich-luyen/core/progression.mjs';
 
-const raw = () => structuredClone({ realms, paths, roots, curve: REALM_CURVE });
+const raw = () => structuredClone({ realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages });
 
 test('rng: cùng seed cùng dãy; giá trị vàng không đổi giữa các lần chạy/máy', () => {
   const a = createRng('battle:abc'), b = createRng('battle:abc');

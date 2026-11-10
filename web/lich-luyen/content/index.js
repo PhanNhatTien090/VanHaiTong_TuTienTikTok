@@ -3,6 +3,9 @@
 import realms, { REALM_CURVE } from './realms.js';
 import paths from './paths.js';
 import roots from './roots.js';
+import skills from './skills.js';
+import monsters from './monsters.js';
+import stages from './stages.js';
 import vi from './text/vi.js';
 
 const ID = /^[a-z]+(\.[a-z0-9]+(-[a-z0-9]+)*)+$/;
@@ -72,15 +75,76 @@ export function validateContent(c, text = vi) {
   const rootIds = new Set(c.roots.map(x => x.id));
   c.roots.forEach((x, i) => { const w = `root[${i}] ${x.id}`; checkId(w, x.id); checkText(w, x.nameKey); if (!rootIds.has(x.counter)) err(w, `counter tham chiếu hỏng "${x.counter}"`); if (x.counter === x.id) err(w, 'không tự khắc mình'); });
 
+  // Chiêu
+  const skillById = new Map((c.skills || []).map(s => [s.id, s]));
+  (c.skills || []).forEach((s, i) => {
+    const w = `skill[${i}] ${s.id}`;
+    checkId(w, s.id); checkText(w, s.nameKey);
+    if (!SLOTS.has(s.slot)) err(w, `slot lạ "${s.slot}"`);
+    nonNegInt(w, 'cd', s.cd); nonNegInt(w, 'mp', s.mp);
+    const a = s.action || {}, spec = ACTIONS[a.type];
+    if (!spec) err(w, `loại đòn lạ "${a.type}"`);
+    else for (const k of spec.required) nonNegInt(w, `action.${k}`, a[k]);
+    if (a.type === 'dash' && s.slot !== 'dash') err(w, 'đòn dash chỉ dùng cho ô dash');
+    if (a.explode) nonNegInt(w, 'action.explode.radius', a.explode.radius);
+    if (a.type !== 'dash' && !(s.effects || []).length) err(w, 'chiêu đánh cần ít nhất một hiệu ứng');
+    for (const e of s.effects || []) {
+      const es = EFFECTS[e.type];
+      if (!es) { err(w, `hiệu ứng lạ "${e.type}"`); continue; }
+      for (const k of es) nonNegInt(w, `${e.type}.${k}`, e[k]);
+    }
+  });
+  const needSkill = (w, id, slot) => { const s = skillById.get(id); if (!s) err(w, `chiêu không tồn tại "${id}"`); else if (slot && s.slot !== slot) err(w, `chiêu "${id}" không thuộc ô ${slot}`); };
+  for (const p of c.paths) for (const slot of ['attack', 'special', 'dash']) needSkill(`path ${p.id} kit`, p.kit?.[slot], slot);
+
+  // Quái
+  const monsterIds = new Set();
+  (c.monsters || []).forEach((m, i) => {
+    const w = `monster[${i}] ${m.id}`;
+    checkId(w, m.id); checkText(w, m.nameKey); monsterIds.add(m.id);
+    if (!AIS.has(m.ai)) err(w, `AI lạ "${m.ai}"`);
+    for (const k of ['radius', 'speed', 'attackRange']) nonNegInt(w, k, m[k]);
+    for (const k of ['hp', 'atk', 'def', 'crit', 'critDmg']) nonNegInt(w, 'stats.' + k, m.stats?.[k]);
+    if (!m.skills?.length) err(w, 'cần ít nhất một chiêu');
+    for (const id of m.skills || []) needSkill(w, id);
+  });
+
+  // Ải
+  (c.stages || []).forEach((st, i) => {
+    const w = `stage[${i}] ${st.id}`;
+    checkId(w, st.id); checkText(w, st.nameKey); checkText(w, st.map);
+    nonNegInt(w, 'level', st.level); nonNegInt(w, 'timeLimit', st.timeLimit);
+    const [aw, ah] = st.arena || []; nonNegInt(w, 'arena.w', aw); nonNegInt(w, 'arena.h', ah);
+    const inside = (p, what) => { if (!Array.isArray(p) || !(p[0] >= 0 && p[0] <= aw && p[1] >= 0 && p[1] <= ah)) err(w, `${what} nằm ngoài sân`); };
+    inside(st.playerStart, 'playerStart');
+    if (!st.waves?.length) err(w, 'cần ít nhất một đợt quái');
+    st.waves?.forEach((wv, j) => {
+      if (!['start', 'clear'].includes(wv.when)) err(w, `wave[${j}].when lạ`);
+      if (j === 0 && wv.when !== 'start') err(w, 'đợt đầu phải là start');
+      for (const sp of wv.spawn || []) { if (!monsterIds.has(sp.monster)) err(w, `quái không tồn tại "${sp.monster}"`); nonNegInt(w, 'count', sp.count); inside(sp.at, 'điểm xuất quái'); }
+    });
+  });
+
   if (errors.length) throw Error('Nội dung Lịch luyện sai:\n- ' + errors.join('\n- '));
 }
 
-export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE }, text = vi) {
-  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve });
+const SLOTS = new Set(['attack', 'special', 'dash', 'ultimate']);
+const ACTIONS = {
+  projectile: { required: ['speed', 'range', 'radius'] },
+  melee: { required: ['offset', 'radius'] },
+  nova: { required: ['radius'] },
+  zone: { required: ['offset', 'radius', 'duration', 'period'] },
+  dash: { required: ['ticks', 'speed', 'invuln'] },
+};
+const EFFECTS = { damage: ['mult'], knockback: ['distance'], stun: ['ticks'], burn: ['ticks', 'period', 'mult'], heal: ['mult'] };
+const AIS = new Set(['chase', 'kite']);
+
+export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages }, text = vi) {
+  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [] });
   validateContent(c, text);
   const version = fnv64(stableJson(c));
   const byId = new Map();
-  for (const list of [c.realms, c.paths, c.roots]) for (const x of list) byId.set(x.id, x);
+  for (const list of [c.realms, c.paths, c.roots, c.skills, c.monsters, c.stages]) for (const x of list) byId.set(x.id, x);
   return deepFreeze({ ...c, version, byId, text });
 }
 

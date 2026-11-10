@@ -67,6 +67,27 @@ export default Object.freeze({
   'path.phap-tu.ngu-hanh': 'Ngũ Hành',
   'path.phap-tu.phu-tran': 'Phù Trận',
 
+  // Chiêu
+  'skill.kiem.luu-van-kiem': 'Lưu Vân Kiếm',
+  'skill.kiem.van-kiem-quy-tong': 'Vạn Kiếm Quy Tông',
+  'skill.kiem.ngu-phong-bo': 'Ngự Phong Bộ',
+  'skill.the.bang-son-quyen': 'Băng Sơn Quyền',
+  'skill.the.chan-dia-chuong': 'Chấn Địa Chưởng',
+  'skill.the.thiet-nguu-xung': 'Thiết Ngưu Xung',
+  'skill.phap.hoa-cau-thuat': 'Hỏa Cầu Thuật',
+  'skill.phap.liet-diem-tran': 'Liệt Diễm Trận',
+  'skill.phap.thuan-buoc': 'Thuấn Bộ',
+  'skill.quai.cao-xe': 'Cào Xé',
+  'skill.quai.doc-dich': 'Độc Dịch',
+  'skill.quai.huc-dia': 'Húc Địa',
+
+  // Quái, ải, bản đồ
+  'monster.yeu-lang': 'Yêu Lang',
+  'monster.doc-xa': 'Độc Xà',
+  'monster.thiet-giap-hung': 'Thiết Giáp Hùng',
+  'stage.thanh-van.1': 'Sơn Môn Hoang Lâm',
+  'map.thanh-van-chau': 'Thanh Vân Châu',
+
   // Linh căn
   'root.hoa': 'Hỏa',
   'root.thuy': 'Thủy',
