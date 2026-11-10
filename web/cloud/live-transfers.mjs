@@ -27,7 +27,8 @@ export function createLiveTransfers({world, save}) {
       if(!p||p.resident||p.puppet)message='Không tìm thấy nhân vật hợp lệ trên LIVE.';
       else if(!command.force&&currentParticipant(world,p,now)&&now-(p.lastRealInteractionAt||0)<LIVE_RECENT_MS)message='Bạn vừa tương tác trên LIVE. Chờ 1 phút không bình luận/thả tim (hoặc gõ roilive) rồi đăng nhập lại.';
       if(message){world.playTransfers[playerId]={id,generation,phase:'denied',message};save();return {ok:false,id,message};}
-      world.playTransfers[playerId]={id,generation,phase:'web',player:structuredClone(p),gifts:[]};
+      // Quản trị mượn (force) chỉ vài giây cho một thao tác: ghi lại trạng thái có mặt để trả về y nguyên — người chơi không bị coi là rời LIVE.
+      world.playTransfers[playerId]={id,generation,phase:'web',player:structuredClone(p),gifts:[],...(command.force?{admin:true,presence:{lastActive:p.lastActive||0,leftLiveAt:p.leftLiveAt,lastAutoArrivalAt:p.lastAutoArrivalAt,lastRealInteractionAt:p.lastRealInteractionAt}}:{})};
       save(); // Do not acknowledge ownership before its lock reaches disk.
       return {ok:true,id,player:structuredClone(p)};
     }
@@ -35,13 +36,21 @@ export function createLiveTransfers({world, save}) {
     if(old.phase==='live')return {ok:true,id}; // ACK loss/retry must never reapply old progress.
     if(old.phase!=='web'||command.player?.id!==playerId)throw Error('Invalid player return');
     const p=structuredClone(command.player);
-    p.lastActive=0;p.leftLiveAt=now;delete p.lastAutoArrivalAt;
+    const keep=old.admin?old.presence:null,heardAt=Number(old.wantsLiveAt)||0;
+    // Người chơi tự sang web: trả về coi như đã rời sân. Quản trị mượn: giữ nguyên có mặt (cộng cả lúc họ vừa tương tác trong vài giây mượn).
+    const presence=()=>{
+      if(!keep){p.lastActive=0;p.leftLiveAt=now;delete p.lastAutoArrivalAt;return;}
+      p.lastActive=Math.max(p.lastActive||0,keep.lastActive||0,heardAt);
+      const real=Math.max(p.lastRealInteractionAt||0,keep.lastRealInteractionAt||0,heardAt);if(real)p.lastRealInteractionAt=real;
+      for(const k of ['leftLiveAt','lastAutoArrivalAt'])if(keep[k]!==undefined)p[k]=keep[k];else delete p[k];
+    };
+    presence();
     world.players[playerId]=p;
     const gifts=old.gifts || [];
     world.playTransfers[playerId]={id,generation,phase:'live'};
     for(const gift of gifts)ingest(world,gift,now);
     // Buffered gifts grant their rewards, but do not put an absent player on stage.
-    p.lastActive=0;p.leftLiveAt=now;
+    presence();
     save();
     return {ok:true,id};
   }

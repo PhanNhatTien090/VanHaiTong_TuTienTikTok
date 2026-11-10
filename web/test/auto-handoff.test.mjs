@@ -53,3 +53,18 @@ test('quản trị: mượn nhân vật cả khi người đó vừa tương tá
   sessions.releaseFor(id,'qt-u1');
   assert.equal(store.get('play:'+id).phase,'release','trả về ngay, không giữ');
 });
+
+test('quản trị mượn rồi trả: người chơi vẫn hiện trên LIVE (không bị coi là rời sân); người chơi tự sang web thì vẫn rời sân',()=>{
+  const now=Date.now(),w=liveWorld(now),live=createLiveTransfers({world:w,save:()=>{}});
+  action(w,{userId:id,type:'chat',text:'xin chao'},now);
+  assert.equal(currentParticipant(w,w.players[id],now+1000),true);
+  const got=live.apply({generation:1,id:'adm-1',playerId:id,kind:'acquire',force:true},now+1000);assert.equal(got.ok,true);
+  ingest(w,{event:'chat',data:{userId:id,nickname:'Đạo hữu',comment:'van o day'}},now+2000);// tương tác lúc đang bị mượn
+  assert.equal(live.apply({generation:1,id:'adm-1',playerId:id,kind:'release',player:{...got.player,stones:(got.player.stones||0)+5}},now+3000).ok,true);
+  assert.equal(currentParticipant(w,w.players[id],now+4000),true,'vẫn hiện sau khi quản trị trả');
+  assert.equal(w.players[id].stones,(got.player.stones||0)+5,'giữ thay đổi của quản trị');
+  // người chơi tự sang web (không force) → trả về coi như đã rời sân
+  const own=live.apply({generation:2,id:'own-1',playerId:id,kind:'acquire'},now+LIVE_RECENT_MS+5000);assert.equal(own.ok,true);
+  live.apply({generation:2,id:'own-1',playerId:id,kind:'release',player:own.player},now+LIVE_RECENT_MS+6000);
+  assert.equal(currentParticipant(w,w.players[id],now+LIVE_RECENT_MS+7000),false);
+});
