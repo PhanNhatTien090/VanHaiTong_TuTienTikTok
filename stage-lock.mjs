@@ -12,6 +12,7 @@ export function stageConflict(w,now,{allowBond=false}={}){
  if(['registration','running'].includes(w.sectWar?.phase)||w.sectWar?.podiumUntil>now)return 'chính ma đại chiến';
  if(['opening','brewing','tribulation'].includes(w.alchemy?.phase)||w.alchemy?.podiumUntil>now)return 'lò luyện đan';
  if(['registration','running'].includes(w.maze?.phase)||w.maze?.podiumUntil>now)return 'bí cảnh mê cung';
+ if(w.bonkFest&&!w.bonkFest.closedAt&&now<w.bonkFest.endsAt)return 'hội gõ đầu';
  if(['registration','running'].includes(w.tournament?.phase)||w.tournament?.podiumUntil>now)return 'tỷ thí';
  if(w.social?.activeCeremony?.endsAt>now)return 'lễ kết duyên';
  return null;

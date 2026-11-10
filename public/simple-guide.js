@@ -37,7 +37,7 @@ export function simpleSteps(s={},page=0){
   {cmd:'trang bị',text:'đeo đồ mạnh nhất'}
  ];
  const race=s.raceStatus,t=s.socialStatus?.tournament;
- const hint=race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':'';
+ const hint=race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':s.bonkFest?.active?'Gõ đầu: go tên':'';
  if(pick)return {...GUIDE_PAGES[pick-1],hint};
  return {title:'CÁCH CHƠI',rows,hint};
 }

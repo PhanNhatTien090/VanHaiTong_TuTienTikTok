@@ -175,6 +175,12 @@ export function speechPlan(e){
     if(e.mazeEnd){const n=sayName(e.mazeWinner);return [say('tongsu',n?`Mê cung khép lại! Mê Cung Chi Chủ là ${n}!`:'Mê cung khép lại! Lần sau tìm đường nhanh hơn nhé!')];}
     return [];
   }
+  // ----- Hội Gõ Đầu (10/11): chỉ đọc lúc mở và lúc khép, từng cú gõ không đọc -----
+  if(e.effect==='bonk'){
+    if(e.bonkStart)return [say('tongsu',pickBy(seed,['Hội gõ đầu khai mạc! Gõ go kèm tên để đi gõ đầu đạo hữu!','Hội gõ đầu mở rồi! Ai muốn gõ đầu ai thì gõ go kèm tên!']))];
+    if(e.bonkEnd){const a=sayName(e.bonkHitter),b=sayName(e.bonkVictim);return [say('tongsu','Hội gõ đầu khép lại!'+(a?` Thiết Thủ Vương là ${a}!`:'')+(b?` Đầu sắt nhất là ${b}!`:''))];}
+    return [];
+  }
   if(e.effect==='war'){
     if(e.warStart)return [say('trongtai','Chính Ma Đại Chiến mở tuyển quân! Gõ chính để vào Chính Đạo, gõ ma để vào Ma Đạo!')];
     if(e.warBattle)return [say('tongsu','Khai chiến! Gõ chiến để xuất chiêu!')];

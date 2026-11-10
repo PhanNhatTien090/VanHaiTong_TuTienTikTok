@@ -1,0 +1,81 @@
+// 10/11/2026: HỘI GÕ ĐẦU (server: bonk.mjs) — người gõ đi bộ từ ghế tới cạnh người bị gõ, vung búa gỗ gõ "BỐP",
+// sao xoay quanh đầu, vài viên linh thạch bay sang người gõ, rồi đi bộ về ghế. Mỗi cú ~3 s (BONK_ANIM_MS).
+// 4 kiểu chữ/màu (h.v) để các cú gõ không giống y hệt nhau. Tối đa MAX_ANIM cú vẽ cùng lúc.
+export const BONK_ANIM_MS=3000;
+const MAX_ANIM=6,TAU=Math.PI*2,clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=k=>k<.5?2*k*k:1-((-2*k+2)**2)/2;
+const WORDS=['BỐP!','CỐC!','PẶC!','BỘP!'],COLORS=['#ffd36b','#ff8a5c','#7ee0ff','#c9a2ff'];
+// Mốc thời gian một cú (giây): đi tới → giơ búa → gõ (IMPACT) → đứng nhìn → đi về.
+const WALK=1.0,IMPACT=1.25,BACK=1.6,END=BONK_ANIM_MS/1000;
+
+export function syncBonk(scene,state){
+ const b=state.bonkFest||null;scene.bonkFest=b;if(!b){scene.bonkHits=[];return;}
+ const now=state.serverNow||Date.now(),t=performance.now(),seen=scene.bonkSeen??=new Map();
+ for(const h of b.hits||[])if(!seen.has(h.id))seen.set(h.id,t-Math.max(0,Math.min(BONK_ANIM_MS,now-h.at)));
+ if(seen.size>80)for(const k of [...seen.keys()].slice(0,seen.size-80))seen.delete(k);
+ scene.bonkHits=b.hits||[];
+}
+export const bonkOn=scene=>!!scene.bonkFest?.active;
+function live(scene,t){const seen=scene.bonkSeen;if(!seen)return [];const out=[],busy=new Set();
+ for(const h of [...(scene.bonkHits||[])].reverse()){const s=seen.get(h.id);if(s==null)continue;const age=(t-s)/1000;if(age<0||age>END||busy.has(h.a))continue;busy.add(h.a);out.push({h,age});if(out.length>=MAX_ANIM)break;}
+ return out;}
+// Đưa cả 2 người lên sân trong lúc diễn cú gõ.
+export function bonkIds(scene,t){const ids=[];for(const {h} of live(scene,t))ids.push(h.a,h.b);return ids;}
+
+const headY=x=>x.y-66*(x.scale||1.4);
+// Dời vị trí người gõ theo đường đi (chỉ trong khung hình này; ghế thật giữ nguyên).
+export function applyBonkWalk(scene,t){
+ const rows=live(scene,t);if(!rows.length||!scene.targets?.length)return;
+ const byId=new Map(scene.targets.map(x=>[x.id,x]));
+ for(const {h,age} of rows){const a=byId.get(h.a),b=byId.get(h.b);if(!a||!b||a===b)continue;
+  const s=b.scale||1.4,side=a.x<=b.x?-1:1,gx=b.x+side*44*s,gy=b.y+2;
+  let k=age<WALK?ease(age/WALK):age<BACK?1:1-ease(clamp((age-BACK)/(END-BACK-.2)));
+  const walking=age<WALK||age>BACK&&k>0,bob=walking?Math.abs(Math.sin(age*TAU*2.6))*5:0;
+  const i=scene.targets.indexOf(a);scene.targets[i]={...a,x:a.x+(gx-a.x)*k,y:a.y+(gy-a.y)*k-bob,bonkFrom:[a.x,a.y]};
+ }
+ scene.targets.sort((p,q)=>p.y-q.y);
+}
+
+function txt(c,s,x,y,font,fill,stroke=5,strokeColor='#1b0d04'){c.font=font;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=stroke;c.strokeStyle=strokeColor;c.strokeText(s,x,y);c.fillStyle=fill;c.fillText(s,x,y);}
+function star(c,x,y,r,fill){c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);}c.closePath();c.fillStyle=fill;c.fill();}
+function stone(c,x,y,r){c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r*.75,y);c.lineTo(x,y+r);c.lineTo(x-r*.75,y);c.closePath();c.fillStyle='#7ff0d8';c.fill();c.strokeStyle='#0c4a44';c.lineWidth=1.2;c.stroke();c.fillStyle='rgba(255,255,255,.75)';c.fillRect(x-r*.2,y-r*.55,r*.3,r*.4);}
+// Búa gỗ: cán nâu + đầu búa trụ, xoay quanh tay (px,py) góc ang.
+function mallet(c,px,py,ang,s){c.save();c.translate(px,py);c.rotate(ang);c.lineCap='round';
+ c.strokeStyle='#3b2412';c.lineWidth=6*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-30*s);c.stroke();c.strokeStyle='#a8743c';c.lineWidth=3.6*s;c.beginPath();c.moveTo(0,0);c.lineTo(0,-30*s);c.stroke();
+ c.fillStyle='#8a5a2b';c.strokeStyle='#2c1a0b';c.lineWidth=2;c.beginPath();c.roundRect?.(-14*s,-42*s,28*s,15*s,5*s);c.fill();c.stroke();
+ c.fillStyle='#d9a35c';c.fillRect(-12*s,-40*s,24*s,3.5*s);c.fillStyle='#e8c27a';c.fillRect(-15*s,-41*s,3*s,13*s);c.fillRect(12*s,-41*s,3*s,13*s);c.restore();}
+
+export function drawBonk(scene,c,t){
+ const b=scene.bonkFest;if(!b)return;const H=scene.height,nowMs=Date.now();
+ c.save();
+ // băng rôn trên cùng: tên sự kiện + đồng hồ / kết quả
+ {const y=H*.165;if(b.active){const left=Math.max(0,Math.ceil((b.endsAt-nowMs)/1000));c.fillStyle='rgba(40,18,6,.78)';c.beginPath();c.roundRect?.(250,y-30,400,60,18);c.fill();c.strokeStyle='#ffcf6b';c.lineWidth=2.5;c.stroke();
+   txt(c,'🔨 HỘI GÕ ĐẦU · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'),450,y-6,'900 26px Segoe UI','#ffe2a0',6);txt(c,'chat  go tên  → đi gõ đầu • bị gõ rơi vài linh thạch',450,y+19,'700 15px Segoe UI','#fff',4);}
+  else if(b.result){const r=b.result;c.fillStyle='rgba(40,18,6,.85)';c.beginPath();c.roundRect?.(220,y-34,460,92,20);c.fill();c.strokeStyle='#ffcf6b';c.lineWidth=2.5;c.stroke();
+   txt(c,'HỘI GÕ ĐẦU KHÉP LẠI',450,y-12,'900 24px Segoe UI','#ffe2a0',6);
+   txt(c,r.hitter?'🔨 Thiết Thủ Vương: '+String(r.hitter.name).slice(0,16)+' ('+r.hitter.n+')':'Chưa ai gõ ai',450,y+16,'800 18px Segoe UI','#fff',4);
+   if(r.victim)txt(c,'🤕 Đầu Sắt: '+String(r.victim.name).slice(0,16)+' ('+r.victim.n+')',450,y+40,'800 18px Segoe UI','#ffd0c0',4);}}
+ const byId=new Map((scene.targets||[]).map(x=>[x.id,x]));
+ for(const {h,age} of live(scene,t)){const a=byId.get(h.a),v=byId.get(h.b);if(!v)continue;
+  const s=v.scale||1.4,F=Math.max(1.5,s*1.9),hy=headY(v),col=COLORS[h.v%COLORS.length],side=a?(a.bonkFrom?.[0]??a.x)<=v.x?-1:1:-1;
+  // búa: có người gõ trên sân thì cầm ở tay, không thì búa từ trời rơi xuống
+  if(age>WALK-.15&&age<BACK){const k=clamp((age-(WALK-.15))/(IMPACT-(WALK-.15)));
+   const L=40*F*.9,HIT=.78;
+   if(a){const dir=-side,sw=age>=IMPACT?HIT:k<.6?-.7*(k/.6):-.7+(HIT+.7)*((k-.6)/.4);mallet(c,v.x-dir*Math.sin(HIT)*L,hy-2+Math.cos(HIT)*L,dir*sw,F*.9);} /* trục búa đặt sao cho lúc bổ xuống đầu búa đúng đỉnh đầu */
+   else{const y0=hy-2+L-150+(age<IMPACT?k*k*150:150);mallet(c,v.x,y0,0,F*.9);}}
+  if(age>=IMPACT){const k=clamp((age-IMPACT)/(END-IMPACT)),fade=1-clamp((age-(END-.4))/.4);
+   c.save();c.globalAlpha=fade;
+   // chớp va chạm
+   if(age<IMPACT+.25){const q=(age-IMPACT)/.25;c.strokeStyle=col;c.lineWidth=3;for(let i=0;i<8;i++){const ang=i*TAU/8+.2,r0=10*s+q*14*s,r1=r0+10*s;c.beginPath();c.moveTo(v.x+Math.cos(ang)*r0,hy-4*s+Math.sin(ang)*r0*.7);c.lineTo(v.x+Math.cos(ang)*r1,hy-4*s+Math.sin(ang)*r1*.7);c.stroke();}}
+   // cục u + sao xoay quanh đầu
+   c.fillStyle='#ffb3a0';c.beginPath();c.ellipse(v.x+2*F,hy-5*F-Math.min(1,k*6)*3*F,4*F*Math.min(1,k*6),3.2*F*Math.min(1,k*6),0,0,TAU);c.fill();
+   for(let i=0;i<3;i++){const ang=age*5.5+i*TAU/3;star(c,v.x+Math.cos(ang)*13*F,hy-8*F+Math.sin(ang)*4*F,4.6*F,i%2?'#fff3b0':col);}
+   // chữ BỐP + tên người gõ
+   const pop=age<IMPACT+.15?.6+(age-IMPACT)/.15*.6:1.2-Math.min(.2,(age-IMPACT-.15)*.5);txt(c,WORDS[h.v%WORDS.length],v.x-side*24*F,hy-14*F-k*10,`900 ${Math.round(36*pop)}px Segoe UI`,col,7);
+   if(!a)txt(c,String(h.an).slice(0,12)+' gõ',v.x,hy-60*F,'800 14px Segoe UI','#fff',4);
+   // linh thạch bay từ đầu người bị gõ sang người gõ (hoặc tỏa ra nếu người gõ không trên sân)
+   if(h.s>0){for(let i=0;i<h.s;i++){const d=clamp((age-IMPACT-.08*i)/1.1);if(d<=0||d>=1)continue;const tx=a?a.x:v.x+(i-1)*30,ty=a?headY(a)+10*s:hy+40*s;const x=v.x+(tx-v.x)*d,y=hy+(ty-hy)*d-Math.sin(d*Math.PI)*36*F;stone(c,x,y,5*F);}
+    txt(c,'-'+h.s+' linh thạch',v.x+side*30*F,hy-6*F-k*16,'900 19px Segoe UI','#9ff5e2',5,'#04231f');}
+   c.restore();}
+ }
+ c.restore();
+}
