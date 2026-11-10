@@ -11,7 +11,7 @@ test('trial web locks cultivation/retreat/qi stages, keeps gear/skins/shop open,
   assert.equal((await api('/api/register',{username:'thuthach',password:'123456'})).ok,true);
   assert.equal((await api('/api/character',{name:'Thử Nghiệm',gender:'nam'})).ok,true);
   assert.equal((await api('/api/site-status')).trial,true);
-  for(const [route,body] of [['/api/act',{type:'cultivate'}],['/api/act',{type:'breakthrough'}],['/api/retreat/start',{hours:1}],['/api/retreat/claim',{}],['/api/tower/start',{}],['/api/dungeon/sweep',{zone:ZONES[0].id,stage:1}],['/api/event/start',{}],['/api/dungeon/start',{zone:ZONES[0].id,stage:2}],['/api/dungeon/start',{zone:ZONES[1].id,stage:1}]]){
+  for(const [route,body] of [['/api/act',{type:'cultivate'}],['/api/act',{type:'breakthrough'}],['/api/act',{type:'brew',itemId:'x'}],['/api/act',{type:'use',itemId:'x'}],['/api/act',{type:'checkin'}],['/api/act',{type:'gather'}],['/api/retreat/start',{hours:1}],['/api/retreat/claim',{}],['/api/tower/start',{}],['/api/dungeon/sweep',{zone:ZONES[0].id,stage:1}],['/api/event/start',{}],['/api/dungeon/start',{zone:ZONES[0].id,stage:2}],['/api/dungeon/start',{zone:ZONES[1].id,stage:1}]]){
     const r=await api(route,body);assert.equal(r.status,403,route);assert.equal(r.trial,true,route);
   }
   // Chủ game chốt 10/11/2026: chỉ khóa tu luyện/bế quan; trang bị, skin, pháp bảo, cường hóa, linh thú, cửa hàng, thư, quà vẫn mở.

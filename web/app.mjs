@@ -263,9 +263,10 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       const TRIAL_LOCKED=new Set(['POST /api/retreat/start','POST /api/retreat/claim','POST /api/dungeon/start','POST /api/dungeon/sweep','POST /api/tower/start','POST /api/event/start']);
       if(trial&&!adminUser&&req.method==='POST'&&(TRIAL_LOCKED.has(route)||route==='POST /api/act')){
         const b=await readBody(req)||{};
-        const lockedAct=route==='POST /api/act'&&['cultivate','breakthrough'].includes(String(b.type||''));
+        // Mọi thao tác ra tu vi: tu luyện, đột phá, luyện đan, dùng đan, điểm danh, hái linh thảo (engine cộng tu vi khi điểm danh/hái).
+        const lockedAct=route==='POST /api/act'&&['cultivate','breakthrough','brew','use','checkin','gather'].includes(String(b.type||''));
         const firstStage=route==='POST /api/dungeon/start'&&String(b.zone||'')===ZONES[0].id&&Number(b.stage)===1;
-        if(lockedAct||(TRIAL_LOCKED.has(route)&&!firstStage))return json(req,res,{ok:false,trial:true,message:'Bản web đang thử nghiệm: tạm khóa tu luyện, đột phá và bế quan (tu vi lên ở LIVE). Trang bị, skin, pháp bảo vẫn dùng được; bí cảnh chỉ mở đánh thử ải đầu.'},403);
+        if(lockedAct||(TRIAL_LOCKED.has(route)&&!firstStage))return json(req,res,{ok:false,trial:true,message:'Bản web đang thử nghiệm: không tăng tu vi trên web (tu luyện, đột phá, bế quan, luyện đan, dùng đan, điểm danh, hái thuốc làm ở LIVE). Trang bị, skin, pháp bảo vẫn dùng được; bí cảnh chỉ mở đánh thử ải đầu.'},403);
       }
 
       // ----- Quản trị: CHỈ trên máy này (qua tunnel/proxy luôn bị chặn). Xem hồ sơ bất kỳ người chơi, chỉ đọc. -----
