@@ -5,8 +5,9 @@
 // Top 1–3 ra cửa nhận thưởng lớn, ai ra cửa cũng có thưởng; ai đi ≥10 bước nhận chút an ủi.
 import {stageConflict} from './stage-lock.mjs';
 
-export const MAZE=Object.freeze({cols:9,rows:13,registerMs:40000,runMs:240000,afterTop3Ms:30000,podiumMs:15000,moveGapMs:300,maxRunners:400,
- hint:[[500,16],[99,14],[20,12],[1,8]],jump:[[500,24],[99,10],[20,4]],hintMs:30000,braid:.1,targetDist:46,
+// 10/11 tối (chủ game: "hơi dễ"): 11×15 ô, gần như không có đường vòng (3%), đường ngắn nhất ~85 bước, chạy 5 phút.
+export const MAZE=Object.freeze({cols:11,rows:15,registerMs:40000,runMs:300000,afterTop3Ms:30000,podiumMs:15000,moveGapMs:300,maxRunners:400,
+ hint:[[500,16],[99,14],[20,12],[1,8]],jump:[[500,24],[99,10],[20,4]],hintMs:30000,braid:.03,targetDist:85,
  reward:{pct:[.04,.03,.02],finisherPct:.01,triedPct:.003,triedSteps:10,stones:[30,20,15],finisherStones:10,triedStones:3},titleMs:3600000});
 const real=p=>p&&!p.resident&&!p.puppet;
 export const mazeActive=w=>['queued','registration','running'].includes(w.maze?.phase);
@@ -23,7 +24,7 @@ export const wallE=(m,x,y)=>x>=m.cols-1||(m.cells[y*m.cols+x]&1)!==0;
 export const wallS=(m,x,y)=>y>=m.rows-1||(m.cells[y*m.cols+x]&2)!==0;
 export function canMove(m,x,y,dir){const [dx,dy]=DIRS[dir];const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=m.cols||ny>=m.rows)return false;
  if(dx===1)return !wallE(m,x,y);if(dx===-1)return !wallE(m,nx,ny);if(dy===1)return !wallS(m,x,y);return !wallS(m,nx,ny);}
-// Mê cung hoàn hảo (đào ngẫu nhiên kiểu backtracker) rồi phá thêm ~10% tường để có vài vòng — lạc vẫn tìm lại được.
+// Mê cung hoàn hảo (đào ngẫu nhiên kiểu backtracker) rồi phá thêm ~3% tường để có ít vòng — lạc vẫn tìm lại được.
 export function generateMaze(seed,cols=MAZE.cols,rows=MAZE.rows){
  const r=rng(seed),cells=new Array(cols*rows).fill(3),seen=new Uint8Array(cols*rows),stack=[[Math.floor(cols/2),rows-1]];seen[(rows-1)*cols+Math.floor(cols/2)]=1;
  while(stack.length){const [x,y]=stack[stack.length-1],opts=[];for(const [dx,dy] of Object.values(DIRS)){const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<cols&&ny<rows&&!seen[ny*cols+nx])opts.push([nx,ny,dx,dy]);}
@@ -31,13 +32,15 @@ export function generateMaze(seed,cols=MAZE.cols,rows=MAZE.rows){
   if(dx===1)cells[y*cols+x]&=~1;else if(dx===-1)cells[ny*cols+nx]&=~1;else if(dy===1)cells[y*cols+x]&=~2;else cells[ny*cols+nx]&=~2;
   seen[ny*cols+nx]=1;stack.push([nx,ny]);}
  for(let i=0;i<cols*rows;i++){const x=i%cols,y=Math.floor(i/cols);if(x<cols-1&&(cells[i]&1)&&r()<MAZE.braid)cells[i]&=~1;if(y<rows-1&&(cells[i]&2)&&r()<MAZE.braid)cells[i]&=~2;}
- const m={cols,rows,cells,start:{x:Math.floor(cols/2),y:rows-1},exit:{x:Math.floor(cols/2),y:0},seed};m.dist=distances(m);return m;
+ // cửa ra: ô hàng trên cùng XA mốc nhất (mỗi lượt một chỗ, không còn đi thẳng lên giữa)
+ const m={cols,rows,cells,start:{x:Math.floor(cols/2),y:rows-1},exit:{x:Math.floor(cols/2),y:rows-1},seed},fromStart=distances(m);let bx=0;for(let x=0;x<cols;x++)if(fromStart[x]>fromStart[bx])bx=x;
+ m.exit={x:bx,y:0};m.dist=distances(m);return m;
 }
 // Khoảng cách (số bước) từ mọi ô tới cửa ra — dùng xếp hạng người chưa ra, soi đường, dịch chuyển.
 export function distances(m){const d=new Array(m.cols*m.rows).fill(-1),q=[[m.exit.x,m.exit.y]];d[m.exit.y*m.cols+m.exit.x]=0;
  for(let h=0;h<q.length;h++){const [x,y]=q[h];for(const dir of Object.keys(DIRS))if(canMove(m,x,y,dir)){const [dx,dy]=DIRS[dir],nx=x+dx,ny=y+dy,k=ny*m.cols+nx;if(d[k]<0){d[k]=d[y*m.cols+x]+1;q.push([nx,ny]);}}}
  return d;}
-function pickMaze(seed){let best=null;for(let i=0;i<8;i++){const m=generateMaze(seed+i*7919),d=m.dist[m.start.y*m.cols+m.start.x];if(!best||Math.abs(d-MAZE.targetDist)<Math.abs(best.d-MAZE.targetDist))best={m,d};}return best.m;}
+function pickMaze(seed){let best=null;for(let i=0;i<12;i++){const m=generateMaze(seed+i*7919),d=m.dist[m.start.y*m.cols+m.start.x];if(!best||Math.abs(d-MAZE.targetDist)<Math.abs(best.d-MAZE.targetDist))best={m,d};}return best.m;}
 // Đường ngắn nhất từ (x,y) đi n bước về phía cửa.
 export function pathAhead(m,x,y,n){const out=[];for(let i=0;i<n;i++){const k=m.dist[y*m.cols+x];if(k<=0)break;let next=null;for(const dir of Object.keys(DIRS))if(canMove(m,x,y,dir)){const [dx,dy]=DIRS[dir];if(m.dist[(y+dy)*m.cols+x+dx]===k-1){next=[x+dx,y+dy];break;}}if(!next)break;[x,y]=next;out.push([x,y]);}return out;}
 const distOf=(e,r)=>e.maze.dist[r.y*e.maze.cols+r.x];

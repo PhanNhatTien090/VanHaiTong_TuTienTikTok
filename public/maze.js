@@ -52,12 +52,17 @@ export function drawMaze(scene,c,t,layer){
  const tt=performance.now(),runners=e.runners||[],seen=new Map(),pos=[];
  for(const r of runners){if(r.f)continue;const p=displayPos(scene,r,L,tt),k=r.x+','+r.y,n=seen.get(k)||0;seen.set(k,n+1);
   // nhiều người cùng ô: xếp xoắn ốc nhỏ quanh tâm ô
-  const ang=n*2.4,rad=n?Math.min(L.cell*.38,6+Math.sqrt(n)*7):0;let x=p.x+Math.cos(ang)*rad,y=p.y+Math.sin(ang)*rad;
+  const ang=n*2.4,rad=n?Math.min(L.cell*.3,5+Math.sqrt(n)*6):0;let x=p.x+Math.cos(ang)*rad,y=p.y+Math.sin(ang)*rad;
   if(now-r.b<320)x+=Math.sin(tt*.09)*3;pos.push({r,x,y,p});}
  const dot=Math.max(7,L.cell*.12);
- for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000;
+ // chỉ skin: bỏ pháp bảo, linh thú, hiệu ứng skin (minimalCrowd tắt VFX khi vẽ thân)
+ const bare=pl=>({...pl,equipped:null,equippedExtra:[],relicVariant:null,spiritPet:null,skinGear:[],artifacts:[]});
+// 10/11 tối (chủ game): hiện SKIN thật của từng người (ảnh nhân vật cache, thu nhỏ vừa ô); quá 80 người thì người xếp sau là chấm sáng cho nhẹ.
+ const sprite=L.cell/72*.4;let sprites=0;pos.sort((a,b)=>a.y-b.y);
+ for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000,pl=sprites<80?scene.playerIndex?.get(r.id):null;
   if(p.moving&&p.dur>300){c.strokeStyle=`hsla(${h},95%,75%,.6)`;c.lineWidth=dot;c.lineCap='round';c.beginPath();c.moveTo(p.fx,p.fy);c.lineTo(x,y);c.stroke();}
   if(fresh)glow(c,x,y,dot*4,`hsla(${h},95%,70%,A)`,.6);
+  if(pl){sprites++;c.save();c.translate(x,y+L.cell*.2);c.scale(sprite,sprite);const prev=scene.minimalCrowd;scene.minimalCrowd=true;try{scene.drawPlayer(c,bare(pl),0,0,t);}catch{}finally{scene.minimalCrowd=prev;}c.restore();continue;}
   c.fillStyle=`hsl(${h},85%,62%)`;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,r.r?dot*1.2:dot,0,TAU);c.fill();c.stroke();}
  // tên: top 5 + người vừa đi/tặng quà gần nhất, tối đa 22
  // mỗi ô tối đa 1 tên (+số người cùng ô) để chữ không chồng nhau; ưu tiên top 5 rồi người vừa đi/tặng quà
