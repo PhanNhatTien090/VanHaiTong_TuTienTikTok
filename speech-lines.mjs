@@ -40,7 +40,7 @@ function giftLines(e,who,Who,t,seed){
  const buff=e.buff?.mult?' Phúc duyên gấp '+multWord(e.buff.mult)+(e.firstGift?' suốt hai mươi phút.':' trong mười phút.'):'';
  const race=e.raceBoost?' Phi kiếm lao vọt '+viNumber(e.raceBoost)+' trượng!':'';
  // 08/11 tối (chủ game): KHÔNG cảm ơn / 'đa tạ tâm ý' — chỉ nói điều vừa xảy ra (tu vi, skin, luật sự kiện).
- const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':e.giftFor?.toName?`${Who} tặng hộ ${sayName(e.giftFor.toName)||'đồng môn'}, tích lũy skin sự kiện!`:`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`}[rule];
+ const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':e.giftFor?.toName?`${Who} tặng hộ ${sayName(e.giftFor.toName)||'đồng môn'}, tích lũy skin sự kiện!`:`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`,'bí cảnh mê cung':e.mazeGift?.moved?`${Who} dịch chuyển ${viNumber(e.mazeGift.moved)} bước!`:e.mazeGift?.hint?`${Who} được soi đường!`:`${Who} vào mê cung!`}[rule];
  const master=(skins?'Chúc mừng '+who+' nhận '+rewards+'!':rewards?Who+' nhận '+rewards+'!':ruleLine||Who+' tặng quà!')+buff+race;
  // 08/11: quà giữa Chính Ma Đại Chiến — hô to quà lật kèo / đại chiêu, rồi mới cảm ơn.
  if(e.warGift){const S=e.warGift==='chinh'?'Chính Đạo':'Ma Đạo',value=(Number(e.coins)||0)*(Number(e.count)||1);
@@ -163,6 +163,14 @@ export function speechPlan(e){
     if(e.alchemyTribStart)return [say('tiennu',pickBy(seed,['Đan kiếp giáng! Giữ vững đan lô!','Thiên lôi thử đan! Giữ vững kết giới!']))];
     if(e.alchemyExplode){const n=sayName(e.alchemyCulprit);return [say('tongsu',n?pickBy(seed,[`Bùm! Nổ lò rồi! ${n} quạt tay quá!`,`Nổ lò! ${n} thổi lửa mạnh quá rồi!`]):'Bùm! Nổ lò rồi! Lần sau nhẹ tay nhé!')];}
     if(e.alchemyEnd){const n=sayName(e.alchemyMaster);return [say('tongsu',`Đan thành, ${g[e.alchemyEnd]||'đan dược'}!`+(n?` Đan sư ${n}!`:''))];}
+    return [];
+  }
+  // ----- Bí Cảnh Mê Cung (10/11): chỉ đọc mở tuyển, mở cửa, top 3 thoát, kết thúc -----
+  if(e.effect==='maze'){
+    if(e.mazeStart)return [say('tongsu',pickBy(seed,['Bí cảnh mê cung mở! Gõ mê cung để vào!','Mê cung bí cảnh hiện thế! Gõ mê cung để vào, tự tìm lối ra!']))];
+    if(e.mazeRun)return [say('tongsu',pickBy(seed,['Mê cung mở cửa! Gõ lên, xuống, trái, phải để đi!','Xuất phát! Mỗi tin một bước, tìm cửa ra!']))];
+    if(e.mazeFinishRank){const rank=['','nhất','nhì','ba'][e.mazeFinishRank];return [say('tiennu',`${Who} thoát mê cung hạng ${rank}!`)];}
+    if(e.mazeEnd){const n=sayName(e.mazeWinner);return [say('tongsu',n?`Mê cung khép lại! Mê Cung Chi Chủ là ${n}!`:'Mê cung khép lại! Lần sau tìm đường nhanh hơn nhé!')];}
     return [];
   }
   if(e.effect==='war'){

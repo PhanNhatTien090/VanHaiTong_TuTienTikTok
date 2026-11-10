@@ -27,6 +27,7 @@ import {recordEventGiftFx} from './event-gift-fx.mjs';
 import {flowerHearts,finishFlowerHearts,bossHearts} from './heart-events.mjs';
 import {raceHearts} from './sword-race.mjs';
 import {warActive,startWar as beginWar,stopWar as endWar,tickWar,warCommand,warHearts,warGift,warView,warStageIds} from './sect-war.mjs';
+import {startMaze as beginMaze,stopMaze as endMaze,tickMaze,mazeCommand,mazeGift,mazeView,mazeActive} from './maze.mjs';
 import {startAlchemy as beginAlchemy,stopAlchemy as endAlchemy,tickAlchemy,alchemyCommand,alchemyHearts,alchemyGift,alchemyView,alchemyStageIds,alchemyActive} from './alchemy.mjs';
 import {DIVINE_ROLES,rankDivineRoles} from './public/divine-wardrobe.js';
 import {honorRoll,honorTitle,eventAvatar,safeAvatar} from './public/honors.js';
@@ -162,7 +163,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen'];
+const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -348,6 +349,7 @@ function actionCore(w,input,now) {
   const avatar=safeAvatar(input.avatar);if(avatar)p.avatar=avatar;
   if(type==='attack'&&w.sectWar?.phase==='running'){const r=warCommand(w,p,'danh',now,socialContext);if(r)return r;}
   if(type==='attack'&&w.race?.phase==='running')return raceCommand(w,p,'danh',now,socialContext);
+  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now);return mz;}} // 10/11: Bí Cảnh Mê Cung
   if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
   if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now);return result;}}
   if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
@@ -536,6 +538,7 @@ function actionCore(w,input,now) {
       const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';}}
     if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;giftEvent.warTruong=war.truong;giftEvent.text+=' • đẩy '+war.truong+' trượng';if(war.flip)giftEvent.warFlip=true;}}
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
+    if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext);if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
     recordEventGiftFx(w,p,giftEvent,now);
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
     p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
@@ -563,6 +566,7 @@ export function giftEventRule(w,now){
  if(['registration','running'].includes(w.race?.phase))return 'đua phi kiếm';
  if(w.sectWar?.phase==='running')return 'chính ma đại chiến';
  if(['opening','brewing','tribulation'].includes(w.alchemy?.phase))return 'lò luyện đan';
+ if(['registration','running'].includes(w.maze?.phase))return 'bí cảnh mê cung';
  if(w.visitor&&!w.visitor.closedAt&&now>=(w.visitor.startedAt||0)&&now<w.visitor.endsAt)return 'tiên nhân truyền đạo';
  if(w.opportunity&&!w.opportunity.closedAt&&now>=(w.opportunity.startedAt||0)&&now<w.opportunity.endsAt)return 'cơ duyên';
  if(w.flowerEvent&&now>=(w.flowerEvent.startedAt||0)&&now<w.flowerEvent.endsAt)return w.flowerEvent.kind==='meteor'?'sao băng':'mưa hoa';
@@ -727,7 +731,7 @@ export const CEREMONY_TITLES=Object.freeze(['THÁI THƯỢNG HỘ PHÁP','TẢ H
 export function honorCeremony(w,now=Date.now(),force=false){
   const top=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&p.giftCoins>0&&currentParticipant(w,p,now)).sort((a,b)=>b.giftCoins-a.giftCoins||a.joinedAt-b.joinedAt).slice(0,3);
   if(!top.length)return fail('Chưa có ai tặng quà đang có mặt.');
-  if(!force&&(eventBusyUntil(w,now)>now||w.boss&&w.boss.hp>0&&now<w.boss.endsAt||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)))return fail('Đang có sự kiện, để sau.');
+  if(!force&&(eventBusyUntil(w,now)>now||w.boss&&w.boss.hp>0&&now<w.boss.endsAt||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)||['registration','running'].includes(w.maze?.phase)))return fail('Đang có sự kiện, để sau.');
   w.lastCeremonyAt=now;
   const list=top.map((p,i)=>({id:p.id,name:p.name,avatar:safeAvatar(p.avatar),coins:p.giftCoins,title:CEREMONY_TITLES[i],realmName:REALMS[p.realm]}));
   emit(w,null,'ĐẠI ĐIỂN VINH DANH • '+list.map(x=>x.title+' '+x.name).join(' • '),'ceremony',now,{ceremony:list});
@@ -837,7 +841,7 @@ function tickCore(w,now) {
   // of losing it repeatedly to competitions and the random-event deck.
   if(!w.settings?.huntBeforeCompetition&&w.settings?.bossInterval<=900&&w.nextBossAt&&now-w.nextBossAt>=5*60000&&!w.boss&&!w.social?.ceremonies?.length&&!automaticEventsPaused(w,now)&&(w.settings?.residents!==false||Object.values(w.players).some(p=>currentParticipant(w,p,now))))openBoss(w,now);
   tickCompetitionSchedule(w,now);
-  tickRace(w,now,socialContext);awardRaceGifts(w,now);tickWar(w,now,socialContext);tickAlchemy(w,now,alchemyContext);
+  tickRace(w,now,socialContext);awardRaceGifts(w,now);tickWar(w,now,socialContext);tickAlchemy(w,now,alchemyContext);tickMaze(w,now,mazeContext);
   tickSocial(w,now,socialContext);
   reconcilePatron(w,now);
 
@@ -886,7 +890,7 @@ export function snapshot(w,now=Date.now(),opts={}) {
   const honors=earlyHonors||honorRoll(w,players);for(const p of players)p.honor=honorTitle(p,honors);
   // v53: chi phí lên từng cảnh giới (tu vi + linh thạch cần ở cảnh giới trước) cho bảng cảnh giới trên LIVE.
   const realmCosts=REALMS.map((name,r)=>r?{qi:requiredQi({realm:r-1}),stones:requiredStones({realm:r-1})}:null);
-  return {...w,alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,quizUsed:undefined,engagement:engagementView(w,now),serverNow:now,environment:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
+  return {...w,maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,quizUsed:undefined,engagement:engagementView(w,now),serverNow:now,environment:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
 }
 export function ingest(w,event,now=Date.now()) {
   if(w.mode==='live'&&(event.simulated||event.autoRose||event.data?.simulated||event.data?.autoRose))return fail('Sự kiện mô phỏng không được ghi vào LIVE.');
@@ -1242,6 +1246,9 @@ export const stopWar=(w,now=Date.now())=>endWar(w,now,socialContext);
 const alchemyContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>requiredQi(p)/progressionMult(p)};
 export const startAlchemy=(w,now=Date.now())=>beginAlchemy(w,now,alchemyContext);
 export const stopAlchemy=(w,now=Date.now())=>endAlchemy(w,now);
+const mazeContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>requiredQi(p)/progressionMult(p)};
+export const startMaze=(w,now=Date.now())=>beginMaze(w,now,mazeContext);
+export const stopMaze=(w,now=Date.now())=>endMaze(w,now);
 export const stopRace=(w,now=Date.now())=>endRace(w,now,socialContext);
 
 export const startBondFestival=(w,now=Date.now())=>beginBondFestival(w,now,socialContext);
