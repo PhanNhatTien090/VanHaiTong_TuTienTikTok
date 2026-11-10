@@ -6,7 +6,7 @@ import {drawRitual} from '../public/live-cinema.js';
 import {breakthroughDuration} from '../public/breakthrough-fx.js';
 import {presentationDuration} from '../public/presentation.js';
 import {scheduleKimDanAudio,kimDanMusicDuck} from '../public/kim-dan-audio.js';
-import {CultivationAudio} from '../public/audio.js';
+import {CultivationAudio,MUSIC_GAIN} from '../public/audio.js';
 const at=(t,H=1600,motion=true)=>kimDanState(t/11.8,H,motion);
 
 test('nine gold drops coalesce, three seals close, and the core enters before the solar release',()=>{
@@ -51,6 +51,6 @@ test('liquid arrivals and solar impact have one audio clock; missed transients a
 test('dedicated Kim Đan audio starts once, ducks smoothly and stops on interruption',async()=>{
  const a=new CultivationAudio();a.enabled=true;a.ctx=new Context();a.master=a.ctx.createGain();a.ambBus=a.ctx.createGain();a.fxBus=a.ctx.createGain();a.music={volume:0};
  const event={toRealm:3,duration:11800};a.ritual(event,0);const count=a.ctx.sources.length;a.ritual(event,9400);assert.equal(a.ctx.sources.length,count);assert.equal(a.qiSession.duck,.14);
- a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*.28);await new Promise(r=>setTimeout(r,100));assert.ok(a.ctx.nodes.some(n=>n.disconnected));
+ a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*MUSIC_GAIN*.28);await new Promise(r=>setTimeout(r,100));assert.ok(a.ctx.nodes.some(n=>n.disconnected));
  a.enabled=false;a.ritual(event);assert.equal(a.qiSession,null);
 });

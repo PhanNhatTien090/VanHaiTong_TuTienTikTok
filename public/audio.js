@@ -30,6 +30,8 @@ export function softClipCurve(n=4096){const a=new Float32Array(n);for(let i=0;i<
 function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.createWaveShaper();w.curve=softClipCurve();w.oversample='4x';return w;}
 // 08/11 tối: 3 bản nhạc nền tu tiên, chuẩn hóa -19 LUFS (to hơn bản cũ -23 LUFS ~4 dB). Nguồn + giấy phép: public/assets/AUDIO.md.
 // 09/11: 8 bài; mỗi bài lặp tới lúc đổi (tự đổi mỗi 30 phút hoặc theo trang quản lý) — xem music-rotation.js.
+// 10/11 (chủ game): nhạc nền to hơn ~4 dB, chỉ nhạc nền (không đụng tiếng hiệu ứng).
+export const MUSIC_GAIN=1.6;
 export const BGM_TRACKS=Object.freeze(BGM_LIST.map(t=>t.src));
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.3;this.ambient=.45;this.sfx=.75;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
@@ -60,7 +62,7 @@ export class CultivationAudio {
     const buf=c.createBuffer(1,c.sampleRate*4,c.sampleRate),d=buf.getChannelData(0);let low=0;for(let i=0;i<d.length;i++){low=.985*low+.015*(Math.random()*2-1);d[i]=low;}
     const noise=c.createBufferSource();noise.buffer=buf;noise.loop=true;const filter=c.createBiquadFilter(),gain=c.createGain();filter.type='lowpass';filter.frequency.value=650;gain.gain.value=typeof Audio==='undefined'?.14:.025;noise.connect(filter);filter.connect(gain);gain.connect(this.ambBus);noise.start();this.sync();
   }
-  sync(){if(this.music)this.music.volume=this.volume*this.ambient*Math.min(this.ducked?.28:1,this.qiSession?(this.qiSession.duck??.22):1);if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t,.3);this.fxBus.gain.setTargetAtTime(this.sfx,t,.08);}
+  sync(){if(this.music)this.music.volume=Math.min(1,this.volume*this.ambient*MUSIC_GAIN*Math.min(this.ducked?.28:1,this.qiSession?(this.qiSession.duck??.22):1));if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t,.3);this.fxBus.gain.setTargetAtTime(this.sfx,t,.08);}
   ritual(event,elapsed=0){
     if(!event||!this.enabled||this.ctx?.state!=='running'){
       if(this.qiSession){this.qiSession.audio.stop();this.qiSession=null;this.sync();}return;

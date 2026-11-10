@@ -7,7 +7,7 @@ import {drawRitual} from '../public/live-cinema.js';
 import {breakthroughDuration} from '../public/breakthrough-fx.js';
 import {presentationDuration} from '../public/presentation.js';
 import {scheduleNguyenAnhAudio,nguyenAnhMusicDuck} from '../public/nguyen-anh-audio.js';
-import {CultivationAudio} from '../public/audio.js';
+import {CultivationAudio,MUSIC_GAIN} from '../public/audio.js';
 const at=(t,H=1600,motion=true)=>nguyenAnhState(t/14.4,H,motion);
 
 test('lotus opens in three layers, the spirit manifests and enters before the release',()=>{
@@ -56,5 +56,5 @@ test('audio follows bloom/release milestones and skips stale impacts after resum
 test('dedicated spirit audio starts once and interruption preserves narration duck',async()=>{
  const a=new CultivationAudio();a.enabled=true;a.ctx=new Context();a.master=a.ctx.createGain();a.ambBus=a.ctx.createGain();a.fxBus=a.ctx.createGain();a.music={volume:0};
  const event={toRealm:4,duration:14400};a.ritual(event,0);const count=a.ctx.sources.length;a.ritual(event,10800);assert.equal(a.ctx.sources.length,count);assert.equal(a.qiSession.duck,.13);
- a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*.28);await new Promise(r=>setTimeout(r,100));assert.ok(a.ctx.nodes.some(n=>n.disconnected));a.enabled=false;a.ritual(event);assert.equal(a.qiSession,null);
+ a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*MUSIC_GAIN*.28);await new Promise(r=>setTimeout(r,100));assert.ok(a.ctx.nodes.some(n=>n.disconnected));a.enabled=false;a.ritual(event);assert.equal(a.qiSession,null);
 });

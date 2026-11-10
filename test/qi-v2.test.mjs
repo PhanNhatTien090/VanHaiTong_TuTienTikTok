@@ -4,7 +4,7 @@ import {createCanvas} from '@napi-rs/canvas';
 import {qiEnergyState,qiStreamPoint} from '../public/qi-energy.js';
 import {drawQiAwakening} from '../public/qi-awakening.js';
 import {scheduleQiAudio} from '../public/qi-audio.js';
-import {CultivationAudio} from '../public/audio.js';
+import {CultivationAudio,MUSIC_GAIN} from '../public/audio.js';
 
 test('energy ends at the dantian, compresses before the burst, and settles in reduced motion',()=>{
  const origin={x:450,y:994};
@@ -47,11 +47,11 @@ test('one audio timeline per event, mute/interruption cleans up, voice ducking s
  a.master=a.ctx.createGain();a.ambBus=a.ctx.createGain();a.fxBus=a.ctx.createGain();a.music={volume:0};
  const event={duration:8800};a.ritual(event,0);const count=a.ctx.sources.length;
  assert.ok(count>10);a.ritual(event,500);assert.equal(a.ctx.sources.length,count);
- a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*.28);
+ a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*MUSIC_GAIN*.28);
  assert.ok(a.ctx.sources.every(n=>n.stopAt<=a.ctx.currentTime+.05));
  await new Promise(resolve=>setTimeout(resolve,100));
  assert.ok(a.ctx.nodes.filter(n=>n!==a.master&&n!==a.ambBus&&n!==a.fxBus).some(n=>n.disconnected));
- a.duck(false);assert.equal(a.music.volume,a.volume*a.ambient);
+ a.duck(false);assert.equal(a.music.volume,a.volume*a.ambient*MUSIC_GAIN);
  a.enabled=false;a.ritual(event);assert.equal(a.qiSession,null);
 });
 

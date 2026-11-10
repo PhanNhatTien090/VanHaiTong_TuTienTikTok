@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {CultivationAudio} from '../public/audio.js';
+import {CultivationAudio,MUSIC_GAIN} from '../public/audio.js';
 class Param {constructor(){this.value=0;}setValueAtTime(v){assert.ok(Number.isFinite(v));}linearRampToValueAtTime(v){assert.ok(Number.isFinite(v));}exponentialRampToValueAtTime(v){assert.ok(v>0);}setTargetAtTime(v){assert.ok(Number.isFinite(v));}cancelScheduledValues(){}}
 class AudioNode {constructor(){this.gain=new Param();this.frequency=new Param();for(const key of ['threshold','knee','ratio','attack','release'])this[key]=new Param();}connect(){}start(){FakeContext.started++;}stop(){}}
 class FakeContext {static started=0;constructor(){this.currentTime=10;this.sampleRate=8000;this.destination={};this.state='suspended';}createGain(){return new AudioNode();}createOscillator(){return new AudioNode();}createBiquadFilter(){return new AudioNode();}createDynamicsCompressor(){return new AudioNode();}createBufferSource(){return new AudioNode();}createBuffer(ch,n){const d=new Float32Array(n);return {getChannelData:()=>d};}async resume(){this.state='running';}async suspend(){this.state='suspended';}async close(){this.state='closed';}}
@@ -12,5 +12,5 @@ test('browser uses recorded background loop and reports autoplay failure without
   globalThis.AudioContext=FakeContext;
   globalThis.Audio=class {constructor(src){this.src=src;}async play(){if(this.blocked)throw Error('autoplay blocked');this.playing=true;}pause(){this.playing=false;}};
   const a=new CultivationAudio();
-  try{await a.enable(true);assert.match(a.music.src,/bgm-tu-tien-[1-8].mp3/);assert.equal(a.music.loop,true);const first=a.music.src,cur=a.track;a.setTrack((cur+1)%8);assert.notEqual(a.music.src,first);assert.match(a.music.src,/bgm-tu-tien-[1-8].mp3/);a.setTrack((cur+1)%8);assert.equal(a.music.playing,true);a.duck(true);assert.equal(a.music.volume,a.volume*a.ambient*.28);await a.enable(false);assert.equal(a.music.playing,false);a.music.blocked=true;await assert.rejects(a.enable(true),/autoplay blocked/);assert.equal(a.enabled,false);assert.equal(a.ctx.state,'suspended');}finally{a.destroy();delete globalThis.Audio;}
+  try{await a.enable(true);assert.match(a.music.src,/bgm-tu-tien-[1-8].mp3/);assert.equal(a.music.loop,true);const first=a.music.src,cur=a.track;a.setTrack((cur+1)%8);assert.notEqual(a.music.src,first);assert.match(a.music.src,/bgm-tu-tien-[1-8].mp3/);a.setTrack((cur+1)%8);assert.equal(a.music.playing,true);a.duck(true);assert.equal(a.music.volume,Math.min(1,a.volume*a.ambient*MUSIC_GAIN*.28));await a.enable(false);assert.equal(a.music.playing,false);a.music.blocked=true;await assert.rejects(a.enable(true),/autoplay blocked/);assert.equal(a.enabled,false);assert.equal(a.ctx.state,'suspended');}finally{a.destroy();delete globalThis.Audio;}
 });

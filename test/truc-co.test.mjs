@@ -6,7 +6,7 @@ import {drawRitual} from '../public/live-cinema.js';
 import {breakthroughDuration} from '../public/breakthrough-fx.js';
 import {presentationDuration} from '../public/presentation.js';
 import {scheduleTrucCoAudio,trucCoMusicDuck} from '../public/truc-co-audio.js';
-import {CultivationAudio} from '../public/audio.js';
+import {CultivationAudio,MUSIC_GAIN} from '../public/audio.js';
 
 const at=(time,H=1600,motion=true)=>trucCoState(time/10.8,H,motion);
 test('eight bamboo swords rise in sequence, then three foundation tiers raise the actor',()=>{
@@ -57,7 +57,7 @@ test('a Trúc Cơ soundtrack starts once and restores music without cancelling n
  const a=new CultivationAudio();a.enabled=true;a.ctx=new Context();a.fxBus=a.ctx.createGain();a.ambBus=a.ctx.createGain();a.master=a.ctx.createGain();a.music={volume:0};
  const e={toRealm:2,duration:10800};a.ritual(e,0);const count=a.ctx.sources.length;
  a.ritual(e,8700);assert.equal(a.ctx.sources.length,count);assert.equal(a.qiSession.duck,.16);
- a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*.28);
+ a.duck(true);a.ritual(null);assert.equal(a.music.volume,a.volume*a.ambient*MUSIC_GAIN*.28);
  await new Promise(r=>setTimeout(r,100));assert.ok(a.ctx.nodes.some(n=>n.disconnected));
  a.enabled=false;a.ritual(e);assert.equal(a.qiSession,null);
 });
