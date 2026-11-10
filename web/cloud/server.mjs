@@ -9,6 +9,7 @@ import { createWebApp } from '../app.mjs';
 import { snapshot } from '../../engine.mjs';
 import { authenticate } from './protocol.mjs';
 import { openCloudStore } from './store.mjs';
+import { createLichLuyen, lichLuyenOptions } from '../lich-luyen/service/api.mjs';
 
 export function createCloudServer({ dataDir, secret, secureCookie = true, trustProxy = true, gameplay = false, errorLog = createErrorLog(dataDir) }) {
   if (typeof secret !== 'string' || secret.length < 48) throw Error('WEB_SYNC_SECRET must contain at least 48 characters');
@@ -27,6 +28,7 @@ export function createCloudServer({ dataDir, secret, secureCookie = true, trustP
     }
   }
   const playSessions=gameplay?createPlaySessions({store,world,notify}):null;
+  const lichLuyen=createLichLuyen({dataDir,...lichLuyenOptions()}); // tắt mặc định (LICH_LUYEN=1 để bật)
   const updates = {subscribe(req,res,user) {
     if (clients.size>=100 || [...clients.values()].filter(u=>u.id===user.id).length>=5) return writeJson(res,429,{ok:false,message:'Đã mở quá nhiều cửa sổ.'});
     res.writeHead(200,{'Content-Type':'text/event-stream; charset=utf-8','Cache-Control':'no-cache, no-transform','Connection':'keep-alive','X-Accel-Buffering':'no'});
@@ -63,13 +65,13 @@ export function createCloudServer({ dataDir, secret, secureCookie = true, trustP
       return writeJson(res,200,{ok:true,seq:result.seq,duplicate:!!result.duplicate,playSessions:gameplay});
     } catch(e) {errorLog.record('sync',{message:e.message});return writeJson(res,409,{ok:false,message:e.message});}
   }
-  app=createWebApp({world,dataDir,accountStore:accounts,profileOnly:!gameplay,playSessions,publicOnly:true,devTools:false,tikfinity:false,secureCookie,trustProxy,handleInternal,errorLog,updates,siteStatus:status,onChange:notify,markDirty:()=>store.saveLocal(world),limits:{requestsPerIp:1800,authPerIp:60},liveState:()=>status().liveConnected?snapshot(structuredClone(world)):{players:[],feed:[],events:[],boss:null}});
+  app=createWebApp({world,dataDir,accountStore:accounts,profileOnly:!gameplay,playSessions,publicOnly:true,devTools:false,tikfinity:false,secureCookie,trustProxy,handleInternal,errorLog,updates,siteStatus:status,lichLuyen,onChange:notify,markDirty:()=>store.saveLocal(world),limits:{requestsPerIp:1800,authPerIp:60},liveState:()=>status().liveConnected?snapshot(structuredClone(world)):{players:[],feed:[],events:[],boss:null}});
   // Prevent public registration before private migration; import via CLI while stopped.
   if(!store.get('accounts'))store.put('accounts',{users:{},sessions:{},links:{},nextId:1});
   const heartbeat=setInterval(()=>{for(const [res] of clients){if(!accounts.userForSession(res.vhToken)||res.writableLength>65536){res.end();clients.delete(res);}else res.write(': heartbeat\n\n');}},20000);heartbeat.unref();
   const saver=setInterval(()=>accounts.save(),3000);saver.unref();
   const backupTimer=setInterval(()=>{try{accounts.save();store.backup();}catch(e){console.error('[cloud] Backup failed:',e.message);errorLog.record('backup',{message:e.message});}},30*60000);backupTimer.unref();
-  return { ...app,store,world,status,notify,playSessions,async close(){clearInterval(heartbeat);clearInterval(saver);clearInterval(backupTimer);for(const [res]of clients)res.end();accounts.save();await new Promise(resolve=>app.server.close(resolve));store.close();} };
+  return { ...app,store,world,status,notify,playSessions,async close(){clearInterval(heartbeat);clearInterval(saver);clearInterval(backupTimer);for(const [res]of clients)res.end();accounts.save();await new Promise(resolve=>app.server.close(resolve));lichLuyen?.close();store.close();} };
 }
 
 const direct=process.argv[1] && path.resolve(process.argv[1])===fileURLToPath(import.meta.url);

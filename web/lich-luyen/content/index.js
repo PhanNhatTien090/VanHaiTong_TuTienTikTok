@@ -6,6 +6,7 @@ import roots from './roots.js';
 import skills from './skills.js';
 import monsters from './monsters.js';
 import stages from './stages.js';
+import stats from './stats.js';
 import vi from './text/vi.js';
 
 const ID = /^[a-z]+(\.[a-z0-9]+(-[a-z0-9]+)*)+$/;
@@ -114,6 +115,7 @@ export function validateContent(c, text = vi) {
     const w = `stage[${i}] ${st.id}`;
     checkId(w, st.id); checkText(w, st.nameKey); checkText(w, st.map);
     nonNegInt(w, 'level', st.level); nonNegInt(w, 'timeLimit', st.timeLimit);
+    nonNegInt(w, 'rewards.qi', st.rewards?.qi); nonNegInt(w, 'rewards.linhThach', st.rewards?.linhThach);
     const [aw, ah] = st.arena || []; nonNegInt(w, 'arena.w', aw); nonNegInt(w, 'arena.h', ah);
     const inside = (p, what) => { if (!Array.isArray(p) || !(p[0] >= 0 && p[0] <= aw && p[1] >= 0 && p[1] <= ah)) err(w, `${what} nằm ngoài sân`); };
     inside(st.playerStart, 'playerStart');
@@ -124,6 +126,11 @@ export function validateContent(c, text = vi) {
       for (const sp of wv.spawn || []) { if (!monsterIds.has(sp.monster)) err(w, `quái không tồn tại "${sp.monster}"`); nonNegInt(w, 'count', sp.count); inside(sp.at, 'điểm xuất quái'); }
     });
   });
+
+  // Chỉ số gốc
+  for (const k of ['hp', 'mp', 'atk', 'def', 'spd', 'crit', 'critDmg']) nonNegInt('stats.base', k, c.stats?.base?.[k]);
+  for (const [k, v] of Object.entries(c.stats?.growth || {})) if (!Number.isSafeInteger(v) || v < 100 || v > 130) err('stats.growth', `${k} phải trong 100..130`);
+  nonNegInt('stats', 'qualityPermille', c.stats?.qualityPermille); nonNegInt('stats', 'mpCap', c.stats?.mpCap);
 
   if (errors.length) throw Error('Nội dung Lịch luyện sai:\n- ' + errors.join('\n- '));
 }
@@ -139,8 +146,8 @@ const ACTIONS = {
 const EFFECTS = { damage: ['mult'], knockback: ['distance'], stun: ['ticks'], burn: ['ticks', 'period', 'mult'], heal: ['mult'] };
 const AIS = new Set(['chase', 'kite']);
 
-export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages }, text = vi) {
-  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [] });
+export function loadContent(raw = { realms, paths, roots, curve: REALM_CURVE, skills, monsters, stages, stats }, text = vi) {
+  const c = structuredClone({ realms: raw.realms, paths: raw.paths, roots: raw.roots, curve: raw.curve, skills: raw.skills || [], monsters: raw.monsters || [], stages: raw.stages || [], stats: raw.stats || stats });
   validateContent(c, text);
   const version = fnv64(stableJson(c));
   const byId = new Map();

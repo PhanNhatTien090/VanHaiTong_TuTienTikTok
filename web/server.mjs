@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { createWorld, prepareSocial, migrateDivineWardrobe } from '../engine.mjs';
 import { createWebApp } from './app.mjs';
 import { pollLive } from './live-view.mjs';
+import { createLichLuyen, lichLuyenOptions } from './lich-luyen/service/api.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = process.env.WEB_DATA_DIR || path.join(here, 'data');
@@ -39,8 +40,9 @@ let liveState = null;
 const liveUrl = process.env.WEB_LIVE_URL ?? 'http://127.0.0.1:4317/api/state?world=live';
 if (liveUrl && process.env.WEB_NO_LISTEN !== '1') pollLive(liveUrl, s => { liveState = s; });
 
+const lichLuyen = createLichLuyen({ dataDir, ...lichLuyenOptions() }); // LICH_LUYEN=1 để bật
 const app = createWebApp({
-  world, dataDir,
+  world, dataDir, lichLuyen,
   markDirty: () => { dirty = true; },
   liveState: () => liveState,
   devTools: process.env.WEB_DEV_TOOLS !== '0',

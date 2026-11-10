@@ -23,7 +23,7 @@ import { createErrorLog } from './error-log.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(here, '..');
 
-export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', trial = process.env.WEB_CLOUD_TRIAL === '1', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {}, errorLog = null }) {
+export function createWebApp({ world, dataDir, markDirty = () => {}, liveState = () => null, devTools = false, trustProxy = false, secureCookie = false, tikfinity = true, profileOnly = process.env.WEB_PROFILE_ONLY !== '0', trial = process.env.WEB_CLOUD_TRIAL === '1', accountStore = null, publicOnly = false, handleInternal = null, updates = null, playSessions = null, siteStatus = () => ({}), onChange = () => {}, limits = {}, errorLog = null, lichLuyen = null }) {
   fs.mkdirSync(dataDir, { recursive: true });
   const accounts = accountStore || createAccountStore(path.join(dataDir, 'accounts.json'));
   const dungeon = createDungeon();
@@ -186,8 +186,14 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
     res.writeHead(200, { ...headers, 'Content-Length': st.size });
     fs.createReadStream(file).pipe(res);
   }
+  // Lịch luyện: lõi + nội dung chạy chung trình duyệt/server → phục vụ thẳng từ web/lich-luyen/{core,content} (chỉ .js/.mjs).
+  const llRoot = path.join(here, 'lich-luyen');
   function serveStatic(req, res, pathname) {
     if (LIBS[pathname]) return serveFile(req, res, LIBS[pathname], '.js', 'public, max-age=604800');
+    if (lichLuyen && /^\/ll\/(core|content)\/[a-z0-9\/._-]+\.m?js$/.test(pathname) && !pathname.includes('..')) {
+      const file = path.normalize(path.join(llRoot, pathname.slice(4)));
+      if (file.startsWith(llRoot + path.sep) && fs.existsSync(file)) return serveFile(req, res, file, path.extname(file), 'no-cache');
+    }
     let rel;
     try { rel = decodeURIComponent(pathname); } catch { rel = '/'; }
     if (rel === '/' || rel === '') rel = '/index.html';
@@ -219,6 +225,8 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       if (!url.pathname.startsWith('/api/') && !url.pathname.startsWith('/dev/') && !url.pathname.startsWith('/admin/')) return serveStatic(req, res, url.pathname);
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json')) return json(req, res, { ok: false, message: 'Yêu cầu không hợp lệ.' }, 400);
       if (limited('ip:' + ip, limits.requestsPerIp || 240, 60000, now)) return json(req, res, { ok: false, message: 'Quá nhiều yêu cầu, thử lại sau.' }, 429);
+      // Lịch luyện có bộ đọc body riêng (đầu vào trận lớn hơn giới hạn 8 KB chung) → xử lý trước khi web đọc body.
+      if (lichLuyen && url.pathname.startsWith('/api/ll/')) return await lichLuyen.handle(req, res, url, accounts.userForSession(cookies(req).vh_session, now));
       if(playSessions&&req.method==='POST')req.playBody=await readBody(req);
       const token = cookies(req).vh_session, user = accounts.userForSession(token, now), route = req.method + ' ' + url.pathname;
 

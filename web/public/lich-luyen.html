@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Lịch Luyện · Vân Hải Tông</title>
+<style>
+  :root { --bg:#0d1117; --panel:#161c26; --line:#2a3445; --text:#e8e3d3; --muted:#9aa4b2; --gold:#e8c46a; --hp:#e05a5a; --mp:#4f8fe6; --ok:#5fbf7a; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, "Segoe UI", sans-serif; overflow:hidden; touch-action:none; }
+  #app { position:fixed; inset:0; }
+  .screen { position:absolute; inset:0; display:none; overflow:auto; padding:16px; touch-action:pan-y; }
+  .screen.on { display:block; }
+  h1 { font-size:22px; margin:4px 0 12px; color:var(--gold); letter-spacing:.5px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; margin:10px 0; max-width:640px; }
+  .paths { display:grid; gap:10px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); max-width:900px; }
+  .path { cursor:pointer; border:2px solid var(--line); }
+  .path.sel { border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset; }
+  .path canvas { width:100%; height:120px; display:block; border-radius:8px; background:#0a0e14; }
+  .muted { color:var(--muted); font-size:13px; }
+  button { font:inherit; color:#1a1408; background:var(--gold); border:0; border-radius:10px; padding:10px 18px; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.5; }
+  input { font:inherit; color:var(--text); background:#0a0e14; border:1px solid var(--line); border-radius:8px; padding:9px 10px; width:100%; max-width:280px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:6px; font-size:14px; }
+  .bar { height:8px; background:#0a0e14; border-radius:6px; overflow:hidden; } .bar > i { display:block; height:100%; background:var(--gold); }
+  #battle { padding:0; overflow:hidden; touch-action:none; }
+  #cv { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .hud { position:absolute; left:12px; top:10px; right:12px; display:flex; gap:10px; align-items:center; pointer-events:none; font-size:13px; }
+  .hud .bars { width:min(260px,40vw); } .hud .bars .bar { height:10px; margin:3px 0; }
+  .btns { position:absolute; right:max(14px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); width:190px; height:190px; }
+  .btn { position:absolute; border-radius:50%; display:grid; place-items:center; color:#fff; font-weight:700; font-size:13px; background:rgba(30,40,58,.78); border:2px solid rgba(232,196,106,.6); user-select:none; touch-action:none; }
+  .btn .cd { position:absolute; inset:0; border-radius:50%; background:conic-gradient(rgba(0,0,0,.6) var(--p,0%), transparent 0); }
+  .btn.atk { width:92px; height:92px; right:0; bottom:0; } .btn.spc { width:64px; height:64px; right:100px; bottom:6px; } .btn.dsh { width:64px; height:64px; right:14px; bottom:104px; }
+  .btn.down { background:rgba(232,196,106,.45); }
+  .result { position:absolute; inset:0; display:none; place-items:center; background:rgba(5,8,12,.72); }
+  .result.on { display:grid; } .result .card { text-align:center; min-width:260px; }
+  .stars { font-size:34px; color:var(--gold); letter-spacing:6px; }
+  .rotate { display:none; position:absolute; inset:0; place-items:center; text-align:center; padding:24px; background:rgba(5,8,12,.9); font-size:17px; z-index:5; pointer-events:none; }
+  @media (orientation: portrait) and (max-width: 700px) { #battle .rotate { display:grid; } }
+  .hint { position:absolute; left:16px; bottom:14px; font-size:12px; color:var(--muted); pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <section class="screen on" id="loading"><h1>Lịch Luyện</h1><p class="muted">Đang mở…</p></section>
+  <section class="screen" id="message"><h1>Lịch Luyện</h1><div class="card" id="messageText"></div><a href="/" style="color:var(--gold)">← Về Vân Hải Tông</a></section>
+  <section class="screen" id="create">
+    <h1>Đi lịch luyện · tạo phân thân</h1>
+    <p class="muted">Phân thân chơi riêng ở web, bắt đầu từ Phàm Nhân. Hồ sơ LIVE giữ nguyên.</p>
+    <div class="paths" id="paths"></div>
+    <div class="card"><label>Tên phân thân<br><input id="avatarName" maxlength="24"></label><p><button id="createBtn" disabled>Tạo phân thân</button></p><p class="muted" id="createMsg"></p></div>
+  </section>
+  <section class="screen" id="home">
+    <h1 id="homeTitle">Lịch Luyện</h1>
+    <div class="card"><div id="homeInfo"></div><div class="bar" style="margin:8px 0"><i id="qiBar"></i></div><div class="stats" id="homeStats"></div></div>
+    <div class="card"><b>Thanh Vân Châu</b><div id="stageList"></div></div>
+    <p class="muted">Máy tính: WASD/mũi tên di chuyển · J đánh · K tuyệt kỹ · Space lướt.</p>
+  </section>
+  <section class="screen" id="battle">
+    <canvas id="cv"></canvas>
+    <div class="hud"><div class="bars"><div class="bar"><i id="hpBar" style="background:var(--hp)"></i></div><div class="bar"><i id="mpBar" style="background:var(--mp)"></i></div></div><div id="hudText"></div></div>
+    <div class="btns">
+      <div class="btn atk" data-btn="1"><span class="cd"></span><span>Đánh</span></div>
+      <div class="btn spc" data-btn="2"><span class="cd"></span><span>Tuyệt kỹ</span></div>
+      <div class="btn dsh" data-btn="4"><span class="cd"></span><span>Lướt</span></div>
+    </div>
+    <div class="rotate">⟲ Xoay ngang điện thoại để lịch luyện</div>
+    <div class="hint" id="hint">Kéo nửa trái màn hình để di chuyển</div>
+    <div class="result" id="result"><div class="card"><div id="resultTitle" style="font-size:20px;font-weight:700"></div><div class="stars" id="resultStars"></div><div id="resultText" class="muted"></div><p><button id="resultBtn">Tiếp tục</button></p></div></div>
+  </section>
+</div>
+<script type="module" src="/lich-luyen/play.js"></script>
+</body>
+</html>

@@ -10,7 +10,7 @@ export default [
   {
     id: 'path.the-tu', nameKey: 'path.the-tu', descKey: 'path.the-tu.desc', weapon: 'quyen', range: 70,
     kit: { attack: 'skill.the.bang-son-quyen', special: 'skill.the.chan-dia-chuong', dash: 'skill.the.thiet-nguu-xung' },
-    statMult: { hp: 1300, atk: 1000, def: 1250, spd: 950, crit: 900, critDmg: 1000 },
+    statMult: { hp: 1300, atk: 1000, def: 1600, spd: 950, crit: 900, critDmg: 1000 },
     branches: [{ id: 'branch.kim-cuong', nameKey: 'path.the-tu.kim-cuong' }, { id: 'branch.cuong-huyet', nameKey: 'path.the-tu.cuong-huyet' }],
   },
   {
