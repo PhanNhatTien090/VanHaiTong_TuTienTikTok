@@ -54,3 +54,7 @@ toàn bộ test; server thử cổng 4399 + xem giao diện Chrome; restart an t
 
 ### Mặc định chờ user chốt
 Giữ log 30 ngày; chỉ ghi bình luận có lệnh; chấm đỏ trên trang quản lý khi có người mới bị đánh dấu (chưa chốt).
+
+## Tặng hộ (10/11/2026)
+
+Lệnh `tang <tên|mã|@id>`: quà trong sự kiện skin/Linh Thú Cốc cộng tiến độ cho người nhận đang ở LIVE (`gift-for.mjs`). Bản ghi audit `gift` có thêm `recipient`/`recipientName`. Một người nhận skin/linh thú mà không tự tặng đồng nào → xem audit có `recipient` trỏ tới họ trước khi nghi lỗi. Nhiều nick cùng dồn cho một người là hợp lệ (người tặng trả tiền thật).

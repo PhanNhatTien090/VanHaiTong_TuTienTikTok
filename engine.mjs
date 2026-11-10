@@ -18,6 +18,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
+import {giftForCommand,giftForTarget,giftForEventEnd} from './gift-for.mjs';
 import {ALL_PETS} from './public/spirit-pets.js';
 import {controlLantern,lanternCommand,tickLantern,lanternView} from './lantern-festival.mjs';
 import {createCompanionPair,companionCommand,companionActivity,finishGuard,tickCompanions,companionView} from './companions.mjs';
@@ -317,7 +318,7 @@ function unlockedAction(w,input,now) {
   if(result.ok&&!result.duplicate&&!result.pending&&w.mode==='live'&&w.settings?.engagementRewards!==true&&w.settings?.heartPlay===false&&['cultivate','gather','attack'].includes(input.type)&&introPlayer&&!introPlayer.puppet&&!introPlayer.resident){
     flowerScore(w,introPlayer,5,now);festivalActivity(w,introPlayer,input,now,socialContext);
   }
-  const p=w.players[clean(input.userId,80)];if(p&&Object.hasOwn(w.players,p.id)){if(result.ok&&!result.duplicate&&!result.pending){companionActivity(w,p,input,now,companionContext);petActivity(w,p,input,now,emit);advanceVisitor(w,p,input,now);bondActivity(w,p,input,now,socialContext);if(input.type==='gift')w.social.visualBusyUntil=now+10000;}checkReady(w,p,now);trackTasks(w,p,input,result,now,engageCtx);if(!missingStones(w,p,now)&&!(result.ok&&newbieGuide(w,p,now)))maybeHint(w,p,now);}
+  const p=w.players[clean(input.userId,80)];if(p&&Object.hasOwn(w.players,p.id)){if(result.ok&&!result.duplicate&&!result.pending){companionActivity(w,p,input,now,companionContext);{const to=input.type==='gift'&&result.giftRecipientId?w.players[result.giftRecipientId]:null;if(to)petActivity(w,to,input,now,(w2,who,text,effect,t,extra)=>emit(w2,who,text+' • '+p.name+' tặng',effect,t,{...extra,giftFrom:p.name,giftFromId:p.id}));else petActivity(w,p,input,now,emit);}advanceVisitor(w,p,input,now);bondActivity(w,p,input,now,socialContext);if(input.type==='gift')w.social.visualBusyUntil=now+10000;}checkReady(w,p,now);trackTasks(w,p,input,result,now,engageCtx);if(!missingStones(w,p,now)&&!(result.ok&&newbieGuide(w,p,now)))maybeHint(w,p,now);}
   return result;
 }
 function actionCore(w,input,now) {
@@ -333,7 +334,7 @@ function actionCore(w,input,now) {
   const genderCmd=['nhapmon','gioitinh','xungho','xunghieu'].includes(cmd);
   const gender=genderCmd?parseGender(rest):type==='join'&&input.gender?parseGender(input.gender):null;
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;
-  const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;
+  const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now);
@@ -349,6 +350,7 @@ function actionCore(w,input,now) {
   if(type==='attack'&&w.race?.phase==='running')return raceCommand(w,p,'danh',now,socialContext);
   if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
   if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now);return result;}}
+  if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
@@ -538,18 +540,23 @@ function actionCore(w,input,now) {
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
     p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
     reconcilePatron(w,now);
-    const visitorReward=creditVisitorGift(w,p,input.coins*count,now);
-    items.push(...visitorReward.items);itemNames.push(...visitorReward.itemNames);
-    if(visitorReward.kind){giftEvent.visitorProgress={kind:visitorReward.kind,coins:visitorReward.coins};giftEvent.reward.skinNames=visitorReward.skinNames;p.giftHistory.at(-1).reward.skinNames=visitorReward.skinNames;}
+    // 10/11: tặng hộ — tiến độ skin/linh thú về người nhận đang ở LIVE; coin, VIP, top vẫn của người tặng.
+    const giftFor=input.simulated||input.autoRose||p.puppet||p.resident?null:giftForTarget(w,p,now,currentParticipant);
+    giftRecipient=giftFor?.target||null;const recipient=giftRecipient||p;
+    if(giftRecipient){giftEvent.giftFor={to:recipient.id,toName:recipient.name};giftEvent.text+=' • tặng hộ '+recipient.name;}
+    else if(giftFor?.missing&&giftForEventEnd(w,now)){giftEvent.giftForMissing=giftFor.name;giftEvent.text+=' • '+giftFor.name+' đã rời LIVE, quà tính cho '+p.name;}
+    const visitorReward=creditVisitorGift(w,recipient,input.coins*count,now);
+    if(!giftRecipient){items.push(...visitorReward.items);itemNames.push(...visitorReward.itemNames);}
+    if(visitorReward.kind){giftEvent.visitorProgress={kind:visitorReward.kind,coins:visitorReward.coins,...(giftRecipient?{to:recipient.id,toName:recipient.name}:{})};if(!giftRecipient){giftEvent.reward.skinNames=visitorReward.skinNames;p.giftHistory.at(-1).reward.skinNames=visitorReward.skinNames;}}
     // v51: nhận skin khách mời → sự kiện BIẾN HÌNH riêng (thông báo + hiệu ứng), chạy sau màn cảm ơn quà.
-    if(visitorReward.skinNames?.length){const skinName=visitorReward.skinNames[0].replace(/^Skin /,'');emit(w,p,`Biến hình ${skinName} • nhận skin truyền thừa`,'transform',now,{transform:visitorReward.kind,skinName});}
-    if(visitorReward.items.length){const id=visitorReward.items[0];if(itemScore(id)>itemScore(p.equipped))p.equipped=id;giftEvent.visitorTechnique=visitorReward.kind;}
+    if(visitorReward.skinNames?.length){const skinName=visitorReward.skinNames[0].replace(/^Skin /,'');emit(w,recipient,`Biến hình ${skinName} • ${giftRecipient?p.name+' tặng skin truyền thừa':'nhận skin truyền thừa'}`,'transform',now,{transform:visitorReward.kind,skinName,...(giftRecipient?{giftFrom:p.name,giftFromId:p.id}:{})});}
+    if(visitorReward.items.length){const id=visitorReward.items[0];if(itemScore(id)>itemScore(recipient.equipped))recipient.equipped=id;if(giftRecipient)emit(w,recipient,'Nhận '+visitorReward.itemNames.join(' · ')+' • '+p.name+' tặng','visitor',now,{visitorAward:true,visitorKind:visitorReward.kind,itemNames:visitorReward.itemNames,reward:{items:visitorReward.items,itemNames:visitorReward.itemNames},giftFrom:p.name,giftFromId:p.id});else giftEvent.visitorTechnique=visitorReward.kind;}
     const jackpot=input.simulated||input.autoRose?null:giftJackpot(w,p,input.coins*count,now,Math.random,qiBeforeGift);if(jackpot){giftEvent.jackpot=jackpot;giftEvent.text+=' • ĐẠI LỄ: +'+jackpot.qi+' tu vi (50%)'+(jackpot.skinName?' + skin '+jackpot.skinName:'');giftEvent.reward.qi+=jackpot.qi;giftEvent.reward.stones+=jackpot.stones;giftEvent.reward.herbs+=jackpot.herbs;if(jackpot.skinName){giftEvent.reward.skinNames=['Skin '+jackpot.skinName];itemNames.push('Skin '+jackpot.skinName);}}
-    auditRecord(w,'gift',now,{id:input.eventId,user:p.id,name:p.name,gift:gift||input.giftName||tier.name,unitCoins:input.coins,count,coins:input.coins*count,simulated:!!(p.puppet||p.resident||input.simulated||input.autoRose),eventId:visitorReward.kind?w.visitor.id:null,eventKind:visitorReward.kind||null,contextEventId:w.visitor?.id||null,reason:p.puppet||p.resident||input.simulated||input.autoRose?'simulated':visitorReward.kind?'in-event':'outside-event-window',eventCoins:visitorReward.coins||0,skinNames:visitorReward.skinNames,items:visitorReward.items});
+    auditRecord(w,'gift',now,{id:input.eventId,user:p.id,name:p.name,gift:gift||input.giftName||tier.name,unitCoins:input.coins,count,coins:input.coins*count,simulated:!!(p.puppet||p.resident||input.simulated||input.autoRose),eventId:visitorReward.kind?w.visitor.id:null,eventKind:visitorReward.kind||null,contextEventId:w.visitor?.id||null,reason:p.puppet||p.resident||input.simulated||input.autoRose?'simulated':visitorReward.kind?'in-event':'outside-event-window',eventCoins:visitorReward.coins||0,skinNames:visitorReward.skinNames,items:visitorReward.items,...(giftRecipient?{recipient:giftRecipient.id,recipientName:giftRecipient.name}:{})});
     creditOpportunity(w,p,input.coins*count,now);
     flowerScore(w,p,input.coins*count*100,now); // v59: 1 coin quà = 100 điểm sự kiện
   }
-  p.interactions++;w.totalInteractions++;return {ok:true,playerId:p.id};
+  p.interactions++;w.totalInteractions++;return giftRecipient?{ok:true,playerId:p.id,giftRecipientId:giftRecipient.id}:{ok:true,playerId:p.id};
 }
 // Sự kiện đang mở có LUẬT QUÀ RIÊNG (tên hiển thị) → quà không cộng phần mặc định. Yêu thú/tỷ thí/kết duyên không có luật quà → vẫn quà mặc định.
 export function giftEventRule(w,now){
@@ -887,7 +894,7 @@ export function ingest(w,event,now=Date.now()) {
   const d=event.data||{}; const u=d.user||d;
   const userId=u.userId||u.id||d.userId||d.id||u.uniqueId||d.uniqueId||u.displayId;
   if(!userId)return {ok:false,message:'Sự kiện không có ID người xem.'};
-  const base={userId:String(userId),name:u.nickname||u.uniqueId||d.nickname||d.uniqueId,avatar:eventAvatar(d)};
+  const base={userId:String(userId),name:u.nickname||u.uniqueId||d.nickname||d.uniqueId,handle:u.uniqueId||d.uniqueId,avatar:eventAvatar(d)};
   if(w.playTransfers?.[base.userId]?.phase==='web'){
     // Người xem đang có mặt trên LIVE: xin web trả nhân vật về (web chỉ nhả khi không còn chơi).
     w.playTransfers[base.userId].wantsLiveAt=now;

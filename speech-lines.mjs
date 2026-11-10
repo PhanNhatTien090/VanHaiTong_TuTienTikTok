@@ -40,7 +40,7 @@ function giftLines(e,who,Who,t,seed){
  const buff=e.buff?.mult?' Phúc duyên gấp '+multWord(e.buff.mult)+(e.firstGift?' suốt hai mươi phút.':' trong mười phút.'):'';
  const race=e.raceBoost?' Phi kiếm lao vọt '+viNumber(e.raceBoost)+' trượng!':'';
  // 08/11 tối (chủ game): KHÔNG cảm ơn / 'đa tạ tâm ý' — chỉ nói điều vừa xảy ra (tu vi, skin, luật sự kiện).
- const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`}[rule];
+ const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':e.giftFor?.toName?`${Who} tặng hộ ${sayName(e.giftFor.toName)||'đồng môn'}, tích lũy skin sự kiện!`:`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`}[rule];
  const master=(skins?'Chúc mừng '+who+' nhận '+rewards+'!':rewards?Who+' nhận '+rewards+'!':ruleLine||Who+' tặng quà!')+buff+race;
  // 08/11: quà giữa Chính Ma Đại Chiến — hô to quà lật kèo / đại chiêu, rồi mới cảm ơn.
  if(e.warGift){const S=e.warGift==='chinh'?'Chính Đạo':'Ma Đạo',value=(Number(e.coins)||0)*(Number(e.count)||1);
@@ -75,7 +75,7 @@ export function speechPlan(e){
   if(e.togetherInvite||e.togetherStart||e.togetherDone||e.guardJoin||e.guardSuccess)return [say('tongsu',text.replace(/•/g,'. '))];
   if(e.petStart)return [say('tiennu','Linh Thú Cốc đã mở!'),say('tongsu','Thả một trăm tim kết bạn Ngọc Thố. Gõ thú để xem tiến độ, linh thú sẽ đồng hành cùng đạo hữu.')];
   if(e.petEnd)return [say('tiennu','Linh Thú Cốc đã khép lại. Các linh thú đã kết bạn vẫn đồng hành cùng đạo hữu.')];
-  if(e.petAward)return [say('tiennu',Who+' kết bạn thành công với '+(e.petNames||[]).join(', ')+'.')];
+  if(e.petAward)return [say('tiennu',Who+' kết bạn thành công với '+(e.petNames||[]).join(', ')+(e.giftFrom?', do '+(sayName(e.giftFrom)||'đồng môn')+' tặng':'')+'.')];
   // ----- quà -----
   if(e.gift&&(e.reward||text.includes('cảm ơn đạo hữu')))return giftLines(e,who,Who,t,seed);
   // ----- người chơi -----
@@ -137,7 +137,7 @@ export function speechPlan(e){
   if(e.patronAward)return [say('tiennu',`Vinh danh Đại Hộ Pháp ${raw||''}!`),say('tongsu',`Ban bộ Thương Long Hộ Pháp, Hộ Pháp Thiên Kiếm và Trấn Tông Long Ấn!`)];
   if(e.effect==='skin')return [say('tongsu',`${Who} khoác lên ${cutWords(text,40)}.`)];
   if(e.effect==='breakthrough'){const to=titleCase(head.replace(/^đột phá\s*/i,''));return [say('tongsu',pickBy(seed,[`Chúc mừng ${who} đột phá ${to}! Đạo hạnh thăng tiến!`,`Thiên môn khai mở! ${Who} bước vào ${to}!`,`${Who} đột phá ${to}, linh khí chấn động!`]))];}
-  if(e.transform)return [say('tiennu',`${Who} nhận truyền thừa ${e.skinName||'tiên nhân'}!`),say('tongsu',`${e.transform==='hanlap'?'Trúc kiếm cuồng phong':e.transform==='shende'?'Đế khí bùng nổ':e.skinName==='Lý Mộ Uyển'?'Thanh quang tỏa sáng':'Tử khí cuộn trào'}, biến hình thành ${e.skinName||'tiên nhân'}!`)];
+  if(e.transform)return [say('tiennu',`${Who} nhận truyền thừa ${e.skinName||'tiên nhân'}${e.giftFrom?', do '+(sayName(e.giftFrom)||'đồng môn')+' tặng':''}!`),say('tongsu',`${e.transform==='hanlap'?'Trúc kiếm cuồng phong':e.transform==='shende'?'Đế khí bùng nổ':e.skinName==='Lý Mộ Uyển'?'Thanh quang tỏa sáng':'Tử khí cuộn trào'}, biến hình thành ${e.skinName||'tiên nhân'}!`)];
   // ----- sự kiện trời -----
   if(e.flowerStart&&e.eventKind==='meteor')return [say('tiennu',`Tinh Hà Lưu Tinh giáng thế ${viNumber(e.minutes)} phút! Sao băng rơi khắp tông môn, bình luận để bắt sao!`)];
   if(e.flowerStart)return [say('tiennu',`Thiên Hoa Vũ giáng thế ${viNumber(e.minutes)} phút! Linh hoa nở khắp tông môn!`)];
