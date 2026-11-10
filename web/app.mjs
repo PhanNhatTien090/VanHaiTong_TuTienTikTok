@@ -301,7 +301,14 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         return json(req, res, { ok: false, message: 'Không có.' }, 404);
       }
       if (route === 'GET /api/session' && viewP) return json(req, res, { user: { username: 'Quản trị · xem ' + viewP.name, linkedTikTok: !viewP.webOnly }, player: playerView(world, viewP, now), pendingLink: null, devTools: false, admin: !!adminUser, adminView: { id: viewP.id, name: viewP.name } });
-      if(playSessions&&user&&playerOf(user)&&!['POST /api/logout','POST /api/login','POST /api/register','POST /api/check','POST /api/link/start'].includes(route)){
+      // Quản trị không phải người chơi: xem thì đọc bản sao, không giành nhân vật; mỗi thao tác mượn nhân vật từ LIVE (kể cả khi họ đang
+      // tương tác), làm xong trả về LIVE ngay khi trả lời — không giữ, không bị LIVE đá ra.
+      if(playSessions&&user?.admin&&playerOf(user)&&req.method==='POST'&&!playerOf(user).webOnly&&!['POST /api/logout','POST /api/login','POST /api/register','POST /api/check','POST /api/link/start','POST /api/play/heartbeat'].includes(route)){
+        const access=await playSessions.enter(user,token,Date.now(),{force:true});
+        if(!access.ok){errors.record('play-session',{route,user:user.username,message:access.code||access.message});return json(req,res,access,409);}
+        const borrowed=user.playerId,by=user.id;res.on('finish',()=>playSessions.releaseFor(borrowed,by));
+        req.playing=true;
+      } else if(playSessions&&user&&!user.admin&&playerOf(user)&&!['POST /api/logout','POST /api/login','POST /api/register','POST /api/check','POST /api/link/start'].includes(route)){
         const access=await playSessions.enter(user,token);
         if(!access.ok){errors.record('play-session',{route,user:user.username,message:access.code||access.message});return json(req,res,access,409);}
         if(!playSessions.allowed(user,token))return json(req,res,{ok:false,code:'PLAY_SESSION_CONFLICT',message:'Phiên chơi đang bàn giao. Thử lại sau.'},409);
@@ -330,7 +337,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         if (!r.ok && publicOnly) limited('auth-fail:' + username,8,60000,now);
         if (!r.ok) return json(req, res, r, 400);
         const t = accounts.createSession(r.user, now);
-        if(playSessions){
+        if(playSessions&&!r.user.admin){
           const access=await playSessions.enter(r.user,t);
           if(!access.ok){accounts.endSession(t);accounts.save();return json(req,res,access,409);}
         }
@@ -407,7 +414,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       if (!profileOnly&&!p.web?.welcomed) { (p.web ??= {}).welcomed = now; welcomeMail(p, now); changed(); }
 
       const body = req.method === 'POST' ? (playSessions ? req.playBody : await readBody(req)) : null;
-      if(playSessions&&!playSessions.allowed(user,token))return json(req,res,{ok:false,code:'PLAY_SESSION_CONFLICT',message:'Phiên chơi đã kết thúc hoặc đang bàn giao. Đăng nhập lại để tiếp tục.'},409);
+      if(playSessions&&!(user.admin&&req.method==='GET')&&!playSessions.allowed(user,token))return json(req,res,{ok:false,code:'PLAY_SESSION_CONFLICT',message:'Phiên chơi đã kết thúc hoặc đang bàn giao. Đăng nhập lại để tiếp tục.'},409);
       const reply = (r, extra = {}) => json(req, res, { ...r, ...extra }, r.ok === false ? 400 : 200);
       switch (route) {
         case 'GET /api/me': return json(req, res, { player: playerView(world, p, now), inventory: inventoryView(world, p), stamina: staminaView(p, now), mats: matsView(p), quests: questView(p, now), jade: jadeBalance(p), mailUnread: mailView(p).unread, giftReady: !giftView(p, now).claimedToday, retreat: retreatView(p, now), liveEvent: live(now).event, eventWon: !!p.web?.eventsWon?.[live(now).event?.id], serverNow: now });

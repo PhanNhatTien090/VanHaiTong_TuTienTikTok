@@ -34,3 +34,22 @@ test('viewer activity on LIVE asks for the character back and the cloud releases
   assert.equal(live.apply(commands[0],now+47000).ok,true);assert.equal(w.playTransfers[id].phase,'live');
   assert.equal(w.playTransfers[id].wantsLiveAt,undefined);
 });
+
+test('quản trị: mượn nhân vật cả khi người đó vừa tương tác (force), thao tác xong trả về LIVE ngay',async()=>{
+  const now=Date.now(),w=liveWorld(now),live=createLiveTransfers({world:w,save:()=>{}});
+  action(w,{userId:id,type:'chat',text:'xin chao'},now);
+  assert.equal(live.apply({generation:1,id:'t-normal',playerId:id,kind:'acquire'},now+1000).ok,false,'người thường vẫn phải chờ');
+  const cloudWorld={players:{[id]:structuredClone(w.players[id])}},store=memoryStore();
+  const sessions=createPlaySessions({store,world:cloudWorld});
+  const admin={id:'qt-u1',playerId:id,admin:true};
+  const entering=sessions.enter(admin,'tok',now+2000,{force:true});
+  const [cmd]=sessions.controls(true,[],now+2000);
+  assert.equal(cmd.kind,'acquire');assert.equal(cmd.force,true);
+  const got=live.apply({...cmd,generation:cmd.generation+1},now+2000);// thế hệ mới hơn bản bị từ chối ở trên
+  assert.equal(got.ok,true,'LIVE nhả cho quản trị');
+  store.transfer({...store.get('play:'+id),generation:cmd.generation+1});
+  sessions.ack({...cmd},{ok:true,player:got.player});
+  assert.equal((await entering).ok,true);
+  sessions.releaseFor(id,'qt-u1');
+  assert.equal(store.get('play:'+id).phase,'release','trả về ngay, không giữ');
+});

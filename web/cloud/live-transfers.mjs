@@ -25,7 +25,7 @@ export function createLiveTransfers({world, save}) {
       const p=world.players[playerId];
       let message;
       if(!p||p.resident||p.puppet)message='Không tìm thấy nhân vật hợp lệ trên LIVE.';
-      else if(currentParticipant(world,p,now)&&now-(p.lastRealInteractionAt||0)<LIVE_RECENT_MS)message='Bạn vừa tương tác trên LIVE. Chờ 1 phút không bình luận/thả tim (hoặc gõ roilive) rồi đăng nhập lại.';
+      else if(!command.force&&currentParticipant(world,p,now)&&now-(p.lastRealInteractionAt||0)<LIVE_RECENT_MS)message='Bạn vừa tương tác trên LIVE. Chờ 1 phút không bình luận/thả tim (hoặc gõ roilive) rồi đăng nhập lại.';
       if(message){world.playTransfers[playerId]={id,generation,phase:'denied',message};save();return {ok:false,id,message};}
       world.playTransfers[playerId]={id,generation,phase:'web',player:structuredClone(p),gifts:[]};
       save(); // Do not acknowledge ownership before its lock reaches disk.

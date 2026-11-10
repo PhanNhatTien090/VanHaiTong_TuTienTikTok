@@ -13,7 +13,8 @@ export function createPlaySessions({store,world,notify=()=>{},idleMs=120000,acti
   function sweep(now=Date.now()) {
     for(const r of store.transfers())if(r.phase==='web'&&now-r.lastUsed>=idleMs)release(r);
   }
-  async function enter(user,token,now=Date.now()) {
+  // force: quản trị — LIVE nhả nhân vật cả khi người đó vừa tương tác (giữ vài giây cho một thao tác rồi trả ngay).
+  async function enter(user,token,now=Date.now(),{force=false}={}) {
     const p=world.players[user?.playerId];
     if(!p||p.webOnly)return {ok:true};
     sweep(now);
@@ -24,7 +25,7 @@ export function createPlaySessions({store,world,notify=()=>{},idleMs=120000,acti
       r={...r,phase:'web',player:undefined,lastUsed:now};store.transfer(r);
     }
     if(!r||r.phase==='live'||r.phase==='denied') {
-      r={generation:(r?.generation||0)+1,id:crypto.randomUUID(),playerId:p.id,userId:user.id,phase:'acquire',lastUsed:now};store.transfer(r);
+      r={generation:(r?.generation||0)+1,id:crypto.randomUUID(),playerId:p.id,userId:user.id,phase:'acquire',lastUsed:now,...(force?{force:true}:{})};store.transfer(r);
     }
     if(r.phase==='acquire') {
       // The agent relays the request. Never grant access from a stale mirror.
@@ -50,7 +51,7 @@ export function createPlaySessions({store,world,notify=()=>{},idleMs=120000,acti
     sweep(now);
     const records=store.transfers().filter(r=>['acquire','release'].includes(r.phase));
     if(dispatch)for(const r of records)if(r.phase==='release'&&!r.dispatched)store.transfer({...r,dispatched:true});
-    return records.map(r=>({generation:r.generation,id:r.id,playerId:r.playerId,kind:r.phase,...(r.phase==='release'?{player:r.player}:{})}));
+    return records.map(r=>({generation:r.generation,id:r.id,playerId:r.playerId,kind:r.phase,...(r.phase==='acquire'&&r.force?{force:true}:{}),...(r.phase==='release'?{player:r.player}:{})}));
   }
   function ack(command,result) {
     const r=read(command.playerId);
@@ -73,5 +74,7 @@ export function createPlaySessions({store,world,notify=()=>{},idleMs=120000,acti
     const p=world.players[user?.playerId];if(!p||p.webOnly)return true;
     const r=read(p.id);return r?.phase==='web'&&r.userId===user.id&&r.tokenHash===digest(token);
   }
-  return {enter,logout,controls,ack,sweep,allowed};
+  // Trả ngay nhân vật mà phiên này (quản trị) vừa mượn cho một thao tác.
+  function releaseFor(playerId,userId){const r=read(playerId);if(r?.phase==='web'&&r.userId===userId)release(r);}
+  return {enter,logout,controls,ack,sweep,allowed,releaseFor};
 }
