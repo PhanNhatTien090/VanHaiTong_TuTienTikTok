@@ -440,3 +440,46 @@ Danh hiệu lên LIVE, đổi skin hồ sơ không mượn nhân vật (gỡ cơ
 - Đánh giá Tale of Immortal: https://gamegeeker.com/games/tale-of-immortal-1468810/review?market=US · https://vaporlens.app/app/1468810/鬼谷八荒_tale_of_immortal/stats · https://rpghq.org/forums/viewtopic.php?p=13501
 - Mô phỏng tất định / chạy lại đầu vào chống gian lận: https://media.gdcvault.com/gdc2024/Slides/GDC+slide+presentations/Pollard_Bradley_CrossPlatformDeterminism+2024-03-26+09.34.19.pdf · https://doc.photonengine.com/quantum/v2/manual/cheat-protection · https://bugnet.io/blog/how-to-make-a-game-simulation-deterministic-for-replays · https://forums.unrealengine.com/t/is-there-a-way-to-repeat-the-event-on-the-exact-same-timing/425586
 - Game cùng dòng (bản 1 kế hoạch): Tiên Nghịch Mobile, Nghịch Thủy Hàn, Nhất Niệm Tiêu Dao, Idle Xanxia, xiuzhen idle.
+
+---
+
+## 9. TIẾN ĐỘ (cập nhật 10/11/2026 tối) — đọc mục này trước khi làm tiếp
+
+Toàn bộ Lịch luyện **đang TẮT trên prod** (`LICH_LUYEN` chưa đặt). Chưa deploy, chưa ai chơi thật. Bật thử: `LICH_LUYEN=1` (+ `LICH_LUYEN_BETA=<tên đăng nhập>`) trong `/etc/van-hai-web.env` — chỉ khi chủ game nói "cập nhật lên prod" và cho phép sửa env VPS.
+
+### Đã xong (commit trên `main`)
+| Phần | Commit | Ghi chú |
+|---|---|---|
+| Nền: RNG có seed, số học nguyên, nội dung + validator, thang 103 bậc (tên LIVE) | `1ff6e79` | Luyện Khí Tầng 1–9 + Viên Mãn; Trúc Cơ trở đi Sơ/Trung/Hậu/Viên Mãn; trần mùa 1 = Kim Đan Viên Mãn |
+| Mô phỏng trận tất định + server chạy lại đầu vào | `a4dec87` | Chrome = Node (`scripts/qa-lich-luyen-determinism.mjs`); trận vàng ghim trong test |
+| Chỉ số, SQLite riêng `lich-luyen.sqlite` + sổ cái, API `/api/ll/*`, trang `/lich-luyen.html` | `5efd007` | Chặn nộp nhanh hơn thời gian thật, nộp 2 lần, trận người khác, trận quá hạn |
+| Túi đồ, rơi đồ, 10 ải Thanh Vân Châu, quét 70% (20/ngày), đột phá Trúc Cơ bằng vật phẩm | `cf298e3` | Phẩm = số LOẠI vật phẩm nâng phẩm (Phàm/Địa/Thiên = 0/1/3) |
+| Hiểm họa + Lôi Kiếp (lên Kim Đan) + Lạc Hà Châu (10 ải, cần Trúc Cơ) | `d019a53` | Kiếp thất bại mất 10% tu vi, giữ vật phẩm; bot phản xạ người thật sống ~65–80% |
+| Mệnh cách (23 thẻ, 5 phẩm, chọn sau đột phá) | `64c8d4a` | Thẻ rút theo seed (tải lại không đổi); phẩm cao dễ ra thẻ hiếm |
+| Bế quan tụ linh | `c7d6989` | 4%/giờ tu vi bậc hiện tại, tối đa 8 giờ, ≥10 phút mới nhận |
+
+Test: `npm run test:web` (78 đạt). QA trực quan: `node scripts/qa-lich-luyen-play.mjs <thư-mục-ảnh> <path.id>` và `node scripts/qa-lich-luyen-trial.mjs <thư-mục-ảnh>` (server thử + Chrome ẩn, dữ liệu tạm).
+
+### Việc tiếp theo (theo thứ tự)
+**Giai đoạn 1 còn lại**
+1. **Bí tịch + tiền tố ngẫu nhiên + ngộ đạo** (học `BattleSkillPrefixValue` của Quỷ Cốc): bảng `ll_items` cho đồ có thuộc tính riêng (migration 003), tiền tố gắn vào chiêu/đòn/hiệu ứng.
+2. **Trang bị** 6 ô (vũ khí, giáp, mũ, giày, nhẫn, ngọc bội) + pháp bảo; phẩm, thuộc tính phụ, bộ đồ, cường hóa +1→+15, luyện hóa.
+3. **Linh căn + khí vận tiên thiên** khi tạo phân thân (6 hệ; rút 6 thẻ chọn 3). Phân thân đã tạo trước đó → cho chọn bù 1 lần.
+4. **Nhiệm vụ ngày, hộp thư, gói quà đổi dữ liệu web cũ** (`p.web`: cường hóa, cấp linh thú web, tầng tháp, vật liệu).
+5. **Đồ họa** (xem dưới) — thay hình tròn bằng sprite theo ID.
+6. **Giả lập cân bằng trọn mùa 42 ngày** cho casual/active/whale/webonly (`sim-tools/balance.mjs`).
+
+**Giai đoạn 2 (đủ để mở Mùa 1)**: Xích Viêm Châu (Kim Đan), thần thông (nút 4), Đạo Tâm, nhánh thứ 2 mỗi đạo lộ, Tháp Trấn Yêu, Luận Kiếm (đấu bản chụp do bot điều khiển), động phủ, luyện đan, kỳ ngộ, xếp hạng, chốt mùa.
+
+**Mở cho người chơi**: deploy + bật beta cho tài khoản chủ game → đo thời gian kiểm tra trận trên VPS (1 vCPU) → mời vài người thử → mở hết.
+
+### Đồ họa — trạng thái
+- Codex hết hạn mức tới **23:26 ngày 12/11/2026**. Không có MCP vẽ ảnh nào đang cài.
+- Lựa chọn đã tìm hiểu: (a) **Claude in Chrome** điều khiển chatgpt.com của chủ game — cần chủ game tự bấm cài tiện ích + đăng nhập (đã mở sẵn trang `claude.ai/chrome`); rủi ro điều khoản OpenAI → vẽ ít, có người xem. (b) **Cloudflare Workers AI** FLUX schnell miễn phí ~57–230 ảnh/ngày — cần chủ game tạo token, đặt `CLOUDFLARE_ACCOUNT_ID`/`CLOUDFLARE_API_TOKEN` bằng `setx`; tách nền bằng rembg. (c) Chờ Codex.
+- Danh sách cần vẽ: 3 đạo lộ × nam/nữ (đứng/đánh), Yêu Lang, Độc Xà, Thiết Giáp Hùng, Hỏa Hồ, Thạch Viên, Xích Luyện Xà, nền Thanh Vân Châu / Lạc Hà Châu / Thiên Kiếp, icon 14 vật phẩm, khung thẻ mệnh cách. Trước khi có ảnh mới: có thể dùng tạm ảnh LIVE (thần trang cảnh giới, boss bí cảnh, linh thú).
+
+### Lưu ý kỹ thuật cho lần sau
+- Sửa file lớn bằng script `.cjs` trong scratchpad (heredoc bash dễ nuốt ký tự `$`, `\`, backtick).
+- Test API đăng ký nhiều tài khoản sẽ chạm giới hạn đăng ký theo IP của web → test mới nên dùng lại phân thân có sẵn hoặc gọi thẳng `ll.game.*`.
+- Đổi nội dung (chiêu/quái/ải) làm `contentVersion` đổi → trận đang dở bị từ chối "game vừa cập nhật" (đúng thiết kế). Đổi luật mô phỏng → trận vàng trong `lich-luyen-sim.test.mjs` đỏ, phải xác nhận rồi cập nhật.
+- Cân bằng: chạy bot qua từng ải với chỉ số đúng cấp (xem các lệnh `runBot` trong lịch sử); Thể tu từng bị lệch 2 lần — luôn kiểm cả 3 đạo lộ.
