@@ -87,7 +87,7 @@ window.addEventListener('storage',e=>{if(e.key==='vanhai-quality'&&!params.has('
 
 let voiceCaptionTimer;
 scene.onWarSound=(kind,side,strength)=>cultivationAudio.war(kind,side,strength);scene.onAlchemySound=(kind,strength)=>cultivationAudio.alchemy(kind,strength);scene.onSpectacleImpact=()=>cultivationAudio.play('impact');
-scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);
+scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);scene.onBonkSound=(kind,o)=>cultivationAudio.bonk(kind,o); /* 10/11: Hội Gõ Đầu */
 scene.onGiftSound=kind=>cultivationAudio.play(kind);
 if(overlay)mountRitualHud($('.scene-shell'),scene);
 scene.onRitualAudio=(event,elapsed)=>cultivationAudio.ritual(event,elapsed);

@@ -1,4 +1,5 @@
 import {BGM_LIST,musicIndex} from './music-rotation.js';
+import {playBonkSound} from './bonk-audio.js';
 import {playWarSound} from './sect-war-audio.js';
 import {playAlchemySound} from './alchemy-audio.js';
 import {scheduleKimTienAudio,kimTienMusicDuck} from './kim-tien-audio.js';
@@ -111,6 +112,13 @@ export class CultivationAudio {
   war(kind,side,strength=1){
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;const now=this.ctx.currentTime,key='war:'+kind+':'+side;if(now-(this.last[key]??-100)<(kind==='clash'?.25:kind==='strike'?.12:.2))return;this.last[key]=now;
     try{playWarSound(this.ctx,this.fxBus,kind,side,strength);}catch{}
+  }
+  // 10/11: Hội Gõ Đầu — tối đa 3 chuỗi tiếng gõ trong 1 giây (đông người gõ cùng lúc không thành mớ ồn).
+  bonk(kind,o={}){
+    if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;const now=this.ctx.currentTime;
+    if(kind==='hit'){this.bonkTimes=(this.bonkTimes||[]).filter(x=>now-x<1);if(this.bonkTimes.length>=3)return;this.bonkTimes.push(now);}
+    else if(now-(this.last['bonk:'+kind]??-100)<2)return;this.last['bonk:'+kind]=now;
+    try{playBonkSound(this.ctx,this.fxBus,kind,o);}catch{}
   }
   combat(kind,variant){
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;

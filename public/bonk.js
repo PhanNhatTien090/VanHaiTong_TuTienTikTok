@@ -9,7 +9,11 @@ const WALK=1.0,IMPACT=1.25,BACK=1.6,END=BONK_ANIM_MS/1000;
 
 export function syncBonk(scene,state){
  const b=state.bonkFest||null;scene.bonkFest=b;if(!b){scene.bonkHits=[];return;}
- const now=state.serverNow||Date.now(),t=performance.now(),seen=scene.bonkSeen??=new Map();
+ const now=state.serverNow||Date.now();
+ // âm mở hội (chỉ khi vừa mở, không phát lại lúc tải trang giữa chừng) / khép hội
+ {const snd=scene.bonkSnd??={};if(b.active&&snd.start!==b.id){snd.start=b.id;if(b.endsAt-now>170000)scene.onBonkSound?.('start');}
+  if(!b.active&&b.result&&snd.end!==b.id){snd.end=b.id;if(snd.start===b.id)scene.onBonkSound?.('end');}}
+ const t=performance.now(),seen=scene.bonkSeen??=new Map();
  for(const h of b.hits||[])if(!seen.has(h.id))seen.set(h.id,t-Math.max(0,Math.min(BONK_ANIM_MS,now-h.at)));
  if(seen.size>80)for(const k of [...seen.keys()].slice(0,seen.size-80))seen.delete(k);
  scene.bonkHits=b.hits||[];
@@ -55,7 +59,9 @@ export function drawBonk(scene,c,t){
    txt(c,r.hitter?'🔨 Thiết Thủ Vương: '+String(r.hitter.name).slice(0,16)+' ('+r.hitter.n+')':'Chưa ai gõ ai',450,y+16,'800 18px Segoe UI','#fff',4);
    if(r.victim)txt(c,'🤕 Đầu Sắt: '+String(r.victim.name).slice(0,16)+' ('+r.victim.n+')',450,y+40,'800 18px Segoe UI','#ffd0c0',4);}}
  const byId=new Map((scene.targets||[]).map(x=>[x.id,x]));
+ const heard=scene.bonkHeard??=new Set();
  for(const {h,age} of live(scene,t)){const a=byId.get(h.a),v=byId.get(h.b);if(!v)continue;
+  if(!heard.has(h.id)){heard.add(h.id);if(heard.size>80)heard.delete(heard.values().next().value);if(age<IMPACT-.1)scene.onBonkSound?.('hit',{variant:h.v,stones:h.s,delay:IMPACT-age,walk:!!a});}
   const s=v.scale||1.4,F=Math.max(1.5,s*1.9),hy=headY(v),col=COLORS[h.v%COLORS.length],side=a?(a.bonkFrom?.[0]??a.x)<=v.x?-1:1:-1;
   // búa: có người gõ trên sân thì cầm ở tay, không thì búa từ trời rơi xuống
   if(age>WALK-.15&&age<BACK){const k=clamp((age-(WALK-.15))/(IMPACT-(WALK-.15)));
