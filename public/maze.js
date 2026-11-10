@@ -63,7 +63,7 @@ export function drawMaze(scene,c,t,layer){
  for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000,pl=sprites<40?scene.playerIndex?.get(r.id):null;
   if(p.moving&&p.dur>300){c.strokeStyle=`hsla(${h},95%,75%,.6)`;c.lineWidth=dot;c.lineCap='round';c.beginPath();c.moveTo(p.fx,p.fy);c.lineTo(x,y);c.stroke();}
   if(fresh)glow(c,x,y,dot*4,`hsla(${h},95%,70%,A)`,.6);
-  if(pl){sprites++;c.save();c.translate(x,y+L.cell*.2);c.scale(sprite,sprite);const prev=scene.minimalCrowd;scene.minimalCrowd=true;try{scene.drawPlayer(c,bare(pl),0,0,t);}catch{}finally{scene.minimalCrowd=prev;}c.restore();continue;}
+  if(pl){sprites++;c.save();c.translate(x,y+L.cell*.2);c.scale(sprite,sprite);/* chống lag: 1 tư thế tĩnh (compact+motion tắt) → mỗi người dựng ảnh 1 lần rồi dùng lại; ảnh cache nhỏ (bareCrowd) */const keep=[scene.minimalCrowd,scene.compact,scene.motion,scene.bareCrowd];scene.minimalCrowd=scene.compact=scene.bareCrowd=true;scene.motion=false;try{scene.drawPlayer(c,bare(pl),0,0,t);}catch{}finally{[scene.minimalCrowd,scene.compact,scene.motion,scene.bareCrowd]=keep;}c.restore();continue;}
   c.fillStyle=`hsl(${h},85%,62%)`;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,r.r?dot*1.2:dot,0,TAU);c.fill();c.stroke();}
  // tên: top 5 + người vừa đi/tặng quà gần nhất, tối đa 22
  // mỗi ô tối đa 1 tên (+số người cùng ô) để chữ không chồng nhau; ưu tiên top 5 rồi người vừa đi/tặng quà
