@@ -58,6 +58,11 @@ function route() {
     bar.innerHTML = `QUẢN TRỊ · đang xem hồ sơ <b>${esc(session.adminView.name)}</b> (chỉ xem) <a href="/admin.html">Đổi người</a> <a href="/admin/view?id=">Thoát</a>`;
     document.body.appendChild(bar);
   }
+  if (session.admin && !session.adminView && !document.querySelector('#adminBar')) {
+    const bar = document.createElement('div'); bar.id = 'adminBar';
+    bar.innerHTML = `TÔNG CHỦ · quản trị <a href="/admin.html">Hồ sơ người chơi</a> <a href="/lich-luyen.html">Lịch luyện</a>`;
+    document.body.appendChild(bar);
+  }
   if (!session.user) return show('#authView');
   if (!session.player) {
     if (session.pendingLink) return openLink(session.pendingLink);

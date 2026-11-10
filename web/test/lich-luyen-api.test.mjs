@@ -41,7 +41,8 @@ function playLocally(setup) {
 }
 
 test('tắt mặc định: không có LICH_LUYEN=1 thì không tạo gì', () => {
-  assert.equal(createLichLuyen({ dataDir: dir, ...lichLuyenOptions({}) }), null);
+  assert.equal(createLichLuyen({ dataDir: dir, ...lichLuyenOptions({ LICH_LUYEN_ADMIN: '0' }) }), null);
+  assert.equal(lichLuyenOptions({}).adminPreview, true);
   assert.deepEqual(lichLuyenOptions({ LICH_LUYEN: '1', LICH_LUYEN_BETA: 'An, Binh' }).beta, ['an', 'binh']);
 });
 
@@ -141,6 +142,32 @@ test('beta: chỉ tài khoản trong danh sách được vào', async () => {
   cookie = reg.headers.get('set-cookie').split(';')[0];
   assert.equal((await fetch(url + '/api/ll/state', { headers: { cookie } })).status, 403);
   app2.server.close(); l2.close();
+});
+
+test('quản trị: vào được khi chưa mở, mở mọi ải; trang quản trị trên cloud chỉ cho admin', async () => {
+  const d3 = fs.mkdtempSync(path.join(os.tmpdir(), 'll-admin-'));
+  const l3 = createLichLuyen({ dataDir: d3, adminPreview: true });
+  const app3 = createWebApp({ world: createWorld('live'), dataDir: d3, profileOnly: true, publicOnly: true, tikfinity: false, lichLuyen: l3 });
+  await new Promise(r => app3.server.listen(0, '127.0.0.1', r));
+  const url = 'http://127.0.0.1:' + app3.server.address().port;
+  const reg = async name => (await fetch(url + '/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: name, password: 'matkhau123' }) })).headers.get('set-cookie').split(';')[0];
+  const boss = await reg('Tông chủ'), other = await reg('nguoila');
+  const get = (p, cookie) => fetch(url + p, { headers: { cookie } });
+  const post = async (p, cookie, body) => (await fetch(url + p, { method: 'POST', headers: { cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json();
+  assert.equal((await get('/api/ll/state', other)).status, 403);
+  assert.equal((await get('/admin.html', boss)).status, 403);
+  assert.equal(app3.accounts.setAdmin('Tông chủ', true).username, 'tong_chu');
+  assert.equal((await get('/admin.html', boss)).status, 200);
+  assert.equal((await get('/admin/players', boss)).status, 200);
+  assert.equal((await get('/admin/players', other)).status, 403);
+  assert.equal((await get('/admin.html', other)).status, 403);
+  assert.equal((await (await get('/api/session', boss)).json()).admin, true);
+  const av = (await post('/api/ll/avatar', boss, { pathId: 'path.kiem-tu', name: 'Tông chủ' })).avatar;
+  assert.equal(av.admin, true);
+  assert.ok(av.stages.list.every(x => x.unlocked), 'admin mở mọi ải');
+  assert.equal((await post('/api/ll/battle/start', boss, { stageId: av.stages.list.at(-1).id })).ok, true);
+  assert.equal((await get('/api/ll/state', other)).status, 403);
+  app3.server.close(); l3.close();
 });
 
 test('sổ cái: không cho âm, ghi đủ dấu vết; migration ghi phiên bản schema', () => {

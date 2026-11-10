@@ -37,7 +37,7 @@ export function createCloudServer({ dataDir, secret, secureCookie = true, trustP
     clients.set(res,user);req.on('close',()=>clients.delete(res));
   }};
   async function handleInternal(req,res,url) {
-    if (req.method!=='POST' || !['/internal/sync','/internal/link','/internal/play/control','/internal/play/ack'].includes(url.pathname)) return writeJson(res,404,{ok:false});
+    if (req.method!=='POST' || !['/internal/sync','/internal/link','/internal/play/control','/internal/play/ack','/internal/admin'].includes(url.pathname)) return writeJson(res,404,{ok:false});
     const chunks=[];let length=0;
     for await (const chunk of req) {length+=chunk.length;if(length>4*1024*1024)return writeJson(res,413,{ok:false});chunks.push(chunk);}
     const raw=Buffer.concat(chunks);
@@ -50,6 +50,13 @@ export function createCloudServer({ dataDir, secret, secureCookie = true, trustP
         if(body.agentId!==store.get('sync')?.agentId)return writeJson(res,409,{ok:false,message:'Agent not paired'});
         if(url.pathname.endsWith('/ack')){playSessions.ack(body.command,body.result);return writeJson(res,200,{ok:true});}
         return writeJson(res,200,{ok:true,commands:playSessions.controls(true,Array.isArray(body.wantsLive)?body.wantsLive.filter(id=>typeof id==='string').slice(0,500):[])});
+      }
+      // Quản trị: chỉ máy LIVE (có WEB_SYNC_SECRET) xem/cấp/gỡ quyền cho một tài khoản đã tự đăng ký.
+      if(url.pathname==='/internal/admin'){
+        const u=typeof body.grant==='boolean'?accounts.setAdmin(String(body.username||''),body.grant):accounts.find(String(body.username||''));
+        if(!u)return writeJson(res,404,{ok:false,message:'Chưa có tài khoản này.'});
+        if(typeof body.grant==='boolean'){accounts.save();errorLog.record('admin',{message:(body.grant?'grant ':'revoke ')+u.username});}
+        return writeJson(res,200,{ok:true,username:u.username,displayName:u.displayName,createdAt:u.createdAt,admin:!!u.admin,linkedPlayer:!!u.playerId});
       }
       if(url.pathname==='/internal/link') {
         if(!body.eventId || typeof body.eventId!=='string' || body.eventId.length>128)return writeJson(res,400,{ok:false});

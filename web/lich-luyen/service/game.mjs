@@ -22,7 +22,8 @@ const BT_MESSAGE = { NEED_QI: 'Chưa đủ tu vi.', NEED_MATERIALS: 'Thiếu v�
 // Ngày theo giờ Việt Nam, đổi lúc 05:00 (giống LIVE).
 const vnDay = now => Math.floor((now + 7 * 3600000 - 5 * 3600000) / 86400000);
 
-export function createGame({ db, content, verifier, season = 1 }) {
+// admins: tập account id có quyền quản trị (API cập nhật theo từng yêu cầu) → mở mọi ải thường để thử nội dung.
+export function createGame({ db, content, verifier, season = 1, admins = new Set() }) {
   const ladder = buildLadder(content, season);
 
   const row = accountId => db.prepare('SELECT * FROM ll_avatars WHERE account_id=?').get(accountId);
@@ -74,7 +75,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
     };
   }
 
-  function stageView(payload, now, stepNow) {
+  function stageView(payload, now, stepNow, admin = false) {
     const prog = payload.stages || {};
     const day = vnDay(now), sweeps = payload.sweepDay?.day === day ? payload.sweepDay.used : 0;
     return {
@@ -82,7 +83,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
       list: content.stages.filter(s => s.kind !== 'trial').map(s => {
         const p = prog[s.id] || { stars: 0, clears: 0 };
         const realmOk = realmReached(stepNow, s.minRealm);
-        const unlocked = realmOk && (!s.requires || (prog[s.requires]?.stars || 0) > 0);
+        const unlocked = admin || (realmOk && (!s.requires || (prog[s.requires]?.stars || 0) > 0));
         return { id: s.id, name: t(content, s.nameKey), mapId: s.map, map: t(content, s.map), level: s.level, stars: p.stars, clears: p.clears, unlocked, needRealm: realmOk ? null : t(content, content.byId.get(s.minRealm).nameKey), sweepable: p.stars === 3, rewards: s.rewards,
           drops: s.drops.map(d => ({ id: d.item, name: t(content, content.byId.get(d.item).nameKey), rarity: content.byId.get(d.item).rarity })) };
       }),
@@ -103,7 +104,9 @@ export function createGame({ db, content, verifier, season = 1 }) {
       pendingFates: payload.pendingFates ? { realmName: t(content, content.byId.get(payload.pendingFates.realmId).nameKey), left: payload.pendingFates.offers.length, offer: payload.pendingFates.offers[0].map(fateView) } : null,
       qiGain: fateQiGain(content, payload.fates),
       idle: idleView(r, payload, now),
-      stages: stageView(payload, now, r.step),
+      stages: stageView(payload, now, r.step, admins.has(r.account_id)),
+      admin: admins.has(r.account_id),
+      realmIndex: step.realmIndex, lookId: payload.lookId || r.live_player_id || null,
     };
   }
 
@@ -127,7 +130,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
     const stage = content.byId.get(stageId);
     if (!stage?.waves) return fail('BAD_STAGE', 'Ải không tồn tại.');
       if (stage.kind === 'trial') { const why = trialBlock(r, stage); if (why) return why; }
-    else if (!stageUnlocked(payloadOf(r), stage, r.step)) return fail('LOCKED', stage.minRealm && !realmReached(r.step, stage.minRealm) ? 'Cần cảnh giới ' + t(content, content.byId.get(stage.minRealm).nameKey) + '.' : 'Hãy vượt ải trước đó.');
+    else if (!admins.has(r.account_id) && !stageUnlocked(payloadOf(r), stage, r.step)) return fail('LOCKED', stage.minRealm && !realmReached(r.step, stage.minRealm) ? 'Cần cảnh giới ' + t(content, content.byId.get(stage.minRealm).nameKey) + '.' : 'Hãy vượt ải trước đó.');
     const seed = crypto.randomBytes(12).toString('hex'), id = 'bt_' + crypto.randomBytes(12).toString('hex');
     const setup = { seed, stageId, player: { pathId: r.path_id, stats: computeStats(content, avatarModel(r)).stats } };
     tx(db, () => {
@@ -289,6 +292,16 @@ export function createGame({ db, content, verifier, season = 1 }) {
     return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
   }
 
+  // Hình nhân vật (tạm mượn skin LIVE): quản trị chọn hồ sơ LIVE bất kỳ để vẽ; người thường dùng nhân vật LIVE đã liên kết.
+  function setLook(user, playerId, now = Date.now()) {
+    if (!admins.has(user.id)) return fail('FORBIDDEN', 'Chỉ quản trị đổi được hình.');
+    const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
+    const id = String(playerId || '').slice(0, 128);
+    const payload = payloadOf(r); if (id) payload.lookId = id; else delete payload.lookId;
+    db.prepare('UPDATE ll_avatars SET payload=?, version=version+1, updated=? WHERE id=?').run(JSON.stringify(payload), now, r.id);
+    return { ok: true, avatar: view(row(user.id), now) };
+  }
+
   function chooseFate(user, fateId, now = Date.now()) {
     const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
     const out = tx(db, () => {
@@ -307,7 +320,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
   }
 
   return {
-    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now), chooseFate, claimIdle,
+    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now), chooseFate, claimIdle, setLook,
     createAvatar, startBattle, finishBattle, sweep, breakthrough: breakthroughNow,
     paths: () => content.paths.map(p => ({ id: p.id, name: t(content, p.nameKey), desc: t(content, p.descKey), kit: Object.fromEntries(Object.entries(p.kit).map(([slot, id]) => [slot, { id, name: t(content, id) }])), branches: p.branches.map(b => t(content, b.nameKey)) })),
   };

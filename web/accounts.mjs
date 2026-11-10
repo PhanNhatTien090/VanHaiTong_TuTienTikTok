@@ -153,6 +153,16 @@ export function createAccountStore(file, persistence = null) {
     return l && l.expiresAt > now ? data.users[l.username] || null : null;
   }
 
+  // Quản trị: chỉ cấp qua kênh nội bộ có chữ ký (máy LIVE), không có đường nào từ web công khai.
+  function setAdmin(usernameRaw, flag) {
+    const username = normalizeUsername(usernameRaw), user = Object.hasOwn(data.users, username) ? data.users[username] : null;
+    if (!user) return null;
+    if (flag) user.admin = true; else delete user.admin;
+    touch();
+    return user;
+  }
+  function find(usernameRaw) { const k = normalizeUsername(usernameRaw); return Object.hasOwn(data.users, k) ? data.users[k] : null; }
+
   function cleanup(now = Date.now()) {
     for (const [t, s] of Object.entries(data.sessions)) if (s.expiresAt <= now) { delete data.sessions[t]; touch(); }
     for (const [c, l] of Object.entries(data.links)) if (l.expiresAt <= now) { delete data.links[c]; touch(); }
@@ -160,7 +170,7 @@ export function createAccountStore(file, persistence = null) {
 
   return {
     register, login, registerAsync, loginAsync, exists, createSession, userForSession, endSession, setPlayer, userForPlayer,
-    startLink, pendingLink, consumeLink, peekLink, cleanup, save,
+    startLink, pendingLink, consumeLink, peekLink, cleanup, save, setAdmin, find,
     users: () => Object.values(data.users),
   };
 }

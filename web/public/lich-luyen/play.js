@@ -4,6 +4,7 @@ import { loadContent, t } from '/ll/content/index.js';
 import { createBattle, tick, battleResult } from '/ll/core/sim/battle.mjs';
 import { encodeInputs, TICK_RATE, BTN } from '/ll/core/sim/inputs.mjs';
 import { quantizeStick, POS } from '/ll/core/fixed.mjs';
+import { preload, drawBackground, drawMonster, drawPlayer, prepareActor, playerActor, MONSTER_ART } from '/lich-luyen/sprites.js';
 
 const content = loadContent();
 const $ = id => document.getElementById(id);
@@ -79,6 +80,7 @@ function renderHome() {
   $('qiBar').style.width = Math.min(100, a.qi * 100 / a.qiNeed) + '%';
   const s = a.stats;
   $('homeStats').innerHTML = [['Khí huyết', s.hp], ['Linh lực', s.mp], ['Công', s.atk], ['Thủ', s.def], ['Tốc', s.spd], ['Bạo kích', (s.crit / 10) + '%']].map(([k, v]) => `<div><span class="muted">${k}</span><br><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('');
+  renderAdmin(a);
   renderIdle(a);
   renderFates(a);
   renderBreakthrough(a);
@@ -88,6 +90,23 @@ function renderHome() {
 }
 const stars = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 const RARITY = ['', '#b9b9b9', '#6fd36f', '#5aa9ff', '#c77dff', '#ffb347'];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// Quản trị: mọi ải đã mở; chọn hồ sơ LIVE để mượn hình nhân vật (skin LIVE).
+function renderAdmin(a) {
+  const box = $('adminBox'); box.style.display = a.admin ? '' : 'none'; if (!a.admin) return;
+  box.innerHTML = `<b style="color:#ff8a8a">Tông chủ · quản trị</b> <span class="muted">· mọi ải đã mở · <a href="/admin.html" style="color:var(--gold)">Hồ sơ người chơi</a> · <a href="/" style="color:var(--gold)">Trang chính</a></span>
+    <div style="margin:8px 0 4px">Hình nhân vật: <b>${a.lookId ? 'mượn hồ sơ LIVE ' + esc(a.lookId) : 'mặc định theo cảnh giới'}</b></div>
+    <input id="lookQ" placeholder="Tìm tên người chơi LIVE để mượn skin…"> <button id="lookReset" style="padding:6px 12px">Mặc định</button><div id="lookList" class="muted"></div>`;
+  let timer;
+  const pick = async id => { const r = await api('look', { playerId: id }); if (!r.ok) return say(r.message); state.avatar = r.avatar; say('Đã đổi hình nhân vật.'); renderHome(); };
+  $('lookReset').onclick = () => pick('');
+  $('lookQ').oninput = () => { clearTimeout(timer); timer = setTimeout(async () => {
+    const q = $('lookQ').value.trim(); if (!q) { $('lookList').innerHTML = ''; return; }
+    const d = await fetch('/api/profiles?sort=gifts&q=' + encodeURIComponent(q)).then(x => x.json()).catch(() => ({ profiles: [] }));
+    $('lookList').innerHTML = (d.profiles || []).slice(0, 8).map(p => `<div data-id="${esc(p.id)}" style="cursor:pointer;padding:4px 0;border-top:1px solid var(--line)"><b style="color:var(--text)">${esc(p.name)}</b> · ${esc(p.realmName)} · ${fmt(p.giftCoins)} coin</div>`).join('') || 'Không thấy.';
+  }, 250); };
+  $('lookList').onclick = e => { const el = e.target.closest('[data-id]'); if (el) pick(el.dataset.id); };
+}
 function renderIdle(a) {
   const v = a.idle, box = $('idleBox'), h = Math.floor(v.minutes / 60), m = v.minutes % 60;
   box.innerHTML = `<b>Bế quan tụ linh</b> <span class="muted">· ${v.ratePerHour / 10}% tu vi bậc hiện tại mỗi giờ, tối đa ${v.capHours} giờ</span>
@@ -190,6 +209,8 @@ async function startBattle(stageId) {
   const r = await api('battle/start', { stageId });
   if (!r.ok) return say(r.message);
   const battle = createBattle(content, r.setup);
+  preload(content.byId.get(stageId)?.map);
+  await prepareActor(state.avatar);
   run = { id: r.battleId, battle, frames: [], acc: 0, last: performance.now(), hp: new Map(), floats: [] };
   $('result').classList.remove('on'); $('hint').style.display = '';
   show('battle'); resize();
@@ -204,6 +225,7 @@ function loop(now) {
     const f = readInput(); run.frames.push(f); tick(content, b, f);
   }
   trackDamage(b);
+  animateActor(b);
   const cv = $('cv'); draw(cv.getContext('2d'), cv.width, cv.height, b, PATH_COLOR[b.player && state.avatar.pathId], false, run.floats);
   hud(b);
   if (b.over && !run.sent) { run.sent = true; finish(); }
@@ -243,10 +265,22 @@ function hud(b) {
     el.querySelector('.cd').style.setProperty('--p', (skill && left ? left * 100 / skill.cd : 0) + '%');
   }
 }
+const hurtAt = new Map();
+// Động tác nhân vật LIVE theo trạng thái mô phỏng: hồi chiêu vừa bật lại = vừa ra đòn.
+function animateActor(b) {
+  const actor = playerActor(), p = b.player; if (!actor || !p) return;
+  const prev = run.pose || { x: p.x, y: p.y, cds: {} };
+  const fresh = slot => (p.cds[slot] || 0) > (prev.cds[slot] || 0);
+  if (fresh('attack')) actor.act('slash', 260);
+  if (fresh('special')) actor.act('cast', 520);
+  if (fresh('dash')) actor.dash();
+  actor.setMove(Math.min(1, Math.hypot(p.x - prev.x, p.y - prev.y) / Math.max(1, p.spd)));
+  run.pose = { x: p.x, y: p.y, cds: { ...p.cds } };
+}
 function trackDamage(b) {
   for (const e of b.entities) {
     const prev = run.hp.get(e.id);
-    if (prev !== undefined && e.hp < prev) run.floats.push({ x: e.x, y: e.y, v: prev - e.hp, t: 0, foe: e.team === 'enemy' });
+    if (prev !== undefined && e.hp < prev) { run.floats.push({ x: e.x, y: e.y, v: prev - e.hp, t: 0, foe: e.team === 'enemy' }); hurtAt.set(e.id, performance.now()); if (e.team === 'player') playerActor()?.hurt(); }
     run.hp.set(e.id, e.hp);
   }
   for (const f of run.floats) f.t++;
@@ -268,6 +302,7 @@ function draw(ctx, W, H, b, color, mini, floats = []) {
   const g = ctx.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, Math.max(W, H) / 1.2);
   g.addColorStop(0, '#1d2a22'); g.addColorStop(1, '#0c120f');
   ctx.fillStyle = g; ctx.fillRect(ox, oy, aw * sc, ah * sc);
+  if (!mini) drawBackground(ctx, content.byId.get(b.stageId)?.map, ox, oy, aw * sc, ah * sc);
   ctx.strokeStyle = 'rgba(232,196,106,.25)'; ctx.lineWidth = 2; ctx.strokeRect(ox, oy, aw * sc, ah * sc);
   for (const z of b.hazards || []) { // vòng báo trước: càng sắp giáng càng đậm, vòng trong co lại
     const k = 1 - z.left / z.total;
@@ -282,9 +317,19 @@ function draw(ctx, W, H, b, color, mini, floats = []) {
     ctx.fillStyle = `rgba(200,215,255,${0.35 * a})`; ctx.beginPath(); ctx.arc(x, y, R(e.r), 0, 7); ctx.fill(); ctx.shadowBlur = 0;
   }
   for (const z of b.zones) { ctx.fillStyle = 'rgba(255,120,60,.18)'; ctx.strokeStyle = 'rgba(255,150,80,.6)'; ctx.beginPath(); ctx.arc(X(z.x), Y(z.y), R(z.r), 0, 7); ctx.fill(); ctx.stroke(); }
-  for (const e of b.entities) {
+  const now = performance.now();
+  for (const e of [...b.entities].sort((p, q) => p.y - q.y)) { // xa trước gần sau
     if (!e.alive) continue;
     const isP = e.team === 'player', col = isP ? color : e.boss ? '#c9a24a' : e.ai === 'kite' ? '#7bd86b' : '#b58c6a';
+    const lookLeft = isP ? Math.cos(e.face * Math.PI / 32) < -0.05 : b.player.x < e.x;
+    const hurt = now - (hurtAt.get(e.id) || -1e9) < 120;
+    const drawn = !mini && (isP ? drawPlayer(ctx, X(e.x), Y(e.y), R(e.r), lookLeft, now, e.invuln > 0 ? .6 : 1) : drawMonster(ctx, e.monster, X(e.x), Y(e.y), R(e.r), lookLeft, now + e.id * 97, hurt));
+    if (drawn) {
+      if (e.stun > 0) { ctx.strokeStyle = '#fff59a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(X(e.x), Y(e.y) + R(e.r) * .85, R(e.r) * 1.3, R(e.r) * .45, 0, 0, 7); ctx.stroke(); }
+      const top = Y(e.y) - R(e.r) * (isP ? 5 : (MONSTER_ART[e.monster]?.scale || 2) * 2 - 0.6), w = R(e.r) * 2.2;
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(X(e.x) - w / 2, top, w, 4); ctx.fillStyle = isP ? '#e05a5a' : '#f0d27a'; ctx.fillRect(X(e.x) - w / 2, top, w * e.hp / e.maxHp, 4);
+      continue;
+    }
     ctx.globalAlpha = e.invuln > 0 && isP ? .55 : 1;
     ctx.shadowColor = col; ctx.shadowBlur = isP ? 14 : e.boss ? 18 : 0;
     ctx.fillStyle = col; ctx.beginPath(); ctx.arc(X(e.x), Y(e.y), R(e.r), 0, 7); ctx.fill();

@@ -93,7 +93,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
   function sessionPayload(user, now = Date.now()) {
     if (!user) return { user: null, devTools:profileOnly?false:devTools, readOnly:profileOnly };
     const p = playerOf(user);
-    return { user: { username: user.username, linkedTikTok: !!p && !p.webOnly }, player: p ? playerView(world, p, now) : null, pendingLink: accounts.pendingLink(user, now), devTools:profileOnly?false:devTools, readOnly:profileOnly };
+    return { admin: !!user.admin, user: { username: user.username, displayName: user.displayName, linkedTikTok: !!p && !p.webOnly }, player: p ? playerView(world, p, now) : null, pendingLink: accounts.pendingLink(user, now), devTools:profileOnly?false:devTools, readOnly:profileOnly };
   }
   // Dữ liệu cho bộ vẽ nhân vật của LIVE: chỉ nhân vật của mình (+ người LIVE khi cần vẽ quảng trường).
   function sceneState(p, now = Date.now(), withLive = false) {
@@ -221,7 +221,8 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         return await handleInternal(req, res, url);
       }
       if (url.pathname === '/healthz' && req.method === 'GET') return json(req, res, { ok: true, ...siteStatus() });
-      if (publicOnly && (url.pathname.startsWith('/admin') || url.pathname.startsWith('/dev'))) return json(req, res, { ok: false, message: 'Không có quyền.' }, 403);
+      const adminUser = (() => { const u = accounts.userForSession(cookies(req).vh_session, now); return u?.admin ? u : null; })();
+      if (publicOnly && (url.pathname.startsWith('/dev') || (url.pathname.startsWith('/admin') && !adminUser))) return json(req, res, { ok: false, message: 'Không có quyền.' }, 403);
       if (!url.pathname.startsWith('/api/') && !url.pathname.startsWith('/dev/') && !url.pathname.startsWith('/admin/')) return serveStatic(req, res, url.pathname);
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json')) return json(req, res, { ok: false, message: 'Yêu cầu không hợp lệ.' }, 400);
       if (limited('ip:' + ip, limits.requestsPerIp || 240, 60000, now)) return json(req, res, { ok: false, message: 'Quá nhiều yêu cầu, thử lại sau.' }, 429);
@@ -260,10 +261,10 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
       }
 
       // ----- Quản trị: CHỈ trên máy này (qua tunnel/proxy luôn bị chặn). Xem hồ sơ bất kỳ người chơi, chỉ đọc. -----
-      const viewId = !publicOnly && isLocal(req) ? cookies(req).vh_view : null;
+      const viewId = (!publicOnly && isLocal(req)) || adminUser ? cookies(req).vh_view : null;
       const viewP = viewId && Object.hasOwn(world.players, viewId) ? world.players[viewId] : null;
       if (url.pathname.startsWith('/admin/')) {
-        if (!isLocal(req)) return json(req, res, { ok: false, message: 'Không có quyền.' }, 403);
+        if (!adminUser && (publicOnly || !isLocal(req))) return json(req, res, { ok: false, message: 'Không có quyền.' }, 403);
         if (route === 'GET /admin/players') {
           // Tìm "lỏng": bỏ dấu, chữ kiểu (𝑷𝒓𝒊𝒏𝒄𝒆), chữ đặc biệt (Ł→l, đ→d…), bỏ ký tự trang trí; tìm cả theo ID TikTok.
           const fold = t => String(t ?? '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase()
@@ -277,12 +278,12 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         if (route === 'GET /admin/view') {
           const id = String(url.searchParams.get('id') || '');
           const ok = id && Object.hasOwn(world.players, id);
-          res.writeHead(302, { Location: ok ? '/' : '/admin.html', 'Set-Cookie': `vh_view=${ok ? encodeURIComponent(id) : ''}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${ok ? 86400 : 0}` });
+          res.writeHead(302, { Location: ok ? '/' : '/admin.html', 'Set-Cookie': `vh_view=${ok ? encodeURIComponent(id) : ''}; Path=/; HttpOnly; SameSite=Strict${secureCookie ? '; Secure' : ''}; Max-Age=${ok ? 86400 : 0}` });
           return res.end();
         }
         return json(req, res, { ok: false, message: 'Không có.' }, 404);
       }
-      if (route === 'GET /api/session' && viewP) return json(req, res, { user: { username: 'Quản trị · xem ' + viewP.name, linkedTikTok: !viewP.webOnly }, player: playerView(world, viewP, now), pendingLink: null, devTools: false, adminView: { id: viewP.id, name: viewP.name } });
+      if (route === 'GET /api/session' && viewP) return json(req, res, { user: { username: 'Quản trị · xem ' + viewP.name, linkedTikTok: !viewP.webOnly }, player: playerView(world, viewP, now), pendingLink: null, devTools: false, admin: !!adminUser, adminView: { id: viewP.id, name: viewP.name } });
       if(playSessions&&user&&playerOf(user)&&!['POST /api/logout','POST /api/login','POST /api/register','POST /api/check','POST /api/link/start'].includes(route)){
         const access=await playSessions.enter(user,token);
         if(!access.ok){errors.record('play-session',{route,user:user.username,message:access.code||access.message});return json(req,res,access,409);}

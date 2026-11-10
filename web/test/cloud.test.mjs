@@ -37,6 +37,15 @@ test('cloud: signed sync is atomic, ordered, idempotent, preserves text IDs and 
   assert.equal((await signed(base,'/internal/link',{eventId:'comment-1',code,userId:'9007199254740993',name:'Đạo hữu thử',at:Date.now()})).body.ok,true);
   assert.equal((await signed(base,'/internal/link',{eventId:'comment-1',code,userId:'9007199254740993',at:0})).body.ok,true);
   assert.equal((await api('/api/me')).body.player.id,'9007199254740993');
+  // Quản trị: chỉ cấp qua kênh ký; sau đó tài khoản đó mở được trang quản trị + xem hồ sơ (chỉ xem).
+  assert.equal((await signed(base,'/internal/admin',{username:'clouduser',grant:true},'x'.repeat(64))).status,401);
+  assert.equal((await signed(base,'/internal/admin',{username:'nobody',grant:true})).status,404);
+  assert.equal((await signed(base,'/internal/admin',{username:'clouduser'})).body.admin,false);
+  assert.equal((await signed(base,'/internal/admin',{username:'clouduser',grant:true})).body.admin,true);
+  assert.equal((await api('/admin/players')).body.some(p=>p.id==='9007199254740994'),true);
+  assert.equal((await api('/api/session')).body.admin,true);
+  assert.equal((await signed(base,'/internal/admin',{username:'clouduser',grant:false})).body.admin,false);
+  assert.equal((await api('/admin/players')).status,403);
   const before=JSON.stringify(cloud.world);
   for(const route of ['/api/act','/api/retreat/start','/api/gift/claim','/api/dungeon/start'])assert.equal((await api(route,{})).status,403);
   assert.equal(JSON.stringify(cloud.world),before);
