@@ -14,8 +14,8 @@
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 const ago=t=>{if(!t)return'';const m=Math.round((Date.now()-t)/60000);return m<60?m+' phút trước':m<1440?Math.round(m/60)+' giờ trước':Math.round(m/1440)+' ngày trước'};
-let timer;async function load(){const r=await fetch('/admin/players?q='+encodeURIComponent(q.value));if(!r.ok){list.innerHTML='<p class="error">Không có quyền (cần tài khoản quản trị).</p>';return;}
+let timer;async function load(){const r=await fetch('/api/quan-tri/players?q='+encodeURIComponent(q.value));if(!r.ok){list.innerHTML='<p class="error">Không có quyền (cần tài khoản quản trị).</p>';return;}
  const d=await r.json();list.innerHTML=d.map(p=>`<div class="row" data-id="${esc(p.id)}"><b>${esc(p.name)}</b>${p.web?'<span class="tag">có web</span>':''}${p.webOnly?'<span class="tag">chỉ web</span>':''}<small>${esc(p.realmName)} · ${fmt(p.totalQi)} tu vi · ${fmt(p.giftCoins)} coin · ${ago(p.lastActive)}</small></div>`).join('')||'<p class="muted">Không thấy.</p>';}
 q.oninput=()=>{clearTimeout(timer);timer=setTimeout(load,250)};
-list.onclick=e=>{const r=e.target.closest('[data-id]');if(r)location.href='/admin/view?id='+encodeURIComponent(r.dataset.id)};load();
+list.onclick=e=>{const r=e.target.closest('[data-id]');if(r)location.href='/api/quan-tri/view?id='+encodeURIComponent(r.dataset.id)};load();
 </script></body></html>

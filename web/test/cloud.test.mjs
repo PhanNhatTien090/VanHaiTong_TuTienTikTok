@@ -44,6 +44,8 @@ test('cloud: signed sync is atomic, ordered, idempotent, preserves text IDs and 
   assert.equal((await signed(base,'/internal/admin',{username:'clouduser',grant:true})).body.admin,true);
   assert.equal((await api('/admin/players')).body.some(p=>p.id==='9007199254740994'),true);
   assert.equal((await api('/api/session')).body.admin,true);
+  assert.equal((await api('/api/quan-tri/players')).status,200);
+  assert.equal((await fetch(base+'/quan-tri.html')).status,403);
   assert.equal((await signed(base,'/internal/admin',{username:'clouduser',grant:false})).body.admin,false);
   assert.equal((await api('/admin/players')).status,403);
   const before=JSON.stringify(cloud.world);

@@ -94,7 +94,7 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 // Quản trị: mọi ải đã mở; chọn hồ sơ LIVE để mượn hình nhân vật (skin LIVE).
 function renderAdmin(a) {
   const box = $('adminBox'); box.style.display = a.admin ? '' : 'none'; if (!a.admin) return;
-  box.innerHTML = `<b style="color:#ff8a8a">Tông chủ · quản trị</b> <span class="muted">· mọi ải đã mở · <a href="/admin.html" style="color:var(--gold)">Hồ sơ người chơi</a> · <a href="/" style="color:var(--gold)">Trang chính</a></span>
+  box.innerHTML = `<b style="color:#ff8a8a">Tông chủ · quản trị</b> <span class="muted">· mọi ải đã mở · <a href="/quan-tri.html" style="color:var(--gold)">Hồ sơ người chơi</a> · <a href="/" style="color:var(--gold)">Trang chính</a></span>
     <div style="margin:8px 0 4px">Hình nhân vật: <b>${a.lookId ? 'mượn hồ sơ LIVE ' + esc(a.lookId) : 'mặc định theo cảnh giới'}</b></div>
     <input id="lookQ" placeholder="Tìm tên người chơi LIVE để mượn skin…"> <button id="lookReset" style="padding:6px 12px">Mặc định</button><div id="lookList" class="muted"></div>`;
   let timer;

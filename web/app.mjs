@@ -214,6 +214,9 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
   // ---------- Định tuyến ----------
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://local');
+    // nginx trên VPS chặn cứng /admin* → trang quản trị dùng tên khác, đổi về đường nội bộ /admin* ở đây.
+    if (url.pathname === '/quan-tri.html') url.pathname = '/admin.html';
+    else if (url.pathname.startsWith('/api/quan-tri/')) url.pathname = '/admin/' + url.pathname.slice('/api/quan-tri/'.length);
     const ip = clientIp(req), now = Date.now();
     try {
       if (url.pathname.startsWith('/internal/')) {
@@ -278,7 +281,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         if (route === 'GET /admin/view') {
           const id = String(url.searchParams.get('id') || '');
           const ok = id && Object.hasOwn(world.players, id);
-          res.writeHead(302, { Location: ok ? '/' : '/admin.html', 'Set-Cookie': `vh_view=${ok ? encodeURIComponent(id) : ''}; Path=/; HttpOnly; SameSite=Strict${secureCookie ? '; Secure' : ''}; Max-Age=${ok ? 86400 : 0}` });
+          res.writeHead(302, { Location: ok ? '/' : '/quan-tri.html', 'Set-Cookie': `vh_view=${ok ? encodeURIComponent(id) : ''}; Path=/; HttpOnly; SameSite=Strict${secureCookie ? '; Secure' : ''}; Max-Age=${ok ? 86400 : 0}` });
           return res.end();
         }
         return json(req, res, { ok: false, message: 'Không có.' }, 404);
