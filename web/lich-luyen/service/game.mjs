@@ -15,6 +15,7 @@ const fail = (code, message, extra = {}) => ({ ok: false, code, message, ...extr
 const REALTIME_SHARE = 80;
 const STALE_MS = 30 * 60000;
 const SWEEPS_PER_DAY = 20;
+const TRIAL_FAIL_QI = 10; // % tu vi Viên Mãn mất khi độ kiếp thất bại (vật phẩm giữ nguyên, đánh lại được)
 const BT_MESSAGE = { NEED_QI: 'Chưa đủ tu vi.', NEED_MATERIALS: 'Thiếu vật phẩm đột phá.', NEED_TRIAL: 'Cần vượt thử thách đột phá.', SEASON_CAP: 'Đã chạm trần cảnh giới mùa này.', END: 'Đã đến tận cùng đại đạo.', NOT_GATE: 'Chưa tới Viên Mãn.', LOCKED: 'Cảnh giới này chưa mở.' };
 // Ngày theo giờ Việt Nam, đổi lúc 05:00 (giống LIVE).
 const vnDay = now => Math.floor((now + 7 * 3600000 - 5 * 3600000) / 86400000);
@@ -26,6 +27,22 @@ export function createGame({ db, content, verifier, season = 1 }) {
   const byId = id => db.prepare('SELECT * FROM ll_avatars WHERE id=?').get(id);
   const payloadOf = r => JSON.parse(r.payload);
   const avatarModel = (r, payload = payloadOf(r)) => ({ pathId: r.path_id, cultivation: { step: r.step, qi: r.qi }, ...payload });
+  // Bậc đầu tiên của đại cảnh minRealm trên thang → đã tới chưa
+  const realmFirstStep = new Map(); for (const s of ladder) if (!realmFirstStep.has(s.realmId)) realmFirstStep.set(s.realmId, s.index);
+  const realmReached = (step, realmId) => !realmId || step >= realmFirstStep.get(realmId);
+  const trialStageFor = key => content.stages.find(s => s.kind === 'trial' && s.trialKey === key);
+  // Được vào độ kiếp không: đúng cổng, cảnh giới đích cần đúng thử thách này, đủ tu vi, đủ vật phẩm bắt buộc.
+  function trialBlock(r, stage) {
+    const step = ladder[r.step];
+    if (step.gate !== 'breakthrough') return fail('NOT_GATE', BT_MESSAGE.NOT_GATE);
+    const target = content.realms[step.realmIndex + 1];
+    if (!target.requires) return fail('LOCKED', BT_MESSAGE.LOCKED);
+    if (target.trial !== stage.trialKey) return fail('WRONG_TRIAL', 'Không phải thử thách của cảnh giới này.');
+    if (r.qi < step.qi) return fail('NEED_QI', BT_MESSAGE.NEED_QI);
+    const inv = stacks(db, r.id);
+    if (target.requires.some(q => (inv[q.item] || 0) < q.count)) return fail('NEED_MATERIALS', BT_MESSAGE.NEED_MATERIALS);
+    return null;
+  }
   const itemView = (id, count) => { const it = content.byId.get(id); return { id, count, name: t(content, it.nameKey), desc: t(content, it.descKey), kind: it.kind, rarity: it.rarity }; };
 
   // Xem trước đột phá: cần gì, có gì, đạt phẩm nào.
@@ -43,18 +60,22 @@ export function createGame({ db, content, verifier, season = 1 }) {
       quality: quality ? { id: quality.id, name: t(content, quality.nameKey), points: quality.points, fatePicks: quality.fatePicks } : null,
       qualities: target.qualities.map(q => ({ id: q.id, name: t(content, q.nameKey), materials: q.materials, points: q.points, fatePicks: q.fatePicks })),
       canBreak: r.qi >= step.qi && requires.every(x => x.count >= x.need) && !!quality && !target.trial,
+      trialStage: target.trial ? trialStageFor(target.trial)?.id || null : null,
+      trialReady: !!target.trial && r.qi >= step.qi && requires.every(x => x.count >= x.need) && !!quality,
+      trialFails: payloadOf(r).trialFails || 0,
     };
   }
 
-  function stageView(payload, now) {
+  function stageView(payload, now, stepNow) {
     const prog = payload.stages || {};
     const day = vnDay(now), sweeps = payload.sweepDay?.day === day ? payload.sweepDay.used : 0;
     return {
       sweepsLeft: Math.max(0, SWEEPS_PER_DAY - sweeps),
-      list: content.stages.map(s => {
+      list: content.stages.filter(s => s.kind !== 'trial').map(s => {
         const p = prog[s.id] || { stars: 0, clears: 0 };
-        const unlocked = !s.requires || (prog[s.requires]?.stars || 0) > 0;
-        return { id: s.id, name: t(content, s.nameKey), map: t(content, s.map), level: s.level, stars: p.stars, clears: p.clears, unlocked, sweepable: p.stars === 3, rewards: s.rewards,
+        const realmOk = realmReached(stepNow, s.minRealm);
+        const unlocked = realmOk && (!s.requires || (prog[s.requires]?.stars || 0) > 0);
+        return { id: s.id, name: t(content, s.nameKey), mapId: s.map, map: t(content, s.map), level: s.level, stars: p.stars, clears: p.clears, unlocked, needRealm: realmOk ? null : t(content, content.byId.get(s.minRealm).nameKey), sweepable: p.stars === 3, rewards: s.rewards,
           drops: s.drops.map(d => ({ id: d.item, name: t(content, content.byId.get(d.item).nameKey), rarity: content.byId.get(d.item).rarity })) };
       }),
     };
@@ -70,7 +91,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
       breakthroughs: (payload.breakthroughs || []).map(b => ({ realmName: t(content, content.byId.get(b.realmId).nameKey), quality: b.quality, points: b.points })),
       inventory: Object.entries(inv).map(([id, n]) => itemView(id, n)).sort((x, y) => y.rarity - x.rarity || x.name.localeCompare(y.name, 'vi')),
       breakthrough: breakthroughPreview(r, inv),
-      stages: stageView(payload, now),
+      stages: stageView(payload, now, r.step),
     };
   }
 
@@ -87,13 +108,14 @@ export function createGame({ db, content, verifier, season = 1 }) {
     return { ok: true, avatar: view(row(user.id), now) };
   }
 
-  const stageUnlocked = (payload, stage) => !stage.requires || ((payload.stages || {})[stage.requires]?.stars || 0) > 0;
+  const stageUnlocked = (payload, stage, step) => realmReached(step, stage.minRealm) && (!stage.requires || ((payload.stages || {})[stage.requires]?.stars || 0) > 0);
 
   function startBattle(user, stageId, now = Date.now()) {
     const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
     const stage = content.byId.get(stageId);
     if (!stage?.waves) return fail('BAD_STAGE', 'Ải không tồn tại.');
-    if (!stageUnlocked(payloadOf(r), stage)) return fail('LOCKED', 'Hãy vượt ải trước đó.');
+      if (stage.kind === 'trial') { const why = trialBlock(r, stage); if (why) return why; }
+    else if (!stageUnlocked(payloadOf(r), stage, r.step)) return fail('LOCKED', stage.minRealm && !realmReached(r.step, stage.minRealm) ? 'Cần cảnh giới ' + t(content, content.byId.get(stage.minRealm).nameKey) + '.' : 'Hãy vượt ải trước đó.');
     const seed = crypto.randomBytes(12).toString('hex'), id = 'bt_' + crypto.randomBytes(12).toString('hex');
     const setup = { seed, stageId, player: { pathId: r.path_id, stats: computeStats(content, avatarModel(r)).stats } };
     tx(db, () => {
@@ -148,12 +170,29 @@ export function createGame({ db, content, verifier, season = 1 }) {
       const done = db.prepare("UPDATE ll_battles SET status='done', finished=?, inputs=?, result=?, mismatch=? WHERE id=? AND status='running'")
         .run(now, JSON.stringify(inputs), JSON.stringify({ ...result, stars }), mismatch, b.id);
       if (done.changes !== 1) return fail('DONE', 'Trận đã kết thúc.');
+      if (stage.kind === 'trial') return finishTrial(byId(r.id), stage, result, now);
       if (!stars) return { ok: true, result, reward: { stars: 0, qi: 0, linhThach: 0, drops: [] } };
       const reward = applyWin(byId(r.id), stage, stars, { ref: b.id, now });
       db.prepare('UPDATE ll_battles SET result=? WHERE id=?').run(JSON.stringify({ ...result, stars, reward }), b.id);
       return { ok: true, result, reward };
     });
     return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
+  }
+
+  // Độ kiếp xong (TRONG transaction): sống sót → đột phá luôn (tiêu vật phẩm); thất bại → mất TRIAL_FAIL_QI% tu vi, giữ vật phẩm.
+  function finishTrial(cur, stage, result, now) {
+    if (result.complete && result.victory) {
+      const why = trialBlock(cur, stage);
+      if (why) return why; // giữa chừng đã tiêu mất vật phẩm/tu vi (trận khác) → không cho đột phá
+      const bt = doBreakthrough(cur, now, true);
+      return bt.ok ? { ok: true, result, trial: { passed: true, ...bt } } : bt;
+    }
+    const payload = payloadOf(cur), lost = Math.trunc(ladder[cur.step].qi * TRIAL_FAIL_QI / 100);
+    payload.trialFails = (payload.trialFails || 0) + 1;
+    const qi = Math.max(0, cur.qi - lost);
+    const upd = db.prepare('UPDATE ll_avatars SET qi=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?').run(qi, JSON.stringify(payload), now, cur.id, cur.version);
+    if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
+    return { ok: true, result, trial: { passed: false, lostQi: cur.qi - qi } };
   }
 
   // Quét: ải đã 3 sao, 70% thưởng, vẫn rơi đồ; tối đa 20 lượt/ngày. Server tính ngay, không cần mô phỏng.
@@ -182,13 +221,19 @@ export function createGame({ db, content, verifier, season = 1 }) {
     if (step.gate === 'breakthrough') {
       const target = content.realms[step.realmIndex + 1];
       if (!target.requires) return fail('LOCKED', BT_MESSAGE.LOCKED);
-      if (target.trial) return fail('NEED_TRIAL', BT_MESSAGE.NEED_TRIAL, { trial: target.trial }); // Lôi Kiếp/Tâm Ma: làm ở phần sau
+      if (target.trial) return fail('NEED_TRIAL', BT_MESSAGE.NEED_TRIAL, { trial: target.trial }); // phải vào ải thử thách; thắng thì finishTrial tự đột phá
     }
-    const out = tx(db, () => {
-      const cur = byId(r.id), payload = payloadOf(cur), inv = stacks(db, cur.id);
+    const out = tx(db, () => doBreakthrough(byId(r.id), now, false));
+    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
+  }
+
+  // Lõi đột phá (TRONG transaction). trialPassed chỉ true khi gọi từ finishTrial (server đã chạy lại trận độ kiếp).
+  function doBreakthrough(cur, now, trialPassed) {
+    {
+      const step = ladder[cur.step], payload = payloadOf(cur), inv = stacks(db, cur.id);
       const target = content.realms[step.realmIndex + 1] || null;
       const present = (target?.boosts || []).filter(id => inv[id] > 0);
-      const bt = breakthrough({ step: cur.step, qi: cur.qi }, ladder, content, { materialTypes: present.length, trialPassed: false });
+      const bt = breakthrough({ step: cur.step, qi: cur.qi }, ladder, content, { materialTypes: present.length, trialPassed });
       if (!bt.ok) return fail(bt.code, BT_MESSAGE[bt.code] || 'Chưa đột phá được.', { need: bt.need });
       const quality = target.qualities.find(q => q.id === bt.quality);
       const consume = {};
@@ -202,8 +247,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
         .run(bt.state.step, bt.state.qi, power, JSON.stringify(payload), now, cur.id, cur.version);
       if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
       return { ok: true, realmId: bt.realmId, realmName: t(content, target.nameKey), quality: bt.quality, qualityName: t(content, quality.nameKey), points: bt.points, fatePicks: bt.fatePicks, consumed: Object.entries(consume).map(([id, n]) => itemView(id, n)) };
-    });
-    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
+    }
   }
 
   return {

@@ -3,9 +3,19 @@
 import { dist2, dirTo, DIR_COUNT, DIRS, POS, isqrt } from '../fixed.mjs';
 import { BTN } from './inputs.mjs';
 
-export function botInput(content, state) {
+// opts.react: số nhịp bot cần để "thấy" một vòng hiểm họa mới (mô phỏng phản xạ người thật ~10–12 nhịp). 0 = phản xạ tức thì.
+export function botInput(content, state, opts = {}) {
+  const react = opts.react || 0;
   const p = state.player;
   if (!p.alive || state.over) return { dir: -1, buttons: 0 };
+  // Né hiểm họa: đứng trong vòng sắp giáng thì chạy ra (sắp giáng mà gần tâm thì lướt)
+  for (const z of state.hazards || []) {
+    if (z.total - z.left < react) continue;
+    const rr = z.r + p.r + 12 * POS;
+    if (dist2(z.x, z.y, p.x, p.y) > rr * rr) continue;
+    const toward = dirTo(z.x - p.x, z.y - p.y), away = escape(state, p, z.x === p.x && z.y === p.y ? 0 : toward);
+    return { dir: away, buttons: z.left <= 10 && (p.cds.dash || 0) === 0 ? BTN.DASH : 0 };
+  }
   let foe = null, bd = Infinity, near = 0;
   for (const e of state.entities) {
     if (!e.alive || e.team !== 'enemy') continue;
@@ -13,7 +23,10 @@ export function botInput(content, state) {
     if (d < bd) { bd = d; foe = e; }
     if (d < (260 * POS) ** 2) near++;
   }
-  if (!foe) return { dir: -1, buttons: 0 };
+  if (!foe) { // không có quái (thử thách): giữ quanh giữa sân để còn chỗ né
+    const cx = state.w >> 1, cy = state.h >> 1;
+    return { dir: dist2(p.x, p.y, cx, cy) > (120 * POS) ** 2 ? dirTo(cx - p.x, cy - p.y) : -1, buttons: 0 };
+  }
   const attack = content.byId.get(p.skills.attack), special = content.byId.get(p.skills.special);
   const reach = attackReach(attack) * POS;
   const toward = dirTo(foe.x - p.x, foe.y - p.y);

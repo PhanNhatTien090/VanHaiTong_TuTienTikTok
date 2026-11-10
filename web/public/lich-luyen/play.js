@@ -95,7 +95,8 @@ function renderBreakthrough(a) {
   const boosts = p.boosts.map(x => `<span style="color:${x.count > 0 ? 'var(--ok)' : 'var(--muted)'}">${x.name}${x.count > 0 ? ' ✓' : ''}</span>`).join(' · ');
   const q = p.quality ? `<b style="color:var(--gold)">${p.realmName} ${p.quality.name}</b> · +${p.quality.points} điểm · ${p.quality.fatePicks} lượt mệnh cách` : '';
   const ladder = p.qualities.map(x => `${x.name}: ${x.materials} loại → +${x.points}`).join(' · ');
-  box.innerHTML = `<b>Đột phá ${p.realmName}</b><div style="margin:6px 0">${p.qiReady ? '<span style="color:var(--ok)">Tu vi đã Viên Mãn</span>' : '<span class="muted">Cần tu vi Viên Mãn</span>'} · Bắt buộc: ${need}</div><div class="muted" style="font-size:13px">Nâng phẩm (mỗi loại có là +1 bậc): ${boosts}<br>${ladder}</div><div style="margin-top:6px">${q}</div>${p.trial ? `<div class="muted">Thử thách: ${p.trial} (sắp có)</div>` : ''}`;
+  box.innerHTML = `<b>Đột phá ${p.realmName}</b><div style="margin:6px 0">${p.qiReady ? '<span style="color:var(--ok)">Tu vi đã Viên Mãn</span>' : '<span class="muted">Cần tu vi Viên Mãn</span>'} · Bắt buộc: ${need}</div><div class="muted" style="font-size:13px">Nâng phẩm (mỗi loại có là +1 bậc): ${boosts}<br>${ladder}</div><div style="margin-top:6px">${q}</div>${p.trial ? `<div style="margin-top:6px">Thử thách: <b>${p.trial}</b> · sống sót 48 giây dưới 9 đạo thiên lôi. Thất bại mất 10% tu vi, giữ vật phẩm.${p.trialFails ? ` <span class="muted">(đã thất bại ${p.trialFails} lần)</span>` : ''}</div>` : ''}`;
+  if (p.trialStage) { const go = document.createElement('button'); go.textContent = 'Độ ' + p.trial; go.disabled = !p.trialReady; go.style.marginTop = '8px'; go.onclick = () => startBattle(p.trialStage); box.append(go); return; }
   const bt = document.createElement('button'); bt.textContent = 'Đột phá'; bt.disabled = !p.canBreak; bt.style.marginTop = '8px';
   bt.onclick = async () => { bt.disabled = true; const r = await api('breakthrough', {}); if (!r.ok) { alert(r.message); bt.disabled = false; return; } state.avatar = r.avatar; alert(`Đột phá thành công: ${r.realmName} ${r.qualityName} · +${r.points} điểm thuộc tính`); renderHome(); };
   box.append(bt);
@@ -103,7 +104,9 @@ function renderBreakthrough(a) {
 function renderStages(a) {
   const list = $('stageList'); list.innerHTML = '';
   $('sweepInfo').textContent = `Lượt quét hôm nay: ${a.stages.sweepsLeft}`;
+  let lastMap = null;
   for (const st of a.stages.list) {
+    if (st.mapId !== lastMap) { lastMap = st.mapId; const h = document.createElement('div'); h.className = 'mapHead'; h.textContent = st.map + (st.needRealm ? ' · cần ' + st.needRealm : ''); list.append(h); }
     const row = document.createElement('div'); row.className = 'stage' + (st.unlocked ? '' : ' locked');
     row.innerHTML = `<div><b>${st.level}. ${st.name}</b> <span style="color:var(--gold)">${stars(st.stars)}</span><div class="muted" style="font-size:12px">+${st.rewards.qi} tu vi · +${st.rewards.linhThach} linh thạch · rơi: ${st.drops.map(d => `<span style="color:${RARITY[d.rarity]}">${d.name}</span>`).join(', ')}</div></div><div class="acts"></div>`;
     const acts = row.querySelector('.acts');
@@ -183,6 +186,13 @@ async function finish() {
   $('resultStars').textContent = ''; $('resultText').textContent = 'Đang xác nhận với tông môn…'; $('result').classList.add('on');
   const r = await api('battle/finish', { battleId: run.id, inputs: encodeInputs(run.frames), hash: local.hash });
   if (!r.ok) { $('resultText').textContent = r.message || 'Không xác nhận được trận.'; return; }
+  if (r.trial) {
+    state.avatar = r.avatar;
+    $('resultTitle').textContent = r.trial.passed ? 'Độ kiếp thành công!' : 'Độ kiếp thất bại';
+    $('resultStars').textContent = r.trial.passed ? '⚡' : '';
+    $('resultText').innerHTML = r.trial.passed ? `<b style="color:var(--gold)">${r.trial.realmName} ${r.trial.qualityName}</b><br>+${r.trial.points} điểm thuộc tính · ${r.trial.fatePicks} lượt mệnh cách<br>${r.avatar.label}` : `Mất ${fmt(r.trial.lostQi)} tu vi. Vật phẩm vẫn còn — tu luyện lại rồi độ kiếp lần nữa.`;
+    return;
+  }
   const rw = r.reward || {};
   $('resultStars').textContent = '★'.repeat(rw.stars || 0) + '☆'.repeat(3 - (rw.stars || 0));
   const drops = (rw.drops || []).map(d => `<span style="color:${RARITY[d.rarity]}">${d.name} ×${d.count}</span>`).join(', ');
@@ -196,7 +206,8 @@ function hud(b) {
   $('hpBar').style.width = (p.hp * 100 / p.maxHp) + '%';
   $('mpBar').style.width = (p.maxMp ? p.mp * 100 / p.maxMp : 0) + '%';
   const left = Math.max(0, Math.ceil((b.maxTicks - b.tick) / TICK_RATE));
-  $('hudText').textContent = `Đợt ${b.wave + 1} · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
+  if (b.kind === 'trial') { const s = Math.max(0, Math.ceil((b.surviveTicks - b.tick) / TICK_RATE)); $('hudText').textContent = `Độ kiếp · còn ${s} giây`; }
+  else $('hudText').textContent = `Đợt ${b.wave + 1} · ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}`;
   const cd = { 1: 'attack', 2: 'special', 4: 'dash' };
   for (const el of document.querySelectorAll('.btn')) {
     const slot = cd[el.dataset.btn], skill = content.byId.get(p.skills[slot]), left = p.cds[slot] || 0;
@@ -229,6 +240,18 @@ function draw(ctx, W, H, b, color, mini, floats = []) {
   g.addColorStop(0, '#1d2a22'); g.addColorStop(1, '#0c120f');
   ctx.fillStyle = g; ctx.fillRect(ox, oy, aw * sc, ah * sc);
   ctx.strokeStyle = 'rgba(232,196,106,.25)'; ctx.lineWidth = 2; ctx.strokeRect(ox, oy, aw * sc, ah * sc);
+  for (const z of b.hazards || []) { // vòng báo trước: càng sắp giáng càng đậm, vòng trong co lại
+    const k = 1 - z.left / z.total;
+    ctx.fillStyle = `rgba(150,170,255,${0.08 + 0.25 * k})`; ctx.strokeStyle = `rgba(190,205,255,${0.4 + 0.5 * k})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(X(z.x), Y(z.y), R(z.r), 0, 7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(X(z.x), Y(z.y), Math.max(1, R(z.r) * (1 - k)), 0, 7); ctx.stroke();
+  }
+  for (const e of b.events) if (e.type === 'strike' && b.tick - e.t < 8) { // tia sét giáng: đường gấp khúc từ trên trời xuống + chớp sáng
+    const a = 1 - (b.tick - e.t) / 8, x = X(e.x), y = Y(e.y);
+    ctx.strokeStyle = `rgba(230,236,255,${a})`; ctx.lineWidth = 3; ctx.shadowColor = '#9fb4ff'; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.moveTo(x + ((e.x / 7) % 30) - 15, oy); for (let i = 1; i <= 6; i++) ctx.lineTo(x + (((e.x + i * 97) % 40) - 20) * (1 - i / 6), oy + (y - oy) * i / 6); ctx.stroke();
+    ctx.fillStyle = `rgba(200,215,255,${0.35 * a})`; ctx.beginPath(); ctx.arc(x, y, R(e.r), 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+  }
   for (const z of b.zones) { ctx.fillStyle = 'rgba(255,120,60,.18)'; ctx.strokeStyle = 'rgba(255,150,80,.6)'; ctx.beginPath(); ctx.arc(X(z.x), Y(z.y), R(z.r), 0, 7); ctx.fill(); ctx.stroke(); }
   for (const e of b.entities) {
     if (!e.alive) continue;

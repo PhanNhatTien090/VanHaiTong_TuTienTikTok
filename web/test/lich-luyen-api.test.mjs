@@ -62,7 +62,7 @@ test('vòng chơi đầy đủ: tạo phân thân → vào ải → đánh → s
   assert.equal((await c('/api/ll/avatar', { pathId: 'path.khong-co' })).ok, false);
   const made = await c('/api/ll/avatar', { pathId: 'path.kiem-tu', name: 'Lưu Vân' });
   assert.equal(made.ok, true); assert.equal(made.avatar.label, 'Phàm Nhân'); assert.equal(made.avatar.name, 'Lưu Vân');
-  assert.equal(made.avatar.stages.list.length, 10); assert.equal(made.avatar.stages.list[0].unlocked, true); assert.equal(made.avatar.stages.list[1].unlocked, false);
+  assert.equal(made.avatar.stages.list.length, 20); assert.ok(made.avatar.stages.list.every(x => !x.id.startsWith('stage.trial'))); assert.equal(made.avatar.stages.list[0].unlocked, true); assert.equal(made.avatar.stages.list[1].unlocked, false);
   assert.equal((await c('/api/ll/battle/start', { stageId: 'stage.thanh-van.2' })).code, 'LOCKED');
   assert.equal((await c('/api/ll/avatar', { pathId: 'path.the-tu' })).code, 'EXISTS');
 
@@ -209,4 +209,62 @@ test('đột phá Trúc Cơ: cần Trúc Cơ Đan; số loại vật phẩm nân
   ll.db.prepare('UPDATE ll_avatars SET step=?, qi=? WHERE id=?').run(kd, L[kd].qi, b.id);
   addItems(ll.db, b.id, { 'item.ket-dan-dan': 1 }, content);
   assert.equal((await b.c('/api/ll/breakthrough', {})).code, 'NEED_TRIAL');
+});
+
+test('Lạc Hà Châu khóa theo cảnh giới Trúc Cơ (dù đã qua Thanh Vân Đỉnh)', async () => {
+  const { c, id } = await freshAvatar('lacha');
+  const p = { breakthroughs: [], stages: { 'stage.thanh-van.10': { stars: 3, clears: 1 } } };
+  ll.db.prepare('UPDATE ll_avatars SET payload=? WHERE id=?').run(JSON.stringify(p), id);
+  let s = await c('/api/ll/state');
+  const lh1 = s.avatar.stages.list.find(x => x.id === 'stage.lac-ha.1');
+  assert.equal(lh1.unlocked, false); assert.equal(lh1.needRealm, 'Trúc Cơ');
+  assert.match((await c('/api/ll/battle/start', { stageId: 'stage.lac-ha.1' })).message, /Trúc Cơ/);
+  const tc = ll.game.ladder.findIndex(x => x.realmId === 'realm.truc-co');
+  ll.db.prepare('UPDATE ll_avatars SET step=? WHERE id=?').run(tc, id);
+  s = await c('/api/ll/state');
+  assert.equal(s.avatar.stages.list.find(x => x.id === 'stage.lac-ha.1').unlocked, true);
+  assert.equal((await c('/api/ll/battle/start', { stageId: 'stage.lac-ha.1' })).ok, true);
+});
+
+test('Lôi Kiếp: không đủ điều kiện thì không vào; thất bại mất 10% tu vi, giữ vật phẩm; vượt qua thì lên Kim Đan theo phẩm', async () => {
+  const L = ll.game.ladder, gate = L.findIndex(x => x.realmId === 'realm.truc-co' && x.gate);
+  const { c, id } = await freshAvatar('dokiep', 'path.kiem-tu');
+  assert.equal((await c('/api/ll/battle/start', { stageId: 'stage.trial.loi-kiep' })).code, 'WRONG_TRIAL'); // Phàm Nhân cũng là cổng, nhưng lên Luyện Khí không cần Lôi Kiếp
+  ll.db.prepare('UPDATE ll_avatars SET step=?, qi=?, payload=? WHERE id=?').run(gate, L[gate].qi, JSON.stringify({ breakthroughs: [{ realmId: 'realm.truc-co', quality: 'dia', points: 16 }], stages: {} }), id);
+  assert.equal((await c('/api/ll/battle/start', { stageId: 'stage.trial.loi-kiep' })).code, 'NEED_MATERIALS');
+  addItems(ll.db, id, { 'item.ket-dan-dan': 1, 'item.xich-viem-tinh': 1, 'item.loi-kich-moc': 1 }, content);
+  let s = await c('/api/ll/state');
+  assert.equal(s.avatar.breakthrough.trialStage, 'stage.trial.loi-kiep'); assert.equal(s.avatar.breakthrough.trialReady, true);
+  assert.equal(s.avatar.breakthrough.quality.id, 'tam-pham');
+  assert.equal((await c('/api/ll/breakthrough', {})).code, 'NEED_TRIAL'); // không lách qua API đột phá thường
+
+  // Đứng yên → bị sét đánh chết → thất bại
+  const st1 = await c('/api/ll/battle/start', { stageId: 'stage.trial.loi-kiep' });
+  const b1 = createBattle(content, st1.setup), f1 = [];
+  while (!b1.over) { const f = { dir: -1, buttons: 0 }; f1.push(f); tick(content, b1, f); }
+  clock += 10 * 60000;
+  const lose = await c('/api/ll/battle/finish', { battleId: st1.battleId, inputs: encodeInputs(f1) });
+  assert.equal(lose.ok, true, lose.message); assert.equal(lose.trial.passed, false);
+  assert.equal(lose.trial.lostQi, Math.trunc(L[gate].qi / 10));
+  assert.equal(lose.avatar.inventory.find(i => i.id === 'item.ket-dan-dan').count, 1);
+  assert.equal(lose.avatar.breakthrough.trialFails, 1);
+
+  // Bù lại tu vi rồi độ kiếp bằng bot né sét (thử tối đa 10 lần — mỗi lần sét rơi khác nhau)
+  let passed = null;
+  for (let i = 0; i < 10 && !passed; i++) {
+    ll.db.prepare('UPDATE ll_avatars SET qi=? WHERE id=?').run(L[gate].qi, id);
+    const st = await c('/api/ll/battle/start', { stageId: 'stage.trial.loi-kiep' });
+    const run = playLocally(st.setup);
+    clock += 10 * 60000;
+    const r = await c('/api/ll/battle/finish', { battleId: st.battleId, inputs: run.inputs, hash: run.local.hash });
+    assert.equal(r.ok, true, r.message);
+    if (r.trial.passed) passed = r;
+  }
+  assert.ok(passed, 'bot phải vượt Lôi Kiếp trong 10 lần');
+  assert.equal(passed.trial.realmName, 'Kim Đan'); assert.equal(passed.trial.quality, 'tam-pham');
+  assert.equal(passed.avatar.label, 'Kim Đan Sơ Kỳ');
+  assert.deepEqual(passed.avatar.inventory.filter(i => i.id.startsWith('item.ket') || i.id.startsWith('item.xich') || i.id.startsWith('item.loi')), []);
+  // Kim Đan Viên Mãn là trần mùa 1
+  const kd = L.findIndex(x => x.realmId === 'realm.kim-dan' && x.gate);
+  assert.equal(L[kd].gate, 'season');
 });

@@ -120,8 +120,24 @@ export function validateContent(c, text = vi) {
     const [aw, ah] = st.arena || []; nonNegInt(w, 'arena.w', aw); nonNegInt(w, 'arena.h', ah);
     const inside = (p, what) => { if (!Array.isArray(p) || !(p[0] >= 0 && p[0] <= aw && p[1] >= 0 && p[1] <= ah)) err(w, `${what} nằm ngoài sân`); };
     inside(st.playerStart, 'playerStart');
-    if (!st.waves?.length) err(w, 'cần ít nhất một đợt quái');
-    st.waves?.forEach((wv, j) => {
+    if (st.kind === 'trial') {
+      if (!Number.isSafeInteger(st.survive) || st.survive < 5 || st.survive >= st.timeLimit) err(w, 'survive phải ≥ 5 và < timeLimit');
+      if (!st.hazards?.length) err(w, 'thử thách cần hiểm họa');
+      checkText(w, st.trialKey);
+      if (!c.realms.some(r => r.trial === st.trialKey)) err(w, `không cảnh giới nào dùng thử thách "${st.trialKey}"`);
+    } else if (st.kind !== undefined) err(w, `kind lạ "${st.kind}"`);
+    else if (!st.waves?.length) err(w, 'cần ít nhất một đợt quái');
+    let lastAt = -1;
+    for (const h of st.hazards || []) {
+      for (const k of ['at', 'count', 'radius', 'delay', 'dmg']) nonNegInt(w, 'hazard.' + k, h[k]);
+      if (h.at < lastAt) err(w, 'hazards phải xếp theo at tăng dần');
+      lastAt = h.at;
+      if (!['player', 'random'].includes(h.aim)) err(w, `hazard.aim lạ "${h.aim}"`);
+      if (h.dmg > 1000) err(w, 'hazard.dmg tối đa 1000‰');
+      if (h.delay < 15) err(w, 'hazard.delay ≥ 15 nhịp (phải kịp thấy để né)');
+    }
+    if (st.minRealm !== undefined && !c.realms.some(r => r.id === st.minRealm)) err(w, `minRealm không tồn tại "${st.minRealm}"`);
+    (st.waves || []).forEach((wv, j) => {
       if (!['start', 'clear'].includes(wv.when)) err(w, `wave[${j}].when lạ`);
       if (j === 0 && wv.when !== 'start') err(w, 'đợt đầu phải là start');
       for (const sp of wv.spawn || []) { if (!monsterIds.has(sp.monster)) err(w, `quái không tồn tại "${sp.monster}"`); nonNegInt(w, 'count', sp.count); inside(sp.at, 'điểm xuất quái'); }

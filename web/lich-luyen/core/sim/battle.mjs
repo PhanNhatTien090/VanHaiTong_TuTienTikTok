@@ -31,7 +31,7 @@ function makeEntity(state, team, x, y, radius, stats, skills, extra = {}) {
 // setup: { seed, stageId, player: { pathId, stats }, maxTicks? }
 export function createBattle(content, setup) {
   const stage = content.byId.get(setup.stageId);
-  if (!stage || !stage.waves) throw Error('Ải không tồn tại: ' + setup.stageId);
+  if (!stage || !Array.isArray(stage.waves)) throw Error('Ải không tồn tại: ' + setup.stageId);
   const path = content.byId.get(setup.player.pathId);
   if (!path || !path.kit) throw Error('Đạo lộ không tồn tại: ' + setup.player.pathId);
   const state = {
@@ -39,13 +39,46 @@ export function createBattle(content, setup) {
     maxTicks: Math.min(setup.maxTicks ?? stage.timeLimit * TICK_RATE, stage.timeLimit * TICK_RATE),
     w: px(stage.arena[0]), h: px(stage.arena[1]), level: stage.level,
     rng: createRng('battle:' + setup.seed), entities: [], shots: [], zones: [], wave: 0,
+    // Hiểm họa (sét kiếp, độc vụ…): lịch trong dữ liệu ải; vòng báo trước rồi mới giáng. trial = sống sót tới survive giây là thắng.
+    hazards: [], hazardNext: 0, kind: stage.kind || 'normal', surviveTicks: (stage.survive || 0) * TICK_RATE,
     stats: { dealt: 0, taken: 0, kills: 0, hits: 0 }, events: [], over: false, victory: false,
   };
   const kit = path.kit;
   state.player = makeEntity(state, 'player', px(stage.playerStart[0]), px(stage.playerStart[1]), 20, setup.player.stats,
     { attack: kit.attack, special: kit.special, dash: kit.dash });
-  spawnWave(content, state, stage, 0);
+  if (stage.waves.length) spawnWave(content, state, stage, 0);
   return state;
+}
+
+// Lịch hiểm họa: tới nhịp `at` thì đặt `count` vòng báo trước; sau `delay` nhịp giáng xuống, trúng người chơi mất dmg ‰ khí huyết tối đa
+// (sát thương thật, không trừ thủ — thiên kiếp không nể ai). aim: 'player' (vòng đầu đúng chỗ đứng, vòng sau lệch trong spread px) | 'random'.
+function scheduleHazards(content, state) {
+  const list = content.byId.get(state.stageId).hazards || [];
+  while (state.hazardNext < list.length && list[state.hazardNext].at <= state.tick) {
+    const h = list[state.hazardNext++], p = state.player;
+    for (let k = 0; k < h.count; k++) {
+      let x, y;
+      if (h.aim === 'player') {
+        const off = k === 0 ? 0 : px(h.spread || 0);
+        x = p.x + (off ? state.rng.range(-off, off) : 0); y = p.y + (off ? state.rng.range(-off, off) : 0);
+      } else { x = state.rng.range(0, state.w); y = state.rng.range(0, state.h); }
+      state.hazards.push({ id: state.nextId++, x: clamp(x, 0, state.w), y: clamp(y, 0, state.h), r: px(h.radius), left: h.delay, total: h.delay, dmg: h.dmg, fx: h.fx || 'lightning' });
+    }
+  }
+}
+function resolveHazards(state) {
+  const p = state.player;
+  for (const z of state.hazards) {
+    if (--z.left > 0) continue;
+    state.events.push({ t: state.tick, type: 'strike', x: z.x, y: z.y, r: z.r, fx: z.fx });
+    const rr = z.r + p.r;
+    if (p.alive && p.invuln === 0 && dist2(z.x, z.y, p.x, p.y) <= rr * rr) {
+      const dmg = Math.max(1, mulDiv(p.maxHp, z.dmg, 1000));
+      p.hp -= dmg; state.stats.taken += dmg; state.stats.struck = (state.stats.struck || 0) + 1;
+      if (p.hp <= 0) { p.hp = 0; p.alive = false; state.events.push({ t: state.tick, type: 'death', id: p.id }); }
+    }
+  }
+  state.hazards = state.hazards.filter(z => z.left > 0);
 }
 
 function spawnWave(content, state, stage, index) {
@@ -224,8 +257,13 @@ export function tick(content, state, input) {
     e.burns = e.burns.filter(b => b.left > 0);
   }
 
+  // Hiểm họa
+  if (state.hazardNext < (content.byId.get(state.stageId).hazards || []).length) scheduleHazards(content, state);
+  if (state.hazards.length) resolveHazards(state);
+
   // Đợt quái, kết thúc
-  if (!living(state, 'enemy').length) {
+  if (state.kind === 'trial') { if (p.alive && state.tick >= state.surviveTicks) { state.over = true; state.victory = true; } }
+  else if (!living(state, 'enemy').length) {
     const stage = content.byId.get(state.stageId), next = stage.waves[state.wave + 1];
     if (next && next.when === 'clear') spawnWave(content, state, stage, state.wave + 1);
     else if (!next) { state.over = true; state.victory = p.alive; }

@@ -21,7 +21,7 @@ export default [
 
   // ── Thể tu ──
   S('skill.the.bang-son-quyen', 'attack', 14, 0, { type: 'melee', offset: 40, radius: 55 }, [{ type: 'damage', mult: 135 }, { type: 'knockback', distance: 30 }, { type: 'heal', mult: 35 }]),
-  S('skill.the.chan-dia-chuong', 'special', 165, 30, { type: 'nova', radius: 130 }, [{ type: 'damage', mult: 160 }, { type: 'stun', ticks: 30 }, { type: 'heal', mult: 200 }]),
+  S('skill.the.chan-dia-chuong', 'special', 165, 30, { type: 'nova', radius: 130 }, [{ type: 'damage', mult: 160 }, { type: 'stun', ticks: 30 }, { type: 'heal', mult: 120 }]),
   S('skill.the.thiet-nguu-xung', 'dash', 50, 0, { type: 'dash', ticks: 8, speed: 800, invuln: 6 }),
 
   // ── Pháp tu ──
@@ -33,4 +33,7 @@ export default [
   S('skill.quai.cao-xe', 'attack', 36, 0, { type: 'melee', offset: 30, radius: 42 }, [{ type: 'damage', mult: 100 }]),
   S('skill.quai.doc-dich', 'attack', 54, 0, { type: 'projectile', speed: 420, range: 420, radius: 14, pierce: 1 }, [{ type: 'damage', mult: 90 }]),
   S('skill.quai.huc-dia', 'special', 150, 0, { type: 'nova', radius: 110 }, [{ type: 'damage', mult: 150 }, { type: 'knockback', distance: 60 }]),
+  S('skill.quai.hoa-cau', 'attack', 60, 0, { type: 'projectile', speed: 380, range: 400, radius: 16, pierce: 1 }, [{ type: 'damage', mult: 75 }, { type: 'burn', ticks: 60, period: 20, mult: 10 }]),
+  S('skill.quai.dam-dat', 'special', 170, 0, { type: 'nova', radius: 95 }, [{ type: 'damage', mult: 120 }, { type: 'stun', ticks: 20 }]),
+  S('skill.quai.doc-vu', 'special', 200, 0, { type: 'zone', offset: 110, radius: 110, duration: 120, period: 20 }, [{ type: 'damage', mult: 40 }]),
 ];

@@ -13,7 +13,7 @@ const root = path.resolve(import.meta.dirname, '../web/lich-luyen');
 const chrome = process.argv[2] || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/usr/bin/chromium'].find(p => fs.existsSync(p));
 if (!chrome) { console.error('Không tìm thấy Chrome'); process.exit(2); }
 
-const CASES = ['path.kiem-tu', 'path.the-tu', 'path.phap-tu'].flatMap(pathId => ['a', 'b', 'c'].map(seed => ({ pathId, seed })));
+const CASES = ['path.kiem-tu', 'path.the-tu', 'path.phap-tu'].flatMap(pathId => [['a', 'stage.thanh-van.1'], ['b', 'stage.lac-ha.5'], ['c', 'stage.trial.loi-kiep']].map(([seed, stageId]) => ({ pathId, seed, stageId })));
 const BASE = { hp: 600, mp: 100, atk: 30, def: 8, spd: 220, crit: 100, critDmg: 1500 };
 
 const page = `<!doctype html><meta charset="utf-8"><pre id="out">pending</pre><script type="module">
@@ -21,9 +21,9 @@ import { loadContent } from './content/index.js';
 import { runBot } from './core/sim/replay.mjs';
 const BASE = ${JSON.stringify(BASE)}, CASES = ${JSON.stringify(CASES)};
 const c = loadContent();
-const rows = CASES.map(({ pathId, seed }) => { const m = c.byId.get(pathId).statMult;
+const rows = CASES.map(({ pathId, seed, stageId }) => { const m = c.byId.get(pathId).statMult;
   const stats = Object.fromEntries(Object.entries(BASE).map(([k, v]) => [k, m[k] ? Math.trunc(v * m[k] / 1000) : v]));
-  const r = runBot(c, { seed, stageId: 'stage.thanh-van.1', player: { pathId, stats } }).result; return [pathId, seed, r.hash, r.ticks]; });
+  const r = runBot(c, { seed, stageId, player: { pathId, stats } }).result; return [pathId, seed, r.hash, r.ticks]; });
 document.getElementById('out').textContent = JSON.stringify({ version: c.version, rows });
 </script>`;
 
@@ -51,12 +51,12 @@ const browser = JSON.parse(m[1].replaceAll('&quot;', '"'));
 const c = loadContent();
 let bad = 0;
 if (browser.version !== c.version) { console.error('contentVersion khác:', browser.version, c.version); bad++; }
-CASES.forEach(({ pathId, seed }, i) => {
+CASES.forEach(({ pathId, seed, stageId }, i) => {
   const stats = Object.fromEntries(Object.entries(BASE).map(([k, v]) => { const mm = c.byId.get(pathId).statMult; return [k, mm[k] ? Math.trunc(v * mm[k] / 1000) : v]; }));
-  const r = runBot(c, { seed, stageId: 'stage.thanh-van.1', player: { pathId, stats } }).result;
+  const r = runBot(c, { seed, stageId, player: { pathId, stats } }).result;
   const b = browser.rows[i], same = b[2] === r.hash && b[3] === r.ticks;
   if (!same) bad++;
-  console.log(same ? 'KHỚP' : 'LỆCH', pathId, seed, 'node', r.hash, r.ticks, 'chrome', b[2], b[3]);
+  console.log(same ? 'KHỚP' : 'LỆCH', pathId, stageId, 'node', r.hash, r.ticks, 'chrome', b[2], b[3]);
 });
 console.log(bad ? `${bad} trường hợp lệch` : `Tất cả ${CASES.length} trận khớp giữa Chrome và Node`);
 process.exit(bad ? 1 : 0);

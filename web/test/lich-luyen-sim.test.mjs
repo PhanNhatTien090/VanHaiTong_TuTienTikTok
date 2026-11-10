@@ -106,3 +106,16 @@ test('bộ kiểm tra nội dung bắt lỗi chiêu/quái/ải', () => {
   bad(c => { c.stages[0].waves[0].spawn[0].at = [5000, 10]; }, /ngoài sân/);
   bad(c => { c.stages[0].waves[0].when = 'clear'; }, /đợt đầu/);
 });
+
+test('thử thách: không có quái thì không tự thắng; sống tới survive mới thắng; đứng yên bị sét đánh chết; chạy lại khớp', () => {
+  const s = { seed: 'trial', stageId: 'stage.trial.loi-kiep', player: { pathId: 'path.kiem-tu', stats: statsFor('path.kiem-tu') } };
+  const b = createBattle(content, s);
+  tick(content, b, { dir: -1, buttons: 0 });
+  assert.equal(b.over, false, 'không được thắng ngay vì không có quái');
+  while (!b.over) tick(content, b, { dir: -1, buttons: 0 });
+  assert.equal(b.victory, false); assert.ok(b.stats.struck > 0);
+  const big = { ...s, player: { ...s.player, stats: { ...s.player.stats, hp: 10 ** 7 } } };
+  const run = runBot(content, big);
+  assert.equal(run.result.victory, true); assert.equal(run.result.ticks, 48 * 30);
+  assert.equal(runReplay(content, big, encodeInputs(run.frames)).hash, run.result.hash);
+});
