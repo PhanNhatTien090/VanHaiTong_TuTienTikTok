@@ -7,6 +7,7 @@ import { computeStats } from '../core/stats.mjs';
 import { buildLadder, addQi, stepLabel, breakthrough, qualityFor } from '../core/progression.mjs';
 import { starsFor, stageReward, rollDrops } from '../core/loot.mjs';
 import { rollFateOffers, fateQiGain } from '../core/fates.mjs';
+import { idleQi, IDLE } from '../core/idle.mjs';
 import { TICK_RATE } from '../core/sim/inputs.mjs';
 import { t } from '../content/index.js';
 
@@ -45,6 +46,11 @@ export function createGame({ db, content, verifier, season = 1 }) {
     return null;
   }
   const fateView = id => { const f = content.byId.get(id); return { id, name: t(content, f.nameKey), rarity: f.rarity, effects: f.effects.map(e => `${t(content, 'stat.' + e.stat)} ${(e.flat ?? e.permille) > 0 ? '+' : ''}${e.flat !== undefined ? (e.stat === 'crit' ? e.flat / 10 + '%' : e.stat === 'critDmg' ? e.flat / 10 + '%' : e.flat) : e.permille / 10 + '%'}`) }; };
+  const idleFrom = (r, payload) => payload.idleFrom ?? r.created;
+  function idleView(r, payload, now) {
+    const v = idleQi(ladder[r.step].qi, now - idleFrom(r, payload), { qiGain: fateQiGain(content, payload.fates) });
+    return { ...v, capHours: IDLE.capHours, ratePerHour: IDLE.ratePerHour, gate: ladder[r.step].gate, full: !!ladder[r.step].gate && r.qi >= ladder[r.step].qi };
+  }
   const itemView = (id, count) => { const it = content.byId.get(id); return { id, count, name: t(content, it.nameKey), desc: t(content, it.descKey), kind: it.kind, rarity: it.rarity }; };
 
   // Xem trước đột phá: cần gì, có gì, đạt phẩm nào.
@@ -96,6 +102,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
       fates: (payload.fates || []).map(fateView),
       pendingFates: payload.pendingFates ? { realmName: t(content, content.byId.get(payload.pendingFates.realmId).nameKey), left: payload.pendingFates.offers.length, offer: payload.pendingFates.offers[0].map(fateView) } : null,
       qiGain: fateQiGain(content, payload.fates),
+      idle: idleView(r, payload, now),
       stages: stageView(payload, now, r.step),
     };
   }
@@ -262,6 +269,26 @@ export function createGame({ db, content, verifier, season = 1 }) {
     }
   }
 
+  // Nhận tu vi bế quan: tính theo thời gian từ lần nhận trước (tối đa 8 giờ), cộng vào thang như thưởng ải.
+  // Đang đứng ở cổng mà đã đầy tu vi thì không cho nhận (tránh mất trắng) — đồng hồ vẫn chạy tới trần.
+  function claimIdle(user, now = Date.now()) {
+    const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
+    const out = tx(db, () => {
+      const cur = byId(r.id), payload = payloadOf(cur), step = ladder[cur.step];
+      const v = idleQi(step.qi, now - idleFrom(cur, payload), { qiGain: fateQiGain(content, payload.fates) });
+      if (!v.claimable) return fail('TOO_SOON', `Bế quan ít nhất ${IDLE.minMinutes} phút mới nhận được.`);
+      if (step.gate && cur.qi >= step.qi) return fail('FULL', 'Tu vi đã Viên Mãn — hãy đột phá trước rồi nhận bế quan.');
+      const grown = addQi({ step: cur.step, qi: cur.qi }, v.qi, ladder);
+      payload.idleFrom = now;
+      const power = computeStats(content, avatarModel({ ...cur, step: grown.state.step }, payload)).power;
+      const upd = db.prepare('UPDATE ll_avatars SET step=?, qi=?, power=?, payload=?, version=version+1, updated=? WHERE id=? AND version=?')
+        .run(grown.state.step, grown.state.qi, power, JSON.stringify(payload), now, cur.id, cur.version);
+      if (upd.changes !== 1) throw Error('Phân thân vừa thay đổi, thử lại.');
+      return { ok: true, idle: { qi: v.qi, minutes: v.minutes, capped: v.capped, advanced: grown.advanced, ready: grown.ready, wasted: grown.wasted } };
+    });
+    return out.ok ? { ...out, avatar: view(row(user.id), now) } : out;
+  }
+
   function chooseFate(user, fateId, now = Date.now()) {
     const r = row(user.id); if (!r) return fail('NO_AVATAR', 'Chưa có phân thân.');
     const out = tx(db, () => {
@@ -280,7 +307,7 @@ export function createGame({ db, content, verifier, season = 1 }) {
   }
 
   return {
-    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now), chooseFate,
+    ladder, view: (accountId, now = Date.now()) => view(row(accountId), now), chooseFate, claimIdle,
     createAvatar, startBattle, finishBattle, sweep, breakthrough: breakthroughNow,
     paths: () => content.paths.map(p => ({ id: p.id, name: t(content, p.nameKey), desc: t(content, p.descKey), kit: Object.fromEntries(Object.entries(p.kit).map(([slot, id]) => [slot, { id, name: t(content, id) }])), branches: p.branches.map(b => t(content, b.nameKey)) })),
   };

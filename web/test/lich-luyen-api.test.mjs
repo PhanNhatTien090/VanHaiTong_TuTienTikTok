@@ -301,3 +301,20 @@ test('mệnh cách: đột phá phẩm Thiên → 3 lượt chọn; chọn đún
   const base = Math.trunc(content.byId.get('stage.thanh-van.1').rewards.qi * 70 / 100);
   assert.equal(sw.reward.qi, Math.trunc(base * 1260 / 1000)); assert.equal(sw.avatar.qiGain, 260);
 });
+
+test('bế quan (lớp nghiệp vụ): nhận theo thời gian, đồng hồ đặt lại sau khi nhận, Viên Mãn thì chặn', () => {
+  const L = ll.game.ladder, g = ll.game;
+  const av = ll.db.prepare("SELECT id, account_id FROM ll_avatars WHERE name='quetai'").get(), user = { id: av.account_id };
+  const lk3 = L.findIndex(x => x.realmId === 'realm.luyen-khi' && x.tangNo === 3);
+  const t0 = clock;
+  ll.db.prepare('UPDATE ll_avatars SET step=?, qi=0, payload=? WHERE id=?').run(lk3, JSON.stringify({ breakthroughs: [], stages: {}, idleFrom: t0 }), av.id);
+  assert.equal(g.claimIdle(user, t0 + 60000).code, 'TOO_SOON');
+  const t1 = t0 + 2 * 3600000, v = g.view(user.id, t1);
+  assert.equal(v.idle.minutes, 120); assert.equal(v.idle.qi, Math.floor(L[lk3].qi * 80 / 1000));
+  const r = g.claimIdle(user, t1);
+  assert.equal(r.ok, true, r.message); assert.equal(r.idle.qi, v.idle.qi);
+  assert.equal(r.avatar.idle.minutes, 0); assert.equal(r.avatar.qi, v.idle.qi);
+  const gate = L.findIndex(x => x.realmId === 'realm.luyen-khi' && x.gate);
+  ll.db.prepare('UPDATE ll_avatars SET step=?, qi=? WHERE id=?').run(gate, L[gate].qi, av.id);
+  assert.equal(g.claimIdle(user, t1 + 3600000).code, 'FULL');
+});

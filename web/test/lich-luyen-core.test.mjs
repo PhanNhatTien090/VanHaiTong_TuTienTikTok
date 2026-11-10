@@ -181,3 +181,14 @@ test('mệnh cách: rút tất định, không trùng, đúng đạo lộ; phẩ
   bad(r => { r.fates[0].path = 'path.dao-tu'; }, /đạo lộ không tồn tại/);
   bad(r => { r.fates = r.fates.slice(0, 5); }, /ít hơn 9 thẻ/);
 });
+
+test('bế quan: tích theo phút, trần 8 giờ, mệnh cách cộng thêm, dưới 10 phút chưa nhận', async () => {
+  const { idleQi } = await import('../lich-luyen/core/idle.mjs');
+  assert.deepEqual(idleQi(1000, 5 * 60000), { qi: 3, minutes: 5, capped: false, claimable: false });
+  assert.equal(idleQi(1000, 3600000).qi, 40);                // 4%/giờ
+  assert.equal(idleQi(1000, 8 * 3600000).qi, 320);
+  assert.equal(idleQi(1000, 30 * 3600000).qi, 320);          // trần 8 giờ
+  assert.equal(idleQi(1000, 30 * 3600000).capped, true);
+  assert.equal(idleQi(1000, 3600000, { qiGain: 260 }).qi, 50);
+  assert.equal(idleQi(1000, -5).qi, 0);
+});

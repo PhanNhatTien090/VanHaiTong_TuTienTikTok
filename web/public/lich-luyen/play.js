@@ -79,6 +79,7 @@ function renderHome() {
   $('qiBar').style.width = Math.min(100, a.qi * 100 / a.qiNeed) + '%';
   const s = a.stats;
   $('homeStats').innerHTML = [['Khí huyết', s.hp], ['Linh lực', s.mp], ['Công', s.atk], ['Thủ', s.def], ['Tốc', s.spd], ['Bạo kích', (s.crit / 10) + '%']].map(([k, v]) => `<div><span class="muted">${k}</span><br><b>${typeof v === 'number' ? fmt(v) : v}</b></div>`).join('');
+  renderIdle(a);
   renderFates(a);
   renderBreakthrough(a);
   renderStages(a);
@@ -87,6 +88,15 @@ function renderHome() {
 }
 const stars = n => '★'.repeat(n) + '☆'.repeat(3 - n);
 const RARITY = ['', '#b9b9b9', '#6fd36f', '#5aa9ff', '#c77dff', '#ffb347'];
+function renderIdle(a) {
+  const v = a.idle, box = $('idleBox'), h = Math.floor(v.minutes / 60), m = v.minutes % 60;
+  box.innerHTML = `<b>Bế quan tụ linh</b> <span class="muted">· ${v.ratePerHour / 10}% tu vi bậc hiện tại mỗi giờ, tối đa ${v.capHours} giờ</span>
+    <div style="margin:6px 0">Đã bế quan <b>${h} giờ ${m} phút</b>${v.capped ? ' <span style="color:var(--gold)">(đầy — vào nhận để tích tiếp)</span>' : ''} · tích được <b style="color:var(--gold)">+${fmt(v.qi)} tu vi</b></div>`;
+  const b = document.createElement('button'); b.textContent = 'Nhận tu vi bế quan';
+  b.disabled = !v.claimable || v.full; if (v.full) b.title = 'Tu vi đã Viên Mãn — đột phá trước';
+  b.onclick = async () => { b.disabled = true; const r = await api('idle/claim', {}); if (!r.ok) { say(r.message); b.disabled = false; return; } state.avatar = r.avatar; say(`Bế quan ${Math.floor(r.idle.minutes / 60)} giờ ${r.idle.minutes % 60} phút: +${fmt(r.idle.qi)} tu vi${r.idle.advanced ? ' · lên ' + r.idle.advanced + ' tiểu cảnh' : ''}`); renderHome(); };
+  box.append(b);
+}
 function renderFates(a) {
   const owned = $('fateList');
   owned.innerHTML = a.fates.length ? a.fates.map(f => `<span class="fate" style="border-color:${RARITY[f.rarity]}" title="${f.effects.join(' · ')}"><b style="color:${RARITY[f.rarity]}">${f.name}</b> <span class="muted">${f.effects.join(' · ')}</span></span>`).join('') : '<span class="muted">Đột phá đại cảnh để nhận mệnh cách.</span>';

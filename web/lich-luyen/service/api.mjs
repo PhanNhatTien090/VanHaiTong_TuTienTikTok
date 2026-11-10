@@ -37,6 +37,7 @@ export function createLichLuyen({ dataDir, enabled = false, beta = [], season = 
       if (limited('u:' + user.id, 60, now)) return send(res, 429, { ok: false, message: 'Thao tác quá nhanh.' });
       if (route === 'GET /api/ll/state') return send(res, 200, { ok: true, contentVersion: content.version, avatar: game.view(user.id, now), paths: game.paths() });
       if (route === 'POST /api/ll/avatar') { const b = await body(req); const r = game.createAvatar(user, b, now); return send(res, r.ok ? 200 : 400, r); }
+      if (route === 'POST /api/ll/idle/claim') { const r = game.claimIdle(user, now); return send(res, r.ok ? 200 : 400, r); }
       if (route === 'POST /api/ll/fate') { const b = await body(req); const r = game.chooseFate(user, String(b.fateId || ''), now); return send(res, r.ok ? 200 : 400, r); }
       if (route === 'POST /api/ll/breakthrough') { const r = game.breakthrough(user, now); return send(res, r.ok ? 200 : 400, r); }
       if (route === 'POST /api/ll/battle/sweep') { const b = await body(req); const r = game.sweep(user, String(b.stageId || ''), now); return send(res, r.ok ? 200 : 400, r); }
