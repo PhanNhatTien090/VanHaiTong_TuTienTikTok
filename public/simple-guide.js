@@ -15,6 +15,13 @@ export const GUIDE_PAGES=[
   {cmd:'giúp + tên',text:'hộ pháp đột phá'},
   {cmd:'skin + tên',text:'mặc skin đã có'},
   {cmd:'từ chối',text:'không nhận lời'}]},
+ {title:'XEM NHÂN VẬT',rows:[
+  {cmd:'9 · tu vi',text:'thẻ tu vi, hạng'},
+  {cmd:'túi đồ',text:'pháp bảo, đan, bí pháp'},
+  {cmd:'thú',text:'linh thú đã có'},
+  {cmd:'skin',text:'tủ skin đang có'},
+  {cmd:'skin + tên',text:'mặc skin đó'},
+  {cmd:'thu + số',text:'gọi linh thú'}]},
  {title:'SỰ KIỆN',rows:[
   {cmd:'6 · bay',text:'đua phi kiếm khi mở'},
   {cmd:'6 · tỷ thí',text:'ghi danh tỷ thí'},
@@ -23,7 +30,7 @@ export const GUIDE_PAGES=[
   {cmd:'4 · luyện đan',text:'góp lửa lò đan'},
   {cmd:'gợi ý',text:'hỏi việc nên làm'}]}
 ];
-const ORDER=[0,1,0,2,0,3];
+const ORDER=[0,1,0,2,0,4,0,3]; // 11/11: thêm trang XEM NHÂN VẬT
 export function simpleSteps(s={},page=0){
  const pick=ORDER[((page%ORDER.length)+ORDER.length)%ORDER.length];
  const rows=[
