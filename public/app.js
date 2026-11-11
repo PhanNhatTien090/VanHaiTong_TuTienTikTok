@@ -42,6 +42,7 @@ import {CultivationAudio} from './audio.js';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js';
+import {renderStageQueue} from './stage-queue.js';
 import {giftTokenHTML} from './gift-icons.js';
 import {giftRules,giftRuleHTML} from './gift-rule-card.js';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
@@ -67,6 +68,7 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   for(const selector of ['#honorBanner']){const panel=root.querySelector(selector);if(panel)dock.appendChild(panel);}
   root.appendChild(dock);
   mountGearGuide(root.querySelector('#phoneHudLeft'));
+  const stageQueue=document.createElement('div');stageQueue.id='stageQueue';stageQueue.className='stage-queue';stageQueue.hidden=true;root.appendChild(stageQueue); // 11/11: Vân Đài · chờ lượt
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
 }
@@ -286,6 +288,7 @@ applyResidents();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
 if(overlay)setInterval(()=>renderGearGuide(state,esc),1000);
+if(overlay)setInterval(()=>renderStageQueue(document.getElementById('stageQueue'),queue,Date.now(),current,esc),500);
 // 09/11: thẻ luật quà (cột phải) bám NGAY DƯỚI bảng TOP QUÀ để không che người giữa sân; TOP QUÀ ẩn thì lên sát góc trên.
 if(overlay){const placeRail=()=>{const shell=document.querySelector('.scene-shell'),rail=document.getElementById('phoneHudRight'),top=document.getElementById('giftRanks');if(!shell||!rail)return;
   let y='5.6%';if(top&&!top.hidden&&getComputedStyle(top).display!=='none'){const a=shell.getBoundingClientRect(),b=top.getBoundingClientRect();if(b.height>0)y=Math.round(b.bottom-a.top+Math.max(3,a.height*.004))+'px';}
