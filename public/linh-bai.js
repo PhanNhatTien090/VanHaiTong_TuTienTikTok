@@ -17,7 +17,27 @@ export function portraitCanvas(scene,p){
  o.filter='drop-shadow(0 0 1.2px #fffbe8) drop-shadow(0 0 1.2px #ffe6a0) drop-shadow(0 0 9px rgba(255,205,110,.75))';o.drawImage(body,0,0);o.filter='none';
  cache.set(key,out);if(cache.size>24)cache.delete(cache.keys().next().value);return out;
 }
+// 11/11: Túi đồ · Linh thú · Tủ skin — cùng khung ngọc bài, phần thân là danh sách gọn.
+const listHTML=(title,box,row,esc,empty)=>`<div class="lb-list"><label>${title}</label>${box.items.length?`<ul>${box.items.map(x=>row(x,esc)).join('')}${box.more?`<li class="lb-more">+${box.more} món khác</li>`:''}</ul>`:`<p class="lb-none">${empty}</p>`}</div>`;
+function inventoryHTML(e,esc){
+ const c=e.card,tip=`<div class="lb-tip">${esc(c.tip).replace(/\b(\d)\b/g,'<u>$1</u>')}</div>`;
+ let head,body;
+ if(c.kind==='bag'){
+  head=`<span class="lb-path">TÚI ĐỒ</span><span class="lb-need"><b>${fmt(c.stones)}</b> linh thạch · <b>${fmt(c.herbs)}</b> linh thảo</span>`;
+  body=listHTML('Pháp bảo',c.artifacts,(x,esc)=>`<li${x.on?' class="on"':''}>${esc(x.name)}${x.on?' <em>đang đeo</em>':''}</li>`,esc,'chưa có · gõ 7 rèn')
+   +listHTML('Đan dược',c.pills,(x,esc)=>`<li>${esc(x.name)} <em>×${fmt(x.n)}</em></li>`,esc,'chưa có · gõ 4 luyện đan')
+   +listHTML('Bí pháp',c.manuals,(x,esc)=>`<li>${esc(x)}</li>`,esc,'chưa học · gõ học');
+ }else if(c.kind==='pets'){
+  head=`<span class="lb-path">LINH THÚ</span><span class="lb-need">Đồng hành: <b>${esc(c.current||'chưa có')}</b></span>`;
+  body=listHTML(`Đã thu phục (${c.owned.items.length+c.owned.more}/${c.total})`,c.owned,(x,esc)=>`<li${x.on?' class="on"':''}><em>${x.no}</em> ${esc(x.name)}</li>`,esc,'chưa có linh thú nào');
+ }else{
+  head=`<span class="lb-path">TỦ SKIN</span><span class="lb-need">Đang mặc: <b>${esc(c.current)}</b></span>`;
+  body=listHTML(`Đã sở hữu (${c.owned.items.length+c.owned.more})`,c.owned,(x,esc)=>`<li${x.on?' class="on"':''}>${esc(x.name)}</li>`,esc,'chưa có skin riêng');
+ }
+ return `<div class="lb-head">${head}</div><div class="lb-body"><div class="lb-portrait"><span class="lb-halo"></span><i class="lb-slot"></i></div><div class="lb-info"><small class="lb-seal">✦ ${esc(e.name)} ✦</small>${body}</div></div>${tip}`;
+}
 export function linhBaiHTML(e,esc){
+ if(e.card?.kind)return inventoryHTML(e,esc);
  const c=e.card,short=Math.max(0,c.needQi-c.qi),stonesShort=Math.max(0,c.needStones-c.stones);
  const head=c.next?(c.ready?`<em class="lb-ready">ĐỦ ĐỘT PHÁ</em>`:short?`Cần thêm <b>${fmt(short)}</b> tu vi`:`Cần thêm <b>${fmt(stonesShort)}</b> linh thạch`):'<em class="lb-ready">ĐỈNH TU TIÊN</em>';
  return `<div class="lb-head"><span class="lb-path">${esc(c.realmName)}${c.next?` <i>→</i> ${esc(c.next)}`:''}</span><span class="lb-need">${head}</span></div>

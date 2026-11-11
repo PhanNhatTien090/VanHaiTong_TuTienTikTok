@@ -201,3 +201,11 @@ body.overlay .tower-stage.tw-flash{box-shadow:0 0 0 1px #000a,0 0 40px rgba(255,
 @keyframes twDmg{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-2.2em)}}
 body.overlay.tower-on .stage-queue{display:none!important}
 body.overlay:is(.sword-race,.social-stage,.ritual-active) .tower-stage{display:none!important}
+
+/* 11/11: Túi đồ · Linh thú · Tủ skin (khung Linh Bài) */
+.linh-bai .lb-list{margin:.15em 0 .35em}
+.linh-bai .lb-list label{display:block;color:#e8d7ae;font-size:.8em;letter-spacing:.04em;border-bottom:1px solid rgba(217,181,106,.35);margin-bottom:.15em}
+.linh-bai .lb-list ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.05em .6em}
+.linh-bai .lb-list li{font-size:.86em;color:#f4efe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.linh-bai .lb-list li.on{color:#ffd76a}.linh-bai .lb-list li em{font-style:normal;color:#9ff0d0;font-size:.9em}
+.linh-bai .lb-list .lb-more{color:#bfe9ff}.linh-bai .lb-none{margin:0;font-size:.82em;color:#cfd8d4}
