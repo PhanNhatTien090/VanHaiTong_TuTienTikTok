@@ -45,6 +45,7 @@ import {mountGearGuide,renderGearGuide} from './gear-guide.js';
 import {renderStageQueue} from './stage-queue.js';
 import {showLinhBai} from './linh-bai.js';
 import {showBaoHy} from './bao-hy.js';
+import {renderTower} from './tower.js';
 import {giftTokenHTML} from './gift-icons.js';
 import {giftRules,giftRuleHTML} from './gift-rule-card.js';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
@@ -73,6 +74,7 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   const stageQueue=document.createElement('div');stageQueue.id='stageQueue';stageQueue.className='stage-queue';stageQueue.hidden=true;root.appendChild(stageQueue); // 11/11: Vân Đài · chờ lượt
   const linhBai=document.createElement('div');linhBai.id='linhBai';linhBai.className='linh-bai';linhBai.hidden=true;root.appendChild(linhBai); // 11/11: Linh Bài đạo hữu
   const baoHy=document.createElement('div');baoHy.id='baoHy';baoHy.className='bao-hy';baoHy.hidden=true;root.appendChild(baoHy); // 11/11: Ngọc Giản Báo Hỷ
+  const towerEl=document.createElement('div');towerEl.id='towerStage';towerEl.className='tower-stage';towerEl.hidden=true;root.appendChild(towerEl); // 11/11: Vân Hải Tháp
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
   // 11/11: đáy khung bị bình luận + ô nhập của TikTok che → dải hướng dẫn và thẻ vinh danh lên cột phải (chỗ trống dưới TOP QUÀ).
@@ -294,6 +296,7 @@ applyResidents();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
 if(overlay)setInterval(()=>renderGearGuide(state,esc),1000);
+if(overlay)setInterval(()=>renderTower(document.getElementById('towerStage'),state,scene,esc),250); // 11/11: Vân Hải Tháp
 if(overlay)setInterval(()=>renderStageQueue(document.getElementById('stageQueue'),queue,Date.now(),current,esc),500);
 // 09/11: thẻ luật quà (cột phải) bám NGAY DƯỚI bảng TOP QUÀ để không che người giữa sân; TOP QUÀ ẩn thì lên sát góc trên.
 if(overlay){const placeRail=()=>{const shell=document.querySelector('.scene-shell'),rail=document.getElementById('phoneHudRight'),top=document.getElementById('giftRanks');if(!shell||!rail)return;

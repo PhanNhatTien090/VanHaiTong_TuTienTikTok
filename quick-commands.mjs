@@ -2,6 +2,7 @@
 // 1–5, 7–9 cố định; 6 đổi theo sự kiện đang mở (gõ đầu, mê cung, đua kiếm, tỷ thí, cơ duyên, yêu thú), không có sự kiện thì là "gợi ý".
 // Khi câu đố mẹo hoặc câu hỏi lò đan đang mở, số là đáp án → lệnh số tự nhường.
 import {bonkOpen} from './bonk.mjs';
+import {towerOpen} from './tower.mjs';
 import {SKY_EVENTS} from './engine.mjs'; // chỉ đọc lúc chạy hàm, vòng import an toàn
 // 11/11 (2): chỉ lệnh CƠ BẢN và GÕ LẶP NHIỀU mới có số; lệnh 1 lần/ngày hoặc ít dùng (điểm danh, học, trang bị, gợi ý) giữ chữ.
 export const QUICK_BASE=[
@@ -16,6 +17,7 @@ export const QUICK_BASE=[
 ];
 const FALLBACK={cmd:'goiy',say:'gợi ý',text:'hỏi việc nên làm'};
 export function eventQuick(w,now){
+ if(towerOpen(w,now))return {cmd:'leothap',say:'leo tháp',name:'VÂN HẢI THÁP',text:'xếp lượt vào tháp',endsAt:w.tower.endsAt};
  if(bonkOpen(w,now))return {cmd:'godau',say:'gõ đầu',name:'HỘI GÕ ĐẦU',text:'gõ đầu người gần nhất',endsAt:w.bonkFest.endsAt};
  const m=w.maze;
  if(m?.phase==='registration'&&now<m.registrationEndsAt)return {cmd:'mecung',say:'mê cung',name:'BÍ CẢNH MÊ CUNG',text:'ghi danh vào mê cung',endsAt:m.registrationEndsAt};

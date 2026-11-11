@@ -8,7 +8,7 @@ import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
-import {startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,teasePair,controlLanternEvent} from './engine.mjs';
+import {startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent} from './engine.mjs';
 import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
@@ -218,6 +218,8 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='stop-maze')result=stopMaze(w,now);
       else if(b.action==='start-bonk')result=startBonk(w,now); // 10/11: Hội Gõ Đầu
       else if(b.action==='stop-bonk')result=stopBonk(w,now);
+      else if(b.action==='start-tower')result=startTower(w,now); // 11/11: Vân Hải Tháp
+      else if(b.action==='stop-tower')result=stopTower(w,now);
       else if(b.action==='start-tournament')result=startTournament(w,now);
       else if(b.action==='stop-tournament')result=stopTournament(w,now);
       else if(b.action==='bond-enabled'&&typeof b.enabled==='boolean'){w.settings.bondEnabled=b.enabled;result={ok:true};}
