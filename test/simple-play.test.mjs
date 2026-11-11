@@ -34,7 +34,7 @@ test('waiting participants expire and old invitation can be accepted using one w
 });
 test('live keeps five stable rows (hearts + chat first), no admission command, with a short event hint',()=>{
  const s={players:[],realms:Array(19),serverNow:N},base=simpleSteps(s);
- assert.deepEqual(base.rows.map(r=>r.cmd),['❤ thả tim','💬 trò chuyện','đột phá','học · rèn','giới tính nam/nữ','trang bị']);
+ assert.deepEqual(base.rows.map(r=>r.cmd),['❤ thả tim · 1','💬 trò chuyện','8 · đột phá','học · 7 rèn','giới tính nam/nữ','trang bị']);
  assert.equal(base.rows.length,6);assert.ok(base.rows.every(r=>!r.cmd.includes('nhapmon')));
  assert.match(simpleSteps({...s,raceStatus:{phase:'registration'}}).hint,/gõ bay/);
  assert.match(simpleSteps({...s,raceStatus:{phase:'running'}}).hint,/phi kiếm/);

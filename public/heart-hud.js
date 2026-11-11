@@ -2,8 +2,13 @@ import {liveRulesActive} from './live-integrity.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 const bar=(n,target)=>`<i style="width:${Math.max(0,Math.min(100,n/Math.max(1,target)*100)).toFixed(1)}%"></i>`;
+// 11/11/2026: dải tin sự kiện — luôn trả lời 3 câu: đang có gì · gõ gì · còn bao lâu.
+function eventTicker(state){const q=state.quick,ev=q?.event;
+ if(ev){const left=ev.endsAt?Math.max(0,Math.ceil((ev.endsAt-state.serverNow)/1000)):0;
+  return '<strong class="ticker-event">⚡ '+esc(ev.name)+(left?' · còn '+(left>=60?Math.floor(left/60)+'p'+String(left%60).padStart(2,'0'):left+'s'):'')+'</strong><span>gõ <b class="ticker-digit">6</b> hoặc <b>'+esc(ev.say)+'</b> → '+esc(ev.text)+'</span>';}
+ return '<strong>TU LUYỆN CÙNG ĐỒNG MÔN</strong><span>gõ số: <b>1</b> tu luyện · <b>2</b> hái · <b>3</b> đánh · <b>9</b> tu vi</span>';}
 export function heartHUD(state){
- if(liveRulesActive(state))return {context:'voluntary',html:'<strong>TU LUYỆN CÙNG ĐỒNG MÔN</strong><span>Gõ tu luyện · hái · đánh để chơi</span><small>Tim, theo dõi và chia sẻ là tự nguyện</small>'};
+ if(liveRulesActive(state))return {context:'voluntary',html:eventTicker(state)+'<small>Tim, theo dõi và chia sẻ là tự nguyện</small>'};
  const now=state.serverNow,g=state.likeGoal||{count:0,target:1000};
  let title='❤ TỤ LINH TOÀN TÔNG',detail=`${fmt(g.count)}/${fmt(g.target)} tim · đủ mốc thưởng ×2`,progress=bar(g.count,g.target),extra='',context='global';
  const b=state.boss,r=state.raceStatus,e=state.flowerEvent,f=state.socialStatus?.festival;

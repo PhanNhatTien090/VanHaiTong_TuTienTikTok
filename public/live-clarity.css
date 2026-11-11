@@ -1,0 +1,36 @@
+/* Georgia trên Windows thiếu nhiều chữ có dấu (Ề, ồ, ữ…) → trình duyệt mượn font khác, chữ bị tách khoảng ("TRUYỀ N", "Buồ n").
+   Ghi đè tên "Georgia" trong trang: chữ thường vẫn là Georgia, riêng dải tiếng Việt U+1EA0–1EF9 lấy Times New Roman (cùng dáng chữ có chân). */
+@font-face{font-family:"Georgia";src:local("Georgia");font-weight:100 600}
+@font-face{font-family:"Georgia";src:local("Georgia Bold"),local("Georgia-Bold");font-weight:700 1000}
+@font-face{font-family:"Georgia";src:local("Times New Roman"),local("TimesNewRomanPSMT");font-weight:100 600;unicode-range:U+1EA0-1EF9}
+@font-face{font-family:"Georgia";src:local("Times New Roman Bold"),local("TimesNewRomanPS-BoldMT");font-weight:700 1000;unicode-range:U+1EA0-1EF9}
+/* 11/11/2026: CHỮ RÕ TRÊN LIVE — giữ bảng trong suốt, chỉ làm chữ chịu nén video của TikTok.
+   Bí quyết: viền tối sát chữ (nhiều lớp bóng 1px) thay cho hào quang mờ to; chữ nhỏ dùng font không chân, đậm hơn;
+   không chữ nhỏ dưới ~.85em. Không thêm nền tối — tranh nền vẫn nhìn xuyên được. */
+body.overlay :is(#phoneHudLeft,#phoneHudRight,#likeGoal){
+  -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
+  text-shadow:0 0 1px #000,0 0 1px #000,0 1px 1px #000,0 1px 3px #000,0 0 6px #000b!important}
+body.overlay :is(#phoneHudLeft,#phoneHudRight,#likeGoal) :is(span,small,li,em){
+  font-family:"Segoe UI",Arial,sans-serif!important;font-weight:600!important;letter-spacing:.01em}
+body.overlay #gearGuide span{font-size:.86em!important;color:#eef3ea!important}
+body.overlay #gearGuide small{font-size:.8em!important}
+body.overlay #gearGuide code{font-family:"Segoe UI",Arial,sans-serif!important;font-weight:800!important}
+
+/* Bảng CHƠI NHANH · GÕ SỐ */
+#gearGuide .quick-digits li{flex-direction:row!important;align-items:center;gap:.45em;margin:3px 0}
+#gearGuide .quick-digits code{display:inline-grid;place-items:center;min-width:1.35em;height:1.35em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff3c4,#e2b24f 60%,#9a6a1c);color:#2a1604!important;font-size:.95em;
+  text-shadow:none!important;box-shadow:0 0 0 1px #000a,0 1px 3px #000}
+#gearGuide .quick-digits span{font-size:1em!important}
+#gearGuide .quick-digits em{font-style:normal;color:#9ff0d0;font-weight:800}
+#gearGuide .quick-digits .quick-event code{background:radial-gradient(circle at 35% 30%,#ffe0ef,#ff6fa8 60%,#a3285a);color:#fff!important}
+#gearGuide .quick-digits .quick-event em{color:#ffb3d1}
+
+/* Dải tin sự kiện (thay dòng tiêu đề tĩnh trên cùng) */
+body.overlay #likeGoal .ticker-event{color:#ffd76a!important;letter-spacing:.03em}
+body.overlay #likeGoal span b{color:#9ff0d0;font-weight:800}
+body.overlay #likeGoal .ticker-digit{display:inline-grid;place-items:center;min-width:1.3em;height:1.3em;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffe0ef,#ff6fa8 60%,#a3285a);color:#fff!important;text-shadow:none!important;box-shadow:0 0 0 1px #000a}
+
+/* Dải hướng dẫn chi tiết ở đáy giữ nguyên chỗ (theo ý chủ kênh), chỉ làm chữ rõ hơn. */
+body.overlay .scene-shell>#basicCommands.corner-command-guide{text-shadow:0 0 1px #000,0 0 1px #000,0 1px 1px #000,0 1px 3px #000,0 0 6px #000b!important}

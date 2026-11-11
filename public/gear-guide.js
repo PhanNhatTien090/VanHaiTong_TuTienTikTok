@@ -6,6 +6,9 @@ const PAGE_MS=10000;
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 function shown(el){if(!el||el.hidden)return false;const st=getComputedStyle(el);return st.display!=='none'&&st.visibility!=='hidden'&&el.offsetHeight>0;}
 function rows(list,esc){return list.map(([cmd,txt])=>`<li><code>${esc(cmd)}</code><span>${esc(txt)}</span></li>`).join('');}
+// 11/11/2026: trang CHƠI NHANH · GÕ SỐ xen giữa mọi trang khác — người xem mới chỉ cần gõ 1 chữ số.
+function quickPage(state,esc){const q=state.quick;if(!q?.rows)return null;
+  return '<b>⚡ CHƠI NHANH · GÕ SỐ</b><ol class="quick-digits">'+q.rows.map(r=>'<li'+(r.event?' class="quick-event"':'')+'><code>'+esc(r.n)+'</code><span><em>'+esc(r.say)+'</em> · '+esc(r.text)+'</span></li>').join('')+'</ol>'+(q.paused?'<small>đang có câu đố · số là đáp án</small>':'');}
 function pages(state,esc){
   const arts=(state.catalog||[]).filter(i=>i.type==='artifact'&&!i.exclusive).sort((a,b)=>(a.price||0)-(b.price||0));
   const realm=t=>state.realms?.[t]||'';
@@ -20,7 +23,7 @@ export function renderGearGuide(state,esc,now=Date.now()){
   const el=document.getElementById('gearGuide');if(!el||!state)return;
   const busy=EVENT_PANELS.some(q=>shown(document.querySelector(q)));
   if(busy){el.hidden=true;return;}
-  const list=pages(state,esc),html=list[Math.floor(now/PAGE_MS)%list.length];
+  const base=pages(state,esc),quick=quickPage(state,esc),list=quick?base.flatMap(p=>[quick,p]):base,html=list[Math.floor(now/PAGE_MS)%list.length];
   if(el.dataset.html!==html){el.innerHTML=html;el.dataset.html=html;}
   el.hidden=false;
 }
