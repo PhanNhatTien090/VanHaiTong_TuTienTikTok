@@ -8,14 +8,15 @@ const KIND={
  craft:{ribbon:'THÀNH CÔNG',verb:'Rèn thành',line:a=>a.skin?`Pháp bảo mới · mở khóa trang phục ${a.skin}`:'Pháp bảo mới · đã tự trang bị',tip:'gõ 7 rèn tiếp'},
  learn:{ribbon:'THÀNH CÔNG',verb:'Lĩnh ngộ',line:()=>'Bí pháp mới · tu luyện nhanh hơn',tip:'gõ 1 vận công thử ngay'},
  admin:{ribbon:'TÔNG CHỦ BAN THƯỞNG',verb:'Nhận',line:a=>(a.parts||[]).slice(0,3).join(' · '),tip:null},
- vip:{ribbon:'THĂNG HỘ PHÁP',verb:'Đạt',line:()=>'Danh vị mới trong tông môn',tip:null}
+ vip:{ribbon:'THĂNG HỘ PHÁP',verb:'Đạt',line:()=>'Danh vị mới trong tông môn',tip:null},
+ genius:{ribbon:'THIÊN TÀI XUẤT THẾ',title:a=>a.item,line:a=>'tu luyện '+Math.round(a.value||0).toLocaleString('vi-VN')+' tu vi hôm nay · đứng đầu tông môn',tip:'gõ 1 tu luyện để đuổi kịp'}
 };
 export function baoHyHTML(e,esc){
  const a=e.achieve,k=KIND[a?.kind];if(!k)return '';
- const thanks=a.kind==='admin'?`${e.name} đa tạ Tông Chủ`:a.kind==='vip'?`Đa tạ hộ pháp ${e.name}`:`Chúc mừng ${e.name}`;
+ const thanks=a.kind==='genius'?((a.runners||[]).join(' · ')||'Toàn tông kính phục'):a.kind==='admin'?`${e.name} đa tạ Tông Chủ`:a.kind==='vip'?`Đa tạ hộ pháp ${e.name}`:`Chúc mừng ${e.name}`;
  return `<div class="bh-ribbon"><span>✦ ${esc(k.ribbon)} ✦</span></div>
 <div class="bh-body"><div class="bh-portrait"><i class="bh-slot"></i></div><div class="bh-text">
-<strong class="bh-title"><em>${esc(k.verb)}</em> · ${esc(a.item)}</strong>
+<strong class="bh-title">${k.title?esc(k.title(a)):`<em>${esc(k.verb)}</em> · ${esc(a.item)}`}</strong>
 ${k.line(a)?`<span class="bh-line">${esc(k.line(a))}</span>`:''}
 <span class="bh-thanks">${esc(thanks)}</span>${k.tip?`<small class="bh-tip">${esc(k.tip).replace(/\b(\d)\b/g,'<u>$1</u>')}</small>`:''}</div></div>`;
 }

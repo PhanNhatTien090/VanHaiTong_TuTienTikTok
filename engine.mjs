@@ -5,7 +5,7 @@ import {rebirthCommand} from './rebirth.mjs';
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
 const viemWorn=p=>p?.skinChoice===VIEM_SKIN_ID&&p.rewardSkins?.includes(VIEM_SKIN_ID);
-import {capturePeriodBase,ensurePeriods} from './period-tops.mjs';
+import {capturePeriodBase,ensurePeriods,computeTops} from './period-tops.mjs';
 import {dailyPracticeView,creditDailyPractice,dailyAscensionView,recordDailyAscension,practiceDay} from './daily-practice.mjs';
 import {bondVipInfo} from './public/bond-policy.js';
 import {PET_COVE_MAP} from './public/pet-cove.js';
@@ -842,6 +842,22 @@ export function tick(w,now=Date.now()) {
 }
 // 08/11: mỗi 6 s tìm 1 người đang có mặt (hoạt động ≤10 phút) đủ tu vi mà thiếu linh thạch để nhắc — không chờ họ thả tim/gõ lệnh.
 function stoneHintTick(w,now){if(warActive(w)||now-(w.stoneScanAt||0)<6000)return;w.stoneScanAt=now;for(const p of Object.values(w.players)){if(now-(p.lastActive||0)>600000||w.playTransfers?.[p.id]?.phase==='web')continue;if(missingStones(w,p,now))return;}}
+// 11/11/2026: THIÊN TÀI XUẤT THẾ — ~6 phút một lần, lúc sân không bận sự kiện, vinh danh người tăng tu vi nhiều nhất HÔM NAY
+// (bảng ngày period-tops, chỉ người thật). Chỉ nói về tu vi trong game — không nhắc quà/tim (luật LIVE).
+export const THIEN_TAI={firstMs:4*60000,everyMs:6*60000,retryMs:30000,minQi:1000};
+function thienTaiTick(w,now){
+ if(w.liveSession?.active===false)return;
+ if(!w.nextThienTaiAt){w.nextThienTaiAt=now+THIEN_TAI.firstMs;return;}
+ if(now<w.nextThienTaiAt)return;
+ // Chỉ nhường khi sân giữa bị khóa thật; khách quý / mưa hoa / cơ duyên chỉ là bảng bên cạnh, thẻ vẫn xếp hàng Vân Đài.
+ const locked=alchemyActive(w)||warActive(w)||skyStageUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase);
+ if(locked){w.nextThienTaiAt=now+THIEN_TAI.retryMs;return;}
+ w.nextThienTaiAt=now+THIEN_TAI.everyMs;
+ const top=computeTops(w,ensurePeriods(w,now).day,3).qi||[],first=top[0],p=first&&w.players[first.id];
+ if(!p||first.value<THIEN_TAI.minQi)return;
+ const f=v=>Math.round(v).toLocaleString('vi-VN');
+ emit(w,p,`Thiên tài xuất thế • ${p.name} tu luyện ${f(first.value)} tu vi hôm nay`,'title',now,{achieve:{kind:'genius',item:p.name,value:first.value,runners:top.slice(1).map((r,i)=>`${i+2}. ${r.name} ${f(r.value)}`)}});
+}
 function tickCore(w,now) {
  stoneHintTick(w,now);
  ensurePeriods(w,now); // 07/11: sang ngày/tuần mới → chốt bảng cũ, mở kỳ mới
@@ -862,7 +878,7 @@ function tickCore(w,now) {
   reconcilePatron(w,now);
 
   if(w.visitor&&now>=w.visitor.endsAt&&!w.visitor.closedAt){w.visitor.closedAt=now;archiveVisitor(w);auditRecord(w,'visitor-end',now,{eventId:w.visitor.id,kind:w.visitor.kind});emit(w,null,VISITORS[w.visitor.kind].name+' đã rời tiên môn • giữ nguyên quà đã nhận','visitor',now,{visitorEnd:true});}
-  autoSkyEvent(w,now);visitorRotation(w,now);autoCeremony(w,now);tickEngagement(w,now,engageCtx);
+  autoSkyEvent(w,now);visitorRotation(w,now);autoCeremony(w,now);tickEngagement(w,now,engageCtx);thienTaiTick(w,now);
   if(w.opportunity){
     preserveOpportunityCredit(w,w.opportunity);
     if(!w.opportunity.closedAt&&now<w.opportunity.endsAt&&w.opportunity.creditClaimDay!==practiceDay(now)){

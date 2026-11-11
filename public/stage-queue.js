@@ -9,7 +9,7 @@ export function stageReason(e){
  if(e.ceremony)return 'đại điển vinh danh';
  if(e.gift&&!e.resident)return 'dâng lễ vật';
  if(e.adminGift)return 'lễ Tông Chủ ban';
- if(e.achieve)return {craft:'rèn thành pháp bảo',learn:'lĩnh ngộ bí pháp',vip:'thăng hộ pháp'}[e.achieve.kind]||'báo hỷ';
+ if(e.achieve)return {craft:'rèn thành pháp bảo',learn:'lĩnh ngộ bí pháp',vip:'thăng hộ pháp',genius:'thiên tài xuất thế'}[e.achieve.kind]||'báo hỷ';
  if(e.effect==='breakthrough'){const r=breakthroughRealm(e);return 'đột phá'+(REALM_NAMES[r]?' '+REALM_NAMES[r]:'');}
  if(e.transform)return 'hóa hình';
  if(e.petAward)return 'linh thú đồng hành';
