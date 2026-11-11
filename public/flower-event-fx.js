@@ -13,7 +13,7 @@ function blossom(c,x,y,size,rot,flip,[light,deep]){
   c.fillStyle='#fff6d0';c.beginPath();c.arc(0,0,size*.1,0,TAU);c.fill();c.restore();
 }
 export function drawFlowerRain(c,t,H,intensity=1,light=false){
-  if(intensity<=0)return;const many=light?.5:1,W=900;
+  if(intensity<=0)return;const many=light?.15:.25,/* 11/11: bớt ~75% hạt bay — đỡ nén video, chữ trên LIVE nét hơn */ W=900;
   c.save();c.globalAlpha=intensity;
   // trời ửng hồng + vàng
   c.save();c.globalCompositeOperation='screen';const sky=c.createLinearGradient(0,0,0,H*.6);sky.addColorStop(0,'#ff8fc0'+hex(.5));sky.addColorStop(.5,'#ffd59a'+hex(.22));sky.addColorStop(1,'#ffd59a00');c.fillStyle=sky;c.fillRect(0,0,W,H*.6);
@@ -40,7 +40,7 @@ export function drawFlowerRain(c,t,H,intensity=1,light=false){
 // v38: "Tinh Hà Lưu Tinh" — trời đêm tím xanh, dải ngân hà, sao lấp lánh, sao băng chéo màn hình,
 // thiên thạch lớn rơi xuống quảng trường nổ sáng, chòm sao Bắc Đẩu hiện dần.
 export function drawMeteorShower(c,t,H,intensity=1,light=false){
-  if(intensity<=0)return;const many=light?.5:1,W=900;
+  if(intensity<=0)return;const many=light?.15:.25,/* 11/11: bớt ~75% hạt bay — đỡ nén video, chữ trên LIVE nét hơn */ W=900;
   c.save();c.globalAlpha=intensity;
   // trời đêm
   const sky=c.createLinearGradient(0,0,0,H*.75);sky.addColorStop(0,'#070624'+hex(.82));sky.addColorStop(.55,'#1e1450'+hex(.5));sky.addColorStop(1,'#2a1a5a00');c.fillStyle=sky;c.fillRect(0,0,W,H*.75);
