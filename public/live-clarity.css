@@ -132,3 +132,31 @@ body.overlay .bao-hy.bh-out{animation:lbOut .36s ease both}
 @keyframes bhShine{0%{opacity:1;background-position:120% 0}100%{opacity:1;background-position:-30% 0}}
 body.overlay:is(.sword-race,.social-stage,.ritual-active) .bao-hy{display:none!important}
 @media(prefers-reduced-motion:reduce){body.overlay .bao-hy.bh-in,body.overlay .bao-hy.bh-out,body.overlay .bao-hy.bh-in::after{animation:none}}
+
+/* 11/11/2026 (bố cục sau khi LIVE Studio về 9:16): ~2,2% mép trên bị nút TikTok che; ~25% đáy bên trái là bình luận + ô nhập.
+   → cụm trên dịch xuống chút; cột phải bắt đầu ngay dưới TOP QUÀ (chỗ trống cũ của widget mục tiêu quà, chủ kênh không dùng nữa),
+   chứa thẻ vinh danh + TẶNG QUÀ/bảng sự kiện + dải hướng dẫn; đáy khung để trống. */
+html body.overlay .like-goal:not([hidden]){top:2.7%}
+html body.overlay .scene-shell .live-disclosure{top:7.4%}
+body.overlay .stage-queue:not([hidden]){top:10.6%}
+html body.overlay .scene-shell>#giftRanks{top:6.6%!important}
+html body.overlay #phoneHudLeft{top:9.2%}
+html body.overlay #phoneHudRight{top:14.4%;bottom:auto;gap:.8cqw}
+html body.overlay #phoneHudRight>.scene-guide-dock.rail-dock{position:relative!important;inset:auto!important;left:auto!important;right:auto!important;bottom:auto!important;
+  width:100%!important;zoom:1;transform:none!important;order:-1}
+html body.overlay #phoneHudRight>.scene-guide-dock.rail-dock:not(:has(.honor-banner:not([hidden]))){display:none!important}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide{display:block!important;position:relative!important;inset:auto!important;left:auto!important;right:auto!important;bottom:auto!important;max-height:none!important;transform:none!important;
+  width:100%!important;max-width:none!important;margin:0!important;padding:5px 8px 6px!important;box-sizing:border-box;text-align:left;pointer-events:none;
+  font-size:clamp(9px,1.6cqw,18px)!important;line-height:1.25;color:#f0fbff;
+  background:linear-gradient(145deg,#07192f38,#102e3926)!important;border:1px solid #9dd9ce30!important;border-radius:10px!important;box-shadow:none!important;
+  text-shadow:0 0 1px #000,0 0 1px #000,0 1px 1px #000,0 1px 3px #000,0 0 6px #000b!important}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide>b{display:block!important;color:#ffe08a;font-size:.86em;letter-spacing:.03em;margin:0 0 3px;white-space:normal}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide>b em{font-style:normal;color:#ffb3d1}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide ol{display:grid!important;grid-template-columns:1fr!important;gap:2px!important;margin:0;padding:0;list-style:none}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide li{display:flex!important;gap:.4em;align-items:baseline;white-space:nowrap;overflow:hidden;margin:0;padding:0;border:0;grid-column:auto!important}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide li::before{display:none!important}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide code{font:800 1em/1.25 "Segoe UI",Arial,sans-serif;color:#9ff0d0;white-space:nowrap}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide span{display:inline!important;min-width:0;font:600 .84em/1.25 "Segoe UI",Arial,sans-serif;color:#eef3ea;overflow:hidden;text-overflow:ellipsis}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide .corner-command-hint{display:none!important}
+/* Mưa hoa / sao băng chiếm cột phải (~2 phút): nhường chỗ, dải trên cùng đã ghi "gõ 6" và bảng gõ số bên trái vẫn còn. */
+html body.overlay .scene-shell #phoneHudRight:not(#_):has(>#flowerHud:not([hidden]))>#basicCommands.rail-guide.corner-command-guide{display:none!important}

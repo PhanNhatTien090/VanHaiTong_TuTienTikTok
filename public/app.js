@@ -75,6 +75,8 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   const baoHy=document.createElement('div');baoHy.id='baoHy';baoHy.className='bao-hy';baoHy.hidden=true;root.appendChild(baoHy); // 11/11: Ngọc Giản Báo Hỷ
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
+  // 11/11: đáy khung bị bình luận + ô nhập của TikTok che → dải hướng dẫn và thẻ vinh danh lên cột phải (chỗ trống dưới TOP QUÀ).
+  {const right=root.querySelector('#phoneHudRight');if(right){if(commands){commands.classList.add('rail-guide');right.appendChild(commands);}right.insertBefore(dock,right.firstChild);dock.classList.add('rail-dock');}}
 }
 
 const params=new URLSearchParams(location.search),mode=params.get('world')==='live'?'live':'demo',overlay=params.get('overlay')==='1';
