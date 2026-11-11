@@ -186,6 +186,15 @@ function checkReady(w,p,now){
 // Mỗi gợi ý chỉ nói một lần mỗi người; mỗi người cách nhau ≥3 phút; cả tông môn ≥20 giây một gợi ý.
 const plain=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D');
 // v33: chỉ cần gõ lệnh ngắn (hoc / ren / luyendan / dung / trangbi), game tự chọn món phù hợp nhất.
+// 11/11/2026: LINH BÀI ĐẠO HỮU — số liệu cho thẻ hồ sơ giữa màn khi gõ 9 / tu vi. Cùng nội dung statusText (không lộ hạn mức ngày),
+// thêm thứ hạng tu vi và MỘT bước nên làm tiếp, chỉ bằng lệnh số.
+export function profileCard(p,w,now=Date.now()){
+  const last=p.realm>=REALMS.length-1,needQi=requiredQi(p),needStones=requiredStones(p),ready=readyToBreak(p,w,now);
+  const real=Object.values(w.players).filter(x=>!x.resident&&!x.puppet);const rank=1+real.filter(x=>(x.totalQi||0)>(p.totalQi||0)).length;
+  const settling=!!(w&&dailyAscensionView(w,p,now).exhausted&&p.qi>=needQi&&p.stones>=needStones);
+  const tip=last?'Đã đạt đỉnh tu tiên':!finalRealmEligible(p)?'Tiên Đế cần tổng quà 100 coin':settling?'Đạo cơ đang lắng đọng · mai đột phá tiếp':ready?'Gõ 8 · đột phá ngay':p.qi<needQi?'Gõ 1 tu luyện · 4 luyện đan · 5 dùng đan':'Gõ 2 hái · 3 đánh để có linh thạch';
+  return {realm:p.realm,realmName:REALMS[p.realm],next:last?null:REALMS[p.realm+1],qi:p.qi,needQi,stones:p.stones,needStones,ready,rank,players:real.length,totalQi:p.totalQi||0,tip};
+}
 export function suggestion(p){
   const pill=CATALOG.find(x=>x.type==='pill'&&p.pills[x.id]>0);if(pill)return {key:'use:'+pill.id,cmd:'dung',say:`dùng ${pill.name}`,why:pill.description};
   const can=x=>!x.exclusive&&x.tier<=p.realm&&p.stones>=x.price&&p.herbs>=x.herbs;
@@ -396,7 +405,7 @@ function actionCore(w,input,now) {
     }
     if(['tuvi','xem','thongtin','tv','check'].includes(cmd)){
       const wait=cooldown(p,'status',15000,now);if(wait)return fail(`Xem tu vi lại sau ${wait}s.`);
-      emit(w,p,statusText(p,w,now),'status',now);return {ok:true};
+      emit(w,p,statusText(p,w,now),'status',now,{card:profileCard(p,w,now)});return {ok:true};
     }
     // 05/11: lệnh tiếp linh lực khi lên đài luận kiếm (vẫn nhận 'danh' như cũ). Ngoài giải, 'kiem' là lời trò chuyện bình thường.
     if(cmd==='kiem'&&tournamentActive(w))return action(w,{...input,type:'attack'},now);
