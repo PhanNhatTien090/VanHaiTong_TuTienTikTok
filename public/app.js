@@ -44,6 +44,7 @@ import {showCeremony} from './ceremony.js';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js';
 import {renderStageQueue} from './stage-queue.js';
 import {showLinhBai} from './linh-bai.js';
+import {showBaoHy} from './bao-hy.js';
 import {giftTokenHTML} from './gift-icons.js';
 import {giftRules,giftRuleHTML} from './gift-rule-card.js';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
@@ -71,6 +72,7 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   mountGearGuide(root.querySelector('#phoneHudLeft'));
   const stageQueue=document.createElement('div');stageQueue.id='stageQueue';stageQueue.className='stage-queue';stageQueue.hidden=true;root.appendChild(stageQueue); // 11/11: Vân Đài · chờ lượt
   const linhBai=document.createElement('div');linhBai.id='linhBai';linhBai.className='linh-bai';linhBai.hidden=true;root.appendChild(linhBai); // 11/11: Linh Bài đạo hữu
+  const baoHy=document.createElement('div');baoHy.id='baoHy';baoHy.className='bao-hy';baoHy.hidden=true;root.appendChild(baoHy); // 11/11: Ngọc Giản Báo Hỷ
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
 }
@@ -395,6 +397,7 @@ function playNext(){
  // v39: trên cảnh LIVE chỉ còn 1 khung (khung tên này); phần thưởng gộp thành 1 dòng nhỏ thay cho khung biên nhận riêng.
  const r=e.reward,extra=r&&!e.raceGift&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
  $('#spotlight').innerHTML=`<strong>${esc(e.name)}</strong><span>${esc(label)}</span>${extra?`<small class="spot-reward">${esc(extra)}</small>`:''}`;
+ if(e.achieve&&!e.gift&&showBaoHy(document.getElementById('baoHy'),e,scene,state?.players?.find(p=>p.id===e.user),esc,duration)){clearTimeout(spotTimer);spotTimer=setTimeout(()=>{busy=false;current=null;playNext();},duration+150);return;} // 11/11: rèn/học/ban thưởng/VIP → Báo Hỷ
  if(e.card&&showLinhBai(document.getElementById('linhBai'),e,scene,state?.players?.find(p=>p.id===e.user),esc,duration)){clearTimeout(spotTimer);spotTimer=setTimeout(()=>{busy=false;current=null;playNext();},duration+150);return;} // 11/11: gõ 9 → Linh Bài thay khung tên
  $('#spotlight').classList.add('visible');clearTimeout(spotTimer);
  spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;current=null;playNext();},duration+150);

@@ -98,3 +98,37 @@ body.overlay .linh-bai.lb-out{animation:lbOut .36s ease both}
 @keyframes lbOut{to{opacity:0;transform:translateX(-50%) translateY(-10px) scale(.96)}}
 body.overlay:is(.sword-race,.social-stage,.ritual-active) .linh-bai{display:none!important}
 @media(prefers-reduced-motion:reduce){body.overlay .linh-bai.lb-in,body.overlay .linh-bai.lb-out{animation:none}}
+
+/* 11/11/2026: NGỌC GIẢN BÁO HỶ — thẻ THÀNH CÔNG (rèn/học/ban thưởng/VIP). Cùng họ với Linh Bài: nền tối ngắn hạn, viền vàng,
+   dải lụa đỏ trên cùng; một vệt sáng quét qua MỘT lần khi hiện (CSS, không vẽ canvas). */
+.bao-hy{display:none}
+body.overlay .bao-hy:not([hidden]){display:block;position:absolute;left:50%;top:23%;transform:translateX(-50%);z-index:12;width:66%;max-width:720px;
+  box-sizing:border-box;pointer-events:none;padding:1.55em .9em .75em;border-radius:16px;overflow:visible;
+  font:600 clamp(11px,2.15cqw,23px)/1.3 "Segoe UI",Arial,sans-serif;color:#f4efe2;
+  background:radial-gradient(110% 80% at 50% 0%,rgba(150,40,40,.35),rgba(6,12,20,0) 60%),linear-gradient(180deg,rgba(14,20,30,.97),rgba(6,10,18,.96));
+  border:1.5px solid #d9b56a;box-shadow:0 0 0 1px #000a,0 0 28px rgba(255,190,90,.30),inset 0 0 0 5px rgba(217,181,106,.10)}
+body.overlay .bao-hy::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(105deg,transparent 35%,rgba(255,236,180,.22) 48%,transparent 60%);background-size:250% 100%;background-position:120% 0;opacity:0}
+body.overlay .bao-hy.bh-in::after{animation:bhShine 1.1s .25s ease-out both}
+.bao-hy .bh-ribbon{position:absolute;left:50%;top:0;transform:translate(-50%,-48%);white-space:nowrap}
+.bao-hy .bh-ribbon span{display:inline-block;padding:.25em 1.4em;font:800 1.15em/1.2 Georgia,"Times New Roman",serif;letter-spacing:.1em;color:#fff4d0;
+  background:linear-gradient(180deg,#b3262b,#7a1218);border:2px solid #e9c46a;border-radius:6px;box-shadow:0 2px 0 #000a,0 0 16px rgba(233,196,106,.45);
+  text-shadow:0 1px 0 #3a0508,0 0 6px rgba(255,200,120,.6);clip-path:polygon(0 0,100% 0,96% 50%,100% 100%,0 100%,4% 50%)}
+.bao-hy .bh-body{display:flex;align-items:center;gap:.7em}
+.bao-hy .bh-portrait{flex:0 0 27%;aspect-ratio:220/260;display:grid;place-items:end center;
+  background:radial-gradient(circle at 50% 45%,rgba(255,215,120,.32),rgba(6,12,20,0) 68%)}
+.bao-hy .bh-portrait canvas{width:100%;height:auto}
+.bao-hy .bh-text{flex:1;min-width:0;text-align:center}
+.bao-hy .bh-title{display:block;font:700 1.4em/1.2 Georgia,"Times New Roman",serif;color:#ffd76a;text-shadow:0 0 1px #000,0 2px 3px #000,0 0 14px rgba(255,200,90,.55)}
+.bao-hy .bh-title em{font-style:normal;color:#ffb36a}
+.bao-hy .bh-line{display:block;margin-top:.3em;color:#9ff0d0;font-size:.95em}
+.bao-hy .bh-thanks{display:block;margin-top:.55em;color:#fff;font-size:1.02em;letter-spacing:.02em}
+.bao-hy .bh-thanks::before,.bao-hy .bh-thanks::after{content:"❖";color:#d9b56a;margin:0 .5em;font-size:.8em}
+.bao-hy .bh-tip{display:inline-block;margin-top:.45em;padding:.15em .8em;border-radius:999px;border:1px solid rgba(159,240,208,.5);background:rgba(63,211,165,.10);color:#eafff7;font-size:.85em}
+.bao-hy .bh-tip u{display:inline-grid;place-items:center;min-width:1.3em;height:1.3em;border-radius:50%;text-decoration:none;font-weight:800;
+  background:radial-gradient(circle at 35% 30%,#fff3c4,#e2b24f 60%,#9a6a1c);color:#2a1604;margin:0 .1em}
+body.overlay .bao-hy.bh-in{animation:lbIn .42s cubic-bezier(.2,1.4,.4,1) both}
+body.overlay .bao-hy.bh-out{animation:lbOut .36s ease both}
+@keyframes bhShine{0%{opacity:1;background-position:120% 0}100%{opacity:1;background-position:-30% 0}}
+body.overlay:is(.sword-race,.social-stage,.ritual-active) .bao-hy{display:none!important}
+@media(prefers-reduced-motion:reduce){body.overlay .bao-hy.bh-in,body.overlay .bao-hy.bh-out,body.overlay .bao-hy.bh-in::after{animation:none}}

@@ -495,7 +495,7 @@ function actionCore(w,input,now) {
     if(type==='learn')p.manuals.push(item.id);
     if(type==='craft'){p.artifacts.push(item.id);p.equipped=item.id;if(item.skinReward){p.rewardSkins??=[];if(!p.rewardSkins.includes(item.skinReward))p.rewardSkins.push(item.skinReward);if(autoSkinChoiceAllowed(p)){p.skinChoice=item.skinReward;p.skinChoiceSource='craft';}}}
     if(type==='brew')p.pills[item.id]=(p.pills[item.id]||0)+1;
-    emit(w,p,`${type==='learn'?'Lĩnh ngộ':type==='craft'?'Rèn thành':'Luyện thành'} ${item.name}`,type==='learn'?'sword':type==='craft'?'lotus':'petal',now);
+    emit(w,p,`${type==='learn'?'Lĩnh ngộ':type==='craft'?'Rèn thành':'Luyện thành'} ${item.name}`,type==='learn'?'sword':type==='craft'?'lotus':'petal',now,type==='brew'?{}:{achieve:{kind:type,item:item.name,skin:type==='craft'&&item.skinReward?SPECIAL_SKINS.find(k=>k.id===item.skinReward)?.name||null:null}}); // 11/11: Ngọc Giản Báo Hỷ
   } else if(type==='equip') {
     if(!p.artifacts.includes(input.itemId))return fail('Chưa sở hữu pháp bảo này.');p.equipped=input.itemId;emit(w,p,`Trang bị ${CATALOG.find(x=>x.id===input.itemId).name}`,'sword',now);
   } else if(type==='use') {
@@ -545,7 +545,7 @@ function actionCore(w,input,now) {
     let buff=null;if(defaults){const mult=Math.max(giftBuff(input.coins*count),firstGift?5:1,p.buffUntil>now?p.buffMult||1:1);p.buffMult=mult;p.buffUntil=now+(firstGift?2:1)*GIFT_BUFF_MS;buff={mult,minutes:(firstGift?2:1)*GIFT_BUFF_MS/60000};}
     const giftEvent=emit(w,p,defaults?`${gift||tier.name}${count>1?` ×${count}`:''} • +${q} tu vi • phúc duyên ×${String(buff.mult).replace('.',',')} 10 phút`:`${gift||tier.name}${count>1?` ×${count}`:''} • ${eventRule}`,tier.effect,now,{kind,gift,count,tier:tier.name,coins:input.coins,comboKey:input.comboKey,comboFinal:input.comboFinal,buff,firstGift,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});
     if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now,input.coins)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;}
-    if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t});} // v86
+    if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t,achieve:{kind:'vip',item:VIP_TIERS[t].name}});} // v86
     if(['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
     if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;if(racing)giftEvent.text=`${gift||tier.name}${count>1?` ×${count}`:''} • BỨT TỐC +${giftEvent.raceBoost} trượng`;
       // v65: ghi lại để cảnh vẽ hiệu ứng quà theo nấc
@@ -1115,7 +1115,7 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   if(c.buff){p.buffMult=Math.max(c.buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=now+GIFT_BUFF_MS;}
   p.lastActive=Math.max(p.lastActive||0,now);
   const parts=[got&&`+${got} tu vi`,c.stones&&!c.fill&&`+${c.stones} linh thạch`,c.herbs&&`+${c.herbs} linh thảo`,c.buff&&`phúc duyên ×${c.buff} 10 phút`,c.fill&&(readyToBreak(p,w,now)?'đủ điều kiện đột phá':'đủ tu vi và linh thạch, chờ lượt đột phá ngày sau')].filter(Boolean);
-  emit(w,p,`Tông chủ ban ${c.name} cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{adminGift:combo,comboName:c.name,reward:{qi:got,stones:c.stones,herbs:c.herbs},buff:c.buff?{mult:c.buff,minutes:10}:null});
+  emit(w,p,`Tông chủ ban ${c.name} cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{achieve:{kind:'admin',item:c.name,parts},adminGift:combo,comboName:c.name,reward:{qi:got,stones:c.stones,herbs:c.herbs},buff:c.buff?{mult:c.buff,minutes:10}:null});
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['ban '+c.name]});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:c.name,qi:got};
 }
@@ -1148,7 +1148,7 @@ export function adminCustomGift(w,id,custom={},now=Date.now()){
   if(buff){p.buffMult=Math.max(buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=Math.max(p.buffUntil>now?p.buffUntil:0,now+minutes*60000);}
   p.lastActive=Math.max(p.lastActive||0,now);
   const parts=[qi&&`+${qi} tu vi`,stones&&`+${stones} linh thạch`,herbs&&`+${herbs} linh thảo`,buff&&`phúc duyên ×${buff} ${minutes} phút`].filter(Boolean);
-  emit(w,p,`Tông chủ ban thưởng riêng cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{adminGift:'custom',comboName:'Thưởng Riêng',reward:{qi,stones,herbs},buff:buff?{mult:buff,minutes}:null});
+  emit(w,p,`Tông chủ ban thưởng riêng cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{achieve:{kind:'admin',item:'Thưởng Riêng',parts},adminGift:'custom',comboName:'Thưởng Riêng',reward:{qi,stones,herbs},buff:buff?{mult:buff,minutes}:null});
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['thưởng riêng: '+parts.join(', ')]});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:'Thưởng Riêng',qi};
 }
