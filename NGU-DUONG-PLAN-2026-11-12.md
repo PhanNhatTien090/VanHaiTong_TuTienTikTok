@@ -62,3 +62,6 @@ Thay bảng thưởng ở trên. Đường nào cũng ra TU VI nhưng theo cách
 | Linh Dược | hái + luyện | hái thêm thảo (→ nhiều đan); tu luyện +2% |
 - Phần thưởng chính là thi đua: Đường nhất tuần → cả Đường +5% tu vi suốt tuần sau.
 - Trước khi lên LIVE: mô phỏng trên bản sao live.json để các Đường cho tu vi/giờ gần bằng nhau, chỉnh số theo kết quả.
+
+## CẬP NHẬT 12/11 — tên chức vị
+Không dùng chữ "Đường Chủ". Người giữ ghế gọi là TRƯỞNG LÃO (chữ to trên ghế, thẻ Báo Hỷ, thách đấu); dòng nhỏ ghi Đường phụ trách, vd "Trưởng Lão · Tàng Bảo Đường". Mọi chỗ "Đường Chủ" ở trên hiểu là Trưởng Lão.
