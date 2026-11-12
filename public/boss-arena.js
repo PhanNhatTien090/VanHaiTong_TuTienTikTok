@@ -36,24 +36,38 @@ export function arenaTargets(players, H) {
 }
 
 // 3/11: CHỈ người đã tặng quà mới có cánh; kiểu cánh theo tổng coin đã tặng.
-const WING_TIERS = [
+export const WING_TIERS = [
   { min: 1, cell: 0 },     // tặng quà: cánh ngọc trắng
   { min: 100, cell: 3 },   // 100+ coin: cánh long vũ lam
   { min: 500, cell: 2 },   // 500+ coin: cánh pha lê tím
   { min: 2000, cell: 1 },  // 2000+ coin: cánh phượng hoàng vàng
+  { min: 3000, name:'Ngọc Long Vũ', art:'wings-3000-ngoc-long.webp', width:1.07, pivot:.48 },
+  { min: 4000, name:'Xích Diệm Hoàng Dực', art:'wings-4000-xich-diem.webp', width:1.10, pivot:.50 },
+  { min: 5000, name:'Tử Nguyệt Điệp Dực', art:'wings-5000-nguyet-diep.webp', width:1.12, pivot:.43 },
+  { min: 6000, name:'Cực Quang Lưu Ly Dực', art:'wings-6000-cuc-quang.webp', width:1.15, pivot:.46 },
+  { min: 7000, name:'Cửu Nhật Thần Dực', art:'wings-7000-cuu-nhat.webp', width:1.19, pivot:.48 },
 ];
+export const wingTier = coins => WING_TIERS.findLast(w => coins >= w.min);
 /** Cánh tiên sau lưng (vẽ trước thân). Chưa tặng quà / NPC / tu sĩ giả thì không có cánh. */
 export function drawWings(scene, c, target, t) {
   const p = target.player; if (!p || p.resident || p.puppet) return;
   const coins = Number(p.giftCoins) || 0; if (coins < 1) return;
-  const img = arenaArt(scene).wings; if (!ready(img)) return;
-  const cell = [...WING_TIERS].reverse().find(w => coins >= w.min)?.cell ?? 0;
-  const cw = img.naturalWidth / 4, ch = img.naturalHeight, s = (target.scale || 1) * (scene.compact ? .9 : 1);
-  const w = 150 * s * (1 + Math.min(.35, Math.log10(coins + 1) * .08)), h = w * ch / cw;
+  const tier = wingTier(coins);
+  const cache = scene.premiumWingArt ??= new Map();
+  if(tier.art&&!cache.has(tier.art)&&typeof Image!=='undefined'){
+    const image=load('/assets/arena-v1/'+tier.art);
+    image.onerror=()=>{cache.set(tier.art,null);};
+    cache.set(tier.art,image);
+  }
+  const premium=tier.art?cache.get(tier.art):null, custom=ready(premium);
+  const img=custom?premium:arenaArt(scene).wings;if(!ready(img))return;
+  const cell=custom?0:tier.cell??1;
+  const cw=img.naturalWidth/(custom?1:4),ch=img.naturalHeight,s=(target.scale||1)*(scene.compact?.9:1);
+  const w=150*s*(1+Math.min(.35,Math.log10(coins+1)*.08))*(custom?tier.width:1)*(p.hallIndex==null?1:.78),h=w*ch/cw;
   const flap = scene.motion ? Math.sin(t * .0042 + (hash(p.id) % 628) / 100) : 0;
   c.save(); c.translate(target.x, target.y - 46 * s); c.scale(1 + flap * .07, 1 - flap * .03);
   c.globalAlpha = scene.compact ? .85 : .95;
-  c.drawImage(img, cell * cw, 0, cw, ch, -w / 2, -h * .55, w, h);
+  c.drawImage(img, cell * cw, 0, cw, ch, -w / 2, -h * (custom?tier.pivot:.55), w, h);
   c.restore();
 }
 

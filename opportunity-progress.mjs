@@ -1,5 +1,6 @@
 // Persist unused opportunity credit on the player, not on a five-minute event.
 import {dailyAscensionView,recordDailyAscension} from './daily-practice.mjs';
+import {OPPORTUNITY_COSTS} from './public/opportunity.js';
 function creditBank(p){
  if(!p.opportunityCredit||!Number.isSafeInteger(p.opportunityCredit.balance)||p.opportunityCredit.balance<0)p.opportunityCredit={balance:0};
  return p.opportunityCredit;
@@ -25,7 +26,7 @@ export function addOpportunityCredit(p,event,coins){
 export function spendOpportunityCredit(w,p,event,now,maxRealm,eligible){
  const {bank,progress}=opportunityProgress(p,event),from=p.realm;
  while(p.realm<maxRealm&&eligible(p)&&!dailyAscensionView(w,p,now).exhausted){
-  const cost=event.costs[p.realm];if(!Number.isSafeInteger(cost)||cost<1||bank.balance<cost)break;
+  const cost=(event.costs[p.realm]??OPPORTUNITY_COSTS[p.realm]);if(!Number.isSafeInteger(cost)||cost<1||bank.balance<cost)break;
   recordDailyAscension(w,p,now);bank.balance-=cost;progress.spent+=cost;progress.breakthroughs++;p.realm++;p.readyRealm=null;
  }
  return {from,to:p.realm,tiers:p.realm-from,balance:bank.balance};

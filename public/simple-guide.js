@@ -22,6 +22,13 @@ export const GUIDE_PAGES=[
   {cmd:'skin',text:'tủ skin đang có'},
   {cmd:'skin + tên',text:'mặc skin đó'},
   {cmd:'thu + số',text:'gọi linh thú'}]},
+ {title:'NGŨ ĐƯỜNG',rows:[
+  {cmd:'đường',text:'xem Trưởng Lão và điểm tuần'},
+  {cmd:'vào đường 1–5',text:'gia nhập một Đường'},
+  {cmd:'thách đấu 1–5',text:'Thiên Bảng tranh ghế'},
+  {cmd:'3 · trợ lực',text:'hỗ trợ khi Vân Đài mở'},
+  {cmd:'chân truyền + tên',text:'Trưởng Lão mời đệ tử'},
+  {cmd:'bái sư',text:'nhận lời Chân Truyền'}]},
  {title:'SỰ KIỆN',rows:[
   {cmd:'6 · bay',text:'đua phi kiếm khi mở'},
   {cmd:'6 · tỷ thí',text:'ghi danh tỷ thí'},
@@ -30,9 +37,10 @@ export const GUIDE_PAGES=[
   {cmd:'4 · luyện đan',text:'góp lửa lò đan'},
   {cmd:'gợi ý',text:'hỏi việc nên làm'}]}
 ];
-const ORDER=[0,1,0,2,0,4,0,3]; // 11/11: thêm trang XEM NHÂN VẬT
+const ORDER=[0,1,0,2,0,5,0,3]; // 11/11: thêm trang XEM NHÂN VẬT
 export function simpleSteps(s={},page=0){
- const pick=ORDER[((page%ORDER.length)+ORDER.length)%ORDER.length];
+ const order=s.halls?[...ORDER,0,4]:ORDER;
+ const pick=order[((page%order.length)+order.length)%order.length];
  const rows=[
   // 4/11/2026 heartPlay: tim là cách vận công, trò chuyện để luận đạo — không cần spam tu luyện.
   // 4/11: chữ ngắn để bảng nhỏ, không che nhân vật.

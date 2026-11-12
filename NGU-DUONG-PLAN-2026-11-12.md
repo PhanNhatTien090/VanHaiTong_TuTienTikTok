@@ -65,3 +65,9 @@ Thay bảng thưởng ở trên. Đường nào cũng ra TU VI nhưng theo cách
 
 ## CẬP NHẬT 12/11 — tên chức vị
 Không dùng chữ "Đường Chủ". Người giữ ghế gọi là TRƯỞNG LÃO (chữ to trên ghế, thẻ Báo Hỷ, thách đấu); dòng nhỏ ghi Đường phụ trách, vd "Trưởng Lão · Tàng Bảo Đường". Mọi chỗ "Đường Chủ" ở trên hiểu là Trưởng Lão.
+
+## Đã triển khai
+- Dùng tên Đường và chức vị Trưởng Lão. Thiên Bảng lấy top 10 tổng tu vi, có dấu đang hoạt động. Mỗi ghế có màu riêng ở Vân Hải Nguyệt Cung.
+- Gia nhập bằng `vào đường 1–5`, mở Ngọc Giản bằng `đường`. Trưởng Lão mời `chân truyền + tên`, người nhận gõ `bái sư`.
+- `thách đấu 1–5` mở trận 30 giây khi Vân Đài trống. Dùng tổng tu vi lúc mở trận. Gõ `3` để trợ lực, mỗi lượt +1%, tối đa 20% mỗi bên. Hòa giữ ghế cho Trưởng Lão. Tuần tính từ thứ Hai theo giờ Việt Nam.
+- Thái Sơ Giới Chủ, Vĩnh Kiếp Đạo Quân, Vô Cực Thiên Tổ và Hỗn Độn Vĩnh Hằng là bốn đại cảnh mới. Mốc tu vi tăng ×4 mỗi lần từ Diệt Thế Chí Tôn trở đi; thưởng tu luyện tiếp tục lấy đường cong thưởng riêng. Chuyển sinh mở ở Hỗn Độn Vĩnh Hằng.

@@ -1,3 +1,4 @@
+import {LATE_ASCENSIONS} from './late-ascension-data.js';
 import {drawRealmPresenceV3} from './realm-presence-v3.js';
 import {specialSkinFor} from './patrons.js';
 import {visualGender} from './cosmetics.js';
@@ -24,7 +25,8 @@ export const GOD_FORMS=Object.freeze([
  // 08/11: 3 cảnh giới mới — TẠM dùng thân thần có sẵn đổi tông màu tới khi có ảnh skin riêng (Codex vẽ sau 12/11).
  {name:'Ma Thần Huyết Giáp',color:'#ff4a3a',dragon:2,bodyCell:3,hue:-28},
  {name:'Thiên Ma Thánh Thể',color:'#a98bff',dragon:2,bodyCell:3,hue:255},
- {name:'Diệt Thế Hư Không Thể',color:'#e9ecff',dragon:2,bodyCell:2,hue:-12}
+ {name:'Diệt Thế Hư Không Thể',color:'#e9ecff',dragon:2,bodyCell:2,hue:-12},
+ ...LATE_ASCENSIONS.map((spec,i)=>({name:spec.armor,color:spec.color,dragon:i%3,bodyCell:2,hue:[110,-15,215,35][i]}))
 ]);
 export function godFormFor(p,{aura=false}={}){
  const rank=Math.trunc(Number(p.realm))-14;if(!Number.isInteger(rank)||p.resident||rank<0||rank>=GOD_FORMS.length)return null;

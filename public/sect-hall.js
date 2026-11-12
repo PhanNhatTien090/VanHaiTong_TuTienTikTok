@@ -10,10 +10,11 @@ function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar
  c.shadowColor='#000a';c.shadowBlur=8;c.fillStyle='#183843';c.beginPath();c.arc(0,0,r+5,0,Math.PI*2);c.fill();c.shadowBlur=0;
  c.save();c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();if(img)c.drawImage(img,-r,-r,r*2,r*2);else{c.fillStyle='#ffe7a0';c.font='900 30px Georgia';c.textAlign='center';c.textBaseline='middle';c.fillText(Array.from(p.name||'Đ')[0]||'Đ',0,2);}c.restore();
  c.lineWidth=4;c.strokeStyle=ring;c.beginPath();c.arc(0,0,r+2,0,Math.PI*2);c.stroke();c.restore();}
-export function sectHallTargets(players,H){
+export function sectHallTargets(players,H,withHalls=false){
  const n=players.length,cols=n<=3?Math.max(1,n):n<=12?4:n<=24?6:8,rows=Math.ceil(n/cols);
  const scale=n<=3?2.9:n<=4?2.7:n<=8?2.35:n<=12?2.05:n<=24?1.5:1.05;
- const gap=rows<=3?Math.min(220,H*.125):Math.min(170,H*.30/Math.max(1,rows-1)),top=H*.66-(Math.max(0,rows-1)*gap)/2;
+ const gap=withHalls?Math.min(190,H*.18/Math.max(1,rows-1)):rows<=3?Math.min(220,H*.125):Math.min(170,H*.30/Math.max(1,rows-1));
+ const top=withHalls?H*.68:H*.66-(Math.max(0,rows-1)*gap)/2;
  const spacing=n<=4?180:n<=12?178:760/cols;
  return players.map((player,i)=>{const row=Math.floor(i/cols),count=Math.min(cols,n-row*cols);return {id:player.id,player,x:450+(i%cols-(count-1)/2)*spacing,y:top+row*gap,scale,lift:0};});
 }
@@ -44,11 +45,28 @@ export function drawSectMaster(scene,c,t){
 
 // The server's active flag is the existing recent-LIVE-activity signal, not an exact viewer roster.
 export function sectElders(players,hostId){return players.filter(p=>p.active&&!p.resident&&!p.puppet&&!p.webOnly&&p.id!==hostId).slice().sort((a,b)=>(Number(b.realm)||0)-(Number(a.realm)||0)||(Number(b.totalQi)||0)-(Number(a.totalQi)||0)||String(a.id).localeCompare(String(b.id))).slice(0,2);}
-export function seatSectElders(targets,elders,H){const ids=new Set(elders.map(p=>p.id));return [...targets.filter(a=>!ids.has(a.id)),...elders.map((player,i)=>({id:player.id,player,x:i===0?260:640,y:H*.435,scale:1.9,lift:0,sectElder:i+1}))];}
+const hallX=index=>96+index*177;
+export function seatSectElders(targets,elders,H){const ids=new Set(elders.map(p=>p.id));return [...targets.filter(a=>!ids.has(a.id)),...elders.map((player,i)=>({id:player.id,player,x:player.hallIndex==null?(i===0?260:640):hallX(player.hallIndex),y:H*(player.hallIndex==null?.435:.463),scale:player.hallIndex==null?1.9:1.12,lift:0,sectElder:i+1}))];}
 export function drawSectCourt(scene,c,t){
  if(scene.environment?.layout!=='sect'||scene.raceStatus?.active||scene.socialStage?.length||scene.presentation?.until>t)return;
  const y=scene.height*.435;
- for(const [i,p]of (scene.sectElders||[]).entries()){
+ if(scene.sectHalls){
+  const y=scene.height*.463, active=new Set(scene.sectElders.map(p=>p.id));
+  for(const hall of scene.sectHalls){
+   c.save();c.translate(hallX(hall.index),y);
+   c.fillStyle='#102b32';c.strokeStyle=hall.color;c.lineWidth=2;
+   c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();c.fill();c.stroke();
+   c.fillStyle=hall.color;c.textAlign='center';c.font='700 32px Georgia';
+   if(!active.has(hall.elder?.id))c.fillText(hall.mark,0,-16);
+   c.fillStyle=hall.color;c.beginPath();c.moveTo(-60,-65);c.lineTo(-43,-65);c.lineTo(-48,-39);c.lineTo(-55,-42);c.closePath();c.fill();
+   c.fillStyle='#092028';c.fillRect(-83,16,166,51);c.strokeRect(-83,16,166,51);
+   c.fillStyle=hall.color;c.font='700 19px Georgia';c.fillText('TRƯỞNG LÃO',0,36,154);
+   c.fillStyle='#f7e8c6';c.font='700 16px Georgia';c.fillText(hall.name,0,56,156);
+   c.font='700 17px Georgia';c.fillStyle='#e9d7b0';c.fillText(hall.elder?.name||'Ghế trống',0,88,156);
+   c.restore();
+  }
+ }
+ if(!scene.sectHalls)for(const [i,p]of (scene.sectElders||[]).entries()){
   const x=i===0?260:640;c.save();c.translate(x,y);c.fillStyle='#122e35e8';c.strokeStyle='#bda466';c.lineWidth=2;
   c.beginPath();c.moveTo(-44,-5);c.lineTo(-44,-70);c.quadraticCurveTo(0,-98,44,-70);c.lineTo(44,-5);c.closePath();c.fill();c.stroke();
   c.fillStyle='#25444b';c.fillRect(-50,0,100,15);c.strokeRect(-50,0,100,15);c.fillStyle='#bda466';c.fillRect(-45,15,6,15);c.fillRect(39,15,6,15);

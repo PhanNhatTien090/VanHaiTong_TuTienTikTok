@@ -93,7 +93,7 @@ const payloadCache=new Map(),assets=new AssetCache();
 const announcementHistory={demo:new EventAnnouncementHistory(),live:new EventAnnouncementHistory()};
 function rememberAnnouncements(){for(const mode of ['demo','live'])announcementHistory[mode].remember(worlds[mode].events);}
 // Top 100 cảnh giới/tu vi + top 3 tu vi + người dẫn đầu quà + danh hiệu + người đang lên đài.
-function visibleTop(players,s){const top=new Set([...players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,100).map(p=>p.id));for(const p of [...players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);if(s.patronCurrent)top.add(s.patronCurrent);for(const h of s.honors||[])top.add(h.id);for(const id of [...(s.socialStage||[]),...(s.raceStage||[])])top.add(id);return top;}
+function visibleTop(players,s){const top=new Set([...players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,100).map(p=>p.id));for(const p of [...players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);if(s.patronCurrent)top.add(s.patronCurrent);for(const p of [s.halls?.match?.a,s.halls?.match?.b])if(p)top.add(p.id);for(const h of s.honors||[])top.add(h.id);for(const id of [...(s.socialStage||[]),...(s.raceStage||[])])top.add(id);return top;}
 function payload(mode,view='full'){
   announcementHistory[mode].remember(worlds[mode].events);
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
@@ -104,7 +104,7 @@ function payload(mode,view='full'){
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
     for(const p of [...full.players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);
-    if(full.patronCurrent)top.add(full.patronCurrent);for(const h of full.honors||[])top.add(h.id);for(const id of [...(full.socialStage||[]),...(full.raceStage||[])])top.add(id);
+    if(full.patronCurrent)top.add(full.patronCurrent);for(const p of [full.halls?.match?.a,full.halls?.match?.b])if(p)top.add(p.id);for(const h of full.honors||[])top.add(h.id);for(const id of [...(full.socialStage||[]),...(full.raceStage||[])])top.add(id);
     value={...full,players:full.players.filter(p=>p.active||top.has(p.id)).map(p=>({...Object.fromEntries(fields.map(k=>[k,p[k]])),skinGear:(p.artifacts||[]).filter(id=>SKIN_GEAR.includes(id))})),events:[...new Map([...full.events.slice(-30),...announcementHistory[mode].recent().slice(-16)].map(e=>[e.id,e])).values()].sort((a,b)=>a.at-b.at),feed:[],seen:undefined,giftCounts:undefined,adminLog:undefined};
   }else{
     // Chọn trước người sẽ gửi (đang hoạt động + top) để snapshot không phải dựng đủ ~8k hồ sơ mỗi 400 ms.
@@ -188,7 +188,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/client-status'&&req.method==='POST'){const b=await body(req);const id=String(b.id||'').slice(0,40);if(id){clientStatus.set(id,{...b,at:Date.now()});if(clientStatus.size>30)clientStatus.delete(clientStatus.keys().next().value);}json(res,{ok:true});return;}
     if(url.pathname==='/api/client-status'){json(res,[...clientStatus.values()].filter(s=>Date.now()-s.at<120000));return;}
     if(url.pathname==='/api/sect-master'&&req.method==='GET'){json(res,sectMaster.view());return;}
-    if(url.pathname==='/api/sect-master'&&req.method==='POST'){try{const config=sectMaster.configure(await body(req));payloadCache.clear();broadcast();json(res,{ok:true,...config});}catch(e){json(res,{ok:false,message:e.message},400);}return;}
+    if(url.pathname==='/api/sect-master'&&req.method==='POST'){try{const config=sectMaster.configure(await body(req));worlds.live.settings.sectMasterUsername=config.username;payloadCache.clear();broadcast();json(res,{ok:true,...config});}catch(e){json(res,{ok:false,message:e.message},400);}return;}
     if(url.pathname==='/api/bridge-samples'){json(res,bridgeSamples);return;}
     if(url.pathname==='/api/period-tops'){json(res,periodTopsView(worlds[mode],Date.now(),Math.min(50,Math.max(3,Number(url.searchParams.get('limit'))||10))));return;} // 07/11: top ngày / tuần (chỉ trang quản lý)
     if(url.pathname==='/api/perf'){json(res,perfView());return;}
@@ -290,6 +290,8 @@ const prewarmed=new Set(),bootAt=Date.now();
 const surelySpoken=e=>(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||isEventAnnouncement(e);
 function prewarmSpeech(){try{if(synthesizeSpeech.busy)return;const now=Date.now();for(const e of worlds.live.events.slice(-15).sort((a,b)=>voicePriority(b)-voicePriority(a))){if(!e?.id||prewarmed.has(e.id))continue;prewarmed.add(e.id);if(prewarmed.size>600)prewarmed.delete(prewarmed.values().next().value);if((e.at||0)<bootAt||now-(e.at||0)>10000||!surelySpoken(e)||!eventAllowedOnLive(e,worlds.live.players))continue;synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});return;}
   if(now-synthesizeSpeech.lastForegroundAt<15000)return;const part=nextMissingPart(worlds.live,plan=>!!synthesizeSpeech.cached(plan),now);if(part)synthesizeSpeech.prewarmPart(part).catch(()=>{});}catch{}}
+for(const world of Object.values(worlds))world.settings.nguDuong=true;
+worlds.live.settings.sectMasterUsername=sectMaster.view().username;
 setInterval(()=>{tick(worlds.demo);tick(worlds.live);prewarmSpeech();broadcast();},1000).unref();
 setInterval(persist,3000).unref();
 // v54: sao lưu tự động thế giới LIVE mỗi 30 phút vào data/backups, giữ 48 bản mới nhất (~24 giờ).

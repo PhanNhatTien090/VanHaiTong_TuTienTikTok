@@ -37,12 +37,13 @@ export function digitsClaimed(w,now){
 // Trả về lệnh thật cho tin nhắn chỉ gồm một chữ số 1–9, hoặc null.
 export function resolveQuick(w,words,now){
  if(words.length!==1||!/^[1-9]$/.test(words[0])||digitsClaimed(w,now))return null;
+ if(words[0]==='3'&&w.nguDuong?.match?.endsAt>now)return 'troluc';
  if(words[0]==='6')return (eventQuick(w,now)||FALLBACK).cmd;
  return QUICK_BASE.find(q=>q.n===words[0]).cmd;
 }
 // Dữ liệu cho bảng "CHƠI NHANH · GÕ SỐ" và dải tin sự kiện trên overlay.
 export function quickView(w,now){
  const ev=eventQuick(w,now),six=ev||FALLBACK;
- return {paused:digitsClaimed(w,now),rows:[...QUICK_BASE.slice(0,5),{n:'6',say:six.say,text:six.text,event:!!ev},...QUICK_BASE.slice(5)].map(({n,say,text,event})=>({n,say,text,event:!!event})),
+ return {paused:digitsClaimed(w,now),rows:[...QUICK_BASE.slice(0,5).map(row=>row.n==='3'&&w.nguDuong?.match?.endsAt>now?{...row,say:'trợ lực',text:'hộ sư hoặc trợ lực đấu thủ',event:true}:row),{n:'6',say:six.say,text:six.text,event:!!ev},...QUICK_BASE.slice(5)].map(({n,say,text,event})=>({n,say,text,event:!!event})),
   event:ev?{name:ev.name,say:ev.say,text:ev.text,endsAt:ev.endsAt||null}:null};
 }

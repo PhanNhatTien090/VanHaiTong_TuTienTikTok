@@ -1,0 +1,30 @@
+.hall-ranks>b{color:#ffe3a0;letter-spacing:.06em}
+html body .qi-leaders.hall-ranks>span{display:grid;grid-template-columns:1.3em minmax(0,1fr) auto;align-items:center;gap:0 .35em;margin:.2em 0}
+.hall-ranks i,.hall-ranks em{font-style:normal}
+.hall-ranks em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hall-ranks u{display:inline-block;width:.4em;height:.4em;border-radius:50%;margin-left:.25em;background:#67f3ab;vertical-align:middle}
+html body .qi-leaders.hall-ranks>span>small{grid-column:2 / -1;color:#c4d7d6}
+.hall-emblem{font:700 1em Georgia,serif;color:var(--hall-color);text-align:center}
+.hall-panel{box-sizing:border-box;color:#f6eedc;background:linear-gradient(145deg,#183c43f7,#0b202cfb);border:1px solid #d7b573;border-radius:12px;padding:clamp(12px,3vw,25px);box-shadow:0 6px 22px #0008}
+.hall-panel[hidden]{display:none}
+.hall-card-title{display:grid;text-align:center;gap:.35em;color:#ffe3a0}
+.hall-roster{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px}
+.hall-roster li{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:.65em;align-items:center;border-bottom:1px solid #e2c78344;padding:.35em 0}
+.hall-roster li div{display:grid;gap:.1em}
+.hall-roster small,.hall-panel footer{color:#c8ddda;font-size:.82em}
+.hall-roster .hall-emblem{font-size:1.35em}
+.hall-card,.hall-duel{position:absolute;z-index:18;left:50%;width:min(87%,34rem);transform:translate(-50%,-50%);pointer-events:none}
+.hall-card{top:46%}
+.hall-duel{top:43%;text-align:center}
+.hall-duel>b{color:#ffe3a0}
+.hall-combatants{display:grid;grid-template-columns:minmax(0,1fr) 3em minmax(0,1fr);gap:.5em;align-items:center;margin:.8em 0}
+.hall-combatants>div{display:grid;gap:.3em}
+.hall-combatants strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hall-combatants small{color:#a7dfed;font-size:.7em}
+.hall-combatants span{font-size:.72em;color:#c6d9da}
+.hall-combatants i{font-style:normal;color:#ffe3a0}
+.hall-balance{overflow:hidden;display:flex;background:#cf9e62;height:.6em;border-radius:9px;margin:0 0 .6em}
+.hall-balance i{background:#70dcc7;transition:width .35s}
+body.ritual-active .hall-panel{visibility:hidden}
+body.hall-dueling :is(#spotlight,#linhBai,#baoHy,.hall-card){visibility:hidden}
+body.hall-dueling #stageQueue{visibility:hidden}

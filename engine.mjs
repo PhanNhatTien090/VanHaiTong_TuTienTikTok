@@ -53,6 +53,7 @@ import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
 import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop} from './sword-race.mjs';
 import {SOCIAL_ITEMS,socialProfile,socialCommand,bondActivity,tickSocial,socialView,socialBusy,tournamentActive,startTournament as beginTournament,stopTournament as endTournament} from './social-events.mjs';
 // Shared realm names keep server, overlay and breakthrough titles aligned.
+import {hallBenefits,hallContribution,hallCommand,hallView,tickHalls} from './ngu-duong.mjs';
 import {REALM_NAMES,REBIRTH_UNLOCK_REALM} from './public/progression.js';
 import {resolveQuick,quickView} from './quick-commands.mjs';
 import {realmStage,STAGES} from './public/realm-stage.js'; // 12/11: Sơ/Trung/Hậu kỳ/Viên Mãn (chỉ hiển thị)
@@ -88,7 +89,9 @@ export const normalize = s=>String(s??'').normalize('NFD').replace(/[\u0300-\u03
 // Tu vi: 150 · 360 · 864 · 2074 · 4977 · 11944 · 28667 · 68800. Linh thạch: 30 · 70 · 110 · 150 …
 // New players keep their first two steps; later breakthroughs require progressively longer cultivation.
 export const progressionMult = p=>p.realm<2?1:p.realm<5?1.5:p.realm<8?2:p.realm<13?3:4;
-export const requiredQi = p=>Math.round((p.realm<=8?150 * 2.4 ** p.realm:150 * 2.4 ** 8 * 1.8 ** (p.realm-8))*progressionMult(p));
+const qiCurve = p => (p.realm<=8?150 * 2.4 ** p.realm:150 * 2.4 ** 8 * 1.8 ** (p.realm-8))*progressionMult(p);
+const rewardQiBasis = p => Math.round(qiCurve(p));
+export const requiredQi = p => p.realm<24?rewardQiBasis(p):Math.round(qiCurve({realm:23})*4**(p.realm-23));
 export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p)));
 export function power(p) {
   return 8 + p.realm*7 + p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.damage||0),0) + (CATALOG.find(x=>x.id===p.equipped)?.damage||0) + Math.round(extraStat(p,'damage'));
@@ -108,7 +111,7 @@ export const GOLDEN_MS=30*60000;
 export const goldenHour=(p,now,w=null)=>!!p&&w?.settings?.goldenHour===true&&!p.resident&&!p.puppet&&now!=null&&(Number(p.realm)||0)<=2&&now-(Number(p.joinedAt)||0)<GOLDEN_MS;
 const qiBonus=p=>p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.bonus||0),0)+(CATALOG.find(x=>x.id===p.equipped)?.bonus||0)+extraStat(p,'bonus');
 export const EVENT_GEAR_SHARE=.5;
-const freeQiUnit=p=>Math.ceil(requiredQi(p)/ascensionPracticeReward(p.realm,'cultivate',requiredQi(p),requiredStones(p)).steps);
+const freeQiUnit=p=>Math.ceil(rewardQiBasis(p)/ascensionPracticeReward(p.realm,'cultivate',rewardQiBasis(p),requiredStones(p)).steps);
 // 12/11: tiểu cảnh giới — báo nhẹ khi bước lên Trung kỳ / Hậu kỳ / Viên Mãn (người thật, tối đa 1 lần/phút/người).
 const stageOf=p=>realmStage(p.realm,p.qi,requiredQi(p),p.realm>=REALMS.length-1);
 function noteStageUp(w,p,before,now){if(p.resident||p.puppet||before==null)return;const after=stageOf(p);if(after==null||after<=before)return;const t=now??Date.now();if(t-(p.stageNoteAt||0)<60000)return;p.stageNoteAt=t;
@@ -119,16 +122,27 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   if(hand&&talking(p,now))qi*=1.2; // 4/11: Luận Đạo — có trò chuyện thường trong 5 phút gần nhất
   if(hand&&goldenHour(p,now,w)){qi*=2;stones*=3;}
   // 09/11 (chủ game): thưởng sự kiện (nguồn 'reward': câu đố, lì xì, nhiệm vụ, lò đan…) chỉ ăn một nửa hệ số pháp bảo/công pháp.
-  const bonus=qiBonus(p)*(source==='reward'?EVENT_GEAR_SHARE:1);
+  const bonus=qiBonus(p)*(source==='reward'||source==='sect-event'?EVENT_GEAR_SHARE:1);
   // v33: Phúc duyên (buff sau khi tặng quà) nhân tu vi + linh thạch của hành động chơi tay trong thời gian hiệu lực.
   const buff=hand&&now!==null&&p.buffUntil>now?(p.buffMult||1):1;
   let amount=Math.round(qi*(1+bonus)*buff);stones=Math.round(stones*buff);
   if(w.settings?.ascensionShowcase===true&&!p.resident&&!p.puppet&&typeof hand==='string'){
-    const floor=ascensionPracticeReward(p.realm,hand,requiredQi(p),requiredStones(p));
+    const floor=ascensionPracticeReward(p.realm,hand,rewardQiBasis(p),requiredStones(p));
     amount=Math.max(amount,Math.round(floor.qi*(talking(p,now)?1.2:1)));stones=Math.max(stones,floor.stones);
   }
-  amount=creditQi(w,p,amount,now??Date.now(),typeof hand==='string'?hand:source);
+  const at=now??Date.now(), activity=typeof hand==='string'?hand:source;
+  const perk=hallBenefits(w,p,at,activity);
+  amount=withHallQi(amount,p,perk.rate,true);
+  herbs+=perk.herbs;
+  amount=creditQi(w,p,amount,at,source==='sect-event'?'reward':activity);
+  if(['sect-event','event'].includes(source)&&amount>0)hallContribution(w,p,at,'event');
   const stageBefore=stageOf(p);p.qi+=amount;p.totalQi+=amount;p.stones+=stones;p.herbs+=herbs;w.sectQi+=amount;noteStageUp(w,p,stageBefore,now); return amount;
+}
+function withHallQi(amount,p,rate,commit=false){
+  if(!rate||amount<=0)return amount;
+  const hundredths=amount*Math.round(rate*100)+(p.hallQiRemainder||0);
+  if(commit)p.hallQiRemainder=hundredths%100;
+  return amount+Math.floor(hundredths/100);
 }
 function creditQi(w,p,amount,now=Date.now(),source='free'){
   const unit=freeQiUnit(p);
@@ -334,7 +348,8 @@ function unlockedAction(w,input,now) {
   if(result.chatOnly){const p=w.players[clean(input.userId,80)];if(p)newbieGuide(w,p,now);return result;}
   // In LIVE, platform metrics are acknowledgements unless the operator explicitly opts in.
   if(w.mode==='live'&&w.settings?.engagementRewards!==true&&['like','follow','share'].includes(input.type)&&!(input.type==='like'&&result.heartCultivated)){if(input.type==='like'&&result.ok&&!result.duplicate){const petPlayer=w.players[clean(input.userId,80)];if(petPlayer)petActivity(w,petPlayer,input,now,emit);}return result;}
-  const introPlayer=w.players[clean(input.userId,80)];if(introPlayer){const stage=trackIntro(w,introPlayer,result.heartCultivated?{...input,type:'cultivate'}:input,result,now);if(stage==='started'){const arrival=w.events.findLast(e=>e.user===introPlayer.id&&e.effect==='join'&&e.at===now)||emit(w,introPlayer,'Chào đồng môn mới • trò chuyện cùng đồng môn','join',now);arrival.newcomerWelcome=true;}if(stage==='cultivated')emit(w,introPlayer,'Linh khí đã khai mở • tiếp tục tuluyen, hoặc cungtu để tìm bạn','lotus',now,{introSpark:true});}
+  const introPlayer=w.players[clean(input.userId,80)];if(result.ok&&!result.duplicate&&!result.pending&&introPlayer)hallContribution(w,introPlayer,now,result.heartCultivated?'cultivate':input.type);
+  if(introPlayer){const stage=trackIntro(w,introPlayer,result.heartCultivated?{...input,type:'cultivate'}:input,result,now);if(stage==='started'){const arrival=w.events.findLast(e=>e.user===introPlayer.id&&e.effect==='join'&&e.at===now)||emit(w,introPlayer,'Chào đồng môn mới • trò chuyện cùng đồng môn','join',now);arrival.newcomerWelcome=true;}if(stage==='cultivated')emit(w,introPlayer,'Linh khí đã khai mở • tiếp tục tuluyen, hoặc cungtu để tìm bạn','lotus',now,{introSpark:true});}
   if(result.ok&&!result.duplicate&&!result.pending&&w.mode==='live'&&w.settings?.engagementRewards!==true&&w.settings?.heartPlay===false&&['cultivate','gather','attack'].includes(input.type)&&introPlayer&&!introPlayer.puppet&&!introPlayer.resident){
     flowerScore(w,introPlayer,5,now);festivalActivity(w,introPlayer,input,now,socialContext);
   }
@@ -357,6 +372,10 @@ function actionCore(w,input,now) {
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;
   const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
+  if(type==='chat'&&!w.webShadow){
+    const result=hallCommand(w,p,words,now,hallContext);
+    if(result){if(!result.ok&&!cooldown(p,'hall-error',6000,now))emit(w,p,result.message,'status',now);return result;}
+  }
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now);
     if(result.reborn)emit(w,p,result.message,'skin',now,{rebirth:true,transform:true,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});
@@ -369,9 +388,9 @@ function actionCore(w,input,now) {
   const avatar=safeAvatar(input.avatar);if(avatar)p.avatar=avatar;
   if(type==='attack'&&w.sectWar?.phase==='running'){const r=warCommand(w,p,'danh',now,socialContext);if(r)return r;}
   if(type==='attack'&&w.race?.phase==='running')return raceCommand(w,p,'danh',now,socialContext);
-  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now);return mz;}} // 10/11: Bí Cảnh Mê Cung
-  if(type==='chat'){const tw=towerCommand(w,p,cmd,now,towerContext);if(tw){if(!tw.ok&&!cooldown(p,'tower-error',6000,now))emit(w,p,tw.message,'status',now);return tw;}} // 11/11: Vân Hải Tháp
-  if(type==='chat'){const bk=bonkCommand(w,p,cmd,input.text,now,bonkContext);if(bk){if(!bk.ok&&!cooldown(p,'bonk-error',6000,now))emit(w,p,bk.message,'status',now);return bk;}} // 10/11: Hội Gõ Đầu
+  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(mz.ok)hallContribution(w,p,now,'event');if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now);return mz;}} // 10/11: Bí Cảnh Mê Cung
+  if(type==='chat'){const tw=towerCommand(w,p,cmd,now,towerContext);if(tw){if(tw.ok)hallContribution(w,p,now,'event');if(!tw.ok&&!cooldown(p,'tower-error',6000,now))emit(w,p,tw.message,'status',now);return tw;}} // 11/11: Vân Hải Tháp
+  if(type==='chat'){const bk=bonkCommand(w,p,cmd,input.text,now,bonkContext);if(bk){if(bk.ok)hallContribution(w,p,now,'event');if(!bk.ok&&!cooldown(p,'bonk-error',6000,now))emit(w,p,bk.message,'status',now);return bk;}} // 10/11: Hội Gõ Đầu
   if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
   if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now);return result;}}
   if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
@@ -379,8 +398,8 @@ function actionCore(w,input,now) {
   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
-  if(type==='chat'){const war=warCommand(w,p,cmd,now,socialContext);if(war){if(!war.ok&&!cooldown(p,'war-error',8000,now))emit(w,p,war.message,'war',now);return war;}}
-  if(type==='chat'){const raceResult=raceCommand(w,p,(cmd==='bay'||cmd==='baykiem')&&rest?null:cmd,now,socialContext,rest);if(raceResult){if(!raceResult.ok&&!cooldown(p,'race-error',10000,now))emit(w,p,raceResult.message,'social',now);return raceResult;}const socialResult=socialCommand(w,p,cmd,rest,now,socialContext);if(socialResult){if(!socialResult.ok&&!cooldown(p,'social-error',10000,now))emit(w,p,socialResult.message,'social',now);return socialResult;}}
+  if(type==='chat'){const war=warCommand(w,p,cmd,now,socialContext);if(war){if(war.ok)hallContribution(w,p,now,'event');if(!war.ok&&!cooldown(p,'war-error',8000,now))emit(w,p,war.message,'war',now);return war;}}
+  if(type==='chat'){const raceResult=raceCommand(w,p,(cmd==='bay'||cmd==='baykiem')&&rest?null:cmd,now,socialContext,rest);if(raceResult){if(raceResult.ok)hallContribution(w,p,now,'event');if(!raceResult.ok&&!cooldown(p,'race-error',10000,now))emit(w,p,raceResult.message,'social',now);return raceResult;}const socialResult=socialCommand(w,p,cmd,rest,now,socialContext);if(socialResult){if(socialResult.ok&&['tythi','kiem','danh'].includes(cmd))hallContribution(w,p,now,'event');if(!socialResult.ok&&!cooldown(p,'social-error',10000,now))emit(w,p,socialResult.message,'social',now);return socialResult;}}
   if(type==='attack'&&tournamentActive(w))return socialCommand(w,p,'danh','',now,socialContext);
   if(existed&&gender)setGender(w,p,gender,now);
   if(type==='chat'&&(w.mode!=='live'||w.settings?.engagementRewards===true)){const ev=w.flowerEvent,pts=ev&&now<ev.endsAt?SKY_EVENTS[ev.kind||'flower']?.chatPoints:0;if(pts&&now-(p.cooldowns.skyChat||0)>=3000){p.cooldowns.skyChat=now;flowerScore(w,p,pts,now);}}
@@ -393,7 +412,7 @@ function actionCore(w,input,now) {
     const e=w.opportunity,wait=cooldown(p,'opportunity-status',15000,now);if(wait)return fail('Xem lại cơ duyên sau '+wait+'s.');
     if(!e||now>=e.endsAt){emit(w,p,'Cơ duyên chưa mở hoặc đã kết thúc','status',now);return {ok:true};}
     const settled=settleOpportunity(w,p,now);if(settled?.tiers)return {ok:true};
-    const balance=p.opportunityCredit?.balance||0,cost=e.costs[p.realm];
+    const balance=p.opportunityCredit?.balance||0,cost=e.costs[p.realm]??OPPORTUNITY_COSTS[p.realm];
     emit(w,p,p.realm>=REALMS.length-1?'Đã đạt '+REALMS.at(-1):`Cơ duyên ${REALMS[p.realm]} → ${REALMS[p.realm+1]} • tiến độ lưu ${balance}/${cost} • ${dailyAscensionView(w,p,now).exhausted?'đã dùng lượt đại cảnh hôm nay, tiến độ dư được giữ':'còn '+Math.ceil((e.endsAt-now)/1000)+'s'}`,'status',now);return {ok:true};
   }
   if(type==='chat'&&cmd==='skin'){
@@ -488,10 +507,10 @@ function actionCore(w,input,now) {
   } else if(type==='checkin') {
     const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
     if(p.day===day)return fail('Hôm nay đã điểm danh. Hẹn đạo hữu ngày mai!');
-    p.day=day;const got=gain(w,p,25,20,3,now);emit(w,p,`Điểm danh • +${got} tu vi, +20 linh thạch, +3 linh thảo`,'petal',now);checkinStreak(w,p,day,now,engageCtx);
+    p.day=day;const got=gain(w,p,25,20,3,now,false,'checkin');emit(w,p,`Điểm danh • +${got} tu vi, +20 linh thạch, +3 linh thảo`,'petal',now);checkinStreak(w,p,day,now,engageCtx);
   } else if(type==='gather') {if(daoTamBlocked(w,p,now))return fail('Đạo tâm trì trệ • trò chuyện hoặc tham gia sự kiện để tu tiếp.');p.gatheredAt??=now;
     const wait=cooldown(p,'gather',30000,now);if(wait)return fail(`Linh thảo đang mọc • còn ${wait}s.`);
-    const beforeStones=p.stones,q=gain(w,p,3,2,3,now,'gather');emit(w,p,`Hái linh thảo • +3 linh thảo, +${p.stones-beforeStones} linh thạch, +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}`,'petal',now);
+    const beforeStones=p.stones,beforeHerbs=p.herbs,q=gain(w,p,3,2,3,now,'gather');emit(w,p,`Hái linh thảo • +${p.herbs-beforeHerbs} linh thảo, +${p.stones-beforeStones} linh thạch, +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}`,'petal',now);
   } else if(['learn','craft','brew'].includes(type)) {
     const item=CATALOG.find(x=>x.id===input.itemId);
     const expected={learn:'manual',craft:'artifact',brew:'pill'}[type];
@@ -502,6 +521,7 @@ function actionCore(w,input,now) {
     if(p.stones<item.price||p.herbs<item.herbs)return fail(`Cần ${item.price} linh thạch${item.herbs?` và ${item.herbs} linh thảo`:''}.`);
     p.stones-=item.price;p.herbs-=item.herbs;
     if(type==='learn')p.manuals.push(item.id);
+    if(type==='craft'&&hallBenefits(w,p,now,'craft').craft){const base=Math.max(1,Math.round(item.price*.05));gain(w,p,base,0,0,now,false,'craft');}
     if(type==='craft'){p.artifacts.push(item.id);p.equipped=item.id;if(item.skinReward){p.rewardSkins??=[];if(!p.rewardSkins.includes(item.skinReward))p.rewardSkins.push(item.skinReward);if(autoSkinChoiceAllowed(p)){p.skinChoice=item.skinReward;p.skinChoiceSource='craft';}}}
     if(type==='brew')p.pills[item.id]=(p.pills[item.id]||0)+1;
     emit(w,p,`${type==='learn'?'Lĩnh ngộ':type==='craft'?'Rèn thành':'Luyện thành'} ${item.name}`,type==='learn'?'sword':type==='craft'?'lotus':'petal',now,type==='brew'?{}:{achieve:{kind:type,item:item.name,skin:type==='craft'&&item.skinReward?SPECIAL_SKINS.find(k=>k.id===item.skinReward)?.name||null:null}}); // 11/11: Ngọc Giản Báo Hỷ
@@ -510,11 +530,12 @@ function actionCore(w,input,now) {
   } else if(type==='use') {
     const item=CATALOG.find(x=>x.id===input.itemId&&x.type==='pill');
     if(!item||!(p.pills[item.id]>0))return fail('Chưa có đan dược này. Hãy luyện đan trước.');
-    const allowance=dailyPracticeView(w,p,now),pillCost=Math.max(1,Math.ceil(Math.round(item.qi*(1+qiBonus(p)))/freeQiUnit(p)*100))/100;
+    const allowance=dailyPracticeView(w,p,now),pillCost=Math.max(1,Math.ceil(withHallQi(Math.round(item.qi*(1+qiBonus(p))),p,hallBenefits(w,p,now,'pill').rate)/freeQiUnit(p)*100))/100;
     if(allowance.enabled&&allowance.remaining+1e-8<pillCost)return fail('Kinh mạch đã no linh khí • đan dược giữ lại dùng lúc khác.'); /* 07/11/2026: ẩn giới hạn */
     const wait=cooldown(p,'pill',3000,now);if(wait)return fail(`Đang hấp thu đan dược • ${wait}s.`);
-    p.pills[item.id]--;const q=gain(w,p,item.qi,0,0,now);emit(w,p,`Dùng ${item.name} • +${q} tu vi`,'lotus',now);
+    p.pills[item.id]--;const q=gain(w,p,item.qi,0,0,now,false,'pill');emit(w,p,`Dùng ${item.name} • +${q} tu vi`,'lotus',now);
   } else if(type==='breakthrough') {
+    if(w.nguDuong?.match?.endsAt>now)return fail('Vân Đài đang thách đấu • đợi trận kết thúc rồi đột phá.');
     // 08/11 tối: đang Chính Ma Đại Chiến thì tạm ngưng đột phá (màn đột phá che chiến trường, lời đọc chen hô chiến).
     if(warActive(w))return fail('Chính Ma Đại Chiến đang diễn ra • tạm ngưng đột phá, dồn sức đẩy chiến tuyến!');
     if(p.realm>=REALMS.length-1)return fail('Đã đạt '+REALMS.at(-1)+'. Hãy hỗ trợ đồng môn!');
@@ -602,7 +623,7 @@ export function giftEventRule(w,now){
 // 1 skin sự kiện ngẫu nhiên chưa có (bộ giá ≤200 coin) và thêm linh thạch + linh thảo.
 export const GIFT_JACKPOT=Object.freeze({minCoins:500,qiRate:.5,maxSkinCoins:200,stones:1000,stoneRate:.5,herbs:100});
 export function giftJackpot(w,p,coins,now,rand=Math.random,baseQi=p?.qi){
-  if(!p||p.puppet||p.resident||!(coins>=GIFT_JACKPOT.minCoins)||stageConflict(w,now))return null;
+  if(!p||p.puppet||p.resident||!(coins>=GIFT_JACKPOT.minCoins)||stageConflict(w,now,{allowHall:true}))return null;
   const qi=creditQi(w,p,Math.floor(Math.max(0,Number(baseQi)||0)*GIFT_JACKPOT.qiRate),now,'gift');
   const stones=Math.max(GIFT_JACKPOT.stones,Math.round(requiredStones(p)*GIFT_JACKPOT.stoneRate)),herbs=GIFT_JACKPOT.herbs;
   p.qi+=qi;p.totalQi+=qi;p.stones+=stones;p.herbs+=herbs;w.sectQi+=qi;
@@ -697,7 +718,7 @@ function winBoss(w,now) {
     const [winnerId,damage]=ranking[0],p=w.players[winnerId],item=[...ELITE_BOSSES,...CELESTIAL_BOSSES,ABYSS_BOSS].find(b=>b.species===boss.species)?.reward||'tiger-bell';
     if(!p.artifacts.includes(item))p.artifacts.push(item);
     if(itemScore(item)>itemScore(p.equipped))p.equipped=item;
-    const qi=gain(w,p,800,250,20,now);
+    const qi=gain(w,p,800,250,20,now,false,'event');
     p.bossWins=(p.bossWins||0)+1;
     w.lastBossResult={id:boss.id,name:boss.name,at:now,winnerId,winner:p.name,damage,ranking:ranking.slice(0,3).map(([id,damage])=>({id,name:w.players[id].name,damage})),reward:{qi,stones:250,herbs:20,item}};
     emit(w,p,`Đệ nhất hàng yêu • ${damage} công lực • nhận ${CATALOG.find(a=>a.id===item)?.name||'Lôi Hổ Thần Chung'}, +${qi} tu vi, 250 linh thạch và 20 linh thảo`,'victory',now,{bossChampion:true,damage,reward:w.lastBossResult.reward});
@@ -705,11 +726,11 @@ function winBoss(w,now) {
   if(boss.species===ABYSS_BOSS.species){
     const members=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&p.actorKind!=='npc'&&!p.webOnly);
     const reward=ABYSS_SECT_REWARD;
-    for(const ally of members)gain(w,ally,reward.qi,reward.stones,reward.herbs,now);
+    for(const ally of members)gain(w,ally,reward.qi,reward.stones,reward.herbs,now,false,'event');
     w.lastBossResult={...(w.lastBossResult?.id===boss.id?w.lastBossResult:{}),id:boss.id,name:boss.name,at:now,sectReward:{...reward,members:members.length}};
     emit(w,null,`Hắc Uyên Ma Long đã bị hạ! Toàn tông ${members.length} đồng môn, kể cả người không tham chiến, nhận ${reward.qi} tu vi cơ bản, ${reward.stones} linh thạch và ${reward.herbs} linh thảo mỗi người.`,'victory',now,{sectBossReward:true,reward:{...reward},members:members.length});
   }else{
-    for(const id of Object.keys(boss.participants)) {const ally=w.players[id];if(ally)gain(w,ally,45,25,4,now);}
+    for(const id of Object.keys(boss.participants)) {const ally=w.players[id];if(ally)gain(w,ally,45,25,4,now,false,'event');}
     emit(w,null,'Bí cảnh hoàn tất • mỗi người tham chiến nhận 45 tu vi, 25 linh thạch, 4 linh thảo','victory',now);
   }
   // 05/11/2026: cảnh Phong Ấn trên overlay (chỉ hình ảnh, ~3,6 s) — ai đứng đầu công lực nhận ấn bay về.
@@ -726,6 +747,7 @@ export function residentStrike(w,now=Date.now(),rng=Math.random) {
   return dmg;
 }
 export function openBoss(w,now=Date.now(),species=null) {
+  if(w.nguDuong?.match?.endsAt>now)return fail('Vân Đài đang thách đấu.');
  const conflict=stageConflict(w,now);if(conflict)return fail('Đang có '+conflict+' • chờ kết thúc và trao thưởng.');
   if(species&&!BOSSES.some(b=>b.species===species))return fail('Yêu thú không hợp lệ.');
   if(socialBusy(w,now))return fail('Đang có tỷ thí hoặc lễ kết duyên.');
@@ -743,6 +765,7 @@ export function openBoss(w,now=Date.now(),species=null) {
 // Sự kiện "Thiên Đạo Ban Phúc": linh khí bộc phát, tối đa `count` người đang hoạt động (gần đủ tu vi nhất)
 // Chỉ chọn người đủ điều kiện và trừ tài nguyên như đột phá thường; không tạo cấp miễn phí.
 export function blessing(w,now=Date.now(),count=3) {
+  if(w.nguDuong?.match?.endsAt>now)return fail('Vân Đài đang thách đấu.');
   const picks=Object.values(w.players).filter(p=>now-p.lastActive<15*60000&&readyToBreak(p,w,now))
     .sort((a,b)=>b.qi/requiredQi(b)-a.qi/requiredQi(a)).slice(0,Math.max(1,Math.min(10,count)));
   if(!picks.length)return fail('Chưa có đạo hữu đang hoạt động đủ tu vi và linh thạch để ban phúc.');
@@ -787,7 +810,7 @@ function likeGoal(w,count,now){const g=w.likeGoal??={count:0,target:1000,level:0
   for(const q of team){gain(w,q,Math.min(1000,Math.max(20,Math.round(requiredQi(q)*.01)))*rounds,10*rounds,rounds,now);q.buffMult=Math.max(2,q.buffUntil>now?q.buffMult||1:1);q.buffUntil=Math.max(q.buffUntil||0,now+5*60000);}
   emit(w,null,`MỤC TIÊU TIM ${reached} • ${rounds} mốc • ban phúc ${team.length} đồng môn • phúc duyên ×2`,'blessing',now,{likeGoal:reached,count:team.length,heartRounds:rounds});}
 export function eventBusyUntil(w,now=Date.now()){
-  const ends=[w.flowerEvent,w.visitor,w.opportunity].filter(e=>e&&!e.closedAt&&now<e.endsAt).map(e=>e.endsAt);
+  const ends=[w.flowerEvent,w.visitor,w.opportunity,w.nguDuong?.match].filter(e=>e&&!e.closedAt&&now<e.endsAt).map(e=>e.endsAt);
   if(skyStageUntil(w,now)>now)ends.push(skyStageUntil(w,now));
   if(!w.bondFestival?.closedAt&&w.bondFestival?.endsAt>now)ends.push(w.bondFestival.endsAt);
   return ends.length?Math.max(...ends):0;
@@ -885,6 +908,7 @@ function tickCore(w,now) {
   tickCompetitionSchedule(w,now);
   tickRace(w,now,socialContext);awardRaceGifts(w,now);tickWar(w,now,socialContext);tickAlchemy(w,now,alchemyContext);tickMaze(w,now,mazeContext);tickBonk(w,now,bonkContext);tickTower(w,now,towerContext);
   tickSocial(w,now,socialContext);
+  if(w.settings?.nguDuong===true||w.nguDuong)tickHalls(w,now,hallContext);
   reconcilePatron(w,now);
 
   if(w.visitor&&now>=w.visitor.endsAt&&!w.visitor.closedAt){w.visitor.closedAt=now;archiveVisitor(w);auditRecord(w,'visitor-end',now,{eventId:w.visitor.id,kind:w.visitor.kind});emit(w,null,VISITORS[w.visitor.kind].name+' đã rời tiên môn • giữ nguyên quà đã nhận','visitor',now,{visitorEnd:true});}
@@ -918,10 +942,11 @@ function tickCore(w,now) {
 export function snapshot(w,now=Date.now(),opts={}) {
   const select=typeof opts.select==='function'?opts.select:null;
   const all=Object.values(w.players);
+  const halls=w.settings?.nguDuong===true||w.nguDuong?hallView(w,now,currentParticipant):null;
   const ranked=select?all.map(p=>({id:p.id,name:p.name,avatar:p.avatar,realm:p.realm,realmName:REALMS[p.realm],totalQi:p.totalQi,giftCoins:p.giftCoins,joinedAt:p.joinedAt,bossWins:p.bossWins,contribution:p.contribution,activeMs:p.activeMs,resident:p.resident,puppet:p.puppet,webOnly:p.webOnly,active:currentParticipant(w,p,now)})):null;
   const earlyHonors=select?honorRoll(w,ranked):null,earlyRoles=select?rankDivineRoles(ranked,w.adminLog||[]):null;
   let pick=all;
-  if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,stage=rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[];const ids=select({players:ranked,honors:earlyHonors,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
+  if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,stage=rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[];const ids=select({players:ranked,honors:earlyHonors,halls,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
   const players=pick.map(p=>({...p,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],realmStage:stageOf(p),progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
   const socialStatus=socialView(w,now),t=socialStatus.tournament,ceremony=socialStatus.ceremony;
   const socialStage=t?.current?[t.current.a,t.current.b]:t?.lastBow?.until>now&&t.lastBow.pair?t.lastBow.pair:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
@@ -932,7 +957,7 @@ export function snapshot(w,now=Date.now(),opts={}) {
   const honors=earlyHonors||honorRoll(w,players);for(const p of players)p.honor=honorTitle(p,honors);
   // v53: chi phí lên từng cảnh giới (tu vi + linh thạch cần ở cảnh giới trước) cho bảng cảnh giới trên LIVE.
   const realmCosts=REALMS.map((name,r)=>r?{qi:requiredQi({realm:r-1}),stones:requiredStones({realm:r-1})}:null);
-  return {...w,tower:towerView(w,now),bonkFest:bonkView(w,now),maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,quizUsed:undefined,engagement:engagementView(w,now),quick:quickView(w,now),serverNow:now,environment:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
+  return {...w,nguDuong:undefined,halls,tower:towerView(w,now),bonkFest:bonkView(w,now),maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,quizUsed:undefined,engagement:engagementView(w,now),quick:quickView(w,now),serverNow:now,environment:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
 }
 export function ingest(w,event,now=Date.now()) {
   if(w.mode==='live'&&(event.simulated||event.autoRose||event.data?.simulated||event.data?.autoRose))return fail('Sự kiện mô phỏng không được ghi vào LIVE.');
@@ -1136,7 +1161,7 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   const c=ADMIN_COMBOS[combo];if(!c)return fail('Gói quà không hợp lệ.');
   let p;if(id==='*'){const pool=Object.values(w.players).filter(x=>!x.resident&&currentParticipant(w,x,now));if(!pool.length)return fail('Chưa có ai đang chơi.');p=pool[Math.floor(Math.random()*pool.length)];}
   else p=w.players[clean(id,80)];if(!p||p.resident)return fail('Không tìm thấy người chơi.');
-  const need=requiredQi(p);let qi=c.fill?Math.max(0,need-p.qi):Math.round(need*c.qiPct);
+  const need=requiredQi(p);let qi=c.fill?Math.max(0,need-p.qi):Math.round(rewardQiBasis(p)*c.qiPct);
   if(c.fill){p.stones=Math.max(p.stones,requiredStones(p));}
   const got=qi?gain(w,p,qi,c.stones,c.herbs,now,false,'admin'):0;if(!qi&&(c.stones||c.herbs)){p.stones+=c.stones;p.herbs+=c.herbs;}
   if(c.buff){p.buffMult=Math.max(c.buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=now+GIFT_BUFF_MS;}
@@ -1273,10 +1298,11 @@ function advanceVisitor(w,p,input,now){
 
 const companionContext={emit,active:currentParticipant,ready:readyToBreak,creditQi,createPair:(w,a,b,now)=>createCompanionPair(w,a,b,now,companionContext)};
 export const controlLanternEvent=(w,op,now=Date.now())=>controlLantern(w,op,now,companionContext);
+const hallContext={emit,active:currentParticipant,busy:(w,now)=>w.liveSession?.active===false||!!stageConflict(w,now)||w.tower?.endsAt>now||w.quiz?.endsAt>now||w.events.some(e=>e.effect==='breakthrough'&&now-e.at<65000)};
 const socialContext={emit,gain,power,technique:attackTechnique,active:currentParticipant};
 // 07/11/2026: thưởng sự kiện (điểm danh chuỗi, lì xì, câu đố, nhiệm vụ ngày, kiến tạo tông) tính theo % tu vi cần,
 // không trừ hạn mức tu luyện ngày — nếu không một lần điểm danh 7 ngày đã tiêu sạch hạn mức.
-const engageCtx={emit,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),active:currentParticipant,requiredQi:p=>requiredQi(p)/progressionMult(p),giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||alchemyActive(w)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
+const engageCtx={emit,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),active:currentParticipant,requiredQi:p=>rewardQiBasis(p)/progressionMult(p),giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||alchemyActive(w)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
 export const engageNow=(w,kind,now=Date.now())=>kind==='quiz'?startQuizNow(w,now,engageCtx):kind==='envelope'?startEnvelopeNow(w,now,engageCtx):fail('Không rõ hoạt động.');
 export const startTournament=(w,now=Date.now())=>beginTournament(w,now,socialContext);
 export const stopTournament=(w,now=Date.now())=>endTournament(w,now,socialContext);
@@ -1287,13 +1313,13 @@ export const startRace=(w,now=Date.now())=>beginRace(w,now,socialContext);
 export const startWar=(w,now=Date.now())=>beginWar(w,now,socialContext);
 export const stopWar=(w,now=Date.now())=>endWar(w,now,socialContext);
 // 08/11/2026: Khai Lò Cửu Chuyển — thưởng theo % tu vi cần (nguồn 'reward', không trừ hạn mức ngày).
-const alchemyContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>requiredQi(p)/progressionMult(p)};
+const alchemyContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
 export const startAlchemy=(w,now=Date.now())=>beginAlchemy(w,now,alchemyContext);
 export const stopAlchemy=(w,now=Date.now())=>endAlchemy(w,now);
-const mazeContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>requiredQi(p)/progressionMult(p)};
+const mazeContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
 export const startMaze=(w,now=Date.now())=>beginMaze(w,now,mazeContext);
 const bonkContext={emit,active:currentParticipant};
-const towerContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,now=null)=>gain(w,p,qi,stones,0,now,false,'reward'),requiredQi:p=>requiredQi(p)/progressionMult(p)};
+const towerContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,now=null)=>gain(w,p,qi,stones,0,now,false,'sect-event'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
 export const startTower=(w,now=Date.now())=>beginTower(w,now,towerContext);
 export const stopTower=(w,now=Date.now())=>endTower(w,now,towerContext);
 export const startBonk=(w,now=Date.now())=>beginBonk(w,now,bonkContext);

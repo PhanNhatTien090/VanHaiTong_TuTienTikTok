@@ -6,7 +6,8 @@ const plain=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'
 let state,toastTimer;
 function card(name,tag,description,commands=[]){return `<article class="card" data-search="${esc([name,tag,description,...commands].join(' ').toLowerCase())}"><span class="tag">${esc(tag)}</span><h3>${esc(name)}</h3><p>${esc(description)}</p>${commands.map(cmd=>`<code>${esc(cmd)}</code><button class="secondary" data-copy="${esc(cmd)}">Chép lệnh</button>`).join('')}</article>`;}
 const basics=[
- ['Chuyển sinh','Mở sau Diệt Thế Chí Tôn. Gõ chuyển sinh, rồi chuyển sinh xác nhận trong 30 giây: về Phàm nhân, tu vi hiện tại về 0; giữ tổng tu vi, vật phẩm, skin, VIP, đạo lữ và thành tích. Ngân sách tu luyện ngày không làm mới.',['chuyển sinh','chuyển sinh xác nhận']],
+ ['Ngũ Đường','Gia nhập một trong năm Đường, đổi sau 7 ngày. Thiên Bảng top 10 có thể thách đấu Trưởng Lão. Đường đứng đầu tuần được +5% tu vi chơi trong tuần sau.',['đường','vào đường 1','thách đấu 1','chân truyền + tên','bái sư']],
+ ['Chuyển sinh','Mở sau Hỗn Độn Vĩnh Hằng. Gõ chuyển sinh, rồi chuyển sinh xác nhận trong 30 giây: về Phàm nhân, tu vi hiện tại về 0; giữ tổng tu vi, vật phẩm, skin, VIP, đạo lữ và thành tích. Ngân sách tu luyện ngày không làm mới.',['chuyển sinh','chuyển sinh xác nhận']],
  ['Kết duyên và VIP',bondRuleText()+' Gõ kết duyên kèm mã người muốn mời; người nhận gõ đồng ý. Gõ duyên để xem tất cả hoặc duyên kèm mã để chọn một đôi dự lễ.',['kết duyên mã','đồng ý','duyên','duyên mã']],
  ['Hủy một đạo lữ','Gõ hủy duyên kèm mã đạo lữ, sau đó hủy duyên mã xác nhận trong 30 giây. Chỉ kết thúc đôi đã chọn; các quan hệ khác, đồ và thành tích giữ nguyên. Nếu chỉ có một đạo lữ, có thể dùng lệnh ngắn cũ.',['hủy duyên mã','hủy duyên mã xác nhận']],
  ['Nhập môn','Chọn nam/nữ để đổi hình và xưng hô. Nhận 30 linh thạch, 3 linh thảo khi tạo hồ sơ.',['nhập môn nam','nhập môn nữ']],

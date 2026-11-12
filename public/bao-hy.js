@@ -5,6 +5,8 @@
 import {portraitCanvas} from './linh-bai.js';
 export const BAO_HY_MS=4200;
 const KIND={
+ elder:{ribbon:'TRƯỞNG LÃO',title:a=>a.item,line:a=>a.reason,tip:null},
+ disciple:{ribbon:'CHÂN TRUYỀN',title:a=>a.item,line:()=>'Đệ tử Chân Truyền của Ngũ Đường',tip:null},
  craft:{ribbon:'THÀNH CÔNG',verb:'Rèn thành',line:a=>a.skin?`Pháp bảo mới · mở khóa trang phục ${a.skin}`:'Pháp bảo mới · đã tự trang bị',tip:'gõ 7 rèn tiếp'},
  learn:{ribbon:'THÀNH CÔNG',verb:'Lĩnh ngộ',line:()=>'Bí pháp mới · tu luyện nhanh hơn',tip:'gõ 1 vận công thử ngay'},
  admin:{ribbon:'TÔNG CHỦ BAN THƯỞNG',verb:'Nhận',line:a=>(a.parts||[]).slice(0,3).join(' · '),tip:null},

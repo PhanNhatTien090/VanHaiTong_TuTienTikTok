@@ -43,6 +43,7 @@ import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js';
 import {renderStageQueue} from './stage-queue.js';
+import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js';
 import {showLinhBai} from './linh-bai.js';
 import {realmWithStage} from './realm-stage.js';
 import {showBaoHy} from './bao-hy.js';
@@ -74,6 +75,9 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   mountGearGuide(root.querySelector('#phoneHudLeft'));
   const stageQueue=document.createElement('div');stageQueue.id='stageQueue';stageQueue.className='stage-queue';stageQueue.hidden=true;root.appendChild(stageQueue); // 11/11: Vân Đài · chờ lượt
   const linhBai=document.createElement('div');linhBai.id='linhBai';linhBai.className='linh-bai';linhBai.hidden=true;root.appendChild(linhBai); // 11/11: Linh Bài đạo hữu
+  for(const [id,kind] of [['hallDuel','hall-duel'],['hallCard','hall-card']]){
+    const panel=document.createElement('div');panel.id=id;panel.className='hall-panel '+kind;panel.hidden=true;root.appendChild(panel);
+  }
   const baoHy=document.createElement('div');baoHy.id='baoHy';baoHy.className='bao-hy';baoHy.hidden=true;root.appendChild(baoHy); // 11/11: Ngọc Giản Báo Hỷ
   const towerEl=document.createElement('div');towerEl.id='towerStage';towerEl.className='tower-stage';towerEl.hidden=true;root.appendChild(towerEl); // 11/11: Vân Hải Tháp
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
@@ -238,7 +242,7 @@ function renderLiveRanks(force=false){
   const ranked=rookieTurn?rookies:[...state.players].filter(p=>!p.resident&&!p.puppet&&p.active).sort((a,b)=>b.totalQi-a.totalQi).slice(0,3);
   const short=s=>Array.from(s||'Đạo hữu').slice(0,11).join('');
   const leader=topPatron(state.players.filter(p=>p.active&&!p.resident&&!p.puppet),state.patronCurrent);
-  const qiHtml='<div class="qi-leaders"><b>'+(rookieTurn?'🌱 TÂN TÚ 24H':'TOP TU VI')+'</b>'+ranked.map((p,i)=>`<span>${i+1}. ${esc(short(p.name))} <strong>${fmt(p.totalQi)}</strong><small class="rank-realm">${esc(realmWithStage(p.realmName||state.realms[p.realm]||'Phàm nhân',p.realmStage))}</small></span>`).join('')+'</div>';
+  const qiHtml=state.halls?hallsRankHTML(state,esc,state.serverNow||Date.now()):'<div class="qi-leaders"><b>'+(rookieTurn?'🌱 TÂN TÚ 24H':'TOP TU VI')+'</b>'+ranked.map((p,i)=>`<span>${i+1}. ${esc(short(p.name))} <strong>${fmt(p.totalQi)}</strong><small class="rank-realm">${esc(realmWithStage(p.realmName||state.realms[p.realm]||'Phàm nhân',p.realmStage))}</small></span>`).join('')+'</div>';
   const giftHtml=((state.topGifters||[]).length?'<div class="qi-leaders gift-leaders"><b>TOP QUÀ</b>'+state.topGifters.slice(0,3).map((g,i)=>{const av=safeAvatar(g.avatar);return `<span class="gift-top gift-top-${i+1}"><i class="gift-top-portrait"><em>${esc(Array.from(g.name||'Đ')[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<svg viewBox="${[1,2,0][i]*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.png" width="1536" height="512" preserveAspectRatio="none"/></svg></i><span class="gift-top-text"><small class="gift-top-title">${['ĐỆ NHẤT CUNG PHỤNG','NHỊ CUNG PHỤNG','TAM CUNG PHỤNG'][i]}</small><span class="gift-top-line">${esc(short(g.name))} · <strong>${fmt(g.giftCoins)}</strong> coin</span></span></span>`;}).join('')+'</div>':(leader?`<div class="patron-leader"><b>${state.patronEnabled?'ĐẠI HỘ PHÁP':'TOP QUÀ'}</b> ${esc(short(leader.name))} · ${fmt(leader.giftCoins)} coin tích lũy</div>`:''));
   const giftEl=$('#giftRanks'),html=giftEl?qiHtml:qiHtml+giftHtml;
   if(force||html!==lastRanksHTML){el.innerHTML=html;lastRanksHTML=html;}
@@ -388,7 +392,7 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
   const n={tu:0,join:0,gift:0,heart:0,other:0};for(const {e}of pulse){if(e.gift)n.gift++;else if(e.effect==='join')n.join++;else if(String(e.text).startsWith('Tụ linh'))n.heart++;else if(/^Vận|^Luận|^Hái/.test(String(e.text)))n.tu++;else n.other++;}
   el.innerHTML=`✦ 10 giây qua: <b>${pulse.length}</b> lượt`+[[n.tu,'tu luyện'],[n.join,'nhập môn'],[n.heart,'thả tim'],[n.gift,'quà']].filter(([k])=>k).map(([k,l])=>` · ${k} ${l}`).join('');el.hidden=false;},1000);
 function playNext(){
- if(busy)return;let e;for(;;){e=presentations.take(Date.now(),e=>!(scene.raceStatus?.active&&e.effect==='breakthrough'));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
+ if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>!(scene.raceStatus?.active&&e.effect==='breakthrough'));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
  busy=true;current={e,at:Date.now()};
  if(e.heavenStrike){scene.startHeavenStrike(e);const au=cultivationAudio;if(au.enabled&&au.ctx?.state==='running'){au.duck(true);scheduleHeavenStrikeAudio(au.ctx,au.fxBus,strikeProfile(e.heavenStrike.seed));}currentTimer=setTimeout(()=>{au.duck(false);busy=false;current=null;playNext();},HEAVEN_STRIKE_MS+200);return;} // 07/11: Thiên Đạo giáng lôi
  if(e.ceremony){showCeremony(document.getElementById('ceremony'),e);narrator.add(e);tone('breakthrough');currentTimer=setTimeout(()=>{busy=false;current=null;playNext();},presentationDuration(e)+200);return;} // v84: đại điển vinh danh
@@ -404,6 +408,10 @@ function playNext(){
  const r=e.reward,extra=r&&!e.raceGift&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
  $('#spotlight').innerHTML=`<strong>${esc(e.name)}</strong><span>${esc(label)}</span>${extra?`<small class="spot-reward">${esc(extra)}</small>`:''}`;
  if(e.achieve&&!e.gift&&showBaoHy(document.getElementById('baoHy'),e,scene,state?.players?.find(p=>p.id===e.user),esc,duration)){clearTimeout(spotTimer);spotTimer=setTimeout(()=>{busy=false;current=null;playNext();},duration+150);return;} // 11/11: rèn/học/ban thưởng/VIP → Báo Hỷ
+ if(e.hallCard){
+   const panel=$('#hallCard');panel.innerHTML=hallCardHTML(e.hallCard,esc);panel.hidden=false;
+   clearTimeout(spotTimer);spotTimer=setTimeout(()=>{panel.hidden=true;busy=false;current=null;playNext();},duration);return;
+ }
  if(e.card&&showLinhBai(document.getElementById('linhBai'),e,scene,state?.players?.find(p=>p.id===e.user),esc,duration)){clearTimeout(spotTimer);spotTimer=setTimeout(()=>{busy=false;current=null;playNext();},duration+150);return;} // 11/11: gõ 9 → Linh Bài thay khung tên
  $('#spotlight').classList.add('visible');clearTimeout(spotTimer);
  spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;current=null;playNext();},duration+150);
@@ -414,7 +422,7 @@ function receive(s){
   ascensionLobby?.update(s,queue);
   document.querySelector('.live-disclosure').textContent=mode==='live'&&s.liveIntegrityVersion!==1?'M\u00c1Y CH\u1ee6 CH\u01afA \u00c1P D\u1ee4NG LU\u1eacT LIVE M\u1edaI':'TRÒ CHƠI TU TIÊN';
   const previous=state;state=s;if(overlay&&s.raceStatus?.entryAnnouncement)narrator.add(s.raceStatus.entryAnnouncement);honorUI.update(s);if(initialized&&previous){const previousPlayers=new Map(previous.players.map(p=>[p.id,p]));for(const p of s.players){const old=previousPlayers.get(p.id);if(old&&skinFor(p.giftCoins).level>skinFor(old.giftCoins).level)enqueue({id:'skin:'+p.id+':'+p.giftCoins,user:p.id,name:p.name,effect:'skin',text:skinFor(p.giftCoins).name});}}online=true;$('#disconnectBanner').hidden=true;$('#saveStatus').textContent='● Đã kết nối · tự lưu mỗi 3s';if(!selected||!state.players.some(p=>p.id===selected))selected=state.players[0]?.id||null;
-  for(let e of s.events){if(e.effect==='breakthrough'){const old=previous?.players.find(p=>p.id===e.user),next=s.players.find(p=>p.id===e.user);e={...e,visualFrom:old?{...old,realm:e.fromRealm??old.realm}:undefined,visualTo:next?{...next,realm:breakthroughRealm(e)}:undefined};}if(!seen.has(e.id)&&(initialized||e.autoArrival&&s.serverNow-e.at<8000)){enqueue(e);lastViewerAt=Date.now();}seen.add(e.id);}if(seen.size>1000)seen=new Set([...seen].slice(-300));
+  for(let e of s.events){if(e.effect==='breakthrough'){const old=previous?.players.find(p=>p.id===e.user),next=s.players.find(p=>p.id===e.user);e={...e,visualFrom:e.visualFrom||(old?{...old,realm:e.fromRealm??old.realm}:undefined),visualTo:e.visualTo||(next?{...next,realm:breakthroughRealm(e)}:undefined)};}if(!seen.has(e.id)&&(initialized||e.autoArrival&&s.serverNow-e.at<8000)){enqueue(e);lastViewerAt=Date.now();}seen.add(e.id);}if(seen.size>1000)seen=new Set([...seen].slice(-300));
   if(!initialized){initialized=true;const p=player();if(p)$('#simName').value=p.name;renderGifts();renderGuide();renderLiveRanks(true);}
   scheduleRender();
 }
@@ -429,9 +437,12 @@ function render(){if(!state)return;if(overlay){renderSimpleGuide(state,esc);rend
   const remain=Math.max(0,Math.ceil(((state.boss?.endsAt||state.nextBossAt)-state.serverNow)/1000));$('#scenePhase').textContent=state.raceStatus?.active?'Vân Hải Thiên Lộ':state.socialScene?(state.socialScene==='tournament'?'Luận Kiếm':'Tam Sinh Ước'):state.boss?`Bí cảnh còn ${remain}s`:`♜ ${Math.floor(remain/60)}:${String(remain%60).padStart(2,'0')}`;
   const bh=$('#bossHud');bh.classList.toggle('visible',!!state.boss&&state.boss.species!=='abyss-dragon');document.body.classList.toggle('abyss-fight',state.boss?.species==='abyss-dragon'&&state.boss.hp>0); // 05/11: bảng yêu lực Ma Long vẽ trên canvas, ẩn bảng xếp hạng góc trái để không chồng
   if(state.boss)setHUD(bh,`<div class="boss-line"><span>♜ ${esc(state.boss.name)}</span><span>${fmt(state.boss.hp)} / ${fmt(state.boss.maxHp)}</span></div><div class="progress"><i style="width:${state.boss.hp/state.boss.maxHp*100}%"></i></div><small>Gõ <b>danh</b> · ${remain}s · ${esc(state.boss.encounter?.name||'Top công lực nhận thưởng')}</small>${Object.entries(state.boss.damage||{}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3).map(([id,d],i)=>`<small class="boss-rank">${i+1}. ${esc(state.players.find(p=>p.id===id)?.name||'Đạo hữu')} · ${fmt(d)} công lực</small>`).join('')}`);
-  if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();renderGiftRules();}else syncAutoEvents();
+  if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();renderGiftRules();
+    const duel=$('#hallDuel'),duelHTML=hallDuelHTML(state.halls,esc,state.serverNow);
+    duel.hidden=!duelHTML;document.body.classList.toggle('hall-dueling',!!duelHTML);
+    if(duelHTML)setHUD(duel,duelHTML);}else syncAutoEvents();
   const oh=$('#opportunityHud'),o=state.opportunity,seconds=o?Math.max(0,Math.ceil((o.endsAt-state.serverNow)/1000)):0;oh.hidden=!seconds;
-  if(seconds){const offset=Math.floor(state.serverNow/7000)%2*4;setHUD(oh,`<b>CƠ DUYÊN · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}</b><span>${o.costs.slice(offset,offset+4).map((cost,i)=>`${esc(state.realms[offset+i])} ${cost} coin`).join(' · ')}</span><small>Từ Hóa Thần: tối đa 1 đại cảnh/ngày · tiến độ dư được giữ · gõ cơ duyên</small>`);}
+  if(seconds){const offset=Math.floor(state.serverNow/7000)%Math.ceil(o.costs.length/4)*4;setHUD(oh,`<b>CƠ DUYÊN · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}</b><span>${o.costs.slice(offset,offset+4).map((cost,i)=>`${esc(state.realms[offset+i])} ${cost} coin`).join(' · ')}</span><small>Từ Hóa Thần: tối đa 1 đại cảnh/ngày · tiến độ dư được giữ · gõ cơ duyên</small>`);}
   if(overlay)return;
   const sig=JSON.stringify(p);if(sig!==lastProfile){lastProfile=sig;renderProfile(p);}
   renderEditor();

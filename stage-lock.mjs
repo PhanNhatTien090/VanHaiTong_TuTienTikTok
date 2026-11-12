@@ -2,7 +2,8 @@
 // Sky rewards present three winners sequentially, so keep the stage for 30s.
 export const SKY_SETTLEMENT_MS=30000;
 export const skyStageUntil=(w,now)=>w.flowerEvent?Math.max(w.flowerEvent.endsAt,w.flowerEvent.closedAt||now)+SKY_SETTLEMENT_MS:0;
-export function stageConflict(w,now,{allowBond=false}={}){
+export function stageConflict(w,now,{allowBond=false,allowHall=false}={}){
+ if(!allowHall&&w.nguDuong?.match?.endsAt>now)return 'Vân Đài thách đấu';
  if(skyStageUntil(w,now)>now)return now<w.flowerEvent.endsAt?'sao băng / mưa hoa':'trao thưởng sao băng / mưa hoa';
  if(w.boss?.hp>0&&w.boss.endsAt>now)return 'yêu thú';
  if(!w.visitor?.closedAt&&w.visitor?.endsAt>now)return 'tiên nhân';

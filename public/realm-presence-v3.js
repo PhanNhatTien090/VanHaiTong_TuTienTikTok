@@ -2,7 +2,7 @@
 export const PRESENCE_STYLES=Object.freeze([
  ['#b8f2ed','feather'],['#a5ccff','star'],['#d0b8ff','shard'],['#f5d69a','sun'],['#efc5f6','lotus'],['#ffe9b1','crown'],
  ['#87e8cb','jade'],['#b5d9ff','star'],['#f4d082','dragon'],['#a8d9ff','star'],['#ffd7a1','sun'],['#c2a1f8','void'],['#a4e0c4','jade'],['#edc8ff','lotus'],
- ['#ff5a40','sun'],['#c48bff','void'],['#e6ebff','shard']
+ ['#ff5a40','sun'],['#c48bff','void'],['#e6ebff','shard'],['#70f6df','jade'],['#ff916a','sun'],['#d5a1ff','star'],['#ffdb84','crown']
 ]);
 export function drawRealmPresenceV3(scene,c,a,t){
  const p=a.player,r=Math.trunc(Number(p?.realm)||0);if((scene.reducePresence??scene.crowded)||p?.resident||r<8||r>=8+PRESENCE_STYLES.length)return false;

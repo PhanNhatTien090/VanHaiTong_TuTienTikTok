@@ -5,7 +5,7 @@ import {OPPORTUNITY_COSTS} from '../public/opportunity.js';
 import {ascensionProfile} from '../public/ascension-art.js';
 import {realmDivineLook,divineHaloProfile} from '../public/divine-wardrobe.js';
 const NOW=1800000000000;
-test('five new realms are reachable after save/reload with matching overlay, wardrobe and event costs',()=>{
+test('endgame realms are reachable after save/reload with matching overlay, wardrobe and event costs',()=>{
  let w=createWorld(),p=ensurePlayer(w,'veteran','Lão tổ',NOW);
  Object.assign(p,{realm:13,giftCoins:100,totalQi:123456,qi:17,stones:19});
  w=JSON.parse(JSON.stringify(w));p=w.players.veteran;
@@ -17,7 +17,8 @@ test('five new realms are reachable after save/reload with matching overlay, war
   assert.ok(realmDivineLook(p).color);assert.equal(ascensionProfile(r).realm,r);
   assert.ok(divineHaloProfile(r).orbs<=12);
  }
- assert.equal(REALMS.length,25);assert.equal(OPPORTUNITY_COSTS.length,24);
+ assert.equal(REALMS.length,29);assert.equal(OPPORTUNITY_COSTS.length,28);
+ for(let r=24;r<28;r++)assert.ok(Math.abs(requiredQi({realm:r})-4*requiredQi({realm:r-1}))<=4);
  assert.equal(action(w,{type:'breakthrough',userId:p.id},NOW+2e6).ok,false);
 });
 test('slower costs preserve onboarding, and blessings cannot recycle stored qi into free levels',()=>{

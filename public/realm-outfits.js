@@ -1,9 +1,10 @@
+import {LATE_ASCENSIONS,lateAscension} from './late-ascension-data.js';
 import {MAX_REALM} from './progression.js';
 import {divineSelection} from './divine-wardrobe.js';
 import {specialSkinFor} from './patrons.js';
 import {skinFor,SKINS} from './cosmetics.js';
 const TIERS=[0,0,1,2,2,3,3,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4];
-const TRIMS=['#b8c5b1','#e2c184','#bcecff','#d4b7ff','#8fe1d4','#ffd580','#a3d4ff','#f2c8ff','#fff0af','#9fd0ff','#ffd86b','#c9a6ff','#ff9f8a','#fff6d8','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf','#ff6a4a','#c995ff','#eef0ff'];
+const TRIMS=['#b8c5b1','#e2c184','#bcecff','#d4b7ff','#8fe1d4','#ffd580','#a3d4ff','#f2c8ff','#fff0af','#9fd0ff','#ffd86b','#c9a6ff','#ff9f8a','#fff6d8','#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf','#ff6a4a','#c995ff','#eef0ff',...LATE_ASCENSIONS.map(spec=>spec.color)];
 export const REALM_STYLES=Object.freeze([
  {robe:'#71817b',metal:'#bcc3ac',motif:0},
  {robe:'#258b73',metal:'#b2e8bd',motif:1},
@@ -21,17 +22,17 @@ export const REALM_STYLES=Object.freeze([
  {robe:'#f2ead2',metal:'#fff8e0',motif:13},
  ...['#83ffe5','#c7b1ff','#ffb0d3','#8bd8ff','#ffe78b','#94fff0','#c9b4ff','#fff1cf'].map((metal,i)=>({robe:['#124c49','#382360','#661d46','#153c64','#52370d','#164e4a','#493376','#67532c'][i],metal,motif:14+i}))
 ]);
-export const REALM_ROBES=['Áo vải nhập môn','Đạo bào Luyện Khí','Ngân văn Trúc Cơ','Tử văn Kim Đan','Đạo bào Nguyên Anh','Kim văn Hóa Thần','Đạo bào Luyện Hư','Thiên y Đại Thừa','Tiên y Chân Tiên','Huyền quang tiên bào','Kim thân tiên y','Thái Ất tử bào','Đại La xích kim bào','Tiên Đế long bào','Đạo Tổ thiên y','Thiên Tôn tinh bào','Thần Quân huyền y','Thần Vương long y','Thần Đế vạn tượng','Thần Tôn thiên y','Thần Tổ nguyên bào','Hồng Mông chí tôn y','Ma Thần huyết giáp','Thiên Ma thánh đế giáp','Diệt Thế chí tôn giáp'];
+export const REALM_ROBES=['Áo vải nhập môn','Đạo bào Luyện Khí','Ngân văn Trúc Cơ','Tử văn Kim Đan','Đạo bào Nguyên Anh','Kim văn Hóa Thần','Đạo bào Luyện Hư','Thiên y Đại Thừa','Tiên y Chân Tiên','Huyền quang tiên bào','Kim thân tiên y','Thái Ất tử bào','Đại La xích kim bào','Tiên Đế long bào','Đạo Tổ thiên y','Thiên Tôn tinh bào','Thần Quân huyền y','Thần Vương long y','Thần Đế vạn tượng','Thần Tôn thiên y','Thần Tổ nguyên bào','Hồng Mông chí tôn y','Ma Thần huyết giáp','Thiên Ma thánh đế giáp','Diệt Thế chí tôn giáp',...LATE_ASCENSIONS.map(spec=>spec.armor)];
 // v48: nấc áo theo cảnh giới — Kim Đan/Nguyên Anh áo vàng · Hóa Thần/Luyện Hư áo đỏ (Xích Phượng) · Đại Thừa+ Thương Long.
 // Coin quà tích lũy lên được cùng nấc: 500 → vàng, 2.000 → đỏ, 10.000 → Thương Long.
 export const OUTFIT_RUNGS=Object.freeze([{name:null,minRealm:0,minCoins:0},{name:'Kim Y',minRealm:3,minCoins:500},{name:'Xích Phượng Chiến Y',minRealm:5,minCoins:2000},{name:'Thương Long Hộ Pháp',minRealm:7,minCoins:10000}]);
 export function outfitRung(p){let r=0;OUTFIT_RUNGS.forEach((x,i)=>{if(i&&((Number(p.realm)||0)>=x.minRealm||(Number(p.giftCoins)||0)>=x.minCoins))r=i;});return r;}
-export function appearanceFor(p){const realm=Math.max(0,Math.min(MAX_REALM,Math.trunc(Number(p.realm)||0))),gift=skinFor(p.giftCoins),special=specialSkinFor(p),level=Math.max(gift.level,TIERS[realm]);return {...(special||SKINS[level]),realm,realmTrim:TRIMS[realm],name:divineSelection(p)?.name||special?.name||REALM_ROBES[realm]};}
+export function appearanceFor(p){const realm=Math.max(0,Math.min(MAX_REALM,Math.trunc(Number(p.realm)||0))),gift=skinFor(p.giftCoins),special=specialSkinFor(p),level=Math.max(gift.level,TIERS[realm]??TIERS.at(-1));return {...(special||SKINS[level]),realm,realmTrim:TRIMS[realm],name:divineSelection(p)?.name||special?.name||REALM_ROBES[realm]};}
 // Keep original painted robes unobstructed. No added armour, belt panels or crowns.
 export function drawRealmClothes(){}
 export function realmQiProfile(p){
  const realm=Math.max(0,Math.min(MAX_REALM,Math.trunc(Number(p.realm)||0)));
- return {realm,color:TRIMS[realm],radius:20+realm*3.5,height:35+realm*7,streams:realm===0?0:Math.min(4,1+Math.floor(realm/2)),speed:.00065+realm*.00006};
+ return {realm,color:lateAscension(realm)?.color||TRIMS[realm],radius:20+realm*3.5,height:35+realm*7,streams:realm===0?0:Math.min(4,1+Math.floor(realm/2)),speed:.00065+realm*.00006};
 }
 export function drawRealmAscension(c,p,pose,t,motion=true,quality='balanced'){
  const q=realmQiProfile(p),r=q.realm;if(!r)return;

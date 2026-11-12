@@ -53,17 +53,17 @@ test('capped players keep combat, items and gift rewards; snapshot cannot refres
  const parsed=JSON.parse(before);assert.equal(p.qi,parsed.qi);assert.equal(w.events.filter(x=>x.dailyPracticeCap).length,0);/* 07/11: hạn mức chạy ngầm, không báo */assert.ok(!w.events.some(x=>/10%|hiệu suất|0 giờ/.test(x.text)));
 });
 
-test('three post-Than-De realms persist and are the only path to the rebirth unlock',()=>{
- const {w,p}=setup(18);assert.equal(MAX_REALM,24);assert.equal(REBIRTH_UNLOCK_REALM,24);assert.equal(REALMS.length,25);
- assert.deepEqual(REALMS.slice(19),['Thần Tôn','Thần Tổ','Hồng Mông Chí Tôn','Ma Thần','Thiên Ma Thánh Đế','Diệt Thế Chí Tôn']);
+test('post-Than-De realms persist and are the only path to the rebirth unlock',()=>{
+ const {w,p}=setup(18);assert.equal(MAX_REALM,28);assert.equal(REBIRTH_UNLOCK_REALM,28);assert.equal(REALMS.length,29);
+ assert.deepEqual(REALMS.slice(19,25),['Thần Tôn','Thần Tổ','Hồng Mông Chí Tôn','Ma Thần','Thiên Ma Thánh Đế','Diệt Thế Chí Tôn']);
  assert.deepEqual(ASCENSION_PRACTICE_STEPS.slice(18),[7000,10000,15000,15000,21000,28000,36000]);
- for(let r=19;r<=24;r++){
+ for(let r=19;r<=MAX_REALM;r++){
   assert.equal(snapshot(w,N).players[0].rebirthEligible,false);p.qi=requiredQi(p);p.stones=requiredStones(p);
   assert.equal(action(w,{type:'breakthrough',userId:p.id},N+r*86400000).ok,true);assert.equal(p.realm,r);assert.ok(ascensionProfile(r).duration>ascensionProfile(r-1).duration);
   assert.equal(realmDivineLook(p).realm,r);assert.equal(godFormFor(p).rank,r-14);
  }
- const view=snapshot(w,N+30).players[0];assert.equal(view.rebirthEligible,true);assert.equal(view.realmName,'Diệt Thế Chí Tôn');
- const saved=JSON.parse(JSON.stringify(w));assert.equal(saved.players.a.realm,24);assert.equal(action(w,{type:'breakthrough',userId:p.id},N+31).ok,false);
+ const view=snapshot(w,N+30).players[0];assert.equal(view.rebirthEligible,true);assert.equal(view.realmName,'Hỗn Độn Vĩnh Hằng');
+ const saved=JSON.parse(JSON.stringify(w));assert.equal(saved.players.a.realm,28);assert.equal(action(w,{type:'breakthrough',userId:p.id},N+31).ok,false);
 });
 
 test('engagement rewards do not drain the daily practice budget',()=>{
