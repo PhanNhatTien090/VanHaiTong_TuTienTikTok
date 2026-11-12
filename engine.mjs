@@ -55,6 +55,7 @@ import {SOCIAL_ITEMS,socialProfile,socialCommand,bondActivity,tickSocial,socialV
 // Shared realm names keep server, overlay and breakthrough titles aligned.
 import {REALM_NAMES,REBIRTH_UNLOCK_REALM} from './public/progression.js';
 import {resolveQuick,quickView} from './quick-commands.mjs';
+import {realmStage,STAGES} from './public/realm-stage.js'; // 12/11: Sơ/Trung/Hậu kỳ/Viên Mãn (chỉ hiển thị)
 import {inventoryRequest,inventoryCard,inventoryText} from './inventory.mjs'; // 11/11: túi đồ · linh thú · tủ skin
 export const REALMS = REALM_NAMES;
 export const CATALOG = [
@@ -108,6 +109,10 @@ export const goldenHour=(p,now,w=null)=>!!p&&w?.settings?.goldenHour===true&&!p.
 const qiBonus=p=>p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.bonus||0),0)+(CATALOG.find(x=>x.id===p.equipped)?.bonus||0)+extraStat(p,'bonus');
 export const EVENT_GEAR_SHARE=.5;
 const freeQiUnit=p=>Math.ceil(requiredQi(p)/ascensionPracticeReward(p.realm,'cultivate',requiredQi(p),requiredStones(p)).steps);
+// 12/11: tiểu cảnh giới — báo nhẹ khi bước lên Trung kỳ / Hậu kỳ / Viên Mãn (người thật, tối đa 1 lần/phút/người).
+const stageOf=p=>realmStage(p.realm,p.qi,requiredQi(p),p.realm>=REALMS.length-1);
+function noteStageUp(w,p,before,now){if(p.resident||p.puppet||before==null)return;const after=stageOf(p);if(after==null||after<=before)return;const t=now??Date.now();if(t-(p.stageNoteAt||0)<60000)return;p.stageNoteAt=t;
+  emit(w,p,`Bước vào ${REALMS[p.realm]} ${STAGES[after]}`,'qi',t,{stageUp:after});}
 function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   if(hand&&heavenStunned(p,now??Date.now()))return 0; // 07/11: Thiên Lôi trấn áp — không tu luyện được
   if(hand)qi*=handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
@@ -123,7 +128,7 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
     amount=Math.max(amount,Math.round(floor.qi*(talking(p,now)?1.2:1)));stones=Math.max(stones,floor.stones);
   }
   amount=creditQi(w,p,amount,now??Date.now(),typeof hand==='string'?hand:source);
-  p.qi+=amount;p.totalQi+=amount;p.stones+=stones;p.herbs+=herbs;w.sectQi+=amount; return amount;
+  const stageBefore=stageOf(p);p.qi+=amount;p.totalQi+=amount;p.stones+=stones;p.herbs+=herbs;w.sectQi+=amount;noteStageUp(w,p,stageBefore,now); return amount;
 }
 function creditQi(w,p,amount,now=Date.now(),source='free'){
   const unit=freeQiUnit(p);
@@ -195,7 +200,7 @@ export function profileCard(p,w,now=Date.now()){
   const real=Object.values(w.players).filter(x=>!x.resident&&!x.puppet);const rank=1+real.filter(x=>(x.totalQi||0)>(p.totalQi||0)).length;
   const settling=!!(w&&dailyAscensionView(w,p,now).exhausted&&p.qi>=needQi&&p.stones>=needStones);
   const tip=last?'Đã đạt đỉnh tu tiên':!finalRealmEligible(p)?'Tiên Đế cần tổng quà 100 coin':settling?'Đạo cơ đang lắng đọng · mai đột phá tiếp':ready?'Gõ 8 · đột phá ngay':p.qi<needQi?'Gõ 1 tu luyện · 4 luyện đan · 5 dùng đan':'Gõ 2 hái · 3 đánh để có linh thạch';
-  return {realm:p.realm,realmName:REALMS[p.realm],next:last?null:REALMS[p.realm+1],qi:p.qi,needQi,stones:p.stones,needStones,ready,rank,players:real.length,totalQi:p.totalQi||0,tip};
+  return {realm:p.realm,realmName:REALMS[p.realm],stage:stageOf(p),next:last?null:REALMS[p.realm+1],qi:p.qi,needQi,stones:p.stones,needStones,ready,rank,players:real.length,totalQi:p.totalQi||0,tip};
 }
 export function suggestion(p){
   const pill=CATALOG.find(x=>x.type==='pill'&&p.pills[x.id]>0);if(pill)return {key:'use:'+pill.id,cmd:'dung',say:`dùng ${pill.name}`,why:pill.description};
@@ -917,7 +922,7 @@ export function snapshot(w,now=Date.now(),opts={}) {
   const earlyHonors=select?honorRoll(w,ranked):null,earlyRoles=select?rankDivineRoles(ranked,w.adminLog||[]):null;
   let pick=all;
   if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,stage=rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[];const ids=select({players:ranked,honors:earlyHonors,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
-  const players=pick.map(p=>({...p,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
+  const players=pick.map(p=>({...p,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],realmStage:stageOf(p),progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
   const socialStatus=socialView(w,now),t=socialStatus.tournament,ceremony=socialStatus.ceremony;
   const socialStage=t?.current?[t.current.a,t.current.b]:t?.lastBow?.until>now&&t.lastBow.pair?t.lastBow.pair:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
   const socialScene=tournamentActive(w)||t?.podiumUntil>now?'tournament':ceremony?'bond':null;

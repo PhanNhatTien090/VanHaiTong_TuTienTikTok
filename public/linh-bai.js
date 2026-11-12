@@ -2,6 +2,7 @@
 // Không lag: chân dung vẽ MỘT lần vào canvas riêng (kèm viền sáng bằng drop-shadow), lưu cache theo bộ áo; thẻ là HTML,
 // chỉ hiện ~5 s theo lượt Vân Đài nên không chồng hiệu ứng. Nền thẻ tối để chữ và nhân vật nổi, tự tắt sau lượt.
 import {skinFor} from './cosmetics.js';
+import {realmWithStage} from './realm-stage.js';
 const PORTRAIT_W=220,PORTRAIT_H=260,cache=new Map();
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 const pct=(a,b)=>Math.max(0,Math.min(100,(Number(a)||0)/Math.max(1,Number(b)||1)*100)).toFixed(1);
@@ -43,7 +44,7 @@ export function linhBaiHTML(e,esc){
  return `<div class="lb-head"><span class="lb-path">${esc(c.realmName)}${c.next?` <i>→</i> ${esc(c.next)}`:''}</span><span class="lb-need">${head}</span></div>
 <div class="lb-body"><div class="lb-portrait"><span class="lb-halo"></span><i class="lb-slot"></i></div>
 <div class="lb-info"><small class="lb-seal">✦ LINH BÀI ĐẠO HỮU ✦</small><strong class="lb-name">${esc(e.name)}</strong>
-<span class="lb-realm">${esc(c.realmName)}</span>
+<span class="lb-realm">${esc(realmWithStage(c.realmName,c.stage))}</span>
 <div class="lb-stat"><label>Tu vi</label><div class="lb-bar"><i style="width:${pct(c.qi,c.needQi)}%"></i></div><span>${fmt(c.qi)} / ${fmt(c.needQi)}</span></div>
 <div class="lb-stat lb-stone"><label>Linh thạch</label><div class="lb-bar"><i style="width:${pct(c.stones,c.needStones)}%"></i></div><span>${fmt(c.stones)} / ${fmt(c.needStones)}</span></div>
 <div class="lb-rank">Hạng tu vi <b>#${fmt(c.rank)}</b> / ${fmt(c.players)} đạo hữu</div></div></div>
