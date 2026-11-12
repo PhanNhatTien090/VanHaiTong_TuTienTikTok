@@ -50,3 +50,15 @@ Top 10 mạnh nhất cả tông theo tổng tu vi (có mặt hay không), chấm
 ## Chủ kênh cần chốt
 - Chữ chung: Đường / Phong / Các.
 - Mức thưởng mỗi Đường (~+10%?).
+
+## CẬP NHẬT 12/11 — cân lại thưởng (chủ kênh: người chơi chỉ quan tâm tu vi; Truyền Công +10% quá mạnh)
+Thay bảng thưởng ở trên. Đường nào cũng ra TU VI nhưng theo cách chơi khác, tổng lợi ngang nhau (~+3–4%); không Đường nào áp đảo.
+| Đường | Kiểu chơi | Thưởng |
+|---|---|---|
+| Truyền Công | tu đều | gõ 1 tu luyện +3% tu vi |
+| Tàng Bảo | đánh nhiều | gõ 3 đánh thêm tu vi nhỏ; rèn pháp bảo +5% tu vi lần rèn |
+| Đan Đỉnh | tích đan | gõ 5 dùng đan +6% tu vi viên đó |
+| Tuần Sơn | chơi sự kiện | tu vi thưởng sự kiện (yêu thú, tháp, đua, gõ đầu) +5% |
+| Linh Dược | hái + luyện | hái thêm thảo (→ nhiều đan); tu luyện +2% |
+- Phần thưởng chính là thi đua: Đường nhất tuần → cả Đường +5% tu vi suốt tuần sau.
+- Trước khi lên LIVE: mô phỏng trên bản sao live.json để các Đường cho tu vi/giờ gần bằng nhau, chỉnh số theo kết quả.
