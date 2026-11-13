@@ -26,22 +26,27 @@ export function sectHallTargets(players,H,withHalls=false){
    if(Number.isInteger(player.sectHallIndex)&&player.sectHallIndex>=0&&player.sectHallIndex<5)groups[player.sectHallIndex].push(player);
    else visitors.push(player);
   }
-  const targets=[],hasVisitors=visitors.length>0;
+  // Keep feet and nameplates above the bottom 30% occupied by LIVE comments.
+  const rows=Math.max(2,...groups.map(g=>g.length),Math.ceil(players.length/5));
+  const top=H*.54,bottom=H*.675,step=(bottom-top)/(rows-1);
+  const scale=Math.max(.55,Math.min(1.1,step/105)),targets=[],occupied=new Set();
   for(const [index,members] of groups.entries()){
    members.sort((a,b)=>(a.sectHallDiscipleRank??999)-(b.sectHallDiscipleRank??999)||(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
-   const step=Math.min(H*.13,H*(hasVisitors?.20:.30)/Math.max(1,members.length-1));
-   const scale=members.length<=3?1.72:members.length<=5?1.35:1.05;
-   members.forEach((player,row)=>targets.push({id:player.id,player,x:hallX(index),y:H*.585+row*step,scale,lift:0}));
+   members.forEach((player,row)=>{
+    occupied.add(row*5+index);
+    targets.push({id:player.id,player,x:hallX(index),y:top+row*step,scale,lift:0});
+   });
   }
-  // Unaffiliated visitors sit outside the hall columns; stable jitter avoids a regimented grid.
-  const hasMembers=groups.some(g=>g.length),cols=hasMembers?4:5,rows=Math.ceil(visitors.length/cols);
+  // Scatter visitors into free places around the columns, never into the comment area.
   const seed=id=>{let h=2166136261;for(const ch of String(id))h=Math.imul(h^ch.charCodeAt(0),16777619);return (h>>>0)/4294967296;};
+  const free=Array.from({length:rows*5},(_,i)=>i).filter(i=>!occupied.has(i));
+  free.sort((a,b)=>seed('seat:'+a)-seed('seat:'+b));
   visitors.sort((a,b)=>seed(a.id)-seed(b.id));
   visitors.forEach((player,i)=>{
-   const row=Math.floor(i/cols),col=i%cols,lower=hasMembers||row>=Math.max(1,rows-1);
-   const x=lower?65+col*(480/Math.max(1,cols-1)):65+col*(770/Math.max(1,cols-1));
-   const y=H*((hasMembers?.865:.64)+(row/Math.max(1,rows-1))*(hasMembers?.095:.31));
-   targets.push({id:player.id,player,x:x+(seed(player.id+':x')-.5)*76,y:y+(seed(player.id+':y')-.5)*H*(rows>2?.022:.045),scale:hasMembers?rows>2?1:1.3:rows>3?1.1:1.5,lift:0});
+   const slot=free[i],row=Math.floor(slot/5),col=slot%5;
+   const x=hallX(col)+(seed(player.id+':x')-.5)*58;
+   const y=Math.max(top,Math.min(bottom,top+row*step+(seed(player.id+':y')-.5)*Math.min(H*.015,step*.2)));
+   targets.push({id:player.id,player,x,y,scale:scale*.92,lift:0});
   });
   return targets;
  }

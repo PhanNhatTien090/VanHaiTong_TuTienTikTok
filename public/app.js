@@ -33,7 +33,7 @@ setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
-import {Scene,portrait,symbols} from './scene.js?v=hall-order-20261113';
+import {Scene,portrait,symbols} from './scene.js?v=hall-safe-area-20261113';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';

@@ -20,7 +20,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
-import {sectHallTargets,drawSectCourt,sectElders,seatSectElders} from './sect-hall.js?v=hall-order-20261113';
+import {sectHallTargets,drawSectCourt,sectElders,seatSectElders} from './sect-hall.js?v=hall-safe-area-20261113';
 import {loadImpactArt} from './ascension-impact.js';
 import {prepareBreakthroughSpectacle} from './breakthrough-spectacle.js';
 import {smallGift,compactPlaza,crowdTargets,stableTargets,PLAZA_CAPACITY,drawRitual} from './live-cinema.js';
