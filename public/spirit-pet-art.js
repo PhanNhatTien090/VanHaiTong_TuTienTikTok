@@ -1,5 +1,7 @@
 import {petById,petPose} from './spirit-pets.js';
 import {makeSurface} from './performance.js';
+import {PREMIUM_PET_ATLAS,PREMIUM_PET_PERIODS,petArtFrame,premiumPetPose} from './premium-pet-motion.js';
+export {petArtFrame,premiumPetPose} from './premium-pet-motion.js';
 // 07/11: Lôi Oa — tia sét gấp khúc nhỏ quanh thân (không phủ màn hình).
 export function drawPetBolt(c,x0,y0,x1,y1,seed,color,width=1.6){let s=seed>>>0;const r=()=>((s=(s*1664525+1013904223)>>>0)/4294967296)-.5,n=6;c.save();c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.shadowColor=color;c.shadowBlur=8;c.beginPath();c.moveTo(x0,y0);for(let i=1;i<n;i++){const k=i/n,d=Math.hypot(x1-x0,y1-y0)*.18;c.lineTo(x0+(x1-x0)*k+r()*d,y0+(y1-y0)*k+r()*d);}c.lineTo(x1,y1);c.stroke();c.strokeStyle='#ffffff';c.lineWidth=width*.45;c.shadowBlur=0;c.stroke();c.restore();}
 // Hiệu ứng riêng của thần thú: sét (Lôi Oa), huyết khí (Văn Thú), lửa (Kỳ Lân). Nhỏ, sát thân, không phủ màn hình.
@@ -17,6 +19,12 @@ export function drawRareFx(c,pet,size,t,seed,power=1){
    else if(pet.fx==='moon'){c.beginPath();c.arc(x,y,s+2,a,a+Math.PI*1.4);c.stroke();}
    else if(pet.fx==='flame'){c.beginPath();c.moveTo(x,y+s);c.quadraticCurveTo(x-5*s,y,x,y-5*s);c.quadraticCurveTo(x+3*s,y,x,y+s);c.fill();}
    else{c.beginPath();c.moveTo(x,y-s*2);c.lineTo(x+s*.35,y);c.lineTo(x,y+s*2);c.lineTo(x-s*.35,y);c.closePath();c.fill();}
+  }
+  for(let j=0;j<2;j++){
+   const wave=t*.0025+j*Math.PI,flow=Math.sin(wave),spread=size*(.28+j*.1);
+   c.globalAlpha=.35;c.strokeStyle=j?'#fff4d8':color;c.lineWidth=(j?1:2)*Math.min(1.5,power);
+   c.beginPath();c.moveTo(-spread,size*.06);
+   c.bezierCurveTo(-spread*.5,size*(-.15+flow*.12),spread*.2,size*(.28-flow*.1),spread,size*.04);c.stroke();
   }
   c.globalAlpha=.32+.16*Math.sin(t*.004);c.strokeStyle=color;c.lineWidth=1.4;
   c.beginPath();c.ellipse(0,size*.18,r,r*.28,-.1,0,TAU);c.stroke();
@@ -37,20 +45,39 @@ export function slicePetFrames(image,id,make=makeSurface){
   if(x0>=x1)return frame;const out=make(160,160);if(!out)return frame;const w=x1-x0+5,h=y1-y0+5,fit=Math.min(144/w,144/h);out.getContext('2d').drawImage(frame,x0-2,y0-2,w,h,(160-w*fit)/2,(160-h*fit)/2,w*fit,h*fit);return out;
  });
 }
+const PET_FRAME_CACHE=new Map();
+export function slicePremiumPetFrames(image,id,make=makeSurface){
+ const a=PREMIUM_PET_ATLAS;
+ if(image.width!==a.size*a.columns||image.height!==a.size*Math.ceil(a.frames/a.columns))throw Error('Invalid premium pet atlas: '+id);
+ const frames=Array.from({length:a.frames},(_,i)=>{
+  const frame=make(a.size,a.size);frame.getContext('2d').drawImage(image,(i%a.columns)*a.size,Math.floor(i/a.columns)*a.size,a.size,a.size,0,0,a.size,a.size);return frame;
+ });
+ frames.period=PREMIUM_PET_PERIODS[id];return frames;
+}
+function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
+ return new Promise((resolve,reject)=>{
+  const image=new Image();image.decoding='async';
+  image.onload=()=>{try{resolve(animated?slicePremiumPetFrames(image,id):slicePetFrames(image,id));}catch(e){reject(e);}};
+  image.onerror=()=>animated?fetchPetFrames(id,false).then(resolve,reject):reject(Error('Pet artwork unavailable: '+id));
+  image.src='/assets/spirit-pets-v1/'+(animated?'animated/'+id+'-'+PREMIUM_PET_ATLAS.version+'.webp':id+'.png');
+ });
+}
 export function loadPetArt(scene,players){
  scene.petArt??=new Map();if(typeof Image==='undefined')return;
  for(const p of players){const pet=petById(p.spiritPet);if(!pet||scene.petArt.has(pet.id))continue;
-  const image=new Image();scene.petArt.set(pet.id,null);image.onload=()=>scene.petArt.set(pet.id,slicePetFrames(image,pet.id));image.onerror=()=>scene.petArt.delete(pet.id);image.src='/assets/spirit-pets-v1/'+pet.id+'.png';
+  scene.petArt.set(pet.id,null);
+  if(!PET_FRAME_CACHE.has(pet.id))PET_FRAME_CACHE.set(pet.id,fetchPetFrames(pet.id).catch(e=>{PET_FRAME_CACHE.delete(pet.id);throw e;}));
+  PET_FRAME_CACHE.get(pet.id).then(frames=>scene.petArt.set(pet.id,frames)).catch(()=>scene.petArt.delete(pet.id));
  }
 }
 export function drawPet(scene,c,target,t){
  const p=target.player,pet=petById(p.spiritPet),frames=pet&&scene.petArt?.get(pet.id);if(!frames)return;
  let seed=0;for(const ch of p.id)seed=(seed*31+ch.charCodeAt(0))>>>0;
- const pose=petPose(t,seed%1000,scene.motion),scale=target.scale||1.4;
+ const pose=premiumPetPose(pet.id,t,seed%1000,scene.motion)||petPose(t,seed%1000,scene.motion),scale=target.scale||1.4;
  // Small follower beside the feet: no full-screen halo, no additional stage actors.
  const flying=pet.id==='sun-phoenix'||pet.id==='astral-dragon'||!!pet.flying,grand=flying||pet.rare,x=target.x+scale*(30+pose.sway*.3),y=target.y+scale*(flying?-8:8)+pose.bob;
- const size=pet.size*scale,image=frames[pose.frame];if(!image)return;
- c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*.025,1);
+ const size=pet.size*scale,image=petArtFrame(frames,t,seed%1000,scene.motion);if(!image)return;
+ c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
  if(grand){c.strokeStyle=pet.color+'80';c.lineWidth=1.2;c.beginPath();c.ellipse(0,size*.29,size*.34,size*.08,0,0,Math.PI*2);c.stroke();}
  c.drawImage(image,-size/2,-size*.65,size,size);
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;

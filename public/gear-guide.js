@@ -8,7 +8,7 @@ function shown(el){if(!el||el.hidden)return false;const st=getComputedStyle(el);
 function rows(list,esc){return list.map(([cmd,txt])=>`<li><code>${esc(cmd)}</code><span>${esc(txt)}</span></li>`).join('');}
 // 11/11/2026: trang CHƠI NHANH · GÕ SỐ xen giữa mọi trang khác — người xem mới chỉ cần gõ 1 chữ số.
 function quickPage(state,esc){const q=state.quick;if(!q?.rows)return null;
-  return '<b>⚡ CHƠI NHANH · GÕ SỐ</b><ol class="quick-digits">'+q.rows.map(r=>'<li'+(r.event?' class="quick-event"':'')+'><code>'+esc(r.n)+'</code><span><em>'+esc(r.say)+'</em> · '+esc(r.text)+'</span></li>').join('')+'</ol>'+(q.paused?'<small>đang có câu đố · số là đáp án</small>':'');}
+  return '<b>CHƠI NHANH · GÕ SỐ</b><ol class="quick-digits">'+q.rows.map(r=>'<li'+(r.event?' class="quick-event"':'')+'><code>'+esc(r.n)+'</code><span><em>'+esc(r.say)+'</em></span></li>').join('')+'</ol>'+(q.paused?'<small>đang có câu đố · số là đáp án</small>':'');}
 function pages(state,esc){
   const arts=(state.catalog||[]).filter(i=>i.type==='artifact'&&!i.exclusive).sort((a,b)=>(a.price||0)-(b.price||0));
   const realm=t=>state.realms?.[t]||'';

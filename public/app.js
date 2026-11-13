@@ -33,7 +33,7 @@ setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
-import {Scene,portrait,symbols} from './scene.js?v=disciple-title-20261113';
+import {Scene,portrait,symbols} from './scene.js?v=premium-motion-20261113';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
@@ -41,7 +41,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
-import {mountGearGuide,renderGearGuide} from './gear-guide.js';
+import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=sharp-digits-20261113';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js';
 import {showLinhBai} from './linh-bai.js';
@@ -312,7 +312,7 @@ if(overlay)setInterval(()=>renderTower(document.getElementById('towerStage'),sta
 if(overlay)setInterval(()=>renderStageQueue(document.getElementById('stageQueue'),queue,Date.now(),current,esc),500);
 // 09/11: thẻ luật quà (cột phải) bám NGAY DƯỚI bảng TOP QUÀ để không che người giữa sân; TOP QUÀ ẩn thì lên sát góc trên.
 if(overlay){const placeRail=()=>{const shell=document.querySelector('.scene-shell'),rail=document.getElementById('phoneHudRight'),top=document.getElementById('giftRanks');if(!shell||!rail)return;
-  let y='5.6%';if(top&&!top.hidden&&getComputedStyle(top).display!=='none'){const a=shell.getBoundingClientRect(),b=top.getBoundingClientRect();if(b.height>0)y=Math.round(b.bottom-a.top+Math.max(3,a.height*.004))+'px';}
+  let y='.8%';if(top&&!top.hidden&&getComputedStyle(top).display!=='none'){const a=shell.getBoundingClientRect(),b=top.getBoundingClientRect();if(b.height>0)y=Math.round(b.bottom-a.top+Math.max(3,a.height*.004))+'px';}
   if(rail.style.top!==y)rail.style.setProperty('top',y);};placeRail();setInterval(placeRail,1000);addEventListener('resize',placeRail);}
 if(overlay){let railTurn=0;setInterval(()=>{const rail=document.getElementById('phoneHudRight');if(!rail)return;
   const extra=[...rail.children].filter(el=>el.id!=='giftBoard'&&el.id!=='giftRanks');for(const el of extra)el.classList.remove('rail-rotate-hide');
