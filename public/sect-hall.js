@@ -28,14 +28,21 @@ export function sectHallTargets(players,H,withHalls=false){
   }
   const targets=[],hasVisitors=visitors.length>0;
   for(const [index,members] of groups.entries()){
-   members.sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
+   members.sort((a,b)=>(a.sectHallDiscipleRank??999)-(b.sectHallDiscipleRank??999)||(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
    const step=Math.min(H*.13,H*(hasVisitors?.20:.30)/Math.max(1,members.length-1));
    const scale=members.length<=3?1.72:members.length<=5?1.35:1.05;
-   members.forEach((player,row)=>targets.push({id:player.id,player,x:hallX(index),y:H*.61+row*step,scale,lift:0}));
+   members.forEach((player,row)=>targets.push({id:player.id,player,x:hallX(index),y:H*.585+row*step,scale,lift:0}));
   }
-  const cols=3,rows=Math.ceil(visitors.length/cols),hasMembers=groups.some(g=>g.length),top=H*(hasMembers?.89:.65);
-  const gap=Math.min(H*.12,H*(hasMembers?.08:.29)/Math.max(1,rows-1));
-  visitors.forEach((player,i)=>targets.push({id:player.id,player,x:hallX(i%cols),y:top+Math.floor(i/cols)*gap,scale:hasMembers||rows>2?1.15:1.65,lift:0}));
+  // Unaffiliated visitors sit outside the hall columns; stable jitter avoids a regimented grid.
+  const hasMembers=groups.some(g=>g.length),cols=hasMembers?4:5,rows=Math.ceil(visitors.length/cols);
+  const seed=id=>{let h=2166136261;for(const ch of String(id))h=Math.imul(h^ch.charCodeAt(0),16777619);return (h>>>0)/4294967296;};
+  visitors.sort((a,b)=>seed(a.id)-seed(b.id));
+  visitors.forEach((player,i)=>{
+   const row=Math.floor(i/cols),col=i%cols,lower=hasMembers||row>=Math.max(1,rows-1);
+   const x=lower?65+col*(480/Math.max(1,cols-1)):65+col*(770/Math.max(1,cols-1));
+   const y=H*((hasMembers?.865:.64)+(row/Math.max(1,rows-1))*(hasMembers?.095:.31));
+   targets.push({id:player.id,player,x:x+(seed(player.id+':x')-.5)*76,y:y+(seed(player.id+':y')-.5)*H*(rows>2?.022:.045),scale:hasMembers?rows>2?1:1.3:rows>3?1.1:1.5,lift:0});
+  });
   return targets;
  }
  const n=players.length,cols=n<=3?Math.max(1,n):n<=12?4:n<=24?6:8,rows=Math.ceil(n/cols);

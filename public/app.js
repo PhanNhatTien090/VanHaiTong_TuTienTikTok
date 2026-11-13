@@ -33,7 +33,7 @@ setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
-import {Scene,portrait,symbols} from './scene.js?v=hall-columns-20261113';
+import {Scene,portrait,symbols} from './scene.js?v=hall-order-20261113';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
@@ -424,8 +424,25 @@ function playNext(){
  spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;current=null;playNext();},duration+150);
 }
 
+// Compatibility for a LIVE server started before membership was added to snapshots.
+// Stop reading exports automatically once snapshots supply the field themselves.
+let legacyHallMembers=null,hallMembershipReadAt=0,hallMembershipLoading=false;
+function withHallMembership(s){
+ if(!s.halls||!s.players.some(p=>!Object.hasOwn(p,'sectHallIndex')))return s;
+ if(!hallMembershipLoading&&Date.now()-hallMembershipReadAt>15000){
+  hallMembershipLoading=true;hallMembershipReadAt=Date.now();
+  fetch(`/api/export?world=${mode}`,{cache:'no-store',signal:AbortSignal.timeout(8000)})
+   .then(r=>{if(!r.ok)throw Error('Hall membership unavailable');return r.json();})
+   .then(w=>{
+    legacyHallMembers=new Map(Object.entries(w.nguDuong?.members||{}).map(([id,m])=>[id,m.index]));
+    if(state){state=withHallMembership(state);scheduleRender();}
+   }).catch(()=>{}).finally(()=>{hallMembershipLoading=false;});
+ }
+ return legacyHallMembers?{...s,players:s.players.map(p=>Object.hasOwn(p,'sectHallIndex')?p:{...p,sectHallIndex:legacyHallMembers.get(p.id)??null})}:s;
+}
+
 function receive(s){
-  s=streamState(s,mode);
+  s=withHallMembership(streamState(s,mode));
   ascensionLobby?.update(s,queue);
   document.querySelector('.live-disclosure').textContent=mode==='live'&&s.liveIntegrityVersion!==1?'M\u00c1Y CH\u1ee6 CH\u01afA \u00c1P D\u1ee4NG LU\u1eacT LIVE M\u1edaI':'TRÒ CHƠI TU TIÊN';
   const previous=state;state=s;if(overlay&&s.raceStatus?.entryAnnouncement)narrator.add(s.raceStatus.entryAnnouncement);honorUI.update(s);if(initialized&&previous){const previousPlayers=new Map(previous.players.map(p=>[p.id,p]));for(const p of s.players){const old=previousPlayers.get(p.id);if(old&&skinFor(p.giftCoins).level>skinFor(old.giftCoins).level)enqueue({id:'skin:'+p.id+':'+p.giftCoins,user:p.id,name:p.name,effect:'skin',text:skinFor(p.giftCoins).name});}}online=true;$('#disconnectBanner').hidden=true;$('#saveStatus').textContent='● Đã kết nối · tự lưu mỗi 3s';if(!selected||!state.players.some(p=>p.id===selected))selected=state.players[0]?.id||null;

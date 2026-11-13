@@ -20,7 +20,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
-import {sectHallTargets,drawSectCourt,sectElders,seatSectElders} from './sect-hall.js?v=hall-columns-20261113';
+import {sectHallTargets,drawSectCourt,sectElders,seatSectElders} from './sect-hall.js?v=hall-order-20261113';
 import {loadImpactArt} from './ascension-impact.js';
 import {prepareBreakthroughSpectacle} from './breakthrough-spectacle.js';
 import {smallGift,compactPlaza,crowdTargets,stableTargets,PLAZA_CAPACITY,drawRitual} from './live-cinema.js';
@@ -108,9 +108,11 @@ loadPrestigeArt(this);syncRace(this,state);syncWar(this,state);syncAlchemy(this,
     this.hallMatch=state.halls?.match;
     this.hallDuelPlayers=this.hallMatch?new Map(state.players.filter(p=>p.id===this.hallMatch.a?.id||p.id===this.hallMatch.b?.id).map(p=>[p.id,p])):null;
     this.sectHalls=state.halls?.halls;
-    // Older running LIVE servers already expose the named disciples in each hall.
-    const hallMembership=new Map((this.sectHalls||[]).flatMap(h=>(h.disciples||[]).map(p=>[p.id,h.index])));
-    state={...state,players:state.players.map(p=>p.sectHallIndex==null&&hallMembership.has(p.id)?{...p,sectHallIndex:hallMembership.get(p.id)}:p)};
+    const hallDisciples=new Map((this.sectHalls||[]).flatMap(h=>(h.disciples||[]).map((p,rank)=>[p.id,{index:h.index,rank}])));
+    state={...state,players:state.players.map(p=>{
+      const disciple=hallDisciples.get(p.id);
+      return disciple?{...p,sectHallIndex:p.sectHallIndex??disciple.index,sectHallDiscipleRank:disciple.rank}:p;
+    })};
     this.sectElders=this.sectHalls?this.sectHalls.flatMap(h=>{
       const p=state.players.find(p=>p.id===h.elder?.id);
       return p?.active&&p.id!==this.sectMaster?.userId?[{...p,hallIndex:h.index}]:[];
