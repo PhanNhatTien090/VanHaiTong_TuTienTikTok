@@ -292,3 +292,27 @@ html body.overlay .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-ca
 html body.overlay .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock .honor-banner{
  background:linear-gradient(145deg,#092d43d1,#061b34d1)!important;
 }
+
+/* Bỏ hai bảng nhỏ cũ, dành cột phải cho thông tin sự kiện đầy đủ. */
+html body.overlay .scene-shell :is(#visitorHud,#likeGoal){display:none!important}
+html body.overlay #eventInfoDock{display:grid;gap:6px;width:100%;min-width:0;flex:none;pointer-events:none}
+html body.overlay #eventInfoDock:not(:has(>:not([hidden]))){display:none}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>:not([hidden]){
+ position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:none!important;
+ box-sizing:border-box;margin:0!important;padding:8px!important;border:1px solid #a6c1ce!important;border-radius:9px!important;
+ background:#071b2bd1!important;color:#fff!important;box-shadow:none!important;animation:none!important;
+ font:700 clamp(12px,2.25cqw,25px)/1.3 "Segoe UI",Arial,sans-serif!important;text-align:left!important;
+ text-shadow:0 1px 1px #000!important;
+}
+#visitorEventInfo>b{display:block;color:#ffe6a0}
+#visitorEventInfo .event-time{display:block;margin:3px 0 5px;color:#d0e6ed;font-size:.9em}
+#visitorEventInfo p{margin:5px 0;display:grid;gap:2px}
+#visitorEventInfo code{font:800 1.08em/1.3 "Segoe UI",Arial,sans-serif;color:#bdffe5}
+#visitorEventInfo p>span{font-size:.9em;color:#fff}
+#visitorEventInfo .event-rewards{margin-top:7px;padding-top:5px;border-top:1px solid #a6c1ce88}
+#visitorEventInfo .event-rewards strong,#visitorEventInfo .event-rewards b{color:#ffe6a0}
+#visitorEventInfo small{display:block;font-size:.85em;color:#d0e6ed}
+/* Bảng gõ số luôn ở cột trái; ẩn bảng lệnh trùng bên phải để thông tin sự kiện có chỗ. */
+html body.overlay .scene-shell #phoneHudRight:has(#eventInfoDock>:not([hidden]))>#basicCommands.rail-guide.corner-command-guide,
+html body.overlay .scene-shell #phoneHudRight:has(#eventInfoDock>:not([hidden]))>#commandRail{display:none!important}
+body.overlay:is(.sword-race,.social-stage,.ritual-active,.pet-cove-stage,.maze-on,.ascension-stage) #eventInfoDock{display:none!important}

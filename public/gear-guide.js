@@ -1,10 +1,8 @@
 // 08/11/2026: bảng hướng dẫn PHÁP BẢO & TRANG BỊ ở cột trái (dưới TOP TU VI) để góc này không trống.
-// Chỉ hiện khi cột trái KHÔNG có bảng sự kiện (yêu thú, cơ duyên, khách quý, sự kiện xã hội); có sự kiện thì nhường chỗ.
+// Khi có sự kiện, giữ trang gõ số cố định; thông tin sự kiện nằm ở cột phải.
 // Xoay 3 trang, mỗi trang 10 giây: lệnh pháp bảo → món rèn được (lấy từ danh mục thật) → bí pháp & đan dược.
-const EVENT_PANELS=['#bossHud','#opportunityHud','#visitorHud','#socialHud'];
 const PAGE_MS=10000;
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
-function shown(el){if(!el||el.hidden)return false;const st=getComputedStyle(el);return st.display!=='none'&&st.visibility!=='hidden'&&el.offsetHeight>0;}
 function rows(list,esc){return list.map(([cmd,txt])=>`<li><code>${esc(cmd)}</code><span>${esc(txt)}</span></li>`).join('');}
 // 11/11/2026: trang CHƠI NHANH · GÕ SỐ xen giữa mọi trang khác — người xem mới chỉ cần gõ 1 chữ số.
 function quickPage(state,esc){const q=state.quick;if(!q?.rows)return null;
@@ -21,9 +19,7 @@ function pages(state,esc){
 }
 export function renderGearGuide(state,esc,now=Date.now()){
   const el=document.getElementById('gearGuide');if(!el||!state)return;
-  const busy=EVENT_PANELS.some(q=>shown(document.querySelector(q)));
-  if(busy){el.hidden=true;return;}
-  const base=pages(state,esc),quick=quickPage(state,esc),list=quick?base.flatMap(p=>[quick,p]):base,html=list[Math.floor(now/PAGE_MS)%list.length];
+  const base=pages(state,esc),quick=quickPage(state,esc),list=quick?base.flatMap(p=>[quick,p]):base,html=state.quick?.event&&quick?quick:list[Math.floor(now/PAGE_MS)%list.length];
   if(el.dataset.html!==html){el.innerHTML=html;el.dataset.html=html;}
   el.hidden=false;
 }

@@ -12,7 +12,6 @@ import {renderCompanionHUD} from './companion-fx.js';
 import {mountPetUI,renderPetUI} from './spirit-pet-ui.js';
 import {ALL_PETS,petById} from './spirit-pets.js';
 import {isEventAnnouncement} from './event-announcements.js';
-import {heartHUD} from './heart-hud.js';
 import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
 import {divineSelection} from './divine-wardrobe.js';
 import {mountEventTab,renderSocialUI} from './social-ui.js';
@@ -41,7 +40,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
-import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=sharp-digits-20261113';
+import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=event-guidance-20261113';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js';
 import {showLinhBai} from './linh-bai.js';
@@ -69,6 +68,11 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
     for(const selector of selectors){const panel=root.querySelector(selector);if(panel)rail.appendChild(panel);}
     root.appendChild(rail);
   }
+  const eventDock=document.createElement('aside');eventDock.id='eventInfoDock';
+  eventDock.setAttribute('aria-label','Thông tin và cách tham gia sự kiện');
+  for(const id of ['bossHud','opportunityHud','socialHud','flowerHud']){const panel=root.querySelector('#'+id);if(panel)eventDock.appendChild(panel);}
+  const visitorInfo=document.createElement('section');visitorInfo.id='visitorEventInfo';visitorInfo.hidden=true;eventDock.appendChild(visitorInfo);
+  root.querySelector('#phoneHudRight').insertBefore(eventDock,root.querySelector('#commandRail'));
   const dock=document.createElement('div');dock.className='scene-guide-dock';
   for(const selector of ['#honorBanner']){const panel=root.querySelector(selector);if(panel)dock.appendChild(panel);}
   root.appendChild(dock);
@@ -315,7 +319,7 @@ if(overlay){const placeRail=()=>{const shell=document.querySelector('.scene-shel
   let y='.8%';if(top&&!top.hidden&&getComputedStyle(top).display!=='none'){const a=shell.getBoundingClientRect(),b=top.getBoundingClientRect();if(b.height>0)y=Math.round(b.bottom-a.top+Math.max(3,a.height*.004))+'px';}
   if(rail.style.top!==y)rail.style.setProperty('top',y);};placeRail();setInterval(placeRail,1000);addEventListener('resize',placeRail);}
 if(overlay){let railTurn=0;setInterval(()=>{const rail=document.getElementById('phoneHudRight');if(!rail)return;
-  const extra=[...rail.children].filter(el=>el.id!=='giftBoard'&&el.id!=='giftRanks');for(const el of extra)el.classList.remove('rail-rotate-hide');
+  const extra=[...rail.children].filter(el=>!['giftBoard','giftRanks','eventInfoDock','basicCommands'].includes(el.id));for(const el of extra)el.classList.remove('rail-rotate-hide');
   const shown=extra.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none'&&el.textContent.trim());
   if(shown.length<2)return;railTurn=(railTurn+1)%shown.length;shown.forEach((el,i)=>{if(i!==railTurn)el.classList.add('rail-rotate-hide');});},8000);}
 // Lịch NPC: đúng mốc thì NPC đó đột phá (hiệu ứng + tiêu đề cảnh giới); đầu chu kỳ mới thì 3 NPC mới nhập môn.
@@ -468,7 +472,7 @@ function render(){if(!state)return;if(overlay){document.body.classList.toggle('p
   const connected=state.connection.status==='connected';$('.scene-location').innerHTML='<i></i> '+esc(state.environment?.name||'Tụ Linh Đài').toUpperCase()+(mode==='demo'?'<small>THỬ</small>':connected?'<small>LIVE</small>':'<small>CHỜ KẾT NỐI</small>');$('#connectionText').textContent=mode==='demo'?'Bộ mô phỏng sẵn sàng':connected?'TikFinity đã kết nối':'TikFinity chưa kết nối';$('#connectionDot').classList.toggle('off',mode==='live'&&!connected);$('#bridgeStatus').textContent=({connected:'Đã kết nối • đang nhận sự kiện',connecting:'Đang kết nối…',reconnecting:'Đang thử kết nối lại sau mỗi 5 giây',disconnected:'Chưa kết nối'})[state.connection.status]+` · ${fmt(state.connection.received)} sự kiện`;
   $('#bridgeError').textContent=state.connection.lastError||'';$('#bridgeButton').textContent=state.connection.enabled?'Ngắt kết nối':'Kết nối TikFinity';
   const remain=Math.max(0,Math.ceil(((state.boss?.endsAt||state.nextBossAt)-state.serverNow)/1000));$('#scenePhase').textContent=state.raceStatus?.active?'Vân Hải Thiên Lộ':state.socialScene?(state.socialScene==='tournament'?'Luận Kiếm':'Tam Sinh Ước'):state.boss?`Bí cảnh còn ${remain}s`:`♜ ${Math.floor(remain/60)}:${String(remain%60).padStart(2,'0')}`;
-  const bh=$('#bossHud');bh.classList.toggle('visible',!!state.boss&&state.boss.species!=='abyss-dragon');document.body.classList.toggle('abyss-fight',state.boss?.species==='abyss-dragon'&&state.boss.hp>0); // 05/11: bảng yêu lực Ma Long vẽ trên canvas, ẩn bảng xếp hạng góc trái để không chồng
+  const bh=$('#bossHud');bh.hidden=!state.boss||state.boss.species==='abyss-dragon';bh.classList.toggle('visible',!bh.hidden);document.body.classList.toggle('abyss-fight',state.boss?.species==='abyss-dragon'&&state.boss.hp>0); // 05/11: bảng yêu lực Ma Long vẽ trên canvas, ẩn bảng xếp hạng góc trái để không chồng
   if(state.boss)setHUD(bh,`<div class="boss-line"><span>♜ ${esc(state.boss.name)}</span><span>${fmt(state.boss.hp)} / ${fmt(state.boss.maxHp)}</span></div><div class="progress"><i style="width:${state.boss.hp/state.boss.maxHp*100}%"></i></div><small>Gõ <b>danh</b> · ${remain}s · ${esc(state.boss.encounter?.name||'Top công lực nhận thưởng')}</small>${Object.entries(state.boss.damage||{}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3).map(([id,d],i)=>`<small class="boss-rank">${i+1}. ${esc(state.players.find(p=>p.id===id)?.name||'Đạo hữu')} · ${fmt(d)} công lực</small>`).join('')}`);
   if(!overlay&&currentTab==='skins')renderSkinGuide();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();renderGiftRules();
     const duel=$('#hallDuel'),duelHTML=hallDuelHTML(state.halls,esc,state.serverNow);
@@ -556,9 +560,21 @@ function syncLife(){scene.worldLife??={};for(const [key,id]of Object.entries(lif
 for(const [key,id]of Object.entries(lifeKeys))$('#'+id).onchange=e=>{localStorage.setItem('vanhai-life-'+key,String(e.target.checked));syncLife();};
 window.addEventListener('storage',e=>{if(e.key?.startsWith('vanhai-life-'))syncLife();});syncLife();
 
-function renderVisitorHud(){const el=$('#visitorHud'),e=state?.visitor;if(!el)return;el.hidden=!e||state.serverNow>=e.endsAt;if(el.hidden)return;const cfg=VISITORS[e.kind],seconds=Math.max(0,Math.ceil((e.endsAt-state.serverNow)/1000)),clock=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'),phase=Math.floor(state.serverNow/6000)%2;const reward=VISITOR_GIFT_REWARDS[e.kind];el.classList.toggle('skin-event',!!reward);// v88: 2 dòng cố định, không luân phiên — dòng quà skin luôn thấy
- // 07/11: một dòng luân phiên mỗi 4 s — cơ duyên miễn phí → mốc skin → mốc skin + pháp bảo.
- const free=e.completed?'Đã mở thưởng · gõ coduyen nhận quà':['hanlap','shende','hailam','doraemon','tudo','khuyniet','viemton','nguyet-lien','xich-vu'].includes(e.kind)?'Gõ coduyen để nhận quà':'Gõ coduyen · truyền đạo '+e.points+'/'+e.goal,lines=reward?[esc(free),...[[reward.skinCoins||100,'Skin'],[reward.artifactCoins||500,'Skin + Pháp bảo']].map(([coins,what])=>'<span class="vh-buy"><small class="vh-tang">Tặng quà</small>'+giftTokenHTML(state.giftArt,coins)+'<b class="vh-arrow">→</b><b class="vh-what">'+what+'</b></span>')]:[esc(free)],line=lines[Math.floor(state.serverNow/4000)%lines.length];setHUD(el,'<b>'+esc(cfg.name.toUpperCase())+' <small>'+clock+'</small></b><span class="vh-gift">'+line+'</span>');}
+function renderVisitorHud(){
+ const old=$('#visitorHud');if(old)old.hidden=true;
+ const el=$('#visitorEventInfo'),e=state?.visitor;if(!el)return;
+ el.hidden=!e||!!e.closedAt||state.serverNow>=e.endsAt;if(el.hidden)return;
+ const cfg=VISITORS[e.kind],reward=VISITOR_GIFT_REWARDS[e.kind];
+ const seconds=Math.max(0,Math.ceil((e.endsAt-state.serverNow)/1000)),clock=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+ const command=state.quick?.paused?'cơ duyên':'6 hoặc cơ duyên';
+ const free=e.completed?'Đã mở thưởng · nhận quà miễn phí':'Nhận cơ duyên miễn phí';
+ let html='<b>SỰ KIỆN · '+esc(cfg?.name||'Khách quý')+'</b><span class="event-time">Còn '+clock+'</span><p><code>Gõ '+esc(command)+'</code><span>'+esc(free)+'</span></p>';
+ if(reward){
+  html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong><p><b>'+fmt(reward.skinCoins||100)+' coin</b><span>Nhận skin '+esc(reward.skinName)+'</span></p><p><b>'+fmt(reward.artifactCoins||500)+' coin</b><span>Nhận thêm '+esc(reward.artifactName)+'</span></p><small>Tính quà cộng dồn trong lượt khách quý này.</small></div>';
+ }else if(e.goal)html+='<span>Truyền đạo: '+fmt(e.points||0)+' / '+fmt(e.goal)+'</span>';
+ setHUD(el,html);
+}
+
 
 // v73: tab Tu sĩ giả
 var puppetUI=initPuppetUI({root:document.getElementById('puppetPanel'),post,toast,getState:()=>state,openPlayer:id=>{tab('scene');selectPlayer(id);renderEditor(true);}});
@@ -644,8 +660,8 @@ function renderHeavenPanel(){const el=document.getElementById('heavenPanel');if(
 const fold=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'d').toLowerCase();
 
 // v86: thanh MỤC TIÊU TIM toàn LIVE (cảnh LIVE)
-function renderLikeGoal(){const el=document.getElementById('likeGoal');if(!el||!state)return;
-  const hud=heartHUD(state);el.dataset.context=hud.context;setHUD(el,hud.html);el.hidden=false;}
+function renderLikeGoal(){const el=document.getElementById('likeGoal');if(el)el.hidden=true;}
+
 
 // v87: HỒNG BAO + CÂU ĐỐ trên cảnh LIVE (đếm ngược theo giờ máy chủ)
 let engageTimer=null;
