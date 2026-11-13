@@ -36,7 +36,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
  let seed=0;for(const ch of String(p.id))seed=(seed*31+ch.codePointAt(0))%997;
  c.save();c.translate(target.x,target.y+(pose.lift||0));c.scale(target.scale||1.4,target.scale||1.4);
  drawCourtAuraLayer(c,spec.kind,t,pose.stand||0,layer,{motion,light,seed:seed*37});
- if(layer==='front'&&p.equipped===spec.artifact&&!light){
+ if(layer==='front'&&p.equipped===spec.artifact&&p.signatureArtifactOwned!==false&&!light){
   const image=load('/assets/thien-khuyet/relic-'+spec.artifact+'.webp');
   if(image){
    const x=spec.kind==='nguyet-lien'?-51:51,y=-34-(pose.stand||0)*15+(motion?Math.sin(t*.002)*6:0);
@@ -46,7 +46,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
  }
  c.restore();
 }
-export const courtShowsSignature=(scene,p)=>!scene.crowded&&scene.budget?.level!=='light'&&!scene.minimalCrowd&&!scene.ritualDrawing&&!scene.raceStatus?.active&&skinOf(p)?.artifact===p.equipped&&!!p.equipped;
+export const courtShowsSignature=(scene,p)=>!scene.crowded&&scene.budget?.level!=='light'&&!scene.minimalCrowd&&!scene.ritualDrawing&&!scene.raceStatus?.active&&skinOf(p)?.artifact===p.equipped&&p.signatureArtifactOwned!==false&&!!p.equipped;
 export function drawCourtVisitor(c,event,H,t,now=Date.now()){
  const spec=COURT_VISITORS.find(x=>x.kind===event?.kind);
  if(!spec||event.closedAt||now>=event.endsAt)return false;

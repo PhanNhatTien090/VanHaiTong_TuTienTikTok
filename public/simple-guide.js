@@ -24,6 +24,7 @@ export const GUIDE_PAGES=[
   {cmd:'thu + số',text:'gọi linh thú'}]},
  {title:'NGŨ ĐƯỜNG',rows:[
   {cmd:'đường',text:'xem Trưởng Lão và điểm tuần'},
+  {cmd:'đường chiến',text:'vào trận Ngũ Đường, xuất chiêu'},
   {cmd:'vào đường 1–5',text:'gia nhập một Đường'},
   {cmd:'thách đấu 1–5',text:'Thiên Bảng tranh ghế'},
   {cmd:'3 · trợ lực',text:'hỗ trợ khi Vân Đài mở'},

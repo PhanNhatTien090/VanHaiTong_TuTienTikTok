@@ -1,5 +1,6 @@
 import {SPIRIT_PETS,ALL_PETS,RARE_PETS,PREMIUM_PETS,petById,unlockedPets,eventPets} from './public/spirit-pets.js';
 import fs from 'node:fs';
+import {stageConflict} from './stage-lock.mjs';
 // Chỉ cho thần thú xuất hiện khi đã có ảnh, tránh hiện ô trống trên LIVE.
 const artDir=new URL('./public/assets/spirit-pets-v1/',import.meta.url);
 const withArt=pool=>pool.filter(p=>fs.existsSync(new URL(p.id+'.png',artDir)));
@@ -12,6 +13,7 @@ function pickFeatured(w,pool,key,rng=Math.random){
 const active=(e,now)=>e&&!e.closedAt&&now>=e.startedAt&&now<e.endsAt;
 export function startPetEvent(w,now,minutes=15){
  if(active(w.petEvent,now))return {ok:false,message:'Linh Thú Cốc đang mở.'};
+ const busy=stageConflict(w,now,{allowPet:true});if(busy)return {ok:false,message:'Đang có '+busy+' • chờ kết thúc.'};
  const duration=Number(minutes);if(!Number.isFinite(duration)||duration<1||duration>60)return {ok:false,message:'Chọn 1–60 phút.'};
  w.petEvent={id:'pets:'+now,startedAt:now,endsAt:now+Math.round(duration*60000),featured:pickFeatured(w,w.settings?.rarePets===false?withArt(SPIRIT_PETS.filter(p=>p.coins===200)):rarePetPool(),'lastFeaturedPet'),premium:pickFeatured(w,withArt(PREMIUM_PETS),'lastPremiumPet')};return {ok:true,featured:w.petEvent.featured};
 }

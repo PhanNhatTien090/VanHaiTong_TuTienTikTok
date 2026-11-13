@@ -1,3 +1,4 @@
+import {settleHallWeek,payHallWeeklyRewards,hallWeeklyView} from './hall-weekly.mjs';
 export const HALLS = [
   {name:'Truyền Công Đường', key:'truyen cong', mark:'功', color:'#79e9c4', perk:'Vận công +3% tu vi'},
   {name:'Tàng Bảo Đường', key:'tang bao', mark:'寶', color:'#ffc671', perk:'Đánh yêu thú và rèn pháp bảo có thêm tu vi'},
@@ -19,12 +20,7 @@ const blankHall = () => ({elder:null, since:0, disciples:[], offers:[], points:0
 
 function getState(w,now) {
   const s = w.nguDuong ??= {week:weekAt(now), halls:HALLS.map(blankHall), members:{}, queue:[], match:null};
-  if(s.week !== weekAt(now)){
-    const standings = s.halls.map((h,index)=>({index,points:h.points})).sort(byPoints);
-    s.champion = s.week === weekAt(now)-1 && standings[0].points>0 ? standings[0].index : null;
-    s.week = weekAt(now);
-    for(const hall of s.halls)hall.points=0;
-  }
+  settleHallWeek(w,s,now,HALLS);
   return s;
 }
 
@@ -60,13 +56,20 @@ export function hallBenefits(w,p,now,source) {
 export function hallContribution(w,p,now,type) {
   if(!w.nguDuong||!real(p)||w.playTransfers?.[p.id]?.phase==='web')return;
   const s=getState(w,now), m=membership(s,p.id);
-  if(!m || !['cultivate','gather','attack','craft','brew','use','learn','checkin','breakthrough','event'].includes(type))return;
+  if(!m || !['cultivate','gather','attack','craft','brew','use','learn','checkin','breakthrough','event','gift'].includes(type))return;
   if(m.pointAt!=null && now-m.pointAt<4000)return;
   m.pointAt=now;
-  if(m.week!==s.week){m.week=s.week;m.weekPoints=0;}
+  if(m.week!==s.week){m.week=s.week;m.weekPoints=0;m.weekActivity={};}
   m.weekPoints=(m.weekPoints||0)+1;
   m.points=(m.points||0)+1;
   s.halls[m.index].points++;
+  m.weekActivity??={};m.weekActivity[type]=(m.weekActivity[type]||0)+1;
+  const h=s.halls[m.index];h.weekActivity??={};h.weekActivity[type]=(h.weekActivity[type]||0)+1;
+}
+
+export function creditHallBattle(w,index,points,now){
+ const s=getState(w,now),h=s.halls[index];if(!h||!Number.isSafeInteger(points)||points<0)return;
+ h.points+=points;h.battlePoints=(h.battlePoints||0)+points;h.weekActivity??={};h.weekActivity.battle=(h.weekActivity.battle||0)+points;
 }
 
 function assign(s,p,index,now) {
@@ -115,10 +118,11 @@ export function hallCommand(w,p,words,now,ctx) {
     p.hallCardAt=now;
     const rows=hallView(w,now,ctx.active).halls;
     const selected=rows[m?.index??index];
-    ctx.emit(w,p,selected?selected.name+' · '+selected.perk:'Ngũ Đường · gõ vào đường 1–5','status',now,{hallCard:{selected:selected?.index??null,personal:m?.week===s.week?m.weekPoints:0,halls:rows}});
+    ctx.emit(w,p,selected?selected.name+' · '+selected.perk:'Ngũ Đường · gõ vào đường 1–5','status',now,{hallCard:{selected:selected?.index??null,personal:m?.week===s.week?m.weekPoints:0,weekly:hallWeeklyView(s,now),halls:rows}});
     return success('Đã mở Ngọc Giản Ngũ Đường.');
   }
   if(command==='vao duong'){
+    if(['registration','running'].includes(w.hallWar?.phase))return failure('Đang Ngũ Đường Tranh Phong • đợi hết trận để đổi Đường.');
     if(index<0)return failure('Gõ vào đường 1–5 hoặc tên Đường.');
     if(m?.index===index)return success('Đạo hữu đã ở '+HALLS[index].name+'.');
     if(hall?.elder===p.id)return failure('Trưởng Lão đang giữ ghế của Đường.');
@@ -178,6 +182,8 @@ function promote(w,hall,p,index,now,emit){
 export function tickHalls(w,now,ctx,force=false){
   if(w.mode==='web')return;
   const s=getState(w,now);
+  payHallWeeklyRewards(w,s,now,ctx,HALLS);
+  if(['registration','running'].includes(w.hallWar?.phase))return;
   if(!force && !s.match && now-(s.scanAt??-Infinity)<5000)return;
   if(s.match && now<s.match.endsAt)return;
   s.scanAt=now;
@@ -232,14 +238,15 @@ export function hallView(w,now,active) {
   const s=w.nguDuong, master=masterId(w,active,now);
   const person=id=>{
     const p=w.players[id];
-    return real(p)?{id:p.id,name:p.name,realm:p.realm,active:active(w,p,now)}:null;
+    return real(p)?{id:p.id,name:p.name,realm:p.realm,active:active(w,p,now),avatar:p.avatar}:null;
   };
   const m=s?.match;
   return {
+    weekly:hallWeeklyView(s,now),
     thienBang:thienBang(w,active,now,master),
     halls:HALLS.map((def,index)=>{
       const h=s?.halls[index];
-      return {...def,index,elder:h?.elder===master?null:person(h?.elder),disciples:(h?.disciples||[]).map(person).filter(Boolean),points:s?.week===weekAt(now)?h?.points||0:0,champion:s?.week===weekAt(now)&&s.champion===index};
+      return {...def,index,elder:h?.elder===master?null:person(h?.elder),disciples:(h?.disciples||[]).map(person).filter(Boolean),points:s?.week===weekAt(now)?h?.points||0:0,activity:s?.week===weekAt(now)?h?.weekActivity||{}:{},battlePoints:s?.week===weekAt(now)?h?.battlePoints||0:0,champion:s?.week===weekAt(now)&&s.champion===index};
     }),
     match:m&&m.endsAt>now?{...m,support:undefined,a:person(m.a),b:person(m.b)}:null,
     queued:s?.queue.length||0

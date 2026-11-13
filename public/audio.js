@@ -1,4 +1,4 @@
-import {BGM_LIST,musicIndex} from './music-rotation.js';
+import {BGM_LIST,musicIndex} from './music-rotation.js?v=context-music-20261114';
 import {playBonkSound} from './bonk-audio.js';
 import {playWarSound} from './sect-war-audio.js';
 import {playAlchemySound} from './alchemy-audio.js';
@@ -36,9 +36,9 @@ function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.c
 export const MUSIC_GAIN=1.6;
 export const BGM_TRACKS=Object.freeze(BGM_LIST.map(t=>t.src));
 export class CultivationAudio {
-  constructor(){this.enabled=false;this.ctx=null;this.volume=.3;this.ambient=.45;this.sfx=.75;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
+  constructor(){this.enabled=false;this.ctx=null;this.volume=.45;this.ambient=.6;this.sfx=.85;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){
-    if(!on){for(const cue of this.battleVoices||[])cue.stop();this.battleVoices=[];this.ritual(null);this.enabled=false;clearTimeout(this.timer);this.timer=null;this.music?.pause();if(this.ctx)await this.ctx.suspend();return;}
+    if(!on){clearInterval(this.trackFadeTimer);this.pendingTrack=null;this.transitionGain=1;for(const cue of this.battleVoices||[])cue.stop();this.battleVoices=[];this.ritual(null);this.enabled=false;clearTimeout(this.timer);this.timer=null;this.music?.pause();if(this.ctx)await this.ctx.suspend();return;}
     if(!this.ctx)this.init();
     const resume=this.ctx.resume();let timer;
     try{await Promise.race([resume,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Bấm nút âm thanh để cho phép phát.')),1500);})]);}finally{clearTimeout(timer);}
@@ -51,9 +51,27 @@ export class CultivationAudio {
   }
   // 10/11: tự giữ tiếng — nhạc nền bị dừng ngoài ý muốn / AudioContext bị treo thì tự phát lại khi vẫn đang bật.
   retryMusic(){clearTimeout(this.musicRetry);this.musicRetry=setTimeout(()=>{if(this.enabled&&this.music?.paused)this.music.play()?.catch?.(()=>this.retryMusic());},3000);}
-  keepAlive(){if(!this.enabled)return;if(this.ctx&&this.ctx.state!=='running'&&this.ctx.state!=='closed')this.ctx.resume().catch(()=>{});if(this.music?.paused)this.music.play()?.catch?.(()=>{});}
+  keepAlive(){if(!this.enabled)return;if(this.ducked&&Date.now()>(this.duckUntil||0))this.duck(false);if(this.ctx&&this.ctx.state!=='running'&&this.ctx.state!=='closed')this.ctx.resume().catch(()=>{});if(this.music?.paused)this.music.play()?.catch?.(()=>{});}
   // 08/11 tối: hết bài thì sang bài kế (vòng lặp danh sách).
-  setTrack(i){if(!Number.isInteger(i)||i<0||i>=BGM_TRACKS.length)return;this.wantTrack=i;if(!this.music||this.track===i)return;this.track=i;this.music.src=BGM_TRACKS[i];this.music.loop=true;this.sync();if(this.enabled)this.music.play()?.catch?.(()=>{});}
+  setTrack(i){
+    if(!Number.isInteger(i)||i<0||i>=BGM_TRACKS.length)return;this.wantTrack=i;
+    if(!this.music||this.pendingTrack===i)return;
+    clearInterval(this.trackFadeTimer);this.pendingTrack=null;
+    if(this.track===i){this.transitionGain=1;this.sync();return;}
+    if(!this.enabled){this.track=i;this.music.src=BGM_TRACKS[i];this.music.loop=true;this.transitionGain=1;this.sync();return;}
+    const started=Date.now(),initial=this.transitionGain??1;this.pendingTrack=i;let swapped=false;
+    this.trackFadeTimer=setInterval(()=>{
+      const age=Date.now()-started;
+      if(age<240)this.transitionGain=initial*(1-age/240);
+      else{
+        if(!swapped){swapped=true;this.track=i;this.music.src=BGM_TRACKS[i];this.music.loop=true;if(this.enabled)this.music.play()?.catch?.(()=>this.retryMusic());}
+        this.transitionGain=Math.min(1,(age-240)/700);
+      }
+      this.sync();
+      if(age>=940){clearInterval(this.trackFadeTimer);this.trackFadeTimer=null;this.pendingTrack=null;this.transitionGain=1;this.sync();}
+    },40);
+  }
+
   init(){const C=globalThis.AudioContext||globalThis.webkitAudioContext;this.ctx=new C();const c=this.ctx;
     this.master=c.createGain();this.ambBus=c.createGain();this.fxBus=c.createGain();this.limiter=c.createDynamicsCompressor();
     this.limiter.threshold.value=-14;this.limiter.knee.value=12;this.limiter.ratio.value=4;this.limiter.attack.value=.01;this.limiter.release.value=.4;
@@ -67,7 +85,7 @@ export class CultivationAudio {
     const buf=c.createBuffer(1,c.sampleRate*4,c.sampleRate),d=buf.getChannelData(0);let low=0;for(let i=0;i<d.length;i++){low=.985*low+.015*(Math.random()*2-1);d[i]=low;}
     const noise=c.createBufferSource();noise.buffer=buf;noise.loop=true;const filter=c.createBiquadFilter(),gain=c.createGain();filter.type='lowpass';filter.frequency.value=650;gain.gain.value=typeof Audio==='undefined'?.14:.025;noise.connect(filter);filter.connect(gain);gain.connect(this.ambBus);noise.start();this.sync();
   }
-  sync(){if(this.music)this.music.volume=Math.min(1,this.volume*this.ambient*MUSIC_GAIN*Math.min(this.ducked?.28:1,this.qiSession?(this.qiSession.duck??.22):1));if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t,.3);this.fxBus.gain.setTargetAtTime(this.sfx,t,.08);}
+  sync(){if(this.music)this.music.volume=Math.min(1,this.volume*this.ambient*MUSIC_GAIN*(this.transitionGain??1)*Math.min(this.ducked?.55:1,this.qiSession?(this.qiSession.duck??.22):1));if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t,.3);this.fxBus.gain.setTargetAtTime(this.sfx,t,.08);}
   ritual(event,elapsed=0){
     if(!event||!this.enabled||this.ctx?.state!=='running'){
       if(this.qiSession){this.qiSession.audio.stop();this.qiSession=null;this.sync();}return;
@@ -99,7 +117,7 @@ export class CultivationAudio {
     if(at>now+.05)timer=setTimeout(()=>{if(!stopped&&this.ctx===c)accent(Math.max(c.currentTime+.02,c.currentTime+.3));},Math.max(0,(at-now-.3)*1000));
     return {input,stop:()=>{stopped=true;clearTimeout(timer);const t=c.currentTime;out.gain.setTargetAtTime(0,t,.08);for(const n of nodes)n.gain.setTargetAtTime(0,t,.08);setTimeout(()=>{try{input.disconnect();out.disconnect();for(const n of nodes)n.disconnect();}catch{}},900);}};
   }
-  duck(on){this.ducked=on;this.sync();}
+  duck(on){this.ducked=on;this.duckUntil=on?Date.now()+20000:0;this.sync();}
   set(kind,value){this[kind]=Math.max(0,Math.min(1,Number(value)||0));this.sync();}
   note(f,at,duration=.8,gain=.06,bus=this.fxBus,kind='sine'){
     const c=this.ctx,o=c.createOscillator(),g=c.createGain();o.type=kind;o.frequency.value=f;o.connect(g);g.connect(bus);g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(gain,at+.025);g.gain.exponentialRampToValueAtTime(.0001,at+duration);o.start(at);o.stop(at+duration+.03);
@@ -127,7 +145,7 @@ export class CultivationAudio {
     if(now-(this.last[key]??-100)<cd)return;
     this.battleVoices=(this.battleVoices||[]).filter(v=>v.until>now);
     const important=kind.startsWith('boss-');if(this.battleVoices.length>=(important?5:3))return;
-    this.last[key]=now;const cue=scheduleBattleSound(this.ctx,this.fxBus,kind,kind==='cast'?combatVoice(variant):variant,this.ducked?.48:1);
+    this.last[key]=now;const cue=scheduleBattleSound(this.ctx,this.fxBus,kind,kind==='cast'?combatVoice(variant):variant,this.ducked?.72:1);
     this.battleVoices.push({...cue,until:now+1.4});
   }
   play(type){if(!this.enabled||!this.ctx)return;const c=this.ctx,t=c.currentTime;

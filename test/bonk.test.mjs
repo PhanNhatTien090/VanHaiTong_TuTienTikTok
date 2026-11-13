@@ -11,7 +11,7 @@ test('ngoài sự kiện: lệnh go không làm gì, không mất linh thạch',
  const w=setup();const r=chat(w,'p0','go Người 1',N+100);assert.notEqual(r.bonk,'p1');assert.equal(w.players.p1.stones,100);
 });
 test('mở sự kiện: gõ theo tên/mã/tên có emoji, người bị gõ rơi 1–3 viên sang người gõ',()=>{
- const w=setup();assert.ok(startBonk(w,N).ok);assert.equal(stageConflict(w,N+1),'hội gõ đầu');
+ const w=setup();assert.ok(startBonk(w,N).ok);assert.equal(stageConflict(w,N+1),null,'trò nhỏ không chiếm sân khấu');
  let r=chat(w,'p0','go Người 1',N+100);assert.equal(r.ok,true);assert.equal(r.bonk,'p1');
  const d=r.stones;assert.ok(d>=BONK.minDrop&&d<=BONK.maxDrop);assert.equal(w.players.p1.stones,100-d);assert.equal(w.players.p0.stones,100+d);
  r=chat(w,'p2','gõ đầu lam ba',N+200);assert.equal(r.bonk,'lam','gõ đầu + tiền tố tên không dấu');

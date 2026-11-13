@@ -6,7 +6,6 @@
 // Cộng dồn coin tặng trong lượt: ≥1 Búa Đồng · ≥20 Ngọc Bích Chùy · ≥99 Lôi Thần Chùy — giữ VĨNH VIỄN (p.bonkHammer),
 // dùng cho mọi lượt Hội Gõ Đầu sau. Búa xịn rơi nhiều linh thạch hơn, tay đỡ mỏi hơn; người bị gõ bằng búa xịn mất tối đa
 // BONK.maxLossPremium viên/lượt (gõ tay không vẫn chỉ tới BONK.maxLoss).
-import {stageConflict} from './stage-lock.mjs';
 
 export const BONK=Object.freeze({durationMs:180000,cooldownMs:15000,immuneMs:8000,minDrop:1,maxDrop:3,maxLoss:15,showMs:3000,podiumMs:8000,maxLossPremium:30});
 export const HAMMERS=Object.freeze([
@@ -24,7 +23,7 @@ export const bonkOpen=(w,now)=>!!w.bonkFest&&!w.bonkFest.closedAt&&now<w.bonkFes
 
 export function startBonk(w,now,c){
  if(bonkOpen(w,now))return fail('Hội Gõ Đầu đang mở.');
- const busy=stageConflict(w,now);if(busy)return fail('Sân đang có '+busy+', để sau.');
+ // Trò nhỏ có thể chạy trong sự kiện lớn; không chiếm sân khấu.
  w.bonkFest={id:'bonk-'+now,startedAt:now,endsAt:now+BONK.durationMs,hits:[],count:{},taken:{},lost:{},seq:0,coins:{}};
  c.emit(w,null,'HỘI GÕ ĐẦU khai mạc 3 phút • gõ go kèm tên để đi gõ đầu đạo hữu • bị gõ rơi vài linh thạch','bonk',now,{bonkStart:true});
  return {ok:true,endsAt:w.bonkFest.endsAt};

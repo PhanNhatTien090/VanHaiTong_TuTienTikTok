@@ -1,3 +1,4 @@
+import {MINI_TYPES,smallEventConflict,startMiniEvent,tickMiniEvent,miniCommand,miniView} from './mini-events.mjs';
 // v87: Đợt 2 giữ chân người xem — Hồng bao rơi · Câu đố tu tiên · Chuỗi điểm danh + Nhiệm vụ ngày · Tông môn kiến tạo.
 // Ngữ cảnh c = {emit, gain, active, requiredQi, giveArtifact, itemName, busy}. Phần thưởng là vật phẩm trong trò chơi.
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
@@ -118,22 +119,23 @@ export function sectBuild(w,p,coins,now,c){if(p.puppet||p.resident||coins<=0)ret
 
 // ---------- LỆNH + NHỊP ----------
 export function engagementCommand(w,p,cmd,rest,now,c){
+  const mini=miniCommand(w,p,cmd,rest,now,c);if(mini)return mini;
   if((cmd==='nhan'||cmd==='hongbao')&&!rest)return claimEnvelope(w,p,now,c);
   {const r=answerQuiz(w,p,[cmd,rest].filter(Boolean).join(' '),now);if(r)return r;} // 4/11: câu đố mẹo — mọi câu chat đều được thử chấm
   if(cmd==='nhiemvu'){c.emit(w,p,taskText(p,now,w),'status',now,{tasks:true});return {ok:true};}
   return null;}
 export function tickEngagement(w,now,c){
-  closeEnvelope(w,now,c);closeQuiz(w,now,c);
+  closeEnvelope(w,now,c);closeQuiz(w,now,c);tickMiniEvent(w,now,c);
   const live=Object.values(w.players).filter(p=>!p.resident&&c.active(w,p,now)).length;
-  const calm=!c.busy(w,now)&&!(w.envelope&&!w.envelope.closedAt)&&!(w.quiz&&!w.quiz.closedAt);
+  const calm=!smallEventConflict(w,now)&&w.liveSession?.active!==false;
   // 4/11/2026: sự kiện nhỏ (lì xì / câu đố) rải dày — một nhịp chung ngẫu nhiên 1–2 phút, bốc ngẫu nhiên loại (không lặp liền một loại).
-  // Đang có sự kiện lớn hoặc chưa đủ 2 người hoạt động thì thử lại sau 20 giây. (envelopeMinutes/quizMinutes cũ không còn dùng.)
-  {const kinds=[w.settings?.envelope!==false&&'envelope',w.settings?.quiz!==false&&'quiz'].filter(Boolean);if(kinds.length){w.nextSmallAt??=now+60000;if(now>=w.nextSmallAt){if(calm&&live>=2){const pool=kinds.length>1?kinds.filter(k=>k!==w.lastSmallKind):kinds,kind=pool[Math.floor(Math.random()*pool.length)];if(kind==='envelope')startEnvelope(w,now,c);else startQuiz(w,now,c);w.lastSmallKind=kind;w.nextSmallAt=now+Math.round((60+Math.random()*60)*1000);}else w.nextSmallAt=now+20000;}}}
+  // Đang có trò nhỏ khác hoặc chưa đủ 2 người hoạt động thì thử lại sau 20 giây. (envelopeMinutes/quizMinutes cũ không còn dùng.)
+  {const kinds=[w.settings?.envelope!==false&&'envelope',w.settings?.quiz!==false&&'quiz',...(w.settings?.miniGames===false?[]:MINI_TYPES)].filter(Boolean);if(kinds.length){w.nextSmallAt??=now+60000;if(now>=w.nextSmallAt){if(calm&&live>=2){const pool=kinds.length>1?kinds.filter(k=>k!==w.lastSmallKind):kinds,kind=pool[Math.floor(Math.random()*pool.length)];if(kind==='envelope')startEnvelope(w,now,c);else if(kind==='quiz')startQuiz(w,now,c);else startMiniEvent(w,kind,now,c);w.lastSmallKind=kind;w.nextSmallAt=now+Math.round((60+Math.random()*60)*1000);}else w.nextSmallAt=now+20000;}}}
 }
 // lộ ra cho cảnh: không lộ đáp án / danh sách nhận
-export function engagementView(w,now){const e=w.envelope,z=w.quiz;return {
+export function engagementView(w,now){const e=w.envelope,z=w.quiz;return {mini:miniView(w,now),
   envelope:e&&!e.closedAt&&now<e.endsAt?{endsAt:e.endsAt,count:Object.keys(e.claimed).length}:null,
   quiz:z&&!z.closedAt&&now<z.endsAt?{q:z.q,riddle:!!z.riddle,...(z.options?{options:z.options}:{}),endsAt:z.endsAt,count:z.order.length}:null,
   sectBuild:w.sectBuild?{level:w.sectBuild.level,coins:w.sectBuild.coins,next:SECT_LEVELS[w.sectBuild.level]||null}:{level:0,coins:0,next:SECT_LEVELS[0]}};}
-export function startEnvelopeNow(w,now,c){if(w.envelope&&!w.envelope.closedAt&&now<w.envelope.endsAt)return {ok:false,message:'Hồng bao đang rơi.'};startEnvelope(w,now,c);return {ok:true};}
-export function startQuizNow(w,now,c){if(w.quiz&&!w.quiz.closedAt&&now<w.quiz.endsAt)return {ok:false,message:'Câu đố đang chạy.'};startQuiz(w,now,c);return {ok:true};}
+export function startEnvelopeNow(w,now,c){const busy=smallEventConflict(w,now);if(busy)return {ok:false,message:'Đang có '+busy+'.'};startEnvelope(w,now,c);return {ok:true};}
+export function startQuizNow(w,now,c){const busy=smallEventConflict(w,now);if(busy)return {ok:false,message:'Đang có '+busy+'.'};startQuiz(w,now,c);return {ok:true};}

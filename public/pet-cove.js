@@ -1,6 +1,6 @@
 import {SPIRIT_PETS,eventPets,petRequirement,petPose} from './spirit-pets.js';
-import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose} from './spirit-pet-art.js?v=premium-motion-20261113';
-import {loadPetArt} from './spirit-pet-art.js?v=premium-motion-20261113';
+import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose} from './spirit-pet-art.js?v=drawn-pets-20261114';
+import {loadPetArt} from './spirit-pet-art.js?v=drawn-pets-20261114';
 export const PET_COVE_MAP={id:'pet-cove',name:'Linh Thú Cốc',image:'/assets/maps-v3/pet-cove.png',ambience:'jade',floorY:.76,layout:'ground'};
 export function petCoveOn(scene,now=Date.now()){
  return !!(scene.petEvent?.active&&scene.petEvent.endsAt>now&&!scene.boss&&!scene.raceStatus?.active&&!scene.socialScene&&!scene.socialStage?.length);

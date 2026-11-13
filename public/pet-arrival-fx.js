@@ -1,5 +1,5 @@
 import {petById} from './spirit-pets.js';
-import {drawPetBolt,drawRareFx,petArtFrame} from './spirit-pet-art.js?v=premium-motion-20261113';
+import {drawPetBolt,drawRareFx,petArtFrame} from './spirit-pet-art.js?v=drawn-pets-20261114';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-(1-clamp(v))**3;
 export function petArrivalProfile(e){
  if(!e?.petAward)return null;const pet=petById(e.petId);if(!pet)return null;

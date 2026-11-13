@@ -1,3 +1,4 @@
+import {stageConflict} from './stage-lock.mjs';
 export const LANTERN_PROMPTS=Object.freeze([
  {question:'Nếu được đi cùng đồng môn, chọn nơi nào?',a:'Biển mây',b:'Rừng trúc'},
  {question:'Lúc nghỉ tu, hai người thích làm gì?',a:'Ngắm sao',b:'Uống trà'},
@@ -6,7 +7,7 @@ export const LANTERN_PROMPTS=Object.freeze([
 ]);
 const open=(w,now)=>w.lanternFestival&&!w.lanternFestival.closedAt&&now<w.lanternFestival.endsAt;
 export function controlLantern(w,op,now,c){
- if(op==='start'){if(open(w,now))return {ok:false,message:'Đêm Đèn Đồng Môn đang mở.'};const active=Object.values(w.players).filter(p=>!p.puppet&&!p.resident&&c.active(w,p,now)).length;
+ if(op==='start'){if(open(w,now))return {ok:false,message:'Đêm Đèn Đồng Môn đang mở.'};const busy=stageConflict(w,now);if(busy)return {ok:false,message:'Đang có '+busy+' • chờ kết thúc.'};const active=Object.values(w.players).filter(p=>!p.puppet&&!p.resident&&c.active(w,p,now)).length;
   w.lanternFestival={id:'lantern:'+now,startedAt:now,endsAt:now+300000,queue:[],joined:[],awarded:[],lanterns:[],goal:Math.max(2,Math.min(8,Math.ceil(active/4))),celebrated:false};c.emit(w,null,'ĐÊM ĐÈN ĐỒNG MÔN • gõ cungtu để ghép bạn • cùng tu luyện và chọn a/b để thắp đèn','social',now,{lanternStart:true});return {ok:true};}
  if(op==='stop'){if(w.lanternFestival){w.lanternFestival.endsAt=now;tickLantern(w,now,c);}return {ok:true};}return {ok:false,message:'Thao tác không hợp lệ.'};
 }

@@ -36,3 +36,16 @@ Ghi công dán vào mô tả LIVE: "Music: Imperial China Cinematic, All The Tea
 - `bgm-tu-tien-10.mp3` — “Five Armies”, Kevin MacLeod, CC BY 4.0. https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875
 
 Hai bản được chuẩn hóa âm lượng cho LIVE. Ghi công thêm vào mô tả LIVE: Music: Mountain Emperor, Five Armies by Kevin MacLeod (incompetech.com), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Volume normalized.
+
+
+## Nhạc theo map và sự kiện — 14/11/2026
+
+- `bgm-battle-crusade.mp3`: Crusade — Kevin MacLeod. https://remote.incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100884
+- `bgm-mystic-dragon.mp3`: Dragon and Toast — Kevin MacLeod. https://www.incompetech.com/music/royalty-free/index.html?isrc=USUAN1100251
+- `bgm-bond-cherry.mp3`: Cherry Blossom — Kevin MacLeod. https://incompetech.com/music/royalty-free/index.html?Search=Search&isrc=USUAN1100382
+
+Nguồn tải: MP3 chính thức tại incompetech.com/music/royalty-free/mp3-royaltyfree/. Cả ba dùng CC BY 4.0: https://incompetech.com/music/royalty-free/licenses/ . Bản tích hợp chuẩn hóa -19 LUFS, true peak -1.5 dBTP, LRA 11; MP3 VBR q4, 44.1 kHz. Không tăng gain vượt limiter.
+
+Thêm dòng này vào mô tả LIVE: **Music: Crusade, Dragon and Toast, Cherry Blossom by Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License https://creativecommons.org/licenses/by/4.0/ . Volume normalized.**
+
+Tự động: tỷ thí / Đường chiến / chính ma / yêu thú dùng nhóm chiến trận; kết duyên dùng nhóm nhẹ vui; luyện đan dùng nhóm phương Đông; mê cung dùng nhóm huyền cảnh. Map thường đổi trong nhóm theo không khí map mỗi 30 phút. Giữ bài ổn định trong suốt sự kiện, chuyển âm nhẹ khi đổi cảnh; trò nhỏ không đổi nhạc. Chọn bài thủ công sẽ giữ lựa chọn, chọn Tự đổi để quay về theo map/sự kiện.

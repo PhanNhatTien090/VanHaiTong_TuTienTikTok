@@ -1,3 +1,5 @@
+import {drawDuelGiftStrike,drawDuelCutIn} from './duel-combat.js';
+import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {drawSpiritGift,loadSpiritBeasts} from './gift-spirit-beasts.js';
 import {makeSurface} from './performance.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>1-(1-clamp(x))**3;
@@ -23,13 +25,14 @@ export class EventGiftQueue{
  sample(t){if(this.active&&t-this.active.start>=this.active.profile.duration)this.active=null;if(!this.active&&this.pending.length){const index=this.pending.findIndex(e=>!e.readyAt||e.comboFinal||performance.now()>=e.readyAt);if(index<0)return null;const [row]=this.pending.splice(index,1);this.active={...row,start:t,profile:eventGiftTier(row.value)};}return this.active;}
 }
 export function syncEventGiftFx(scene,state){const race=state.raceStatus,match=state.socialStatus?.tournament?.current,context=race?.active&&race.phase==='running'?'race:'+race.id:state.socialScene==='tournament'&&match?'duel:'+match.id:null;
- (scene.eventGiftQueue??=new EventGiftQueue()).sync(context,context?.startsWith('race:')?race.giftFx:match?.giftFx,state.serverNow||Date.now());if(scene.eventGiftQueue.pending.length){loadEventGiftArt(scene);if(scene.eventGiftQueue.pending.some(e=>e.value>=500))loadSpiritBeasts(scene);}
+ const rows=(context?.startsWith('race:')?race.giftFx:match?.giftFx)||[],players=new Map(state.players.map(p=>[p.id,p]));
+ (scene.eventGiftQueue??=new EventGiftQueue()).sync(context,rows.map(e=>{const p=players.get(e.user);const row={...e,avatar:p?.avatar||e.avatar,name:p?.name||e.name};donorPortrait(row.avatar);return row;}),state.serverNow||Date.now());if(scene.eventGiftQueue.pending.length){loadEventGiftArt(scene);if(scene.eventGiftQueue.pending.some(e=>e.value>=500))loadSpiritBeasts(scene);}
 }
 function img(c,im,x,y,w,h,rot=0,alpha=1,flip=false){if(!im||alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(rot);if(flip)c.scale(-1,1);c.drawImage(im,-w/2,-h/2,w,h);c.restore();}
 function flowingSprite(c,im,x,y,w,h,time,alpha){if(!im)return;c.save();c.globalAlpha*=alpha;for(let i=0;i<6;i++){const u=i/6,shift=Math.sin(time*.011-u*8)*w*.035*u;c.drawImage(im,0,i*im.height/6,im.width,im.height/6,x-w/2+shift,y-h/2+i*h/6,w,h/6+1);}c.restore();}
-export function eventGiftImpulse(scene,t){const e=scene.eventGiftQueue?.sample(t);if(!e||e.value<500||!scene.motion||!scene.cameraEnabled)return {x:0,y:0};const k=(t-e.start)/e.profile.duration,a=clamp(1-Math.abs(k-.3)/.09)*Math.min(5,1+e.profile.blades/5);if(!a)return {x:0,y:0};return {x:Math.sin((t-e.start)*.045)*a,y:Math.cos((t-e.start)*.057)*a*.5};}
+export function eventGiftImpulse(scene,t){return {x:0,y:0};}
 export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQueue?.sample(t);if(!e||e.mode!==mode)return false;const q=e.profile,k=scene.motion?clamp((t-e.start)/q.duration):.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,light=scene.budget?.level==='light',art=scene.eventGiftArt?.[mode];
- if(mode==='race'&&!caster)return false;if(!fade)return true;const a=caster||{x:450,y:H*.32,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
+ if(!fade)return true;const a=caster||{x:450,y:H*.32,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
  if(layer==='back'&&!e.castStarted){e.castStarted=true;if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword');}if(layer==='front'&&k>=.3&&!e.impactSound){e.impactSound=true;if(e.value>=500)scene.onSpectacleImpact?.();}
  c.save();c.globalAlpha=fade;
  if(layer==='back')drawSpiritGift(c,e.value,k,a,H,{art:scene.spiritBeasts,time,light,motion:scene.motion,mode});
@@ -51,6 +54,8 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
    if(im)img(c,im,x-side*40,y-65,q.size*open,q.size*.7,-side*.25,.44);
    else {c.strokeStyle=q.color;c.lineWidth=3;c.beginPath();c.ellipse(x,y+25,80*open,20*open,0,0,TAU);c.stroke();}
   }else{
+   drawDuelGiftStrike(c,{x,y:y-90,toX:to.x,toY:to.y-90,k,color:q.color,power:Math.min(2,.7+q.blades/10),light});
+   if(e.value>=500&&caster)drawDuelCutIn(scene,c,caster,{name:q.name+' · GIÁNG THẾ',color:q.color},k,H,{gift:true});
    for(let wave=0;wave<Math.min(light?6:8,q.waves);wave++){
     const u=clamp((k-.10-wave*.085)/.30);if(u<=0||u>=1)continue;const travel=ease(u),xx=x+(to.x-x)*travel,yy=y-90+(to.y-y)*travel-Math.sin(u*Math.PI)*(35+wave*14),w=q.size*(.55+Math.sin(u*Math.PI)*.4);
     img(c,im,xx,yy,w,w*.74,Math.sin(u*Math.PI)*side*.14,Math.sin(u*Math.PI)*.90,side<0);
@@ -62,6 +67,7 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
  }
  if(layer==='front'){
   const n=Math.min(light?12:20,q.blades);c.fillStyle=q.color;for(let i=0;i<n;i++){const u=(k*1.7+i/n)%1,xx=x+Math.cos(i*2.399)*(25+u*q.size*.55),yy=y+20+u*u*170;c.globalAlpha=fade*(1-u)*.65;c.fillRect(xx,yy,2,5);}
+  c.globalAlpha=fade;drawGiftDonor(c,e,x,Math.max(H*.19,y-(mode==='race'?155*s:205)),{color:q.color,radius:mode==='race'?25:34,width:mode==='race'?200:290,caption:e.value.toLocaleString('vi-VN')+' coin · '+q.name});
   c.globalAlpha=fade;c.font='bold '+(mode==='race'?15:18)+'px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#101422';c.fillStyle=q.color;const label=(mode==='duel'&&!e.fighter?e.name+' · ':'')+q.name+(mode==='race'?(e.boost?' · BỨT TỐC':' · VINH DANH'):' · CỔ VŨ');const yy=mode==='race'?y+70*s:y+90;c.strokeText(label,x,yy,mode==='race'?170:370);c.fillText(label,x,yy,mode==='race'?170:370);
  }
  c.restore();return true;

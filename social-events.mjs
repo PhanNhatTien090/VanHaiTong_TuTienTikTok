@@ -34,7 +34,22 @@ function match(w,a,b,now,c){
  const t=w.tournament,pa=w.players[a],pb=w.players[b],sa=t.fighters[a],sb=t.fighters[b];
  return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+DUEL_MS,boosts:{[a]:0,[b]:0},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},aura:{[a]:0,[b]:0}};
 }
-function pairRound(w,ids,now,c){const t=w.tournament;t.matches=[];for(let i=0;i<ids.length;i+=2)t.matches.push([ids[i],ids[i+1]||null]);t.matchIndex=0;t.nextMatchAt=now+3000;t.current=null;t.quick=null;t.roundSize=ids.length;t.roundStaged=ids.length<=STAGED_MAX;t.roundAnnounced=false;}
+// Re-seed every round by actual cultivation, not equipment power or registration order.
+export function tournamentPairs(ids,fighters){
+ const ordered=[...ids].sort((a,b)=>(fighters[a]?.realm||0)-(fighters[b]?.realm||0)||(fighters[a]?.totalQi||0)-(fighters[b]?.totalQi||0)||a.localeCompare(b));
+ const cost=(a,b)=>Math.abs((fighters[a]?.realm||0)-(fighters[b]?.realm||0))*4+Math.abs(Math.log((Math.max(0,fighters[a]?.totalQi||0)+10)/(Math.max(0,fighters[b]?.totalQi||0)+10)));
+ const make=list=>Array.from({length:list.length/2},(_,i)=>[list[i*2],list[i*2+1]]);
+ if(ordered.length%2===0)return make(ordered);
+ let best=null,bestCost=Infinity;
+ // An odd entrant receives a bye where it avoids the largest mismatch.
+ for(let i=0;i<ordered.length;i++){
+  const pairs=make(ordered.filter((_,j)=>j!==i)),score=pairs.reduce((sum,[a,b])=>sum+cost(a,b),0);
+  if(score<bestCost){bestCost=score;best=[...pairs,[ordered[i],null]];}
+ }
+ return best||[];
+}
+function pairRound(w,ids,now,c){const t=w.tournament;t.matches=tournamentPairs(ids,t.fighters);t.matchIndex=0;t.nextMatchAt=now+1800;t.current=null;t.quick=null;t.roundSize=ids.length;t.roundStaged=ids.length<=STAGED_MAX;t.roundAnnounced=false;}
+
 function beginRound(w,now,c){
  const t=w.tournament,eligible=t.entries.filter(e=>w.players[e.id]&&c.active(w,w.players[e.id],now)).sort((a,b)=>(w.players[a.id].lastTournamentAt||0)-(w.players[b.id].lastTournamentAt||0)||a.at-b.at);
  if(eligible.length<2){t.phase='cancelled';notify(w,null,'Chưa đủ 2 đạo hữu hoạt động • hẹn lượt tỷ thí tiếp theo',now,c);return;}
@@ -43,9 +58,9 @@ function beginRound(w,now,c){
  // Tỷ thí xét TỔNG TU VI: tu vi cao hơn thì mạnh hơn (thanh máu cũng theo đó). Sức mạnh trang bị chỉ cộng rất nhỏ để phân định khi bằng nhau.
  const duelPower=p=>Math.log10((Number(p.totalQi)||0)+10)*100+c.power(p)*0.05;
  const powers=selected.map(e=>duelPower(w.players[e.id])).sort((a,b)=>a-b),median=powers[Math.floor(powers.length/2)]||1;
- for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
- const sorted=selected.map(e=>e.id).sort((a,b)=>t.fighters[a].power-t.fighters[b].power||a.localeCompare(b));pairRound(w,sorted,now,c);
- c.emit(w,null,'Luận Kiếm bắt đầu • '+selected.length+' đấu thủ • '+(selected.length>STAGED_MAX?'vòng loại so tài nhanh, tối đa 3 ván cuối lên đài':'các ván lên đài')+' • đấu thủ gõ kiem tiếp linh lực','tournament',now);
+ for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0,realm:Number(p.realm)||0};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
+ pairRound(w,selected.map(e=>e.id),now,c);
+ c.emit(w,null,'Luận Kiếm bắt đầu • '+selected.length+' đấu thủ • '+(selected.length>STAGED_MAX?'vòng loại so tài nhanh, tối đa 3 ván cuối lên đài':'các ván lên đài')+' • ghép cặp gần cảnh giới và tổng tu vi • đấu thủ gõ kiem tiếp linh lực','tournament',now);
 }
 function finishMatch(w,now,c){
  const t=w.tournament,m=t.current,r=decide(t,m.a,m.b,m.strengths,m.boosts),{winner,loser,tie}=r;

@@ -1,4 +1,5 @@
-import {drawEventGiftFx} from './event-gift-fx.js';
+import {duelCastState,drawDuelImpact,drawDuelCutIn} from './duel-combat.js';
+import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
 import {drawCombatTechnique} from './combat-techniques.js';
 export function syncSocialStage(scene,state){
@@ -9,6 +10,11 @@ export function syncSocialStage(scene,state){
 }
 // 08/11: nền Luận Kiếm mới (maps-v3/tournament-arena.png) có mặt sàn ~66–92% chiều cao — đứng ở 78% để chân chạm sàn, không lơ lửng.
 const TOURNAMENT_FLOOR=.78;
+export function tournamentLobbyTargets(players,H){
+ const cols=Math.min(5,Math.max(1,players.length)),rows=Math.max(1,Math.ceil(players.length/cols));
+ const scale=Math.min(1.7,rows>3?1.05:rows>1?1.35:1.7);
+ return players.map((player,i)=>{const row=Math.floor(i/cols),count=Math.min(cols,players.length-row*cols),x=450+(i%cols-(count-1)/2)*158,y=H*(rows===1?.78:.72+row/Math.max(1,rows-1)*.14);return {id:player.id,player,x,y,baseY:y,scale,lift:0};});
+}
 export function socialTargets(scene,ordered,H){
  const pair=ordered.length===2,kind=scene.socialScene;
  return ordered.map((p,i)=>({id:p.id,player:p,x:pair?(kind==='bond'?315+i*270:225+i*450):450,y:H*(kind==='bond'?.57:TOURNAMENT_FLOOR),scale:pair?2.25:2.6,lift:0,baseY:H*(kind==='bond'?.57:TOURNAMENT_FLOOR)}));
@@ -27,10 +33,10 @@ export function drawSocialStage(scene,c,t,layer,solo){
    if(layer==='front'&&age>=0){
     for(const [p,i] of [[L,0],[R,1]]){const tech=match.techniques[p.id];beam(c,p.x,p.y-60,orb.x,orb.y,tech?.color||(i?'#c6a0ff':'#a6ecff'),.35+.25*Math.sin((scene.motion?t:0)*.006+i*2));}
     linhChau(c,orb.x,orb.y,scene.motion?t:0);
-    const turn=Math.floor(age/4000),a=scene.targets[turn%2],technique=match.techniques[a.id],k=age%4000/4000;
-    if(age>1800&&technique&&!scene.eventGiftQueue?.active?.fighter){scene.animator?.trigger({id:match.id+':'+turn,user:a.id,effect:'attack',technique},t);drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});techName(c,a.x,a.y-235,technique,Math.min(1,k/.08,(1-k)/.2));}
+    const cast=duelCastState(age),turn=cast.turn,a=scene.targets[cast.side],technique=match.techniques[a.id],k=cast.k;
+    if(cast.ready&&technique){if(scene.duelLastCast!==match.id+':'+turn){scene.duelLastCast=match.id+':'+turn;scene.animator?.trigger({id:scene.duelLastCast,user:a.id,effect:'attack',technique},t);scene.onCombatSound?.('cast',technique.id);}drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});drawDuelImpact(c,orb,cast,technique,scene.budget?.level==='light');if(cast.ultimate)drawDuelCutIn(scene,c,a,technique,k,H);else techName(c,a.x,a.y-235,technique,Math.min(1,k/.08,(1-k)/.2));}
     if(k>.6&&k<.95)image(3,orb.x-60,orb.y-60,120,120,Math.sin((k-.6)/.35*Math.PI)*.55);
-    if(age<1800)for(const p of scene.targets)bubble(c,p.x,p.y-250,'Mời chỉ giáo',Math.min(1,age/250,(1800-age)/250));
+    if(age<650)for(const p of scene.targets)bubble(c,p.x,p.y-250,'Mời chỉ giáo',Math.min(1,age/250,(650-age)/200));
    }
   }else if(bow?.until>now&&scene.targets.length===2&&layer==='front'){const k=Math.min(1,(now-bow.at)/250,(bow.until-now)/250);
    for(const p of scene.targets)bubble(c,p.x,p.y-250,p.id===bow.loser?'Đa tạ chỉ giáo':'Đã nhường',k);

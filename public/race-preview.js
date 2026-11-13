@@ -1,4 +1,4 @@
-import {Scene} from './scene.js';import {REALM_NAMES} from './progression.js';
+import {Scene} from './scene.js?v=hall-war-drawn-pets-20261114';import {REALM_NAMES} from './progression.js';
 // Xem thử đua phi kiếm với dữ liệu giả; không gửi gì vào LIVE. ?n=200 để thử đông người.
 const scene=new Scene(document.querySelector('#preview'),()=>{});scene.residents=false;scene.zoom=1;scene.cameraEnabled=false;scene.setQuality('balanced');window.raceScene=scene;
 const NAMES=['Thanh Vân','Mộc Miên','Tiểu Ngư','Hàn Phong','Bạch Lộ','Vô Trần','Lăng Tiêu','Diệp Phàm','Tô Mạt','Hạ Vy','Lâm Uyên','Tử Yên','Công Tài','Kiếm Chủ'];

@@ -8,7 +8,7 @@ test('music files exist and rotation changes every 30 minutes',()=>{
  assert.equal(musicIndex(null,R*9),9%BGM_LIST.length);
 });
 test('admin commands: fixed pick, next, back to auto from the playing track',()=>{
- const now=10*R;let m=applyMusicCommand(null,'3',now);assert.deepEqual(m,{mode:'fixed',index:3,at:now});assert.equal(musicIndex(m,now+5*R),3);
+ const now=10*R;let m=applyMusicCommand(null,'3',now);assert.deepEqual(m,{mode:'fixed',index:3,at:now,followContext:false});assert.equal(musicIndex(m,now+5*R),3);
  m=applyMusicCommand(m,'next',now+R);assert.equal(m.mode,'fixed');assert.equal(musicIndex(m,now+9*R),4);
  m=applyMusicCommand(m,'auto',now+2*R);assert.equal(musicIndex(m,now+2*R),4);assert.equal(musicIndex(m,now+3*R),5);
  assert.equal(applyMusicCommand(m,'99',now),null);assert.equal(applyMusicCommand(m,'x',now),null);

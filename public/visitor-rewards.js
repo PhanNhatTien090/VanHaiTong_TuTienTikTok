@@ -23,12 +23,14 @@ export function creditVisitorGift(w,p,coins,now){
 }
 export function visitorSkinName(kind,gender){return kind==='vuonglam'?(gender==='nu'?'Lý Mộ Uyển':'Vương Lâm'):VISITOR_GIFT_REWARDS[kind]?.skinName||'Tiên nhân';}
 function grantVisitorProgress(p,e,r,progress,equip=false){const result={items:[],itemNames:[],skinNames:[]};
- if(progress.coins>=(r.skinCoins||100)){progress.skinAwarded=true;p.rewardSkins??=[];
+ const court=COURT_VISITORS.some(v=>v.kind===e.kind),skinPrice=court?300:(r.skinCoins||100),artifactPrice=court?500:(r.artifactCoins||500);
+ if(progress.coins>=skinPrice){progress.skinAwarded=true;p.rewardSkins??=[];
   // 07/11: mua skin sự kiện thì mặc ngay, kể cả khi trước đó đã tự chọn skin khác (chủ game yêu cầu).
   // equip=true chỉ khi vừa tặng quà thật; bù thưởng tự động không đè skin đang chọn.
   if(!p.rewardSkins.includes(r.skin)){p.rewardSkins.push(r.skin);if(equip||!['manual','admin'].includes(p.skinChoiceSource)){p.skinChoice=r.skin;p.skinChoiceSource='visitor';}const name=visitorSkinName(e.kind,p.gender);result.skinNames.push('Skin '+name);result.itemNames.push('Skin '+name);}
  }
- if(progress.coins>=(r.artifactCoins||500)){progress.artifactAwarded=true;
+ if(progress.coins>=artifactPrice){progress.artifactAwarded=true;
+  p.visitorArtifactUnlocks??={};p.visitorArtifactUnlocks[r.artifact]={kind:e.kind,eventId:e.id,coins:progress.coins,requiredCoins:artifactPrice};
   if(!p.artifacts.includes(r.artifact)){p.artifacts.push(r.artifact);result.items.push(r.artifact);result.itemNames.push(r.artifactName);}
  }
  return {...result,kind:e.kind,coins:progress.coins};

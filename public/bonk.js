@@ -1,3 +1,5 @@
+import {majorEventActive} from './event-donations.js?v=event-donors-20261114';
+import {drawGiftDonor} from './gift-donor.js';
 // 10/11/2026: HỘI GÕ ĐẦU (server: bonk.mjs) — người gõ đi bộ từ ghế tới cạnh người bị gõ, vung búa gỗ gõ "BỐP",
 // sao xoay quanh đầu, vài viên linh thạch bay sang người gõ, rồi đi bộ về ghế. Mỗi cú ~3 s (BONK_ANIM_MS).
 // 4 kiểu chữ/màu (h.v) để các cú gõ không giống y hệt nhau. Tối đa MAX_ANIM cú vẽ cùng lúc.
@@ -41,11 +43,12 @@ function live(scene,t){const seen=scene.bonkSeen;if(!seen)return [];const out=[]
  for(const h of [...(scene.bonkHits||[])].reverse()){const s=seen.get(h.id);if(s==null)continue;const age=(t-s)/1000;if(age<0||age>END||busy.has(h.a))continue;busy.add(h.a);out.push({h,age});if(out.length>=MAX_ANIM)break;}
  return out;}
 // Đưa cả 2 người lên sân trong lúc diễn cú gõ.
-export function bonkIds(scene,t){const ids=[];for(const {h} of live(scene,t))ids.push(h.a,h.b);return ids;}
+export function bonkIds(scene,t){if(majorEventActive(scene.lastState))return [];const ids=[];for(const {h} of live(scene,t))ids.push(h.a,h.b);return ids;}
 
 const headY=x=>x.y-66*(x.scale||1.4);
 // Dời vị trí người gõ theo đường đi (chỉ trong khung hình này; ghế thật giữ nguyên).
 export function applyBonkWalk(scene,t){
+ if(majorEventActive(scene.lastState))return;
  const rows=live(scene,t);if(!rows.length||!scene.targets?.length)return;
  const byId=new Map(scene.targets.map(x=>[x.id,x]));
  for(const {h,age} of rows){const a=byId.get(h.a),b=byId.get(h.b);if(!a||!b||a===b)continue;
@@ -83,6 +86,14 @@ function bolt(c,x0,y0,x1,y1,seed,col,w){c.strokeStyle=col;c.lineWidth=w;c.beginP
 
 export function drawBonk(scene,c,t){
  const b=scene.bonkFest;if(!b)return;const H=scene.height,nowMs=Date.now();
+ if(majorEventActive(scene.lastState)){
+  const rows=live(scene,t).slice(0,2);c.save();
+  if(b.active)txt(c,'🔨 GÕ ĐẦU · go tên',450,H*.79,'700 17px Segoe UI','#ffe4a3',4);
+  rows.forEach(({h,age},i)=>{const p=scene.playerIndex?.get(h.a),v=scene.playerIndex?.get(h.b),x=390+i*120,y=H*.84;
+   drawGiftDonor(c,{name:p?.name,avatar:p?.avatar},x,y,{radius:22,color:'#ffdc88',width:112,caption:'gõ '+String(v?.name||'đạo hữu').slice(0,12)});
+   mallet(c,x+32,y+5,Math.sin(age*7)*.8,1.1,h.h||0,t);drawBonkImpact(c,x,y,age-IMPACT,1,h.h||0,'#ffdc88',h.v||0);
+  });c.restore();return;
+ }
  c.save();
  // băng rôn trên cùng: tên sự kiện + đồng hồ / kết quả
  {const y=H*.165;if(b.active){const left=Math.max(0,Math.ceil((b.endsAt-nowMs)/1000));c.fillStyle='rgba(40,18,6,.78)';c.beginPath();c.roundRect?.(250,y-30,400,60,18);c.fill();c.strokeStyle='#ffcf6b';c.lineWidth=2.5;c.stroke();

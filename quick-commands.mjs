@@ -17,8 +17,8 @@ export const QUICK_BASE=[
 ];
 const FALLBACK={cmd:'goiy',say:'gợi ý',text:'hỏi việc nên làm'};
 export function eventQuick(w,now){
+ if(['registration','running'].includes(w.hallWar?.phase))return {cmd:'duongchien',say:'đường chiến',name:'NGŨ ĐƯỜNG TRANH PHONG',text:'vào trận theo Đường, xuất chiêu trợ lực',endsAt:w.hallWar.phase==='registration'?w.hallWar.registrationEndsAt:w.hallWar.endsAt};
  if(towerOpen(w,now))return {cmd:'leothap',say:'leo tháp',name:'VÂN HẢI THÁP',text:'xếp lượt vào tháp',endsAt:w.tower.endsAt};
- if(bonkOpen(w,now))return {cmd:'godau',say:'gõ đầu',name:'HỘI GÕ ĐẦU',text:'gõ đầu người gần nhất',endsAt:w.bonkFest.endsAt};
  const m=w.maze;
  if(m?.phase==='registration'&&now<m.registrationEndsAt)return {cmd:'mecung',say:'mê cung',name:'BÍ CẢNH MÊ CUNG',text:'ghi danh vào mê cung',endsAt:m.registrationEndsAt};
  if(m?.phase==='running')return {cmd:'mecung',say:'mê cung',name:'BÍ CẢNH MÊ CUNG',text:'nhảy vào mê cung',endsAt:m.endsAt};
@@ -28,6 +28,7 @@ export function eventQuick(w,now){
  const o=w.opportunity;if(o&&now<o.endsAt)return {cmd:'coduyen',say:'cơ duyên',name:'CƠ DUYÊN',text:'xem tiến độ cơ duyên',endsAt:o.endsAt};
  const f=w.flowerEvent;if(f&&!f.closedAt&&now>=(f.startedAt||0)&&now<f.endsAt)return {cmd:'tuluyen',say:'tu luyện',name:String(SKY_EVENTS[f.kind||'flower']?.name||'Mưa hoa').toLocaleUpperCase('vi'),text:'gõ lệnh chơi để ghi điểm',endsAt:f.endsAt};
  const b=w.boss;if(b&&b.hp>0&&now<b.endsAt)return {cmd:'danh',say:'đánh',name:'YÊU THÚ XÂM PHẠM',text:'cùng đánh yêu thú',endsAt:b.endsAt};
+ if(bonkOpen(w,now))return {cmd:'godau',say:'gõ đầu',name:'HỘI GÕ ĐẦU',text:'gõ đầu người gần nhất',endsAt:w.bonkFest.endsAt};
  return null;
 }
 export function digitsClaimed(w,now){

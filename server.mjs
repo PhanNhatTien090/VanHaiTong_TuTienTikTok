@@ -8,7 +8,7 @@ import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
-import {startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
+import {startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent} from './engine.mjs';
 import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
@@ -99,7 +99,7 @@ function payload(mode,view='full'){
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
   let value;
   if(view==='overlay'){
-    const full=payload(mode),fields=['sectHallIndex','puppet','resident','id','name','realmStage','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','raceMounts','sectMasterUnlocked','sectMasterGiftAt'];
+    const full=payload(mode),fields=['signatureArtifactOwned','sectHallIndex','puppet','resident','id','name','realmStage','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','raceMounts','sectMasterUnlocked','sectMasterGiftAt'];
     // Cảnh LIVE chỉ cần: người đang hoạt động (sân khấu) + top 10 (bảng xếp hạng nhỏ) + 30 sự kiện mới nhất.
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
@@ -209,6 +209,8 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='stop-bond-festival')result=stopBondFestival(w,now);
       else if(b.action==='start-race')result=startRace(w,now);
       else if(b.action==='stop-race')result=stopRace(w,now);
+      else if(b.action==='start-hall-war')result=startHallWar(w,now);
+      else if(b.action==='stop-hall-war')result=stopHallWar(w,now);
       else if(b.action==='start-war')result=startWar(w,now);
       else if(b.action==='stop-war')result=stopWar(w,now);
       else if(b.action==='start-alchemy')result=startAlchemy(w,now);

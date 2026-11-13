@@ -1,7 +1,7 @@
 import {petById,petPose} from './spirit-pets.js';
 import {makeSurface} from './performance.js';
-import {PREMIUM_PET_ATLAS,PREMIUM_PET_PERIODS,petArtFrame,premiumPetPose} from './premium-pet-motion.js';
-export {petArtFrame,premiumPetPose} from './premium-pet-motion.js';
+import {PREMIUM_PET_ATLAS,PREMIUM_PET_PERIODS,petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
+export {petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
 // 07/11: Lôi Oa — tia sét gấp khúc nhỏ quanh thân (không phủ màn hình).
 export function drawPetBolt(c,x0,y0,x1,y1,seed,color,width=1.6){let s=seed>>>0;const r=()=>((s=(s*1664525+1013904223)>>>0)/4294967296)-.5,n=6;c.save();c.strokeStyle=color;c.lineWidth=width;c.lineCap='round';c.lineJoin='round';c.shadowColor=color;c.shadowBlur=8;c.beginPath();c.moveTo(x0,y0);for(let i=1;i<n;i++){const k=i/n,d=Math.hypot(x1-x0,y1-y0)*.18;c.lineTo(x0+(x1-x0)*k+r()*d,y0+(y1-y0)*k+r()*d);}c.lineTo(x1,y1);c.stroke();c.strokeStyle='#ffffff';c.lineWidth=width*.45;c.shadowBlur=0;c.stroke();c.restore();}
 // Hiệu ứng riêng của thần thú: sét (Lôi Oa), huyết khí (Văn Thú), lửa (Kỳ Lân). Nhỏ, sát thân, không phủ màn hình.

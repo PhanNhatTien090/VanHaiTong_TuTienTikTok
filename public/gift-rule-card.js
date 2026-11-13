@@ -10,6 +10,7 @@ export const RACE_TRUONG_PER_COIN=30,WAR_TRUONG_PER_COIN=Math.round(3*.85*20);
 
 // → {kind,title,tone,rows:[[coins,text]],note} hoặc null (không hiện khi sự kiện đã có bảng quà riêng, vd. tiên nhân truyền đạo).
 export function giftRules(s,now=s?.serverNow||Date.now()){
+ if(s?.hallWar?.active)return {kind:'hall-war',title:'NGŨ ĐƯỜNG TRANH PHONG',tone:'jade',rows:[[1,'trợ lực cho Đường'],[100,'liên chiêu'],[300,'đánh nhiều mục tiêu']],note:'Gia nhập Đường trước · điểm trận cộng bảng tuần'};
  if(!s)return null;
  const race=s.raceStatus,war=s.sectWar,alc=s.alchemy;
  if(race&&['registration','running'].includes(race.phase))return race.phase==='running'
@@ -17,7 +18,6 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
   :{kind:'race',title:'ĐUA PHI KIẾM · TUYỂN',tone:'sky',rows:[[1,'điểm đua'],[100,'top nhận thú cưỡi']]};
  // 10/11: mê cung (maze.mjs): quà = lượt phá tường (≥1: 1 · ≥20: 4 · ≥99: 10), lúc tuyển tặng là vào luôn
  // 10/11: Hội Gõ Đầu (bonk.mjs): quà cộng dồn = búa xịn giữ vĩnh viễn, gõ rơi nhiều linh thạch hơn
- if(s.bonkFest?.active)return {kind:'bonk',title:'HỘI GÕ ĐẦU',tone:'fire',rows:[[1,'Búa Đồng'],[20,'Ngọc Bích Chùy'],[99,'Lôi Thần Chùy']]};
  const mz=s.maze;if(mz?.active&&mz.phase==='registration')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'vào + phá 1 tường'],[20,'phá 4 tường'],[99,'phá 10 tường'],[100,'tốc biến lúc khai trận']]};
  if(mz?.active&&mz.phase==='running')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'phá 1 tường'],[20,'phá 4 tường'],[99,'phá 10 tường'],[100,'tốc biến thẳng cửa ra']]};
  if(war?.active&&war.phase==='running')return {kind:'war',title:'CHÍNH MA ĐẠI CHIẾN',tone:'war',rows:[[1,`đẩy ${WAR_TRUONG_PER_COIN} trượng`],[99,'sóng năng lượng']]};
@@ -29,6 +29,7 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  if(live(s.opportunity,now)){const cost=s.opportunity.costs?.[0]||10;return {kind:'opportunity',title:'CƠ DUYÊN',tone:'gold',rows:[[1,'+1 điểm'],[cost,'tự đột phá']]};}
  const pe=s.petEvent;if(pe?.active){const paid=(pe.rules||[]).filter(r=>r.coins>0).slice(-2);return {kind:'pets',title:'LINH THÚ CỐC',tone:'jade',rows:paid.map(r=>[r.coins,r.name])};}
  if(live(s.visitor,now))return null; // bảng tiên nhân đã có ảnh quà → skin riêng
+ if(s.bonkFest?.active)return {kind:'bonk',title:'HỘI GÕ ĐẦU',tone:'fire',rows:[[1,'Búa Đồng'],[20,'Ngọc Bích Chùy'],[99,'Lôi Thần Chùy']]};
  // không sự kiện: quà mặc định
  // 2000 = 1 món Vương miện 2000 coin: Tông chủ cần MỘT món ≥2000 (master-rewards.mjs), không cộng dồn. Ảnh thật tự thay khi kênh nhận quà này (giftArt theo tên+giá).
  return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi'],[99,'+pháp bảo'],[500,'ĐẠI LỄ'],[2000,'TÔNG CHỦ']]};

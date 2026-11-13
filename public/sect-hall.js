@@ -60,7 +60,7 @@ export function sectHallTargets(players,H,withHalls=false){
 export function loadSectMasterArt(scene){if(scene.sectMasterArt||scene.sectMasterArtLoading||scene.sectMasterArtRetry>Date.now()||typeof Image==='undefined')return;scene.sectMasterArtLoading=true;let im=new Image();im.onload=()=>{scene.sectMasterArt=im;scene.sectMasterArtLoading=false;};im.onerror=()=>{scene.sectMasterArtLoading=false;scene.sectMasterArtRetry=Date.now()+15000;};im.src='/assets/sect-hall-v1/sect-master-throne-v2.png';}
 export function masterSeatGeometry(H,art){const iw=art?.naturalWidth||art?.width||900,ih=art?.naturalHeight||art?.height||1600,crop=artworkCrop(iw,ih,H),scale=ih/crop.sh*H/1600,height=176*scale,seatY=(ih*.318-crop.sy)/crop.sh*H;return {x:(iw*.5-crop.sx)/crop.sw*900,y:seatY,top:seatY-height*.53,height};}
 export function sectCourtVisible(scene){
- return scene.environment?.layout==='sect'&&!scene.raceStatus?.active&&!scene.warStatus?.active&&!scene.alcStatus?.active&&!scene.mazeStatus&&!scene.socialScene&&!scene.socialStage?.length&&!scene.bonkFest?.active;
+ return scene.environment?.layout==='sect'&&!scene.hallWarStatus?.active&&!scene.raceStatus?.active&&!scene.warStatus?.active&&!scene.alcStatus?.active&&!scene.mazeStatus&&!scene.socialScene&&!scene.socialStage?.length&&!scene.bonkFest?.active;
 }
 export function drawSectMaster(scene,c,t){
  if(!sectCourtVisible(scene)||scene.sectMaster?.enabled===false||scene.presentation?.until>t)return false;
