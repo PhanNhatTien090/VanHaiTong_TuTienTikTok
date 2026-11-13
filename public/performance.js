@@ -79,5 +79,16 @@ export class FrameClock{
 }
 export function inView(target,camera,height){const s=camera?.s||1,x=target.x*s+(camera?.x||0),y=target.y*s+(camera?.y||0),r=(target.scale||1.4)*s;return x+65*r>=0&&x-65*r<=900&&y+45*r>=0&&y-120*r<=height;}
 
-// Backing pixels follow the selected output size, not the editor pane's CSS size.
-export function renderDimensions(rect,config,preview=false,maxWidth=Infinity){if(!(rect.width>0&&rect.height>0))return null;const width=preview?720:Math.min(maxWidth,config?.width||1080);return {width,height:Math.max(1,Math.round(width*rect.height/rect.width))};}
+// CSS controls layout; this only chooses raster density. A HiDPI browser source must
+// not multiply Full HD into a 2160×3840 framebuffer on a shared integrated GPU.
+export const MAX_RENDER_PIXELS=1080*1920;
+export function renderDimensions(rect,config,preview=false,maxWidth=1080,dpr=globalThis.devicePixelRatio||1){
+ const w=Number(rect.width),h=Number(rect.height);
+ if(!Number.isFinite(w)||!Number.isFinite(h)||w<=0||h<=0)return null;
+ const density=Number.isFinite(dpr)&&dpr>0?dpr:1;
+ const cap=Math.min(maxWidth,preview?720:(config?.width||1080));
+ const scale=Math.min(density,cap/w,Math.sqrt(MAX_RENDER_PIXELS/(w*h)));
+ const width=Math.max(1,Math.floor(w*scale));
+ const height=Math.max(1,Math.min(Math.round(width*h/w),Math.floor(MAX_RENDER_PIXELS/width)));
+ return {width,height};
+}

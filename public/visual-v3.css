@@ -79,11 +79,9 @@ body.overlay .gift-receipt strong{font-size:clamp(16px,2.3vw,26px)}body.overlay 
 
 body:has(.gift-receipt:not([hidden])) .focus-card{visibility:hidden}
 
-/* Browser preview retains the same portrait frame as the 1080×1920 LIVE source. */
+/* Typography for wide browser sources. The broadcast root always fills its viewport. */
 @media (min-aspect-ratio: 7/10){
  body.overlay{background:#071218}
- body.overlay .workspace{width:min(100vw,56.25vh);margin:0 auto}
- body.overlay .scene-shell{container-type:inline-size}
  body.overlay .scene-top{font-size:clamp(10px,3cqw,32px)}
  body.overlay .scene-top button{width:clamp(24px,4cqw,48px);height:clamp(24px,4cqw,48px);font-size:clamp(14px,2.5cqw,26px)}
  body.overlay .crowd-pulse{font-size:clamp(8px,2.1cqw,25px);padding:4px 6px;margin:0 3px}

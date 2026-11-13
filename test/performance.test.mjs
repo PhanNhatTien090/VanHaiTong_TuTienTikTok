@@ -3,11 +3,15 @@ import assert from 'node:assert/strict';
 import {createCanvas} from '@napi-rs/canvas';
 import {CharacterFrames,RenderBudget,QUALITY,FrameClock,inView,actorSample,BitmapCache,renderDimensions} from '../public/performance.js';
 
-test('output stays full HD even inside a narrow Studio pane; editor preview remains bounded',()=>{
- assert.deepEqual(renderDimensions({width:635,height:635*16/9},QUALITY.balanced),{width:1080,height:1920});
- assert.deepEqual(renderDimensions({width:360,height:640},QUALITY.balanced,true),{width:720,height:1280});
- assert.deepEqual(renderDimensions({width:1080,height:1920},QUALITY.light),{width:1080,height:1920});
- assert.equal(renderDimensions({width:0,height:0},QUALITY.high),null);
+test('backing follows viewport and DPR with Full HD pixel and width ceilings',()=>{
+ for(const [width,height] of [[1080,1920],[720,1280],[540,960]]){
+  assert.deepEqual(renderDimensions({width,height},QUALITY.balanced,false,1080,1),{width,height});
+  assert.deepEqual(renderDimensions({width,height},QUALITY.high,false,1080,2),{width:1080,height:1920});
+ }
+ assert.deepEqual(renderDimensions({width:360,height:640},QUALITY.balanced,true,1080,1),{width:360,height:640});
+ assert.deepEqual(renderDimensions({width:360,height:640},QUALITY.balanced,true,1080,3),{width:720,height:1280});
+ for(const rect of [{width:0,height:0},{width:NaN,height:900},{width:500,height:Infinity}])assert.equal(renderDimensions(rect,QUALITY.high),null);
+ const tall=renderDimensions({width:1080,height:6000},QUALITY.high,false,1080,2);assert.ok(tall.width*tall.height<=1080*1920);assert.ok(Math.abs(tall.width/tall.height-1080/6000)<.001);
 });
 
 test('automatic budget lowers resolution on sustained slow rendering and waits before recovery',()=>{
@@ -73,4 +77,4 @@ test('30fps scheduler retains fractional time and does not collapse to 20fps on 
 
 test('zooming back out reuses sharp actor raster and repaint keeps its native transform',()=>{let allocations=0,transform;const frames=new CharacterFrames((w,h)=>{allocations++;return createCanvas(w,h);}),c=createCanvas(200,200).getContext('2d');frames.draw(c,'a','pose1',()=>{},4);const original=frames.frames.get('a').canvas;frames.draw(c,'a','pose2',x=>{transform=x.getTransform().a;},2);assert.equal(allocations,1);assert.equal(frames.frames.get('a').canvas,original);assert.equal(transform,4);});
 test('large zoom rasters obey a byte ceiling and evict least recently used',()=>{const f=new CharacterFrames(createCanvas),c=createCanvas(100,100).getContext('2d');for(let i=0;i<40;i++)f.draw(c,'p'+i,'k',()=>{},8);assert.ok(f.bytes<=32*1024*1024);assert.ok(f.frames.size<10);assert.equal(f.frames.has('p39'),true);assert.equal(f.frames.has('p0'),false);f.clear();assert.equal(f.bytes,0);});
-test('LIVE output ceiling preserves Full HD and high detail without a 1440p backing buffer',()=>{assert.deepEqual(renderDimensions({width:900,height:1600},QUALITY.high,false,1080),{width:1080,height:1920});});
+test('LIVE output ceiling preserves Full HD and high detail without a 1440p backing buffer',()=>{assert.deepEqual(renderDimensions({width:900,height:1600},QUALITY.high,false,1080,2),{width:1080,height:1920});});
