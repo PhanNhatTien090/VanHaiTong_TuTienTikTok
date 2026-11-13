@@ -214,43 +214,18 @@ body.overlay.pet-cove-stage :is(#liveRanks,#giftRanks,#basicCommands,#commandRai
  visibility:hidden;
 }
 
+/* Góc dưới phải: hướng dẫn Ngũ Đường cố định, độc lập bảng lệnh chung. */
 html body.overlay .scene-shell>#lowerRightGuide{
  position:absolute;right:1.5%;bottom:2.5%;width:30%;z-index:9;
- display:flex;flex-direction:column;gap:6px;pointer-events:none;
+ box-sizing:border-box;padding:7px 8px;border-radius:8px;pointer-events:none;
+ background:#081c30bb;border:1px solid #a0cbb944;color:#f0fbff;
+ font:clamp(9px,1.7cqw,19px)/1.25 "Segoe UI",Arial,sans-serif;
+ text-shadow:0 1px 2px #000;
 }
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands.corner-command-guide,
-html body.overlay .scene-shell #lowerRightGuide>#commandRail{
- position:relative!important;inset:auto!important;width:100%!important;max-width:none!important;
- max-height:none!important;transform:none!important;box-sizing:border-box;margin:0!important;
- padding:6px 8px!important;border-radius:8px!important;background:#081c30bb!important;
- border:1px solid #a0cbb944!important;color:#f0fbff!important;
- font-size:clamp(9px,1.7cqw,19px)!important;line-height:1.25!important;
-}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands>b{font-size:.88em!important}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands ol{
- display:grid!important;grid-template-columns:1fr!important;gap:3px!important;margin:0!important;padding:0!important;list-style:none;
-}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands li{
- display:flex!important;gap:.35em;white-space:normal!important;grid-column:auto!important;padding:0!important;border:0!important;
-}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands code{font-size:.92em!important;font-weight:800}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands span{font-size:.8em!important;color:#e4efea}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands :is(.corner-command-hint,b em){display:none!important}
-body.overlay:is(.sword-race,.sect-war,.maze-on,.ritual-active,.pet-cove-stage) #lowerRightGuide{display:none!important}
-
-html body.overlay .scene-shell #lowerRightGuide{align-items:stretch;overflow:hidden;max-height:37%;}
-html body.overlay .scene-shell #lowerRightGuide>:is(#gearGuide,#basicCommands,#commandRail){
- left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;min-width:0!important;
- align-self:stretch!important;flex:none!important;translate:none!important;
-}
-html body.overlay .scene-shell #lowerRightGuide>#gearGuide{
- position:relative;width:100%;box-sizing:border-box;padding:6px 8px;border-radius:8px;
- background:#081c30bb;border:1px solid #a0cbb944;font-size:clamp(9px,1.7cqw,19px);line-height:1.25;
-}
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands li::before{display:none!important}
-body.ascension-stage #lowerRightGuide{display:none!important}
-
-html body.overlay .scene-shell #lowerRightGuide>#basicCommands.corner-command-guide{
- left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;font-size:clamp(9px,1.7cqw,19px)!important;
-}
-html body.overlay .scene-shell #lowerRightGuide:has(>#gearGuide:not([hidden]))>#basicCommands{display:none!important}
+#lowerRightGuide>b{display:block;color:#ffe08a;font-size:.9em;margin-bottom:4px}
+#lowerRightGuide .hall-guide-names{margin:0 0 5px;padding-bottom:4px;border-bottom:1px solid #a0cbb933;color:#cde4de;font-size:.85em}
+#lowerRightGuide ol{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+#lowerRightGuide li{display:flex;flex-direction:column;gap:1px}
+#lowerRightGuide code{font:800 1em/1.2 "Segoe UI",Arial,sans-serif;color:#9ff0d0}
+#lowerRightGuide li span{font-size:.8em;color:#e4efea}
+body.overlay:is(.sword-race,.sect-war,.maze-on,.ritual-active,.pet-cove-stage,.social-stage,.performance-solo,.ascension-stage) #lowerRightGuide{display:none!important}

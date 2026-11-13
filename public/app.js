@@ -82,11 +82,14 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   const towerEl=document.createElement('div');towerEl.id='towerStage';towerEl.className='tower-stage';towerEl.hidden=true;root.appendChild(towerEl); // 11/11: Vân Hải Tháp
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
-  // Hướng dẫn ở góc dưới phải, thẻ vinh danh giữ trong cột TOP QUÀ.
+  // Bảng lệnh chung ở vị trí cũ; góc dưới phải dành riêng cho Ngũ Đường.
   {const right=root.querySelector('#phoneHudRight');if(right){
-    const guideDock=document.createElement('aside');guideDock.id='lowerRightGuide';root.appendChild(guideDock);
-    for(const panel of [root.querySelector('#gearGuide'),root.querySelector('#commandRail'),commands])if(panel){panel.classList.add('rail-guide');guideDock.appendChild(panel);}
+    if(commands){commands.classList.add('rail-guide');right.appendChild(commands);}
     right.insertBefore(dock,right.firstChild);dock.classList.add('rail-dock');
+    const guideDock=document.createElement('aside');guideDock.id='lowerRightGuide';
+    guideDock.setAttribute('aria-label','Hướng dẫn lệnh Ngũ Đường');
+    guideDock.innerHTML='<b>NGŨ ĐƯỜNG</b><p class="hall-guide-names">1 Truyền Công · 2 Tàng Bảo<br>3 Đan Đỉnh · 4 Tuần Sơn<br>5 Linh Dược</p><ol><li><code>đường</code><span>xem các Đường, điểm tuần</span></li><li><code>vào đường 1–5</code><span>chọn số Đường muốn gia nhập</span></li><li><code>thách đấu 1–5</code><span>Thiên Bảng tranh ghế Trưởng Lão</span></li><li><code>trợ lực</code><span>hỗ trợ trận Vân Đài đang diễn ra</span></li><li><code>chân truyền + tên</code><span>Trưởng Lão mời đệ tử</span></li><li><code>bái sư</code><span>nhận lời mời Chân Truyền</span></li></ol>';
+    root.appendChild(guideDock);
   }}
 }
 
