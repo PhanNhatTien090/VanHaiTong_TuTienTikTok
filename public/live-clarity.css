@@ -229,3 +229,20 @@ html body.overlay .scene-shell>#lowerRightGuide{
 #lowerRightGuide code{font:800 1em/1.2 "Segoe UI",Arial,sans-serif;color:#9ff0d0}
 #lowerRightGuide li span{font-size:.8em;color:#e4efea}
 body.overlay:is(.sword-race,.sect-war,.maze-on,.ritual-active,.pet-cove-stage,.social-stage,.performance-solo,.ascension-stage) #lowerRightGuide{display:none!important}
+
+/* Nền đậm và chữ nét để các bảng hướng dẫn đọc được khi nén video LIVE. */
+html body.overlay .scene-shell #phoneHudLeft>#gearGuide,
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide,
+html body.overlay .scene-shell>#lowerRightGuide{
+ background:#071b2bf5!important;border:1px solid #b7d7c5cc!important;
+ color:#ffffff!important;box-shadow:0 2px 8px #0008!important;
+ text-shadow:0 1px 1px #000!important;backdrop-filter:none!important;
+ font-size:clamp(10px,1.8cqw,20px)!important;
+}
+html body.overlay .scene-shell :is(#gearGuide,#basicCommands,#lowerRightGuide)>b{color:#ffe6a0!important;font-weight:800!important}
+html body.overlay .scene-shell :is(#gearGuide,#basicCommands,#lowerRightGuide) code{color:#bdffe5!important;font-weight:800!important}
+html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide span,
+html body.overlay .scene-shell :is(#gearGuide,#lowerRightGuide) li span{
+ color:#ffffff!important;font-weight:650!important;font-size:.9em!important;
+}
+html body.overlay .scene-shell #lowerRightGuide .hall-guide-names{color:#f5fff8;border-bottom-color:#a0cbb988;font-weight:650}
