@@ -32,15 +32,15 @@ function sigil(c,x,y,r,angle,color,glyph){
 export function drawEventDonations(scene,c,t,H=scene.height){
  const queue=scene.eventDonations,context=eventDonationContext(scene);if(!queue)return;
  if(!context||queue.key!==context.key){queue.pending=[];queue.active=[];return;}
- const light=scene.budget?.level==='light';queue.active=queue.active.filter(e=>t-e.start<e.profile.duration);
+ const light=scene.budget?.level==='light',podium=context.kind==='hallwar'&&scene.hallWarStatus?.phase==='finished';queue.active=queue.active.filter(e=>t-e.start<e.profile.duration);
  queue.pending=queue.pending.filter(e=>t-e.receivedAt<12000);
- while(queue.active.length<(light?1:2)&&queue.pending.length){const e=queue.pending.shift();e.start=t;queue.active.push(e);scene.onEventGiftSound?.(e.value>=100?'dragon':'sword');}
+ while(queue.active.length<(light||context.kind==='hallwar'?1:2)&&queue.pending.length){const e=queue.pending.shift();e.start=t;queue.active.push(e);scene.onEventGiftSound?.(e.value>=100?'dragon':'sword');}
  for(const [slot,e] of queue.active.entries()){
   const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion===false?.45:raw,fade=clamp(Math.min(raw/.09,(1-raw)/.17));
-  const [color,title,glyph]=e.context.theme,x=450+(slot?115:-40),y=H*(slot?.34:.245),impactY=H*.49,large=e.value>=100;
+  const [color,title,glyph]=e.context.theme,x=context.kind==='hallwar'?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='hallwar'?.425:slot?.34:.245),impactY=H*(context.kind==='hallwar'?.53:.49),large=e.value>=100;
   c.save();c.globalAlpha=fade;c.lineCap='round';c.lineJoin='round';
   // Avatar is the casting origin; energy travels into the event, without moving its camera or actors.
-  if(scene.motion!==false){
+  if(scene.motion!==false&&!podium){
    const count=light?5:large?12:7;
    for(let i=0;i<count;i++){
     const u=(k*1.7+i/count)%1,side=i%2?-1:1,spread=(32+i*9)*(large?1.15:.7),xx=x+Math.sin(u*Math.PI)*side*spread,yy=y+35+(impactY-y)*u;
@@ -48,7 +48,7 @@ export function drawEventDonations(scene,c,t,H=scene.height){
     c.beginPath();c.moveTo(xx-side*8,yy-22);c.quadraticCurveTo(xx+side*9,yy-5,xx,yy+9);c.stroke();
    }
   }
-  if(k>.22){
+  if(k>.22&&!podium){
    const hit=clamp((k-.22)/.7),radius=(large?75:42)+hit*(large?105:50);
    c.globalAlpha=fade*(1-hit)*.65;sigil(c,x,impactY,radius,k*TAU*.35,color,glyph);
    if(large){c.beginPath();c.ellipse(x,impactY,radius*1.35,radius*.38,-.15,0,TAU);c.stroke();}

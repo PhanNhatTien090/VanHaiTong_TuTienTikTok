@@ -10,7 +10,7 @@ export function donorPortrait(url){
  }
  return entry.ready?entry.image:null;
 }
-export function drawGiftDonor(c,row,x,y,{color='#ffe4a0',radius=31,width=280,alpha=1,caption=''}={}){
+export function drawGiftDonor(c,row,x,y,{color='#ffe4a0',radius=31,width=280,alpha=1,caption='',nameSize=19}={}){
  const im=donorPortrait(row.avatar),name=String(row.name||'Đạo hữu');
  c.save();c.globalAlpha*=alpha;c.fillStyle='#071b2bf2';c.strokeStyle=color;c.lineWidth=2;
  c.beginPath();c.roundRect(x-width/2,y+radius-6,width,caption?54:30,8);c.fill();c.stroke();
@@ -19,7 +19,7 @@ export function drawGiftDonor(c,row,x,y,{color='#ffe4a0',radius=31,width=280,alp
  if(im){const size=Math.min(im.naturalWidth,im.naturalHeight);c.drawImage(im,(im.naturalWidth-size)/2,(im.naturalHeight-size)/2,size,size,x-radius,y-radius,radius*2,radius*2);}
  else{c.fillStyle='#fff6db';c.font='900 '+Math.round(radius)+'px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(Array.from(name)[0]||'Đ',x,y);}
  c.restore();c.beginPath();c.arc(x,y,radius+2,0,Math.PI*2);c.stroke();
- c.textAlign='center';c.textBaseline='middle';c.font='800 19px "Segoe UI",Arial,sans-serif';c.fillStyle='#fff';
+ c.textAlign='center';c.textBaseline='middle';c.font='800 '+nameSize+'px "Segoe UI",Arial,sans-serif';c.fillStyle='#fff';
  let display=name;while(c.measureText(display).width>width-16&&display.length>2)display=display.slice(0,-2)+'…';
  c.fillText(display,x,y+radius+10);
  if(caption){c.font='700 16px "Segoe UI",Arial,sans-serif';c.fillStyle=color;c.fillText(caption,x,y+radius+32,width-14);}

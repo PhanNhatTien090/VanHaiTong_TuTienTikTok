@@ -1,0 +1,37 @@
+/* Illustrated, bounded minor-game cards. One card at a time; no full-screen effects. */
+body.overlay #miniEventBox:not([hidden]){display:block;position:absolute;left:27%;top:19%;width:46%;box-sizing:border-box;padding:11px 13px;border:1px solid #e8c678;border-radius:14px;background:linear-gradient(145deg,#101c32f5,#0b1429f8 65%,#2d2334f5);color:#fff;z-index:22;pointer-events:none;box-shadow:0 6px 22px #0006,inset 0 0 0 3px #f0d18e0c;font:700 clamp(11px,2cqw,20px)/1.3 "Segoe UI",Arial,sans-serif;text-shadow:0 1px 1px #000}
+body.overlay #miniEventBox[hidden]{display:none!important}
+body.overlay.has-major-event #miniEventBox{left:32%;top:20%;width:36%;padding:8px 9px;font-size:clamp(10px,1.75cqw,18px)}
+#miniEventBox header{text-align:center}#miniEventBox .mini-kicker{display:block;font-size:.65em;letter-spacing:.06em;color:#d5c5aa}
+#miniEventBox header b{display:block;margin:3px 0;font:900 1.15em/1.2 Georgia,serif;color:#ffdf9a}
+#miniEventBox header small{display:inline-block;font-size:.75em;letter-spacing:.06em;padding:2px 9px;border-radius:20px;background:#dec27b18;color:#fff3d1}
+#miniEventBox .mini-choices{display:flex;justify-content:center;align-items:center;gap:7px;margin:9px 0 7px}
+#miniEventBox .mini-choice{flex:1;min-width:0;text-align:center;background:linear-gradient(#e7bc6517,#080e2066);border:1px solid #f0cd6e50;border-radius:9px;padding:4px 2px 5px}
+#miniEventBox svg{display:block;width:100%;height:clamp(30px,7cqw,65px);overflow:visible}
+#miniEventBox .mini-choice svg{animation:mini-choice-rise 2.2s ease-in-out infinite;transform-origin:50% 80%}
+#miniEventBox .mini-choice:nth-child(2) svg{animation-delay:-.7s}#miniEventBox .mini-choice:nth-child(3) svg{animation-delay:-1.4s}
+#miniEventBox code{font:900 .92em/1.4 "Segoe UI",Arial,sans-serif;color:#ffefba;white-space:nowrap}
+#miniEventBox .mini-star-orbit{position:relative;width:38%;flex:none}#miniEventBox .mini-star-orbit svg{animation:mini-star-float 2s ease-in-out infinite}
+#miniEventBox .mini-star-orbit i{position:absolute;border:1px solid #eace7966;border-radius:50%;inset:12% 2%;transform:rotate(-25deg) scaleY(.45)}#miniEventBox .mini-star-orbit i:nth-child(3){transform:rotate(35deg) scaleY(.45)}
+#miniEventBox .mini-star-command{width:59%;text-align:center}#miniEventBox .mini-star-command code{font-size:1.5em;display:block}#miniEventBox .mini-star-command span{display:block;font-size:.75em;color:#cbddeb}
+#miniEventBox .mini-progress{height:3px;border-radius:4px;background:#fff2;overflow:hidden}#miniEventBox .mini-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#dd9d50,#fff0b7);transform-origin:left;transition:transform .45s linear}
+#miniEventBox .mini-receipts{margin:7px 0 4px}#miniEventBox .mini-receipts p{font-size:.85em;text-align:center;margin:7px 0;color:#e0e9f0}#miniEventBox .mini-receipts p small{font-size:.8em;color:#afc4d4}
+#miniEventBox .mini-receipt{display:flex;align-items:center;gap:6px;margin-top:4px;padding:4px 5px;background:#adcce50b;border-radius:6px;animation:mini-receipt-in .35s ease-out}
+#miniEventBox .mini-result-mark{flex:none;min-width:40px;text-align:center;font-size:.65em;color:#ffe19e;border-right:1px solid #d9b96c55;padding-right:5px}
+#miniEventBox .mini-receipt>span:last-child{min-width:0}#miniEventBox .mini-receipt strong{display:block;margin:0;font-size:.85em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#miniEventBox .mini-receipt small{display:block;font-size:.7em;color:#d0e9e4;line-height:1.3}
+body.overlay.has-major-event #miniEventBox.mini-playing .mini-receipt:nth-child(n+2){display:none}
+#miniEventBox footer{border-top:1px solid #c0d4ee22;padding-top:5px;text-align:center;font-size:.7em;color:#c6d8e5}
+#miniEventBox .mini-finale{text-align:center;margin:8px 0}#miniEventBox .mini-finale-seal{display:block;width:50px;margin:auto}#miniEventBox .mini-finale strong{display:block;font-size:.85em;color:#ffefba}
+@keyframes mini-choice-rise{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-3px) rotate(3deg)}}
+@keyframes mini-star-float{0%,100%{transform:translateY(2px) rotate(-8deg)}50%{transform:translateY(-3px) rotate(8deg)}}
+@keyframes mini-receipt-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){#miniEventBox *{animation:none!important;transition:none!important}}
+
+#miniEventBox .mini-compact-how{display:none}
+body.overlay.hall-war-podium #miniEventBox{left:1.5%;top:18.5%;width:28%;padding:6px}
+body.overlay.hall-war-podium #miniEventBox :is(.mini-choices,.mini-receipts,.mini-progress,.mini-kicker,.mini-finale){display:none}
+body.overlay.hall-war-podium #miniEventBox header b{font-size:.9em}
+body.overlay.hall-war-podium #miniEventBox .mini-compact-how{display:block;text-align:center;font-size:.85em;color:#fff2bb;margin:4px 0}
+
+#miniEventBox.mini-motion-off *{animation:none!important;transition:none!important}

@@ -41,7 +41,7 @@ import {ELITE_BOSSES,BOSS_RELICS,encounterPhase,encounterHit} from './public/bos
 import {BOSSES,environmentAt} from './public/world-rotation.js';
 import {GIFT_TIERS,GIFT_ARTIFACTS,GIFT_POLICY_VERSION,giftReward} from './public/gift-rewards.js';
 import {VIP_TIERS,vipTier} from './public/vip.js';
-import {startMiniEvent} from './mini-events.mjs';
+import {startMiniEvent,stopMiniEvent} from './mini-events.mjs';
 import {engagementCommand,tickEngagement,trackTasks,checkinStreak,sectBuild,engagementView,startEnvelopeNow,startQuizNow} from './engagement.mjs';
 import {topPatron,PATRON_SKIN,PATRON_SWORD,PATRON_SEAL,SPECIAL_SKINS} from './public/patrons.js';
 import {giftKind,giftNameVi} from './public/gift-kinds.js';
@@ -1318,7 +1318,7 @@ export const stopHallWar=(w,now=Date.now())=>endHallWar(w,now,hallWarContext);
 // 07/11/2026: thưởng sự kiện (điểm danh chuỗi, lì xì, câu đố, nhiệm vụ ngày, kiến tạo tông) tính theo % tu vi cần,
 // không trừ hạn mức tu luyện ngày — nếu không một lần điểm danh 7 ngày đã tiêu sạch hạn mức.
 const engageCtx={emit,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),active:currentParticipant,requiredQi:p=>rewardQiBasis(p)/progressionMult(p),giveArtifact,itemName:id=>CATALOG.find(x=>x.id===id)?.name||id,busy:(w,now)=>automaticEventsPaused(w,now)||alchemyActive(w)||eventBusyUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase)};
-export const engageNow=(w,kind,now=Date.now())=>kind==='quiz'?startQuizNow(w,now,engageCtx):kind==='envelope'?startEnvelopeNow(w,now,engageCtx):startMiniEvent(w,kind,now,engageCtx);
+export const engageNow=(w,kind,now=Date.now())=>kind==='stop-mini'?stopMiniEvent(w,now,engageCtx):kind==='quiz'?startQuizNow(w,now,engageCtx):kind==='envelope'?startEnvelopeNow(w,now,engageCtx):startMiniEvent(w,kind,now,engageCtx);
 export const startTournament=(w,now=Date.now())=>beginTournament(w,now,socialContext);
 export const stopTournament=(w,now=Date.now())=>endTournament(w,now,socialContext);
 

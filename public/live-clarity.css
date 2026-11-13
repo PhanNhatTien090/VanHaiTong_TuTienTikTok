@@ -323,9 +323,7 @@ body.overlay.hall-war :is(#phoneHudLeft,#phoneHudRight,#giftRanks,#lowerRightGui
 .hall-weekly-panel p{color:#d1e9e4;line-height:1.55}.hall-weekly-panel details{margin-top:8px}
 
 /* A single compact minor-game card stays visible over every main event. */
-body.overlay #miniEventBox:not([hidden]),body.overlay.has-major-event #quizBox:not([hidden]),body.overlay.has-major-event #envelopeBox:not([hidden]){display:block!important;position:absolute;left:32%;right:auto;top:20.5%;bottom:auto;transform:none;width:36%;max-width:none;padding:9px 10px;background:rgba(4,12,29,.96);border:1px solid #d7bc70;border-radius:10px;color:#fff;z-index:22;pointer-events:none;font:700 clamp(11px,1.85cqw,18px)/1.35 Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 4px 14px #0007}
-body.overlay #miniEventBox b,body.overlay #miniEventBox strong,body.overlay #miniEventBox small{display:block;text-align:center;margin:3px 0}
-body.overlay #miniEventBox b{color:#ffdf88}body.overlay #miniEventBox small{color:#dcefff;font-size:.85em}
+body.overlay.has-major-event #quizBox:not([hidden]),body.overlay.has-major-event #envelopeBox:not([hidden]){display:block!important;position:absolute;left:32%;right:auto;top:20.5%;bottom:auto;transform:none;width:36%;max-width:none;padding:9px 10px;background:rgba(4,12,29,.96);border:1px solid #d7bc70;border-radius:10px;color:#fff;z-index:22;pointer-events:none;font:700 clamp(11px,1.85cqw,18px)/1.35 Georgia,serif;text-shadow:0 1px 2px #000;box-shadow:0 4px 14px #0007}
 body.overlay.has-major-event #envelopeBox .env-card{position:static;transform:none;animation:none;width:auto;height:auto;min-height:0;padding:0;background:none;border:0;box-shadow:none}
 body.overlay.has-major-event #envelopeBox .env-top,body.overlay.has-major-event #envelopeBox .env-seal,body.overlay.has-major-event #envelopeBox .env-coin{display:none}
 body.overlay.has-major-event #envelopeBox b,body.overlay.has-major-event #envelopeBox span,body.overlay.has-major-event #envelopeBox small{position:static;display:block;transform:none;margin:3px 0;text-align:center;font:inherit}

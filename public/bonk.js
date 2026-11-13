@@ -87,9 +87,9 @@ function bolt(c,x0,y0,x1,y1,seed,col,w){c.strokeStyle=col;c.lineWidth=w;c.beginP
 export function drawBonk(scene,c,t){
  const b=scene.bonkFest;if(!b)return;const H=scene.height,nowMs=Date.now();
  if(majorEventActive(scene.lastState)){
-  const rows=live(scene,t).slice(0,2);c.save();
-  if(b.active)txt(c,'🔨 GÕ ĐẦU · go tên',450,H*.79,'700 17px Segoe UI','#ffe4a3',4);
-  rows.forEach(({h,age},i)=>{const p=scene.playerIndex?.get(h.a),v=scene.playerIndex?.get(h.b),x=390+i*120,y=H*.84;
+  const rows=live(scene,t).slice(0,2),hall=scene.hallWarStatus?.active;c.save();
+  if(b.active)txt(c,'🔨 GÕ ĐẦU · go tên',450,H*(hall?.189:.79),'700 17px Segoe UI','#ffe4a3',4);
+  rows.forEach(({h,age},i)=>{const p=scene.playerIndex?.get(h.a),v=scene.playerIndex?.get(h.b),x=hall?(i?820:80):390+i*120,y=H*(hall?.79:.84);
    drawGiftDonor(c,{name:p?.name,avatar:p?.avatar},x,y,{radius:22,color:'#ffdc88',width:112,caption:'gõ '+String(v?.name||'đạo hữu').slice(0,12)});
    mallet(c,x+32,y+5,Math.sin(age*7)*.8,1.1,h.h||0,t);drawBonkImpact(c,x,y,age-IMPACT,1,h.h||0,'#ffdc88',h.v||0);
   });c.restore();return;

@@ -1,3 +1,4 @@
+import {renderMiniEvent} from './mini-event-ui.js?v=polish-20261114';
 import {eventDonationContext,majorEventActive} from './event-donations.js';
 import {ManagementState} from './management-state.js';
 import {startLiveDiag,liveDiagSnapshot} from './live-diag.js';
@@ -381,6 +382,12 @@ function showDiscipleNotice(e){
  setTimeout(()=>card.remove(),6000);
 }
 function enqueueReady(e){
+  // Event cards and the battlefield own these updates; never queue one spotlight/voice per hit or claim.
+  if(e.miniStart||e.miniEnd||e.miniReward||e.hallWarAction||e.hallWarReward||e.hallWarStart||e.hallWarBattle||e.hallWarEnd){
+    if(!ascensionStage&&(e.miniStart||e.miniEnd||e.hallWarStart||e.hallWarBattle||e.hallWarEnd))narrator.add(e);
+    if(e.miniReward&&performance.now()-engagementSoundAt>1000){tone('lotus');engagementSoundAt=performance.now();}
+    return;
+  }
   if(raceOpeningVoice(e)&&state?.raceStatus?.entryAnnouncement)e={...e,...state.raceStatus.entryAnnouncement};
   // 4/11/2026: đưa vào hàng giọng NGAY khi nhận (trước khi hiệu ứng/chữ đến lượt hiện) — giọng đến sớm hơn chữ.
   if(!e.resident&&!isArrivalWelcome(e))narrator.add(e);
@@ -681,7 +688,7 @@ function renderEngagement(){const g=state.engagement||{},env=document.getElement
   if(g.quiz){const key=g.quiz.q;if(qz.dataset.q!==key){qz.dataset.q=key;qz.innerHTML=g.quiz.options?'<b>'+(g.quiz.riddle?'🤔 CÂU ĐỐ MẸO':'❓ CÂU ĐỐ TU TIÊN')+'</b><p>'+esc(g.quiz.q)+'</p><ol>'+g.quiz.options.map((o,i)=>'<li><code>'+'abc'[i]+'</code> '+esc(o)+'</li>').join('')+'</ol><small class="quiz-left"></small>':'<b>🤔 CÂU ĐỐ MẸO</b><p>'+esc(g.quiz.q)+'</p><small class="quiz-left"></small>';qz.hidden=false;}
     qz.querySelector('.quiz-left').textContent=(g.quiz.options?'Gõ a, b hoặc c':'Gõ đáp án vào chat')+' · còn '+left(g.quiz.endsAt)+' giây · '+g.quiz.count+(g.quiz.options?' người đã trả lời':' người đã giải được');}
   else{qz.hidden=true;qz.dataset.q='';}
-  let mini=document.getElementById('miniEventBox');if(!mini){mini=document.createElement('aside');mini.id='miniEventBox';document.querySelector('.scene-shell').appendChild(mini);}mini.hidden=!g.mini;if(g.mini)mini.innerHTML='<b>✦ '+esc(g.mini.name)+'</b><strong>'+esc(g.mini.how)+'</strong><small>'+left(g.mini.endsAt)+' giây · '+g.mini.count+' đạo hữu đã chơi · miễn phí</small>';
+  renderMiniEvent(g.mini,state.serverNow,document.querySelector('.scene-shell'),scene.motion!==false);
   clearTimeout(engageTimer);if(g.envelope||g.quiz||g.mini)engageTimer=setTimeout(renderEngagement,500);}
 
 // Refresh a deployed UI update after the current presentation, keeping event data on the server.
