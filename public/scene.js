@@ -343,8 +343,15 @@ loadPrestigeArt(this);syncRace(this,state);syncWar(this,state);syncAlchemy(this,
         const text=cache.get('txt:'+l.name+':'+l.h+':'+skin.level,(tw+2)*2,(l.h+2)*2,paintText),inner=l.w-10,travel=Math.max(0,tw-inner),move=travel/35*1000,cycle=2*(move)+2700,u=this.motion===false?0:(t+(String(l.id).length*397))%cycle;
         const off=u<1500?0:u<1500+move?travel*(u-1500)/move:u<2700+move?travel:travel*(1-(u-2700-move)/move);
         c.save();c.beginPath();c.rect(l.x+5,l.y,inner,l.h);c.clip();if(text)c.drawImage(text,l.x+5-off-1,l.y-1,text.width/2,text.height/2);c.restore();}
+      if(l.player.sectHallDiscipleRank!=null){
+        c.save();c.font='800 18px "Segoe UI",Arial,sans-serif';
+        const title='CHÂN TRUYỀN',w=c.measureText(title).width+18,cx=l.x+l.w/2,cy=l.y-14;
+        c.fillStyle='#10291ff5';c.strokeStyle='#ffe39b';c.lineWidth=1.3;
+        c.beginPath();c.roundRect(cx-w/2,cy-12,w,24,6);c.fill();c.stroke();
+        c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff0b8';c.fillText(title,cx,cy);c.restore();
+      }
       this.drawQiBar(c,l,t);
-      if(l.player.honor){c.save();c.textAlign='center';c.font='700 13px Georgia';c.fillStyle=['#a9f1e0','#ffe3a0','#d9c2ff'][l.player.honor.frame]||'#ffe3a0';c.fillText(l.player.honor.title,l.x+l.w/2,l.y-7);c.restore();}
+      if(l.player.honor){c.save();c.textAlign='center';c.font='700 13px Georgia';c.fillStyle=['#a9f1e0','#ffe3a0','#d9c2ff'][l.player.honor.frame]||'#ffe3a0';c.fillText(l.player.honor.title,l.x+l.w/2,l.y-(l.player.sectHallDiscipleRank!=null?34:7));c.restore();}
     }
     this.drawTalkBubbles(c,t,cache);
   }

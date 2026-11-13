@@ -33,7 +33,7 @@ setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
-import {Scene,portrait,symbols} from './scene.js?v=hall-safe-area-20261113';
+import {Scene,portrait,symbols} from './scene.js?v=disciple-title-20261113';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
@@ -362,11 +362,20 @@ const GIFT_STALE_MS=10000;let current=null,currentTimer=null;
 const giftValue=e=>(Number(e.coins)||0)*Math.max(1,Number(e.count)||1);
 function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony)return false;if(cur.effect==='breakthrough')return (giftValue(g)>=99||!!luxuryTier(g))&&breakthroughRealm(cur)<=5;return true;}
 function interruptShow(){clearTimeout(spotTimer);clearTimeout(currentTimer);$('#spotlight').classList.remove('visible');scene.interruptPresentation?.();cultivationAudio.ritual(null);busy=false;current=null;}
+function showDiscipleNotice(e){
+ let box=document.getElementById('discipleNotices');
+ if(!box){box=document.createElement('aside');box.id='discipleNotices';box.setAttribute('role','status');box.setAttribute('aria-live','polite');document.querySelector('.scene-shell').appendChild(box);}
+ const card=document.createElement('div');card.className='disciple-notice';
+ card.innerHTML=`<b>✦ KẾT NẠP CHÂN TRUYỀN THÀNH CÔNG ✦</b><strong>${esc(e.name||'Đạo hữu')}</strong><span>Đệ tử Chân Truyền · ${esc(e.achieve.item||'Ngũ Đường')}</span>`;
+ box.appendChild(card);while(box.children.length>3)box.firstElementChild.remove();
+ setTimeout(()=>card.remove(),6000);
+}
 function enqueueReady(e){
   if(raceOpeningVoice(e)&&state?.raceStatus?.entryAnnouncement)e={...e,...state.raceStatus.entryAnnouncement};
   // 4/11/2026: đưa vào hàng giọng NGAY khi nhận (trước khi hiệu ứng/chữ đến lượt hiện) — giọng đến sớm hơn chữ.
   if(!e.resident&&!isArrivalWelcome(e))narrator.add(e);
   if(ascensionStage&&!isAscensionEvent(scene,e)){if(!e.resident)narrator.add(e);return;}
+  if(e.achieve?.kind==='disciple'){showDiscipleNotice(e);scene.noteEvent(e);tone('lotus');return;}
   if(isArrivalWelcome(e)){arrivalWelcomes.add(e);return;}
   if(e.engagementAction){scene.noteEvent(e);narrator.add(e);const now=performance.now();if(now-engagementSoundAt>800){tone(e.engagementAction==='follow'?'petal':'lotus');engagementSoundAt=now;}return;}
   if(isEventAnnouncement(e)||e.gift)narrator.add(e);
