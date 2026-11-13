@@ -32,8 +32,12 @@ function stele(c,x,roadTop,wz){const n=Math.abs(Math.round(wz));const side=wz<0?
  if(!side){c.font='900 12px Segoe UI';c.fillStyle='#fff3c8';c.fillText('TRUNG TUYẾN',x,roadTop-74);}c.restore();}
 
 // Vẽ toàn bộ nền bản đồ (đè hẳn lên sân thường). light = máy yếu: bớt lớp.
-export function drawWarRoad(c,{H,cam,lx,t,light=false,motion=true}){
+export function drawWarRoad(c,{H,cam,lx,t,light=false,motion=true,landscape=null}){
  const roadTop=H*.56,roadBot=H*.9;
+ if(landscape?.complete&&landscape.naturalWidth){
+  const shift=cam*.07;c.drawImage(landscape,-90-shift,-7,1080,H+14);
+  c.fillStyle='#07101b42';c.fillRect(0,0,900,H);
+ }else{
  // trời: nửa trái bình minh vàng lam, nửa phải huyết dạ — ranh giới chạy theo điểm giao tranh
  const sky=c.createLinearGradient(0,0,0,roadTop);sky.addColorStop(0,'#0a0f24');sky.addColorStop(1,'#2a2445');c.fillStyle=sky;c.fillRect(0,0,900,H);
  const tl=c.createLinearGradient(0,0,lx,0);tl.addColorStop(0,'#2b4f9acc');tl.addColorStop(1,'#ffd36b22');c.fillStyle=tl;c.fillRect(0,0,Math.max(0,lx),roadTop);
@@ -47,8 +51,9 @@ export function drawWarRoad(c,{H,cam,lx,t,light=false,motion=true}){
  for(let k=-5;k<=5;k++){const wz=k*260+130;const x=screenX(wz,cam,.6);if(x<-120||x>1020)continue;pagoda(c,x,roadTop-6,.9+(k%2)*.2,wz<0?'chinh':'ma',t);}
  // sương chân núi
  const mist=c.createLinearGradient(0,roadTop-70,0,roadTop+10);mist.addColorStop(0,'#c8d0ff00');mist.addColorStop(1,'#c8d0ff30');c.fillStyle=mist;c.fillRect(0,roadTop-70,900,80);
+ }
  // mặt đường đá lát, chạy theo camera (thị sai 1)
- const road=c.createLinearGradient(0,roadTop,0,roadBot);road.addColorStop(0,'#4a4458');road.addColorStop(.5,'#2e2a3a');road.addColorStop(1,'#1a1824');c.fillStyle=road;c.fillRect(0,roadTop,900,H-roadTop);
+ const road=c.createLinearGradient(0,roadTop,0,roadBot);road.addColorStop(0,'#4a445888');road.addColorStop(.5,'#2e2a3a55');road.addColorStop(1,'#1a1824b0');c.fillStyle=road;c.fillRect(0,roadTop,900,H-roadTop);
  c.fillStyle='#6a6280';c.fillRect(0,roadTop-4,900,6);
  c.strokeStyle='#ffffff12';c.lineWidth=2;const step=40;const first=Math.floor((cam-450/PX_PER_TRUONG)/step)*step;
  for(let wz=first;wz<=cam+450/PX_PER_TRUONG+step;wz+=step){const xb=screenX(wz,cam),xt=450+(xb-450)*.82;c.beginPath();c.moveTo(xt,roadTop);c.lineTo(xb,roadBot);c.stroke();}

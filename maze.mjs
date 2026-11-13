@@ -83,12 +83,20 @@ export function mazeCommand(w,p,cmd,now,c){
  const [dx,dy]=DIRS[dir];r.x+=dx;r.y+=dy;r.steps++;r.moveAt=now;arrive(w,e,r,now,c);return {ok:true,maze:true};
 }
 // Quà lúc tuyển: vào mê cung (+ lượt phá tường dùng khi chạy). Lúc đang chạy: thêm lượt phá tường. Người chưa vào thì tặng quà là vào luôn.
-export function mazeGift(w,p,coins,now,c){
+export function mazeGift(w,p,coins,now,c,{unitCoins=coins}={}){
  const e=w.maze;if(!real(p)||!(coins>0))return null;
- const add=tier(MAZE.breaks,coins);
- if(e?.phase==='registration'){const had=e.runners.some(r=>r.id===p.id),r=addRunner(w,e,p,now);if(!r)return null;r.breaks=(r.breaks||0)+add;r.giftAt=now;return {breaks:add,text:(had?'':'vào mê cung • ')+`phá ${add} tường`};}
- if(e?.phase!=='running')return null;
+ const teleport=unitCoins===100,add=teleport?0:tier(MAZE.breaks,coins);
+ const send=r=>{
+  const from={x:r.x,y:r.y},to={...e.maze.exit};
+  r.x=to.x;r.y=to.y;r.moveAt=now;r.giftAt=now;
+  const fx={id:p.id,name:p.name,from,to,at:now};
+  (e.teleports??=[]).push(fx);e.teleports=e.teleports.slice(-12);
+  arrive(w,e,r,now,c);return {teleport:true,text:'Tốc biến thẳng tới cửa ra'};
+ };
+ if(e?.phase==='registration'){const had=e.runners.some(r=>r.id===p.id),r=addRunner(w,e,p,now);if(!r)return null;if(teleport){r.pendingTeleport=true;return {teleport:true,text:'Tốc biến tới cửa ra khi khai trận'};}r.breaks=(r.breaks||0)+add;r.giftAt=now;return {breaks:add,text:(had?'':'vào mê cung • ')+`phá ${add} tường`};}
+ if(e?.phase!=='running'||now>=e.endsAt)return null;
  const r=addRunner(w,e,p,now);if(!r||r.finishAt)return null;
+ if(teleport)return send(r);
  r.breaks=(r.breaks||0)+add;r.giftAt=now;r.giftCoins=coins;
  return {breaks:add,text:`phá ${add} tường • đâm tường là phá`};
 }
@@ -107,6 +115,7 @@ export function tickMaze(w,now,c){
   e.runners=e.runners.filter(r=>w.players[r.id]);
   if(!e.runners.length){e.phase='finished';e.podiumUntil=now+4000;e.results=[];announce(w,null,'Bí cảnh mê cung khép lại • chưa có đạo hữu nào vào',now,c,{mazeEmpty:true});return;}
   e.phase='running';e.startedAt=now;e.endsAt=now+MAZE.runMs;for(const r of e.runners)r.at=now;
+  for(const r of e.runners){if(!r.pendingTeleport)continue;delete r.pendingTeleport;mazeGift(w,w.players[r.id],100,now,c);}
   announce(w,null,'MÊ CUNG MỞ CỬA • gõ len / xuong / trai / phai • mỗi tin 1 bước',now,c,{mazeRun:true});return;}
  if(e.phase==='running'&&(now>=e.endsAt||e.runners.length&&e.runners.every(r=>r.finishAt))){
   e.phase='finished';e.finishedAt=now;e.podiumUntil=now+MAZE.podiumMs;award(w,e,now,c);
@@ -120,5 +129,5 @@ export function mazeView(w,now){
  if(!mazeVisible(w,now))return null;const m=e.maze;
  const runners=mazeRanking(e).slice(0,300).map(r=>({id:r.id,n:r.name,x:r.x,y:r.y,s:r.steps,d:distOf(e,r),f:r.finishAt||0,r:r.rank||0,m:r.moveAt||0,b:r.bumpAt||0,g:r.giftAt||0,k:r.breaks||0,bk:r.breakAt||0}));
  return {id:e.id,phase:e.phase,active:true,cols:m.cols,rows:m.rows,cells:m.cells.join(''),start:m.start,exit:m.exit,startDist:m.dist[m.start.y*m.cols+m.start.x],
-  registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,count:e.runners.length,finished:e.finished,runners,broken:(e.broken||[]).filter(b=>now-b.at<2500),results:e.results||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil};
+  registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,count:e.runners.length,finished:e.finished,runners,teleports:(e.teleports||[]).filter(f=>now-f.at<2600),broken:(e.broken||[]).filter(b=>now-b.at<2500),results:e.results||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil};
 }

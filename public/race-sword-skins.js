@@ -4,7 +4,20 @@ export const RACE_SWORD_SKINS=Object.freeze([
  {id:'race-moon',name:'Tinh Hà Nguyệt Kiếm',color:'#dcafff',edge:'#fff0cd',dark:'#49216f',cell:2,motif:'moon'},
  {id:'race-frost',name:'Băng Liên Thần Kiếm',color:'#86ffe2',edge:'#e5ffff',dark:'#165466',cell:0,motif:'lotus'},
  // 07/11: giải nhất Đua phi kiếm (thay Thương Long). Ảnh riêng, hiệu ứng lấp lánh nháy liên tục.
- {id:'race-cuu-thien',name:'Cửu Thiên Lưu Ly Kiếm',color:'#ffc8f2',edge:'#fff4c8',dark:'#5b2d86',cell:3,motif:'phoenix',sparkle:true,art:'/assets/events-v1/sword-cuu-thien-v1.png'}]);
+ {id:'race-cuu-thien',name:'Cửu Thiên Lưu Ly Kiếm',color:'#ffc8f2',edge:'#fff4c8',dark:'#5b2d86',cell:3,motif:'phoenix',sparkle:true,art:'/assets/events-v1/sword-cuu-thien-v1.png'},
+ ...[
+ ['thai-duong','Thái Dương Long Kiếm','#ffdc84','dragon'],
+ ['tu-tinh','Tử Tinh Trảm Nguyệt','#d9a6ff','moon'],
+ ['thanh-cot','Thanh Long Cốt Kiếm','#89ffe0','dragon'],
+ ['xich-phuong','Xích Phượng Hoàng Vũ','#ff8f70','phoenix'],
+ ['bach-bang','Bạch Băng Hàn Quang','#a2e7ff','lotus'],
+ ['dao-lien','Đào Liên Kiếm','#ffb7cf','lotus'],
+ ['lam-loi','Lam Lôi Kiếm','#9db9ff','dragon'],
+ ['u-anh','U Ảnh Kiếm','#d5c2ff','moon'],
+ ['thanh-truc','Thanh Trúc Kiếm','#acffc9','lotus'],
+ ['ho-phach','Hổ Phách Kiếm','#ffca82','phoenix']
+ ].map(([slug,name,color,motif],i)=>({id:'race-'+slug,name,color,motif,edge:'#fff2d4',dark:'#20253b',prize:i<4?'elite':'standard',file:'/assets/thien-khuyet/sword-'+slug+'.webp'}))
+]);
 // Ngôi sao 4 cánh nháy theo nhịp riêng dọc lưỡi kiếm + vầng cầu vồng thở + thỉnh thoảng một chớp sáng lớn.
 // Khung toạ độ: kiếm dựng đứng, mũi ở y=-len/2, chuôi ở y=+len/2, tâm (0,0).
 const RAINBOW=['#ff9ad5','#ffe27a','#8ff3ff','#c9a2ff','#ffffff','#9dffc8'];
@@ -26,9 +39,25 @@ export function drawSwordSparkle(c,t,len,motion=true,light=false){
  c.restore();
 }
 export function raceSwordFor(p={}){return RACE_SWORD_SKINS.find(s=>s.id===p.raceSwordChoice&&p.raceSwordSkins?.includes(s.id))||RACE_SWORD_SKINS.find(s=>p.raceSwordSkins?.includes(s.id));}
+export function racePrizeImage(scene,skin){
+ if(!skin?.file||typeof Image==='undefined')return null;
+ const cache=scene.racePrizeArt??=new Map();
+ if(!cache.has(skin.file)){const img=new Image();img.decoding='async';img.src=skin.file;cache.set(skin.file,img);}
+ const img=cache.get(skin.file);return img.complete&&img.naturalWidth?img:null;
+}
 export function drawRaceSword(scene,c,a,t){
  const skin=raceSwordFor(a.player),scale=(a.scale||1.5)/1.5;
  if(!skin){scene.drawRaceBaseSword?.(c,a,t);return;}
+ const img=racePrizeImage(scene,skin);
+ if(img){
+   c.save();c.translate(a.x,a.y+31*scale);c.rotate(-.07-(a.kick||0)*.22);
+   const w=(skin.prize==='elite'?226:197)*scale,h=w*img.naturalHeight/img.naturalWidth;
+   c.drawImage(img,-w/2,-h/2,w,h);
+   if(skin.prize==='elite'&&scene.motion!==false){
+    const u=(t*.001)%1;c.globalAlpha=Math.sin(u*Math.PI)*.9;star(c,(u-.5)*w*.84,-5*scale,10*scale,skin.color);
+   }
+   c.restore();return;
+ }
  const art=scene.prestigeSwords?.[skin.cell];
  if(art){c.save();c.translate(a.x,a.y+32*scale);c.rotate(Math.PI/2-.04);c.drawImage(art,-56*scale,-120*scale,112*scale,240*scale);if(skin.sparkle)drawSwordSparkle(c,t,240*scale,scene.motion!==false,scene.budget?.level==='light');c.restore();return;}
  c.save();c.translate(a.x,a.y+32*scale);c.scale(scale,scale);c.rotate(-.04+(a.boost?-.035:0));

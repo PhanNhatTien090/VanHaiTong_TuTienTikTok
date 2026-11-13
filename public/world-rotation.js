@@ -12,6 +12,7 @@ export const SCENES=Object.freeze([
  {id:'autumn-peak',name:'Thu Phong Lĩnh',image:'/assets/sect-autumn-peak.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
  {id:'morning',name:'Vân Hải Bình Minh',image:'/assets/sect-morning-v20.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
  {id:'twilight',name:'Hoàng Hôn Tụ Linh',image:'/assets/sect-twilight-v2.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
+ {id:'thien-khuyet',name:'Vân Hải Thiên Khuyết',image:'/assets/thien-khuyet/map.webp',ambience:'sect',floorY:.65,layout:'sect'},
  {id:'sect-hall',name:'Vân Hải Nguyệt Cung',image:'/assets/realm-skins-v2/moon-jade/background-v1.png',ambience:'sect',floorY:.65,layout:'sect'}
 ]);
 export const BOSSES=Object.freeze([

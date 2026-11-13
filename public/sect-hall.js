@@ -4,7 +4,16 @@ import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
 import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
 // 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.
-const AVATARS=new Map();
+const AVATARS=new Map(), SEATS=new Map();
+function courtSeat(kind){
+ if(typeof Image==='undefined')return null;
+ if(!SEATS.has(kind)){const image=new Image();image.decoding='async';image.src='/assets/thien-khuyet/'+kind+'.webp';SEATS.set(kind,image);}
+ const art=SEATS.get(kind);return art.complete&&art.naturalWidth?art:null;
+}
+function paintSeat(c,art,x,y,w){
+ const h=w*art.naturalHeight/art.naturalWidth;
+ c.drawImage(art,x-w/2,y-h*.79,w,h);
+}
 function avatarImage(url){if(!url||typeof Image==='undefined')return null;let e=AVATARS.get(url);if(e&&e.failed&&Date.now()<e.retry)return null;if(!e||e.failed){if(AVATARS.size>40)AVATARS.delete(AVATARS.keys().next().value);const img=new Image();img.referrerPolicy='no-referrer';img.decoding='async';e={img,ready:false,failed:false};img.onload=()=>{e.ready=true;};img.onerror=()=>{e.failed=true;e.retry=Date.now()+60000;};img.src=url;AVATARS.set(url,e);}return e.ready?e.img:null;}
 function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar)),ring=i===0?'#ffd76a':'#cfe6ff';c.save();c.translate(0,y);
  c.shadowColor='#000a';c.shadowBlur=8;c.fillStyle='#183843';c.beginPath();c.arc(0,0,r+5,0,Math.PI*2);c.fill();c.shadowBlur=0;
@@ -24,15 +33,17 @@ export function drawSectMaster(scene,c,t){
  if(scene.environment?.layout!=='sect'||scene.sectMaster?.enabled===false||scene.raceStatus?.active||scene.socialStage?.length||scene.presentation?.until>t)return false;
  const host=scene.sectMaster||{},now=(scene.stateServerNow||Date.now())+(t-(scene.stateReceivedAt??t)),speaking=host.active===true&&(!host.until||now<host.until);
  const seat=masterSeatGeometry(scene.height,scene.art),x=seat.x,y=seat.y,age=speaking?Math.max(0,now-host.at):Infinity,appear=1,motion=scene.motion!==false,nod=motion&&age<1800?Math.sin(age*.0035)*.018:0,breathe=motion?Math.sin(t*.0018)*1.2:0;
+ const throne=courtSeat('throne');
  const p={id:'resident:sect-master',name:'Tông chủ',resident:true,gender:'nam',realm:3,giftCoins:500,equipped:null};
  let throneTier=-1;loadSectMasterArt(scene);c.save();c.globalAlpha=appear;
  if(host.source==='gift'&&host.player){
   const height=seat.height,scale=height/120,tier=masterTier(host.player.giftCoins);throneTier=tier;
-  drawThroneBack(c,x,y,height,tier,t,motion); // 12/11: ngai rồng vàng vẽ 1 lần (cache) + hiệu ứng theo cấp
+  if(throne)paintSeat(c,throne,x,y,height*1.85);else drawThroneBack(c,x,y,height,tier,t,motion); // 12/11: ngai rồng vàng vẽ 1 lần (cache) + hiệu ứng theo cấp
   drawWings(scene,c,{id:host.player.id,player:host.player,x,y,scale},t);
   c.translate(x,y);c.scale(scale,scale);const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
   try{scene.drawCharacterBody(c,host.player,skinFor(host.player.giftCoins),t);}finally{scene.compact=compact;scene.cinematicPose=pose;}
  }
+ else if(throne){paintSeat(c,throne,x,y,seat.height*1.85);}
  else if(scene.sectMasterArt){const im=scene.sectMasterArt,w=seat.height*(im.naturalWidth||im.width)/(im.naturalHeight||im.height);c.translate(x,seat.top+seat.height*.35);c.rotate(nod*.25);c.scale(1,1+breathe*.0015);c.imageSmoothingQuality='high';c.drawImage(im,-w/2,-seat.height*.35,w,seat.height);}
  else{c.translate(x,y-42);c.scale(1.35,1.35);const old=scene.compact;scene.compact=true;try{scene.drawCharacterBody(c,p,skinFor(p.giftCoins),0);}finally{scene.compact=old;}}
  c.restore();
@@ -54,12 +65,13 @@ export function drawSectCourt(scene,c,t){
   const y=scene.height*.463, active=new Set(scene.sectElders.map(p=>p.id));
   for(const hall of scene.sectHalls){
    c.save();c.translate(hallX(hall.index),y);
+   const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,124);
    c.fillStyle='#102b32';c.strokeStyle=hall.color;c.lineWidth=2;
-   c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();c.fill();c.stroke();
+   c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();if(!elder){c.fill();c.stroke();}
    c.fillStyle=hall.color;c.textAlign='center';c.font='700 32px Georgia';
    if(!active.has(hall.elder?.id))c.fillText(hall.mark,0,-16);
    c.fillStyle=hall.color;c.beginPath();c.moveTo(-60,-65);c.lineTo(-43,-65);c.lineTo(-48,-39);c.lineTo(-55,-42);c.closePath();c.fill();
-   c.fillStyle='#092028';c.fillRect(-83,16,166,51);c.strokeRect(-83,16,166,51);
+   c.fillStyle='#092028';c.beginPath();c.roundRect(-83,16,166,51,8);c.fill();c.stroke();
    c.fillStyle=hall.color;c.font='700 19px Georgia';c.fillText('TRƯỞNG LÃO',0,36,154);
    c.fillStyle='#f7e8c6';c.font='700 16px Georgia';c.fillText(hall.name,0,56,156);
    c.font='700 17px Georgia';c.fillStyle='#e9d7b0';c.fillText(hall.elder?.name||'Ghế trống',0,88,156);

@@ -1,3 +1,4 @@
+import {courtRelic} from './court-rewards.js';
 import {drawCombatFx} from './combat-fx.js';
 // One chat command, automatic visual selection. Damage remains authoritative in engine.power.
 export const COMBAT_RELICS=Object.freeze([
@@ -44,7 +45,7 @@ export function attackTechnique(p){
  else if(gear==='dora-air-cannon')id='dora-cannon';
  else if(gear==='hanlap-bamboo-swords')id='bamboo';
  else if(gear==='vuonglam-soul-banner')id='soul';
- else id=COMBAT_RELICS.find(a=>a.id===gear)?.technique||GEAR_TECH[gear];
+ else id=courtRelic(gear)?.technique||COMBAT_RELICS.find(a=>a.id===gear)?.technique||GEAR_TECH[gear];
  if(!id){if(/storm/.test(gear))id='thunder';else if(/heaven-seal/.test(gear)||p.realm>=8)id='celestial';else if(/kinh|orb|dragon/.test(gear)||p.realm>=7)id='stars';else if(/phoenix|phien/.test(gear)||p.manuals?.includes('lotus')&&p.realm>=3)id='lotus';else if(p.realm>=5)id='thunder';else if(p.realm>=2||p.manuals?.includes('sword'))id='sword';else id='slash';}
  const intensity=Math.min(3,1+Math.floor(Math.max(0,p.realm||0)/4)+(p.artifacts?.length>=8?1:0));
  return {id,...TECHNIQUES[id],intensity};

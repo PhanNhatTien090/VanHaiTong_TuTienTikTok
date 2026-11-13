@@ -6,7 +6,7 @@ const TAU=Math.PI*2;
 const clamp=v=>Math.max(0,Math.min(1,v)),ease=k=>1-(1-clamp(k))**3;
 const hex=a=>Math.round(255*clamp(a)).toString(16).padStart(2,'0');
 const rnd=i=>{const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);};
-const STYLE={viemton:{a:'#ff5a14',b:'#ffe2a0',dark:'#1a0402',mist:'#5c1206'},khuyniet:{a:'#a45bff',b:'#ffe7a0',dark:'#0e0418',mist:'#2c1050'},tudo:{a:'#ff3b2f',b:'#ffd0a8',dark:'#1a0306',mist:'#5c0a14'},hailam:{a:'#4fcaff',b:'#e1fbff',dark:'#07142f',mist:'#184b79'},doraemon:{a:'#61dbff',b:'#fff6bb',dark:'#061a31',mist:'#164a6d'},shende:{a:'#ffb15d',b:'#fff2c6',dark:'#260b13',mist:'#633123'},vuonglam:{a:'#a46bff',b:'#efe2ff',dark:'#1a0b2e',mist:'#3a1d63'},hanlap:{a:'#4fe0a0',b:'#eafff4',dark:'#06281c',mist:'#164a37'}};
+const STYLE={'nguyet-lien':{a:'#71dce8',b:'#f2ffff',dark:'#071830',mist:'#1d526c'},'xich-vu':{a:'#ff6436',b:'#ffe8a0',dark:'#270810',mist:'#862a28'},viemton:{a:'#ff5a14',b:'#ffe2a0',dark:'#1a0402',mist:'#5c1206'},khuyniet:{a:'#a45bff',b:'#ffe7a0',dark:'#0e0418',mist:'#2c1050'},tudo:{a:'#ff3b2f',b:'#ffd0a8',dark:'#1a0306',mist:'#5c0a14'},hailam:{a:'#4fcaff',b:'#e1fbff',dark:'#07142f',mist:'#184b79'},doraemon:{a:'#61dbff',b:'#fff6bb',dark:'#061a31',mist:'#164a6d'},shende:{a:'#ffb15d',b:'#fff2c6',dark:'#260b13',mist:'#633123'},vuonglam:{a:'#a46bff',b:'#efe2ff',dark:'#1a0b2e',mist:'#3a1d63'},hanlap:{a:'#4fe0a0',b:'#eafff4',dark:'#06281c',mist:'#164a37'}};
 function glow(c,x,y,r,color,a){if(r<=0||a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color+hex(a));g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
 function leaf(c,len,w,color){c.fillStyle=color;c.beginPath();c.moveTo(0,-len/2);c.quadraticCurveTo(w,0,0,len/2);c.quadraticCurveTo(-w,0,0,-len/2);c.fill();}
 function sword(c,len,color){c.fillStyle=color;c.beginPath();c.moveTo(-1.6,-len*.55);c.lineTo(1.6,-len*.55);c.lineTo(2.2,len*.3);c.lineTo(0,len*.45);c.lineTo(-2.2,len*.3);c.closePath();c.fill();c.fillRect(-5,-len*.38,10,1.8);}
@@ -20,6 +20,17 @@ export function drawTransform(c,e,t,k,p,H,layer='front'){
     c.fillStyle=s.dark+hex(.45);c.fillRect(0,0,900,H);
     c.globalCompositeOperation='screen';
     const bw=120*sc,beam=c.createLinearGradient(x-bw,0,x+bw,0);beam.addColorStop(0,s.a+'00');beam.addColorStop(.5,s.a+hex(.55));beam.addColorStop(1,s.a+'00');c.fillStyle=beam;c.fillRect(x-bw,0,bw*2,feet);
+    if(kind==='nguyet-lien'||kind==='xich-vu'){
+     const rise=ease(k/.32),size=(125+k*85)*sc,moon=kind==='nguyet-lien';
+     c.save();c.translate(x,cy-35*sc);c.rotate(t*.00012);
+     c.strokeStyle=s.b;c.lineWidth=(moon?2:4)*sc;c.globalAlpha=fade*rise;
+     for(let i=0;i<9;i++){
+      c.rotate(TAU/9);c.beginPath();c.moveTo(22*sc,0);
+      c.bezierCurveTo(size*.55,-size*.50,size*.89,-size*.32,size,0);
+      c.bezierCurveTo(size*.75,size*.29,size*.41,size*.32,22*sc,0);c.stroke();
+     }
+     c.restore();
+    }
     // trận phù văn dưới chân (2 vòng xoay ngược)
     for(let j=0;j<2;j++){const R=(110+j*50)*sc*ease(k/.25);c.save();c.translate(x,feet);c.scale(1,.32);c.rotate(t*.0012*(j?-1:1));
       c.strokeStyle=s.b+hex(.85-j*.25);c.lineWidth=3-j;c.beginPath();c.arc(0,0,R,0,TAU);c.stroke();c.beginPath();c.arc(0,0,R*.82,0,TAU);c.stroke();

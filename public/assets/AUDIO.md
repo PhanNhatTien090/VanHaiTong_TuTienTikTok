@@ -29,3 +29,10 @@ Danh sách + luật đổi bài: `public/music-rotation.js`. Mỗi bài lặp; m
 - `bgm-tu-tien-7.mp3`: "Lotus" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
 - `bgm-tu-tien-8.mp3`: "Teller of the Tales" — Kevin MacLeod (incompetech.com) — CC BY 4.0.
 Ghi công dán vào mô tả LIVE: "Music: Imperial China Cinematic, All The Tea In China by Shane Ivers - silvermansound.com; Ishikari Lore, Dream Culture, Eastern Thought, Lotus, Teller of the Tales by Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License http://creativecommons.org/licenses/by/4.0/"
+
+## Nhạc chiến cảnh — 13/11/2026
+
+- `bgm-tu-tien-9.mp3` — “Mountain Emperor”, Kevin MacLeod, CC BY 4.0. https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1700012
+- `bgm-tu-tien-10.mp3` — “Five Armies”, Kevin MacLeod, CC BY 4.0. https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100875
+
+Hai bản được chuẩn hóa âm lượng cho LIVE. Ghi công thêm vào mô tả LIVE: Music: Mountain Emperor, Five Armies by Kevin MacLeod (incompetech.com), licensed CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Volume normalized.

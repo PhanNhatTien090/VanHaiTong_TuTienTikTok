@@ -47,3 +47,21 @@ test('300 người cùng đi không lỗi, mỗi người một vị trí riêng
  for(let s=0;s<20;s++)for(let i=0;i<300;i++)chat(w,'p'+i,['len','trai','phai','xuong'][(i+s)%4],t+s*1000+i);
  assert.equal(e.runners.length,300);assert.ok(e.runners.filter(r=>r.steps>0).length>150,'nhiều người đã đi được');const v=snapshot(w,t+30000).maze;assert.ok(JSON.stringify(v).length<40000,'gói '+JSON.stringify(v).length);
 });
+
+test('an exact 100-coin gift teleports to the exit once, including queued gifts',()=>{
+ const w=setup(3);
+ startMaze(w,N);
+ gift(w,'p0',100,N+100);
+ assert.equal(w.maze.runners[0].pendingTeleport,true);
+ const at=w.maze.registrationEndsAt;
+ tick(w,at);
+ assert.equal(w.maze.runners[0].rank,1);
+ const r=action(w,{type:'gift',userId:'p1',coins:50,count:2,eventId:'not-teleport'},at+100);
+ assert.equal(r.ok,true);
+ assert.equal(w.maze.finished,1);
+ const event={type:'gift',userId:'p1',coins:100,count:1,eventId:'teleport'};
+ assert.equal(action(w,event,at+200).ok,true);
+ assert.equal(action(w,event,at+201).duplicate,true);
+ assert.equal(w.maze.finished,2);
+ assert.equal(snapshot(w,at+300).maze.teleports.length,2);
+});

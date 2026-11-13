@@ -1,7 +1,9 @@
+import {drawCourtRelic} from './court-art.js';
 import {drawEventRelic} from './event-artifacts.js';
 // Small code-drawn relics are sampled in the existing character bitmap cache.
 export function drawRelic(c,id,t,motion=true){
  const kind=id==='vip-dragon-orb'?'orb':id==='vip-heaven-seal'?'seal':id==='spirit-vase'?'vase':id==='soul-bell'||id==='bell'||id==='tiger-bell'?'bell':id==='cosmic-cauldron'?'cauldron':null;
+ if(!kind&&drawCourtRelic(c,id,t,motion))return true;
  if(!kind)return drawEventRelic(c,id,t,motion);
  const a=motion?t*.001:0,x=Math.cos(a)*32,y=-18+Math.sin(a)*9;
  const gold='#f3ce78',jade='#85f0d1',color=kind==='vase'?jade:gold;

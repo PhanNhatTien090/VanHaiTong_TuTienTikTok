@@ -6,6 +6,22 @@ export function drawPetBolt(c,x0,y0,x1,y1,seed,color,width=1.6){let s=seed>>>0;c
 export function drawRareFx(c,pet,size,t,seed,power=1){
  if(!pet?.fx)return;const TAU=Math.PI*2;
  if(pet.fx==='lightning'){const beat=Math.floor((t+seed%1600)/1600),k=((t+seed%1600)%1600)/1600;if(k<.16*power+.0){c.save();c.globalAlpha*=1-k/(.16*power||.16);const a=(beat*2.3)%TAU,r=size*.42;drawPetBolt(c,Math.cos(a)*r*.35,-size*.25+Math.sin(a)*r*.2,Math.cos(a)*r,-size*.12+Math.sin(a*1.7)*r*.45,beat+seed,'#b9a8ff',1.3*power);c.restore();}return;}
+ if(pet.coins===300){
+  const color=pet.color,r=size*.48,n=Math.round(9*power);
+  c.save();c.globalCompositeOperation='screen';
+  for(let i=0;i<n;i++){
+   const u=(t*.0007+i/n+seed%97/97)%1,a=i*2.399+t*.0016,x=Math.cos(a)*r*(.6+u*.5),y=Math.sin(a)*r*.62-u*size*.26;
+   c.globalAlpha=Math.sin(u*Math.PI)*.85;c.fillStyle=color;c.strokeStyle=color;c.lineWidth=1.2;
+   const s=(2.2+power*2)*(1-u);
+   if(pet.fx==='pearl'){c.beginPath();c.arc(x,y,s+1,0,TAU);c.stroke();}
+   else if(pet.fx==='moon'){c.beginPath();c.arc(x,y,s+2,a,a+Math.PI*1.4);c.stroke();}
+   else if(pet.fx==='flame'){c.beginPath();c.moveTo(x,y+s);c.quadraticCurveTo(x-5*s,y,x,y-5*s);c.quadraticCurveTo(x+3*s,y,x,y+s);c.fill();}
+   else{c.beginPath();c.moveTo(x,y-s*2);c.lineTo(x+s*.35,y);c.lineTo(x,y+s*2);c.lineTo(x-s*.35,y);c.closePath();c.fill();}
+  }
+  c.globalAlpha=.32+.16*Math.sin(t*.004);c.strokeStyle=color;c.lineWidth=1.4;
+  c.beginPath();c.ellipse(0,size*.18,r,r*.28,-.1,0,TAU);c.stroke();
+  c.restore();return;
+ }
  const n=Math.round(7*power);c.save();
  for(let i=0;i<n;i++){const u=((t*.0007+i/n+(seed%97)/97)%1),a=i*2.4+seed;
   if(pet.fx==='blood'){const x=Math.cos(a+t*.002)*size*(.25+.25*u),y=-size*.3+Math.sin(a+t*.002)*size*.2-u*size*.25;c.globalAlpha=(1-u)*.7;c.fillStyle=i%2?'#ff2d55':'#b3002d';c.beginPath();c.arc(x,y,(1.6+2*(1-u))*power,0,TAU);c.fill();}

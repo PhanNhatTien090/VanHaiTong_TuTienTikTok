@@ -1,6 +1,6 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {createWorld,action,controlPetEvent,tick,snapshot} from '../engine.mjs';
-import {SPIRIT_PETS,ALL_PETS,RARE_PETS,petPose} from '../public/spirit-pets.js';
+import {SPIRIT_PETS,ALL_PETS,PREMIUM_PETS,petPose} from '../public/spirit-pets.js';
 import {announcement} from '../speech.mjs';
 const N=1800000000000;
 function world(){const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});Object.assign(w.settings,{autoEvents:false,blessingMinutes:0,ceremony:false,rarePets:false});w.nextBossAt=N+1e9;return w;}
@@ -14,7 +14,7 @@ test('event hearts accumulate through XP cooldown, unlock once and survive reloa
 });
 test('gifts count once, do not manufacture free rabbit and equip strongest new pet',()=>{
  const w=world();controlPetEvent(w,'start',N);gift(w,29);assert.equal(w.players.a.spiritPet,undefined);gift(w,1,'g2');assert.equal(w.players.a.spiritPet,undefined);gift(w,70,'g3');assert.equal(w.players.a.spiritPet,'sun-phoenix');
- gift(w,1000,'huge');assert.equal(w.players.a.spiritPet,'astral-dragon');const coins=w.players.a.petProgress.coins;assert.equal(gift(w,1000,'huge').duplicate,true);assert.equal(w.players.a.petProgress.coins,coins);assert.equal(w.players.a.spiritPets.includes('jade-rabbit'),false);
+ gift(w,1000,'huge');assert.equal(w.players.a.spiritPet,w.petEvent.premium||'astral-dragon');const coins=w.players.a.petProgress.coins;assert.equal(gift(w,1000,'huge').duplicate,true);assert.equal(w.players.a.petProgress.coins,coins);assert.equal(w.players.a.spiritPets.includes('jade-rabbit'),false);
 });
 test('expired/reopened event resets progress, preserves ownership and never backfills old gifts',()=>{
  const w=world();gift(w,1000);controlPetEvent(w,'start',N+10,1);like(w,100,N+11);like(w,500,N+60010);assert.equal(w.players.a.petProgress.hearts,100);
@@ -30,16 +30,16 @@ test('manual selection respects ownership and persists; unknown IDs cannot equip
  assert.equal(chat('thu 5',N+10000).ok,false);assert.equal(w.players.a.spiritPet,'ember-fox');assert.equal(chat('thu 1',N+20000).ok,true);w=JSON.parse(JSON.stringify(w));assert.equal(w.players.a.spiritPet,'jade-rabbit');chat('thu an',N+30000);assert.equal(w.players.a.spiritPet,null);
  assert.notDeepEqual(petPose(1000),petPose(2000));assert.deepEqual(petPose(1000,0,false),petPose(9000,0,false));assert.equal(SPIRIT_PETS.length,5);
 });
-test('each pet cove features one rare beast with art; Loi Oa costs 200 coin, equips first and is callable as pet 6',()=>{
- const w=world();w.settings.rarePets=true;controlPetEvent(w,'start',N);const rare=w.petEvent.featured;assert.ok(RARE_PETS.some(p=>p.id===rare));const slot=String(ALL_PETS.findIndex(p=>p.id===rare)+1);
+test('each pet cove draws a 200-coin pet and a separate 300-coin pet',()=>{
+ const w=world();w.settings.rarePets=true;controlPetEvent(w,'start',N);const rare=w.petEvent.featured;assert.equal(ALL_PETS.find(p=>p.id===rare).coins,200);assert.ok(PREMIUM_PETS.some(p=>p.id===w.petEvent.premium));const slot=String(ALL_PETS.findIndex(p=>p.id===rare)+1);
  assert.ok(snapshot(w,N+1).petEvent.rules.some(p=>p.id===rare));
  gift(w,199);assert.equal(w.players.a.spiritPets.includes(rare),false);gift(w,1,'g2');
- assert.equal(w.players.a.spiritPet,rare);assert.ok(w.players.a.spiritPets.includes('astral-dragon'));
- assert.equal(action(w,{type:'chat',userId:'a',text:'thu 5'},N+10000).ok,true);assert.equal(w.players.a.spiritPet,'astral-dragon');
+ assert.equal(w.players.a.spiritPet,rare);assert.equal(w.players.a.spiritPets.filter(id=>ALL_PETS.find(p=>p.id===id).coins===200).length,1);
+ gift(w,100,'g3');assert.equal(w.players.a.spiritPet,w.petEvent.premium);
  assert.equal(action(w,{type:'chat',userId:'a',text:'thu '+slot},N+20000).ok,true);assert.equal(w.players.a.spiritPet,rare);
 });
 test('rare beasts can be switched off and never appear outside their own event',()=>{
- const w=world();controlPetEvent(w,'start',N);assert.equal(w.petEvent.featured,null);gift(w,1000);assert.equal(w.players.a.spiritPets.includes('loi-oa'),false);
+ const w=world();controlPetEvent(w,'start',N);assert.equal(w.petEvent.featured,'astral-dragon');gift(w,1000);assert.equal(w.players.a.spiritPets.includes('loi-oa'),false);
 });
 test('quản lý gỡ linh thú: removePets gỡ đúng con, linh thú đang dẫn chuyển sang con còn lại',async()=>{
  const {createWorld,ensurePlayer,adminEditPlayer}=await import('../engine.mjs');const w=createWorld('live');const p=ensurePlayer(w,'u1','A',1e12);

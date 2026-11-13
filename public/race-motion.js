@@ -36,6 +36,19 @@ export function drawRaceMotion(scene,c,t,layer){
     }
    }
   }else{
+   if(motion&&featured.has(a.id)&&a.gift.k<.72){
+    const u=a.gift.k/.72,alpha=(1-u)*Math.min(1,u*10),r=(35+u*130)*s;
+    c.save();c.globalCompositeOperation='screen';c.globalAlpha=alpha;
+    for(let i=0;i<4;i++){
+     c.strokeStyle=i%2?'#8fe8ff':'#ffe2a1';c.lineWidth=(5-i)*s;
+     c.beginPath();c.ellipse(a.x,a.y+28*s+i*13*s,r+i*11,r*.20,-.14,0,TAU);c.stroke();
+    }
+    for(let i=0;i<(light?8:18);i++){
+     const d=(i/(light?8:18)-.5)*2,x=a.x+d*r,y=a.y+40*s+u*120*s+Math.sin(i*2)*28;
+     c.strokeStyle=i%2?'#fff4c1':'#83dcff';c.lineWidth=2.6*s;c.beginPath();c.moveTo(x,y);c.lineTo(x+d*16,y+46*s);c.stroke();
+    }
+    c.restore();
+   }
    const launch=a.launchAge!=null&&a.launchAge>=0&&a.launchAge<1800;
    const finish=a.finishAge!=null&&a.finishAge<2400;
    if(motion&&(launch||finish)){

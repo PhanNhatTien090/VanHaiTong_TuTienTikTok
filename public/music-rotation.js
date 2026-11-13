@@ -10,7 +10,9 @@ export const BGM_LIST=Object.freeze([
  {src:'/assets/bgm-tu-tien-5.mp3',name:'Dream Culture'},
  {src:'/assets/bgm-tu-tien-6.mp3',name:'Eastern Thought'},
  {src:'/assets/bgm-tu-tien-7.mp3',name:'Lotus'},
- {src:'/assets/bgm-tu-tien-8.mp3',name:'Teller of the Tales'}
+ {src:'/assets/bgm-tu-tien-8.mp3',name:'Teller of the Tales'},
+ {src:'/assets/bgm-tu-tien-9.mp3',name:'Mountain Emperor'},
+ {src:'/assets/bgm-tu-tien-10.mp3',name:'Five Armies'}
 ]);
 export function musicIndex(music,now=Date.now(),n=BGM_LIST.length){
  if(!music||typeof music!=='object')return Math.floor(now/MUSIC_ROTATE_MS)%n;

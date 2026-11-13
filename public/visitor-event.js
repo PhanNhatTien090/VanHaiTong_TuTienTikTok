@@ -1,4 +1,6 @@
 import {drawShendeVisitor} from './shende-art.js';
+import {COURT_VISITORS} from './court-rewards.js';
+import {drawCourtVisitor} from './court-art.js';
 export const VISITORS=Object.freeze({
  hailam:{name:'Long Duệ Hải Lam',title:'LONG DUỆ HẢI LAM GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#69dcff'},
  doraemon:{name:'Doraemon',title:'DORAEMON GHÉ THĂM TÔNG MÔN',cell:3,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#7de7ff'},
@@ -7,6 +9,7 @@ export const VISITORS=Object.freeze({
  tudo:{name:'Tư Đồ Ma Tôn',title:'TƯ ĐỒ MA TÔN GIÁNG THẾ',cell:2,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff6a5a'},
  khuyniet:{name:'Khuy Niết Lôi Tôn',title:'KHUY NIẾT LÔI TÔN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#c69bff'},
  viemton:{name:'Tần Mục Hỏa Thần',title:'TẦN MỤC HỎA THẦN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff7a2a'},
+ ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{name:v.name,title:v.name.toLocaleUpperCase('vi')+' GIÁNG LÂM',duration:300000,how:'Gõ cơ duyên nhận truyền thừa',color:v.color}])),
  vuonglam:{name:'Vương Lâm',title:'VƯƠNG LÂM TRUYỀN ĐẠO',cell:0,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#d4c2ff'}
 });
 export const VISITOR_RELICS=Object.freeze([
@@ -18,6 +21,7 @@ export const VISITOR_RELICS=Object.freeze([
  {id:'visitor-phoenix-fan',name:'Xích Vũ Linh Phiến',cell:5,damage:32,bonus:.26}
 ].map(x=>({...x,type:'artifact',icon:x.cell===0||x.cell===3?'sword':x.cell===1?'vase':x.cell===2?'bell':'orb',tier:0,price:0,herbs:0,exclusive:true,eventReward:'Tiên nhân ghé thăm',description:'Pháp bảo cơ duyên miễn phí; các mẫu có tổng điểm sức mạnh ngang nhau.'})));
 export function drawVisitor(c,event,sprites,t,H,signatures=null,shende=null){
+ if(drawCourtVisitor(c,event,H,t))return;
  if(event?.kind==='shende'){drawShendeVisitor(c,event,shende,t,H);return;}
  if(!event||Date.now()>=event.endsAt)return;const spec=VISITORS[event.kind],img=sprites?.[spec?.cell];if(!img)return;
  const age=Math.max(0,(Date.now()-event.startedAt)/1000),rise=Math.min(1,age/1.5),bob=Math.sin(t*.0013)*5;

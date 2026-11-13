@@ -1,13 +1,14 @@
 // Chính Ma Đại Chiến — phần hình (07/11/2026). Sân chia đôi theo chiến tuyến 0..100 (100 = Chính Đạo thắng).
 // Trái: Chính Đạo (vàng/lam). Phải: Ma Đạo (đỏ/đen). Bức tường năng lượng ở chiến tuyến; mỗi phe 6 nhân vật đầy đủ + binh sĩ mini.
-import {drawWarRoad,drawBeams,drawTide,truongOf,warCamera,screenX,TRUONG_PER_POINT} from './war-road.js';
+import {drawWarForces,warGiftImpact} from './war-impact.js';
+import {drawWarRoad,truongOf,warCamera,screenX,TRUONG_PER_POINT} from './war-road.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 const rnd=i=>{const v=Math.sin(i*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const hash=s=>{let h=2166136261;for(const ch of String(s||''))h=Math.imul(h^ch.codePointAt(0),16777619);return h>>>0;};
 const COL={chinh:{main:'#ffd36b',soft:'#fff3c8',deep:'#1d3a6b',name:'CHÍNH ĐẠO'},ma:{main:'#ff3b4e',soft:'#ffc2c8',deep:'#3a0710',name:'MA ĐẠO'}};
 const OMEN_NAME={'golden-sun':'☀ KIM DƯƠNG','blood-moon':'🌑 HUYẾT NGUYỆT',chaos:'⚡ HỖN CHIẾN',mist:'🌫 SƯƠNG MÙ'};
 const serverNow=(scene,t)=>(scene.warServerNow||Date.now())+Math.min(2000,t-(scene.warReceivedAt||t));
-export function syncWar(scene,state){scene.warStatus=state.sectWar||null;scene.warStage=state.warStage||[];scene.warReceivedAt=performance.now();scene.warServerNow=state.serverNow;document.body.classList.toggle('sect-war',!!scene.warStatus?.active);}
+export function syncWar(scene,state){if(state.sectWar?.id!==scene.warStatus?.id){scene.warZ=null;scene.warCameraZ=null;scene.warKick=null;}scene.warStatus=state.sectWar||null;scene.warStage=state.warStage||[];scene.warReceivedAt=performance.now();scene.warServerNow=state.serverNow;document.body.classList.toggle('sect-war',!!scene.warStatus?.active);}
 export const warActive=scene=>!!scene.warStatus?.active;
 // Vị trí chiến tuyến trên màn hình (x), làm mượt.
 // 08/11: chiến tuyến chạy bằng LÒ XO + cú hích mỗi lần điểm đổi → đẩy qua đẩy lại giật mạnh, nảy quá đà rồi bật lại (không còn trôi "rí rí").
@@ -15,9 +16,10 @@ export const warActive=scene=>!!scene.warStatus?.active;
 function lineX(scene,t){const e=scene.warStatus,goal=truongOf(e?.line??50);
  if(scene.warZ==null){scene.warZ=goal;scene.warZV=0;scene.warGoalZ=goal;scene.warLineT=t;}
  const dt=Math.min(.05,Math.max(0,(t-(scene.warLineT??t))/1000));scene.warLineT=t;
- if(Math.abs(goal-scene.warGoalZ)>.5){const jump=goal-scene.warGoalZ;scene.warZV+=jump*9;scene.warKick={at:t,dir:Math.sign(jump),size:Math.min(1,Math.abs(jump)/110),truong:Math.round(Math.abs(jump))};}scene.warGoalZ=goal;
+ if(Math.abs(goal-scene.warGoalZ)>.5){const jump=goal-scene.warGoalZ;scene.warZV+=jump*7;scene.warKick={at:t,dir:Math.sign(jump),size:Math.min(1,Math.abs(jump)/110),truong:Math.round(Math.abs(jump))};}scene.warGoalZ=goal;
  if(dt>0){scene.warZV+=((goal-scene.warZ)*55-scene.warZV*7)*dt;scene.warZ=Math.max(-1000,Math.min(1000,scene.warZ+scene.warZV*dt));}
- scene.warCam=warCamera(scene.warZ);scene.warLineX=Math.max(30,Math.min(870,screenX(scene.warZ,scene.warCam)));return scene.warLineX;}
+ scene.warCameraZ??=scene.warZ;scene.warCameraZ+=(scene.warZ-scene.warCameraZ)*(scene.motion===false?1:1-Math.exp(-dt*4.8));
+ scene.warCam=warCamera(scene.warCameraZ);scene.warLineX=Math.max(30,Math.min(870,screenX(scene.warZ,scene.warCam)));return scene.warLineX;}
 // chữ nhảy tưng tưng: nảy theo nhịp + nảy mạnh khi vừa có cú hích
 const hop=(scene,t,seed=0,amp=7)=>{const k=scene.warKick&&t-scene.warKick.at<500?(1-(t-scene.warKick.at)/500)*14*(.5+scene.warKick.size):0;return -Math.abs(Math.sin(t*.011+seed))*amp-k*Math.abs(Math.sin((t-(scene.warKick?.at||0))*.03));};
 const pop=(age,dur=500)=>age<dur?1+.45*Math.sin(Math.min(1,age/dur)*Math.PI)*(1-age/dur):1;
@@ -56,12 +58,12 @@ export function drawWar(scene,c,t,layer){
  if(layer==='back'){
   // 08/11 tối: bản đồ riêng VẠN LÝ CHIẾN ĐẠO (đè sân thường) + hai luồng khí đâm nhau ở điểm giao tranh
   const light=scene.budget?.level==='light',cam=scene.warCam??0;
-  drawWarRoad(c,{H,cam,lx,t,light,motion});
+  if(!scene.warLandscape&&typeof Image!=='undefined'){scene.warLandscape=new Image();scene.warLandscape.src='/assets/thien-khuyet/war.webp';}
+  drawWarRoad(c,{H,cam,lx,t,light,motion,landscape:scene.warLandscape});
   const om=e.omen?.kind;if(om==='golden-sun')glow(c,200,H*.12,420,'#ffd36b',.45);if(om==='blood-moon')glow(c,700,H*.12,380,'#ff2030',.5);
-  if(motion){const cyc=t%2600;if(cyc<220){const a=1-cyc/220;c.save();c.globalCompositeOperation='screen';c.globalAlpha=a*.22;c.fillStyle=Math.floor(t/2600)%2?'#ffe9b0':'#ffb0b8';c.fillRect(0,0,900,H);c.globalAlpha=a;bolt(c,lx+(rnd(Math.floor(t/2600))-.5)*300,0,lx,H*.4,Math.floor(t/2600)*13,'#ffffff',3);c.restore();}}
+  if(motion&&e.phase==='running'){const cyc=t%4200;if(cyc<220){const a=1-cyc/220;c.save();c.globalCompositeOperation='screen';c.globalAlpha=a*.22;c.fillStyle=Math.floor(t/4200)%2?'#ffe9b0':'#ffb0b8';c.fillRect(0,0,900,H);c.globalAlpha=a;bolt(c,lx+(rnd(Math.floor(t/4200))-.5)*300,0,lx,H*.4,Math.floor(t/4200)*13,'#ffffff',3);c.restore();}}
   const surge=warSurge(scene,e,now,t),push=Math.max(-1,Math.min(1,vel*.2));
-  for(const f of fx){const age=now-f.at;if(f.kind==='gift'&&(f.value||0)>=99&&age>=0&&age<1800)drawTide(c,{H,lx,side:f.side,k:age/1800,power:powerOf(f),t,light});}
-  drawBeams(c,{H,lx,cam,t,surge,push,light,motion});
+  if(e.phase==='running')drawWarForces(c,{H,lx,t,surge,push,light,motion});
   for(const side of ['chinh','ma'])soldiers(scene,c,e,side,lx,H,t);
   if(motion)drawPushWave(scene,c,lx,H,t);
  }else{
@@ -71,7 +73,8 @@ export function drawWar(scene,c,t,layer){
    c.strokeText(nm,a.x,y);c.fillStyle=col.soft;c.fillText(nm,a.x,y);}
   // đại chiêu khi tặng quà (mỗi quà ~2,5 s), cứu nguy, xuất chiêu
   const flipping=fx.some(f=>f.kind==='flip'&&now-f.at>=0&&now-f.at<2800),newestGift=flipping?null:[...fx].reverse().find(f=>f.kind==='gift'&&now-f.at>=0&&now-f.at<giftDur(f));
-  for(const f of fx){const age=now-f.at;if(f.kind==='gift'&&age>=0&&age<giftDur(f))drawGiftFx(scene,c,f,age,lx,H,t,f===newestGift);
+  const activeGift=new Set(fx.filter(f=>f.kind==='gift'&&now>=f.at&&now-f.at<giftDur(f)).slice(-3));
+  for(const f of fx){const age=now-f.at;if(activeGift.has(f))drawGiftFx(scene,c,f,age,lx,H,t,f===newestGift);
    if(f.kind==='flip'&&age>=0&&age<2800)drawFlip(scene,c,f,age,H,t);
    if(f.kind==='turn'&&age>=0&&age<1900)drawTurn(scene,c,f,age,lx,H,t);
    if(f.kind==='final'&&f.left===30&&age>=0&&age<2400)drawFinal30(c,age,H,t);
@@ -155,39 +158,11 @@ const tierOf=f=>(f.value||0)>=500?3:(f.value||0)>=99?2:(f.value||0)>=10?1:0;
 function giftDur(f){return [2200,2800,3600,4200][tierOf(f)];}
 // 08/11 tối: lực chiêu 0..1 theo coin (log, 1 coin ≈ .1, 1000 coin = 1) — hình chiêu, lực đẩy nhìn thấy và âm thanh đều to dần.
 const powerOf=f=>clamp(Math.log10(1+(f.value||1))/3);
-// Chiêu tung ra: Chính = cự kiếm vàng, Ma = huyết chưởng (bàn tay quỷ). Đầu chiêu ở (x,y), bay theo dir.
-function drawSkill(c,side,x,y,dir,size,t){c.save();c.translate(x,y);c.scale(dir,1);const col=COL[side];
- if(side==='chinh'){c.rotate(Math.sin(t*.03)*.04);const L=size*2.2,W=size*.28;glow(c,-L*.35,0,size*1.3,col.main,.55);
-  const g=c.createLinearGradient(-L,0,0,0);g.addColorStop(0,'#fff3c800');g.addColorStop(.35,'#ffe9a8');g.addColorStop(1,'#ffffff');c.fillStyle=g;
-  c.beginPath();c.moveTo(0,0);c.lineTo(-W*1.6,-W);c.lineTo(-L*.78,-W*.8);c.lineTo(-L*.78,W*.8);c.lineTo(-W*1.6,W);c.closePath();c.fill();
-  c.fillStyle=col.main;c.fillRect(-L*.82,-W*2.1,W*.7,W*4.2);c.fillRect(-L,-W*.35,L*.2,W*.7);c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.moveTo(-W,0);c.lineTo(-L*.76,0);c.stroke();}
- else{const R=size*.9;glow(c,-R*.4,0,R*2,col.main,.6);c.fillStyle='#ff2a3c';c.strokeStyle='#ffc2c8';c.lineWidth=3;
-  c.beginPath();c.ellipse(-R*.5,0,R*.75,R*.62,0,0,TAU);c.fill();
-  for(let i=0;i<4;i++){const yy=(i-1.5)*R*.36;c.beginPath();c.moveTo(-R*.2,yy-R*.1);c.quadraticCurveTo(R*.5,yy-R*.18,R*.95,yy+R*.05);c.lineTo(R*.55,yy+R*.12);c.quadraticCurveTo(R*.2,yy+R*.1,-R*.2,yy+R*.12);c.closePath();c.fill();c.stroke();}
-  c.beginPath();c.moveTo(-R*.6,-R*.55);c.quadraticCurveTo(-R*.1,-R*1.05,R*.35,-R*.75);c.lineTo(R*.15,-R*.5);c.closePath();c.fill();c.stroke();
-  c.fillStyle='#fff';c.globalAlpha*=.85;c.beginPath();c.arc(-R*.55,0,R*.16,0,TAU);c.fill();}
- c.restore();}
 function strokeText(c,s,x,y,font,fill,lw=7,stroke='#05060c'){c.font=font;c.lineWidth=lw;c.strokeStyle=stroke;c.lineJoin='round';c.strokeText(s,x,y);c.fillStyle=fill;c.fillText(s,x,y);}
 function drawGiftFx(scene,c,f,age,lx,H,t,banner){
- const tier=tierOf(f),dur=giftDur(f),k=age/dur,a=Math.sin(Math.min(1,k)*Math.PI),side=f.side,col=COL[side],dir=side==='chinh'?1:-1,seed=hash(f.id),motion=scene.motion!==false,light=scene.budget?.level==='light';
+ const tier=tierOf(f),dur=giftDur(f),k=age/dur,a=Math.sin(Math.min(1,k)*Math.PI),side=f.side,col=COL[side],seed=hash(f.id),light=scene.budget?.level==='light';
  c.save();
- // chớp màn theo màu phe
- if(age<260){c.globalAlpha=(.28+.14*tier)*(1-age/260);c.fillStyle=side==='chinh'?'#fff1b8':'#ff2a3c';c.fillRect(0,0,900,H);}
- c.globalCompositeOperation='screen';
- // sao chổi: từ mép phe lao vào chiến tuyến trong 450 ms
- const fly=clamp(age/450),cy=H*(.42+((seed%7)-3)*.015),sx=side==='chinh'?-80:980,cx=sx+(lx-sx)*ease(fly);
- const pw=powerOf(f),size=60+pw*150;
- if(fly<1){c.globalAlpha=1;for(let i=0;i<10;i++){const u=i/10;glow(c,cx-dir*u*(220+pw*200),cy,(60+tier*35+pw*40)*(1-u*.7),col.main,.9*(1-u));}glow(c,cx,cy,70+pw*120,'#ffffff',.8);c.globalCompositeOperation='source-over';drawSkill(c,side,cx,cy,dir,size,t);c.globalCompositeOperation='screen';}
- // sau va chạm: đầu sóng đẩy lan về phía phe địch, càng quà to càng xa và lâu
- if(age>450&&age<450+500+pw*700){const pk=(age-450)/(500+pw*700),fx2=lx+dir*ease(pk)*(140+pw*320);c.globalAlpha=(1-pk)*.95;c.strokeStyle=col.soft;c.lineWidth=8+pw*14;c.beginPath();c.arc(fx2-dir*(90+pw*80),cy,90+pw*110,-Math.PI/2.6,Math.PI/2.6,dir<0);c.stroke();c.lineWidth=3;c.strokeStyle='#fff';c.stroke();}
- // sóng xung kích + tia lửa tại chiến tuyến
- const hit=age-450;if(hit>0){const hk=hit/(dur-450);
-  for(let r=0;r<2+tier;r++){const R=(hk*1.4+r*.18)%1.2*(380+tier*180);if(R<=0)continue;c.globalAlpha=Math.max(0,1-R/(380+tier*180))*.9;c.strokeStyle=r%2?col.soft:col.main;c.lineWidth=6+tier*3;c.beginPath();c.ellipse(lx,cy,R,R*.55,0,0,TAU);c.stroke();}
-  if(motion){const n=light?18:30+tier*30;for(let i=0;i<n;i++){const ang=rnd(seed+i)*TAU,sp=(.35+rnd(seed+i*3)*.75)*(1+tier*.4),d=hit*sp,x=lx+Math.cos(ang)*d,y=cy+Math.sin(ang)*d*.7+hit*hit*.00025;c.globalAlpha=Math.max(0,1-hk*1.1);c.fillStyle=i%3?col.main:'#ffffff';c.fillRect(x-2,y-2,4+tier,4+tier);}}
-  glow(c,lx,cy,(260+tier*160)*(1-hk*.5),col.soft,.75*(1-hk));}
- // chiêu riêng mỗi phe, to theo cấp
- c.globalAlpha=a;if(side==='chinh'){for(let i=0;i<(light?10:14+tier*14);i++){const px=60+rnd(i+seed)*(lx-60),py=-80+((k*1.6+rnd(i+3))%1)*(H*.85);c.strokeStyle=col.main;c.lineWidth=4+tier;c.beginPath();c.moveTo(px,py);c.lineTo(px+42,py+100);c.stroke();glow(c,px+42,py+100,22,col.soft,.9);}}
- else{const px=lx+40+(1-k)*300,py=H*.45;glow(c,px,py,260+tier*160,col.main,.7);c.fillStyle='#ff2a3c';for(let i=0;i<3+tier;i++){c.beginPath();c.ellipse(px-60,py-140+i*62,110+tier*50,22,-.3+i*.15,0,TAU);c.fill();}}
+ warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved:f.truong||0});
  c.restore();
  if(!banner)return;
  // băng rôn: tên đại chiêu + người tặng + coin

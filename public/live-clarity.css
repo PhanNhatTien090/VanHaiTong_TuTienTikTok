@@ -209,3 +209,7 @@ body.overlay:is(.sword-race,.social-stage,.ritual-active) .tower-stage{display:n
 .linh-bai .lb-list li{font-size:.86em;color:#f4efe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .linh-bai .lb-list li.on{color:#ffd76a}.linh-bai .lb-list li em{font-style:normal;color:#9ff0d0;font-size:.9em}
 .linh-bai .lb-list .lb-more{color:#bfe9ff}.linh-bai .lb-none{margin:0;font-size:.82em;color:#cfd8d4}
+
+body.overlay.pet-cove-stage :is(#liveRanks,#giftRanks,#basicCommands,#commandRail,.scene-guide-dock,#spotlight,#likeGoal,#giftBoard){
+ visibility:hidden;
+}

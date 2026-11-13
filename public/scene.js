@@ -67,6 +67,7 @@ import {appearanceFor,drawRealmClothes,drawRealmAscension,drawRealmQiFront,REALM
 import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,BitmapCache,renderDimensions} from './performance.js';
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
+import {drawCourtSkin,warmCourtSkin,drawCourtAura} from './court-art.js';
 import {skinFor,layoutPlayers,layoutLabels,wrapName,spriteCell,visualGender} from './cosmetics.js';
 import {residentPlayers} from './residents.js';
 import {arenaOn,arenaBackground,arenaTargets,drawWings,drawArenaShots,drawArenaCasts,ARENA_BOSS_Y} from './boss-arena.js';
@@ -112,7 +113,7 @@ loadPrestigeArt(this);syncRace(this,state);syncWar(this,state);syncAlchemy(this,
     }):sectElders(state.players,this.sectMaster?.userId);
     const currentEnv=state.environment?.id==='sect-hall'?{...state.environment,...SCENES.find(s=>s.id==='sect-hall')}:state.environment;const env=petCoveOn({...this,boss:state.boss})?PET_COVE_MAP:currentEnv;this.environment=env;if(env?.ambience==='underwater')loadFish(this);
     if(env?.image&&this.environmentImage!==env.image){this.environmentImage=env.image;const next=new Image();next.onload=()=>{if(this.environmentImage!==env.image)return;const previous=this.background;this.art=next;this.resize();this.previousBackground=previous;this.backgroundChangedAt=performance.now();};next.src=env.image;}
-    this.realPlayers=state.players.filter(p=>!(this.environment?.layout==='sect'&&p.id===this.sectMaster?.userId)).filter(p=>p.active||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)||this.warStage?.includes(p.id)||this.alcStage?.includes(p.id)||(this.heavenStrike&&p.id===this.heavenStrike.user)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];for(const actor of this.players)ensureRealmSkinV2(this,actor);this.playerIndex=new Map(this.players.map(p=>[p.id,p]));if(this.sectMaster?.player)this.playerIndex.set(this.sectMaster.player.id,this.sectMaster.player);this.selected=selected;this.boss=state.boss||sealingBoss(state);}
+    this.realPlayers=state.players.filter(p=>!(this.environment?.layout==='sect'&&p.id===this.sectMaster?.userId)).filter(p=>p.active||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)||this.warStage?.includes(p.id)||this.alcStage?.includes(p.id)||(this.heavenStrike&&p.id===this.heavenStrike.user)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];for(const actor of this.players){ensureRealmSkinV2(this,actor);warmCourtSkin(this,actor);}this.playerIndex=new Map(this.players.map(p=>[p.id,p]));if(this.sectMaster?.player)this.playerIndex.set(this.sectMaster.player.id,this.sectMaster.player);this.selected=selected;this.boss=state.boss||sealingBoss(state);}
   // v51: strength = độ zoom khi vinh danh (quà lớn zoom sâu hơn). Gọi lại cùng người mà không truyền strength thì giữ nguyên độ zoom.
   // 07/11/2026: quà vừa tặng cắt ngang màn đang diễn (app.js quyết định khi nào được cắt).
   interruptPresentation(){this.presentation=null;this.effects=[];this.fxQueue=[];this.luxuryQueue=[];this.transforming=null;this.focusUntil=0;this.welcomeFocus=null;}
@@ -254,7 +255,8 @@ loadPrestigeArt(this);syncRace(this,state);syncWar(this,state);syncAlchemy(this,
     c.save();c.shadowColor=skin.color;c.shadowBlur=0;
     const hideNew=this.transforming?.id===p.id&&performance.now()<this.transforming.revealAt; // đang biến hình: giữ hình cũ tới lúc chớp sáng
     const visitorCell=hideNew?null:visitorSkinCell(p),visitorArt=visitorCell===null?null:this.visitorSprites?.[visitorCell];
-    if(!hideNew&&drawViemBody(this,c,p,pose,t)){}
+    if(!hideNew&&drawCourtSkin(c,p,pose,t)){}
+    else if(!hideNew&&drawViemBody(this,c,p,pose,t)){}
     else if(!hideNew&&drawKhuyBody(this,c,p,pose,t)){}
     else if(!hideNew&&drawTudoBody(this,c,p,pose,t)){}
     else if(!hideNew&&drawSeaBody(this,c,p,pose,t)){}
@@ -298,7 +300,7 @@ loadPrestigeArt(this);syncRace(this,state);syncWar(this,state);syncAlchemy(this,
     c.restore();
   }
   drawFlyingSword(c,x,y,a,color){c.save();c.translate(x,y);c.rotate(a);c.shadowColor=color;c.shadowBlur=8;const metal=c.createLinearGradient(-2,0,2,0);metal.addColorStop(0,'#aac4db');metal.addColorStop(.5,'#fff6d2');metal.addColorStop(1,color);this.path(c,[[-1.4,-22],[1.4,-22],[2,4],[0,12],[-2,4]],metal);c.shadowBlur=0;c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.moveTo(-6,-16);c.lineTo(6,-16);c.stroke();c.fillStyle='#182c43';c.fillRect(-1,-26,2,8);c.restore();}
-  drawSkinVFX(c,skin,t,p){if(this.crowded||this.raceStatus?.active)return;const level=0,a=this.motion?t*.0006+hash(p.id):hash(p.id);c.save();c.globalCompositeOperation='screen';
+  drawSkinVFX(c,skin,t,p){if(this.crowded||this.raceStatus?.active)return;drawCourtAura(c,skin,t,this.motion);const level=0,a=this.motion?t*.0006+hash(p.id):hash(p.id);c.save();c.globalCompositeOperation='screen';
     const glow=c.createRadialGradient(0,-8,2,0,-8,43);glow.addColorStop(0,skin.color+(level?'30':'15'));glow.addColorStop(1,skin.color+'00');c.fillStyle=glow;c.fillRect(-44,-52,88,90);
     c.strokeStyle=skin.color+(level?'b0':'55');c.lineWidth=.8;this.ellipse(c,0,16,25+level*2,7+level,null,c.strokeStyle);
     if(level>=1){c.save();c.translate(0,-21);c.rotate(Math.sin(a)*.10);c.strokeStyle=skin.color+'90';c.lineWidth=1.2;c.beginPath();c.arc(0,0,27+level*2,-Math.PI*.9,Math.PI*.6);c.stroke();if(level>=2){c.strokeStyle=skin.trim+'a0';c.setLineDash([2,4]);c.beginPath();c.arc(0,0,32+level*2,0,TAU);c.stroke();c.setLineDash([]);}c.restore();}

@@ -69,7 +69,33 @@ export function drawMaze(scene,c,t,layer){
  // mỗi ô tối đa 1 tên (+số người cùng ô) để chữ không chồng nhau; ưu tiên top 5 rồi người vừa đi/tặng quà
  const want=[...runners.filter(r=>!r.f).slice(0,5),...[...runners].filter(r=>!r.f&&(now-r.m<2500||now-(r.g||0)<6000)).sort((a,b)=>Math.max(b.m,b.g||0)-Math.max(a.m,a.g||0))],byId=new Map(pos.map(o=>[o.r.id,o])),usedCell=new Set();let shown=0;
  for(const r of want){if(shown>=22)break;const k=r.x+','+r.y;if(usedCell.has(k)||usedCell.has((r.x-1)+','+r.y)||usedCell.has((r.x+1)+','+r.y))continue;const o=byId.get(r.id);if(!o)continue;usedCell.add(k);shown++;const more=(seen.get(k)||1)-1,[cx,cy]=cellXY(L,r.x,r.y);txt(c,String(r.n).slice(0,11)+(more?' +'+more:'')+(r.k?' ⛏'+r.k:''),cx,cy-L.cell*.5+4,'800 14px Segoe UI','#ffffff',4);}
+ drawMazePortals(c,e,L,now,H,scene.budget?.level==='light');
  drawHud(scene,c,e,t,H,now,L);
+}
+function drawMazePortals(c,e,L,now,H,light){
+ for(const f of (e.teleports||[]).slice(-3)){
+  const age=now-f.at;if(age<0||age>2400)continue;
+  const [x,y]=cellXY(L,f.from.x,f.from.y),[X,Y]=cellXY(L,f.to.x,f.to.y),k=age/2400;
+  const alpha=Math.min(1,age/80)*(1-k),u=clamp(age/360),dx=X-x,dy=Y-y;
+  c.save();c.globalCompositeOperation='screen';c.globalAlpha=alpha;
+  for(const [px,py] of [[x,y],[X,Y]]){
+   glow(c,px,py,L.cell*(.9+k),'rgba(128,179,255,A)',.65);
+   for(let i=0;i<4;i++){
+    const r=L.cell*(.25+k*.8+i*.11);
+    c.strokeStyle=i%2?'#bdffff':'#ab8bff';c.lineWidth=5-i;
+    c.beginPath();c.ellipse(px,py,r,r*.66,age*.002+i,0,TAU);c.stroke();
+   }
+  }
+  if(u<1){
+   c.lineCap='round';
+   for(let i=0;i<(light?3:6);i++){
+    c.strokeStyle=i%2?'#dffeff':'#83aaff';c.lineWidth=4+i;
+    c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+dx*.65+Math.sin(i*3)*105,y+dy*.28,x+dx*u,y+dy*u);c.stroke();
+   }
+  }
+  c.restore();c.save();c.globalAlpha=alpha;
+  txt(c,f.name+' · TỐC BIẾN',Math.max(145,Math.min(755,X)),Math.min(H*.8,Y+52),'900 21px Segoe UI','#eaffff',5);c.restore();
+ }
 }
 function fmtTime(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function drawHud(scene,c,e,t,H,now,L){

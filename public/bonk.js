@@ -3,6 +3,24 @@
 // 4 kiểu chữ/màu (h.v) để các cú gõ không giống y hệt nhau. Tối đa MAX_ANIM cú vẽ cùng lúc.
 export const BONK_ANIM_MS=3000;
 const MAX_ANIM=6,TAU=Math.PI*2,clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=k=>k<.5?2*k*k:1-((-2*k+2)**2)/2;
+function drawBonkImpact(c,x,y,age,scale,tier,col,variant){
+ if(age<0||age>.85)return;
+ const k=age/.85,n=8+tier*4;
+ c.save();c.globalCompositeOperation='screen';c.lineCap='round';
+ for(let i=0;i<3;i++){
+  const p=clamp((age-i*.045)/.64);if(p<=0||p>=1)continue;
+  const r=(12+p*(48+tier*24))*scale;c.globalAlpha=(1-p)*.72;
+  c.strokeStyle=i%2?'#fff0b3':col;c.lineWidth=(4-i)*scale;
+  c.beginPath();c.ellipse(x,y,r,r*.49,-.15+i*.14,0,TAU);c.stroke();
+ }
+ for(let i=0;i<n;i++){
+  const a=i*TAU/n+variant*.61,d=(18+k*(43+i%4*14))*scale;
+  c.globalAlpha=(1-k)*.86;c.fillStyle=i%3?col:'#fff5be';
+  c.save();c.translate(x+Math.cos(a)*d,y+Math.sin(a)*d*.55+k*k*60);c.rotate(a+k);
+  c.beginPath();c.moveTo(-3*scale,0);c.lineTo(9*scale,-2*scale);c.lineTo(3*scale,4*scale);c.closePath();c.fill();c.restore();
+ }
+ c.restore();
+}
 const WORDS=['BỐP!','CỐC!','PẶC!','BỘP!'],COLORS=['#ffd36b','#ff8a5c','#7ee0ff','#c9a2ff'];
 // Mốc thời gian một cú (giây): đi tới → giơ búa → gõ (IMPACT) → đứng nhìn → đi về.
 const WALK=1.0,IMPACT=1.25,BACK=1.6,END=BONK_ANIM_MS/1000;
@@ -33,6 +51,8 @@ export function applyBonkWalk(scene,t){
  for(const {h,age} of rows){const a=byId.get(h.a),b=byId.get(h.b);if(!a||!b||a===b)continue;
   const s=b.scale||1.4,side=a.x<=b.x?-1:1,gx=b.x+side*44*s,gy=b.y+2;
   let k=age<WALK?ease(age/WALK):age<BACK?1:1-ease(clamp((age-BACK)/(END-BACK-.2)));
+  const hit=Math.max(0,1-Math.abs(age-IMPACT-.13)/.23);
+  if(hit&&scene.motion!==false){const j=scene.targets.indexOf(b);if(j>=0)scene.targets[j]={...b,x:b.x-side*hit*(9+(h.h||0)*4),y:b.y-Math.sin(hit*Math.PI/2)*12};}
   const walking=age<WALK||age>BACK&&k>0,bob=walking?Math.abs(Math.sin(age*TAU*2.6))*5:0;
   const i=scene.targets.indexOf(a);scene.targets[i]={...a,x:a.x+(gx-a.x)*k,y:a.y+(gy-a.y)*k-bob,bonkFrom:[a.x,a.y]};
  }
@@ -82,7 +102,7 @@ export function drawBonk(scene,c,t){
    if(a){const dir=-side,sw=age>=IMPACT?HIT:k<.6?-.7*(k/.6):-.7+(HIT+.7)*((k-.6)/.4);mallet(c,v.x-dir*Math.sin(HIT)*L,hy-2+Math.cos(HIT)*L,dir*sw,F*.9,h.h||0,t);} /* trục búa đặt sao cho lúc bổ xuống đầu búa đúng đỉnh đầu */
    else{const y0=hy-2+L-150+(age<IMPACT?k*k*150:150);mallet(c,v.x,y0,0,F*.9,h.h||0,t);}
    if((h.h||0)>0&&age<IMPACT)txt(c,(h.h===3?'⚡ ':h.h===2?'✦ ':'')+HAMMER_NAMES[h.h],(a?a.x:v.x),(a?headY(a):hy)-40*F,'900 17px Segoe UI',HAMMER_SKIN[h.h].fx,5);}
-  if(age>=IMPACT){const k=clamp((age-IMPACT)/(END-IMPACT)),fade=1-clamp((age-(END-.4))/.4);
+  if(age>=IMPACT){drawBonkImpact(c,v.x,hy,age-IMPACT,F*.55,h.h||0,col,h.v);const k=clamp((age-IMPACT)/(END-IMPACT)),fade=1-clamp((age-(END-.4))/.4);
    c.save();c.globalAlpha=fade;
    // chớp va chạm
    if(age<IMPACT+.25){const q=(age-IMPACT)/.25;c.strokeStyle=col;c.lineWidth=3;for(let i=0;i<8;i++){const ang=i*TAU/8+.2,r0=10*s+q*14*s,r1=r0+10*s;c.beginPath();c.moveTo(v.x+Math.cos(ang)*r0,hy-4*s+Math.sin(ang)*r0*.7);c.lineTo(v.x+Math.cos(ang)*r1,hy-4*s+Math.sin(ang)*r1*.7);c.stroke();}}

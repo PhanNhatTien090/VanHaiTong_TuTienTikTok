@@ -46,11 +46,12 @@ import {giftKind,giftNameVi} from './public/gift-kinds.js';
 import {LOYALTY_ARTIFACTS,LOYALTY_TIERS} from './public/loyalty.js';
 import {OPPORTUNITY_COSTS,OPPORTUNITY_MS} from './public/opportunity.js';
 import {gameText} from './public/game-language.js';
+import {COURT_RELICS,COURT_VISITORS} from './public/court-rewards.js';
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
 import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
-import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop} from './sword-race.mjs';
+import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop,awardRaceSword} from './sword-race.mjs';
 import {SOCIAL_ITEMS,socialProfile,socialCommand,bondActivity,tickSocial,socialView,socialBusy,tournamentActive,startTournament as beginTournament,stopTournament as endTournament} from './social-events.mjs';
 // Shared realm names keep server, overlay and breakthrough titles aligned.
 import {hallBenefits,hallContribution,hallCommand,hallView,tickHalls} from './ngu-duong.mjs';
@@ -60,7 +61,7 @@ import {realmStage,STAGES} from './public/realm-stage.js'; // 12/11: Sơ/Trung/H
 import {inventoryRequest,inventoryCard,inventoryText} from './inventory.mjs'; // 11/11: túi đồ · linh thú · tủ skin
 export const REALMS = REALM_NAMES;
 export const CATALOG = [
-  ...DORA_RELICS,...LOYALTY_ARTIFACTS,...GIFT_ARTIFACTS,...EVENT_ARTIFACTS,...VISITOR_RELICS,...SIGNATURE_ARTIFACTS,...COMBAT_RELICS,...SOCIAL_ITEMS,...BOSS_RELICS,...CELESTIAL_RELICS,
+  ...COURT_RELICS,...DORA_RELICS,...LOYALTY_ARTIFACTS,...GIFT_ARTIFACTS,...EVENT_ARTIFACTS,...VISITOR_RELICS,...SIGNATURE_ARTIFACTS,...COMBAT_RELICS,...SOCIAL_ITEMS,...BOSS_RELICS,...CELESTIAL_RELICS,
   {id:'tiger-bell',type:'artifact',name:'Lôi Hổ Thần Chung',icon:'bell',tier:0,price:0,herbs:0,damage:50,bonus:.35,exclusive:true,description:'Chiến lợi phẩm Top công lực khi hạ Lôi Hổ: +50 công lực, +35% tu vi khi trang bị.'},
   {id:'breath', type:'manual', name:'Thanh Tâm Quyết', icon:'scroll', tier:0, price:35, herbs:0, description:'Tu luyện nhận thêm 15% tu vi.', bonus:0.15},
   {id:'sword', type:'manual', name:'Vạn Kiếm Quy Tông', icon:'swords', tier:1, price:110, herbs:0, description:'Tăng 12 công lực khi xuất chiêu.', damage:12},
@@ -582,7 +583,7 @@ function actionCore(w,input,now) {
       const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';}}
     if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;giftEvent.warTruong=war.truong;giftEvent.text+=' • đẩy '+war.truong+' trượng';if(war.flip)giftEvent.warFlip=true;}}
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
-    if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext);if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
+    if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext,{unitCoins:input.coins});if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
     {const bk=bonkGift(w,p,input.coins*count,now);if(bk){giftEvent.bonkHammer=bk;giftEvent.text+=' • '+bk.text;}} // 10/11: Hội Gõ Đầu — quà = búa xịn
     recordEventGiftFx(w,p,giftEvent,now);
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
@@ -791,11 +792,12 @@ function autoCeremony(w,now){if(automaticEventsPaused(w,now))return;const every=
   if(!honorCeremony(w,now).ok)w.lastCeremonyAt=now-every+60000;}
 function awardRaceGifts(w,now){const r=w.race;if(!r||r.giftAwarded||r.phase!=='finished'||!r.giftScores)return;r.giftAwarded=true;
   raceGiftTop(w).forEach((t,i)=>{const p=w.players[t.id],pz=RACE_GIFT_PRIZES[i];if(!p||!pz)return;
-    if(pz.skin){p.raceSwordSkins??=[];if(!p.raceSwordSkins.includes(pz.skin))p.raceSwordSkins.push(pz.skin);p.raceSwordChoice=pz.skin;}
+    const prize=awardRaceSword(p,i);
+    (r.giftPrizes??=[])[i]={id:p.id,skin:prize?.id||null,mount:pz.mount,qi:pz.qi};
     // 08/11: vật cưỡi đua (top 1 Cửu Vĩ Hồ, 2 Kim Lý, 3 Tiên Hạc) — vĩnh viễn, đua sau tự cưỡi con đẹp nhất đang có.
     if(pz.mount){p.raceMounts??=[];if(!p.raceMounts.includes(pz.mount))p.raceMounts.push(pz.mount);}
     const qi=gain(w,p,pz.qi,pz.stones,0,now);
-    emit(w,p,`Quà đua hạng ${i+1} • ${pz.mount?'nhận vật cưỡi '+pz.mountName+' + ':''}${pz.skin?'skin '+pz.name+' vĩnh viễn • ':''}+${qi} tu vi`,'race',now,{raceGiftRank:i+1,itemNames:pz.skin?[pz.name]:[],mountName:pz.mountName||null,raceSwordSkin:pz.skin||null,raceMount:pz.mount||null,reward:{qi,stones:pz.stones}});
+    emit(w,p,`Quà đua hạng ${i+1} • ${pz.mount?'nhận vật cưỡi '+pz.mountName+' + ':''}${prize?'skin '+prize.name+' vĩnh viễn • ':''}+${qi} tu vi`,'race',now,{raceGiftRank:i+1,itemNames:prize?[prize.name]:[],mountName:pz.mountName||null,raceSwordSkin:prize?.id||null,raceMount:pz.mount||null,reward:{qi,stones:pz.stones}});
   });}
 // v86: TÂN THỦ LỆNH — người mới ở lại đủ 3 phút mà vẫn Phàm nhân → tự đột phá Luyện Khí (mỗi 6 giây tối đa 1 người để không loạn).
 function starterBoost(w,now){if(now-(w.lastStarterAt||0)<15000)return;
@@ -1285,7 +1287,7 @@ function claimVisitor(w,p,now){
  if(e.players[p.id])return {ok:true,duplicate:true};
  if(Object.keys(e.players).length>=10000)return fail('Sự kiện đã đủ người.');
  e.players[p.id]={joinedAt:now,awarded:false,lastPointAt:0};
- if(e.kind==='hanlap'||e.kind==='shende'||e.kind==='doraemon'||e.kind==='hailam'||e.kind==='tudo'||e.kind==='khuyniet'||e.kind==='viemton'||e.completed)awardVisitor(w,p,e,now);
+ if(e.kind==='hanlap'||e.kind==='shende'||e.kind==='doraemon'||e.kind==='hailam'||e.kind==='tudo'||e.kind==='khuyniet'||e.kind==='viemton'||COURT_VISITORS.some(v=>v.kind===e.kind)||e.completed)awardVisitor(w,p,e,now);
  else emit(w,p,'Đã nhập trận truyền đạo • cùng tu luyện và thả tim','visitor',now,{visitorKind:e.kind});
  return {ok:true};
 }
