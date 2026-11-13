@@ -45,7 +45,7 @@ import {prepareAscensionArt} from './ascension-art.js';
 import {divineSelection,drawDivineBody,drawDivineHalo} from './divine-wardrobe.js';
 import {loadCelestialArt} from './celestial-bosses.js';
 import {loadPrestigeArt,notePrestigeGift,drawPrestigeAura} from './sword-prestige.js';
-import {syncRace,raceTargets,drawRace,raceActorIds} from './sword-race.js';
+import {syncRace,raceTargets,drawRace,raceActorIds} from './sword-race.js?v=top-three-awards-20261113';
 import {syncWar,warTargets,drawWar,drawWarResult} from './sect-war.js';
 import {syncMaze,mazeOn,drawMaze,drawMazeResult} from './maze.js';
 import {syncTease,teaseIds,drawTease} from './tease.js';

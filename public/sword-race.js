@@ -114,25 +114,43 @@ function drawAwardSword(scene,c,skin,x,y,size,t){const art=scene.prestigeSwords?
   // vệt sáng quét dọc lưỡi kiếm
   if(scene.motion){const u=(t*.0006+(skin.cell||0)*.3)%1,yy=-size*.45+u*size*.8;c.globalCompositeOperation='screen';c.save();c.translate(0,yy);c.scale(1,2.2);const g=c.createRadialGradient(0,0,0,0,0,size*.07);g.addColorStop(0,'#ffffffcc');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.beginPath();c.arc(0,0,size*.07,0,Math.PI*2);c.fill();c.restore();}
   c.restore();}
-function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-PODIUM_MS),left=Math.max(0,Math.ceil(((e.podiumUntil||now)-now)/1000)),gift=(e.giftTop||[]).length>0,top=gift?e.giftTop:e.results||[],prizes=gift?e.giftPrizes:e.finishPrizes;c.save();
+export function raceAwardBoard(e){
+ const finish=(e.results||[]).length>0;
+ return {gift:!finish,top:finish?e.results:e.giftTop||[],prizes:(finish?e.finishPrizes:e.giftPrizes)||[]};
+}
+function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-PODIUM_MS),left=Math.max(0,Math.ceil(((e.podiumUntil||now)-now)/1000)),{gift,top,prizes}=raceAwardBoard(e);c.save();
   c.fillStyle='#030a14'+hexA(Math.min(.62,age/600*.62));c.fillRect(0,0,900,H);
   c.textAlign='center';c.lineWidth=7;c.strokeStyle='#1d1206';c.font='900 42px Segoe UI';c.fillStyle='#ffe7a0';c.strokeText('TRAO THƯỞNG PHI KIẾM',450,H*.12);c.fillText('TRAO THƯỞNG PHI KIẾM',450,H*.12);
   c.font='bold 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';const sub=gift?'Bảng quà · hạng nhất nhận phi kiếm thượng phẩm':'Bảng về đích · hạng nhất nhận phi kiếm thượng phẩm';c.strokeText(sub,450,H*.12+32);c.fillStyle='#eafcff';c.fillText(sub,450,H*.12+32);
+  // Cả ba hạng về đích luôn hiện cùng nhau, kể cả khi chỉ một người tặng quà.
   // 08/11: 3 thẻ gom vào vùng an toàn 14–86% bề ngang — trên điện thoại cột nút TikTok bên phải che mất thẻ hạng 3.
-  const slots=[{rank:1,x:450,y:H*.40,k:1,at:1300},{rank:2,x:222,y:H*.44,k:.78,at:800},{rank:3,x:678,y:H*.44,k:.78,at:300}];
-  for(const sl of slots){const winner=top[sl.rank-1],pz=prizes?.[sl.rank-1],skin=RACE_SWORD_SKINS.find(s=>s.id===pz?.skin),u=clamp((age-sl.at)/650);if(!winner||!pz||u<=0)continue;
+  const slots=[{rank:1,x:450,y:H*.38,k:1,at:300},{rank:2,x:222,y:H*.42,k:.78,at:300},{rank:3,x:678,y:H*.42,k:.78,at:300}];
+  for(const sl of slots){const winner=top[sl.rank-1],pz=prizes?.[sl.rank-1],skin=RACE_SWORD_SKINS.find(s=>s.id===pz?.skin),u=clamp((age-sl.at)/650);if(!winner||u<=0)continue;
     const e2=1-(1-u)**3,w=250*sl.k,h=430*sl.k,x=sl.x,y=sl.y-(1-e2)*120;c.save();c.globalAlpha=e2;
     c.fillStyle='#0a1a2ce8';c.strokeStyle=sl.rank===1?'#ffd76a':skin?.color||'#9ce9ef';c.lineWidth=sl.rank===1?4:3;c.beginPath();c.roundRect(x-w/2,y-h/2,w,h,16);c.fill();c.stroke();
     c.font='900 '+Math.round(22*sl.k)+'px Segoe UI';c.fillStyle=sl.rank===1?'#ffd76a':'#d9f6ff';c.fillText((sl.rank===1?'👑 ':'')+'HẠNG '+sl.rank,x,y-h/2+34*sl.k);
-    {const m0=RACE_MOUNTS.find(m=>m.id===pz.mount);if(skin)drawAwardSword(scene,c,skin,x,y-18*sl.k,215*sl.k,t);else if(m0)drawRaceMount(scene,c,{x,y:y+10*sl.k,scale:1.5*sl.k*.62,id:'prize-'+sl.rank},t,m0);}
+    {const m0=RACE_MOUNTS.find(m=>m.id===pz?.mount);if(skin)drawAwardSword(scene,c,skin,x,y-18*sl.k,215*sl.k,t);else if(m0)drawRaceMount(scene,c,{x,y:y+10*sl.k,scale:1.5*sl.k*.62,id:'prize-'+sl.rank},t,m0);}
     c.font='900 '+Math.round(24*sl.k)+'px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';const nm=fit(c,winner.name||'Đạo hữu',w-20);c.strokeText(nm,x,y+h/2-74*sl.k);c.fillStyle='#ffffff';c.fillText(nm,x,y+h/2-74*sl.k);
-    const mt=RACE_MOUNTS.find(m=>m.id===pz.mount);c.font='800 '+Math.round(18*sl.k)+'px Segoe UI';c.fillStyle=skin?.color||'#e6fbff';c.fillText(fit(c,skin?.name||mt?.name||'Phần thưởng',w-16),x,y+h/2-46*sl.k);
-    c.font='700 '+Math.round(16*sl.k)+'px Segoe UI';c.fillStyle='#ffe2a0';c.fillText(pz.qi?'+'+VIFMT.format(pz.qi)+' tu vi':(mt?.name||''),x,y+h/2-20*sl.k);c.restore();}
-  // hạng 4–5 quà + Kiếm Vương + đếm ngược
-  let y=H*.66;c.font='800 20px Segoe UI';c.lineWidth=4;c.strokeStyle='#04101c';
-  for(let i=3;gift&&i<5;i++){const w=top[i];if(!w||age<1900)continue;const line=['④','⑤'][i-3]+' '+Array.from(w.name||'').slice(0,14).join('')+' · +'+VIFMT.format(PRIZE_VIEW[i].qi)+' tu vi';c.strokeText(line,450,y);c.fillStyle='#d9f6ff';c.fillText(line,450,y);y+=30;}
-  const champ=(e.results||[])[0];if(champ&&age>2200){y+=14;c.font='900 26px Segoe UI';const line='⚔ VÂN HẢI KIẾM VƯƠNG · '+Array.from(champ.name||'').slice(0,16).join('');c.strokeText(line,450,y);c.fillStyle='#ffd76a';c.fillText(line,450,y);y+=30;
-    c.font='700 18px Segoe UI';const rest=(e.results||[]).slice(1,5).map((r,i)=>(i+2)+'. '+Array.from(r.name||'').slice(0,10).join('')).join('   ');c.strokeText(rest,450,y);c.fillStyle='#eafcff';c.fillText(rest,450,y);if((e.results||[]).length>=4){y+=28;c.font='800 17px Segoe UI';const pr='Về đích: top 3 nhận vật cưỡi + phi kiếm theo hạng';c.strokeText(pr,450,y);c.fillStyle='#ffd7a0';c.fillText(pr,450,y);}}
+    const mt=RACE_MOUNTS.find(m=>m.id===pz?.mount);c.font='800 '+Math.round(18*sl.k)+'px Segoe UI';c.fillStyle=skin?.color||'#e6fbff';c.fillText(fit(c,skin?.name||mt?.name||'Kết quả về đích',w-16),x,y+h/2-46*sl.k);
+    c.font='700 '+Math.round(16*sl.k)+'px Segoe UI';c.fillStyle='#ffe2a0';c.fillText(pz?.qi?'+'+VIFMT.format(pz.qi)+' tu vi':(mt?.name||'Chưa đủ 4 người trao skin'),x,y+h/2-20*sl.k);c.restore();}
+  // Show gifting rewards separately; never replace the finish podium with a one-person gift board.
+  let y=H*.63;c.textAlign='center';c.lineWidth=4;c.strokeStyle='#04101c';
+  const donors=(e.giftTop||[]).slice(0,3);
+  if(donors.length){
+   c.font='900 23px Segoe UI';c.fillStyle='#ffe7a0';c.strokeText('THƯỞNG TOP QUÀ',450,y);c.fillText('THƯỞNG TOP QUÀ',450,y);y+=32;
+   for(const [i,winner] of donors.entries()){
+    const prize=e.giftPrizes?.find(p=>p?.id===winner.id),skin=RACE_SWORD_SKINS.find(s=>s.id===prize?.skin),mount=RACE_MOUNTS.find(m=>m.id===prize?.mount);
+    c.font='800 21px Segoe UI';const name=fit(c,'Top '+(i+1)+' · '+winner.name,740);c.strokeText(name,450,y);c.fillStyle='#ffffff';c.fillText(name,450,y);y+=24;
+    c.font='700 18px Segoe UI';const reward=fit(c,[skin?.name,mount?.name,prize?.qi?'+'+VIFMT.format(prize.qi)+' tu vi':null].filter(Boolean).join(' · ')||'Đang ghi nhận phần thưởng',760);
+    c.strokeText(reward,450,y);c.fillStyle=skin?.color||'#c4f2e4';c.fillText(reward,450,y);y+=35;
+   }
+  }
+  for(let i=3;i<Math.min(5,(e.giftTop||[]).length);i++){
+   const winner=e.giftTop[i],prize=e.giftPrizes?.find(p=>p?.id===winner.id);c.font='700 18px Segoe UI';
+   const line=fit(c,'Top quà '+(i+1)+' · '+winner.name+' · +'+VIFMT.format(prize?.qi||PRIZE_VIEW[i].qi)+' tu vi',760);
+   c.strokeText(line,450,y);c.fillStyle='#d9f6ff';c.fillText(line,450,y);y+=26;
+  }
+  if(!gift&&top.length<4){c.font='800 20px Segoe UI';c.fillStyle='#ffe2a0';const note='Cần ít nhất 4 đấu thủ để trao skin và vật cưỡi về đích';c.strokeText(note,450,y+10);c.fillText(note,450,y+10);}
   if(e.repeat!==false){c.font='bold 20px Segoe UI';const nx='Lượt đua mới sau '+left+' giây · gõ bay để ghi danh';c.strokeText(nx,450,H-40);c.fillStyle='#fff1ae';c.fillText(nx,450,H-40);}
   c.restore();}
 export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active)return;const H=scene.height,now=serverNow(scene,t),running=e.phase==='running',moving=running&&scene.motion,light=scene.budget?.level==='light';
