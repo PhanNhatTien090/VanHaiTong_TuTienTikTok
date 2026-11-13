@@ -8,7 +8,7 @@ export function topPatron(players,currentId=null){
 export function hasPatronSet(p){return p?.rewardSkins?.includes(PATRON_SKIN.id)===true;}
 
 export const SPECIAL_SKINS=[PATRON_SKIN,
- ...COURT_VISITORS.map(v=>({id:v.skin,name:v.name,aliases:[v.kind.replace(/-/g,' ')],level:4,color:v.color,trim:v.trim,robe:v.dark,vfx:v.relic,atlas:0})),
+ ...COURT_VISITORS.map(v=>({id:v.skin,name:v.name,aliases:[v.kind.replace(/-/g,' ')],level:4,color:v.color,trim:v.trim,robe:v.dark,vfx:(v.kind==='nguyet-lien'?'Trăng lưỡi liềm · đài sen ngọc':'Phượng vũ · nhật ấn hỏa diễm')+' · '+v.relic,atlas:0})),
  {id:'sea-dragon-heir',name:'Long Duệ Hải Lam',aliases:['long due hai lam','hailam','hai lam'],level:4,color:'#55cfff',trim:'#d8fcff',robe:'#173d8c',vfx:'Vảy long lân · ngân tuyến · tiểu long bay quanh',atlas:0},
  {id:'tudo-ma-ton',name:'Tư Đồ Ma Tôn',aliases:['tu do ma ton','tudo','tu do','ma ton'],level:4,color:'#ff6a5a',trim:'#ffc2a0',robe:'#2a0b10',vfx:'Huyết Sát Ma Đao · ma diễm · phù văn',atlas:0},
  {id:'phan-thien-viem-ton',name:'Tần Mục Hỏa Thần',aliases:['tan muc hoa than','tan muc','hoa than','tanmuc','hoathan'],level:4,color:'#ff7a2a',trim:'#ffd36a',robe:'#3a0604',vfx:'Biển lửa Phần Thiên · Song Đao Liệt Diễm · luyencong ×1,5',atlas:0},
