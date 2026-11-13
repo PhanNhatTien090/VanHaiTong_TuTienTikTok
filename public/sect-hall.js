@@ -20,6 +20,24 @@ function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar
  c.save();c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();if(img)c.drawImage(img,-r,-r,r*2,r*2);else{c.fillStyle='#ffe7a0';c.font='900 30px Georgia';c.textAlign='center';c.textBaseline='middle';c.fillText(Array.from(p.name||'Đ')[0]||'Đ',0,2);}c.restore();
  c.lineWidth=4;c.strokeStyle=ring;c.beginPath();c.arc(0,0,r+2,0,Math.PI*2);c.stroke();c.restore();}
 export function sectHallTargets(players,H,withHalls=false){
+ if(withHalls){
+  const groups=Array.from({length:5},()=>[]),visitors=[];
+  for(const player of players){
+   if(Number.isInteger(player.sectHallIndex)&&player.sectHallIndex>=0&&player.sectHallIndex<5)groups[player.sectHallIndex].push(player);
+   else visitors.push(player);
+  }
+  const targets=[],hasVisitors=visitors.length>0;
+  for(const [index,members] of groups.entries()){
+   members.sort((a,b)=>(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
+   const step=Math.min(H*.13,H*(hasVisitors?.20:.30)/Math.max(1,members.length-1));
+   const scale=members.length<=3?1.72:members.length<=5?1.35:1.05;
+   members.forEach((player,row)=>targets.push({id:player.id,player,x:hallX(index),y:H*.61+row*step,scale,lift:0}));
+  }
+  const cols=3,rows=Math.ceil(visitors.length/cols),hasMembers=groups.some(g=>g.length),top=H*(hasMembers?.89:.65);
+  const gap=Math.min(H*.12,H*(hasMembers?.08:.29)/Math.max(1,rows-1));
+  visitors.forEach((player,i)=>targets.push({id:player.id,player,x:hallX(i%cols),y:top+Math.floor(i/cols)*gap,scale:hasMembers||rows>2?1.15:1.65,lift:0}));
+  return targets;
+ }
  const n=players.length,cols=n<=3?Math.max(1,n):n<=12?4:n<=24?6:8,rows=Math.ceil(n/cols);
  const scale=n<=3?2.9:n<=4?2.7:n<=8?2.35:n<=12?2.05:n<=24?1.5:1.05;
  const gap=withHalls?Math.min(190,H*.18/Math.max(1,rows-1)):rows<=3?Math.min(220,H*.125):Math.min(170,H*.30/Math.max(1,rows-1));
@@ -28,7 +46,7 @@ export function sectHallTargets(players,H,withHalls=false){
  return players.map((player,i)=>{const row=Math.floor(i/cols),count=Math.min(cols,n-row*cols);return {id:player.id,player,x:450+(i%cols-(count-1)/2)*spacing,y:top+row*gap,scale,lift:0};});
 }
 export function loadSectMasterArt(scene){if(scene.sectMasterArt||scene.sectMasterArtLoading||scene.sectMasterArtRetry>Date.now()||typeof Image==='undefined')return;scene.sectMasterArtLoading=true;let im=new Image();im.onload=()=>{scene.sectMasterArt=im;scene.sectMasterArtLoading=false;};im.onerror=()=>{scene.sectMasterArtLoading=false;scene.sectMasterArtRetry=Date.now()+15000;};im.src='/assets/sect-hall-v1/sect-master-throne-v2.png';}
-export function masterSeatGeometry(H,art){const iw=art?.naturalWidth||art?.width||900,ih=art?.naturalHeight||art?.height||1600,crop=artworkCrop(iw,ih,H),scale=ih/crop.sh*H/1600,height=220*scale,seatY=(ih*.352-crop.sy)/crop.sh*H;return {x:(iw*.5-crop.sx)/crop.sw*900,y:seatY,top:seatY-height*.53,height};}
+export function masterSeatGeometry(H,art){const iw=art?.naturalWidth||art?.width||900,ih=art?.naturalHeight||art?.height||1600,crop=artworkCrop(iw,ih,H),scale=ih/crop.sh*H/1600,height=176*scale,seatY=(ih*.318-crop.sy)/crop.sh*H;return {x:(iw*.5-crop.sx)/crop.sw*900,y:seatY,top:seatY-height*.53,height};}
 export function drawSectMaster(scene,c,t){
  if(scene.environment?.layout!=='sect'||scene.sectMaster?.enabled===false||scene.raceStatus?.active||scene.socialStage?.length||scene.presentation?.until>t)return false;
  const host=scene.sectMaster||{},now=(scene.stateServerNow||Date.now())+(t-(scene.stateReceivedAt??t)),speaking=host.active===true&&(!host.until||now<host.until);
@@ -57,7 +75,7 @@ export function drawSectMaster(scene,c,t){
 // The server's active flag is the existing recent-LIVE-activity signal, not an exact viewer roster.
 export function sectElders(players,hostId){return players.filter(p=>p.active&&!p.resident&&!p.puppet&&!p.webOnly&&p.id!==hostId).slice().sort((a,b)=>(Number(b.realm)||0)-(Number(a.realm)||0)||(Number(b.totalQi)||0)-(Number(a.totalQi)||0)||String(a.id).localeCompare(String(b.id))).slice(0,2);}
 const hallX=index=>96+index*177;
-export function seatSectElders(targets,elders,H){const ids=new Set(elders.map(p=>p.id));return [...targets.filter(a=>!ids.has(a.id)),...elders.map((player,i)=>({id:player.id,player,x:player.hallIndex==null?(i===0?260:640):hallX(player.hallIndex),y:H*(player.hallIndex==null?.435:.463),scale:player.hallIndex==null?1.9:1.12,lift:0,sectElder:i+1}))];}
+export function seatSectElders(targets,elders,H){const ids=new Set(elders.map(p=>p.id));return [...targets.filter(a=>!ids.has(a.id)),...elders.map((player,i)=>({id:player.id,player,x:player.hallIndex==null?(i===0?260:640):hallX(player.hallIndex),y:H*(player.hallIndex==null?.435:.463),scale:player.hallIndex==null?1.9:1.42,lift:0,sectElder:i+1}))];}
 export function drawSectCourt(scene,c,t){
  if(scene.environment?.layout!=='sect'||scene.raceStatus?.active||scene.socialStage?.length||scene.presentation?.until>t)return;
  const y=scene.height*.435;
@@ -65,7 +83,7 @@ export function drawSectCourt(scene,c,t){
   const y=scene.height*.463, active=new Set(scene.sectElders.map(p=>p.id));
   for(const hall of scene.sectHalls){
    c.save();c.translate(hallX(hall.index),y);
-   const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,124);
+   const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,150);
    c.fillStyle='#102b32';c.strokeStyle=hall.color;c.lineWidth=2;
    c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();if(!elder){c.fill();c.stroke();}
    c.fillStyle=hall.color;c.textAlign='center';c.font='700 32px Georgia';

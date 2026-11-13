@@ -33,7 +33,7 @@ setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
-import {Scene,portrait,symbols} from './scene.js';
+import {Scene,portrait,symbols} from './scene.js?v=hall-columns-20261113';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
@@ -82,8 +82,12 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   const towerEl=document.createElement('div');towerEl.id='towerStage';towerEl.className='tower-stage';towerEl.hidden=true;root.appendChild(towerEl); // 11/11: Vân Hải Tháp
   const disclosure=document.createElement('div');disclosure.className='live-disclosure';disclosure.textContent='TRÒ CHƠI TU TIÊN';root.appendChild(disclosure);
   const commands=root.querySelector('#basicCommands');if(commands){commands.classList.add('corner-command-guide');root.appendChild(commands);}
-  // 11/11: đáy khung bị bình luận + ô nhập của TikTok che → dải hướng dẫn và thẻ vinh danh lên cột phải (chỗ trống dưới TOP QUÀ).
-  {const right=root.querySelector('#phoneHudRight');if(right){if(commands){commands.classList.add('rail-guide');right.appendChild(commands);}right.insertBefore(dock,right.firstChild);dock.classList.add('rail-dock');}}
+  // Hướng dẫn ở góc dưới phải, thẻ vinh danh giữ trong cột TOP QUÀ.
+  {const right=root.querySelector('#phoneHudRight');if(right){
+    const guideDock=document.createElement('aside');guideDock.id='lowerRightGuide';root.appendChild(guideDock);
+    for(const panel of [root.querySelector('#gearGuide'),root.querySelector('#commandRail'),commands])if(panel){panel.classList.add('rail-guide');guideDock.appendChild(panel);}
+    right.insertBefore(dock,right.firstChild);dock.classList.add('rail-dock');
+  }}
 }
 
 const params=new URLSearchParams(location.search),mode=params.get('world')==='live'?'live':'demo',overlay=params.get('overlay')==='1';
