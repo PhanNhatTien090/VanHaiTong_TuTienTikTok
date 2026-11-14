@@ -70,9 +70,15 @@ function elemental(c,stage,colors,motif,phase){
  else if(motif==='water'){for(let i=0;i<stage+2;i++)strokeArc(c,80,108+i*3,39+i*5,8,phase*.07,main,1.8,.7);}
  else if(motif==='moon'){strokeArc(c,81,64,35+stage*7,27+stage*7,.14,light,stage===3?3:2,.52);}
 }
-function crest(c,stage,colors,motif,phase){
+const HEAD_ANCHOR={
+ 'jade-rabbit':[45,36],'ember-fox':[51,29],'frost-tiger':[53,34],'sun-phoenix':[76,26],
+ 'astral-dragon':[55,34],'loi-oa':[94,33],'van-thu':[66,45],'ky-lan':[60,24],
+ 'bach-nguyet-ho':[115,32],'ngoc-chau-long':[83,35],'xich-ha-phuong':[96,32],
+ 'tu-nguyet-lan':[99,36],'hac-tinh-ho':[112,34]
+};
+function crest(c,stage,colors,motif,phase,id){
  const [main,light,accent]=colors;
- const cx=stage===3?103:108,cy=stage===3?34:40;
+ const [cx,cy]=HEAD_ANCHOR[id]||[80,34];
  // Semi-flexible brow plate attached near upper right of each drawn pose.
  c.save();c.globalAlpha=.9;
  for(let s of [-1,1]){
@@ -88,20 +94,18 @@ function crest(c,stage,colors,motif,phase){
  }
  if(stage===3){
   // A supernatural crown and orbiting spirit gems differentiate the final evolution.
-  for(let i=-2;i<=2;i++)petal(c,103+i*6,37,i*.2,14+6*(2-Math.abs(i)),4,accent,light);
+  for(let i=-2;i<=2;i++)petal(c,cx+i*4,cy+1,i*.17,10+3*(2-Math.abs(i)),3,accent,light);
  }
 }
 function armor(c,stage,colors){
+ // Neck jewel/shoulder clasp only: never mask an existing animal's face or anatomy.
  const [main,light,accent]=colors;
- c.save();c.globalAlpha=stage===1?.52:.83;
- const x=78,y=91,w=stage===3?31:stage===2?25:17;
- c.beginPath();c.moveTo(x-w,y-10);c.quadraticCurveTo(x,y-24,x+w,y-10);
- c.quadraticCurveTo(x+w*.8,y+8,x,y+19);c.quadraticCurveTo(x-w*.9,y+7,x-w,y-10);
- c.fillStyle=main;c.fill();c.strokeStyle=light;c.lineWidth=2;c.stroke();
- kite(c,x,y-2,stage===1?5:stage===2?8:10,accent,light);
- if(stage>=2){
-  for(let s of [-1,1]){c.beginPath();c.moveTo(x+s*w,y-10);c.lineTo(x+s*(w+14),y-1);c.lineTo(x+s*w,y+10);c.stroke();}
- }
+ c.save();c.globalAlpha=stage===1?.65:.85;
+ const x=81,y=105,w=stage===3?13:stage===2?11:9;
+ c.beginPath();c.ellipse(x,y,w,w*.58,-.25,0,TAU);
+ c.fillStyle=main;c.fill();c.strokeStyle=light;c.lineWidth=1.4;c.stroke();
+ kite(c,x,y-1,stage===1?3.5:stage===2?4.7:5.6,accent,light);
+ if(stage>=2)strokeArc(c,x,y+3,w+7,7,.05,light,1.5,.8);
  c.restore();
 }
 function artFrame(base,spec,index,colors){
@@ -115,10 +119,9 @@ function artFrame(base,spec,index,colors){
  elemental(g,stage,colors,magic,phase);
  g.drawImage(base,0,0,160,160);
  armor(g,stage,colors);
- crest(g,stage,colors,magic,phase);
- if(stage>=2)ring(g,80,80,stage===2?60:72,stage,colors,phase+.4);
+ crest(g,stage,colors,magic,phase,spec.id);
  // Frame-specific eye highlight; light enough to keep original face readable.
- if(stage===3)kite(g,116,64,3.5,colors[1],colors[0],phase);
+ if(stage===3){const h=HEAD_ANCHOR[spec.id]||[80,32];kite(g,h[0],h[1]-8,2.5,colors[1],colors[0],phase);}
  g.restore();return c;
 }
 await fs.mkdir(OUT,{recursive:true});
