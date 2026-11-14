@@ -6,6 +6,43 @@ const TAU=Math.PI*2;
 const clamp=x=>Math.max(0,Math.min(1,x));
 const ease=x=>1-(1-clamp(x))**3;
 const stamps=new Map();
+// Original, local SVG illustrations are decoded once ahead of the render loop.
+// The procedural artwork remains a fallback while images decode or on Node tests.
+const detailedArt=new Map();
+const artSource=Object.freeze({
+  seal:'/assets/vfx-v35/celestial-seal.svg',
+  rift:'/assets/vfx-v35/void-rift.svg',
+  impact:'/assets/vfx-v35/celestial-impact.svg'
+});
+function preloadDetailedArt(){
+  if(typeof Image==='undefined')return;
+  for(const [key,src] of Object.entries(artSource)){
+    if(detailedArt.has(key))continue;
+    detailedArt.set(key,null);
+    const img=new Image();
+    img.decoding='async';
+    img.onload=()=>{detailedArt.set(key,img);};
+    img.onerror=()=>{detailedArt.set(key,null);};
+    img.src=src;
+  }
+}
+export function drawOrnateSeal(c,x,y,r,phase=0,alpha=.7){
+  const im=detailedArt.get('seal');
+  if(!im||alpha<=0)return false;
+  c.save();c.globalAlpha*=Math.max(0,Math.min(1,alpha));
+  c.translate(x,y);c.rotate(phase);
+  c.drawImage(im,-r,-r,r*2,r*2);
+  c.restore();
+  return true;
+}
+export function drawCelestialImpact(c,x,y,age,r=210,alpha=.66){
+  const im=detailedArt.get('impact');
+  if(!im||age<0||age>=420||alpha<=0)return false;
+  const u=age/420;
+  c.save();c.globalAlpha*=alpha*(1-u)*(1-u);
+  const size=r*(.72+u*.66);c.drawImage(im,x-size,y-size,size*2,size*2);
+  c.restore();return true;
+}
 export const PALETTES={
   void:['#a98cff','#6deee8','#f4eaff'],
   gold:['#ffc05f','#ff7452','#fff4c8'],
@@ -122,6 +159,7 @@ function gateTexture(){
 export function prepareCinematicArt(){
   for(const theme of Object.keys(PALETTES))for(const kind of ['glow','seal','trail'])texture(theme,kind);
   gateTexture();
+  preloadDetailedArt();
 }
 // Testable deterministic storyboard: the rift forms before impact, splits at
 // impact and fades. No particle creation or image decoding on the hit frame.
@@ -140,6 +178,11 @@ export function drawVoidGate(c,x,y,gather,age,{motion=true,quality='balanced'}={
   c.save();c.globalAlpha*=state.opacity;
   c.drawImage(image,0,0,192,384,x-width*.5-shift,top,width*.5,h);
   c.drawImage(image,192,0,192,384,x+shift,top,width*.5,h);
+  const rift=detailedArt.get('rift');
+  // Decorative SVG only for isolated hero scenes, never the Light performance path.
+  if(rift&&quality!=='light'){
+    c.globalAlpha*=.42;c.drawImage(rift,x-width*.48,top,width*.96,h);
+  }
   c.restore();
 }
 
