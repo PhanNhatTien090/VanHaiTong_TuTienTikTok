@@ -7,10 +7,13 @@ import {makeSurface} from './performance.js';
 import {portraitCanvas} from './linh-bai.js';
 import {drawCombatTechnique} from './combat-techniques.js';
 import {prewarmDuelV6,drawDuelV6Ultimate,v6SkillFamily,v6CounterProgress} from './duel-showcase-v6.js';
+import {prewarmVariantArt,drawV7Variant,v7SkillSpec} from './ultimate-variants-v7.js';
+import {prewarmOverdrive} from './cinematic-overdrive-v7.js';
 export function syncSocialStage(scene,state){
  scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;
  const match=state.socialStatus?.tournament?.current;
  if(match?.id&&scene.v6Showcase!==false)prewarmDuelV6(scene,match);
+ if(match?.id&&scene.v7Overdrive!==false){prewarmVariantArt(scene,match);prewarmOverdrive(scene);}
  if(match?.id&&match.id!==scene.duelPortraitMatchId){
   scene.duelPortraitMatchId=match.id;
   const fighters=(state.players||[]).filter(p=>p.id===match.a||p.id===match.b);
@@ -64,9 +67,11 @@ export function drawSocialStage(scene,c,t,layer,solo){
       scene.onCombatSound?.('cast',technique.id);
       scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),Math.max(0,(.67-k)*cast.period)/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
      }
-     const v6Hero=cast.ultimate&&scene.cinematicV2!==false&&scene.v6Showcase!==false&&!!v6SkillFamily(technique.id);
+     const v7Hero=cast.ultimate&&scene.cinematicV2!==false&&scene.v7Overdrive!==false&&!!v7SkillSpec(technique.id);
+     const v6Hero=!v7Hero&&cast.ultimate&&scene.cinematicV2!==false&&scene.v6Showcase!==false&&!!v6SkillFamily(technique.id);
      if(k<DUEL_RELEASE_AT){
-      if(v6Hero)drawDuelV6Ultimate(scene,c,t,a,aim,technique,k);
+      if(v7Hero)drawV7Variant(scene,c,t,a,aim,technique,k);
+      else if(v6Hero)drawDuelV6Ultimate(scene,c,t,a,aim,technique,k);
       else drawDuelCharge(scene,c,a,technique,k,t,{ultimate:cast.ultimate,light});
      }
      if(k>=DUEL_RELEASE_AT&&scene.duelLastTrigger!==key){
@@ -78,12 +83,14 @@ export function drawSocialStage(scene,c,t,layer,solo){
       if(!cast.light){
        scene.duelImpact={at:now,preset:cast.ultimate?'legendary':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
        scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);
-       // The scheduled elemental SFX owns the impact beat; do not double it.
+       // The elemental SFX remains dominant, with a short low-headroom shatter accent.
+        if(cast.ultimate&&scene.v7Overdrive!==false)scene.onCinematicSound?.(key+':v7-shatter','fracture',0,{priority:5,charge:false,gain:.19});
       }
      }
      if(k>=DUEL_RELEASE_AT){
       const releaseK=Math.min(1,(k-DUEL_RELEASE_AT)/(1-DUEL_RELEASE_AT));
-      if(v6Hero)drawDuelV6Ultimate(scene,c,t,a,aim,technique,k);
+      if(v7Hero)drawV7Variant(scene,c,t,a,aim,technique,k);
+      else if(v6Hero)drawDuelV6Ultimate(scene,c,t,a,aim,technique,k);
       else {
        drawCombatTechnique(c,{technique,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,releaseK,a,H,{light:light||cast.light,signatures:scene.signatureSprites,relics:scene.combatSprites});
        if(scene.cinematicV2===false)drawDuelImpact(c,aim,{...cast,k:releaseK},technique,light);
@@ -98,7 +105,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
      if(cast.ultimate&&scene.cinematicV2!==false&&scene.v6Showcase!==false){
       const other=match.techniques?.[trailer.id],counterK=v6CounterProgress(match,now);
       if(other&&counterK>=0&&counterK<=1){
-       const shown=drawDuelV6Ultimate(scene,c,t,trailer,aim,other,counterK,{counter:true});
+       const shown=(scene.v7Overdrive!==false&&drawV7Variant(scene,c,t,trailer,aim,other,counterK,{counter:true}))||drawDuelV6Ultimate(scene,c,t,trailer,aim,other,counterK,{counter:true});
        if(!shown&&counterK<DUEL_RELEASE_AT)drawDuelCharge(scene,c,trailer,other,counterK,t,{ultimate:true,light:true});
       }
      }
