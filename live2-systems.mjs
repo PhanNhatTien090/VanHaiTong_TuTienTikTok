@@ -58,7 +58,7 @@ export function live2CombatBonus(p,now=Date.now(),kind='boss'){
  if(s.bondSkillUntil>now)rate+=.015;
  return 1+Math.min(.12,rate);
 }
-export function live2PlayerView(p){const s=p.live2;if(!s?.path)return null;return {path:s.path,pathName:live2Path(p)?.name,level:live2Level(p),insight:s.insight,guildId:s.guildId||null,masterId:s.masterId||null};}
+export function live2PlayerView(p){const s=p.live2;if(!s?.path)return null;return {path:s.path,pathName:live2Path(p)?.name,level:live2Level(p),insight:s.insight,bondResonanceUntil:s.bondSkillUntil||0,guildId:s.guildId||null,masterId:s.masterId||null};}
 export function live2Insight(w,p,input,result,now,emit){
  if(!live2Enabled(w)||!real(p)||!p.live2?.path||!result?.ok||result.duplicate||result.pending||result.cooldown||result.xpCooldown)return 0;
  const type=result.heartCultivated?'cultivate':input.type;
@@ -143,6 +143,27 @@ export function live2Command(w,p,words,now,ctx){
   g.elders.push(target.id);announce(w,target,'TRƯỞNG LÃO BANG • '+g.name,now,emit,{live2Kind:'guild',guildPromotion:true});
   return ok('Đã bổ nhiệm Trưởng Lão.');
  }
+ if(cmd==='hoi'&&rest.startsWith('nhuong ')){
+  const g=guilds(w)[s.guildId];if(!g||g.leader!==p.id)return fail('Chỉ Hội Chủ được truyền quyền.');
+  if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Đợi Hội Chiến kết thúc mới được truyền quyền.');
+  const target=findPlayer(w,rest.slice(7));
+  if(!target||target.id===p.id||!g.members.includes(target.id))return fail('Chọn một thành viên khác trong bang.');
+  g.leader=target.id;if(g.deputy===target.id)g.deputy=null;
+  g.elders=(g.elders||[]).filter(id=>id!==target.id);
+  announce(w,target,'TRUYỀN NGÔI HỘI CHỦ • '+g.name,now,emit,{guildPromotion:true,live2Kind:'guild'});
+  return ok('Đã truyền quyền Hội Chủ cho '+target.name+'.');
+ }
+ if(cmd==='hoi'&&rest.startsWith('giang ')){
+  const g=guilds(w)[s.guildId];if(!g||g.leader!==p.id)return fail('Chỉ Hội Chủ được điều chỉnh chức vụ.');
+  if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Đợi Hội Chiến kết thúc.');
+  const target=findPlayer(w,rest.slice(6));
+  if(!target||!g.members.includes(target.id)||target.id===p.id)return fail('Chọn một thành viên đang có chức vụ.');
+  if(g.deputy===target.id)g.deputy=null;
+  else if((g.elders||[]).includes(target.id))g.elders=g.elders.filter(id=>id!==target.id);
+  else return fail('Thành viên này không có chức vụ để thu hồi.');
+  announce(w,target,'THOÁI VỊ • '+g.name,now,emit,{guildPromotion:true,live2Kind:'guild'});
+  return ok('Đã thu hồi chức vụ của '+target.name+'.');
+ }
  if(cmd==='hoi'&&rest==='xay'){
   const g=guilds(w)[s.guildId];if(!g||g.leader!==p.id)return fail('Hội Chủ mới được xây Đại Điện.');
   g.buildings??={hall:0};const lv=g.buildings.hall;
@@ -215,14 +236,18 @@ export function live2Command(w,p,words,now,ctx){
   const master=w.players[s.masterId];if(master?.live2)master.live2.students=(master.live2.students||[]).filter(id=>id!==p.id);
   s.masterId=null;announce(w,p,'XUẤT SƯ • Độc lập tu hành',now,emit,{mentorGraduated:true,live2Kind:'mentor'});return ok('Đã xuất sư.');
  }
- if(cmd==='dong'&&rest==='tam'){
+ if(cmd==='dong'&&(rest==='tam'||rest.startsWith('tam '))){
   const bonds=Object.values(w.social?.bonds||{}).filter(b=>!b.endedAt&&(b.a===p.id||b.b===p.id));
-  const other=bonds.map(b=>w.players[b.a===p.id?b.b:b.a]).find(o=>real(o)&&o.lastActive>=now-5*60000);
-  if(!other)return fail('Đạo lữ cần đang hoạt động trên LIVE.');
-  if(!((w.boss?.hp>0&&w.boss.endsAt>now)||w.tower?.cur?.id===p.id))return fail('Đồng Tâm chỉ kích hoạt trong Boss hoặc lượt vượt Tháp.');
-  if(now-(s.cooldowns.bond??-Infinity)<15*60000)return fail('Đồng Tâm hồi sau 15 phút.');
-  s.cooldowns.bond=now;s.bondSkillUntil=now+120000;
-  announce(w,p,'SONG TINH ĐỒNG TÂM • '+other.name,now,emit,{bondSkill:true,live2Kind:'bond',daoPath:s.path});
+  const eligible=bonds.map(b=>w.players[b.a===p.id?b.b:b.a]).filter(o=>real(o)&&o.lastActive>=now-5*60000);
+  const query=rest.slice(3).trim();
+  const other=query?eligible.find(o=>personKey(o.name)===personKey(query)||personKey(o.socialCode)===personKey(query)):eligible.length===1?eligible[0]:null;
+  if(!other)return fail(eligible.length>1?'Có nhiều đạo lữ đang ở LIVE • gõ đồng tâm + tên chính xác':'Đạo lữ cần đang hoạt động trên LIVE.');
+  if(!((w.boss?.hp>0&&w.boss.endsAt>now)||[p.id,other.id].includes(w.tower?.cur?.id)))return fail('Đồng Tâm chỉ kích hoạt trong Boss hoặc lượt vượt Tháp.');
+  const otherS=ensure(other),cooldownAt=Math.max(s.cooldowns.bond??-Infinity,otherS.cooldowns.bond??-Infinity);
+  if(now-cooldownAt<15*60000)return fail('Đồng Tâm của đôi bạn hồi sau 15 phút.');
+  s.cooldowns.bond=otherS.cooldowns.bond=now;
+  s.bondSkillUntil=otherS.bondSkillUntil=now+120000;
+  announce(w,p,'SONG TINH ĐỒNG TÂM • '+other.name,now,emit,{bondSkill:true,live2Kind:'bond',bondPartnerId:other.id,daoPath:s.path});
   return ok('Đồng tâm hỗ trợ Boss/Tháp trong 2 phút.');
  }
  return null;
