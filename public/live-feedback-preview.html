@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vân Hải Tông · Preview Reward & Impact V3.5</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui;background:#080c1d;color:#eef3ff}
+*{box-sizing:border-box}
+body{margin:0;padding:16px}
+main{max-width:1080px;margin:auto;display:grid;grid-template-columns:minmax(260px,430px) 1fr;gap:20px;align-items:start}
+canvas{display:block;width:100%;aspect-ratio:9/16;border:1px solid #465b87;border-radius:8px;background:#080c1d}
+section{background:#121a30;border:1px solid #2a385a;border-radius:10px;padding:18px}
+h1{font-size:1.35rem;margin-top:0}h2{font-size:1rem;margin-top:20px}
+p{line-height:1.55;color:#b6c8e5}
+button,select{background:#233557;color:#fff;border:1px solid #4b6899;border-radius:7px;padding:9px 12px;cursor:pointer;font:inherit;margin:4px}
+button:focus-visible{outline:2px solid #d9baff}
+label{display:block;margin:12px 0}
+output{font:13px monospace;color:#a7efdc;display:block;margin-top:12px}
+@media(max-width:720px){main{grid-template-columns:1fr}canvas{max-width:430px;margin:auto}}
+</style></head>
+<body>
+<main>
+<canvas id="scene" width="900" height="1600" aria-label="Sân demo hiệu ứng"></canvas>
+<section>
+<h1>Cinematic V3.5 · Phản hồi sự kiện</h1>
+<p>Chỉ dùng dữ liệu giả lập. Không kết nối TikFinity, không thay đổi dữ liệu LIVE hay gửi quà thật. Bật âm thanh bằng nút thử để trình duyệt cho phép Web Audio.</p>
+<h2>Phần thưởng và tương tác</h2>
+<button data-kind="small-stone">+6 linh thạch</button>
+<button data-kind="large-stone">Mưa 800 linh thạch</button>
+<button data-kind="hearts">100 tim</button>
+<button data-kind="heart-goal">Mốc tim toàn tông</button>
+<h2>Cảnh giới và hành động</h2>
+<button data-kind="stage-1">Trung kỳ</button>
+<button data-kind="stage-2">Hậu kỳ</button>
+<button data-kind="stage-3">Viên mãn</button>
+<button data-kind="reward">Lễ nhận thưởng</button>
+<button data-kind="hit">Tuyệt kỹ trúng đích</button>
+<label>Chất lượng <select id="quality"><option value="balanced">Cân bằng</option><option value="light">Nhẹ/đông người</option></select></label>
+<label><input type="checkbox" id="motion"> Giảm chuyển động</label>
+<label><input type="checkbox" id="flash"> Giảm ánh chớp</label>
+<label><input type="checkbox" id="sound"> Bật SFX (chỉ khi bấm nút)</label>
+<output id="stats">Chờ phát thử...</output>
+</section>
+</main>
+<script type="module" src="/live-feedback-preview.js"></script>
+</body></html>

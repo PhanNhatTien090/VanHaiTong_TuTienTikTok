@@ -13,6 +13,7 @@ import {scheduleDaiLaAudio,daiLaMusicDuck} from './dai-la-audio.js';
 import {lateMusicDuck,scheduleLateAudio} from './late-ascension-audio.js';
 import {scheduleTienDeAudio,tienDeMusicDuck} from './tien-de-audio.js';import {scheduleMaThanAudio,maThanMusicDuck} from './ma-than-audio.js';import {scheduleThienMaAudio,thienMaMusicDuck} from './thien-ma-audio.js';import {scheduleDietTheAudio,dietTheMusicDuck} from './diet-the-audio.js';
 import {CinematicSfx} from './cinematic-sfx.js';
+import {prepareFeedbackAudio,playFeedbackAudio} from './feedback-audio.js';
 import {LH_TIMING} from './luyen-hu-formation.js';
 import {createRitualBoostBus,scheduleRitualBoostLayer} from './ritual-boost-audio.js';
 import {scheduleHoaThanAudio,hoaThanMusicDuck} from './hoa-than-audio.js';
@@ -132,7 +133,7 @@ export class CultivationAudio {
     // 08/11: chống rè — chỉ còn 1 tầng nén chung (các màn đột phá bỏ nén riêng) + trần an toàn chỉ chạm ở đỉnh hiếm.
     this.ceiling=c.createDynamicsCompressor();this.ceiling.threshold.value=-5;this.ceiling.knee.value=1;this.ceiling.ratio.value=18;this.ceiling.attack.value=.001;this.ceiling.release.value=.12;
     this.ambBus.connect(this.master);this.fxBus.connect(this.master);this.master.connect(this.limiter);this.limiter.connect(this.ceiling);this.softClip=softClipper(c);this.ceiling.connect(this.softClip);this.softClip.connect(c.destination);
-    this.cinematic=new CinematicSfx(c,this.fxBus);
+    this.cinematic=new CinematicSfx(c,this.fxBus);prepareFeedbackAudio(c);
     // A quiet fifth drone with a slow breath envelope, kept below event sounds.
     for(const f of (typeof Audio==='undefined'?[110,164.81,220]:[])){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;g.gain.value=.018;o.connect(g);g.connect(this.ambBus);o.start();this.drone.push({o,g});}
     const lfo=c.createOscillator(),depth=c.createGain();lfo.frequency.value=.095;depth.gain.value=.008;lfo.connect(depth);for(const {g}of this.drone)depth.connect(g.gain);lfo.start();
@@ -237,6 +238,7 @@ export class CultivationAudio {
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;const now=this.ctx.currentTime,key='alc:'+kind;if(now-(this.last[key]??-100)<(kind==='bubble'?.15:.2))return;this.last[key]=now;
     try{playAlchemySound(this.ctx,this.fxBus,kind,strength);}catch{}
   }
+  feedback(kind,level=1){return playFeedbackAudio(this,kind,level);}
   cinematicCue(id,preset,delay=0,options={}){
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;
     this.cinematic.schedule(id,preset,delay,{...options,gain:(options.gain??.82)*(this.ducked?.63:1)});

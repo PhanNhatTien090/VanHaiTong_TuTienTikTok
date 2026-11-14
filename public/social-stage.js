@@ -1,5 +1,6 @@
 import {drawAura,drawSeal,drawShockwave} from './cinematic-vfx.js';
 import {DUEL_CAST_MS,duelCastState,drawDuelImpact,drawDuelCutIn} from './duel-combat.js';
+import {drawDuelFeedback} from './duel-feedback-v3.js';
 import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
 import {drawCombatTechnique} from './combat-techniques.js';
@@ -37,6 +38,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
     const cast=duelCastState(age),turn=cast.turn,a=scene.targets[cast.side],technique=match.techniques[a.id],k=cast.k;
     if(cast.ready&&technique){if(scene.duelLastCast!==match.id+':'+turn){scene.duelLastCast=match.id+':'+turn;scene.animator?.trigger({id:scene.duelLastCast,user:a.id,effect:'attack',technique},t);scene.onCombatSound?.('cast',technique.id);}drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});if(scene.cinematicV2===false)drawDuelImpact(c,orb,cast,technique,scene.budget?.level==='light');else drawShockwave(c,cast.side?'dusk':'jade',orb.x,orb.y,(k-.34)*DUEL_CAST_MS,{quality:'light',radius:cast.ultimate?210:132,seed:cast.turn*.17,motion:scene.motion,flash:cast.ultimate&&!scene.reduceFlash,aspect:.68});if(cast.ultimate)drawDuelCutIn(scene,c,a,technique,k,H);else techName(c,a.x,a.y-235,technique,Math.min(1,k/.08,(1-k)/.2));}
     if(k>.6&&k<.95)image(3,orb.x-60,orb.y-60,120,120,Math.sin((k-.6)/.35*Math.PI)*.55);
+    drawDuelFeedback(scene,c,match,scene.targets,now);
     if(age<650)for(const p of scene.targets)bubble(c,p.x,p.y-250,'Mời chỉ giáo',Math.min(1,age/250,(650-age)/200));
    }
   }else if(bow?.until>now&&scene.targets.length===2&&layer==='front'){const k=Math.min(1,(now-bow.at)/250,(bow.until-now)/250);
