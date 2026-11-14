@@ -1,6 +1,6 @@
 import {drawAura,drawSeal,drawShockwave} from './cinematic-vfx.js';
 import {duelCastState,duelPhase,drawDuelImpact} from './duel-combat.js';
-import {DUEL_RELEASE_AT,drawDuelCharge,drawDuelRelease} from './duel-cinematic.js';
+import {DUEL_RELEASE_AT,drawDuelCharge,drawDuelRelease,duelSoundPreset} from './duel-cinematic.js';
 import {drawDuelFeedback} from './duel-feedback-v3.js';
 import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
@@ -49,7 +49,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
      if(scene.duelLastCharge!==key){
       scene.duelLastCharge=key;
       scene.onCombatSound?.('cast',technique.id);
-      if(cast.ultimate)scene.onCinematicSound?.(key+':charge','gold',cast.period*DUEL_RELEASE_AT/1000,{priority:5,charge:true,gain:.44});
+      scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),cast.period*.67/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
      }
      if(k<DUEL_RELEASE_AT)drawDuelCharge(scene,c,a,technique,k,t,{ultimate:cast.ultimate,light});
      if(k>=DUEL_RELEASE_AT&&scene.duelLastTrigger!==key){
@@ -61,7 +61,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
       if(!cast.light){
        scene.duelImpact={at:now,preset:cast.ultimate?'major':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
        scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);
-       if(cast.ultimate)scene.onCinematicSound?.(key+':ultimate-impact','resonance',0,{priority:4,charge:false,gain:.32});
+       // The scheduled elemental SFX owns the impact beat; do not double it.
       }
      }
      if(k>=DUEL_RELEASE_AT){
