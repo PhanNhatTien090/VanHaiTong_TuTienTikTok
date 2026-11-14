@@ -45,20 +45,22 @@ function ring(c,x,y,r,stage,colors,phase){
 function wings(c,stage,colors,motif,phase){
  const [main,light,accent]=colors;
  if(stage===1)return;
- const count=stage===3?5:3,dx=stage===3?58:40;
- // Behind original silhouette; each element has independent hand-drawn curves.
+ const count=stage===3?3:2;
+ c.save();c.globalAlpha=stage===3?.5:.38;
+ // Feather pairs reach upward BEHIND the body, never draw horizontal ribbons across the face.
  for(const side of [-1,1]){
   for(let i=0;i<count;i++){
-   const a=side*(.44+i*.31)+phase*.05;
-   const ox=80+side*(12+i*3),oy=80+i*2;
-   petal(c,ox,oy,a,dx+i*5,9+stage*2,main,i%2?light:accent);
+   const a=side*(.22+i*.25)+Math.sin(phase)*.06;
+   const ox=80+side*(19+i*5),oy=90+i*7;
+   petal(c,ox,oy,a,stage===3?43+i*5:31+i*5,stage===3?7+i:5+i,main,i%2?light:accent);
   }
  }
  if(motif==='wing'){
   for(let j=0;j<3;j++){
-   petal(c,80+(j-1)*18,78,Math.sin(phase)*.08+(j-1)*.28,30+stage*8,8,accent,light);
+   petal(c,80+(j-1)*15,80,Math.sin(phase)*.06+(j-1)*.22,25+stage*6,5,accent,light);
   }
  }
+ c.restore();
 }
 function elemental(c,stage,colors,motif,phase){
  const [main,light,accent]=colors;
