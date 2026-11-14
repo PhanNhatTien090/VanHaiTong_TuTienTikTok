@@ -12,10 +12,14 @@ import {prewarmOverdrive} from './cinematic-overdrive-v7.js';
 import {prewarmV7Premium} from './v7-premium-art.js';
 export function syncSocialStage(scene,state){
  scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;
- const match=state.socialStatus?.tournament?.current;
- if(match?.id&&scene.v6Showcase!==false)prewarmDuelV6(scene,match);
- if(match?.id&&scene.v7Overdrive!==false){prewarmVariantArt(scene,match);prewarmOverdrive(scene);prewarmV7Premium(scene,match);}
- if(match?.id&&match.id!==scene.duelPortraitMatchId){
+ const match=state.socialStatus?.tournament?.current,active=state.socialScene==='tournament'&&!!match?.id;
+ // Release potentially multi-megabyte decoded sprites when the LIVE scene changes.
+ if(!active&&scene.premiumMatchId){scene.premiumMatchId=null;scene.v7PremiumArt=null;scene.v7PremiumErrors=null;}
+ if(!active&&scene.v7VariantMatch){scene.v7VariantMatch=null;scene.v7VariantArt=null;scene.v7VariantErrors=null;}
+ if(!active&&scene.v6AssetMatch){scene.v6AssetMatch=null;scene.v6Assets=null;scene.v6MissingAssets=null;}
+ if(active&&scene.v6Showcase!==false)prewarmDuelV6(scene,match);
+ if(active&&scene.v7Overdrive!==false){prewarmVariantArt(scene,match);prewarmOverdrive(scene);prewarmV7Premium(scene,match);}
+ if(active&&match.id!==scene.duelPortraitMatchId){
   scene.duelPortraitMatchId=match.id;
   const fighters=(state.players||[]).filter(p=>p.id===match.a||p.id===match.b);
   // Pre-raster the two existing in-game character portraits outside the render frame.
