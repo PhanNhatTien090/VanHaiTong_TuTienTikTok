@@ -25,6 +25,8 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Generate 33 frames from actual LIVE renderer
         run: node scripts/render-v7-overdrive-gallery.mjs
+      - name: Benchmark real V7 draw costs (high and crowded)
+        run: node scripts/bench-v7-render.mjs
       - name: Publish visual review images
         uses: actions/upload-artifact@v4
         with:
