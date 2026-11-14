@@ -126,7 +126,7 @@ export function duelChargingPose(match,actor,serverNow,enhanced=false){
 export function drawDuelCinematic(scene,c,t,H,serverNow=Date.now()){
  if(scene.cinematicV2===false||scene.socialScene!=='tournament')return 0;
  const match=scene.socialStatus?.tournament?.current;if(!match)return 0;
- const light=!!(scene.budget?.pressured||scene.budget?.level==='light'||scene.heavyCrowd||(scene.fps>0&&scene.fps<18));
+ const light=!!(scene.budget?.pressured||scene.budget?.crowded||scene.budget?.level==='light'||scene.heavyCrowd||(scene.fps>0&&scene.fps<18));
  const gifts=scene.eventGiftQueue?.activeRows||[];
  const enhanced=scene.v6Showcase!==false;
  const cues=duelCutinPlan(match,serverNow,gifts,t,light,enhanced);
