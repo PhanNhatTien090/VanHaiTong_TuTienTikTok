@@ -68,6 +68,7 @@ test('strict effect budget preserves the dragon silhouette and caps secondary de
  assert.equal(crowd.pressed,true);assert.equal(crowd.showSecondary,false);
  assert.ok(crowd.bolts<base.bolts&&crowd.blades<base.blades);
  assert.equal(crowd.flashes,false);
+ assert.equal(v6Budget({budget:{level:'balanced',crowded:true},fps:24}).pressed,true,'crowded 24 FPS mode must cap work');
 });
 
 test('V6 real PNGs render distinct thunder and phoenix attacks with a bounded number of draws',async()=>{
