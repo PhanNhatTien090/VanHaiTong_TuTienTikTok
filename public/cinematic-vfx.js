@@ -19,8 +19,16 @@ export const VFX_LIMITS={
   high:{particles:20,rings:2,glows:1}
 };
 
-export function cinematicQuality(scene){
-  if(feedbackBudget(scene)||Math.max(scene.visibleActors||0,scene.actorLoad?.activePlayers||0,scene.targets?.length||0)>=20)return 'light';
+// During a solo presentation, background audience records are not being rasterized.
+// Honour measured pressure and an explicit Performance setting before giving focused
+// events a small, bounded budget. Never grant High merely because the scene is solo.
+export function cinematicQuality(scene,{focused=false}={}){
+  if(scene.budget?.pressured||scene.budget?.mode==='light')return 'light';
+  const active=Math.max(scene.visibleActors||0,scene.actorLoad?.activePlayers||0,scene.targets?.length||0);
+  // addEffect runs before the first solo frame, so visibleActors still describes
+  // the previous plaza. Trust focused only when the caller has a solo presentation.
+  if(focused)return scene.budget?.mode==='high'?'high':'balanced';
+  if(feedbackBudget(scene)||active>=20)return 'light';
   return scene.budget?.level==='high'?'high':'balanced';
 }
 
@@ -72,8 +80,67 @@ function texture(theme,kind){
   return surface;
 }
 
+// One original, pre-rasterized void gate (384x384): kept outside the frame loop.
+// Dense edge marks are painted just once; animation only transforms two half images.
+let voidGate=null;
+function gateTexture(){
+  if(voidGate)return voidGate;
+  const surface=makeSurface(384,384);
+  if(!surface)return null;
+  const c=surface.getContext('2d'),cx=192,cy=192;
+  c.save();
+  const hollow=c.createRadialGradient(cx,cy,26,cx,cy,174);
+  hollow.addColorStop(0,'#030518fa');
+  hollow.addColorStop(.57,'#08102bdc');
+  hollow.addColorStop(.78,'#30205c9a');
+  hollow.addColorStop(1,'#30205c00');
+  c.fillStyle=hollow;c.beginPath();c.ellipse(cx,cy,139,178,0,0,TAU);c.fill();
+  for(const side of [-1,1]){
+    for(let layer=0;layer<3;layer++){
+      const xx=cx+side*(107+layer*9),top=18+layer*10;
+      c.strokeStyle=layer===0?'#e9ffff':layer===1?'#83e9ecb8':'#b7a1ff7a';
+      c.lineWidth=layer===0?3.5:layer===1?5:10;
+      c.beginPath();c.moveTo(cx+side*23,top);
+      c.bezierCurveTo(xx+side*38,cy*.40,xx-side*36,cy*1.54,cx+side*24,384-top);
+      c.stroke();
+    }
+    for(let i=0;i<10;i++){
+      const y=43+i*30,reach=(i%3+1)*9,outer=cx+side*(97+Math.sin(i*2.8)*20);
+      c.beginPath();c.moveTo(outer,y-11);c.lineTo(outer+side*reach,y);
+      c.lineTo(outer-side*5,y+12);
+      c.strokeStyle=i%3===0?'#ecf7ffd9':'#91ececa5';
+      c.lineWidth=i%3===0?2.5:1.4;c.stroke();
+    }
+  }
+  for(let i=0;i<28;i++){
+    const x=36+(i*117)%312,y=25+(i*79)%334;
+    c.fillStyle=i%4?'#c7e8ff9c':'#fff2d8d0';
+    c.fillRect(x,y,i%7===0?2:1,i%7===0?2:1);
+  }
+  c.restore();voidGate=surface;return surface;
+}
 export function prepareCinematicArt(){
   for(const theme of Object.keys(PALETTES))for(const kind of ['glow','seal','trail'])texture(theme,kind);
+  gateTexture();
+}
+// Testable deterministic storyboard: the rift forms before impact, splits at
+// impact and fades. No particle creation or image decoding on the hit frame.
+export function voidGateFrame(gather,age){
+  const opening=ease(gather);
+  const split=age<0?0:ease(age/550);
+  const opacity=age<0?opening*.78:(1-ease((age-180)/1050))*.86;
+  return {opening,split,opacity:clamp(opacity)};
+}
+export function drawVoidGate(c,x,y,gather,age,{motion=true,quality='balanced'}={}){
+  const image=gateTexture(),state=voidGateFrame(gather,age);
+  if(!image||state.opacity<=.005)return;
+  const w=motion?375:345,h=quality==='light'?475:550;
+  const width=w*(.19+.81*state.opening);
+  const shift=motion?state.split*64:0,top=y-h*.5;
+  c.save();c.globalAlpha*=state.opacity;
+  c.drawImage(image,0,0,192,384,x-width*.5-shift,top,width*.5,h);
+  c.drawImage(image,192,0,192,384,x+shift,top,width*.5,h);
+  c.restore();
 }
 
 function stamp(c,image,x,y,w,h,rotation,alpha){

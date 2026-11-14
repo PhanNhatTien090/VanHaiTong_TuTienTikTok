@@ -190,7 +190,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu'];
+const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -404,7 +404,7 @@ function actionCore(w,input,now) {
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
   if(type==='chat'){const war=warCommand(w,p,cmd,now,socialContext);if(war){if(war.ok)hallContribution(w,p,now,'event');if(!war.ok&&!cooldown(p,'war-error',8000,now))emit(w,p,war.message,'war',now);return war;}}
-  if(type==='chat'){const raceResult=raceCommand(w,p,(cmd==='bay'||cmd==='baykiem')&&rest?null:cmd,now,socialContext,rest);if(raceResult){if(raceResult.ok)hallContribution(w,p,now,'event');if(!raceResult.ok&&!cooldown(p,'race-error',10000,now))emit(w,p,raceResult.message,'social',now);return raceResult;}const socialResult=socialCommand(w,p,cmd,rest,now,socialContext);if(socialResult){if(socialResult.ok&&['tythi','kiem','danh'].includes(cmd))hallContribution(w,p,now,'event');if(!socialResult.ok&&!cooldown(p,'social-error',10000,now))emit(w,p,socialResult.message,'social',now);return socialResult;}}
+  if(type==='chat'){const raceResult=raceCommand(w,p,(cmd==='bay'||cmd==='baykiem')&&rest?null:cmd,now,socialContext,rest);if(raceResult){if(raceResult.ok)hallContribution(w,p,now,'event');if(!raceResult.ok&&!cooldown(p,'race-error',10000,now))emit(w,p,raceResult.message,'social',now);return raceResult;}const socialResult=socialCommand(w,p,cmd,rest,now,socialContext);if(socialResult){if(socialResult.ok&&['tythi','kiem','danh','hoikhi'].includes(cmd))hallContribution(w,p,now,'event');if(!socialResult.ok&&!cooldown(p,'social-error',10000,now))emit(w,p,socialResult.message,'social',now);return socialResult;}}
   if(type==='attack'&&tournamentActive(w))return socialCommand(w,p,'danh','',now,socialContext);
   if(existed&&gender)setGender(w,p,gender,now);
   if(type==='chat'&&(w.mode!=='live'||w.settings?.engagementRewards===true)){const ev=w.flowerEvent,pts=ev&&now<ev.endsAt?SKY_EVENTS[ev.kind||'flower']?.chatPoints:0;if(pts&&now-(p.cooldowns.skyChat||0)>=3000){p.cooldowns.skyChat=now;flowerScore(w,p,pts,now);}}

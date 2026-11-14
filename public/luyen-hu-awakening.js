@@ -1,6 +1,6 @@
 // Luyện Hư v2 — Hư Không Khai Giới · Vạn Kính Quy Nhất (07/11/2026). Bản cũ "Bát Ấn Khai Hư" sao lưu ở data/backups.
 import {cameraImpulse} from './cinematic-feedback.js';
-import {cinematicQuality,drawAura,drawDissolve,drawEnergyOrb,drawSeal,drawShockwave} from './cinematic-vfx.js';
+import {cinematicQuality,drawAura,drawDissolve,drawEnergyOrb,drawSeal,drawShockwave,drawVoidGate} from './cinematic-vfx.js';
 import {makeSurface} from './performance.js';
 import {setFxPalette,qiVariant,qiRemap,pushFxCamera,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
 import {LH_TIMING as T,LH_RIFTS,prepareLuyenHuArt,luyenHuFormationState,drawLhWorld,drawLhMirrors,drawLhClones,drawLhRifts,drawLhEye,drawLhBody,drawLhBreak,drawLhAfter,drawLhEdges} from './luyen-hu-formation.js';
@@ -54,7 +54,7 @@ export function drawLuyenHuAwakening(scene,c,e,t,H){
  drawLhWorld(scene,c,st,v);
  pushFxCamera(scene,c,kq,v,s.feet);
  const shake=legacy&&s.motion&&scene.cameraEnabled!==false?legacyShake(sec,s.burst):0;
- const age=(sec-T.impact)*1000,quality=e.cinematicQuality??cinematicQuality(scene);
+ const age=(sec-T.impact)*1000,quality=e.cinematicQuality??cinematicQuality(scene,{focused:true});
  const jolt=cameraImpulse(scene,'legendary',age,v.phase,quality==='light');
  const gather=clamp((sec-T.rewind)/(T.impact-T.rewind));
  c.translate(legacy?Math.sin(sec*83)*shake:jolt.x,legacy?Math.cos(sec*71)*shake*.55:jolt.y);
@@ -69,6 +69,9 @@ export function drawLuyenHuAwakening(scene,c,e,t,H){
    drawSeal(c,'void',450,s.feet+20,235,spin,(age<0?gather:settled)*.86);
    if(age<0)drawSeal(c,'void',450,st.belly-125,155,-spin*.55,gather*.44);
   }
+  // Keep the void gate behind the actor, timed to existing rewind/impact.
+  // It uses one cached 384px original texture and two drawImage calls per frame.
+  if(scene.cinematicLayers?.energy!==false&&gather>0)drawVoidGate(c,450,st.belly-55,gather,age,{motion:s.motion,quality});
   if(scene.cinematicLayers?.tail!==false)drawAura(c,'void',450,s.feet-265,180,(age<0?gather*.16:settled*.55));
 
   if(scene.cinematicLayers?.impact!==false)drawShockwave(c,'void',450,st.belly,age,{quality,radius:385,seed:v.phase,motion:s.motion,flash:!scene.reduceFlash});

@@ -12,7 +12,7 @@ function pages(state,esc){
   const realm=t=>state.realms?.[t]||'';
   const forge=[];for(let i=0;i<arts.length;i+=3)forge.push(arts.slice(i,i+3));
   return [
-    `<b>⚔ PHÁP BẢO &amp; TRANG BỊ</b><ol>${rows([['rèn','rèn pháp bảo tốt nhất đủ linh thạch'],['trang bị','đeo món mạnh nhất đang có'],['trang bị + tên','đeo đúng món mình chọn'],['đánh','pháp bảo tung chiêu, tăng tu vi']],esc)}</ol>`,
+    `<b>⚔ PHÁP BẢO &amp; TRANG BỊ</b><ol>${rows([['rèn','rèn pháp bảo tốt nhất đủ linh thạch'],['trang bị','đeo món mạnh nhất đang có'],['trang bị + tên','đeo đúng món mình chọn'],['đánh','pháp bảo tung chiêu, tăng tu vi'],['hồi khí','tỷ thí: hồi linh lực, tối đa 3 lần']],esc)}</ol>`,
     ...forge.map((group,i)=>`<b>🔨 RÈN PHÁP BẢO${forge.length>1?' · '+(i+1)+'/'+forge.length:''}</b><ol>${group.map(a=>`<li><code>${esc(a.name)}</code><span>${fmt(a.price)} linh thạch${a.herbs?' · '+fmt(a.herbs)+' thảo':''}${realm(a.tier)?' · '+esc(realm(a.tier)):''}</span></li>`).join('')}</ol><small>gõ <i>rèn ${esc(group[0].name)}</i> để rèn đúng món</small>`),
     `<b>📜 BÍ PHÁP · ĐAN DƯỢC</b><ol>${rows([['học','học bí pháp mới, tu luyện nhanh hơn'],['luyện đan','luyện viên đan tốt nhất đủ nguyên liệu'],['dùng','uống đan dược, cộng tu vi'],['hái','hái linh thảo làm nguyên liệu']],esc)}</ol>`
   ];

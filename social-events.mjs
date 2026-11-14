@@ -106,10 +106,10 @@ export function socialCommand(w,p,cmd,rest,now,c){
   const t=w.tournament;if(t?.phase!=='registration'||now>=t.registrationEndsAt)return fail('Chưa mở tuyển tỷ thí.');if(t.entries.some(e=>e.id===p.id))return {ok:true,duplicate:true};if(t.entries.length>=128)return fail('Danh sách đã đủ.');
   t.entries.push({id:p.id,at:now});markInteraction(w,p);notify(w,p,'Đã đăng ký tỷ thí • tự vào sân khi đến lượt',now,c);return ok();
  }
- if(cmd==='danh'&&tournamentActive(w)){
+ if((cmd==='danh'||cmd==='hoikhi')&&tournamentActive(w)){
   tickTournament(w,now,c);const m=w.tournament.current;if(!m||now>=m.endsAt||![m.a,m.b].includes(p.id))return fail('Chưa đến lượt lên đài của đạo hữu.');
   if((m.boosts[p.id]||0)>=3)return {ok:true,duplicate:true};if(now-(m.lastBoost[p.id]||0)<5000)return fail('Trợ lực hồi sau 5 giây.');
-  m.lastBoost[p.id]=now;m.boosts[p.id]=(m.boosts[p.id]||0)+1;markInteraction(w,p);notify(w,p,'Tiếp linh lực '+m.boosts[p.id]+'/3',now,c);return ok();
+  m.lastBoost[p.id]=now;m.boosts[p.id]=(m.boosts[p.id]||0)+1;markInteraction(w,p);notify(w,p,'Hồi linh lực · trợ lực '+m.boosts[p.id]+'/3',now,c);return ok();
  }
  if(cmd==='ketduyen'){
   if(w.settings.bondEnabled===false)return fail('Kết duyên đang tạm đóng.');const own=bondAllowance(w,p);if(!own.remaining)return fail(own.name+' đã đủ '+own.limit+' đạo lữ.');const matches=resolveTarget(w,rest);
