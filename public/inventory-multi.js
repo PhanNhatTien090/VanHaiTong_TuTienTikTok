@@ -7,7 +7,9 @@ const fallback={artifact:'relic',pill:'elixir',manual:'book',pets:'spirit',skins
 export function safeInventoryArt(item,category='artifact'){
  const input=String(item?.art||'');
  if(/^\/?assets\/[a-z0-9/_-]+\.(?:png|jpe?g|webp|svg)$/i.test(input))return input.startsWith('/')?input:'/'+input;
- const kind=category==='artifact'?'relic':category==='manual'?'book':category==='pill'?'elixir':fallback[category]||'relic';
+ const type=String(item?.icon||'').toLowerCase();
+ const specialized={sword:'sword',swords:'sword',bell:'bell',orb:'orb',vase:'vase',cauldron:'cauldron',scroll:'scroll'};
+ const kind=category==='artifact'?(specialized[type]||'relic'):category==='manual'?(specialized[type]||'book'):category==='pill'?'elixir':fallback[category]||'relic';
  return '/assets/ui-inventory/'+kind+'.svg';
 }
 const img=(item,category,esc)=>`<img class="inv-art" src="${esc(safeInventoryArt(item,category))}" width="42" height="42" alt="" loading="eager" decoding="async">`;
@@ -15,8 +17,9 @@ function entries(box,category,esc){
  if(!box?.items?.length)return `<span class="inv-empty">Chưa sở hữu</span>`;
  return `<div class="inv-list">${box.items.map(item=>{
   const i=typeof item==='string'?{name:item}:item;
-  const stats=i.on?'ĐANG TRANG BỊ':i.damage>0?'+ '+fmt(i.damage)+' công lực':i.bonus>0?'Tu vi +'+Math.round(i.bonus*100)+'%':i.n?'×'+fmt(i.n):'';
-  return `<div class="inv-item${i.on?' is-equipped':''}">${img(i,category,esc)}<span class="inv-item-info"><b>${esc(i.name||'Vật phẩm')}</b>${stats?`<small>${esc(stats)}</small>`:''}</span></div>`;
+  const stats=i.on?'CHỦ PHÁP BẢO':i.secondary?'TRỢ PHÁP BẢO (50%)':i.damage>0?'+'+fmt(i.damage)+' công lực':i.bonus>0?'Tu vi +'+Math.round(i.bonus*100)+'%':i.n?'×'+fmt(i.n):'';
+  const stats2=i.damage>0&&i.bonus>0?('· +'+Math.round(i.bonus*100)+'% tu vi'):'';
+  return `<div class="inv-item${i.on?' is-equipped':''}">${img(i,category,esc)}<span class="inv-item-info"><b>${esc(i.name||'Vật phẩm')}</b>${stats?`<small>${esc(stats)}${stats2?esc(stats2):''}</small>`:''}</span></div>`;
  }).join('')}${box.more?`<span class="inv-more">+ ${fmt(box.more)} vật phẩm khác</span>`:''}</div>`;
 }
 export function inventoryDeckHTML(e,esc){
