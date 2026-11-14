@@ -41,7 +41,8 @@ export function musicForState(s,now=s?.serverNow||Date.now()){
  if(music?.followContext===false)return {index:base,mood:'manual'};
  const live=e=>e&&!e.closedAt&&(!e.endsAt||now<e.endsAt),social=s?.socialStatus;
  let mood='',key='',pool=[];
- if(s?.hallWar?.active){mood='battle';key=s.hallWar.id;pool=[9,10,8];}
+ if(s?.live2GuildWar?.active){mood='battle';key=s.live2GuildWar.id;pool=[10,9,8];}
+ else if(s?.hallWar?.active){mood='battle';key=s.hallWar.id;pool=[9,10,8];}
  else if(s?.sectWar?.active){mood='battle';key=s.sectWar.id;pool=[10,9,8];}
  else if(s?.socialScene==='tournament'||['registration','running'].includes(social?.tournament?.phase)){mood='duel';key=social?.tournament?.id||'tournament';pool=[9,10,8];}
  else if(s?.raceStatus?.active){mood='race';key=s.raceStatus.id;pool=[8,9];}
