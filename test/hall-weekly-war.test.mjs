@@ -14,7 +14,7 @@ function setup(){
  w.nguDuong.halls[0].elder='a';w.nguDuong.halls[1].elder='b';return w;
 }
 test('hall battle joins by real membership, resolves, saves history and never pays twice',()=>{
- let w=setup();assert.equal(startHallWar(w,NOW).ok,true);assert.equal(stageConflict(w,NOW),'Ngũ Đường Tranh Phong');
+ let w=setup();assert.equal(startHallWar(w,NOW).ok,true);assert.equal(stageConflict(w,NOW),'Ngũ Đường Giao Lưu');
  assert.equal(action(w,{type:'chat',userId:'c',text:'đường chiến'},NOW+1000).ok,true);
  assert.equal(action(w,{type:'chat',userId:'c',text:'vào đường 2'},NOW+2000).ok,false);
  assert.equal(action(w,{type:'chat',userId:'c',text:'rời đường'},NOW+2500).ok,false);

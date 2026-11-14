@@ -61,6 +61,12 @@ export function speechPlan(e){
   if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới đến Vân Hải Tông!`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
+  if(e.hallWarGift)return [say('trongtai',Who+' tiếp linh lực cho Đường mình! Chiêu thức giao lưu tỏa sáng, cùng đồng môn tích điểm so tài!')];
+  if(e.hallWarStart)return [say('trongtai','Ngũ Đường Giao Lưu bắt đầu tập hợp! Gõ đường chiến hoặc số sáu để tham gia cùng đồng môn.')];
+  if(e.hallWarBattle)return [say('trongtai','Ngũ Đường khai hội! Cùng biểu diễn chiêu thức và tích điểm so tài. Gõ đường chiến hoặc số sáu để tiếp linh lực.')];
+  if(e.hallWarEnd)return [say('trongtai',e.cancelled?'Buổi giao lưu đã khép lại. Điểm hoạt động đã được lưu.':'Ngũ Đường Giao Lưu đã hoàn tất! Chúc mừng các Đường, kết quả đã lưu vào bảng tuần.')];
+  if(e.hallWarReward||e.hallWeeklyAward)return [say('tiennu',Who+' nhận phần thưởng giao lưu Ngũ Đường! Chúc mừng đồng môn!')];
+  if(e.hallWarAction)return [say('trongtai',Who+' tham gia so tài cùng Đường mình!')];
   // 10/11: chọc ghẹo (tease.mjs) — tông sư trêu, không phải kết duyên thật
   if(e.teasePair){const [A,B]=(e.teaseNames||[]).map(n=>sayName(n)||'đạo hữu');return [say('tongsu',pickBy(seed,[`Ồ! ${A} với ${B} hình như có tình ý với nhau nha!`,`Tông môn đồn rằng ${A} để ý ${B} lâu rồi đó!`,`${A} với ${B}, nhìn xứng đôi ghê!`,`Có ai thấy ${A} cứ nhìn ${B} mãi không!`,`Trời se duyên rồi! ${A} và ${B} đó!`]))];}
   if(e.sectMasterAward)return [say('tongsu',`Tông môn tôn phong ${who} làm Tông chủ! Toàn bộ pháp bảo, bí pháp và trang phục đã khai mở!`)];

@@ -231,7 +231,7 @@ export function hallCommand(w,p,words,now,ctx) {
     return success('Đã mở Ngọc Giản Ngũ Đường.');
   }
   if(command==='vao duong'){
-    if(['registration','running'].includes(w.hallWar?.phase))return failure('Đang Ngũ Đường Tranh Phong • đợi hết trận để đổi Đường.');
+    if(['registration','running'].includes(w.hallWar?.phase))return failure('Đang Ngũ Đường Giao Lưu • đợi hết trận để đổi Đường.');
     if(index<0)return failure('Gõ vào đường kèm số hoặc tên Đường.');
     if(m?.index===index)return success('Đạo hữu đã ở '+defs[index].name+'.');
     if(hall?.elder===p.id)return failure('Trưởng Lão đang giữ ghế của Đường.');
@@ -245,7 +245,7 @@ export function hallCommand(w,p,words,now,ctx) {
   if(command==='roi duong'){
     if(arg)return failure('Gõ rời đường để rời Đường hiện tại.');
     if(!m)return failure('Đạo hữu chưa gia nhập Đường nào.');
-    if(['registration','running'].includes(w.hallWar?.phase))return failure('Đang Ngũ Đường Tranh Phong • đợi hết trận để rời Đường.');
+    if(['registration','running'].includes(w.hallWar?.phase))return failure('Đang Ngũ Đường Giao Lưu • đợi hết trận để rời Đường.');
     if(s.match && [s.match.a,s.match.b].includes(p.id))return failure('Đợi công bố kết quả Vân Đài để rời Đường.');
     leaveHall(s,p,m);
     const message='Đã rời '+defs[m.index].name+'.';

@@ -29,5 +29,5 @@ test('empty combat does not invent a champion, transferred players do not strike
  assert.ok(startHallWar(w,N,ctx).ok);tickHallWar(w,N+30000,ctx);assert.equal(w.hallWar.castCursor,1);
  w.playTransfers={a:{phase:'web'}};const before=w.hallWar.members.a.score;tickHallWar(w,N+31800,ctx);assert.equal(w.hallWar.members.a.score,before);assert.equal(w.hallWar.castCursor,2);
  w.hallWar.teams.forEach(t=>t.score=0);Object.values(w.hallWar.members).forEach(m=>m.score=0);tickHallWar(w,N+150000,ctx);
- assert.equal(w.hallWar.results.length,0);assert.equal(w.hallWar.rewards,undefined);assert.ok(events.at(-1).includes('chưa có chiến công'));
+ assert.equal(w.hallWar.results.length,0);assert.equal(w.hallWar.rewards,undefined);assert.ok(events.at(-1).includes('chưa có điểm so tài'));
 });

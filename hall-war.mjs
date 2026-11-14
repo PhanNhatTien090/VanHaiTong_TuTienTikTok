@@ -12,17 +12,17 @@ function enroll(w,p,now){
  return true;
 }
 export function startHallWar(w,now,ctx){
- const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc trước khi mở Ngũ Đường Tranh Phong.');
+ const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc trước khi mở Ngũ Đường Giao Lưu.');
  const active=Object.values(w.players).filter(p=>real(p)&&ctx.active(w,p,now)&&hallOf(w,p.id)!=null);
  if(new Set(active.map(p=>hallOf(w,p.id))).size<2)return fail('Cần ít nhất 2 Đường có người đang hoạt động.');
  w.hallWar={id:'hall-war-'+now,phase:'registration',startedAt:now,registrationEndsAt:now+REGISTER_MS,members:{},teams:activeHalls(w).map(({index,name,color,mark})=>({index,name,color,mark,score:0,kills:0})),fx:[],seq:0};
  for(const p of active)enroll(w,p,now);
- ctx.emit(w,null,'NGŨ ĐƯỜNG TRANH PHONG • 30 giây tập hợp • gõ đường chiến hoặc 6 để vào trận theo Đường đã gia nhập','hall-war',now,{hallWarStart:true});
+ ctx.emit(w,null,'NGŨ ĐƯỜNG GIAO LƯU • 30 giây tập hợp • gõ đường chiến hoặc 6 để vào trận theo Đường đã gia nhập','hall-war',now,{hallWarStart:true});
  return {ok:true};
 }
 export function stopHallWar(w,now,ctx){
- if(!hallWarVisible(w,now))return fail('Chưa có Ngũ Đường Tranh Phong.');
- w.hallWar.phase='cancelled';w.hallWar.podiumUntil=0;ctx.emit(w,null,'Ngũ Đường Tranh Phong đã dừng • giữ điểm hoạt động đã ghi nhận','hall-war',now,{hallWarEnd:true,cancelled:true});return {ok:true};
+ if(!hallWarVisible(w,now))return fail('Chưa có Ngũ Đường Giao Lưu.');
+ w.hallWar.phase='cancelled';w.hallWar.podiumUntil=0;ctx.emit(w,null,'Ngũ Đường Giao Lưu đã dừng • giữ điểm hoạt động đã ghi nhận','hall-war',now,{hallWarEnd:true,cancelled:true});return {ok:true};
 }
 const power=p=>Math.max(7,Math.min(20,Math.log10(Math.max(0,p.totalQi||0)+10)*2));
 function strike(w,member,now,ctx,{value=0,manual=false}={}){
@@ -42,7 +42,7 @@ function strike(w,member,now,ctx,{value=0,manual=false}={}){
 export function hallWarCommand(w,p,words,now,ctx){
  const text=words.join(' '),join=['duong chien','duongchien','tranh phong','tranhphong'].includes(text),attack=words.length===1&&['danh','kiem'].includes(words[0]);
  if(!join&&!(attack&&w.hallWar?.phase==='running'))return null;
- const e=w.hallWar;if(!e||!['registration','running'].includes(e.phase))return fail('Ngũ Đường Tranh Phong chưa mở.');
+ const e=w.hallWar;if(!e||!['registration','running'].includes(e.phase))return fail('Ngũ Đường Giao Lưu chưa mở.');
  if(!enroll(w,p,now))return fail('Gõ vào đường 1–5 trước khi tham gia Đường chiến.');
  const member=e.members[p.id];
  if(e.phase==='running'){
@@ -51,7 +51,7 @@ export function hallWarCommand(w,p,words,now,ctx){
   member.lastManual=now;strike(w,member,now,ctx,{manual:true});
  }
  const name=e.teams.find(t=>t.index===member.index).name;
- ctx.emit(w,p,(e.phase==='registration'?'Đã tập hợp cùng ':'Xuất chiêu vì ')+name,'hall-war',now,{hallWarAction:true});return {ok:true};
+ ctx.emit(w,p,(e.phase==='registration'?'Đã tập hợp cùng ':'Biểu diễn chiêu thức cùng ')+name,'hall-war',now,{hallWarAction:true});return {ok:true};
 }
 export function hallWarGift(w,p,value,now,ctx){
  const e=w.hallWar;if(!['registration','running'].includes(e?.phase)||!enroll(w,p,now)||value<1)return null;
@@ -72,12 +72,12 @@ function finish(w,now,ctx){
    p.hallWarMedals=(p.hallWarMedals||0)+Math.max(1,5-rank);
    const stones=Math.max(10,60-rank*10),qi=ctx.gain(w,p,[600,400,250,150][rank]??100,stones,5,now,false,'event');
    (e.rewards??=[]).push({id:p.id,name:p.name,index:team.index,rank:rank+1,qi,stones,herbs:5});
-   ctx.emit(w,p,team.name+' hạng '+(rank+1)+' • +'+qi+' tu vi • điểm chiến đấu đã cộng vào bảng tuần','hall-war',now,{hallWarReward:true,hallIndex:team.index,rank:rank+1,reward:{qi,stones,herbs:5}});
+   ctx.emit(w,p,team.name+' hạng '+(rank+1)+' • +'+qi+' tu vi • điểm so tài đã cộng vào bảng tuần','hall-war',now,{hallWarReward:true,hallIndex:team.index,rank:rank+1,reward:{qi,stones,herbs:5}});
   }
  }
  const summary={id:e.id,at:now,results:e.results.map(t=>({...t})),rewardCount:(e.rewards||[]).length,mvp:Object.values(e.members).sort((a,b)=>b.score-a.score).slice(0,10).map(m=>({id:m.id,name:w.players[m.id]?.name,index:m.index,score:m.score,kills:m.kills}))};
  (w.hallWarHistory??=[]).push(summary);w.hallWarHistory=w.hallWarHistory.slice(-24);
- ctx.emit(w,null,'NGŨ ĐƯỜNG TRANH PHONG • '+(e.results.length?e.results[0].name+' giành ngôi đầu':'chưa có chiến công, chưa xếp hạng')+' • kết quả đã lưu vào lịch sử tuần','hall-war',now,{hallWarEnd:true});
+ ctx.emit(w,null,'NGŨ ĐƯỜNG GIAO LƯU • '+(e.results.length?e.results[0].name+' giành ngôi đầu':'chưa có điểm so tài, chưa xếp hạng')+' • kết quả đã lưu vào lịch sử tuần','hall-war',now,{hallWarEnd:true});
 }
 export function tickHallWar(w,now,ctx){
  const e=w.hallWar;if(!e)return;
@@ -85,7 +85,7 @@ export function tickHallWar(w,now,ctx){
   for(const m of Object.values(e.members))if(!ctx.active(w,w.players[m.id],now))delete e.members[m.id];
   if(new Set(Object.values(e.members).map(m=>m.index)).size<2){e.phase='cancelled';ctx.emit(w,null,'Chưa đủ hai Đường tập hợp • chưa trao thưởng','hall-war',now,{hallWarEnd:true});return;}
   e.phase='running';e.battleStartedAt=now;e.endsAt=now+BATTLE_MS;e.nextCastAt=now;
-  ctx.emit(w,null,'NGŨ ĐƯỜNG KHAI CHIẾN • tự giao chiến • gõ 6 hoặc đánh để tung liên chiêu • quà trợ lực đúng Đường của người tặng','hall-war',now,{hallWarBattle:true});
+  ctx.emit(w,null,'NGŨ ĐƯỜNG KHAI HỘI • cùng so tài • gõ 6 hoặc đường chiến để biểu diễn chiêu thức • quà trợ lực đúng Đường của người tặng','hall-war',now,{hallWarBattle:true});
  }
  if(e.phase!=='running')return;if(now>=e.endsAt){finish(w,now,ctx);return;}
  if(now<(e.nextCastAt||0))return;e.nextCastAt=now+1800;

@@ -56,24 +56,24 @@ function spell(c,from,to,fx,k,light,motion){
   c.globalAlpha*=1-hit;sigil(c,to.x,to.y,16+hit*(big?90:42),color,big?MARKS[fx.index]:'',hit);
   const n=light?6:big?14:8;
   for(let i=0;i<n;i++){const a=i*2.399+fx.index,d=hit*(big?100:52);shard(c,fx.index,to.x+Math.cos(a)*d,to.y+Math.sin(a)*d*.65,Math.max(1,(big?10:6)*(1-hit)),a+hit,color);}
-  text(c,fx.knockout?'PHÁ TRẬN':'−'+fx.damage,to.x,to.y-38-hit*35,fx.knockout?24:big?27:21,fx.knockout?'#ffe29d':'#fff3cd',190);
+  text(c,fx.knockout?'VƯỢT THỬ THÁCH':'+'+fx.damage+' điểm',to.x,to.y-38-hit*35,fx.knockout?24:big?27:21,fx.knockout?'#ffe29d':'#fff3cd',190);
  }
  if(big&&k<.5)text(c,SKILLS[fx.index]||'HỘ ĐƯỜNG KIẾM TRẬN',from.x,from.y-35,14,color,160);
  c.restore();
 }
 function podium(c,e,H){
  box(c,55,H*.305,790,H*.375,'#dec987','#061222f5',18);
- text(c,e.results?.length?'VINH DANH NGŨ ĐƯỜNG':'CHƯA CÓ CHIẾN CÔNG',450,H*.34,31,'#ffe5a8');
+ text(c,e.results?.length?'VINH DANH NGŨ ĐƯỜNG':'CHƯA CÓ ĐIỂM SO TÀI',450,H*.34,31,'#ffe5a8');
  const order=[1,0,2],positions=[{x:180,y:.455},{x:450,y:.42},{x:720,y:.455}];
  for(let slot=0;slot<3;slot++){
   const rank=order[slot],team=e.results?.[rank];if(!team)continue;const pos=positions[slot],x=pos.x,y=H*pos.y;
   box(c,x-108,y-42,216,rank===0?210:190,team.color,rank===0?'#604518a0':'#142840c9');
   sigil(c,x,y-12,rank===0?42:30,team.color,team.mark||MARKS[team.index]);
   text(c,'HẠNG '+(rank+1),x,y+42,19,'#fff0bb');text(c,team.name.replace(' Đường',''),x,y+70,21,team.color,200);
-  text(c,Math.round(team.score).toLocaleString('vi-VN')+' chiến công',x,y+99,16,'#fff',200);
+  text(c,Math.round(team.score).toLocaleString('vi-VN')+' điểm so tài',x,y+99,16,'#fff',200);
   text(c,'+'+[80,50,30][rank]+' điểm tuần',x,y+124,16,'#e2f6ed',200);
  }
- if(e.results?.length&&e.mvp?.[0]?.score>0){const m=e.mvp[0];text(c,'CHIẾN THẦN · '+m.name+' · '+m.score+' công',450,H*.615,21,'#ffe7a8',730);}
+ if(e.results?.length&&e.mvp?.[0]?.score>0){const m=e.mvp[0];text(c,'ĐẠO HỮU NỔI BẬT · '+m.name+' · '+m.score+' công',450,H*.615,21,'#ffe7a8',730);}
  text(c,e.rewardCount?e.rewardCount+' đồng môn đã nhận quà · kết quả lưu vào bảng tuần':'Không phát thưởng khi chưa có đóng góp',450,H*.66,18,'#c9e6e6',740);
 }
 export function drawHallWar(scene,c,t,H){
@@ -82,8 +82,8 @@ export function drawHallWar(scene,c,t,H){
  if(scene.background)c.drawImage(scene.background,0,0,900,H);else{c.fillStyle='#091a2e';c.fillRect(0,0,900,H);}
  const shade=c.createLinearGradient(0,0,0,H);shade.addColorStop(0,'#041326e6');shade.addColorStop(.6,'#07162b6b');shade.addColorStop(1,'#061126d9');c.fillStyle=shade;c.fillRect(0,0,900,H);
  const now=nowAt(scene,t),light=scene.budget?.level==='light',moving=scene.motion!==false,done=e.phase==='finished',registration=e.phase==='registration',end=registration?e.registrationEndsAt:done?e.podiumUntil:e.endsAt,remaining=Math.max(0,Math.ceil((end-now)/1000));
- text(c,'NGŨ ĐƯỜNG TRANH PHONG',450,H*.042,33,'#ffe3a0');
- text(c,(registration?'TẬP HỢP ĐỒNG MÔN':done?'LỄ VINH DANH':'NGŨ HÀNH GIAO CHIẾN')+' · '+Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'),450,H*.074,20,'#d7f5ff');
+ text(c,'NGŨ ĐƯỜNG GIAO LƯU',450,H*.042,33,'#ffe3a0');
+ text(c,(registration?'TẬP HỢP ĐỒNG MÔN':done?'LỄ VINH DANH':'ĐỒNG MÔN SO TÀI')+' · '+Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'),450,H*.074,20,'#d7f5ff');
  const ranked=[...(e.teams||[])].sort((a,b)=>b.score-a.score||b.kills-a.kills||a.index-b.index),leader=ranked[0]?.score>0?ranked[0].index:-1;
  const teams=e.teams||[],layout=camps(teams),teamColors=new Map(teams.map(team=>[team.index,team.color]));
  const width=Math.min(180,900/Math.max(1,teams.length));
@@ -91,7 +91,7 @@ export function drawHallWar(scene,c,t,H){
   const mid=450+(slot-(teams.length-1)/2)*width,count=(e.members||[]).filter(p=>p.index===team.index).length;
   box(c,mid-width/2+5,H*.103,width-10,92,team.index===leader?'#ffe2a0':team.color,team.index===leader?'#51401de8':'#061625e8');
   text(c,team.name.replace(' Đường',''),mid,H*.103+18,18,team.color,width-20);
-  text(c,Math.round(team.score).toLocaleString('vi-VN'),mid,H*.103+46,27,'#ffffff');text(c,count+' người · '+team.kills+' hạ trận',mid,H*.103+74,14,'#d3e7ed',width-20);
+  text(c,Math.round(team.score).toLocaleString('vi-VN'),mid,H*.103+46,27,'#ffffff');text(c,count+' người · '+team.kills+' lượt vượt thử thách',mid,H*.103+74,14,'#d3e7ed',width-20);
  }
  const elapsed=registration?clamp((now-e.startedAt)/30000):clamp((now-e.battleStartedAt)/120000);
  c.fillStyle='#fff2';c.fillRect(110,H*.177,680,4);c.fillStyle=done?'#ffda83':'#8edbd1';c.fillRect(110,H*.177,680*(1-elapsed),4);
@@ -111,10 +111,10 @@ export function drawHallWar(scene,c,t,H){
    const words=p.name.trim().split(/\s+/),nickname=words.length>1?Array.from(words[0])[0]+'·'+words.slice(-2).join(' '):p.name;
    drawGiftDonor(c,{...p,name:nickname},p.x,p.y,{color:p.color,radius:25,width:82,nameSize:14});
    c.fillStyle='#07121f';c.fillRect(p.x-35,p.y+52,70,5);c.fillStyle=p.color;c.fillRect(p.x-35,p.y+52,70*clamp(p.hp/100),5);
-   const wait=Math.max(1,Math.ceil(((p.respawnAt||now)-now)/1000));text(c,p.hp<=0?'Hồi '+wait+'s':Math.round(p.score)+' công',p.x,p.y+69,13,p.hp<=0?'#cfd8e2':p.color,84);
+   const wait=Math.max(1,Math.ceil(((p.respawnAt||now)-now)/1000));text(c,p.hp<=0?'Nghỉ '+wait+'s':Math.round(p.score)+' công',p.x,p.y+69,13,p.hp<=0?'#cfd8e2':p.color,84);
    if(p.shieldUntil>now)sigil(c,p.x,p.y,32,'#efffce','',moving?t*.001:0);c.restore();
   }
-  text(c,members.length>3?active+' / '+members.length+' đang giao chiến · luân phiên hiện tên':registration?'Gõ 6 để tập hợp cùng Đường':active+' / '+members.length+' đang giao chiến',cx,H*cy+112,13,'#d5e3e9',270);c.restore();
+  text(c,members.length>3?active+' / '+members.length+' đang so tài · luân phiên hiện tên':registration?'Gõ 6 để tập hợp cùng Đường':active+' / '+members.length+' đang so tài',cx,H*cy+112,13,'#d5e3e9',270);c.restore();
  }
  if(!done)for(const fx of (e.fx||[]).slice(-(light?6:12))){
   const place=id=>{const p=e.members.find(p=>p.id===id),spot=layout.get(p?.index);return places.get(id)||(spot?{x:spot[0],y:H*spot[1],color:teamColors.get(p.index)}:null);};
@@ -126,7 +126,7 @@ export function drawHallWar(scene,c,t,H){
  if(registration){box(c,270,H*.465,360,108,'#e8cf91','#071725ed');text(c,'TRẬN PHÁP ĐANG HỘI TỤ',450,H*.465+25,21,'#ffe6a0',340);text(c,'Gõ 6 / đường chiến',450,H*.465+55,25,'#fff');text(c,'Tự vào đúng Đường đã gia nhập',450,H*.465+84,16,'#d3eced',340);}
  if(done)podium(c,e,H);
  const guideY=H*.79;box(c,145,guideY-29,610,78,'#b9d7c9','#071725f2');
- text(c,done?'TRẬN ĐÃ KHÉP · KẾT QUẢ ĐÃ LƯU':registration?'Gõ 6 để tập hợp · trận dài 2 phút':'Gõ 6 / đánh · liên chiêu hồi 3,5 giây',450,guideY-7,20,'#ffffff',585);
- text(c,done?'Top 3 Đường nhận điểm tuần · quà theo đóng góp':'Quà trợ lực đúng Đường · phá trận hồi sau 5 giây',450,guideY+21,16,'#ffe6a0',585);
+ text(c,done?'TRẬN ĐÃ KHÉP · KẾT QUẢ ĐÃ LƯU':registration?'Gõ 6 để tập hợp · trận dài 2 phút':'Gõ 6 / đường chiến · hồi chiêu 3,5 giây',450,guideY-7,20,'#ffffff',585);
+ text(c,done?'Top 3 Đường nhận điểm tuần · quà theo đóng góp':'Quà trợ lực đúng Đường · nghỉ 5 giây rồi tiếp tục',450,guideY+21,16,'#ffe6a0',585);
  return done?0:places.size;
 }
