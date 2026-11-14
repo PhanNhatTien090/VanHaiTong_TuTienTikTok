@@ -25,13 +25,18 @@ export function warmCourtSkin(scene,p){
  if(spec){const refresh=scene.refreshCourtSkins??=()=>scene.characterFrames?.clear();figure(spec,'seated',refresh);figure(spec,'standing',refresh);}
  if(showsBlackGoldGear(p))blackGoldArt();
 }
+// 14/11: Tiêu Viêm (Hắc Kim) trông nhỏ hơn skin khác → phóng to, giữ chân cố định (y=25).
+// Đứng tối đa ×1.12 vì khung cache nhân vật chỉ cao tới y=-115 (performance.js CharacterFrames).
+const HAC_KIM_SEATED=1.2,HAC_KIM_STANDING=1.12;
+const hacKimSize=stand=>HAC_KIM_SEATED+(HAC_KIM_STANDING-HAC_KIM_SEATED)*Math.max(0,Math.min(1,stand||0));
 export function drawCourtSkin(c,p,pose,t){
  const spec=skinOf(p);
  if(!spec)return false;
  const stand=Math.max(0,Math.min(1,pose.stand||0)), seated=figure(spec,'seated'),standing=figure(spec,'standing');
  if((stand<.999&&!seated)||(stand>.001&&!standing))return false;
+ const big=spec===BLACK_GOLD_VISITOR;
  c.save();c.translate(0,pose.lift||0);c.rotate(pose.lean||0);
- for(const [img,a,h] of [[seated,1-stand,91],[standing,stand,125]]){
+ for(const [img,a,h] of [[seated,1-stand,big?91*HAC_KIM_SEATED:91],[standing,stand,big?125*HAC_KIM_STANDING:125]]){
   if(!img||a<=.001)continue;
   // The seated exports include the bottom edge of the standing cell above them.
   const trimTop=img===seated&&spec!==BLACK_GOLD_VISITOR?Math.round(img.naturalHeight*54/618):0;
@@ -47,6 +52,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
   const pose=scene.cinematicPose||scene.animator?.pose(p,t,motion&&!scene.compact)||{};
   const scale=target.scale||1.4;
   c.save();c.translate(target.x,target.y+(pose.lift||0));c.scale(scale,scale);
+  if(spec===BLACK_GOLD_VISITOR){const k=hacKimSize(pose.stand);c.translate(0,25);c.scale(k,k);c.translate(0,-25);}
   const revealing=scene.transforming?.id===p.id&&t<scene.transforming.revealAt;
   if(spec===BLACK_GOLD_VISITOR&&!revealing)drawBlackGoldAura(c,t,pose.stand||0,layer,{motion,light});
   const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
