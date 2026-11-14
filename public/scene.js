@@ -207,6 +207,12 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
     (this.animator??=new CharacterAnimator()).trigger(event,performance.now());const cinematic=event.gift&&giftSpectacleTier(event);if(cinematic){const action=this.animator.actions.get(event.user);if(action)action.duration=cinematic.duration*.85;}
     this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?transformMs(event):event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.effect==='daoPath'?(event.daoChoose?3800:event.daoSkill?2200:1800):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
+    // New Dao visual/audio cues reuse the existing cinematic mixer (3 voices max).
+    // Do not play new sounds from the game update loop or on every attack.
+    if(event.effect==='daoPath'&&(event.daoChoose||event.daoSkill||event.daoUltimate||event.daoBrew||event.daoPill||event.daoRelic||event.daoForge||event.guildWarStart||event.guildWarEnd||event.guildFounded||event.guildBuild||event.mentorJoined||event.mentorGraduated||event.bondSkill)){
+      const cue={sword:'jade',demon:'void',body:'gold',beast:'resonance',alchemy:'dawn',guild:'dusk',mentor:'resonance',relic:'void',bond:'gold',tribulation:'void'}[event.live2Kind||event.daoPath]||'jade';
+      this.onCinematicSound?.('live2:'+event.id,cue,.10,{gain:.27,priority:1,charge:false});
+    }
     // Only one premium skill title may own the ribbon at any time.
     if(event.effect==='attack'&&Number(event.technique?.intensity)>=2&&event.id&&performance.now()-(this.skillBannerTime??-1e9)>1200){this.skillBannerId=event.id;this.skillBannerTime=performance.now();}
     const limit=this.budget?.config.effects||5;
