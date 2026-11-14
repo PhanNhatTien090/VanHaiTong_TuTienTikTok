@@ -14,13 +14,23 @@
     <h1>Xem thử hiệu ứng</h1>
     <label>Nhóm <select id="group"><option value="ritual">Đột phá</option><option value="combat">Chiến đấu</option><option value="gift">Quà</option><option value="support">Trợ lực sự kiện</option><option value="daily">Sinh hoạt</option></select></label>
     <label>Sự kiện <select id="event"></select></label>
+    <label id="duelSkillLabel" hidden>V6 · Mẫu tuyệt kỹ
+      <select id="duelSkill">
+        <option value="thunder">Cửu Thiên Lôi Long · Lôi</option>
+        <option value="sword">Vạn Kiếm Diệt Thế · Kiếm</option>
+        <option value="flame">Phượng Hoàng Niết Bàn · Hỏa</option>
+        <option value="azure">Thương Long Phá Hải · Thủy</option>
+        <option value="frost">Băng Phách Phong Giới · Băng</option>
+        <option value="yinYang">Thái Cực Phong Thiên · Âm Dương</option>
+      </select>
+    </label>
     <label>Đoạn <select id="section"><option value="all">Toàn bộ</option><option value="charge">Tụ lực</option><option value="impact">Cao trào</option><option value="tail">Dư âm</option></select></label>
     <label>Chất lượng <select id="quality"><option value="light">Nhẹ</option><option value="balanced" selected>Cân bằng</option><option value="high">Điện ảnh</option><option value="auto">Tự động</option></select></label>
     <label>Hồ sơ mô phỏng <input id="actors" type="number" min="1" max="500" value="10"></label>
     <label>Mã dựng lại <input id="seed" value="van-hai" maxlength="48"></label>
     <label><input type="checkbox" id="sound"> Âm thanh</label>
     <label>Rung camera <select id="shake"><option value="off">Tắt</option><option value="low" selected>Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select></label>
-    <label>Phiên bản <select id="version"><option value="new">V2</option><option value="old">Trước nâng cấp</option></select></label>
+    <label>Phiên bản <select id="version"><option value="new">Cinematic V6</option><option value="old">Trước nâng cấp</option></select></label>
     <fieldset id="visualLayers"><legend>Lớp hình V2</legend>
       <label><input type="checkbox" name="energy" checked> Pháp trận và tụ lực</label>
       <label><input type="checkbox" name="impact" checked> Sóng và vệt tác động</label>
