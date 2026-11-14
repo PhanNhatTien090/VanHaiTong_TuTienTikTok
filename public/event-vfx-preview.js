@@ -103,6 +103,8 @@ document.querySelector('form').onsubmit=async event=>{
     if(choice==='race')state.raceStage=players.slice(0,10).map(player=>player.id);
     if(choice==='duel'){
       const opponent=players[1]||{...p,id:'demo-duel',name:'Đối thủ'};
+      // V6 preview: a real thunder-seal against bamboo-sword magic, not tinted copies.
+      p.equipped='nine-heaven-seal';opponent.equipped='hanlap-bamboo-swords';
       if(!players[1])players.push(opponent);
       state.socialScene='tournament';
       state.socialStage=[p.id,opponent.id];
@@ -150,6 +152,7 @@ document.querySelector('form').onsubmit=async event=>{
   if((group==='combat'||group==='support')&&choice==='boss')state.boss={id,startedAt:now,endsAt:now+12000,species:'storm-tiger',name:'Lôi Hổ',hp:500,maxHp:500,participants:{},damage:{}};
   scene.showcase=group==='ritual';
   scene.cinematicV2=$('version').value==='new';
+  scene.v6Showcase=scene.cinematicV2;
   scene.cinematicLayers=toggles('visualLayers');
   scene.shakeLevel=$('shake').value;
   scene.cameraEnabled=true;
