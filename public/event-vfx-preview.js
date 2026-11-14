@@ -216,6 +216,9 @@ setInterval(()=>{
   if(performance.now()-entry<650)return;
   const db=peak?(20*Math.log10(peak)).toFixed(1)+' dBFS':'—';
   if((performance.now()-entry)%1000<300)interval=metrics.snapshot(scene).timings.frameInterval;
-  $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db;
+  const v6Report=scene.socialScene==='tournament'&&scene.v6Showcase?
+   ' · ảnh V6: '+(Object.keys(scene.v6Assets||{}).join(', ')||'đang tải')+
+   (scene.v6MissingAssets?.size?' · LỖI '+[...scene.v6MissingAssets].join(', '):''):'';
+  $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db+v6Report;
 },250);
 addEventListener('pagehide',()=>{stop();audio.destroy();});
