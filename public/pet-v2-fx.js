@@ -85,3 +85,36 @@ export function drawPetV2Event(scene,c,e,t,k,target,H,layer){
  }
  c.restore();return true;
 }
+
+
+// Low-cost permanent evolution ornaments FOLLOW the original body's bob/sway/pose.
+// They do not replace, distort or flatten any of the 3/8 drawn animation frames.
+export function drawPetV2Adornment(c,pet,view,t,size,{motion=true,light=false}={}){
+ const stage=Math.max(0,Math.min(3,Math.floor(view?.stage||0)));
+ if(!pet||!stage)return false;
+ const color=pet.color||'#eadf9b',r=size*.45,angle=motion?t*.00065:0;
+ c.save();
+ c.lineWidth=light?1.5:2;
+ c.strokeStyle=color;
+ c.globalAlpha=light?.48:.76;
+ c.beginPath();c.ellipse(0,size*.28,r*(.65+stage*.1),r*.22,0,0,TAU);c.stroke();
+ if(stage>=2&&!light){
+  c.beginPath();c.ellipse(0,-size*.23,r*.54,r*.72,-.28+angle*.15,-1.3,1.4);c.stroke();
+ }
+ if(stage>=3){
+  c.globalAlpha=light?.62:.92;c.strokeStyle='#fff3ce';
+  // A light, distinctive crown-like glyph anchored above the animated head.
+  const cy=-size*.68;
+  c.beginPath();c.moveTo(-r*.32,cy+6);c.lineTo(-r*.23,cy-4);
+  c.lineTo(0,cy+2);c.lineTo(r*.23,cy-4);c.lineTo(r*.32,cy+6);c.closePath();c.stroke();
+ }
+ if(motion&&!light){
+  c.globalAlpha=.4+.2*Math.sin(t*.003);
+  c.fillStyle=color;
+  for(let i=0;i<Math.min(6,stage*2);i++){
+   const a=angle+i*TAU/Math.min(6,stage*2),d=r*(.78+stage*.08);
+   c.fillRect(Math.cos(a)*d-1,Math.sin(a)*d*.6-size*.24,2.2,3.6);
+  }
+ }
+ c.restore();return true;
+}

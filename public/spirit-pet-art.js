@@ -1,5 +1,6 @@
 import {petById,petPose} from './spirit-pets.js';
 import {makeSurface} from './performance.js';
+import {drawPetV2Adornment} from './pet-v2-fx.js';
 import {PREMIUM_PET_ATLAS,PREMIUM_PET_PERIODS,petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
 export {petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
 // 07/11: Lôi Oa — tia sét gấp khúc nhỏ quanh thân (không phủ màn hình).
@@ -82,6 +83,7 @@ export function drawPet(scene,c,target,t){
  c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
  if(grand){c.strokeStyle=pet.color+'80';c.lineWidth=1.2;c.beginPath();c.ellipse(0,size*.29,size*.34,size*.08,0,0,Math.PI*2);c.stroke();}
  c.drawImage(image,-size/2,-size*.65,size,size);
+ drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;
  if(progress>=0&&progress<1){c.globalAlpha=1-progress;c.strokeStyle=pet.color;c.lineWidth=1.5;c.beginPath();c.ellipse(0,0,size*(.2+progress*.6),size*(.1+progress*.3),0,0,Math.PI*2);c.stroke();c.globalAlpha=1;}
  if(pet.rare&&scene.motion&&scene.budget?.level!=='light')drawRareFx(c,pet,size,t,seed);
