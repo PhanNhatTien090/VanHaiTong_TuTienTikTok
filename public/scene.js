@@ -205,6 +205,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(luxury&&this.effects.some(e=>e.luxury)){queueLuxury(this.luxuryQueue??=[],event);return;}
     if(!luxury&&event.kind&&event.kind!=='blessing'&&this.effects.filter(x=>x.kind&&x.kind!=='blessing').length>=(this.budget?.level==='light'?1:2)){(this.fxQueue??=[]).push(event);if(this.fxQueue.length>6)this.fxQueue.shift();return;}
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
+    if(event.petV2Cast||event.petV2Synergy)this.onCombatSound?.('cast',event.petFx||'stars');
     (this.animator??=new CharacterAnimator()).trigger(event,performance.now());const cinematic=event.gift&&giftSpectacleTier(event);if(cinematic){const action=this.animator.actions.get(event.user);if(action)action.duration=cinematic.duration*.85;}
     this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petV2EffectDuration(event)||petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?transformMs(event):event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
     // Only one premium skill title may own the ribbon at any time.
@@ -446,7 +447,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     const p=this.targets.find(x=>x.id===e.user)||{x:450,y:this.floorY||this.height*.65};
     if(layer==='front'&&e.gift&&tributeProfile(e)?.value>=30&&!giftSpectacleTier(e)&&!e.tributeImpact&&k>=.46){e.tributeImpact=true;if(k<.58)this.onGiftSound?.('ascension-screen-impact');}
     if(layer==='front'&&e.gift)drawComboBurst(c,e,t,k,p,this.height,this.budget?.level==='light',this.motion);
-    if(petV2EffectType(e)){drawPetV2Event(this,c,e,t,k,p,this.height,layer);return;}if(e.petAward){drawPetArrival(this,c,e,t,p,this.height,layer);return;}
+    if(petV2EffectType(e)){if(layer==='front'&&(e.petV2Cast||e.petV2Synergy)&&k>=.55&&!e.petV2SoundHit){e.petV2SoundHit=true;this.onCombatSound?.('hit',e.petFx||'stars');}drawPetV2Event(this,c,e,t,k,p,this.height,layer);return;}if(e.petAward){drawPetArrival(this,c,e,t,p,this.height,layer);return;}
     if(e.gift&&giftSpectacleTier(e)){drawGiftTribute(this,c,e,t,k,p,this.height,layer);drawGiftSpectacle(c,e,t,k,p,this.height,{light:feedbackBudget(this),reducedFlash:this.reduceFlash,art:this.giftSpectacleArt,beasts:this.spiritBeasts,layer,motion:this.motion,upgrade:this.cinematicV2!==false&&spectacleV2(e.spectacleTier),quality:e.cinematicQuality,layers:this.cinematicLayers,tier:e.spectacleTier});return;}
     // v43: hiệu ứng lớn vẽ SAU nhân vật, hiệu ứng nhỏ vẽ TRƯỚC. Quà thường: sân khấu (đèn, hoa nở, lụa) ở sau, hoạt cảnh quà nhỏ ở trước.
     if(e.gift){drawGiftTribute(this,c,e,t,k,p,this.height,layer);if(e.transform)drawTransform(c,e,t,k,p,this.height,layer);return;}

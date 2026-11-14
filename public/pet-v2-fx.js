@@ -1,6 +1,7 @@
 // Linh Thú V2 event cinema. ALWAYS uses each species' original animated frames.
 // No new anatomy, no static substitutions; low-cost arcs and glyphs are purely additive.
 import {petById} from './spirit-pets.js';
+import {drawPetV2SkillSignature} from './pet-v2-skill-fx.js';
 import {petArtFrame} from './premium-pet-motion.js';
 // Resolve evolved poses from the scene cache without importing the animation renderer (no module cycle).
 const TAU=Math.PI*2;
@@ -71,6 +72,7 @@ export function drawPetV2Event(scene,c,e,t,k,target,H,layer){
   c.drawImage(sprite,-s/2,-s*.68,s,s);
   c.restore();
  }
+ if(main&&['cast','synergy'].includes(type))drawPetV2SkillSignature(c,pet.id,x,y,size,k,{motion,light});
  if(main){
   // Comic-style skill cut-in using thin diagonal bands, not large raster layers.
   const bend=main&&type==='cast'?1:0;
