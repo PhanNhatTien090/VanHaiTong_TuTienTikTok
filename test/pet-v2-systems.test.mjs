@@ -53,6 +53,9 @@ test('community milestone awards once to real LIVE players and does not change o
  assert.equal(controlPetEvent(w,'start',N,5).ok,true);
  assert.equal(petV2Command(w,p,'thu','duyen',N+1000,emit).ok,true);
  assert.equal(w.petGrowthV2.players.a.inventory.spiritFood,2);
+ const session=w.petGrowthV2.coveSessions[w.petEvent.id];
+ assert.deepEqual(Object.keys(session.participants),['a']);
+ assert.equal(session.goal,1);
  petV2Tick(w,N+240000,emit);
  assert.equal(w.petGrowthV2.players.a.inventory.evolutionShards,1);
  assert.equal(w.petGrowthV2.coveSessions[w.petEvent.id].rewarded,true);
