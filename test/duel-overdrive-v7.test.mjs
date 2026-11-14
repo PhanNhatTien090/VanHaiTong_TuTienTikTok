@@ -6,7 +6,7 @@ import {SHATTER_URL,prewarmOverdrive,overdriveBudget,overdriveMoment,drawOverdri
 import {V7_VARIANTS,v7SkillSpec,prewarmVariantArt,drawV7Variant} from '../public/ultimate-variants-v7.js';
 import {V7_GIFT_SPELLS,giftV7Spell,drawGiftOverdriveV7} from '../public/gift-overdrive-v7.js';
 import {duelCutinPlan} from '../public/duel-cinematic.js';
-import {CINEMATIC_SOUND} from '../public/cinematic-sfx.js';
+import {CINEMATIC_SOUND,prepareCinematicAudio} from '../public/cinematic-sfx.js';
 
 const T=1800000000000,H=1600;
 const m=()=>({id:'v7-test',a:'a',b:'b',startedAt:T,endsAt:T+25000,
@@ -143,4 +143,27 @@ test('elemental audio is pre-synthesizable and budget-aware, no sample-file requ
  assert.equal(overdriveBudget(scene()).cracks,18);
  const s=scene();s.budget.crowded=true;
  assert.ok(overdriveBudget(s).cracks<18);
+});
+
+test('new audio sample banks are bounded and non-silent before Web Audio mixes them',()=>{
+ const context={createBuffer(channels,length,rate){
+  const data=new Float32Array(length);
+  return {getChannelData:()=>data,length,sampleRate:rate};
+ }};
+ const all=prepareCinematicAudio(context);
+ assert.equal(all.size,Object.keys(CINEMATIC_SOUND).length);
+ for(const [preset,blocks]of all){
+  assert.equal(blocks.length,5);
+  let maxPeak=0,energy=0;
+  for(const block of blocks){
+   const d=block.getChannelData(0);
+   for(let i=0;i<d.length;i++){
+    assert.ok(Number.isFinite(d[i]),'invalid audio sample '+preset);
+    maxPeak=Math.max(maxPeak,Math.abs(d[i]));
+    energy+=d[i]*d[i];
+   }
+  }
+  assert.ok(maxPeak<.8,preset+' must have mix headroom, peak='+maxPeak);
+  assert.ok(energy>.002,preset+' must not be silent');
+ }
 });
