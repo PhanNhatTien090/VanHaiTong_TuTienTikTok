@@ -107,10 +107,10 @@ document.querySelector('form').onsubmit=async event=>{
       state.socialScene='tournament';
       state.socialStage=[p.id,opponent.id];
       const age=part==='charge'?19800:part==='impact'?21700:part==='tail'?23000:8900;
-      const duelGift={...support,id:support.id+':super',value:2000,coins:2000,fighter:true};
-      const secondGift={...support,id:support.id+':other',user:opponent.id,name:opponent.name,value:1000,coins:1000,fighter:true};
+      const duelGift={...support,id:support.id+':super',value:2000,coins:2000,fighter:true,wardEffect:{kind:'shield-break',amount:35000,source:p.id,target:opponent.id,after:65000,max:100000}};
+      const secondGift={...support,id:support.id+':other',user:opponent.id,name:opponent.name,value:1000,coins:1000,fighter:true,wardEffect:{kind:'shield-heal',amount:20000,source:opponent.id,target:opponent.id,after:80000,max:100000}};
       state.socialStatus={tournament:{phase:'running',current:{id,a:p.id,b:opponent.id,
-        startedAt:now-age,endsAt:now+(25000-age),boosts:{[p.id]:0,[opponent.id]:0},lastBoost:{},
+        startedAt:now-age,endsAt:now+(25000-age),boosts:{[p.id]:0,[opponent.id]:0},lastBoost:{},guardShields:{[p.id]:{current:100000,max:100000},[opponent.id]:{current:80000,max:100000}},
         aura:{[p.id]:70,[opponent.id]:45},techniques:{[p.id]:attackTechnique(p),[opponent.id]:attackTechnique(opponent)},
         giftFx:[duelGift,secondGift]}}};
     }
