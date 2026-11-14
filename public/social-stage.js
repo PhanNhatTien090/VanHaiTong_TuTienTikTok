@@ -68,6 +68,17 @@ export function drawSocialStage(scene,c,t,layer,solo){
       scene.onCombatSound?.('cast',technique.id);
       scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),Math.max(0,(.67-k)*cast.period)/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
      }
+     // A softer second-caster hit adds stereo-like call-and-response without
+     // changing simulation, animation loops or the three-voice cinematic cap.
+     if(cast.ultimate&&scene.v7Overdrive!==false&&k>=.16&&k<.72){
+      const counterAudioKey=match.id+':counter-audio',other=match.techniques?.[trailer.id];
+      if(other&&scene.duelCounterAudioKey!==counterAudioKey){
+       scene.duelCounterAudioKey=counterAudioKey;
+       const counterHit=.16+.67*(1-.16);
+       scene.onCinematicSound?.(counterAudioKey,duelSoundPreset(other),Math.max(0,(counterHit-k)*cast.period/1000),
+        {priority:2,charge:false,gain:.20,enabled:{crack:false,sub:false}});
+      }
+     }
      const v7Hero=cast.ultimate&&scene.cinematicV2!==false&&scene.v7Overdrive!==false&&!!v7SkillSpec(technique.id);
      const v6Hero=!v7Hero&&cast.ultimate&&scene.cinematicV2!==false&&scene.v6Showcase!==false&&!!v6SkillFamily(technique.id);
      if(k<DUEL_RELEASE_AT){
