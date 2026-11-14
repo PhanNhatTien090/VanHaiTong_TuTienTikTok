@@ -54,7 +54,7 @@ export function drawEventGiftFx(scene,c,t,layer,mode){
  shown=true;
  const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion?raw:.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,art=scene.eventGiftArt?.[mode];
  if(!fade)continue;const a=caster||{x:450,y:H*.42,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
- if(layer==='back'&&takeFeedbackCue(e,'castStarted',raw,0,.22)){if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',mode);if(mode==='duel'&&e.value>=1000)scene.onCinematicSound?.('duel-gift:'+e.id,'gold',q.duration*.30/1000,{priority:e.value>=2000?5:4,charge:true,gain:.5});}
+ if(layer==='back'&&takeFeedbackCue(e,'castStarted',raw,0,.22)){if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',mode);if(mode==='duel'&&e.value>=1000)scene.onCinematicSound?.('duel-gift:'+e.id,e.wardEffect?.kind==='shield-heal'?'healing':'gold',q.duration*.30/1000,{priority:e.value>=2000?5:4,charge:true,gain:.5});}
  if(layer==='front'&&takeFeedbackCue(e,'impactSound',raw,.3,.43)&&e.value>=500&&e.value<1000)scene.onSpectacleImpact?.();
  c.save();c.globalAlpha=fade;
  if(layer==='back')drawSpiritGift(c,e.value,k,a,H,{art:scene.spiritBeasts,time,light,motion:scene.motion,mode});
