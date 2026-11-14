@@ -31,6 +31,7 @@ import {noteEngagementReaction,drawEngagementReactions} from './engagement-react
 import {LiveFeedbackDirector,prepareFeedbackArt} from './live-feedback-fx.js';
 import {drawSkillImpact,impactSeverity} from './skill-impact-v3.js';
 import {drawImpactPunctuation} from './impact-punch.js';
+import {drawDuelCinematic,duelChargingPose} from './duel-cinematic.js';
 import {artworkCrop,projectedGround,courtyardTargets,constrainGroundTargets} from './courtyard-layout.js';
 import {godFormFor,drawGodAuras} from './god-forms.js';
 import {raceFlightPose} from './race-motion.js';
@@ -538,7 +539,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.targetFps=targetFps;
     const started=performance.now();
     const beforeRaster=this.characterFrames.stats.repaints;
-    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);}
+    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);}
     finally{
       const cost=performance.now()-started;
       this.lastCost=Math.round(cost*10)/10;
@@ -646,7 +647,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn
      for(const target of this.minimalCrowd?[]:this.targets){if(!inView(target,this.camera,H))continue;drawWings(this,c,target,t);if(!this.heavyCrowd&&!this.raceStatus?.active&&!this.compact)drawLinWanQi(this,c,target,t);if(!this.raceStatus?.active)drawDivineHalo(this,c,target,t);}c.globalAlpha=ga;}
     this.onStageActors=this.targets.length;
-    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());if(!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
+    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now())||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());if(!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
     for(const target of this.premiumTargets||[]){drawSeaAdornment(this,c,target,t,'front');drawTudoAdornment(this,c,target,t,'front');drawKhuyAdornment(this,c,target,t,'front');drawViemAdornment(this,c,target,t,'front');drawCourtAdornment(this,c,target,t,'front');}
     if(arena){const strikeAge=Date.now()-(this.battleSound?.impactAt??-Infinity);
       if(strikeAge>=0&&strikeAge<500){
