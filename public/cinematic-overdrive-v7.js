@@ -92,13 +92,19 @@ export function drawOverdriveV7(scene,c,t,H,wallNow=Date.now()){
  const span=budget.low?300:460;
  // A thin matte stroke improves contrast more than an expensive full-screen bloom.
  c.globalAlpha=.14*strength;c.fillStyle='#030713';c.fillRect(0,H*.20,900,H*.57);
- if(budget.showArt&&scene.v7ShatterArt?.naturalWidth&&scene.reduceFlash!==true){
-  c.globalAlpha=budget.shatterOpacity*strength;
-  const w=900,h=Math.min(H*1.08,1550),yy=y-h*.4;
-  c.drawImage(scene.v7ShatterArt,0,yy,w,h);
- }else{
-  fractureLines(c,x,y,span,budget.cracks,strength,3.1,moment.color);
- }
+ if(budget.showArt&&scene.reduceFlash!==true){
+  const premium=scene.v7PremiumArt?.shatter;
+  if(premium?.naturalWidth){
+   c.globalAlpha=Math.min(.72,budget.shatterOpacity)*strength;
+   const width=Math.min(950,720+moment.power*58),height=width*(premium.naturalHeight/premium.naturalWidth);
+   c.drawImage(premium,x-width*.5,y-height*.48,width,height);
+  }
+  if(scene.v7ShatterArt?.naturalWidth){
+   c.globalAlpha=(premium?.naturalWidth?.42:budget.shatterOpacity)*strength;
+   const w=900,h=Math.min(H*1.08,1550),yy=y-h*.4;
+   c.drawImage(scene.v7ShatterArt,0,yy,w,h);
+  }else if(!premium?.naturalWidth)fractureLines(c,x,y,span,budget.cracks,strength,3.1,moment.color);
+ }else fractureLines(c,x,y,span,budget.cracks,strength,3.1,moment.color);
  // Static contact core for ~90ms: hit-stop *appearance* without delaying gameplay.
  const radius=(26+315*clamp(u*2))* (budget.low?.83:1);
  c.globalAlpha=strength*.92;c.strokeStyle=moment.color;c.lineWidth=budget.low?4:6;
