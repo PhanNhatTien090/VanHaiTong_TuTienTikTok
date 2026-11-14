@@ -49,6 +49,7 @@ import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=event-guidance-2
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-war-20261114';
 import {showLinhBai} from './linh-bai.js';
+import {InventoryDeck} from './inventory-multi.js';
 import {realmWithStage} from './realm-stage.js';
 import {showBaoHy} from './bao-hy.js';
 import {renderTower} from './tower.js';
@@ -84,6 +85,7 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
   mountGearGuide(root.querySelector('#phoneHudLeft'));
   const stageQueue=document.createElement('div');stageQueue.id='stageQueue';stageQueue.className='stage-queue';stageQueue.hidden=true;root.appendChild(stageQueue); // 11/11: Vân Đài · chờ lượt
   const linhBai=document.createElement('div');linhBai.id='linhBai';linhBai.className='linh-bai';linhBai.hidden=true;root.appendChild(linhBai); // 11/11: Linh Bài đạo hữu
+  const inventoryDeckPanel=document.createElement('div');inventoryDeckPanel.id='inventoryDeck';inventoryDeckPanel.className='inventory-deck';inventoryDeckPanel.hidden=true;inventoryDeckPanel.setAttribute('aria-label','Hành trang của các đạo hữu');root.appendChild(inventoryDeckPanel);
   for(const [id,kind] of [['hallDuel','hall-duel'],['hallCard','hall-card']]){
     const panel=document.createElement('div');panel.id=id;panel.className='hall-panel '+kind;panel.hidden=true;root.appendChild(panel);
   }
@@ -108,7 +110,8 @@ $('#worldSelect').value=mode;
 let state=null,selected=null,online=false,initialized=false,seen=new Set(),auto=null,sound=false,lastProfile='',lastFeed='',lastCards='',toastTimer,spotTimer,queue=[],busy=false,currentTab='scene';
 const honorUI=new HonorUI($('#honorBanner'));
 setInterval(()=>honorUI.tick(busy),1000);
-const scene=overlay?new Scene($('#sceneCanvas'),id=>selectPlayer(id)):new ManagementState($('#sceneCanvas'));if(overlay)prepareAscensionStage(scene); // 4/11: nạp sẵn ảnh thiên đài
+const scene=overlay?new Scene($('#sceneCanvas'),id=>selectPlayer(id)):new ManagementState($('#sceneCanvas'));if(overlay)prepareAscensionStage(scene);
+const inventoryDeck=overlay?new InventoryDeck($('#inventoryDeck'),scene,esc):null; // 4/11: nạp sẵn ảnh thiên đài
 const ascensionStage=overlay&&params.get('stage')==='ascension';scene.showcase=ascensionStage;document.body.classList.toggle('ascension-stage',ascensionStage);const ascensionLobby=ascensionStage?mountAscensionStage($('.scene-shell'),scene):null;
 const qualitySelect=$('#qualityMode');
 const shakeSelect=$('#shakeMode'),motionToggle=$('#reduceMotion'),flashToggle=$('#reduceFlash');
@@ -430,7 +433,7 @@ setInterval(()=>{for(const e of giftCombos.drain(Date.now()))enqueueReady(e);},1
 let lastFullRitualAt=0;
 function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.resident&&e.actorKind!=='npc')return e;const now=Date.now();// 4/11 tối: mọi cảnh giới tối đa 1 màn toàn cảnh / 60 s (Luyện Khí 90 s) — nhiều người đột phá liền nhau từng tạo cảnh lặp nối đuôi.
   if(now-lastFullRitualAt<(breakthroughRealm(e)<=1?90000:60000))return {...e,effect:"qi",kind:undefined,ritualSkipped:true};lastFullRitualAt=now;return e;}
-function enqueue(e){if(!overlay)return;e=throttleRitual(e);if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
+function enqueue(e){if(!overlay)return;e=throttleRitual(e);if(e?.card&&['bag','pets','skins'].includes(e.card.kind)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
 let engagementSoundAt=-Infinity;
 // 07/11/2026: QUÀ HIỆN NGAY LÚC TẶNG. Thẻ quà hiện lập tức; quà ưu tiên cao nhất và cắt ngang hiệu ứng thường.
 // Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.
