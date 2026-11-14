@@ -29,6 +29,7 @@ import {smallGift,compactPlaza,crowdTargets,stableTargets,PLAZA_CAPACITY,drawRit
 import {loadDoraArt,doraWorn,drawDoraBody,drawDoraRelic,drawDoraVisitor,drawDoraTechnique} from './doraemon-art.js';
 import {noteEngagementReaction,drawEngagementReactions} from './engagement-reactions.js';
 import {LiveFeedbackDirector,prepareFeedbackArt} from './live-feedback-fx.js';
+import {drawSkillImpact,impactSeverity} from './skill-impact-v3.js';
 import {artworkCrop,projectedGround,courtyardTargets,constrainGroundTargets} from './courtyard-layout.js';
 import {godFormFor,drawGodAuras} from './god-forms.js';
 import {raceFlightPose} from './race-motion.js';
@@ -444,7 +445,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       }
       drawTransform(c,e,t,k,p,this.height,layer);return;
     }
-    const big=e.effect==='breakthrough'||e.flowerRank||e.luxury;if(e.effect!=='breakthrough'&&(big?layer!=='back':layer==='back'&&!e.gift))return;if(e.effect==='attack'&&e.technique){if(arenaOn(this)&&!e.target)e.target={x:450,yRatio:ARENA_BOSS_Y+.02};if(drawDoraTechnique(this,c,e,t,k,p))return;drawCombatTechnique(c,e,t,k,p,this.height,{light:this.budget?.level==='light',signatures:this.signatureSprites,relics:this.combatSprites});return;}if(e.effect==='breakthrough'){drawBreakthroughFx(c,e,t,k,p,this.height,{light:this.budget?.level==='light',formation:this.formationArt,art:this.ascensionArt,layer,viewScale:this.camera?.s||1,motion:this.motion,title:false});return;}if(e.flowerRank){const fake={...e,gift:'Sự kiện',kind:e.eventKind==='meteor'?'cosmos':'flower',coins:[0,2999,1200,600][e.flowerRank]||600,count:1};
+    const big=e.effect==='breakthrough'||e.flowerRank||e.luxury;if(e.effect!=='breakthrough'&&(big?layer!=='back':layer==='back'&&!e.gift))return;if(e.effect==='attack'&&e.technique){if(arenaOn(this)&&!e.target)e.target={x:450,yRatio:ARENA_BOSS_Y+.02};const dora=drawDoraTechnique(this,c,e,t,k,p);if(!dora)drawCombatTechnique(c,e,t,k,p,this.height,{light:this.budget?.level==='light',signatures:this.signatureSprites,relics:this.combatSprites});drawSkillImpact(this,c,e,age,k,this.height);if(!e.feedbackHit&&k>=.55&&k<.78&&impactSeverity(e)>0){e.feedbackHit=true;this.onFeedbackSound?.('hit',Math.min(1,impactSeverity(e)/3));}return;}if(e.effect==='breakthrough'){drawBreakthroughFx(c,e,t,k,p,this.height,{light:this.budget?.level==='light',formation:this.formationArt,art:this.ascensionArt,layer,viewScale:this.camera?.s||1,motion:this.motion,title:false});return;}if(e.flowerRank){const fake={...e,gift:'Sự kiện',kind:e.eventKind==='meteor'?'cosmos':'flower',coins:[0,2999,1200,600][e.flowerRank]||600,count:1};
     if(this.cinematicV2!==false&&this.motion&&e.eventKind==='meteor'){
       const alpha=Math.sin(k*Math.PI),x=450+210*(.5-k),y=this.height*(.28+k*.28);
       drawTrail(c,'void',x,y,2.25,230,alpha*.85);
@@ -549,7 +550,10 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(!secondary){
       const boss=this.battleSound;
       const jolt=boss?.impactAt?cameraImpulse(this,'major',Date.now()-boss.impactAt,boss.seed,boss.quality==='light'):null;
-      const mixed=jolt?mixCameraImpulses(jolt,gift):gift;
+      const attack=this.effects.find(e=>e.effect==='attack'&&e.technique&&impactSeverity(e)>=2&&t-e.start-e.duration*.55>=0&&t-e.start-e.duration*.55<300);
+      const hit=attack?cameraImpulse(this,impactSeverity(attack)>=3?'medium':'minor',t-attack.start-attack.duration*.55,attack.cinematicSeed,feedbackBudget(this)):null;
+      const baseJolt=jolt?mixCameraImpulses(jolt,gift):gift;
+      const mixed=hit?mixCameraImpulses(baseJolt,hit):baseJolt;
       return boundedCameraJolt(base,mixed,H,!!(mixed.x||mixed.y));
     }
     const gain=strength*(feedbackBudget(this)?.55:1);
