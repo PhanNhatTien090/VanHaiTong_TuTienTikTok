@@ -1,6 +1,9 @@
 import {portraitCanvas} from './linh-bai.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
 export const DUEL_CAST_MS=1150;
+// On late LIVE join/seek, anchor cosmetic impact to the server match clock;
+// never replay a fresh hit or shatter merely because the browser drew late.
+export const duelImpactAt=(now,cast)=>Number.isFinite(now)&&Number.isFinite(cast?.k)&&Number.isFinite(cast?.period)?now+(.67-cast.k)*cast.period:null;
 // V4 (15/11): trận Luận Kiếm 25 s có nhịp thay vì vòng lặp đổi bên đều đều.
 // Mở trận → Thăm dò (chiêu nhẹ, chậm) → Tụ khí (không ra chiêu) → Công kích (liên chiêu) → Phòng thủ
 // (bên đang kém linh áp dựng kết giới, bên dẫn đánh vào kết giới) → Tuyệt kỹ (bên dẫn, theo linh áp THẬT của server) → Kết thúc.

@@ -1,6 +1,7 @@
 // V6 authored duel ultimates: real existing transparent in-game assets,
 // deterministic staging and bounded draw work. Does NOT own damage or scores.
 import {duelCastState} from './duel-combat.js';
+import {drawPremiumArt} from './v7-premium-art.js';
 
 const TAU=Math.PI*2;
 const clamp=(n,min=0,max=1)=>Math.max(min,Math.min(max,n));
@@ -142,7 +143,7 @@ function charge(scene,c,actor,tech,family,k,t,b,counter){
  ring(c,x,y,r,r*.29,color,3.5,.29+.53*u,-.2);
  ring(c,x,y,r*.6,r*.60,'#f0f7ff',2,.24+.45*u,clock);
  if(family==='thunder'){
-  const sprite=scene.v6Assets?.thunder;
+  const sprite=(!b.pressed&&scene.v7PremiumArt?.thunderDragon)||scene.v6Assets?.thunder;
   apparition(c,sprite,x,actor.y-315,r*1.48,r*2.05,.10+.45*u,actor.x>450);
   for(let i=0;i<b.bolts;i++){
    const a=i*TAU/b.bolts+clock,xx=x+Math.cos(a)*r,yy=y+Math.sin(a)*r*.8;
@@ -156,7 +157,7 @@ function charge(scene,c,actor,tech,family,k,t,b,counter){
     (11+14*u)*(counter?.7:1),-a,color,.25+.7*u);
   }
  }else if(family==='flame'){
-  apparition(c,scene.v6Assets?.flame,x,actor.y-290,r*1.15,r*1.5,.10+.52*u,actor.x>450);
+  apparition(c,(!b.pressed&&scene.v7PremiumArt?.phoenix)||scene.v6Assets?.flame,x,actor.y-290,r*1.15,r*1.5,.10+.52*u,actor.x>450);
   for(let i=0;i<b.streamers;i++){
    const a=i*TAU/b.streamers+clock*.7,xx=x+Math.cos(a)*r*.9,yy=y+Math.sin(a)*r*.7;
    line(c,xx,yy,x+(xx-x)*.18,y-43+(yy-y)*.15,color,2+2*u,.34+.52*u);
@@ -168,7 +169,7 @@ function charge(scene,c,actor,tech,family,k,t,b,counter){
    ring(c,x,y,60+i*12+u*r*.48,16+i*4+u*r*.20,color,2,.18+.35*u,j);
   }
  }else if(family==='yinYang'){
-  const img=scene.v6Assets?.yinYang;
+  const img=(!b.pressed&&scene.v7PremiumArt?.taiji)||scene.v6Assets?.yinYang;
   if(img?.naturalWidth||img?.width){
    c.save();c.translate(x,y);c.rotate(clock);c.globalAlpha=.25+.55*u;c.drawImage(img,-r,-r,r*2,r*2);c.restore();
   }
@@ -196,7 +197,7 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
  const fade=clamp((1-u)/.15);
  c.save();c.lineCap='round';c.lineJoin='round';
  if(family==='thunder'){
-  const im=scene.v6Assets?.thunder;
+  const im=(!b.pressed&&scene.v7PremiumArt?.thunderDragon)||scene.v6Assets?.thunder;
   if(!apparition(c,im,x,y-130,270*b.scale*pow,445*b.scale*pow,fade*.98,actor.x>450)){
    // Asset failed to decode: still a unique forked lightning-dragon silhouette.
    for(let i=0;i<5;i++)thunder(c,sx,sy,x+i*13,y-30+i*9,i+3,color,7*b.scale*pow,fade*.8);
@@ -216,8 +217,9 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
    line(c,xx-(tx-sx)*.10,yy-(ty-sy)*.10,xx,yy,color,2*b.scale,fade*.48);
   }
   sword(c,x,y,105*b.scale*pow,Math.atan2(ty-sy,tx-sx)+Math.PI/2,'#f5f9ff',fade);
+  if(!b.pressed)drawPremiumArt(c,scene.v7PremiumArt?.swordStorm,x,y-80,365*pow,365*pow,.82*fade,actor.x>450);
  }else if(family==='flame'){
-  apparition(c,scene.v6Assets?.flame,x,y-100,315*b.scale*pow,370*b.scale*pow,fade*.96,actor.x>450);
+  apparition(c,(!b.pressed&&scene.v7PremiumArt?.phoenix)||scene.v6Assets?.flame,x,y-100,315*b.scale*pow,370*b.scale*pow,fade*.96,actor.x>450);
   for(let i=0;i<b.streamers;i++){
    const a=i*TAU/b.streamers+u*3,rr=(24+i*12)*b.scale*pow;
    const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;
@@ -230,7 +232,7 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
    ring(c,xx,yy,25+i*5,6+i*2,color,2,fade*.51,a);
   }
  }else if(family==='yinYang'){
-  const im=scene.v6Assets?.yinYang,sz=(160+u*220)*b.scale*pow;
+  const im=(!b.pressed&&scene.v7PremiumArt?.taiji)||scene.v6Assets?.yinYang,sz=(160+u*220)*b.scale*pow;
   if(im?.naturalWidth||im?.width){
    c.save();c.translate(x,y);c.rotate(scene.motion===false?0:u*2.5);
    c.globalAlpha=fade*.91;c.drawImage(im,-sz*.5,-sz*.5,sz,sz);c.restore();
@@ -246,6 +248,12 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
     (14+i%3*9)*b.scale*pow,a,fade*.73);
   }
 
+ }
+ if(!b.pressed&&progress>.36&&progress<.94){
+  const im=family==='thunder'?scene.v7PremiumArt?.thunderImpact:
+   family==='flame'?scene.v7PremiumArt?.phoenixImpact:null;
+  const pulse=Math.sin(Math.PI*clamp((progress-.36)/.58));
+  drawPremiumArt(c,im,tx,ty-65,505*b.scale*pow,300*b.scale*pow,.75*pulse*fade,actor.x>450);
  }
  if(progress>.36){
   const v=clamp((progress-.36)/.64);

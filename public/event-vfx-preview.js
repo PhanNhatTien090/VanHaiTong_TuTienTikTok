@@ -21,7 +21,9 @@ let scene,metrics,meter,timeout,warTimer,entry=0,voice=null,generation=0;
 const meterSamples=new Float32Array(2048);
 let peak=0,interval=null;
 const duelSkillGear=Object.freeze({thunder:'nine-heaven-seal',sword:'hanlap-bamboo-swords',
- flame:'phoenix-blade',azure:'vip-dragon-orb',frost:'frost-sword',yinYang:'vip-heaven-seal'});
+ flame:'phoenix-blade',azure:'vip-dragon-orb',frost:'frost-sword',yinYang:'vip-heaven-seal',
+ void:'dora-anywhere-door',soul:'vuonglam-soul-banner',stars:'that-tinh-phu',lotus:'celestial-lotus-mirror',
+ bell:'soul-bell',meteor:'tinh-sa-dai',blossom:'bond-jade'});
 const showDuelOptions=()=>{$('duelSkillLabel').hidden=$('group').value!=='support'||$('event').value!=='duel';};
 const toggles=id=>Object.fromEntries([...$(id).querySelectorAll('input')].map(input=>[input.name,input.checked]));
 
@@ -159,6 +161,7 @@ document.querySelector('form').onsubmit=async event=>{
   scene.showcase=group==='ritual';
   scene.cinematicV2=$('version').value==='new';
   scene.v6Showcase=scene.cinematicV2;
+  scene.v7Overdrive=scene.cinematicV2&&$('overdrive').checked;
   scene.cinematicLayers=toggles('visualLayers');
   scene.shakeLevel=$('shake').value;
   scene.cameraEnabled=true;
@@ -218,7 +221,12 @@ setInterval(()=>{
   if((performance.now()-entry)%1000<300)interval=metrics.snapshot(scene).timings.frameInterval;
   const v6Report=scene.socialScene==='tournament'&&scene.v6Showcase?
    ' · ảnh V6: '+(Object.keys(scene.v6Assets||{}).join(', ')||'đang tải')+
-   (scene.v6MissingAssets?.size?' · LỖI '+[...scene.v6MissingAssets].join(', '):''):'';
+   (scene.v6MissingAssets?.size?' · LỖI '+[...scene.v6MissingAssets].join(', '):'')+
+   ' · V7: '+Object.keys(scene.v7VariantArt||{}).join(', ')+
+   (scene.v7ShatterArt?' · SHATTER OK':' · shatter chưa tải')+
+   (scene.v7VariantErrors?.size?' · LỖI V7 '+[...scene.v7VariantErrors].join(', '):'')+
+   (scene.v7PremiumArt?' · Premium WEBP: '+Object.keys(scene.v7PremiumArt).join(', '):'')+
+   (scene.v7PremiumErrors?.size?' · LỖI PREMIUM '+[...scene.v7PremiumErrors].join(', '):''):'';
   $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db+v6Report;
 },250);
 addEventListener('pagehide',()=>{stop();audio.destroy();});

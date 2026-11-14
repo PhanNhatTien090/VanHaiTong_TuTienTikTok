@@ -1,0 +1,37 @@
+name: V7 Cinematic Visual Proof
+on:
+  pull_request:
+    paths:
+      - 'public/cinematic-overdrive-v7.js'
+      - 'public/ultimate-variants-v7.js'
+      - 'public/gift-overdrive-v7.js'
+      - 'public/assets/v7/**'
+      - 'scripts/render-v7-overdrive-gallery.mjs'
+      - 'scripts/bench-v7-render.mjs'
+      - '.github/workflows/v7-visual-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render-v7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked packages
+        run: npm ci --no-audit --no-fund
+      - name: Generate 33 frames from actual LIVE renderer
+        run: node scripts/render-v7-overdrive-gallery.mjs
+      - name: Benchmark real V7 draw costs (high and crowded)
+        run: node scripts/bench-v7-render.mjs
+      - name: Publish visual review images
+        uses: actions/upload-artifact@v4
+        with:
+          name: v7-overdrive-33-frames
+          path: output/v7-visual-proof/
+          retention-days: 14
+          if-no-files-found: error

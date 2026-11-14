@@ -12,7 +12,13 @@ export const CINEMATIC_SOUND={
   blade:{root:196,body:[1,2.01,3.65],sub:.12,crack:.27,tail:.82},
   healing:{root:294,body:[1,1.5,2.99],sub:0,crack:.045,tail:1.06},
   tide:{root:110,body:[1,1.35,1.98],sub:.20,crack:.08,tail:1.15},
-  crystal:{root:330,body:[1,1.50,2.96],sub:.02,crack:.22,tail:.95}
+  crystal:{root:330,body:[1,1.50,2.96],sub:.02,crack:.22,tail:.95},
+  'void-blade':{root:71,body:[1,1.414,2.7],sub:.19,crack:.27,tail:1.22},
+  starlight:{root:185,body:[1,1.5,2.76],sub:.13,crack:.16,tail:1.28},
+  blossom:{root:260,body:[1,1.33,2.0],sub:.09,crack:.11,tail:1.04},
+  'holy-bell':{root:196,body:[1,2.0,3.0],sub:.17,crack:.09,tail:1.43},
+  meteor:{root:87,body:[1,1.499,2.35],sub:.29,crack:.26,tail:1.37},
+  fracture:{root:62,body:[1,1.94,3.24],sub:.20,crack:.33,tail:.52}
 };
 const layers=['charge','sub','crack','body','tail'];
 const bank=new WeakMap();
@@ -50,7 +56,30 @@ function voiceSamples(c,preset,layer){
         value=(tone(root*body[1],t)*.066+tone(root*body[2]*1.003,t)*.031+low*.025)*Math.exp(-t*3.3)*Math.min(1,t/.08);
         break;
     }
-    data[i]=value*fade(t,length);
+    // Give key dramatic moments a real timbral identity, not just pitch-shifted
+    // sine waves. Still renders ONCE into a 24k mono buffer, never in the hit frame.
+    if(preset==='fracture'){
+      if(layer==='charge')value+=.13*(band-low)*u*u;
+      else if(layer==='sub')value+=.10*tone(42+22*Math.exp(-t*9),t)*Math.exp(-t*12);
+      else if(layer==='crack'){
+        const burst=Math.exp(-t*51)+.42*Math.exp(-Math.max(0,t-.018)*125)*(t>=.018);
+        value=(band-low)*.31*burst+tone(1700-350*u,t)*.11*Math.exp(-t*42);
+      }else if(layer==='body'){
+        value=.075*tone(677,t)*Math.exp(-t*11)+.054*tone(1023.4,t)*Math.exp(-t*13)+
+          .062*(band-low)*Math.exp(-t*9);
+      }else if(layer==='tail')value+=.051*tone(1432.7,t)*Math.exp(-t*7)+
+        .038*tone(2131,t)*Math.exp(-t*8);
+    }else if(preset==='storm'&&layer==='body'){
+      value+=.12*low*Math.exp(-t*5)+.08*tone(67-12*u,t)*Math.exp(-t*6);
+    }else if(preset==='meteor'&&layer==='body'){
+      value+=.115*(band-low)*Math.exp(-t*8)+.075*tone(52+25/(1+t*25),t)*Math.exp(-t*4);
+    }else if(preset==='holy-bell'&&(layer==='body'||layer==='tail')){
+      value+=.068*tone(root*2.397,t)*Math.exp(-t*4)+.037*tone(root*3.958,t)*Math.exp(-t*6);
+    }else if(preset==='void-blade'&&layer==='charge'){
+      value+=.077*tone(root*(1.6-.86*u),t)*u*u;
+    }
+    const sample=value*fade(t,length);
+    data[i]=Math.max(-.78,Math.min(.78,sample));
   }
   return out;
 }
