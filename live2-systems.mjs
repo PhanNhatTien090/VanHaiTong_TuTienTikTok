@@ -31,6 +31,7 @@ export function live2CombatBonus(p,now=Date.now(),kind='boss'){
  if(lvl&&((kind==='boss'&&['sword','demon','beast'].includes(s.path))||(kind==='tower'&&['sword','body','beast'].includes(s.path))))rate+=.02+lvl*.006;
  if(s.path==='beast'&&p.spiritPet)rate+=.01;
  if(s.skillUntil>now)rate+=.06;
+ if(s.relicActive?.until>now&&s.relicActive.id===p.equipped)rate+=.04;
  const refine=Number(s.refinements?.[p.equipped]||0);rate+=Math.min(3,Math.max(0,refine))*.008;
  if(s.bondSkillUntil>now)rate+=.015;
  return 1+Math.min(.12,rate);
@@ -111,6 +112,7 @@ export function live2Command(w,p,words,now,ctx){
  }
  if(cmd==='vao'&&rest.startsWith('hoi ')){
   if(s.guildId)return fail('Cần rời bang hiện tại trước.');
+  if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Hội Chiến đang diễn ra, chưa thể đổi bang.');
   const id=rest.slice(4).trim().toUpperCase(),g=guilds(w)[id];
   if(!g)return fail('Không tìm thấy mã bang.');
   if(g.members.length>=24)return fail('Bang đã đủ 24 thành viên.');
@@ -120,8 +122,10 @@ export function live2Command(w,p,words,now,ctx){
  }
  if(cmd==='roi'&&rest==='hoi'){
   const all=guilds(w),g=all[s.guildId];if(!g)return fail('Chưa gia nhập bang.');
+  if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Hội Chiến đang diễn ra, chưa thể rời bang.');
   if(g.leader===p.id&&g.members.length>1)return fail('Hội chủ cần chuyển quyền hoặc bang chỉ còn một người mới có thể rời.');
-  g.members=g.members.filter(id=>id!==p.id);delete g.contributions[p.id];if(!g.members.length)delete all[g.id];s.guildId=null;return ok('Đã rời bang.');
+  g.members=g.members.filter(id=>id!==p.id);delete g.contributions[p.id];if(!g.members.length)delete all[g.id];s.guildId=null;
+  announce(w,p,'RỜI BANG HỘI • '+g.name,now,emit,{guildLeft:true});return ok('Đã rời bang.');
  }
  if(cmd==='xin'&&rest.startsWith('su ')){
   if(s.masterId)return fail('Đã có sư phụ cá nhân.');

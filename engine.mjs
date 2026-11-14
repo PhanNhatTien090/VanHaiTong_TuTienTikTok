@@ -5,6 +5,7 @@ import {WING_TIERS,playerWing} from './public/boss-arena.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand} from './rebirth.mjs';
 import {live2Command,live2Insight,live2CombatBonus,live2PlayerView} from './live2-systems.mjs';
+import {live2ExtraCommand,live2Tick,live2GuildWarView,live2ExtraBonus,live2MentorActivity} from './live2-extensions.mjs';
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
 const viemWorn=p=>p?.skinChoice===VIEM_SKIN_ID&&p.rewardSkins?.includes(VIEM_SKIN_ID);
@@ -364,7 +365,7 @@ function unlockedAction(w,input,now) {
   }
   // Independent, bounded Dao insight. No mutation of old realm/qi accounting.
   if(['cultivate','gather','attack','checkin','craft','brew','breakthrough'].includes(input.type)){
-    const actor=w.players[clean(input.userId,80)];if(actor)live2Insight(w,actor,input,result,now,emit);
+    const actor=w.players[clean(input.userId,80)];if(actor){live2Insight(w,actor,input,result,now,emit);live2MentorActivity(w,actor,input,result,now,{emit});}
   }
   if(result.chatOnly){const p=w.players[clean(input.userId,80)];if(p)newbieGuide(w,p,now);return result;}
   // In LIVE, platform metrics are acknowledgements unless the operator explicitly opts in.
@@ -421,6 +422,9 @@ function actionCore(w,input,now) {
   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
   if(type==='chat'&&['dao','chon','doi','tinh','hoi','lap','vao','roi','xin','nhan','truyen','xuat','dong'].includes(cmd)){
     const live2=live2Command(w,p,words,now,{emit});if(live2){if(!live2.ok&&!cooldown(p,'live2-error',5000,now))emit(w,p,live2.message,'status',now);return live2;}
+  }
+  if(type==='chat'&&['dan','che','phap','hoi','chien','su'].includes(cmd)){
+    const extra=live2ExtraCommand(w,p,words,now,{emit});if(extra){if(!extra.ok&&!cooldown(p,'live2-extra-error',5000,now))emit(w,p,extra.message,'status',now);return extra;}
   }
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
@@ -592,11 +596,11 @@ function actionCore(w,input,now) {
     recordDailyAscension(w,p,now);
     p.qi-=requiredQi(p);p.stones-=requiredStones(p);p.realm++;
     const helpers=finishGuard(w,p,p.realm-1,now,companionContext);
-    emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{fromRealm:p.realm-1,toRealm:p.realm,guardHelpers:helpers,...(helpers.length?{guardNames:helpers.map(id=>String(w.players[id]?.name||'').slice(0,24))}:{})}); /* V4: tên hộ pháp đi kèm để overlay luôn ghi đúng tên */
+    emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{daoPath:p.live2?.path||null,daoTribulation:!!p.live2?.path,fromRealm:p.realm-1,toRealm:p.realm,guardHelpers:helpers,...(helpers.length?{guardNames:helpers.map(id=>String(w.players[id]?.name||'').slice(0,24))}:{})}); /* V4: tên hộ pháp đi kèm để overlay luôn ghi đúng tên */
   } else if(type==='attack') {
     if(!w.boss||w.boss.endsAt<=now||w.boss.hp<=0)return fail('Chưa có yêu thú. Bí cảnh sẽ mở theo lịch.');
     const wait=cooldown(p,'attack',4000,now);if(wait)return fail(`Chiêu thức hồi sau ${wait}s.`);
-    const encounter=encounterHit(w.boss,p.id,now);const dmg=Math.min(w.boss.hp,Math.max(1,Math.round(power(p)*(encounter?.mult||1)*live2CombatBonus(p,now,'boss'))));w.boss.hp-=dmg;p.contribution+=dmg;w.boss.participants[p.id]=true;w.boss.damage??={};w.boss.damage[p.id]=(w.boss.damage[p.id]||0)+dmg;
+    const encounter=encounterHit(w.boss,p.id,now);const dmg=Math.min(w.boss.hp,Math.max(1,Math.round(power(p)*(encounter?.mult||1)*Math.min(1.16,live2CombatBonus(p,now,'boss')*live2ExtraBonus(p,now,'boss')))));w.boss.hp-=dmg;p.contribution+=dmg;w.boss.participants[p.id]=true;w.boss.damage??={};w.boss.damage[p.id]=(w.boss.damage[p.id]||0)+dmg;
     const gearList=[p.equipped,...(p.equippedExtra||[])].filter(Boolean),gearNow=gearList.length>1?gearList[(p.attackSeq=(p.attackSeq||0)+1)%gearList.length]:p.equipped;const technique=attackTechnique(gearNow===p.equipped?p:{...p,equipped:gearNow});gain(w,p,3,1,0,now,'attack');emit(w,p,`${technique.name} • ${dmg} công lực${practiceTag(w,p,now)}`,'attack',now,{technique,target:{x:450,yRatio:.37},damage:dmg,encounterPhase:encounter?.id,damageMultiplier:encounter?.mult||1});
     if(w.boss.hp===0) {
       winBoss(w,now);
@@ -963,6 +967,7 @@ function tickCore(w,now) {
   // A boss overdue by five minutes gets the next free, rested slot instead
   // of losing it repeatedly to competitions and the random-event deck.
   if(!w.settings?.huntBeforeCompetition&&w.settings?.bossInterval<=900&&w.nextBossAt&&now-w.nextBossAt>=5*60000&&!w.boss&&!w.social?.ceremonies?.length&&!automaticEventsPaused(w,now)&&(w.settings?.residents!==false||Object.values(w.players).some(p=>currentParticipant(w,p,now))))openBoss(w,now);
+  live2Tick(w,now,{emit});
   tickCompetitionSchedule(w,now);
   tickRace(w,now,socialContext);awardRaceGifts(w,now);tickWar(w,now,socialContext);tickAlchemy(w,now,alchemyContext);tickMaze(w,now,mazeContext);tickBonk(w,now,bonkContext);tickTower(w,now,towerContext);
   tickHallWar(w,now,hallWarContext);
@@ -1016,7 +1021,7 @@ export function snapshot(w,now=Date.now(),opts={}) {
   const honors=earlyHonors||honorRoll(w,players);for(const p of players)p.honor=honorTitle(p,honors);
   // v53: chi phí lên từng cảnh giới (tu vi + linh thạch cần ở cảnh giới trước) cho bảng cảnh giới trên LIVE.
   const realmCosts=REALMS.map((name,r)=>r?{qi:requiredQi({realm:r-1}),stones:requiredStones({realm:r-1})}:null);
-  return {...w,live2World:undefined,live2Guilds:Object.values(w.live2World?.guilds||{}).map(g=>({id:g.id,name:g.name,members:g.members.length,points:g.points})).sort((a,b)=>b.points-a.points).slice(0,12),mainStage:stageConflict(w,now),nguDuong:undefined,hallDefinitions:undefined,halls,hallWar:hallWarView(w,now),hallWarHistory:undefined,tower:towerView(w,now),bonkFest:bonkView(w,now),maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,miniEvent:undefined,quizUsed:undefined,engagement:engagementView(w,now),quick:quickView(w,now),serverNow:now,environment:hallWarVisible(w,now)?{id:'hall-war',name:'Ngũ Đường Tranh Phong',image:'/assets/maps-v3/tournament-arena.png',layout:'ground',floorY:.72}:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
+  return {...w,live2World:undefined,live2GuildWar:live2GuildWarView(w,now),live2Guilds:Object.values(w.live2World?.guilds||{}).map(g=>({id:g.id,name:g.name,members:g.members.length,points:g.points})).sort((a,b)=>b.points-a.points).slice(0,12),mainStage:stageConflict(w,now),nguDuong:undefined,hallDefinitions:undefined,halls,hallWar:hallWarView(w,now),hallWarHistory:undefined,tower:towerView(w,now),bonkFest:bonkView(w,now),maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,miniEvent:undefined,quizUsed:undefined,engagement:engagementView(w,now),quick:quickView(w,now),serverNow:now,environment:hallWarVisible(w,now)?{id:'hall-war',name:'Ngũ Đường Tranh Phong',image:'/assets/maps-v3/tournament-arena.png',layout:'ground',floorY:.72}:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
 }
 export function ingest(w,event,now=Date.now()) {
   if(w.mode==='live'&&(event.simulated||event.autoRose||event.data?.simulated||event.data?.autoRose))return fail('Sự kiện mô phỏng không được ghi vào LIVE.');
