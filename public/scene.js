@@ -30,6 +30,7 @@ import {loadDoraArt,doraWorn,drawDoraBody,drawDoraRelic,drawDoraVisitor,drawDora
 import {noteEngagementReaction,drawEngagementReactions} from './engagement-reactions.js';
 import {LiveFeedbackDirector,prepareFeedbackArt} from './live-feedback-fx.js';
 import {drawSkillImpact,impactSeverity} from './skill-impact-v3.js';
+import {drawImpactPunctuation} from './impact-punch.js';
 import {artworkCrop,projectedGround,courtyardTargets,constrainGroundTargets} from './courtyard-layout.js';
 import {godFormFor,drawGodAuras} from './god-forms.js';
 import {raceFlightPose} from './race-motion.js';
@@ -537,7 +538,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.targetFps=targetFps;
     const started=performance.now();
     const beforeRaster=this.characterFrames.stats.repaints;
-    try{this.drawFrame(t,this.ctx,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);}
+    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);}
     finally{
       const cost=performance.now()-started;
       this.lastCost=Math.round(cost*10)/10;
