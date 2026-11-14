@@ -77,7 +77,7 @@ import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,B
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
 import {signatureVisitor} from './court-rewards.js';
-import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=nhan-qua-v1';
+import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=karma-idle-v4';
 import {skinFor,layoutPlayers,layoutLabels,wrapName,spriteCell,visualGender} from './cosmetics.js';
 import {residentPlayers} from './residents.js';
 import {arenaOn,arenaBackground,arenaTargets,drawWings,drawArenaShots,drawArenaCasts,ARENA_BOSS_Y} from './boss-arena.js';
@@ -577,7 +577,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       return boundedCameraJolt(base,mixed,H,!!(mixed.x||mixed.y));
     }
     const gain=strength*(feedbackBudget(this)?.55:1);
-    return boundedCameraJolt(base,{x:gift.x+secondary.x*gain,y:gift.y+secondary.y*gain},H,!!(gift.x||gift.y));
+    const mixed={x:gift.x+secondary.x*gain,y:gift.y+secondary.y*gain};
+    return boundedCameraJolt(base,mixed,H,!!(mixed.x||mixed.y));
   }
   cueGiftSpectacles(t){
     for(const event of this.effects){

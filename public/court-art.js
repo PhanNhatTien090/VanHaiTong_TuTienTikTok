@@ -1,7 +1,7 @@
 import {BLACK_GOLD_VISITOR,KARMA_VISITOR,COURT_VISITORS,SIGNATURE_VISITORS,courtRelic} from './court-rewards.js';
 import {drawCourtAuraLayer} from './court-skin-fx.js';
 import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
-import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js';
+import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-idle-v4';
 import {feedbackBudget} from './cinematic-feedback.js';
 import {ownsGear} from './skin-gear.js';
 const skinOf=p=>COURT_VISITORS.find(v=>v.skin===p?.skinChoice&&p.rewardSkins?.includes(v.skin));
@@ -25,7 +25,9 @@ function signatureArt(spec){
  art.blade??=load(spec.artwork.blade);art.halo??=load(spec.artwork.halo);return art;
 }
 // Pháp bảo skin đặc biệt người này sở hữu (ưu tiên cái đang trang bị).
-export const signatureGearOf=p=>SIGNATURE_VISITORS.find(v=>p?.equipped===v.artifact&&ownsGear(p,v.artifact))||SIGNATURE_VISITORS.find(v=>ownsGear(p,v.artifact))||null;
+export const signatureGearOf=p=>SIGNATURE_VISITORS.find(v=>v.skin===p?.skinChoice&&ownsGear(p,v.artifact))
+ ||SIGNATURE_VISITORS.find(v=>p?.equipped===v.artifact&&ownsGear(p,v.artifact))
+ ||SIGNATURE_VISITORS.find(v=>ownsGear(p,v.artifact))||null;
 export const showsBlackGoldGear=p=>!!signatureGearOf(p);
 export function warmCourtSkin(scene,p){
  const spec=COURT_VISITORS.find(x=>x.skin===p.skinChoice);

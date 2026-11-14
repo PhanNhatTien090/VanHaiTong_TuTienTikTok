@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {KARMA_VISITOR,signatureVisitor} from '../public/court-rewards.js';
+import {BLACK_GOLD_VISITOR,KARMA_VISITOR,signatureVisitor} from '../public/court-rewards.js';
 import {creditVisitorGift,VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
 import {VISITORS} from '../public/visitor-event.js';
 import {showsBlackGoldGear,signatureGearOf} from '../public/court-art.js';
@@ -28,6 +28,13 @@ test('Nhân Quả: màn biến hình ưu tiên cao và dài hơn skin thường'
  assert.equal(isBlackGoldAward(e),true);
  assert.equal(presentationDuration(e),8000);
  assert.equal(presentationDuration({id:'y',effect:'transform',transform:'xich-vu'}),6000);
+});
+
+test('Nhân Quả selects its own spear when both signature sets are owned',()=>{
+ const p={skinChoice:KARMA_VISITOR.skin,equipped:BLACK_GOLD_VISITOR.artifact,
+  skinGear:[BLACK_GOLD_VISITOR.artifact,KARMA_VISITOR.artifact]};
+ assert.equal(signatureGearOf(p),KARMA_VISITOR);
+ assert.equal(signatureGearOf({...p,skinChoice:BLACK_GOLD_VISITOR.skin}),BLACK_GOLD_VISITOR);
 });
 
 test('Skin cũ giữ giá cũ (300 skin / 500 pháp bảo)', () => {

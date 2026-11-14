@@ -5,6 +5,19 @@ import {REALM_NAMES} from '../public/progression.js';
 import {breakthroughDuration} from '../public/breakthrough-fx.js';
 import {boundedCameraJolt,giftCameraImpulse,takeFeedbackCue} from '../public/cinematic-feedback.js';
 import {EventGiftQueue,eventGiftTier} from '../public/event-gift-fx.js';
+import {Scene} from '../public/scene.js';
+
+test('the scene preserves secondary camera shake at 1x without a gift impulse',()=>{
+  const scene={motion:true,cameraEnabled:true,shakeLevel:'high',effects:[],heavenStrike:{start:100,profile:{seed:1,bolts:[{at:2,main:true}]}}};
+  const base={s:1,x:0,y:0},H=1600;
+  const camera=Scene.prototype.impactCamera.call(scene,base,2140,H);
+  assert.ok(camera.s>1);
+  assert.ok(camera.x!==0||camera.y!==0);
+  assert.ok(camera.x<=0&&camera.x+900*camera.s>=900);
+  assert.ok(camera.y<=0&&camera.y+H*camera.s>=H);
+  const disabled=Scene.prototype.impactCamera.call({...scene,shakeLevel:'off'},base,2140,H);
+  assert.equal(disabled,base);
+});
 
 test('impact plays once across visual passes and drops missed impact after resume',()=>{
   const event={};

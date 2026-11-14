@@ -22,7 +22,7 @@ test('shake decays, prioritizes the main cue and preserves camera coverage',()=>
   const scene={cameraEnabled:true,motion:true,shakeLevel:'high'};
   const peak=cameraImpulse(scene,'legendary',32,.4);
   assert.ok(Math.abs(peak.x)>0);
-  assert.deepEqual(cameraImpulse(scene,'legendary',285,.4),{x:0,y:0});
+  assert.deepEqual(cameraImpulse(scene,'legendary',340,.4),{x:0,y:0});
   assert.deepEqual(cameraImpulse({...scene,motion:false},'legendary',32,.4),{x:0,y:0});
   assert.deepEqual(cameraImpulse({...scene,shakeLevel:'off'},'legendary',32,.4),{x:0,y:0});
   const jolt=mixCameraImpulses({x:9,y:-9},{x:30,y:-30});

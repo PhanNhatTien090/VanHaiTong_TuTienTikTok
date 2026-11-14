@@ -17,13 +17,13 @@ export function cameraShakeStrength(scene){
 }
 
 const IMPULSES={
-  minor:[2,105],medium:[4,165],major:[7,240],legendary:[9,285]
+  minor:[3,160],medium:[5,220],major:[8,300],legendary:[10,340]
 };
 export function cameraImpulse(scene,preset,age,seed=0,light=feedbackBudget(scene)){
   const [offset,span]=IMPULSES[preset]||[0,1];
   const strength=cameraShakeStrength(scene);
   if(!strength||age<0||age>=span)return ZERO;
-  const gain=offset*strength*(light?.56:1)*(1-age/span)**2*Math.min(1,age/24);
+  const gain=offset*strength*(light?(scene.shakeLevel==='high'?.85:.56):1)*(1-age/span)**2*Math.min(1,age/24);
   return {x:Math.sin(age*.048+seed*6.28)*gain,y:Math.cos(age*.053+seed*6.28)*gain*.64};
 }
 
