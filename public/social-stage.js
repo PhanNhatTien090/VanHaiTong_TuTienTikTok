@@ -1,5 +1,5 @@
 import {drawAura,drawSeal,drawShockwave} from './cinematic-vfx.js';
-import {duelCastState,duelPhase,drawDuelImpact} from './duel-combat.js';
+import {duelCastState,duelPhase,duelImpactAt,drawDuelImpact} from './duel-combat.js';
 import {DUEL_RELEASE_AT,drawDuelCharge,drawDuelRelease,duelSoundPreset} from './duel-cinematic.js';
 import {drawDuelFeedback} from './duel-feedback-v3.js';
 import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
@@ -68,9 +68,9 @@ export function drawSocialStage(scene,c,t,layer,solo){
      // release are one-shot, keyed by this server match/cast, never by a frame.
      if(scene.duelLastCharge!==key){
       scene.duelLastCharge=key;
-      if(cast.ultimate)scene.duelChargeAt=now;
-      scene.onCombatSound?.('cast',technique.id);
-      scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),Math.max(0,(.67-k)*cast.period)/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
+      if(cast.ultimate&&k<.56)scene.duelChargeAt=now-k*cast.period;
+      if(k<.56)scene.onCombatSound?.('cast',technique.id);
+      if(k<=.72)scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),Math.max(0,(.67-k)*cast.period)/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
      }
      // A softer second-caster hit adds stereo-like call-and-response without
      // changing simulation, animation loops or the three-voice cinematic cap.
@@ -92,15 +92,15 @@ export function drawSocialStage(scene,c,t,layer,solo){
      }
      if(k>=DUEL_RELEASE_AT&&scene.duelLastTrigger!==key){
       scene.duelLastTrigger=key;
-      scene.animator?.trigger({id:key,user:a.id,effect:'attack',technique},t);
+      if(k<=.73)scene.animator?.trigger({id:key,user:a.id,effect:'attack',technique},t);
      }
      if(k>=.67&&scene.duelHitKey!==key){
       scene.duelHitKey=key;
       if(!cast.light){
-       scene.duelImpact={at:now,preset:cast.ultimate?'legendary':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
-       scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);
+       scene.duelImpact={at:duelImpactAt(now,cast),preset:cast.ultimate?'legendary':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
+       if(k<=.76)scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);
        // The elemental SFX remains dominant, with a short low-headroom shatter accent.
-        if(cast.ultimate&&scene.v7Overdrive!==false)scene.onCinematicSound?.(key+':v7-shatter','fracture',0,{priority:5,charge:false,gain:.19});
+        if(cast.ultimate&&k<=.76&&scene.v7Overdrive!==false)scene.onCinematicSound?.(key+':v7-shatter','fracture',0,{priority:5,charge:false,gain:.19});
       }
      }
      if(k>=DUEL_RELEASE_AT){
