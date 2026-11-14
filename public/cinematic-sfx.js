@@ -10,7 +10,9 @@ export const CINEMATIC_SOUND={
   storm:{root:92,body:[1,1.49,3.18],sub:.23,crack:.22,tail:1.04},
   flame:{root:131,body:[1,1.88,2.99],sub:.20,crack:.15,tail:1.06},
   blade:{root:196,body:[1,2.01,3.65],sub:.12,crack:.27,tail:.82},
-  healing:{root:294,body:[1,1.5,2.99],sub:0,crack:.045,tail:1.06}
+  healing:{root:294,body:[1,1.5,2.99],sub:0,crack:.045,tail:1.06},
+  tide:{root:110,body:[1,1.35,1.98],sub:.20,crack:.08,tail:1.15},
+  crystal:{root:330,body:[1,1.50,2.96],sub:.02,crack:.22,tail:.95}
 };
 const layers=['charge','sub','crack','body','tail'];
 const bank=new WeakMap();
