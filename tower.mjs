@@ -4,6 +4,7 @@
 // • Thắng: +tu vi / linh thạch theo cảnh giới; mỗi 5 tầng thưởng ×2 + thẻ Báo Hỷ. Thua: không mất gì, gõ 6 xếp lượt lại.
 // • Chỉ dùng lệnh chơi miễn phí — không gắn quà / tim (luật LIVE sau đợt bị hạn chế 03/11).
 import {stageConflict} from './stage-lock.mjs';
+import {live2CombatBonus} from './live2-systems.mjs';
 
 export const TOWER=Object.freeze({durationMs:240000,turnMs:25000,gapMs:2500,hitCdMs:900,helpCdMs:2000,maxQueue:20,podiumMs:8000,milestone:5});
 export const TOWER_JOIN=['leothap','thap','vaothap'];
@@ -54,7 +55,7 @@ export function tickTower(w,now,c){
  const t=e.cur;
  if(t){
   const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
-  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*dt);
+  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*live2CombatBonus(p,now,'tower')*dt);
   if(t.hp<=0)finishTurn(w,e,now,c,true);
   else if(now>=t.endsAt||!p)finishTurn(w,e,now,c,false);
  }
@@ -87,7 +88,7 @@ export function towerCommand(w,p,cmd,now,c){
  if(!t)return null; // chưa ai leo → để lệnh đánh cho sự kiện khác
  if(t.id===p.id){
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
-  t.next[p.id]=now+TOWER.hitCdMs;t.hits++;t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor));
+  t.next[p.id]=now+TOWER.hitCdMs;t.hits++;t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor)*live2CombatBonus(p,now,'tower'));
  }else{
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
   t.next[p.id]=now+TOWER.helpCdMs;t.helpers[p.id]=(t.helpers[p.id]||0)+1;t.helpHits++;t.hp=Math.max(0,t.hp-HELP_DAMAGE);
