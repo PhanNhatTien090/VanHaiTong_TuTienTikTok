@@ -9,11 +9,12 @@ import {drawCombatTechnique} from './combat-techniques.js';
 import {prewarmDuelV6,drawDuelV6Ultimate,v6SkillFamily,v6CounterProgress} from './duel-showcase-v6.js';
 import {prewarmVariantArt,drawV7Variant,v7SkillSpec} from './ultimate-variants-v7.js';
 import {prewarmOverdrive} from './cinematic-overdrive-v7.js';
+import {prewarmV7Premium} from './v7-premium-art.js';
 export function syncSocialStage(scene,state){
  scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;
  const match=state.socialStatus?.tournament?.current;
  if(match?.id&&scene.v6Showcase!==false)prewarmDuelV6(scene,match);
- if(match?.id&&scene.v7Overdrive!==false){prewarmVariantArt(scene,match);prewarmOverdrive(scene);}
+ if(match?.id&&scene.v7Overdrive!==false){prewarmVariantArt(scene,match);prewarmOverdrive(scene);prewarmV7Premium(scene,match);}
  if(match?.id&&match.id!==scene.duelPortraitMatchId){
   scene.duelPortraitMatchId=match.id;
   const fighters=(state.players||[]).filter(p=>p.id===match.a||p.id===match.b);
