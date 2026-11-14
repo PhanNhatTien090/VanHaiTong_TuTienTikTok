@@ -9,13 +9,20 @@ const petOpen=(w,now)=>{const e=w.petEvent;return !!(e&&!e.closedAt&&now>=e.star
 const cap=(list,n)=>({items:list.slice(0,n),more:Math.max(0,list.length-n)});
 
 export function bagCard(p,catalog){
- const name=id=>catalog.find(x=>x.id===id)?.name||id;
- const arts=[...new Set(p.artifacts||[])].map(id=>({name:name(id),on:id===p.equipped}));
- arts.sort((a,b)=>b.on-a.on);
- const pills=Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>({name:name(id),n}));
- const manuals=[...new Set(p.manuals||[])].map(name);
+ const byId=new Map(catalog.map(item=>[item.id,item]));
+ const entry=(id,extra={})=>{
+  const item=byId.get(id);
+  return {id,name:item?.name||id,icon:item?.icon||'orb',art:item?.art||null,
+    damage:Math.max(0,Number(item?.damage)||0),bonus:Math.max(0,Number(item?.bonus)||0),
+    description:String(item?.description||'').slice(0,180),...extra};
+ };
+ const arts=[...new Set(p.artifacts||[])].map(id=>entry(id,{on:id===p.equipped}));
+ arts.sort((a,b)=>Number(b.on)-Number(a.on));
+ const pills=Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>entry(id,{n}));
+ const manuals=[...new Set(p.manuals||[])].map(id=>entry(id));
  return {kind:'bag',stones:Math.floor(p.stones||0),herbs:Math.floor(p.herbs||0),
-  artifacts:cap(arts,4),pills:cap(pills,4),manuals:cap(manuals,3),
+  equipped:arts.find(x=>x.on)||null,
+  artifacts:cap(arts,8),pills:cap(pills,6),manuals:cap(manuals,5),
   tip:arts.length?(pills.length?'Gõ 5 dùng đan · 7 rèn thêm':'Gõ 4 luyện đan · 7 rèn thêm'):'Gõ 7 rèn pháp bảo đầu tiên'};
 }
 export function petCard(p){
