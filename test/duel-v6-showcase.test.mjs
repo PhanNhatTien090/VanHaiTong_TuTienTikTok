@@ -16,6 +16,9 @@ test('V6 reuses existing small sprite assets and includes an original loaded sig
  assert.equal(v6SkillFamily('thunder'),'thunder');
  assert.equal(v6SkillFamily('bamboo'),'sword');
  assert.equal(v6SkillFamily('flame'),'flame');
+ assert.equal(v6SkillFamily('dragon'),'azure');
+ assert.equal(v6SkillFamily('frost'),'frost');
+ assert.equal(v6SkillFamily('celestial'),'yinYang');
  assert.equal(v6SkillFamily('unknown'),null);
  for(const url of Object.values(V6_ASSETS)){
   const path='public'+url;
@@ -70,13 +73,14 @@ test('strict effect budget preserves the dragon silhouette and caps secondary de
 test('V6 real PNGs render distinct thunder and phoenix attacks with a bounded number of draws',async()=>{
  const dragon=await loadImage('public/assets/god-forms-v1/thunder-dragon.png');
  const phoenix=await loadImage('public/assets/god-forms-v1/phoenix-fire.png');
+ const azure=await loadImage('public/assets/god-forms-v1/jade-dragon.png');
  const canvas=createCanvas(900,1600),c=canvas.getContext('2d');
  const oldDraw=c.drawImage.bind(c);let calls=0;c.drawImage=(...args)=>{calls++;return oldDraw(...args);};
  const left=fighter('a',225),right=fighter('b',675),target={x:450,y:940};
  const scene={budget:{level:'balanced'},fps:30,motion:true,reduceFlash:false,
-  v6Assets:{thunder:dragon,flame:phoenix},v6Showcase:true,cinematicV2:true};
+  v6Assets:{thunder:dragon,flame:phoenix,azure},v6Showcase:true,cinematicV2:true};
  const colors=[];
- for(const [kind,tech] of [['thunder',{id:'thunder'}],['sword',{id:'bamboo'}],['flame',{id:'flame'}]]){
+ for(const [kind,tech] of [['thunder',{id:'thunder'}],['sword',{id:'bamboo'}],['flame',{id:'flame'}],['azure',{id:'dragon'}],['frost',{id:'frost'}],['yinYang',{id:'celestial'}]]){
   c.clearRect(0,0,900,1600);calls=0;
   assert.equal(drawDuelV6Ultimate(scene,c,2200,left,target,tech,.77),true);
   const px=c.getImageData(370,720,165,350).data;
@@ -85,7 +89,7 @@ test('V6 real PNGs render distinct thunder and phoenix attacks with a bounded nu
   assert.ok(calls<=2,kind+' sprite draws must remain bounded');
   colors.push([px[0],px[1],px[2],active]);
  }
- assert.equal(colors.length,3);
+ assert.equal(colors.length,6);
  c.clearRect(0,0,900,1600);
  scene.budget.level='light';scene.budget.pressured=true;scene.motion=false;scene.reduceFlash=true;
  assert.equal(drawDuelV6Ultimate(scene,c,2200,right,target,{id:'thunder'},.20,{counter:true}),true);
