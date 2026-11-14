@@ -24,11 +24,10 @@ export const VFX_LIMITS={
 // events a small, bounded budget. Never grant High merely because the scene is solo.
 export function cinematicQuality(scene,{focused=false}={}){
   if(scene.budget?.pressured||scene.budget?.mode==='light')return 'light';
-  const visible=Math.max(0,scene.visibleActors||0);
-  const active=Math.max(visible,scene.actorLoad?.activePlayers||0,scene.targets?.length||0);
-  if(focused&&visible<=2){
-    return scene.budget?.level==='high'?'high':'balanced';
-  }
+  const active=Math.max(scene.visibleActors||0,scene.actorLoad?.activePlayers||0,scene.targets?.length||0);
+  // addEffect runs before the first solo frame, so visibleActors still describes
+  // the previous plaza. Trust focused only when the caller has a solo presentation.
+  if(focused)return scene.budget?.mode==='high'?'high':'balanced';
   if(feedbackBudget(scene)||active>=20)return 'light';
   return scene.budget?.level==='high'?'high':'balanced';
 }
