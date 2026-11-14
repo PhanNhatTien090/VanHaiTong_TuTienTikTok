@@ -43,7 +43,7 @@ test('event gift queues an avatar effect without character presentation; queue b
 test('tournament lobby feet stay on floor, fast casts alternate with an ultimate',()=>{
  const targets=tournamentLobbyTargets(Array.from({length:15},(_,i)=>({id:String(i)})),1600);
  assert.ok(targets.every(p=>p.y>=1600*.72&&p.y<=1600*.86));
- assert.equal(duelCastState(650).side,0);assert.equal(duelCastState(650+DUEL_CAST_MS).side,1);assert.equal(duelCastState(650+DUEL_CAST_MS*5).ultimate,true);
+ /* V4: pha có nhịp — xem duel-phases.test */assert.equal(duelCastState(9000).side,0);assert.equal(duelCastState(9000+DUEL_CAST_MS).side,1);assert.equal(duelCastState(20000,3).ultimate,true);
 });
 test('louder music and SFX mix; speech ducking restores both music and stale lease',()=>{
  const a=new CultivationAudio();a.music={volume:0};a.sync();const normal=a.music.volume;
