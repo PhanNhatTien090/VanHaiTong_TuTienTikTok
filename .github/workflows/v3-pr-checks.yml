@@ -65,6 +65,13 @@ jobs:
         run: npm test
       - name: Verify and render LIVE 2.0 artwork at 1080x1920
         run: node scripts/render-live2-preview.mjs
+      - name: Record LIVE 2.0 synthetic server load metrics
+        run: node scripts/bench-live2.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: live2-server-bench
+          path: output/live2-bench/
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: live2-visual-preview
