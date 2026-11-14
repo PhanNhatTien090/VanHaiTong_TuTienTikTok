@@ -1,4 +1,5 @@
-import {drawDuelGiftStrike,drawDuelCutIn} from './duel-combat.js';
+import {drawDuelGiftStrike} from './duel-combat.js';
+import {drawShockwave,drawCelestialImpact} from './cinematic-vfx.js';
 import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {drawSpiritGift,loadSpiritBeasts} from './gift-spirit-beasts.js';
 import {giftCameraImpulse,boundedCameraJolt,feedbackBudget,takeFeedbackCue} from './cinematic-feedback.js';
@@ -18,12 +19,24 @@ export function eventGiftTier(value){value=Number(value);if(!Number.isFinite(val
 export function sliceEventGiftAtlas(im,factory=makeSurface,size=256){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;return Array.from({length:6},(_,i)=>{const f=factory(size,size);f?.getContext('2d').drawImage(im,i%3*w/3,Math.floor(i/3)*h/2,w/3,h/2,2,2,size-4,size-4);return f;});}
 export function loadEventGiftArt(scene){if(scene.eventGiftArt||scene.eventGiftLoading||scene.eventGiftRetry>Date.now()||typeof Image==='undefined')return;scene.eventGiftLoading=true;Promise.all(['race','duel'].map(kind=>new Promise((resolve,reject)=>{let im=new Image();im.onload=()=>{const frames=sliceEventGiftAtlas(im);im=null;resolve(frames);};im.onerror=reject;im.src='/assets/event-gift-v1/'+kind+'.png';}))).then(([race,duel])=>{scene.eventGiftArt={race,duel};scene.eventGiftLoading=false;}).catch(()=>{scene.eventGiftLoading=false;scene.eventGiftRetry=Date.now()+15000;});}
 export class EventGiftQueue{
- constructor(){this.seen=new Set();this.pending=[];this.active=null;this.context=null;}
- sync(context,rows,serverNow){if(context!==this.context){this.context=context;this.pending=[];this.active=null;}if(!context)return;for(const row of rows||[]){if(this.seen.has(row.id))continue;this.seen.add(row.id);if(serverNow-row.at>15000||row.at>serverNow+2000||!eventGiftTier(row.value))continue;
+ constructor(){this.seen=new Set();this.pending=[];this.active=null;this.activeRows=[];this.context=null;}
+ sync(context,rows,serverNow){if(context!==this.context){this.context=context;this.pending=[];this.active=null;this.activeRows=[];}if(!context)return;for(const row of rows||[]){if(this.seen.has(row.id))continue;this.seen.add(row.id);if(serverNow-row.at>15000||row.at>serverNow+2000||!eventGiftTier(row.value))continue;
   const same=this.pending.find(e=>e.user===row.user&&(row.comboKey?e.comboKey===row.comboKey&&e.gift===row.gift:e.value<100&&row.value<100&&Math.abs(e.at-row.at)<1200));if(same){same.value+=row.value;same.count=(same.count||1)+(row.count||1);same.at=row.at;same.comboFinal=row.comboFinal;if(row.comboKey)same.readyAt=Math.min(same.firstAt+20000,performance.now()+1500);}else this.pending.push({...row,firstAt:performance.now(),readyAt:row.comboKey?performance.now()+1500:0});}
   while(this.seen.size>256)this.seen.delete(this.seen.values().next().value);this.pending=this.pending.filter(e=>serverNow-e.at<15000).sort((a,b)=>b.value-a.value||a.at-b.at).slice(0,8);
  }
- sample(t){if(this.active&&t-this.active.start>=this.active.profile.duration)this.active=null;if(!this.active&&this.pending.length){const index=this.pending.findIndex(e=>!e.readyAt||e.comboFinal||performance.now()>=e.readyAt);if(index<0)return null;const [row]=this.pending.splice(index,1);this.active={...row,start:t,profile:eventGiftTier(row.value)};}return this.active;}
+ sampleAll(t,cap=1){
+  this.activeRows=this.activeRows.filter(e=>t-e.start<e.profile.duration);
+  const max=Math.min(2,Math.max(1,cap));
+  while(this.activeRows.length<max&&this.pending.length){
+   const index=this.pending.findIndex(e=>!e.readyAt||e.comboFinal||performance.now()>=e.readyAt);
+   if(index<0)break;
+   const [row]=this.pending.splice(index,1);
+   this.activeRows.push({...row,start:t,profile:eventGiftTier(row.value)});
+  }
+  this.active=this.activeRows[0]||null;
+  return this.activeRows;
+ }
+ sample(t){return this.sampleAll(t,1)[0]||null;}
 }
 export function syncEventGiftFx(scene,state){const race=state.raceStatus,match=state.socialStatus?.tournament?.current,context=race?.active&&race.phase==='running'?'race:'+race.id:state.socialScene==='tournament'&&match?'duel:'+match.id:null;
  const rows=(context?.startsWith('race:')?race.giftFx:match?.giftFx)||[],players=new Map(state.players.map(p=>[p.id,p]));
@@ -32,10 +45,17 @@ export function syncEventGiftFx(scene,state){const race=state.raceStatus,match=s
 function img(c,im,x,y,w,h,rot=0,alpha=1,flip=false){if(!im||alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(rot);if(flip)c.scale(-1,1);c.drawImage(im,-w/2,-h/2,w,h);c.restore();}
 function flowingSprite(c,im,x,y,w,h,time,alpha){if(!im)return;c.save();c.globalAlpha*=alpha;for(let i=0;i<6;i++){const u=i/6,shift=Math.sin(time*.011-u*8)*w*.035*u;c.drawImage(im,0,i*im.height/6,im.width,im.height/6,x-w/2+shift,y-h/2+i*h/6,w,h/6+1);}c.restore();}
 export function eventGiftImpulse(scene,t){return giftCameraImpulse(scene,scene.eventGiftQueue?.active,t);}
-export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQueue?.sample(t);if(!e||e.mode!==mode)return false;const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion?raw:.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,light=feedbackBudget(scene),art=scene.eventGiftArt?.[mode];
- if(!fade)return true;const a=caster||{x:450,y:H*.32,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
- if(layer==='back'&&takeFeedbackCue(e,'castStarted',raw,0,.22)){if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',mode);}
- if(layer==='front'&&takeFeedbackCue(e,'impactSound',raw,.3,.43)&&e.value>=500)scene.onSpectacleImpact?.();
+export function drawEventGiftFx(scene,c,t,layer,mode){
+ const light=feedbackBudget(scene),available=scene.eventGiftQueue?.sampleAll(t,mode==='duel'&&!light?2:1)||[],rows=light?available.slice(0,1):available;
+ if(!rows.length)return false;
+ let shown=false;
+ for(const e of rows){
+ if(e.mode!==mode)continue;
+ shown=true;
+ const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion?raw:.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,art=scene.eventGiftArt?.[mode];
+ if(!fade)continue;const a=caster||{x:450,y:H*.42,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
+ if(layer==='back'&&takeFeedbackCue(e,'castStarted',raw,0,.22)){if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',mode);if(mode==='duel'&&e.value>=1000)scene.onCinematicSound?.('duel-gift:'+e.id,e.wardEffect?.kind==='shield-heal'?'healing':'gold',q.duration*.30/1000,{priority:e.value>=2000?5:4,charge:true,gain:.5});}
+ if(layer==='front'&&takeFeedbackCue(e,'impactSound',raw,.3,.43)&&e.value>=500&&e.value<1000)scene.onSpectacleImpact?.();
  c.save();c.globalAlpha=fade;
  if(layer==='back')drawSpiritGift(c,e.value,k,a,H,{art:scene.spiritBeasts,time,light,motion:scene.motion,mode});
  if(mode==='race'){
@@ -57,7 +77,14 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
    else {c.strokeStyle=q.color;c.lineWidth=3;c.beginPath();c.ellipse(x,y+25,80*open,20*open,0,0,TAU);c.stroke();}
   }else{
    drawDuelGiftStrike(c,{x,y:y-90,toX:to.x,toY:to.y-90,k,color:q.color,power:Math.min(2,.7+q.blades/10),light});
-   if(e.value>=500&&caster?.player)drawDuelCutIn(scene,c,caster,{name:q.name+' · GIÁNG THẾ',color:q.color},k,H,{gift:true});
+   if(e.value>=500){
+    const impactAge=(raw-.30)*q.duration,tx=caster?to.x:450,ty=caster?to.y-80:H*.49;
+    if(impactAge>=0&&impactAge<420){
+     drawShockwave(c,'gold',tx,ty,impactAge,{quality:light?'light':'balanced',radius:e.value>=2000?340:235,seed:e.value*.013,motion:scene.motion,flash:false,aspect:.58});
+     if(!light&&!scene.reduceFlash)drawCelestialImpact(c,tx,ty,impactAge,e.value>=2000?205:125,.78);
+    }
+   }
+   // Pre-cast diagonal banners are rendered once in screen space by duel-cinematic.js.
    for(let wave=0;wave<Math.min(light?6:8,q.waves);wave++){
     const u=clamp((k-.10-wave*.085)/.30);if(u<=0||u>=1)continue;const travel=ease(u),xx=x+(to.x-x)*travel,yy=y-90+(to.y-y)*travel-Math.sin(u*Math.PI)*(35+wave*14),w=q.size*(.55+Math.sin(u*Math.PI)*.4);
     img(c,im,xx,yy,w,w*.74,Math.sin(u*Math.PI)*side*.14,Math.sin(u*Math.PI)*.90,side<0);
@@ -71,8 +98,23 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
   const n=Math.min(light?12:20,q.blades);c.fillStyle=q.color;for(let i=0;i<n;i++){const u=(k*1.7+i/n)%1,xx=x+Math.cos(i*2.399)*(25+u*q.size*.55),yy=y+20+u*u*170;c.globalAlpha=fade*(1-u)*.65;c.fillRect(xx,yy,2,5);}
   c.globalAlpha=fade;drawGiftDonor(c,e,x,Math.max(H*.19,y-(mode==='race'?155*s:205)),{color:q.color,radius:mode==='race'?25:34,width:mode==='race'?200:290,caption:e.value.toLocaleString('vi-VN')+' coin · '+q.name});
   c.globalAlpha=fade;c.font='bold '+(mode==='race'?15:18)+'px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#101422';c.fillStyle=q.color;const label=(mode==='duel'&&!e.fighter?e.name+' · ':'')+q.name+(mode==='race'?(e.boost?' · BỨT TỐC':' · VINH DANH'):' · CỔ VŨ');const yy=mode==='race'?y+70*s:y+90;c.strokeText(label,x,yy,mode==='race'?170:370);c.fillText(label,x,yy,mode==='race'?170:370);
+  // Display ONLY server-accepted barrier damage/restoration. No invented HP.
+  if(mode==='duel'&&e.wardEffect?.amount>0){
+   const effect=e.wardEffect,pulse=clamp((raw-.31)/.26),visibility=Math.sin(pulse*Math.PI);
+   if(raw>=.31&&raw<.57&&visibility>0){
+    const healed=effect.kind==='shield-heal',target=targets.find(p=>p.id===effect.target);
+    const tx=target?.x??450,ty=(target?.y??H*.65)-215-(scene.motion?pulse*65:0);
+    const text=(healed?'HỒI HỘ THUẪN +':'PHÁ HỘ THUẪN -')+Math.round(effect.amount).toLocaleString('vi-VN');
+    c.globalAlpha=visibility*fade;c.font='900 32px "Segoe UI",sans-serif';
+    c.strokeStyle='#071120';c.lineWidth=7;c.strokeText(text,tx,ty,560);
+    c.fillStyle=healed?'#95ffd2':'#ffd28a';c.fillText(text,tx,ty,560);
+    c.globalAlpha=fade;
+   }
+  }
  }
- c.restore();return true;
+ c.restore();
+ }
+ return shown;
 }
 
 export const eventGiftCamera=(base,jolt,H)=>boundedCameraJolt(base,jolt,H,true);

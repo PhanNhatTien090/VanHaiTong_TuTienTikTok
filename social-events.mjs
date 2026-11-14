@@ -30,9 +30,55 @@ function decide(t,a,b,strengths,boosts={}){
  const tie=!decided&&score(a)===score(b),aEarlier=(t.entries.find(e=>e.id===a)?.at||0)<=(t.entries.find(e=>e.id===b)?.at||0),winner=decided||(score(a)>score(b)||tie&&aEarlier?a:b);
  return {winner,loser:winner===a?b:a,scoreA:score(a),scoreB:score(b),tie};
 }
+// Server-owned spectacle shields. This is a separate magic barrier, NOT player HP,
+// and never changes decide() or the tournament's existing winner/reward rules.
+export const DUEL_SHIELD_PHASES=Object.freeze([
+ {id:'probe',from:1500,to:6300,period:1600,hit:.67,strength:.025},
+ {id:'attack',from:8900,to:17000,period:1150,hit:.67,strength:.055},
+ {id:'guard',from:17000,to:19800,period:1400,hit:.67,strength:.055},
+ {id:'ultimate',from:19800,to:23300,period:3500,hit:.67,strength:.18}
+]);
+const duelShieldMax=(t,id)=>Math.round(Math.max(70,Math.min(160,t.fighters?.[id]?.strength||100))*1000);
+function ensureDuelShields(t,m){
+ if(!m.guardShields)m.guardShields={};
+ for(const id of [m.a,m.b])if(!m.guardShields[id]){
+  const max=duelShieldMax(t,id);m.guardShields[id]={current:max,max};
+ }
+ return m.guardShields;
+}
+function applyDuelShieldHits(t,m,now){
+ const shields=ensureDuelShields(t,m),age=Math.max(0,Math.min(DUEL_MS,now-m.startedAt));
+ m.guardHitKeys??={};
+ for(const phase of DUEL_SHIELD_PHASES){
+  const count=Math.floor((phase.to-phase.from)/phase.period);
+  for(let n=0;n<count;n++){
+   const key=phase.id+':'+n,at=phase.from+(n+phase.hit)*phase.period;
+   if(at>age||m.guardHitKeys[key])continue;
+   m.guardHitKeys[key]=true;
+   const lead=decide(t,m.a,m.b,m.strengths,m.boosts);
+   const caster=phase.id==='guard'||phase.id==='ultimate'?lead.winner:n%2?m.b:m.a;
+   const target=caster===m.a?m.b:m.a,shield=shields[target];
+   shield.current=Math.max(0,shield.current-Math.round(shield.max*phase.strength));
+  }
+ }
+}
+export function duelGiftShieldImpact(w,p,value,now){
+ const t=w.tournament,m=t?.current;
+ if(t?.phase!=='running'||!m||now>=m.endsAt||value<500||![m.a,m.b].includes(p?.id))return null;
+ // Resolve missed battle ticks before applying the gifted super-move.
+ applyDuelShieldHits(t,m,now);
+ const shields=ensureDuelShields(t,m),own=shields[p.id],foeId=p.id===m.a?m.b:m.a,foe=shields[foeId];
+ const fraction=Math.min(.38,.1+Math.log10(value+1)*.082);
+ const useHeal=own.current<own.max*.68;
+ const receiver=useHeal?own:foe;
+ const desired=Math.max(1,Math.round(receiver.max*(useHeal?fraction*.8:fraction)));
+ const amount=useHeal?Math.min(receiver.max-receiver.current,desired):Math.min(receiver.current,desired);
+ receiver.current=Math.max(0,Math.min(receiver.max,receiver.current+(useHeal?amount:-amount)));
+ return {kind:useHeal?'shield-heal':'shield-break',amount,source:p.id,target:useHeal?p.id:foeId,after:receiver.current,max:receiver.max};
+}
 function match(w,a,b,now,c){
  const t=w.tournament,pa=w.players[a],pb=w.players[b],sa=t.fighters[a],sb=t.fighters[b];
- return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+DUEL_MS,boosts:{[a]:0,[b]:0},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},aura:{[a]:0,[b]:0}};
+ return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+DUEL_MS,boosts:{[a]:0,[b]:0},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},aura:{[a]:0,[b]:0},guardShields:{[a]:{current:duelShieldMax(t,a),max:duelShieldMax(t,a)},[b]:{current:duelShieldMax(t,b),max:duelShieldMax(t,b)}}};
 }
 // Re-seed every round by actual cultivation, not equipment power or registration order.
 export function tournamentPairs(ids,fighters){
@@ -88,7 +134,7 @@ function finishTournament(w,winner,now,c){
 function tickTournament(w,now,c){
  const t=w.tournament;if(!tournamentActive(w))return;
  if(t.phase==='registration'){if(now>=t.registrationEndsAt)beginRound(w,now,c);return;}
- if(t.current){const m=t.current,progress=Math.max(0,Math.min(1,(now-m.startedAt)/DUEL_MS)),lead=decide(t,m.a,m.b,m.strengths,m.boosts);m.aura??={};
+ if(t.current){const m=t.current,progress=Math.max(0,Math.min(1,(now-m.startedAt)/DUEL_MS)),lead=decide(t,m.a,m.b,m.strengths,m.boosts);m.aura??={};applyDuelShieldHits(t,m,now);
   // Linh áp tăng dần (không có thanh máu): bên đang dẫn lên 100, bên kia dừng thấp hơn theo tỉ lệ điểm.
   for(const id of [m.a,m.b]){const own=id===m.a?lead.scoreA:lead.scoreB,top=Math.max(lead.scoreA,lead.scoreB)||1,cap=id===lead.winner?100:Math.max(60,Math.min(97,Math.round(100*own/top)-(lead.winner===id?0:3)));m.aura[id]=Math.round(progress*cap);}
   if(now>=m.endsAt)finishMatch(w,now,c);return;}
