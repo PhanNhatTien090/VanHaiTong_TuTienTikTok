@@ -49,11 +49,11 @@ test('installer validates a local extracted folder and its own generated switch 
   await mkdir(join(input,'alpha_webp'),{recursive:true});
   for(const [i,name]of PREMIUM_FILES.entries())await writeFile(join(input,'alpha_webp',name),fakeWebp(i+18));
   const installed=await installV7Premium(input,{root:output});
-  assert.equal(installed.files,7);
+  assert.equal(installed.files,10);
   const config=await readFile(join(output,'public','v7-premium-config.js'),'utf8');
   assert.match(config,/V7_PREMIUM_ENABLED=true/);
   const manifest=JSON.parse(await readFile(join(output,'public','assets','v7-premium','manifest.json'),'utf8'));
-  assert.equal(manifest.files.length,7);
+  assert.equal(manifest.files.length,10);
   assert.equal(manifest.files[0].sha256.length,64);
   const again=await readFile(join(output,'public','assets','v7-premium','thunder-dragon.webp'));
   assert.equal(again.toString('ascii',0,4),'RIFF');
@@ -66,10 +66,10 @@ test('installer safely reads compact ZIP uploads with central-directory deflate 
   const blobs=new Map(PREMIUM_FILES.map((file,i)=>[file,fakeWebp(i+20)]));
   const name=join(tmp,'asset-pack.zip');await writeFile(name,zipPack(blobs));
   const decoded=await readPremiumPack(name);
-  assert.equal(decoded.size,7);
+  assert.equal(decoded.size,10);
   for(const key of PREMIUM_FILES)assert.deepEqual(decoded.get(key),blobs.get(key));
   const dest=await installV7Premium(name,{root:join(tmp,'webgame')});
-  assert.equal(dest.files,7);
+  assert.equal(dest.files,10);
  }finally{await rm(tmp,{recursive:true,force:true});}
 });
 
