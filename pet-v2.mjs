@@ -3,6 +3,7 @@
 import {petById} from './public/spirit-pets.js';
 import {petV2Skill,petStageName,petXpNext,petBasePoints,petStageUnlocked} from './public/pet-v2-catalog.js';
 import {stageConflict} from './stage-lock.mjs';
+import {petV2GearResonance,petV2Route,petV2ExpeditionAffinity,petV2Combination} from './pet-v2-systems.mjs';
 const V2_DEFAULTS=Object.freeze({enabled:false,progression:false,combat:false,evolutionArt:false,coveV2:false,expedition:false,synergy:false,quality:'auto'});
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const dayOf=t=>new Date(t+7*3600000).toISOString().slice(0,10);
@@ -21,9 +22,9 @@ function allowedPlayer(w,p,id=p?.spiritPet){
 }
 function storage(w,create=false){
  if(!create)return w.petGrowthV2?.schema===2?w.petGrowthV2:null;
- if(!w.petGrowthV2||w.petGrowthV2.schema!==2)w.petGrowthV2={schema:2,players:{},activeExpeditions:{},cinematics:[]};
+ if(!w.petGrowthV2||w.petGrowthV2.schema!==2)w.petGrowthV2={schema:2,players:{},activeExpeditions:{},cinematics:[],coveSessions:{}};
  const s=w.petGrowthV2;
- s.players??={};s.activeExpeditions??={};s.cinematics??=[];
+ s.players??={};s.activeExpeditions??={};s.cinematics??=[];s.coveSessions??={};
  return s;
 }
 function freshPet(){return {level:1,xp:0,bond:0,stage:0,trains:0,expeditions:0,lastFedAt:0,lastTrainedAt:0,nextSkillAt:0,armedUntil:0};}
@@ -48,7 +49,7 @@ export function petV2View(w,p,id=p?.spiritPet){
  if(!petV2Flags(w).enabled||!allowedPlayer(w,p,id))return null;
  const g=growth(w,p,id),s=petV2Skill(id);
  if(!s||!g)return null;
- return {id,level:g.level,stage:g.stage,stageName:petStageName(g.stage),xp:g.xp,xpNext:petXpNext(g.level),bond:g.bond,skill:s.name,skillId:s.id,role:s.role,element:s.element,onExpedition:!!owner(w,p)?.expedition?.endsAt&&!owner(w,p)?.expedition?.resolvedAt&&owner(w,p).expedition.petId===id};
+ return {id,level:g.level,stage:g.stage,stageName:petStageName(g.stage),xp:g.xp,xpNext:petXpNext(g.level),bond:g.bond,skill:s.name,skillId:s.id,role:s.role,element:s.element,resonance:petV2GearResonance(p,id),onExpedition:!!owner(w,p)?.expedition?.endsAt&&!owner(w,p)?.expedition?.resolvedAt&&owner(w,p).expedition.petId===id};
 }
 export function petV2Cards(w,p){
  if(!petV2Flags(w).enabled||!valid(p))return {};
@@ -93,6 +94,12 @@ export function petV2Command(w,p,cmd,rest,now,emit){
   const k='cove:'+w.petEvent.id;
   if(o.lastCoveReward===k)return result('Đã nhận linh duyên lượt này.');
   o.lastCoveReward=k;o.inventory.spiritFood=Math.min(99,o.inventory.spiritFood+1);
+  // A free, once-per-event co-op goal, independent of gifts/rarity and capped at 8 participants.
+  const state=storage(w,true),eid=w.petEvent.id;
+  const active=Object.values(w.players).filter(q=>valid(q)&&now-(q.lastActive||0)<300000).length;
+  const session=state.coveSessions[eid]??={participants:{},goal:clamp(Math.ceil(active/4),1,8),rewarded:false,startedAt:now};
+  if(!session.rewarded)session.participants[p.id]=now;
+  const coveIds=Object.keys(state.coveSessions);if(coveIds.length>12)for(const old of coveIds.slice(0,coveIds.length-12))delete state.coveSessions[old];
   emit(w,p,'Tìm thấy linh duyên • +1 Linh Lương','pet',now,{petV2Reward:true});
   return result('Nhận 1 Linh Lương miễn phí.');
  }
@@ -131,6 +138,8 @@ export function petV2Command(w,p,cmd,rest,now,emit){
   return result('Tiến hóa thành '+petStageName(next));
  }
  if(op==='hanh'){
+  const routeId=String(rest||'').split(' ')[1]||'nguyet',route=petV2Route(routeId);
+  if(!route)return {ok:false,message:'Chọn viễn chinh: thú hành nguyet / hoa / tinh.'};
   if(!petV2On(w,'expedition'))return {ok:false,message:'Viễn chinh chưa bật.'};
   if(o.expedition&&!o.expedition.resolvedAt){
    const remaining=Math.max(0,Math.ceil((o.expedition.endsAt-now)/60000));
@@ -138,9 +147,9 @@ export function petV2Command(w,p,cmd,rest,now,emit){
   }
   if(d.expeditionClaims)return {ok:false,message:'Đã nhận thưởng viễn chinh hôm nay.'};
   const duration=[600000,900000,1200000][Math.min(2,g.stage)];
-  o.expedition={id:'pet-exp:'+p.id+':'+now,petId:id,startedAt:now,endsAt:now+duration,resolvedAt:0};
+  o.expedition={id:'pet-exp:'+p.id+':'+now,petId:id,routeId,startedAt:now,endsAt:now+duration,resolvedAt:0};
   storage(w,true).activeExpeditions[p.id]=o.expedition.endsAt;
-  emit(w,p,petById(id).name+' khởi hành thám hiểm bí cảnh','pet',now,{petV2Expedition:true,petId:id});
+  emit(w,p,petById(id).name+' khởi hành '+route.name,'pet',now,{petV2Expedition:true,petId:id,routeId});
   return result('Viễn chinh bắt đầu, hoàn thành sau '+Math.round(duration/60000)+' phút.');
  }
  if(op==='xuat'){
@@ -167,16 +176,17 @@ export function petV2DuelPoints(w,p){
  if(!petV2On(w,'combat')||!allowedPlayer(w,p))return 0;
  const o=owner(w,p);
  if(o?.expedition&&!o.expedition.resolvedAt&&o.expedition.petId===p.spiritPet)return 0;
- return petBasePoints(growth(w,p));
+ return Math.min(4,petBasePoints(growth(w,p))+(petV2GearResonance(p)?1:0));
 }
 export function petV2BossDamage(w,p,base,now){
  if(!petV2On(w,'combat')||!allowedPlayer(w,p)||!w.boss?.hp||base<=0)return 0;
  const o=owner(w,p);
  if(o?.expedition&&!o.expedition.resolvedAt&&o.expedition.petId===p.spiritPet)return 0;
  const boss=w.boss,prior=boss.petV2Damage||{},global=prior.total||0,per=prior.players?.[p.id]||0;
- const g=growth(w,p),rate=.06+.04*((g.level-1)/39);
+ const maxHp=Number(boss.maxHp);if(!Number.isFinite(maxHp)||maxHp<=0)return 0;
+ const g=growth(w,p),rate=.06+.03*((g.level-1)/39)+(petV2GearResonance(p)? .01:0);
  const hit=Math.max(1,Math.round(base*rate));
- return Math.max(0,Math.floor(Math.min(hit,boss.maxHp*.01,boss.maxHp*.03-per,boss.maxHp*.15-global,boss.hp-Math.min(boss.hp,base))));
+ return Math.max(0,Math.floor(Math.min(hit,maxHp*.01,maxHp*.03-per,maxHp*.15-global,boss.hp-Math.min(boss.hp,base))));
 }
 export function petV2CommitBossDamage(w,p,damage,now,emit){
  if(damage<=0||!w.boss)return null;
@@ -188,14 +198,13 @@ export function petV2CommitBossDamage(w,p,damage,now,emit){
  if(g.armedUntil>now){g.armedUntil=0;g.nextSkillAt=now+20000;emit(w,p,skill.name,'pet',now,{petV2Cast:true,petId:id,petSkill:skill.name,petFx:skill.fx,damage});}
  if(!petV2On(w,'synergy'))return null;
  s.recent=s.recent.filter(x=>now-x.at<=8000&&x.id!==p.id).slice(-8);
- const combinations=[['fire','lightning','Lôi Hỏa Thiên Kiếp'],['ice','water','Huyền Băng Thiên Triều'],['moon','star','Tinh Nguyệt Đồng Huy']];
- const other=s.recent.find(x=>combinations.some(c=>c.slice(0,2).includes(x.element)&&c.slice(0,2).includes(skill.element)&&x.element!==skill.element));
+ const other=s.recent.find(x=>petV2Combination(x.element,skill.element));
  s.recent.push({id:p.id,element:skill.element,at:now});
  if(!other||now-s.lastSynergyAt<40000)return null;
  s.lastSynergyAt=now;
- const combo=combinations.find(c=>c.slice(0,2).includes(other.element)&&c.slice(0,2).includes(skill.element));
- emit(w,p,'HỢP KÍCH • '+combo[2],'pet',now,{petV2Synergy:true,petId:id,petSkill:combo[2],petFx:skill.fx,partnerId:other.id});
- return combo[2];
+ const combo=petV2Combination(other.element,skill.element);
+ emit(w,p,'HỢP KÍCH • '+combo,'pet',now,{petV2Synergy:true,petId:id,petSkill:combo,petFx:skill.fx,partnerId:other.id});
+ return combo;
 }
 export function petV2Tick(w,now,emit){
  const s=storage(w);if(!petV2Flags(w).enabled||!s||now-(s.lastTickAt||0)<5000)return;
@@ -207,9 +216,20 @@ export function petV2Tick(w,now,emit){
   if(!allowedPlayer(w,p,e.petId))continue;
   e.resolvedAt=now;delete s.activeExpeditions[id];
   const g=growth(w,p,e.petId,true),d=daily(o,now);g.expeditions++;d.expeditionClaims++;
-  const xp=gainXp(w,p,'expedition',30,now,e.petId);
+  const xp=gainXp(w,p,'expedition',30+(petV2ExpeditionAffinity(e.petId,e.routeId)?10:0),now,e.petId);
   o.inventory.evolutionShards=Math.min(999,(o.inventory.evolutionShards||0)+1);
   emit(w,p,petById(e.petId).name+' trở về • +'+xp+' XP · +1 Linh Ấn','pet',now,{petV2ExpeditionDone:true,petId:e.petId,xp});
+ }
+ const cove=petV2CovePhase(w,now),session=cove&&s.coveSessions?.[w.petEvent?.id];
+ if(session&&!session.rewarded&&['community','settlement'].includes(cove.phase)&&
+    Object.keys(session.participants||{}).length>=session.goal){
+   session.rewarded=true;
+   const participants=Object.keys(session.participants).filter(id=>valid(w.players[id])&&!w.playTransfers?.[id]?.phase==='web');
+   for(const id of participants){const p=w.players[id],o=owner(w,p,true);if(!o)continue;
+    o.inventory.evolutionShards=Math.min(999,(o.inventory.evolutionShards||0)+1);
+    gainXp(w,p,'cove',10,now);
+   }
+   emit(w,null,'LINH THÚ CỐC • '+participants.length+' đạo hữu hợp lực nhận Linh Ấn','pet',now,{petV2CoveCompleted:true,count:participants.length,goal:session.goal});
  }
  if(s.cinematics?.length&&!stageConflict(w,now)&&now-(s.lastCinematicAt||0)>=6000){
   const e=s.cinematics.shift(),p=w.players[e.playerId];s.lastCinematicAt=now;
