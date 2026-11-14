@@ -69,8 +69,29 @@ export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))r
 // Evolved animation loads lazily; never replaces any of the thirteen original pose atlases.
 // Absent/unapproved stage artwork immediately falls back to all original moving frames.
 const PET_V2_FRAME_CACHE=new Map(),PET_V2_BAD_ASSETS=new Set();
-const PET_V2_CACHE_LIMIT=8*1024*1024;
+const PET_V2_CACHE_LIMIT=8*1024*1024, PET_V2_MAX_LOADING=2;
 const petV2Key=(id,stage)=>id+':stage'+stage;
+const petV2LoadQueue=[];let petV2ActiveLoads=0;
+function pumpPetV2Loads(){
+ while(petV2ActiveLoads<PET_V2_MAX_LOADING&&petV2LoadQueue.length){
+  const task=petV2LoadQueue.shift();
+  petV2ActiveLoads++;
+  const finish=(value,error)=>{petV2ActiveLoads--;if(error)task.reject(error);else task.resolve(value);pumpPetV2Loads();};
+  const im=new Image();im.decoding='async';
+  im.onload=()=>{try{
+   const {spec,id}=task;
+   if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size)throw Error('Evolved atlas dimensions invalid');
+   const frames=spec.frames===8?slicePremiumPetFrames(im,id):slicePetFrames(im,id);
+   if(frames.length!==spec.frames||frames.some(f=>!f))throw Error('Evolved atlas frame coverage invalid');
+   finish(frames,null);
+  }catch(err){finish(null,err);}};
+  im.onerror=()=>finish(null,Error('Evolved atlas unavailable: '+task.key));
+  im.src=task.spec.path;
+ }
+}
+function requestPetV2Frames(spec,id,key){
+ return new Promise((resolve,reject)=>{petV2LoadQueue.push({spec,id,key,resolve,reject});pumpPetV2Loads();});
+}
 export function petV2FramesFor(scene,p){
  const id=p?.spiritPet;
  const stage=Math.max(0,Math.min(3,Math.floor(p?.petView?.stage||0)));
@@ -84,17 +105,7 @@ function loadPetEvolution(scene,id,stage){
  if(scene.petArt.has(key)||PET_V2_BAD_ASSETS.has(key))return;
  scene.petArt.set(key,null);
  if(!PET_V2_FRAME_CACHE.has(key)){
-  const job=new Promise((resolve,reject)=>{
-   const im=new Image();im.decoding='async';
-   im.onload=()=>{try{
-    if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size)throw Error('Evolved atlas dimensions invalid');
-    const frames=spec.frames===8?slicePremiumPetFrames(im,id):slicePetFrames(im,id);
-    if(frames.length!==spec.frames||frames.some(f=>!f))throw Error('Evolved atlas frame coverage invalid');
-    resolve(frames);
-   }catch(err){reject(err);}};
-   im.onerror=()=>reject(Error('Evolved atlas unavailable: '+key));
-   im.src=spec.path;
-  });
+  const job=requestPetV2Frames(spec,id,key);
   PET_V2_FRAME_CACHE.set(key,job);
  }
  PET_V2_FRAME_CACHE.get(key).then(frames=>{
