@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>Nhân Quả Vương Lâm · xem thử</title>
+<style>html,body{margin:0;background:#111}canvas{display:block}</style></head>
+<body><canvas id="c" width="900" height="1600"></canvas>
+<script type="module">
+import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js';
+import {KARMA_VISITOR} from './court-rewards.js';
+// ?mode=idle|reveal  &k=0..1 (cố định khung)  &t=ms  &pose=stand|seat  &map=url
+const q=new URLSearchParams(location.search),mode=q.get('mode')||'idle',stand=q.get('pose')==='seat'?0:1;
+const load=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
+const a=KARMA_VISITOR.artwork;
+const [bg,seated,standing,blade,halo]=await Promise.all([load(q.get('map')||'/assets/thien-khuyet/map.webp'),load(a.seated),load(a.standing),load(a.blade),load(a.halo)]);
+const art={blade,halo},c=document.getElementById('c'),x=c.getContext('2d'),H=1600;
+const target={x:450,y:1180,scale:4.6};
+function body(){
+ const img=stand?standing:seated,h=stand?125:91,w=h*img.naturalWidth/img.naturalHeight;
+ x.save();x.translate(target.x,target.y);x.scale(target.scale,target.scale);x.drawImage(img,-w/2,25-h,w,h);x.restore();
+}
+function frame(t,k){
+ x.clearRect(0,0,900,H);if(bg){const s=Math.max(900/bg.naturalWidth,H/bg.naturalHeight);x.drawImage(bg,(900-bg.naturalWidth*s)/2,(H-bg.naturalHeight*s)/2,bg.naturalWidth*s,bg.naturalHeight*s);}
+ const pose={stand};
+ if(mode==='reveal'){
+  drawKarmaReveal(x,t,k,target,'back',.45,art,{pose,seed:q.get('seed')||'demo'});
+  if(k>=.45)body();
+  drawKarmaReveal(x,t,k,target,'front',.45,art,{pose,seed:q.get('seed')||'demo'});
+ }else{
+  const light=q.get('light')==='1';
+  x.save();x.translate(target.x,target.y);x.scale(target.scale,target.scale);
+  drawKarmaAura(x,t,stand,'back',{light});drawKarmaGear(x,art,t,pose,'back',{light});x.restore();
+  body();
+  x.save();x.translate(target.x,target.y);x.scale(target.scale,target.scale);
+  drawKarmaGear(x,art,t,pose,'front',{light});drawKarmaAura(x,t,stand,'front',{light});x.restore();
+ }
+}
+const fixedK=q.has('k')?Number(q.get('k')):null,fixedT=q.has('t')?Number(q.get('t')):null;
+if(fixedK!==null||fixedT!==null){frame(fixedT??4000,fixedK??0);document.title='ready';}
+else{const start=performance.now();const loop=now=>{const k=((now-start)%9000)/8000;frame(now,Math.min(k,1));requestAnimationFrame(loop);};requestAnimationFrame(loop);}
+</script></body></html>

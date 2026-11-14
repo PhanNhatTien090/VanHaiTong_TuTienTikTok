@@ -15,7 +15,7 @@ export function eventDashboardHTML(state){
  const knownRelics=new Set((state.catalog||[]).map(item=>item.id));
  const courtCards=COURT_VISITORS.map(v=>{
   const supported=knownRelics.has(v.artifact);
-  return `<article class="event-hero event-hero-boss"><img src="/assets/thien-khuyet/${v.kind}-standing.webp" alt=""><div><h3>${esc(v.name)}</h3><p>300 coin mở skin · 500 coin thêm ${esc(v.relic)}</p>${button('Mở sự kiện','visitor',{kind:v.kind,disabled:busy||!supported})}${supported?'':'<p>Máy chủ game'+(globalThis.location?.port?' cổng '+esc(globalThis.location.port):'')+' chưa nạp sự kiện này. Chạy CAP-NHAT-LIVE.cmd để cập nhật máy chủ.</p>'}</div></article>`;
+  return `<article class="event-hero event-hero-boss"><img src="${v.artwork?.standing||'/assets/thien-khuyet/'+v.kind+'-standing.webp'}" alt=""><div><h3>${esc(v.name)}</h3><p>${v.skinCoins&&v.skinCoins===v.artifactCoins?v.skinCoins+' coin nhận skin + '+esc(v.relic):(v.skinCoins||300)+' coin mở skin · '+(v.artifactCoins||500)+' coin thêm '+esc(v.relic)}</p>${button('Mở sự kiện','visitor',{kind:v.kind,disabled:busy||!supported})}${supported?'':'<p>Máy chủ game'+(globalThis.location?.port?' cổng '+esc(globalThis.location.port):'')+' chưa nạp sự kiện này. Chạy CAP-NHAT-LIVE.cmd để cập nhật máy chủ.</p>'}</div></article>`;
  }).join('');
  const visitors=[['hanlap','Hàn Lập'],['vuonglam','Vương Lâm / Lý Mộ Uyển'],['shende','Thần Đế'],['doraemon','Doraemon']].map(([id,name])=>button(name,'visitor',{kind:id,disabled:busy})).join('');
  const bosses=[['storm-tiger','Lôi Hổ'],['astral-tortoise','Huyền Vũ'],['rebirth-phoenix','Phượng Hoàng'],['azure-dragon','Thương Long'],['sky-kun','Cự Côn'],['moon-fox','Cửu Vĩ Hồ']].map(([species,label])=>button(label,'boss',{species,disabled:busy})).join('');

@@ -74,8 +74,8 @@ import {appearanceFor,drawRealmClothes,drawRealmAscension,drawRealmQiFront,REALM
 import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,BitmapCache,renderDimensions} from './performance.js';
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
-import {BLACK_GOLD_VISITOR} from './court-rewards.js';
-import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=tieu-viem-size-v3';
+import {signatureVisitor} from './court-rewards.js';
+import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=nhan-qua-v1';
 import {skinFor,layoutPlayers,layoutLabels,wrapName,spriteCell,visualGender} from './cosmetics.js';
 import {residentPlayers} from './residents.js';
 import {arenaOn,arenaBackground,arenaTargets,drawWings,drawArenaShots,drawArenaCasts,ARENA_BOSS_Y} from './boss-arena.js';
@@ -86,7 +86,7 @@ import {Mover} from './motion.js';
 import {drawBreakthroughFx,drawBreakthroughTitle,breakthroughTitleLayout,breakthroughDuration,breakthroughRealm} from './breakthrough-fx.js';
 import {drawGiftStage} from './gift-stage-fx.js';
 import {isCourtTransform,drawCourtTransformTitle} from './court-skin-fx.js';
-import {drawTransform,TRANSFORM_MS,REVEAL_AT} from './transform-fx.js';
+import {drawTransform,transformMs,REVEAL_AT} from './transform-fx.js';
 import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 const TAU=Math.PI*2;
@@ -192,26 +192,26 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(big&&event.user){this.presentation={id:event.user,kind:event.effect==='breakthrough'?'breakthrough':'gift',spectacle:!!giftSpectacleTier(event),until:performance.now()+(luxury?.duration||breakthroughDuration(event))};this.effects=[];this.fxQueue=[];this.focus(event.user,luxury?.duration||breakthroughDuration(event),luxury?1.45:2.1);}
     // v33: quà thường cũng "solo" người tặng (giống đột phá) trong 4,5 giây, trừ khi đang có màn đột phá / quà lớn.
     else if(event.transform&&event.user&&!smallGift(event)){
-      const start=performance.now(),blackGold=event.transform===BLACK_GOLD_VISITOR.kind;
-      this.presentation={id:event.user,kind:blackGold?'black-gold':'transform',until:start+TRANSFORM_MS};
-      this.transforming=event.hacKimArtifact?null:{id:event.user,revealAt:start+TRANSFORM_MS*REVEAL_AT};
+      const start=performance.now(),blackGold=!!signatureVisitor(event.transform),ms=transformMs(event);
+      this.presentation={id:event.user,kind:blackGold?'black-gold':'transform',until:start+ms};
+      this.transforming=event.hacKimArtifact?null:{id:event.user,revealAt:start+ms*REVEAL_AT};
       this.effects=[];this.fxQueue=[];
-      if(!blackGold)this.focus(event.user,TRANSFORM_MS,2.3);
+      if(!blackGold)this.focus(event.user,ms,2.3);
     }
     else if((event.gift||event.flowerRank)&&event.user&&!this.effects.some(e=>e.luxury||e.effect==='breakthrough')){const d=event.flowerRank?7000:tributeProfile(event)?.duration||4500,value=(Number(event.coins)||0)*(Number(event.count)||1);this.presentation={id:event.user,kind:event.gift?'gift':'flower',until:performance.now()+d};this.effects=[];this.fxQueue=[];this.focus(event.user,d,event.gift?1.45:2.2);}
     // Giữ hoạt cảnh quà đang chạy; hành động thường (tim, bình luận, thường trú) không được xóa nó giữa chừng.
-    else this.effects=this.effects.filter(e=>e.luxury||e.effect==='breakthrough'||e.transform===BLACK_GOLD_VISITOR.kind||(e.kind&&e.gift)||(e.effect==='attack'&&e.technique)); // v76: giữ các đòn đánh song song
+    else this.effects=this.effects.filter(e=>e.luxury||e.effect==='breakthrough'||signatureVisitor(e.transform)||(e.kind&&e.gift)||(e.effect==='attack'&&e.technique)); // v76: giữ các đòn đánh song song
     if(luxury&&this.effects.some(e=>e.luxury)){queueLuxury(this.luxuryQueue??=[],event);return;}
     if(!luxury&&event.kind&&event.kind!=='blessing'&&this.effects.filter(x=>x.kind&&x.kind!=='blessing').length>=(this.budget?.level==='light'?1:2)){(this.fxQueue??=[]).push(event);if(this.fxQueue.length>6)this.fxQueue.shift();return;}
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
     (this.animator??=new CharacterAnimator()).trigger(event,performance.now());const cinematic=event.gift&&giftSpectacleTier(event);if(cinematic){const action=this.animator.actions.get(event.user);if(action)action.duration=cinematic.duration*.85;}
-    this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?TRANSFORM_MS:event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
+    this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?transformMs(event):event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
     // Only one premium skill title may own the ribbon at any time.
     if(event.effect==='attack'&&Number(event.technique?.intensity)>=2&&event.id&&performance.now()-(this.skillBannerTime??-1e9)>1200){this.skillBannerId=event.id;this.skillBannerTime=performance.now();}
     const limit=this.budget?.config.effects||5;
     while(this.effects.length>limit){
-      const ordinary=this.effects.findIndex(e=>!e.gift&&!e.luxury&&e.effect!=='breakthrough'&&e.transform!==BLACK_GOLD_VISITOR.kind);
-      const expendable=ordinary>=0?ordinary:this.effects.findIndex(e=>e.transform===BLACK_GOLD_VISITOR.kind);
+      const ordinary=this.effects.findIndex(e=>!e.gift&&!e.luxury&&e.effect!=='breakthrough'&&!signatureVisitor(e.transform));
+      const expendable=ordinary>=0?ordinary:this.effects.findIndex(e=>signatureVisitor(e.transform));
       if(expendable<0)break;
       this.effects.splice(expendable,1);
     }
@@ -449,9 +449,9 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(e.gift&&giftSpectacleTier(e)){drawGiftTribute(this,c,e,t,k,p,this.height,layer);drawGiftSpectacle(c,e,t,k,p,this.height,{light:feedbackBudget(this),reducedFlash:this.reduceFlash,art:this.giftSpectacleArt,beasts:this.spiritBeasts,layer,motion:this.motion,upgrade:this.cinematicV2!==false&&spectacleV2(e.spectacleTier),quality:e.cinematicQuality,layers:this.cinematicLayers,tier:e.spectacleTier});return;}
     // v43: hiệu ứng lớn vẽ SAU nhân vật, hiệu ứng nhỏ vẽ TRƯỚC. Quà thường: sân khấu (đèn, hoa nở, lụa) ở sau, hoạt cảnh quà nhỏ ở trước.
     if(e.gift){drawGiftTribute(this,c,e,t,k,p,this.height,layer);if(e.transform)drawTransform(c,e,t,k,p,this.height,layer);return;}
-    if(e.transform===BLACK_GOLD_VISITOR.kind){
+    if(signatureVisitor(e.transform)){
       if(layer==='front'&&k>=REVEAL_AT&&!e.courtImpact){
-        e.courtImpact=true;if(k<REVEAL_AT+.1)this.onGiftSound?.(e.hacKimArtifact?'ascension-screen-impact':'ascension-echo');
+        e.courtImpact=true;if(k<REVEAL_AT+.1)this.onGiftSound?.(e.hacKimArtifact||e.transform==='nhan-qua'?'ascension-screen-impact':'ascension-echo');
       }
       drawBlackGoldAward(this,c,e,t,k,p,layer,REVEAL_AT);
       return;

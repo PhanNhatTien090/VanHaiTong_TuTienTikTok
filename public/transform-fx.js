@@ -3,6 +3,8 @@
 // chớp sáng + sóng xung kích ở k≈0,45, rồi sương tan ra để lộ hình mới. REVEAL_AT dùng chung với scene để đổi hình đúng lúc chớp.
 import {drawCourtTransformation,isCourtTransform} from './court-skin-fx.js';
 export const TRANSFORM_MS=6000,REVEAL_AT=.45;
+// 14/11: Nhân Quả Vương Lâm (500 coin) có màn biến hình dài hơn.
+export const transformMs=e=>e?.transform==='nhan-qua'?8000:TRANSFORM_MS;
 const TAU=Math.PI*2;
 const clamp=v=>Math.max(0,Math.min(1,v)),ease=k=>1-(1-clamp(k))**3;
 const hex=a=>Math.round(255*clamp(a)).toString(16).padStart(2,'0');

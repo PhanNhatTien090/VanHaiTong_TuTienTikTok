@@ -49,7 +49,7 @@ import {giftKind,giftNameVi} from './public/gift-kinds.js';
 import {LOYALTY_ARTIFACTS,LOYALTY_TIERS} from './public/loyalty.js';
 import {OPPORTUNITY_COSTS,OPPORTUNITY_MS} from './public/opportunity.js';
 import {gameText} from './public/game-language.js';
-import {BLACK_GOLD_VISITOR,COURT_RELICS,COURT_VISITORS} from './public/court-rewards.js';
+import {BLACK_GOLD_VISITOR,COURT_RELICS,COURT_VISITORS,SIGNATURE_VISITORS} from './public/court-rewards.js';
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
 import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS} from './public/visitor-rewards.js';
@@ -445,7 +445,8 @@ function actionCore(w,input,now) {
     if(!skin||!p.rewardSkins?.includes(skin.id))return fail('Chưa sở hữu bộ này. Gõ skin kèm tên bộ đã mở khóa, hoặc skin macdinh để mặc áo cảnh giới.');
     const wait=cooldown(p,'skin',10000,now);if(wait)return fail(`Đổi áo sau ${wait}s.`);
     p.skinChoice=skin.id;p.skinChoiceSource='manual';
-    if(skin.id===BLACK_GOLD_VISITOR.skin)emit(w,p,'Biến hình '+skin.name,'transform',now,{transform:BLACK_GOLD_VISITOR.kind,skinName:skin.name});
+    const signature=SIGNATURE_VISITORS.find(v=>v.skin===skin.id);
+    if(signature)emit(w,p,'Biến hình '+skin.name,'transform',now,{transform:signature.kind,skinName:skin.name});
     else emit(w,p,skin.id==='vuonglam-avatar'?visitorSkinName('vuonglam',p.gender):skin.name,'skin',now);
     return {ok:true};
   }

@@ -5,7 +5,19 @@ export const BLACK_GOLD_VISITOR=Object.freeze({
  aura:'Hỏa ấn · tàn lửa · đao và hỏa luân đồng bộ',
  artwork:{blade:'/assets/thien-khuyet/relic-hac-kim-hoa-dao.webp',halo:'/assets/thien-khuyet/hac-kim-halo.webp'}
 });
+// 14/11: Nhân Quả Vương Lâm — một mốc duy nhất 500 coin: skin + Nhân Quả Xích Long Thương cùng lúc.
+export const KARMA_VISITOR=Object.freeze({
+ kind:'nhan-qua',aliases:['nhan qua vuong lam','nhan qua','nhanqua'],skin:'nhan-qua-vuong-lam',name:'Nhân Quả Vương Lâm',
+ artifact:'nhan-qua-xich-long-thuong',relic:'Nhân Quả Xích Long Thương',
+ color:'#f4f2ee',trim:'#ffffff',dark:'#0b0b0e',technique:'dragon',icon:'sword',skinCoins:500,artifactCoins:500,
+ aura:'Âm dương nhân quả · tơ trắng đen · Xích Long Thương',
+ artwork:{blade:'/assets/nhan-qua/spear.webp',halo:'/assets/nhan-qua/halo.webp',seated:'/assets/nhan-qua/seated.webp',standing:'/assets/nhan-qua/standing.webp'}
+});
+// Skin có bộ hiệu ứng riêng (màn biến hình ưu tiên cao, pháp bảo theo người).
+export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR];
+export const signatureVisitor=kind=>SIGNATURE_VISITORS.find(v=>v.kind===kind)||null;
 export const COURT_VISITORS=[
+ KARMA_VISITOR,
  BLACK_GOLD_VISITOR,
  {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},
  {kind:'xich-vu',skin:'xich-vu-nu-de',name:'Xích Vũ Nữ Đế',artifact:'xich-vu-thien-kich',relic:'Xích Vũ Thiên Kích',color:'#ff925e',trim:'#ffe8a6',dark:'#511020',technique:'flame'}

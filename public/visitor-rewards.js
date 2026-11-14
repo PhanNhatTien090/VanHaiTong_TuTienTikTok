@@ -7,7 +7,7 @@ export const VISITOR_GIFT_REWARDS=Object.freeze({
  tudo:{skin:'tudo-ma-ton',skinName:'Tư Đồ Ma Tôn',cell:2,skinCoins:200,artifactCoins:300,artifact:'tudo-huyet-dao',artifactName:'Huyết Sát Ma Đao'},
  khuyniet:{skin:'khuy-niet-loi-ton',skinName:'Khuy Niết Lôi Tôn',cell:0,skinCoins:300,artifactCoins:500,artifact:'khuy-niet-tu-loi-long',artifactName:'Tử Lôi Long'},
  viemton:{skin:'phan-thien-viem-ton',skinName:'Tần Mục Hỏa Thần',cell:0,skinCoins:300,artifactCoins:500,artifact:'phan-thien-song-dao',artifactName:'Song Đao Liệt Diễm',icon:'sword'},
- ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{skin:v.skin,skinName:v.name,skinCoins:300,artifactCoins:500,artifact:v.artifact,artifactName:v.relic,icon:v.icon||'orb',art:v.artwork?.blade}])),
+ ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{skin:v.skin,skinName:v.name,skinCoins:v.skinCoins||300,artifactCoins:v.artifactCoins||500,artifact:v.artifact,artifactName:v.relic,icon:v.icon||'orb',art:v.artwork?.blade}])),
  vuonglam:{skin:'vuonglam-avatar',skinName:'Vương Lâm / Lý Mộ Uyển',cell:0,skinCoins:200,artifactCoins:300,artifact:'vuonglam-soul-banner',artifactName:'Hồn Phiên'}
 });
 export const SIGNATURE_ARTIFACTS=Object.values(VISITOR_GIFT_REWARDS).map(r=>({id:r.artifact,name:r.artifactName,type:'artifact',art:r.art,icon:r.icon||(r.cell===1?'sword':'orb'),tier:0,price:0,herbs:0,damage:80,bonus:.45,exclusive:true,eventReward:r.skinName+' · tích lũy '+(r.artifactCoins||500)+' coin trong lượt xuất hiện',description:'Pháp bảo truyền thừa: +80 công lực, +45% tu vi khi trang bị. Trao cố định ở mốc '+(r.artifactCoins||500)+' coin sự kiện.'}));
@@ -23,7 +23,7 @@ export function creditVisitorGift(w,p,coins,now){
 }
 export function visitorSkinName(kind,gender){return kind==='vuonglam'?(gender==='nu'?'Lý Mộ Uyển':'Vương Lâm'):VISITOR_GIFT_REWARDS[kind]?.skinName||'Tiên nhân';}
 function grantVisitorProgress(p,e,r,progress,equip=false){const result={items:[],itemNames:[],skinNames:[]};
- const court=COURT_VISITORS.some(v=>v.kind===e.kind),skinPrice=court?300:(r.skinCoins||100),artifactPrice=court?500:(r.artifactCoins||500);
+ const court=COURT_VISITORS.some(v=>v.kind===e.kind),skinPrice=court?(r.skinCoins||300):(r.skinCoins||100),artifactPrice=court?(r.artifactCoins||500):(r.artifactCoins||500);
  if(progress.coins>=skinPrice){progress.skinAwarded=true;p.rewardSkins??=[];
   // 07/11: mua skin sự kiện thì mặc ngay, kể cả khi trước đó đã tự chọn skin khác (chủ game yêu cầu).
   // equip=true chỉ khi vừa tặng quà thật; bù thưởng tự động không đè skin đang chọn.

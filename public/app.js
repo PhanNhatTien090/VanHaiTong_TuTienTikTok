@@ -497,7 +497,7 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
   if(pulse.length<6){el.hidden=true;return;}
   const n={tu:0,join:0,gift:0,heart:0,other:0};for(const {e}of pulse){if(e.gift)n.gift++;else if(e.effect==='join')n.join++;else if(String(e.text).startsWith('Tụ linh'))n.heart++;else if(/^Vận|^Luận|^Hái/.test(String(e.text)))n.tu++;else n.other++;}
   el.innerHTML=`✦ 10 giây qua: <b>${pulse.length}</b> lượt`+[[n.tu,'tu luyện'],[n.join,'nhập môn'],[n.heart,'thả tim'],[n.gift,'quà']].filter(([k])=>k).map(([k,l])=>` · ${k} ${l}`).join('');el.hidden=false;},1000);
-const ownVisitorReveal=(event,state)=>isBlackGoldAward(event)&&state?.visitor?.kind===BLACK_GOLD_VISITOR.kind
+const ownVisitorReveal=(event,state)=>isBlackGoldAward(event)&&state?.visitor?.kind===event.transform
   &&!state.visitor.closedAt&&state.visitor.endsAt>state.serverNow;
 function playNext(){
  if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>ownVisitorReveal(e,state)||!(majorEventActive(state)&&(e.effect==='breakthrough'||e.effect==='transform'||e.petAward)));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;if(!presentations.start(e))continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
@@ -674,7 +674,8 @@ function renderVisitorHud(){
  const free=e.completed?'Đã mở thưởng · nhận quà miễn phí':'Nhận cơ duyên miễn phí';
  let html='<b>SỰ KIỆN · '+esc(cfg?.name||'Khách quý')+'</b><span class="event-time">Còn '+clock+'</span><p><code>Gõ '+esc(command)+'</code><span>'+esc(free)+'</span></p>';
  if(reward){
-  html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong><p><b>'+fmt(reward.skinCoins||100)+' coin</b><span>Nhận skin '+esc(reward.skinName)+'</span></p><p><b>'+fmt(reward.artifactCoins||500)+' coin</b><span>Nhận thêm '+esc(reward.artifactName)+'</span></p><small>Tính quà cộng dồn trong lượt khách quý này.</small></div>';
+  const single=reward.skinCoins&&reward.skinCoins===reward.artifactCoins; // 14/11: Nhân Quả — 1 mốc nhận cả skin + pháp bảo
+  html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong>'+(single?'<p><b>'+fmt(reward.skinCoins)+' coin</b><span>Nhận skin '+esc(reward.skinName)+' + '+esc(reward.artifactName)+'</span></p>':'<p><b>'+fmt(reward.skinCoins||100)+' coin</b><span>Nhận skin '+esc(reward.skinName)+'</span></p><p><b>'+fmt(reward.artifactCoins||500)+' coin</b><span>Nhận thêm '+esc(reward.artifactName)+'</span></p>')+'<small>Tính quà cộng dồn trong lượt khách quý này.</small></div>';
  }else if(e.goal)html+='<span>Truyền đạo: '+fmt(e.points||0)+' / '+fmt(e.goal)+'</span>';
  setHUD(el,html);
 }

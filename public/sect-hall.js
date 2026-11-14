@@ -3,7 +3,7 @@ import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
 import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
-import {drawCourtAdornment,showsBlackGoldGear} from './court-art.js?v=tieu-viem-size-v3';
+import {drawCourtAdornment,showsBlackGoldGear} from './court-art.js?v=nhan-qua-v1';
 // 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.
 const AVATARS=new Map(), SEATS=new Map();
 function courtSeat(kind){
