@@ -25,7 +25,7 @@ export const V6_SKILL_FAMILY=Object.freeze({
 export function v6SkillFamily(id){return V6_SKILL_FAMILY[id]||null;}
 
 export function v6Budget(scene){
- const pressed=!!(scene.budget?.pressured||scene.budget?.level==='light'||scene.heavyCrowd||(scene.fps>0&&scene.fps<18));
+ const pressed=!!(scene.budget?.pressured||scene.budget?.crowded||scene.budget?.level==='light'||scene.heavyCrowd||(scene.fps>0&&scene.fps<18));
  return {pressed,bolts:pressed?3:8,blades:pressed?7:19,streamers:pressed?3:7,
   scale:pressed?.77:1,showSecondary:!pressed,flashes:!scene.reduceFlash};
 }
