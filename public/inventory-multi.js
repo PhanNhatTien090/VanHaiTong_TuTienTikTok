@@ -31,8 +31,9 @@ function cell(i,category,esc){
  const item=typeof i==='string'?{name:i}:i;
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
+ const refine=category==='artifact'&&item.refinement>0?`<em class="vd-n">+${Math.min(3,item.refinement)}</em>`:'';
  const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
- return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
+ return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${refine}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
 }
 // 15/11 (user): HIỆN HẾT món — nhiều món thì thêm cột cho ô nhỏ lại (3→4→5→6 cột), bảng không cao quá ô góc.
 // Chỉ khi máy chủ cắt bớt (quá nhiều) mới có ô "+N".
@@ -61,8 +62,8 @@ export function inventoryDeckHTML(e,esc){
   const bar=(cls,label,k,a,b,lack)=>`<div class="vd-stat ${cls}${lack?'':' is-full'}"><label>${label}</label><div class="vd-bar"><i style="width:${k.toFixed(1)}%"></i><span>${short(a)} / ${short(b)}${lack?'':' ✓'}</span></div></div>`;
   body=`<div class="vd-tuvi-body"><span class="vd-portrait" aria-hidden="true"></span><div class="vd-tuvi-info"><strong class="vd-realm">${esc(realmWithStage(card.realmName,card.stage))}</strong>${card.next?bar('vd-qi','Tu vi',p,card.qi,card.needQi,qiShort)+bar('vd-stone','Linh thạch',ps,card.stones,card.needStones,stonesShort):''}<div class="vd-state">${state}</div><div class="vd-rank">Hạng <b>#${fmt(card.rank)}</b> / ${fmt(card.players)}</div></div></div>`;
  }else if(kind==='bag'){
-  body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span></div>`
-   +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');
+  body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span>${card.daoPath?`<span>✦ ${esc(card.daoPath.name)} · Đạo Ngộ ${fmt(card.daoPath.insight)}</span>`:''}</div>`
+   +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.live2Pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');
  }else if(kind==='pets'){
   const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+grid([[card.owned,'pets']],esc,'Chưa có linh thú');

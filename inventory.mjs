@@ -17,13 +17,17 @@ export function bagCard(p,catalog){
     description:String(item?.description||'').slice(0,180),...extra};
  };
  const secondary=new Set((p.equippedExtra||[]).filter(id=>id!==p.equipped));
- const arts=[...new Set(p.artifacts||[])].map(id=>entry(id,{on:id===p.equipped,secondary:secondary.has(id)}));
+ const arts=[...new Set(p.artifacts||[])].map(id=>entry(id,{on:id===p.equipped,secondary:secondary.has(id),refinement:Math.max(0,Math.min(3,Number(p.live2?.refinements?.[id])||0))}));
  arts.sort((a,b)=>Number(b.on)-Number(a.on)||Number(b.secondary)-Number(a.secondary));
  const pills=Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>entry(id,{n}));
+ const l2Names={guard:'Hộ Mạch Đan',fury:'Chiến Ý Đan',clarity:'Thanh Tâm Đan'};
+ const live2Pills=Object.entries(p.live2?.elixirs||{}).filter(([id,n])=>l2Names[id]&&n>0).map(([id,n])=>({id:'live2-'+id,name:l2Names[id],n,icon:'pill',art:'/assets/live2-paths/alchemy.svg',description:'Đan dược chiến thuật LIVE 2.0'}));
+ const l2PathNames={sword:'Kiếm Đạo',demon:'Ma Đạo',body:'Thể Đạo',beast:'Ngự Thú Đạo',alchemy:'Đan Đạo'};
+ const daoPath=p.live2?.path&&l2PathNames[p.live2.path]?{id:p.live2.path,name:l2PathNames[p.live2.path],insight:p.live2.insight||0}:null;
  const manuals=[...new Set(p.manuals||[])].map(id=>entry(id));
  return {kind:'bag',stones:Math.floor(p.stones||0),herbs:Math.floor(p.herbs||0),
   equipped:arts.find(x=>x.on)||null,secondaryEquipped:arts.filter(x=>x.secondary).length,
-  artifacts:cap(arts,12),pills:cap(pills,8),manuals:cap(manuals,8), // 15/11: bảng xem hiện hết món (user)
+  artifacts:cap(arts,12),pills:cap(pills,8),live2Pills:cap(live2Pills,3),daoPath,manuals:cap(manuals,8), // 15/11: bảng xem hiện hết món (user)
   tip:arts.length?(pills.length?'Gõ 5 dùng đan · 7 rèn thêm':'Gõ 4 luyện đan · 7 rèn thêm'):'Gõ 7 rèn pháp bảo đầu tiên'};
 }
 export function petCard(p){
@@ -49,7 +53,7 @@ export function inventoryRequest(w,p,cmd,rest,now){
 }
 export function inventoryCard(kind,p,catalog){return kind==='bag'?bagCard(p,catalog):kind==='pets'?petCard(p):skinCard(p);}
 export function inventoryText(c){
- if(c.kind==='bag')return `Túi đồ • ${c.artifacts.items.length+c.artifacts.more} pháp bảo • ${c.pills.items.reduce((s,x)=>s+x.n,0)} viên đan • ${c.stones.toLocaleString('vi-VN')} linh thạch`;
+ if(c.kind==='bag')return `Túi đồ • ${c.artifacts.items.length+c.artifacts.more} pháp bảo • ${c.pills.items.reduce((s,x)=>s+x.n,0)+c.live2Pills.items.reduce((s,x)=>s+x.n,0)} viên đan • ${c.stones.toLocaleString('vi-VN')} linh thạch`;
  if(c.kind==='pets')return `Linh thú • ${c.current||'chưa có đồng hành'} • sở hữu ${c.owned.items.length+c.owned.more}/${c.total}`;
  return `Tủ skin • đang mặc ${c.current} • sở hữu ${c.owned.items.length+c.owned.more}`;
 }
