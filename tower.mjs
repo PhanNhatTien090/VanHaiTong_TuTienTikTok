@@ -5,6 +5,8 @@
 // • Chỉ dùng lệnh chơi miễn phí — không gắn quà / tim (luật LIVE sau đợt bị hạn chế 03/11).
 import {stageConflict} from './stage-lock.mjs';
 import {live2CombatBonus} from './live2-systems.mjs';
+import {live2ExtraBonus} from './live2-extensions.mjs';
+import {towerRule,towerRuleMultiplier,towerRuleAction} from './tower-rules.mjs';
 
 export const TOWER=Object.freeze({durationMs:240000,turnMs:25000,gapMs:2500,hitCdMs:900,helpCdMs:2000,maxQueue:20,podiumMs:8000,milestone:5});
 export const TOWER_JOIN=['leothap','thap','vaothap'];
@@ -33,7 +35,7 @@ export function stopTower(w,now,c){if(!towerOpen(w,now))return fail('Không có 
 
 function beginTurn(w,e,p,now){
  const floor=(Number(p.towerFloor)||0)+1;
- e.cur={id:p.id,name:p.name,floor,hp:100,startedAt:now,endsAt:now+TOWER.turnMs,lastAt:now,helpers:{},helpHits:0,hits:0,next:{}};
+ e.cur={id:p.id,name:p.name,floor,rule:towerRule(floor),hp:100,startedAt:now,endsAt:now+TOWER.turnMs,lastAt:now,helpers:{},helpHits:0,hits:0,next:{}};
 }
 function finishTurn(w,e,now,c,won){
  const t=e.cur;e.cur=null;const p=w.players[t.id];e.seq++;
@@ -55,7 +57,7 @@ export function tickTower(w,now,c){
  const t=e.cur;
  if(t){
   const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
-  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*live2CombatBonus(p,now,'tower')*dt);
+  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower'))*towerRuleMultiplier(t,p,now)*dt);
   if(t.hp<=0)finishTurn(w,e,now,c,true);
   else if(now>=t.endsAt||!p)finishTurn(w,e,now,c,false);
  }
@@ -74,7 +76,7 @@ export function tickTower(w,now,c){
 
 export function towerCommand(w,p,cmd,now,c){
  if(!towerOpen(w,now))return null;
- const join=TOWER_JOIN.includes(cmd),hit=HIT.includes(cmd);if(!join&&!hit)return null;
+ const join=TOWER_JOIN.includes(cmd),hit=HIT.includes(cmd),special=['phatran','hoiphap','tamtinh','tamlinh'].includes(cmd);if(!join&&!hit&&!special)return null;
  if(!real(p))return fail('Vân Hải Tháp dành cho người xem thật.');
  const e=w.tower,t=e.cur;
  if(join){
@@ -86,9 +88,13 @@ export function towerCommand(w,p,cmd,now,c){
  }
  // gõ 3 / đánh
  if(!t)return null; // chưa ai leo → để lệnh đánh cho sự kiện khác
+ if(special&&t.id!==p.id)return fail('Chỉ người đang leo tháp mới dùng đạo thuật đặc biệt.');
  if(t.id===p.id){
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
-  t.next[p.id]=now+TOWER.hitCdMs;t.hits++;t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor)*live2CombatBonus(p,now,'tower'));
+  t.next[p.id]=now+TOWER.hitCdMs;t.hits++;const ability=special?towerRuleAction(t,p,cmd,now):null;
+  if(special&&!ability?.ok)return fail(ability?.message||'Tầng này không dùng đạo thuật đó.');
+  const mult=Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower'));
+  t.hp=Math.max(0,t.hp-(hit?hitDamage(p.realm,t.floor)*towerRuleMultiplier(t,p,now):ability.damage)*mult);
  }else{
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
   t.next[p.id]=now+TOWER.helpCdMs;t.helpers[p.id]=(t.helpers[p.id]||0)+1;t.helpHits++;t.hp=Math.max(0,t.hp-HELP_DAMAGE);
@@ -102,7 +108,7 @@ export function towerView(w,now){
  const open=towerOpen(w,now);if(!open&&!(e.podiumUntil>now))return null;
  const t=e.cur,p=t&&w.players[t.id];
  return {id:e.id,active:open,endsAt:e.endsAt,clears:e.clears,
-  cur:t?{id:t.id,name:t.name,floor:t.floor,hp:Math.round(t.hp*10)/10,endsAt:t.endsAt,startedAt:t.startedAt,helpers:Object.keys(t.helpers).length,helpHits:t.helpHits,hits:t.hits,realm:p?.realm??0,guardian:guardianOf(t.floor),next:Math.ceil(t.floor/TOWER.milestone)*TOWER.milestone}:null,
+  cur:t?{id:t.id,name:t.name,floor:t.floor,rule:t.rule,hp:Math.round(t.hp*10)/10,endsAt:t.endsAt,startedAt:t.startedAt,helpers:Object.keys(t.helpers).length,helpHits:t.helpHits,hits:t.hits,realm:p?.realm??0,guardian:guardianOf(t.floor),next:Math.ceil(t.floor/TOWER.milestone)*TOWER.milestone}:null,
   queue:e.queue.slice(0,5).map(id=>w.players[id]?.name||'Đạo hữu'),queued:e.queue.length,
   last:e.last&&now-e.last.at<4000?e.last:null,result:open?null:e.result||null};
 }
