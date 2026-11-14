@@ -4,12 +4,19 @@ import {duelCastState} from './duel-combat.js';
 import {portraitCanvas} from './linh-bai.js';
 import {donorPortrait} from './gift-donor.js';
 import {v6SkillTitle} from './duel-showcase-v6.js';
+import {v7SkillSpec} from './ultimate-variants-v7.js';
+import {giftV7Spell} from './gift-overdrive-v7.js';
 import {drawAura,drawSeal,drawCelestialImpact} from './cinematic-vfx.js';
 
 export const DUEL_RELEASE_AT=.56;
 export function duelSoundPreset(tech){
  const id=String(tech?.id||'');
- if(['thunder','meteor','sevenstars'].includes(id))return 'storm';
+ if(['thunder'].includes(id))return 'storm';
+ if(['meteor','stardust','starmirror'].includes(id))return 'meteor';
+ if(['sevenstars','stars'].includes(id))return 'starlight';
+ if(id==='soul'||id==='dora-door')return 'void-blade';
+ if(['lotus','petal','flowersword','peachfan','flowercage'].includes(id))return 'blossom';
+ if(id==='bell')return 'holy-bell';
  if(['flame','dora-cannon'].includes(id))return 'flame';
  if(['dragon','vortex'].includes(id))return 'tide';
  if(id==='frost')return 'crystal';
@@ -33,7 +40,7 @@ export function duelCutinPlan(match,serverNow,gifts=[],performanceNow=0,light=fa
   if(tech)result.push({id:match.id+':cast:'+cast.turn,user:id,name:match.names?.[id]||'Đạo hữu',
    kind:'cast',priority:cast.ultimate?6:cast.guard?3:2,ultimate:!!cast.ultimate,
    progress:clamp(cast.k/DUEL_RELEASE_AT),color:validColor(tech.color),
-   title:String((enhanced&&cast.ultimate?v6SkillTitle(tech.id):null)||tech.name||'TUYỆT KỸ').slice(0,36),side:cast.side});
+   title:String((enhanced&&cast.ultimate?(v7SkillSpec(tech.id)?.name||v6SkillTitle(tech.id)):null)||tech.name||'TUYỆT KỸ').slice(0,36),side:cast.side});
  }
  if(enhanced&&cast.ready&&cast.ultimate&&cast.k>=.16&&cast.k<=DUEL_RELEASE_AT){
   const other=cast.side?match.a:match.b,otherTech=match.techniques?.[other];
@@ -41,7 +48,7 @@ export function duelCutinPlan(match,serverNow,gifts=[],performanceNow=0,light=fa
    id:match.id+':counter:'+cast.turn,user:other,
    name:match.names?.[other]||'Đạo hữu',kind:'counter',priority:4.5,
    ultimate:true,progress:clamp((cast.k-.16)/(DUEL_RELEASE_AT-.16)),
-   color:validColor(otherTech.color),title:String(v6SkillTitle(otherTech.id)||otherTech.name||'PHẢN CHIÊU').slice(0,36),
+   color:validColor(otherTech.color),title:String(v7SkillSpec(otherTech.id)?.name||v6SkillTitle(otherTech.id)||otherTech.name||'PHẢN CHIÊU').slice(0,36),
    side:1-cast.side
   });
  }
@@ -52,7 +59,7 @@ export function duelCutinPlan(match,serverNow,gifts=[],performanceNow=0,light=fa
   result.push({id:'gift:'+row.id,user:row.user,name:String(row.name||'Đạo hữu').slice(0,24),
    kind:'gift',priority:row.value>=2000?5:4,ultimate:row.value>=2000,
    progress:clamp(k/.30),color:validColor(row.profile?.color||'#ffda88'),
-   title:String(row.profile?.name||'THẦN BINH TRỢ CHIẾN').slice(0,36),
+   title:String((enhanced?giftV7Spell(row.value)?.name:null)||row.profile?.name||'THẦN BINH TRỢ CHIẾN').slice(0,36),
    avatar:row.avatar,value:Number(row.value),side:match.b===row.user?1:0,
    fighter:!!row.fighter});
  }
