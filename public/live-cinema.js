@@ -1,19 +1,29 @@
 import {drawKimTienAwakening} from './kim-tien-awakening.js';
 import {QUALITY} from './performance.js';
+import {drawGuardianTribulation} from './guardian-tribulation-v3.js';
 import {beginRitualPalette} from './qi-impact.js';
 import {ritualAppearance,ritualAppearanceFrame,drawRitualAppearance,drawRitualWeather,drawRitualGrade} from './ritual-appearance.js';
-const FULL_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
+const BALANCED_RITUAL_BUDGET=Object.freeze({level:'balanced',config:QUALITY.balanced});
+const HIGH_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
 export function drawRitual(scene,...args){
  const [c,e,t,H]=args,a=scene.ritualVariantsEnabled===false?null:ritualAppearance(e),restorePalette=beginRitualPalette(a?.palette||null);
- const reduceDecor=scene.budget?.pressured||scene.heavyCrowd;
+ const reduceDecor=!!(scene.budget?.pressured||scene.budget?.mode==='light'||(scene.fps>0&&scene.fps<18));
  const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,minimalCrowd:scene.minimalCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
- Object.assign(scene,{budget:breakthroughRealm(e)>=25&&saved.budget?.level==='light'?saved.budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,minimalCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
+ // Respect actual load/explicit Performance even for a solo ritual.
+ // High may be requested explicitly; otherwise a focused scene uses Balanced.
+ const keepLow=!!(saved.budget?.pressured||saved.budget?.mode==='light'||(scene.fps>0&&scene.fps<18));
+ const focusBudget=keepLow?saved.budget:saved.budget?.mode==='high'?HIGH_RITUAL_BUDGET:BALANCED_RITUAL_BUDGET;
+ Object.assign(scene,{budget:focusBudget,crowded:false,heavyCrowd:false,minimalCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
  if(a&&typeof saved.onRitualFrame==='function')scene.onRitualFrame=ui=>saved.onRitualFrame.call(scene,ritualAppearanceFrame(ui,a));
  // 07/11: lật trái/phải + khung zoom khác nhau cho mỗi lần (chỉ cảnh giới đầu). Chữ HUD là DOM nên không bị lật.
  const framed=!!(a?.zoom&&(a.mirror||a.zoom!==1||a.dy));
  try{if(framed){c.save();const cy=H*.62;c.translate(450,cy);c.scale(a.mirror?-a.zoom:a.zoom,a.zoom);c.translate(-450,-cy+a.dy/a.zoom);}
   let result;try{result=drawRitualFull(scene,...args);}finally{if(framed)c.restore();}
-  if(!scene.reduceFlash)drawRitualGrade(scene,c,e,t,H,a);if(!reduceDecor)drawRitualWeather(scene,c,e,t,H,a);drawRitualAppearance(scene,c,e,t,H,a);return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
+  if(!scene.reduceFlash)drawRitualGrade(scene,c,e,t,H,a);
+  if(!reduceDecor)drawRitualWeather(scene,c,e,t,H,a);
+  drawRitualAppearance(scene,c,e,t,H,a);
+  if(breakthroughRealm(e)>=6&&e.guardHelpers?.length)drawGuardianTribulation(scene,c,e,result?.k??0,H);
+  return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
 }
 import {drawHuyenTienAwakening} from './huyen-tien-awakening.js';
 import {drawDaiThuaAwakening} from './dai-thua-awakening.js';
