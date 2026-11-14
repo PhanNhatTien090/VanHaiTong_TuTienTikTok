@@ -22,6 +22,7 @@ export function towerHTML(t,now,esc,{staticVitals=false}={}){
  <div class="tw-vs">${c?'VS':''}</div>
  <div class="tw-side tw-guard">${c?`<div class="tw-beast" style="--art:${g.art};--hue:${g.hue}deg"></div><small>${esc(g.name)}</small>`:''}</div>
  ${last}
+ ${c?.rule&&['sword','shield','beast','mind','storm'].includes(c.rule.id)?`<img src="/assets/live2-tower/${c.rule.id}.svg" alt="" loading="lazy" decoding="async" style="position:absolute;pointer-events:none;width:180px;max-width:24%;left:50%;top:8%;transform:translateX(-50%);opacity:.48;filter:drop-shadow(0 3px 12px #293e91)"/>`:''}
 </div>
 ${c?`<div class="tw-bars"><div class="tw-hp"><i style="width:${Math.max(0,Math.min(100,hp)).toFixed(1)}%"></i><span>Thủ vệ ${Math.ceil(hp)}%</span></div><div class="tw-time"><i style="width:${Math.max(0,Math.min(100,left/25*100)).toFixed(1)}%"></i><span>${left}s</span></div></div>`:''}
 <div class="tw-line">${sub}</div>${trial}
