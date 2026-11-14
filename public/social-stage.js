@@ -2,7 +2,7 @@ import {drawAura,drawSeal,drawShockwave} from './cinematic-vfx.js';
 import {duelCastState,duelPhase,duelImpactAt,drawDuelImpact} from './duel-combat.js';
 import {DUEL_RELEASE_AT,drawDuelCharge,drawDuelRelease,duelSoundPreset} from './duel-cinematic.js';
 import {drawDuelFeedback} from './duel-feedback-v3.js';
-import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
+import {drawEventGiftFx} from './event-gift-fx.js?v=v7-overdrive-premium-20261115';
 import {makeSurface} from './performance.js';
 import {portraitCanvas} from './linh-bai.js';
 import {drawCombatTechnique} from './combat-techniques.js';
