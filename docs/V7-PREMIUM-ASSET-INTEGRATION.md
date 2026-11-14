@@ -2,7 +2,7 @@
 
 The repo now contains two fully integrated art modes:
 - **Default:** eight original SVG vectors (including screen fracture) and reused pre-existing transparent game assets. Works immediately from PR #6; all thirteen ultimates and six gift classes remain visible.
-- **Premium:** seven optional transparent WebP layers derived from the art pack already generated during the design conversation. A small config enables WebP only once files have actually been placed under `public/assets/v7-premium/`. This avoids false claims that generated ChatGPT binary files are automatically in GitHub.
+- **Premium:** ten optional transparent WebP layers derived from the art pack already generated during the design conversation. A small config enables WebP only once files have actually been placed under `public/assets/v7-premium/`. This avoids false claims that generated ChatGPT binary files are automatically in GitHub.
 
 ## Install the actual generated premium imagery
 1. Download `van_hai_tong_v7_asset_pack.zip` from the conversation, or the smaller `van_hai_tong_v7_premium_runtime_ready.zip` containing only runtime files.
@@ -13,7 +13,7 @@ The repo now contains two fully integrated art modes:
 npm run assets:v7-install -- "C:\\Users\\You\\Downloads\\van_hai_tong_v7_asset_pack.zip"
 ```
 
-The cross-platform installer has no third-party dependencies: it reads a ZIP central directory, extracts only seven whitelisted WebPs, rejects invalid RIFF/WEBP contents and sizes above 900 KB, creates a SHA256 manifest, and enables the `public/v7-premium-config.js` switch. It also works with the already extracted folder.
+The cross-platform installer has no third-party dependencies: it reads a ZIP central directory, extracts only ten whitelisted WebPs, rejects invalid RIFF/WEBP contents and sizes above 900 KB, creates a SHA256 manifest, and enables the `public/v7-premium-config.js` switch. It also works with the already extracted folder.
 
 Alternatively, unzip the **runtime-ready** ZIP directly at the repository root. It includes `public/assets/v7-premium/` and the enabled config (no CLI needed). Do not combine the two methods: they produce the same runtime files.
 
@@ -27,12 +27,15 @@ Alternatively, unzip the **runtime-ready** ZIP directly at the repository root. 
 | `phoenix-impact.webp` | Phoenix collision |
 | `taiji-seal.webp` | Thái Cực sealing portal |
 | `screen-shatter.webp` | screen-wide fracture/impact, correctly aspect-fit around the collision |
+| `golden-sword-atlas.webp` | one cropped, large golden sword arc for 2000+ coin impact |
+| `thunder-parts-atlas.webp` | localized purple dragon cutout for 700–999 coin gifts |
+| `sword-formation-atlas.webp` | single sword-array cutout for 1000–1499 coin joint casting |
 
-All seven are genuine WebPs with alpha, predecoded per active match. There are no placeholder network URLs or runtime CSS full-screen filters. The V7 original SVG fallback is always available.
+All ten are genuine WebPs with alpha, predecoded per active match. There are no placeholder network URLs or runtime CSS full-screen filters. The V7 original SVG fallback is always available.
 
 ## Memory / lag rules
 - For **Light**, **Crowded**, or **Pressured** quality, the premium images are **not even fetched or decoded**. The game automatically falls back to its authored lightweight SVG/Canvas versions.
-- At normal quality, only sprites for **the actual two current fighters** and one screen-shatter file are requested. Repeated state synchronizations do not reload the same images.
+- At normal quality, only sprites for **the actual two current fighters** and one screen-shatter file are requested initially; the gift-receipt sync preloads at most one specifically relevant atlas per qualifying gift. Repeated state synchronizations do not reload the same images.
 - Individual compressed assets are about 180–390 KB; only a subset is decoded at a time, not the full original 31MB archive.
 - Zero new `requestAnimationFrame` loops, WebGL dependencies, CSS blur, or per-hit image allocations.
 - All of this is a client-side cosmetic addition. The authoritative winner, gift coin calculation, server shield damage, and saved player state remain untouched.
