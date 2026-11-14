@@ -12,7 +12,13 @@ export const CINEMATIC_SOUND={
   blade:{root:196,body:[1,2.01,3.65],sub:.12,crack:.27,tail:.82},
   healing:{root:294,body:[1,1.5,2.99],sub:0,crack:.045,tail:1.06},
   tide:{root:110,body:[1,1.35,1.98],sub:.20,crack:.08,tail:1.15},
-  crystal:{root:330,body:[1,1.50,2.96],sub:.02,crack:.22,tail:.95}
+  crystal:{root:330,body:[1,1.50,2.96],sub:.02,crack:.22,tail:.95},
+  'void-blade':{root:71,body:[1,1.414,2.7],sub:.19,crack:.27,tail:1.22},
+  starlight:{root:185,body:[1,1.5,2.76],sub:.13,crack:.16,tail:1.28},
+  blossom:{root:260,body:[1,1.33,2.0],sub:.09,crack:.11,tail:1.04},
+  'holy-bell':{root:196,body:[1,2.0,3.0],sub:.17,crack:.09,tail:1.43},
+  meteor:{root:87,body:[1,1.499,2.35],sub:.29,crack:.26,tail:1.37},
+  fracture:{root:62,body:[1,1.94,3.24],sub:.20,crack:.33,tail:.52}
 };
 const layers=['charge','sub','crack','body','tail'];
 const bank=new WeakMap();
