@@ -27,6 +27,10 @@ export function premiumArtKeys(match){
  return [...new Set([...keys,'shatter'])];
 }
 const disabled=scene=>scene.budget?.crowded||scene.budget?.pressured||scene.budget?.level==='light';
+export function premiumGiftArtKey(value){
+ const v=Number(value)||0;
+ return v>=2000?'goldenAtlas':v>=1500?null:v>=1000?'formationAtlas':v>=700?'thunderAtlas':v>=500?'phoenix':null;
+}
 function requestOne(scene,key,token){
  if(!scene.premiumAllowed?.has(supported[key])||scene.premiumRequested?.has(key))return;
  scene.premiumRequested.add(key);
@@ -51,8 +55,7 @@ export function prewarmV7GiftArt(scene,rows=[]){
  if(!V7_PREMIUM_ENABLED||!scene?.premiumMatchId||disabled(scene)||typeof Image==='undefined')return 0;
  let loaded=0;
  for(const row of rows){
-  const v=Number(row?.value)||0;
-  const key=v>=2000?'goldenAtlas':v>=1500?null:v>=1000?'formationAtlas':v>=700?'thunderAtlas':v>=500?'phoenix':null;
+  const key=premiumGiftArtKey(row?.value);
   if(key&&!scene.premiumRequested.has(key)){
    requestOne(scene,key,scene.premiumMatchId);loaded++;
   }
