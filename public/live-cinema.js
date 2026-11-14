@@ -22,7 +22,12 @@ export function drawRitual(scene,...args){
   if(!scene.reduceFlash)drawRitualGrade(scene,c,e,t,H,a);
   if(!reduceDecor)drawRitualWeather(scene,c,e,t,H,a);
   drawRitualAppearance(scene,c,e,t,H,a);
-  if(breakthroughRealm(e)>=6&&e.guardHelpers?.length)drawGuardianTribulation(scene,c,e,result?.k??0,H);
+  // Specialized realm renderers don't all return their normalized phase.
+  // The event clock is authoritative, so guardian seals animate for EVERY major realm.
+  if(breakthroughRealm(e)>=6&&e.guardHelpers?.length){
+    const phase=clamp((t-e.start)/Math.max(1,e.duration));
+    drawGuardianTribulation(scene,c,e,phase,H);
+  }
   return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
 }
 import {drawHuyenTienAwakening} from './huyen-tien-awakening.js';
