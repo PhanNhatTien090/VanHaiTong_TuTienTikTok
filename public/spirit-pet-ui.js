@@ -7,7 +7,7 @@ export function mountPetUI(post){
  const root=document.createElement('div');root.id='spiritPetControl';parent.insertBefore(root,document.querySelector('#socialControl'));
  root.addEventListener('click',async e=>{
   const flag=e.target.closest('[data-pet-v2-toggle]');
-  if(flag){flag.disabled=true;try{const r=await post('/api/pet-v2-settings',{enabled:flag.dataset.petV2Toggle==='on',progression:flag.dataset.petV2Toggle==='on',combat:flag.dataset.petV2Toggle==='on',expedition:flag.dataset.petV2Toggle==='on',coveV2:flag.dataset.petV2Toggle==='on',synergy:flag.dataset.petV2Toggle==='on',evolutionArt:flag.dataset.petV2Toggle==='on'});if(!r.ok)alert(r.message||'Chưa cập nhật được.');}finally{flag.disabled=false;}return;}
+  if(flag){flag.disabled=true;try{const r=await post('/api/pet-v2-settings',{enabled:flag.dataset.petV2Toggle==='on',progression:flag.dataset.petV2Toggle==='on',combat:flag.dataset.petV2Toggle==='on',expedition:flag.dataset.petV2Toggle==='on',coveV2:flag.dataset.petV2Toggle==='on',synergy:flag.dataset.petV2Toggle==='on',evolutionArt:false});if(!r.ok)alert(r.message||'Chưa cập nhật được.');}finally{flag.disabled=false;}return;}
   const b=e.target.closest('[data-pet-event]');if(!b)return;b.disabled=true;try{const r=await post('/api/pet-event',{action:b.dataset.petEvent,minutes:5});if(!r.ok)alert(r.message||'Chưa mở được sự kiện.');}finally{b.disabled=false;}
  });
  const shell=document.querySelector('.scene-shell'),hud=document.createElement('div');hud.id='spiritPetHud';hud.className='spirit-pet-hud';hud.hidden=true;shell?.appendChild(hud);
