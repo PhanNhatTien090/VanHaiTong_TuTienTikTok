@@ -224,7 +224,9 @@ setInterval(()=>{
    (scene.v6MissingAssets?.size?' · LỖI '+[...scene.v6MissingAssets].join(', '):'')+
    ' · V7: '+Object.keys(scene.v7VariantArt||{}).join(', ')+
    (scene.v7ShatterArt?' · SHATTER OK':' · shatter chưa tải')+
-   (scene.v7VariantErrors?.size?' · LỖI V7 '+[...scene.v7VariantErrors].join(', '):''):'';
+   (scene.v7VariantErrors?.size?' · LỖI V7 '+[...scene.v7VariantErrors].join(', '):'')+
+   (scene.v7PremiumArt?' · Premium WEBP: '+Object.keys(scene.v7PremiumArt).join(', '):'')+
+   (scene.v7PremiumErrors?.size?' · LỖI PREMIUM '+[...scene.v7PremiumErrors].join(', '):''):'';
   $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db+v6Report;
 },250);
 addEventListener('pagehide',()=>{stop();audio.destroy();});
