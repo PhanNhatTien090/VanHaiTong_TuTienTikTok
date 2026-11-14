@@ -1,5 +1,6 @@
 import {drawAura,drawSeal,drawShockwave} from './cinematic-vfx.js';
-import {duelCastState,duelPhase,drawDuelImpact,drawDuelCutIn} from './duel-combat.js';
+import {duelCastState,duelPhase,drawDuelImpact} from './duel-combat.js';
+import {DUEL_RELEASE_AT,drawDuelCharge,drawDuelRelease} from './duel-cinematic.js';
 import {drawDuelFeedback} from './duel-feedback-v3.js';
 import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
@@ -43,11 +44,36 @@ export function drawSocialStage(scene,c,t,layer,solo){
     const shield=cast.guard?{x:trailer.x+(orb.x-trailer.x)*.42,y:orb.y+28}:null,aim=shield||orb;
     if(cast.guard){const up=Math.min(1,cast.phaseK*6);drawSeal(c,side?'jade':'dusk',trailer.x,trailer.y+10,82,scene.motion?t*.0009:0,.55*up);drawAura(c,side?'jade':'dusk',shield.x,shield.y,58+(k>.34&&k<.6?18:0),.6*up);const hit=k>.34&&k<.6?1-(k-.34)/.26:0;c.save();c.globalAlpha=(.55+.4*hit)*up;c.strokeStyle=side?'#9ff5df':'#e2c4ff';c.lineWidth=3+3*hit;c.beginPath();c.ellipse(shield.x,shield.y-6,26+6*hit,78+10*hit,0,0,Math.PI*2);c.stroke();c.globalAlpha*=.5;c.lineWidth=1.5;c.beginPath();c.ellipse(shield.x,shield.y-6,16,62,0,0,Math.PI*2);c.stroke();c.restore();}
     if(cast.ready&&technique){
-     if(scene.duelLastTrigger!==key){scene.duelLastTrigger=key;scene.animator?.trigger({id:key,user:a.id,effect:'attack',technique},t);scene.onCombatSound?.('cast',technique.id);}
-     if(k>=.34&&scene.duelHitKey!==key){scene.duelHitKey=key;if(!cast.light){scene.duelImpact={at:now,preset:cast.ultimate?'medium':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);if(cast.ultimate)scene.onCinematicSound?.(key+':ultimate-impact','gold',0,{priority:4,charge:false,gain:.48});}}
-     drawCombatTechnique(c,{technique,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,k,a,H,{light:light||cast.light,signatures:scene.signatureSprites,relics:scene.combatSprites});
-     if(scene.cinematicV2===false)drawDuelImpact(c,aim,cast,technique,light);else drawShockwave(c,side?'dusk':'jade',aim.x,aim.y,(k-.34)*cast.period,{quality:'light',radius:cast.ultimate?230:cast.light?92:cast.guard?110:132,seed:cast.turn*.17,motion:scene.motion,flash:cast.ultimate&&!scene.reduceFlash,aspect:.68});
-     if(cast.ultimate)drawDuelCutIn(scene,c,a,technique,Math.min(.82,k*1.4),H);else techName(c,a.x,a.y-312,technique,Math.min(1,k/.08,(1-k)/.2));
+     // The real fighter charges visibly BEFORE the attack animation. Sound and
+     // release are one-shot, keyed by this server match/cast, never by a frame.
+     if(scene.duelLastCharge!==key){
+      scene.duelLastCharge=key;
+      scene.onCombatSound?.('cast',technique.id);
+      if(cast.ultimate)scene.onCinematicSound?.(key+':charge','gold',cast.period*DUEL_RELEASE_AT/1000,{priority:5,charge:true,gain:.44});
+     }
+     if(k<DUEL_RELEASE_AT)drawDuelCharge(scene,c,a,technique,k,t,{ultimate:cast.ultimate,light});
+     if(k>=DUEL_RELEASE_AT&&scene.duelLastTrigger!==key){
+      scene.duelLastTrigger=key;
+      scene.animator?.trigger({id:key,user:a.id,effect:'attack',technique},t);
+     }
+     if(k>=.67&&scene.duelHitKey!==key){
+      scene.duelHitKey=key;
+      if(!cast.light){
+       scene.duelImpact={at:now,preset:cast.ultimate?'major':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
+       scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);
+       if(cast.ultimate)scene.onCinematicSound?.(key+':ultimate-impact','resonance',0,{priority:4,charge:false,gain:.32});
+      }
+     }
+     if(k>=DUEL_RELEASE_AT){
+      const releaseK=Math.min(1,(k-DUEL_RELEASE_AT)/(1-DUEL_RELEASE_AT));
+      drawCombatTechnique(c,{technique,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,releaseK,a,H,{light:light||cast.light,signatures:scene.signatureSprites,relics:scene.combatSprites});
+      if(scene.cinematicV2===false)drawDuelImpact(c,aim,{...cast,k:releaseK},technique,light);
+      else {
+       drawDuelRelease(scene,c,a,aim,technique,k,{ultimate:cast.ultimate,light});
+       drawShockwave(c,side?'dusk':'jade',aim.x,aim.y,(k-.67)*cast.period,{quality:light?'light':'balanced',radius:cast.ultimate?280:cast.light?92:cast.guard?120:150,seed:cast.turn*.17,motion:scene.motion,flash:false,aspect:.68});
+      }
+     }
+     if(!cast.ultimate)techName(c,a.x,a.y-312,technique,Math.min(1,k/.08,(1-k)/.2));
     }
     if(cast.label){const la=age-phaseInfo.from,fade=Math.max(0,Math.min(1,la/180,(1300-la)/350));if(fade>0){c.save();c.globalAlpha=fade;c.textAlign='center';c.textBaseline='middle';c.font='900 30px "Segoe UI",Arial,sans-serif';c.lineWidth=6;c.strokeStyle='#07121d';c.strokeText(cast.label,450,Math.min(L.y,R.y)-352);c.fillStyle=cast.ultimate?'#ffe4a0':'#e9f6ff';c.fillText(cast.label,450,Math.min(L.y,R.y)-352);c.restore();}}
     if(k>.6&&k<.95)image(3,orb.x-60,orb.y-60,120,120,Math.sin((k-.6)/.35*Math.PI)*.55);
