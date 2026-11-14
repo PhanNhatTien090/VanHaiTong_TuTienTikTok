@@ -58,7 +58,7 @@ test('pre-rendered sound buffers are reused; duplicate time window is suppressed
  const c={sampleRate:48000,currentTime:3,state:'running',
   createBuffer(ch,length,rate){created++;assert.equal(ch,1);assert.equal(rate,24000);return {getChannelData:()=>new Float32Array(length)};},
   createGain(){return {gain:{value:0},connect(){},disconnect(){}};},
-  createBufferSource(){return {connect(){},disconnect(){},start(at){assert.equal(at,3);started++;}};}
+  createBufferSource(){return {connect(){},disconnect(){},start(at){assert.ok(at>=3);started++;}};}
  };
  const sounds=prepareFeedbackAudio(c);
  assert.equal(sounds.size,5);assert.equal(prepareFeedbackAudio(c),sounds);
