@@ -106,8 +106,13 @@ document.querySelector('form').onsubmit=async event=>{
       if(!players[1])players.push(opponent);
       state.socialScene='tournament';
       state.socialStage=[p.id,opponent.id];
-      state.socialStatus={tournament:{current:{id,startedAt:now,endsAt:now+15000,
-        aura:{[p.id]:50,[opponent.id]:45},techniques:{[p.id]:attackTechnique(p),[opponent.id]:attackTechnique(opponent)},giftFx:[support]}}};
+      const age=part==='charge'?19800:part==='impact'?21700:part==='tail'?23000:8900;
+      const duelGift={...support,id:support.id+':super',value:2000,coins:2000,fighter:true};
+      const secondGift={...support,id:support.id+':other',user:opponent.id,name:opponent.name,value:1000,coins:1000,fighter:true};
+      state.socialStatus={tournament:{phase:'running',current:{id,a:p.id,b:opponent.id,
+        startedAt:now-age,endsAt:now+(25000-age),boosts:{[p.id]:0,[opponent.id]:0},lastBoost:{},
+        aura:{[p.id]:70,[opponent.id]:45},techniques:{[p.id]:attackTechnique(p),[opponent.id]:attackTechnique(opponent)},
+        giftFx:[duelGift,secondGift]}}};
     }
     if(choice==='war'){
       const impact=part==='impact',tail=part==='tail';
