@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {live2BossOnHit,live2BossView,live2BossTick,live2BossMultiplier} from '../live2-boss.mjs';
 function world(opt=true){
  const t=100000,b={id:'boss',name:'Lôi Hổ',maxHp:1000,hp:900,endsAt:t+90000,startedAt:t-1000};
- const w={mode:'live',settings:opt?{live2Enabled:true}:{},boss:b},calls=[];
+ const w={mode:'live',settings:opt?{live2Enabled:true,live2BossTrialsEnabled:true}:{},boss:b},calls=[];
  const emit=(_w,_p,msg,effect,at,extra)=>calls.push({msg,effect,at,...extra});
  return {t,w,b,calls,emit};
 }

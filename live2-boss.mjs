@@ -1,6 +1,8 @@
 // LIVE 2.0 Boss Trials — extra cooperative phases on top of the existing encounter clock.
 // No damage to players, paid gates, stage override, or changes to legacy boss loot.
 import {live2Enabled} from './live2-systems.mjs';
+// Boss difficulty is separately opt-in: existing combat tests and LIVE battles remain unchanged.
+export const live2BossEnabled=w=>live2Enabled(w)&&w?.settings?.live2BossTrialsEnabled===true;
 const PHASES=Object.freeze({
  gathering:{id:'gathering',name:'YÊU LỰC TỤ HỘI',hint:'Tấn công để ép yêu thú xuất kết giới',color:'#d8bdfa'},
  seal:{id:'seal',name:'HUYỀN ẤN PHONG MA',hint:'Ba người hợp lực hoặc năm đòn để phá ấn',color:'#94e6ff'},
@@ -22,7 +24,7 @@ function updatePhase(w,b,now,emit){
  return s;
 }
 export function live2BossOnHit(w,p,now,emit){
- if(!live2Enabled(w)||!p||p.resident||p.puppet||p.webOnly||!w?.boss?.hp)return 1;
+ if(!live2BossEnabled(w)||!p||p.resident||p.puppet||p.webOnly||!w?.boss?.hp)return 1;
  const b=w.boss,s=updatePhase(w,b,now,emit);if(!s)return 1;
  if(s.phase==='seal'&&s.exposedUntil<=now){
   if(now-s.windowAt>=8000){s.windowAt=now;s.seen=[];s.hits=0;}
@@ -42,7 +44,7 @@ export function live2BossMultiplier(b,now){
  return 1;
 }
 export function live2BossTick(w,now,emit){
- if(!live2Enabled(w)||!w.boss||w.boss.hp<=0||w.boss.endsAt<=now)return;
+ if(!live2BossEnabled(w)||!w.boss||w.boss.hp<=0||w.boss.endsAt<=now)return;
  updatePhase(w,w.boss,now,emit);
 }
 export function live2BossView(b,now){
