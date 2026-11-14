@@ -12,6 +12,7 @@ export function towerHTML(t,now,esc,{staticVitals=false}={}){
  const c=t.cur,g=c?.guardian;
  const head=c?`TẦNG ${fmt(c.floor)} · ${esc(g.name)}`:'VÂN HẢI THÁP';
  const sub=c?`<b>${esc(c.name)}</b> gõ <u>3</u> đánh · người khác gõ <u>3</u> trợ lực${c.helpers?` <em>· ${c.helpers} trợ lực</em>`:''}`:`Đài trống · gõ <u>6</u> vào tháp`;
+ const trial=c?.rule?`<div class="tw-rule" style="color:#fbe0a6;font-weight:700;text-shadow:0 2px 5px #090717;">✦ ${esc(c.rule.name)} · ${esc(c.rule.hint)}</div>`:'';
  const left=c&&!staticVitals?secs(c.endsAt-now):0,hp=staticVitals?0:c?.hp;
  const q=t.queue?.length?`Chờ lượt: ${t.queue.map(esc).join(' · ')}${t.queued>t.queue.length?` +${t.queued-t.queue.length}`:''}`:'Chưa ai chờ · gõ 6 xếp lượt';
  const last=t.last?(t.last.won?`<div class="tw-result tw-win">✦ ${esc(t.last.name)} vượt tầng ${fmt(t.last.floor)} · +${fmt(t.last.qi)} tu vi${t.last.mile?' · MỐC ×2':''}</div>`:`<div class="tw-result tw-lose">${esc(t.last.name)} dừng ở tầng ${fmt(t.last.floor)} · gõ 6 thử lại</div>`):'';
@@ -23,7 +24,7 @@ export function towerHTML(t,now,esc,{staticVitals=false}={}){
  ${last}
 </div>
 ${c?`<div class="tw-bars"><div class="tw-hp"><i style="width:${Math.max(0,Math.min(100,hp)).toFixed(1)}%"></i><span>Thủ vệ ${Math.ceil(hp)}%</span></div><div class="tw-time"><i style="width:${Math.max(0,Math.min(100,left/25*100)).toFixed(1)}%"></i><span>${left}s</span></div></div>`:''}
-<div class="tw-line">${sub}</div>
+<div class="tw-line">${sub}</div>${trial}
 <div class="tw-meta"><span>${q}</span>${c?`<span>Mốc kế: tầng ${fmt(c.next)} · thưởng ×2</span>`:''}<span class="tw-clock">Tháp đóng sau ${staticVitals?0:secs(t.endsAt-now)}s</span></div>`;
 }
 function setText(node,text){if(node&&node.textContent!==text)node.textContent=text;}
