@@ -70,7 +70,6 @@ export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))r
 // Absent/unapproved stage artwork immediately falls back to all original moving frames.
 const PET_V2_FRAME_CACHE=new Map(),PET_V2_BAD_ASSETS=new Set();
 const PET_V2_CACHE_LIMIT=8*1024*1024;
-let petV2CacheBytes=0;
 const petV2Key=(id,stage)=>id+':stage'+stage;
 export function petV2FramesFor(scene,p){
  const id=p?.spiritPet;
@@ -106,7 +105,7 @@ function loadPetEvolution(scene,id,stage){
   scene.petV2FrameLru.set(key,bytes);
   while([...scene.petV2FrameLru.values()].reduce((a,b)=>a+b,0)>PET_V2_CACHE_LIMIT&&scene.petV2FrameLru.size>1){
    const oldest=scene.petV2FrameLru.keys().next().value;
-   scene.petV2FrameLru.delete(oldest);scene.petArt.delete(oldest);
+   scene.petV2FrameLru.delete(oldest);scene.petArt.delete(oldest);PET_V2_FRAME_CACHE.delete(oldest);
   }
   scene.petArt.set(key,frames);
  }).catch(()=>{PET_V2_BAD_ASSETS.add(key);scene.petArt?.delete(key);PET_V2_FRAME_CACHE.delete(key);});
