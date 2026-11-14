@@ -10,12 +10,17 @@ const mix=(a,b,k)=>a+(b-a)*k;
 export const V6_ASSETS=Object.freeze({
  thunder:'/assets/god-forms-v1/thunder-dragon.png',
  thunderSeal:'/assets/v6/thunder-sigil.svg',
- flame:'/assets/god-forms-v1/phoenix-fire.png'
+ flame:'/assets/god-forms-v1/phoenix-fire.png',
+ azure:'/assets/god-forms-v1/jade-dragon.png',
+ yinYang:'/assets/v6/taiji-seal.svg'
 });
 export const V6_SKILL_FAMILY=Object.freeze({
- thunder:'thunder',celestial:'thunder',meteor:'thunder',sevenstars:'thunder',
- sword:'sword',slash:'sword',bamboo:'sword',flowersword:'sword',stararrow:'sword',frost:'sword',
- flame:'flame',dragon:'flame',petal:'flame'
+ thunder:'thunder',meteor:'thunder',sevenstars:'thunder',
+ sword:'sword',slash:'sword',bamboo:'sword',flowersword:'sword',stararrow:'sword',
+ flame:'flame',petal:'flame',
+ dragon:'azure',vortex:'azure',
+ celestial:'yinYang',lotus:'yinYang',stars:'yinYang',starmirror:'yinYang',bell:'yinYang',
+ frost:'frost'
 });
 export function v6SkillFamily(id){return V6_SKILL_FAMILY[id]||null;}
 
@@ -75,6 +80,17 @@ function sword(c,x,y,size,angle,color,alpha=1){
  c.beginPath();c.moveTo(0,-size*.85);c.lineTo(0,size*.43);c.stroke();
  c.restore();
 }
+function crystal(c,x,y,size,a,alpha=1){
+ c.save();c.translate(x,y);c.rotate(a);c.globalAlpha=alpha;
+ c.fillStyle='#92edff';c.strokeStyle='#f8ffff';c.lineWidth=2;
+ c.beginPath();c.moveTo(0,-size);c.lineTo(size*.33,-size*.12);
+ c.lineTo(size*.2,size*.70);c.lineTo(0,size*.9);
+ c.lineTo(-size*.2,size*.7);c.lineTo(-size*.33,-size*.12);c.closePath();
+ c.fill();c.stroke();c.strokeStyle='#e5faff';c.lineWidth=1;
+ c.beginPath();c.moveTo(0,-size);c.lineTo(0,size*.7);
+ c.moveTo(-size*.33,-size*.12);c.lineTo(0,size*.10);c.lineTo(size*.33,-size*.12);c.stroke();
+ c.restore();
+}
 function thunder(c,x0,y0,x1,y1,seed,color,width,alpha){
  // Two nested strokes from one stable seed. No allocations, randomness or filters.
  const dx=x1-x0,dy=y1-y0,cross=Math.hypot(dx,dy)||1;
@@ -103,7 +119,7 @@ function groundSeal(c,x,y,r,color,opacity,clock){
 function charge(scene,c,actor,tech,family,k,t,b,counter){
  const u=clamp(k/.56),pow=counter?.68:1;
  const x=actor.x,y=actor.y-150,r=(65+145*ease(u))*b.scale*pow;
- const color=family==='thunder'?'#b1a8ff':family==='flame'?'#ffc178':'#9ceeff';
+ const color=family==='thunder'?'#b1a8ff':family==='flame'?'#ffc178':family==='azure'?'#7cf8de':family==='frost'?'#bdeeff':family==='yinYang'?'#f7e5b4':'#9ceeff';
  const clock=scene.motion===false?0:t*.00045;
  c.save();c.lineCap='round';
  // Negative-space rings stay readable over the bright arena.
@@ -137,6 +153,27 @@ function charge(scene,c,actor,tech,family,k,t,b,counter){
    const a=i*TAU/b.streamers+clock*.7,xx=x+Math.cos(a)*r*.9,yy=y+Math.sin(a)*r*.7;
    line(c,xx,yy,x+(xx-x)*.18,y-43+(yy-y)*.15,color,2+2*u,.34+.52*u);
   }
+ }else if(family==='azure'){
+  apparition(c,scene.v6Assets?.azure,x,actor.y-290,r*1.25,r*1.85,.1+.5*u,actor.x>450);
+  for(let i=0;i<b.streamers;i++){
+   const j=i*TAU/b.streamers+clock*.9;
+   ring(c,x,y,60+i*12+u*r*.48,16+i*4+u*r*.20,color,2,.18+.35*u,j);
+  }
+ }else if(family==='yinYang'){
+  const img=scene.v6Assets?.yinYang;
+  if(img?.naturalWidth||img?.width){
+   c.save();c.translate(x,y);c.rotate(clock);c.globalAlpha=.25+.55*u;c.drawImage(img,-r,-r,r*2,r*2);c.restore();
+  }
+  for(let i=0;i<4;i++){
+   const a=i*Math.PI/2+clock,xx=x+Math.cos(a)*r*.77,yy=y+Math.sin(a)*r*.55;
+   ring(c,xx,yy,12+u*7,12+u*7,i%2?'#e8cbff':'#dbffff',2,.42+.43*u);
+  }
+ }else if(family==='frost'){
+  for(let i=0;i<b.blades;i++){
+   const a=i*TAU/b.blades+clock*.6;
+   const xx=x+Math.sin(a)*r*(.45+(i%3)*.15),yy=y+Math.cos(a)*r*.64;
+   crystal(c,xx,yy,(13+u*20)*(i%2?.65:1),a,.24+.7*u);
+  }
  }else return void c.restore();
  // The fully charged heart is always crisp even when reduced-flash is on.
  c.fillStyle='#fff6e0';c.globalAlpha=.26+.60*u;
@@ -147,7 +184,7 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
  const u=clamp((k-.56)/.40),progress=ease(clamp(u/.65)),pow=counter?.64:1;
  const sx=actor.x,sy=actor.y-215,tx=target.x,ty=target.y-30;
  const x=mix(sx,tx,progress),y=mix(sy,ty,progress)-Math.sin(Math.PI*progress)*(counter?40:105);
- const color=family==='thunder'?'#b4a6ff':family==='flame'?'#ffac6f':'#9edbff';
+ const color=family==='thunder'?'#b4a6ff':family==='flame'?'#ffac6f':family==='azure'?'#6ef2d4':family==='frost'?'#b6f7ff':family==='yinYang'?'#f5e7be':'#9edbff';
  const fade=clamp((1-u)/.15);
  c.save();c.lineCap='round';c.lineJoin='round';
  if(family==='thunder'){
@@ -178,7 +215,29 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
    const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;
    line(c,sx+(px-sx)*.65,sy+(py-sy)*.65,px,py,i%2?'#ff744b':'#fff4bb',3*b.scale,fade*.7);
   }
- }
+ } else if(family==='azure'){
+  apparition(c,scene.v6Assets?.azure,x,y-105,275*b.scale*pow,430*b.scale*pow,fade*.92,actor.x>450);
+  for(let i=0;i<b.streamers;i++){
+   const a=i*TAU/b.streamers+u*4,xx=x+Math.cos(a)*115*b.scale*pow,yy=y+Math.sin(a)*72*b.scale*pow;
+   ring(c,xx,yy,25+i*5,6+i*2,color,2,fade*.51,a);
+  }
+ }else if(family==='yinYang'){
+  const im=scene.v6Assets?.yinYang,sz=(160+u*220)*b.scale*pow;
+  if(im?.naturalWidth||im?.width){
+   c.save();c.translate(x,y);c.rotate(scene.motion===false?0:u*2.5);
+   c.globalAlpha=fade*.91;c.drawImage(im,-sz*.5,-sz*.5,sz,sz);c.restore();
+  }else{
+   ring(c,x,y,sz*.45,sz*.45,color,6,fade);
+   ring(c,x,y,sz*.27,sz*.27,'#f5f8ff',3,fade);
+  }
+ }else if(family==='frost'){
+  crystal(c,x,y-40,165*b.scale*pow,Math.atan2(ty-sy,tx-sx)+Math.PI/2,fade);
+  for(let i=0;i<b.blades;i++){
+   const a=i*2.399,spread=(35+i%5*20)*b.scale*pow;
+   crystal(c,x+Math.cos(a)*spread,y+Math.sin(a)*spread*.70,
+    (14+i%3*9)*b.scale*pow,a,fade*.73);
+  }
+
  if(progress>.36){
   const v=clamp((progress-.36)/.64);
   const rr=(28+v*(counter?160:310))*b.scale;
