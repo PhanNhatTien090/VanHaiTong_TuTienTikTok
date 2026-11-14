@@ -1,5 +1,6 @@
 import {petById,petPose} from './spirit-pets.js';
 import {makeSurface} from './performance.js';
+import {PET_V2_ART_APPROVED,petV2AssetSpec} from './pet-v2-art-manifest.js';
 import {drawPetV2Adornment} from './pet-v2-fx.js';
 import {PREMIUM_PET_ATLAS,PREMIUM_PET_PERIODS,petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
 export {petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
@@ -65,16 +66,64 @@ function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
 }
 // 15/11: ảnh nhỏ cho bảng xem linh thú — dùng chung cache khung với sân khấu.
 export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));return PET_FRAME_CACHE.get(id);}
+// Evolved animation loads lazily; never replaces any of the thirteen original pose atlases.
+// Absent/unapproved stage artwork immediately falls back to all original moving frames.
+const PET_V2_FRAME_CACHE=new Map(),PET_V2_BAD_ASSETS=new Set();
+const PET_V2_CACHE_LIMIT=8*1024*1024;
+let petV2CacheBytes=0;
+const petV2Key=(id,stage)=>id+':stage'+stage;
+export function petV2FramesFor(scene,p){
+ const id=p?.spiritPet;
+ const stage=Math.max(0,Math.min(3,Math.floor(p?.petView?.stage||0)));
+ return (PET_V2_ART_APPROVED&&stage&&scene.petArt?.get(petV2Key(id,stage)))||scene.petArt?.get(id)||null;
+}
+function loadPetEvolution(scene,id,stage){
+ if(!PET_V2_ART_APPROVED||!stage||typeof Image==='undefined')return;
+ const spec=petV2AssetSpec(id,stage);
+ if(!spec)return;
+ const key=petV2Key(id,stage);
+ if(scene.petArt.has(key)||PET_V2_BAD_ASSETS.has(key))return;
+ scene.petArt.set(key,null);
+ if(!PET_V2_FRAME_CACHE.has(key)){
+  const job=new Promise((resolve,reject)=>{
+   const im=new Image();im.decoding='async';
+   im.onload=()=>{try{
+    if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size)throw Error('Evolved atlas dimensions invalid');
+    const frames=spec.frames===8?slicePremiumPetFrames(im,id):slicePetFrames(im,id);
+    if(frames.length!==spec.frames||frames.some(f=>!f))throw Error('Evolved atlas frame coverage invalid');
+    resolve(frames);
+   }catch(err){reject(err);}};
+   im.onerror=()=>reject(Error('Evolved atlas unavailable: '+key));
+   im.src=spec.path;
+  });
+  PET_V2_FRAME_CACHE.set(key,job);
+ }
+ PET_V2_FRAME_CACHE.get(key).then(frames=>{
+  if(!scene.petArt||!scene.petArt.has(key))return;
+  const bytes=frames.reduce((n,f)=>n+f.width*f.height*4,0);
+  // Keep a hard limit for evictable evolved art; base sprite cache remains untouched.
+  if(!scene.petV2FrameLru)scene.petV2FrameLru=new Map();
+  scene.petV2FrameLru.set(key,bytes);
+  while([...scene.petV2FrameLru.values()].reduce((a,b)=>a+b,0)>PET_V2_CACHE_LIMIT&&scene.petV2FrameLru.size>1){
+   const oldest=scene.petV2FrameLru.keys().next().value;
+   scene.petV2FrameLru.delete(oldest);scene.petArt.delete(oldest);
+  }
+  scene.petArt.set(key,frames);
+ }).catch(()=>{PET_V2_BAD_ASSETS.add(key);scene.petArt?.delete(key);PET_V2_FRAME_CACHE.delete(key);});
+}
+
 export function loadPetArt(scene,players){
  scene.petArt??=new Map();if(typeof Image==='undefined')return;
- for(const p of players){const pet=petById(p.spiritPet);if(!pet||scene.petArt.has(pet.id))continue;
+ for(const p of players){const pet=petById(p.spiritPet);if(!pet)continue;
+  if(PET_V2_ART_APPROVED&&p.petView?.stage>0)loadPetEvolution(scene,pet.id,p.petView.stage);
+  if(scene.petArt.has(pet.id))continue;
   scene.petArt.set(pet.id,null);
   if(!PET_FRAME_CACHE.has(pet.id))PET_FRAME_CACHE.set(pet.id,fetchPetFrames(pet.id).catch(e=>{PET_FRAME_CACHE.delete(pet.id);throw e;}));
   PET_FRAME_CACHE.get(pet.id).then(frames=>scene.petArt.set(pet.id,frames)).catch(()=>scene.petArt.delete(pet.id));
  }
 }
 export function drawPet(scene,c,target,t){
- const p=target.player,pet=petById(p.spiritPet),frames=pet&&scene.petArt?.get(pet.id);if(!frames)return;
+ const p=target.player,pet=petById(p.spiritPet),frames=pet&&petV2FramesFor(scene,p);if(!frames)return;
  let seed=0;for(const ch of p.id)seed=(seed*31+ch.charCodeAt(0))>>>0;
  const pose=premiumPetPose(pet.id,t,seed%1000,scene.motion)||petPose(t,seed%1000,scene.motion),scale=target.scale||1.4;
  // Small follower beside the feet: no full-screen halo, no additional stage actors.
