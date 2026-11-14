@@ -12,6 +12,8 @@ import {scheduleThaiAtAudio,thaiAtMusicDuck} from './thai-at-audio.js';
 import {scheduleDaiLaAudio,daiLaMusicDuck} from './dai-la-audio.js';
 import {lateMusicDuck,scheduleLateAudio} from './late-ascension-audio.js';
 import {scheduleTienDeAudio,tienDeMusicDuck} from './tien-de-audio.js';import {scheduleMaThanAudio,maThanMusicDuck} from './ma-than-audio.js';import {scheduleThienMaAudio,thienMaMusicDuck} from './thien-ma-audio.js';import {scheduleDietTheAudio,dietTheMusicDuck} from './diet-the-audio.js';
+import {CinematicSfx} from './cinematic-sfx.js';
+import {LH_TIMING} from './luyen-hu-formation.js';
 import {createRitualBoostBus,scheduleRitualBoostLayer} from './ritual-boost-audio.js';
 import {scheduleHoaThanAudio,hoaThanMusicDuck} from './hoa-than-audio.js';
 import {scheduleQiAudio} from './qi-audio.js';
@@ -90,7 +92,7 @@ function scheduleDivineCue(c,destination,elapsed,duration,realm){
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.45;this.ambient=.6;this.sfx=.85;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){
-    if(!on){clearInterval(this.trackFadeTimer);this.pendingTrack=null;this.transitionGain=1;for(const cue of this.battleVoices||[])cue.stop();this.battleVoices=[];this.ritual(null);this.enabled=false;clearTimeout(this.timer);this.timer=null;this.music?.pause();if(this.ctx)await this.ctx.suspend();return;}
+    if(!on){this.cinematic?.clear();clearInterval(this.trackFadeTimer);this.pendingTrack=null;this.transitionGain=1;for(const cue of this.battleVoices||[])cue.stop();this.battleVoices=[];this.ritual(null);this.enabled=false;clearTimeout(this.timer);this.timer=null;this.music?.pause();if(this.ctx)await this.ctx.suspend();return;}
     if(!this.ctx)this.init();
     const resume=this.ctx.resume();let timer;
     try{await Promise.race([resume,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Bấm nút âm thanh để cho phép phát.')),1500);})]);}finally{clearTimeout(timer);}
@@ -130,6 +132,7 @@ export class CultivationAudio {
     // 08/11: chống rè — chỉ còn 1 tầng nén chung (các màn đột phá bỏ nén riêng) + trần an toàn chỉ chạm ở đỉnh hiếm.
     this.ceiling=c.createDynamicsCompressor();this.ceiling.threshold.value=-5;this.ceiling.knee.value=1;this.ceiling.ratio.value=18;this.ceiling.attack.value=.001;this.ceiling.release.value=.12;
     this.ambBus.connect(this.master);this.fxBus.connect(this.master);this.master.connect(this.limiter);this.limiter.connect(this.ceiling);this.softClip=softClipper(c);this.ceiling.connect(this.softClip);this.softClip.connect(c.destination);
+    this.cinematic=new CinematicSfx(c,this.fxBus);
     // A quiet fifth drone with a slow breath envelope, kept below event sounds.
     for(const f of (typeof Audio==='undefined'?[110,164.81,220]:[])){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;g.gain.value=.018;o.connect(g);g.connect(this.ambBus);o.start();this.drone.push({o,g});}
     const lfo=c.createOscillator(),depth=c.createGain();lfo.frequency.value=.095;depth.gain.value=.008;lfo.connect(depth);for(const {g}of this.drone)depth.connect(g.gain);lfo.start();
@@ -147,12 +150,13 @@ export class CultivationAudio {
     this.qiSession?.audio.stop();
     this.qiSession={event,duck,audio:this.scheduleRitual(event,realm,elapsed)};this.sync();
   }
-  scheduleRitual(event,realm,elapsed=0,{base=true,impact=true,boost=true,variant=true}={}){
+  scheduleRitual(event,realm,elapsed=0,{base=true,impact=true,boost=true,variant=true,upgrade=true,cinematicLayers}={}){
     const c=this.ctx,seconds=elapsed/1000,duration=event.duration/1000;
     const output=c.createGain();
     output.connect(this.fxBus);
     const appearance=variant?this.ritualVariant(event,realm,elapsed,output):null;
-    const enhancement=boost&&realm>=6&&realm<25?createRitualBoostBus(c,output,realm):null;
+    const revised=upgrade&&realm===6;
+    const enhancement=boost&&!revised&&realm>=6&&realm<25?createRitualBoostBus(c,output,realm):null;
     const schedule=REALM_CUES[realm]||scheduleQiAudio;
     const baseOut=appearance?.input||output, cues=[];
     if(base){
@@ -161,11 +165,18 @@ export class CultivationAudio {
         :schedule===scheduleQiAudio?schedule(c,baseOut,seconds,duration,1,qiVariant(event).pitch)
         :schedule===scheduleTrucCoAudio?schedule(c,baseOut,seconds,duration,1,'mix',qiVariant(event).pitch)
         :schedule===scheduleKimDanAudio||schedule===scheduleNguyenAnhAudio?schedule(c,baseOut,seconds,duration)
-        :schedule(c,baseOut,seconds,duration,1,event);
+        :schedule(c,baseOut,seconds,duration,1,event,revised);
       cues.push(cue);
     }
     const hit=IMPACT_LAYERS[realm];
-    if(impact&&hit)cues.push(scheduleImpactLayers(c,output,{
+    if(impact&&revised){
+      const id='ritual:'+event.id;
+      const delay=(LH_TIMING.impact/LH_TIMING.duration)*duration-seconds;
+      if(this.cinematic.schedule(id,'void',delay,{priority:10,gain:this.ducked?.62:.9,enabled:cinematicLayers})){
+        cues.push({stop:()=>this.cinematic.cancel(id)});
+      }
+    }
+    if(impact&&hit&&!revised)cues.push(scheduleImpactLayers(c,output,{
       elapsed:seconds,at:hit[0],duration:hit[1],scale:duration/hit[1],
       pitch:qiVariant(event).pitch,root:hit[2],level:realm>=6?.53:.72
     }));
@@ -226,6 +237,10 @@ export class CultivationAudio {
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;const now=this.ctx.currentTime,key='alc:'+kind;if(now-(this.last[key]??-100)<(kind==='bubble'?.15:.2))return;this.last[key]=now;
     try{playAlchemySound(this.ctx,this.fxBus,kind,strength);}catch{}
   }
+  cinematicCue(id,preset,delay=0,options={}){
+    if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;
+    this.cinematic.schedule(id,preset,delay,{...options,gain:(options.gain??.82)*(this.ducked?.63:1)});
+  }
   war(kind,side,strength=1){
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;const now=this.ctx.currentTime,key='war:'+kind+':'+side;if(now-(this.last[key]??-100)<(kind==='clash'?.25:kind==='strike'?.12:.2))return;this.last[key]=now;
     try{playWarSound(this.ctx,this.fxBus,kind,side,strength);}catch{}
@@ -249,7 +264,7 @@ export class CultivationAudio {
   voiceLoad(){
     const now=this.ctx?.currentTime??0;
     return {activeCues:this.voices.filter(until=>until>now).length,
-      battleCues:(this.battleVoices||[]).filter(cue=>cue.until>now).length,ritual:!!this.qiSession};
+      battleCues:(this.battleVoices||[]).filter(cue=>cue.until>now).length,ritual:!!this.qiSession,cinematicSources:this.cinematic?.sourceCount??0};
   }
   eventGift(kind,context){
     if(kind==='dragon'){this.play(kind,true);return;}
@@ -295,5 +310,5 @@ export class CultivationAudio {
     else{this.bell(type==='lotus'?220:293.66,t,.06);}
   }
   schedule(){if(!this.enabled){this.timer=null;return;}const t=this.ctx.currentTime;const steps=[0,7,12,7,4,2,7,4];const n=this.step||0;const f=220*2**(steps[n%steps.length]/12);this.note(f,t+.2,3.4,.032,this.ambBus);if(n%4===0)this.bell(146.83,t,.027,this.ambBus);this.step=n+1;this.timer=setTimeout(()=>this.schedule(),4500);}
-  destroy(){for(const cue of this.battleVoices||[])cue.stop();this.battleVoices=[];this.ritual(null);this.music?.pause();clearTimeout(this.timer);this.ctx?.close();this.enabled=false;}
+  destroy(){this.cinematic?.clear();for(const cue of this.battleVoices||[])cue.stop();this.battleVoices=[];this.ritual(null);this.music?.pause();clearTimeout(this.timer);this.ctx?.close();this.enabled=false;}
 }

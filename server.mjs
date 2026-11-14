@@ -1,3 +1,4 @@
+import {visualPreferences} from './public/visual-preferences.js';
 import {giftMasterView} from './master-rewards.mjs';
 import {createLiveTransfers} from './web/cloud/live-transfers.mjs';
 import {authenticate} from './web/cloud/protocol.mjs';
@@ -78,6 +79,9 @@ function persistPlayTransfer(){
 const liveTransfers=createLiveTransfers({world:worlds.live,save:persistPlayTransfer});
 const voiceLatency=[]; // 08/11: đo thời gian tạo giọng (ms) và tuổi sự kiện khi client xin giọng
 const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
+const visualSettingsFile=path.join(dataDir,'source-visual.json');
+let visualSettings={};
+try{visualSettings=JSON.parse(fs.readFileSync(visualSettingsFile,'utf8'))||{};}catch{}
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
 // Lưu định kỳ (3 s) ghi đĩa ở nền để quà/lệnh không phải chờ ổ đĩa + Defender quét file ~8 MB.
@@ -117,7 +121,7 @@ function payload(mode,view='full'){
     const topGifters=s.players.filter(p=>!p.resident&&!p.puppet&&p.active&&p.giftCoins>0&&!giftEdited.has(p.id)).sort((a,b)=>(a.puppet?1:0)-(b.puppet?1:0)||b.giftCoins-a.giftCoins||a.joinedAt-b.joinedAt).slice(0,5).map(p=>({id:p.id,name:p.name,giftCoins:p.giftCoins,realmName:p.realmName,avatar:p.avatar||null}));
     value={...s,heartRulesVersion:1,playerCount:playerTotal,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view()):{enabled:false,active:false}};
   }
-  value=streamState(value,mode);
+  value={...streamState(value,mode),sourceVisual:visualSettings[mode]||null};
   payloadCache.set(key,{at:now,value});return value;
 }
 
@@ -186,6 +190,12 @@ const server=http.createServer(async(req,res)=>{
       catch(e){json(res,{ok:false,message:e.message},503);}return;
     }
     if(url.pathname==='/api/client-status'&&req.method==='POST'){const b=await body(req);const id=String(b.id||'').slice(0,40);if(id){clientStatus.set(id,{...b,at:Date.now()});if(clientStatus.size>30)clientStatus.delete(clientStatus.keys().next().value);}json(res,{ok:true});return;}
+    if(url.pathname==='/api/source-visual'&&req.method==='POST'){
+      const next={...visualSettings,[mode]:visualPreferences(await body(req))};
+      const temp=visualSettingsFile+'.tmp';
+      fs.writeFileSync(temp,JSON.stringify(next));fs.renameSync(temp,visualSettingsFile);
+      visualSettings=next;broadcast();json(res,next[mode]);return;
+    }
     if(url.pathname==='/api/client-status'){json(res,[...clientStatus.values()].filter(s=>Date.now()-s.at<120000));return;}
     if(url.pathname==='/api/sect-master'&&req.method==='GET'){json(res,sectMaster.view());return;}
     if(url.pathname==='/api/sect-master'&&req.method==='POST'){try{const config=sectMaster.configure(await body(req));worlds.live.settings.sectMasterUsername=config.username;payloadCache.clear();broadcast();json(res,{ok:true,...config});}catch(e){json(res,{ok:false,message:e.message},400);}return;}

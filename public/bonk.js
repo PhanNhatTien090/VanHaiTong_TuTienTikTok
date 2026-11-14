@@ -1,3 +1,4 @@
+import {drawShockwave} from './cinematic-vfx.js';
 import {majorEventActive} from './event-donations.js?v=event-donors-20261114';
 import {drawGiftDonor} from './gift-donor.js';
 // 10/11/2026: HỘI GÕ ĐẦU (server: bonk.mjs) — người gõ đi bộ từ ghế tới cạnh người bị gõ, vung búa gỗ gõ "BỐP",
@@ -5,7 +6,11 @@ import {drawGiftDonor} from './gift-donor.js';
 // 4 kiểu chữ/màu (h.v) để các cú gõ không giống y hệt nhau. Tối đa MAX_ANIM cú vẽ cùng lúc.
 export const BONK_ANIM_MS=3000;
 const MAX_ANIM=6,TAU=Math.PI*2,clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),ease=k=>k<.5?2*k*k:1-((-2*k+2)**2)/2;
-function drawBonkImpact(c,x,y,age,scale,tier,col,variant){
+function drawBonkImpact(scene,c,x,y,age,scale,tier,col,variant){
+ if(scene.cinematicV2!==false){
+  drawShockwave(c,tier>=2?'jade':'gold',x,y,age*1000,{quality:'light',radius:(55+tier*15)*scale,seed:variant*.23,motion:scene.motion,aspect:.46});
+  return;
+ }
  if(age<0||age>.85)return;
  const k=age/.85,n=8+tier*4;
  c.save();c.globalCompositeOperation='screen';c.lineCap='round';
@@ -91,7 +96,7 @@ export function drawBonk(scene,c,t){
   if(b.active)txt(c,'🔨 GÕ ĐẦU · go tên',450,H*(hall?.189:.79),'700 17px Segoe UI','#ffe4a3',4);
   rows.forEach(({h,age},i)=>{const p=scene.playerIndex?.get(h.a),v=scene.playerIndex?.get(h.b),x=hall?(i?820:80):390+i*120,y=H*(hall?.79:.84);
    drawGiftDonor(c,{name:p?.name,avatar:p?.avatar},x,y,{radius:22,color:'#ffdc88',width:112,caption:'gõ '+String(v?.name||'đạo hữu').slice(0,12)});
-   mallet(c,x+32,y+5,Math.sin(age*7)*.8,1.1,h.h||0,t);drawBonkImpact(c,x,y,age-IMPACT,1,h.h||0,'#ffdc88',h.v||0);
+   mallet(c,x+32,y+5,Math.sin(age*7)*.8,1.1,h.h||0,t);drawBonkImpact(scene,c,x,y,age-IMPACT,1,h.h||0,'#ffdc88',h.v||0);
   });c.restore();return;
  }
  c.save();
@@ -113,7 +118,7 @@ export function drawBonk(scene,c,t){
    if(a){const dir=-side,sw=age>=IMPACT?HIT:k<.6?-.7*(k/.6):-.7+(HIT+.7)*((k-.6)/.4);mallet(c,v.x-dir*Math.sin(HIT)*L,hy-2+Math.cos(HIT)*L,dir*sw,F*.9,h.h||0,t);} /* trục búa đặt sao cho lúc bổ xuống đầu búa đúng đỉnh đầu */
    else{const y0=hy-2+L-150+(age<IMPACT?k*k*150:150);mallet(c,v.x,y0,0,F*.9,h.h||0,t);}
    if((h.h||0)>0&&age<IMPACT)txt(c,(h.h===3?'⚡ ':h.h===2?'✦ ':'')+HAMMER_NAMES[h.h],(a?a.x:v.x),(a?headY(a):hy)-40*F,'900 17px Segoe UI',HAMMER_SKIN[h.h].fx,5);}
-  if(age>=IMPACT){drawBonkImpact(c,v.x,hy,age-IMPACT,F*.55,h.h||0,col,h.v);const k=clamp((age-IMPACT)/(END-IMPACT)),fade=1-clamp((age-(END-.4))/.4);
+  if(age>=IMPACT){drawBonkImpact(scene,c,v.x,hy,age-IMPACT,F*.55,h.h||0,col,h.v);const k=clamp((age-IMPACT)/(END-IMPACT)),fade=1-clamp((age-(END-.4))/.4);
    c.save();c.globalAlpha=fade;
    // chớp va chạm
    if(age<IMPACT+.25){const q=(age-IMPACT)/.25;c.strokeStyle=col;c.lineWidth=3;for(let i=0;i<8;i++){const ang=i*TAU/8+.2,r0=10*s+q*14*s,r1=r0+10*s;c.beginPath();c.moveTo(v.x+Math.cos(ang)*r0,hy-4*s+Math.sin(ang)*r0*.7);c.lineTo(v.x+Math.cos(ang)*r1,hy-4*s+Math.sin(ang)*r1*.7);c.stroke();}}

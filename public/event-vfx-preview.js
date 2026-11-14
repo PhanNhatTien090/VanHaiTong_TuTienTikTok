@@ -1,3 +1,4 @@
+import {GIFT_HITS,giftSpectacleTier} from './gift-spectacle.js';
 import {Scene} from './scene.js';
 import {REALM_NAMES} from './progression.js';
 import {breakthroughDuration} from './breakthrough-fx.js';
@@ -16,14 +17,15 @@ const events={
   support:[['race','Đua phi kiếm'],['duel','Luận Kiếm'],['hallwar','Ngũ Đường Tranh Phong'],['boss','Trừ yêu'],['war','Chính Ma Đại Chiến'],['alchemy','Luyện đan'],['maze','Mê cung tốc biến'],['tower','Vân Hải Tháp']],
   daily:[['join','Nhập môn'],['practice','Tu luyện'],['skin','Nhận trang phục'],['victory','Vinh danh']]
 };
-let scene,metrics,meter,timeout,entry=0,voice=null,generation=0;
+let scene,metrics,meter,timeout,warTimer,entry=0,voice=null,generation=0;
 const meterSamples=new Float32Array(2048);
-let peak=0,intervalP95=null;
+let peak=0,interval=null;
+const toggles=id=>Object.fromEntries([...$(id).querySelectorAll('input')].map(input=>[input.name,input.checked]));
 
 function options(){
   const group=$('group').value;
   $('event').replaceChildren(...events[group].map(([value,name])=>new Option(name,value)));
-  $('section').disabled=group!=='ritual';
+  $('section').disabled=!['ritual','gift','support'].includes(group);
   $('layers').disabled=group!=='ritual';
 }
 $('group').onchange=options;
@@ -36,6 +38,7 @@ function setup(){
   scene.residents=false;
   scene.zoom=1;
   scene.onSpectacleImpact=()=>audio.play('impact',true);
+  scene.onCinematicSound=(id,preset,delay,options)=>audio.cinematicCue(id,preset,delay,{...options,enabled:toggles('cinematicLayers')});
   scene.onTowerSound=kind=>audio.play('tower-'+kind,true);
   scene.onMazePortalSound=()=>audio.play('maze-portal',true);
   scene.onWarSound=(kind,side,power)=>audio.war(kind,side,power);
@@ -48,7 +51,7 @@ function setup(){
     if(!event){voice?.audio.stop();voice=null;return;}
     if(!audio.enabled||voice?.event===event)return;
     voice?.audio.stop();
-    const layers=Object.fromEntries([...$('layers').querySelectorAll('input')].map(input=>[input.name,input.checked]));
+    const layers={...toggles('layers'),upgrade:$('version').value==='new',cinematicLayers:toggles('cinematicLayers')};
     voice={event,audio:audio.scheduleRitual(event,event.toRealm,elapsed,layers)};
   };
 }
@@ -60,15 +63,17 @@ async function enableSound(){
     audio.softClip.connect(meter);
   }
   await audio.ctx.resume();
-  audio.enabled=audio.ctx.state==='running';
+  return audio.ctx.state==='running';
 }
 function stop(){
   generation++;
-  clearTimeout(timeout);
+  clearTimeout(timeout);clearTimeout(warTimer);
   voice?.audio.stop();voice=null;
   if(scene){renderTower($('previewTower'),null,scene,escapeText);scene.interruptPresentation();scene.heavenStrike=null;scene.visible=false;}
   for(const cue of audio.battleVoices||[])cue.stop();
   audio.battleVoices=[];
+  audio.cinematic?.clear({replay:true});
+  if(scene){scene.warSeen?.clear();scene.warPhaseKey=null;}
   audio.enabled=false;
 }
 $('stop').onclick=()=>{stop();$('stats').value='Đã dừng';};
@@ -78,15 +83,17 @@ document.querySelector('form').onsubmit=async event=>{
   stop();
   const current=generation;
   if(!scene)setup();
-  if($('sound').checked){try{await enableSound();}catch{$('stats').value='Trình duyệt đang chặn âm thanh';}}
+  let enabled=false;
+  if($('sound').checked){try{enabled=await enableSound();}catch{$('stats').value='Trình duyệt đang chặn âm thanh';}}
   if(current!==generation)return;
-  const count=Math.max(1,Math.min(100,Math.trunc(Number($('actors').value)||1)));
+  audio.enabled=enabled;
+  const count=Math.max(1,Math.min(500,Math.trunc(Number($('actors').value)||1)));
   const players=Array.from({length:count},(_,i)=>({
-    id:'demo-'+i,name:'Đạo hữu '+(i+1),active:true,gender:i%2?'nu':'nam',joinedAt:i,
+    id:'demo-'+i,name:'Đạo hữu '+(i+1),active:i<(count===500?28:80),gender:i%2?'nu':'nam',joinedAt:i,
     realm:i%9,giftCoins:0,qi:20,neededQi:100,stones:10,neededStones:25
   }));
   const p=players[0],group=$('group').value,choice=$('event').value,seed=$('seed').value||'van-hai';
-  const now=Date.now(),id='preview:'+seed+':'+group+':'+choice;
+  const now=Date.now(),part=$('section').value,id='preview:'+seed+':'+group+':'+choice;
   const state={players,realms:REALM_NAMES,serverNow:now,settings:{},mode:'demo'};
   const support={id:id+'-gift',user:p.id,name:p.name,gift:'Quà mô phỏng',coins:500,value:500,count:1,at:now,mode:choice};
   if(group==='support'){
@@ -102,9 +109,13 @@ document.querySelector('form').onsubmit=async event=>{
         aura:{[p.id]:50,[opponent.id]:45},techniques:{[p.id]:attackTechnique(p),[opponent.id]:attackTechnique(opponent)},giftFx:[support]}}};
     }
     if(choice==='war'){
-      state.sectWar={id,active:true,phase:'running',line:62,startedAt:now,endsAt:now+15000,
-        roster:{chinh:[],ma:[]},counts:{chinh:count,ma:count},fx:[{id: support.id,kind:'gift',side:'chinh',
-          user:p.id,name:p.name,value:500,truong:125,at:now,gift:support.gift}]};
+      const impact=part==='impact',tail=part==='tail';
+      state.sectWar={id,active:true,phase:tail?'finished':'running',line:62,startedAt:now,endsAt:now+15000,
+        ...(tail?{finishedAt:now,podiumUntil:now+15000,result:{winner:'chinh'}}:{}),
+        roster:{chinh:players.filter((_,i)=>i%2===0&&players[i].active),ma:players.filter((_,i)=>i%2===1&&players[i].active)},
+        counts:{chinh:Math.ceil(players.filter(actor=>actor.active).length/2),ma:Math.floor(players.filter(actor=>actor.active).length/2)},fx:[{
+          id:support.id,kind:impact?'flip':'gift',side:'chinh',user:p.id,name:p.name,value:500,truong:125,at:now,gift:support.gift
+        }]};
     }
     if(choice==='alchemy'){
       state.alchemy={id,active:true,phase:'brewing',grade:5,heat:62,round:2,roundEndsAt:now+15000,
@@ -132,18 +143,20 @@ document.querySelector('form').onsubmit=async event=>{
   }
   if((group==='combat'||group==='support')&&choice==='boss')state.boss={id,startedAt:now,endsAt:now+12000,species:'storm-tiger',name:'Lôi Hổ',hp:500,maxHp:500,participants:{},damage:{}};
   scene.showcase=group==='ritual';
-  scene.shakeLevel=$('shake').checked?'low':'off';
-  scene.cameraEnabled=$('shake').checked;
+  scene.cinematicV2=$('version').value==='new';
+  scene.cinematicLayers=toggles('visualLayers');
+  scene.shakeLevel=$('shake').value;
+  scene.cameraEnabled=true;
   scene.motion=!$('motion').checked&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
   scene.reduceFlash=$('flash').checked||!scene.motion;
   scene.visible=true;scene.setQuality($('quality').value);scene.update(state,null);
-  peak=0;intervalP95=null;entry=performance.now();
+  peak=0;interval=null;entry=performance.now();
   if(state.tower)renderTower($('previewTower'),state,scene,escapeText,now);
   if(group==='ritual'){
     const realm=Number(choice),e={id,user:p.id,name:p.name,effect:'breakthrough',fromRealm:realm-1,toRealm:realm,
       visualFrom:{...p,realm:realm-1},visualTo:{...p,realm}};
     scene.noteEvent(e);scene.addEffect(e);
-    const duration=breakthroughDuration(e),impact=duration*ascensionImpactRatio(realm),part=$('section').value;
+    const duration=breakthroughDuration(e),impact=duration*ascensionImpactRatio(realm);
     const offset=part==='impact'?Math.max(0,impact-850):part==='tail'?impact+450:0;
     const end=part==='charge'?Math.max(300,impact-250):part==='impact'?Math.min(duration,impact+1700):duration;
     const visual=scene.effects.find(effect=>effect.id===id);
@@ -152,8 +165,27 @@ document.querySelector('form').onsubmit=async event=>{
   }else if(group==='gift'){
     const e={id,user:p.id,name:p.name,effect:'gift',gift:'Quà mô phỏng',coins:Number(choice),count:1};
     scene.noteEvent(e);scene.addEffect(e);audio.play(+choice>=100?'dragon':'sword',true);
+    const visual=scene.effects.find(effect=>effect.id===id),tier=giftSpectacleTier(e);
+    if(tier&&visual){
+      if(part==='impact')visual.start-=Math.max(0,tier.duration*GIFT_HITS[0]-850);
+      if(part==='tail')visual.start-=tier.duration*GIFT_HITS[1]+300;
+    }
   }else if(group==='support'){
     if(['hallwar','boss','tower'].includes(choice))scene.addEffect({...support,effect:'gift'});
+    if(choice==='war'&&part==='all'){
+      warTimer=setTimeout(()=>{
+        const at=Date.now(),war=state.sectWar;
+        state.serverNow=at;
+        state.sectWar={...war,line:37,fx:[{id:id+':turn',kind:'turn',side:'ma',at}]};
+        scene.update(state,null);
+        warTimer=setTimeout(()=>{
+          const finishedAt=Date.now();
+          state.serverNow=finishedAt;
+          state.sectWar={...state.sectWar,phase:'finished',finishedAt,podiumUntil:finishedAt+15000,result:{winner:'ma'},fx:[]};
+          scene.update(state,null);
+        },4400);
+      },3200);
+    }
   }else if(group==='combat'&&choice==='strike'){
     scene.startHeavenStrike({user:p.id,name:p.name,heavenStrike:{seed,loss:0}});audio.play('impact',true);
   }else{
@@ -168,7 +200,7 @@ setInterval(()=>{
   if(meter&&audio.enabled){meter.getFloatTimeDomainData(meterSamples);for(const v of meterSamples)peak=Math.max(peak,Math.abs(v));}
   if(performance.now()-entry<650)return;
   const db=peak?(20*Math.log10(peak)).toFixed(1)+' dBFS':'—';
-  if((performance.now()-entry)%1000<300)intervalP95=metrics.snapshot(scene).timings.frameInterval?.p95;
-  $('stats').value=(scene.fps||'—')+' FPS · P95 '+(intervalP95??'—')+' ms · đỉnh mẫu '+db;
+  if((performance.now()-entry)%1000<300)interval=metrics.snapshot(scene).timings.frameInterval;
+  $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db;
 },250);
 addEventListener('pagehide',()=>{stop();audio.destroy();});

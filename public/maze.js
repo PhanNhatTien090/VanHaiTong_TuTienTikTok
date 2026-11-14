@@ -1,3 +1,4 @@
+import {drawAura,drawSeal,drawTrail} from './cinematic-vfx.js';
 import {MAZE_SPRITE_CAP} from './crowd-policy.js';
 import {feedbackBudget} from './cinematic-feedback.js';
 // 10/11/2026: BÍ CẢNH MÊ CUNG — vẽ mê cung chung + chấm sáng mỗi người (server: maze.mjs).
@@ -93,11 +94,20 @@ function drawMazePortals(scene,c,e,L,now,H){
   if(!heard.has(key)){
    heard.add(key);
    if(heard.size>32)heard.delete(heard.values().next().value);
-   if(age<550)scene.onMazePortalSound?.();
+   if(age<550){
+    if(scene.cinematicV2!==false&&scene.onCinematicSound)scene.onCinematicSound('maze:'+key,'jade',0,{priority:1,gain:.48});
+    else scene.onMazePortalSound?.();
+   }
   }
   const [x,y]=cellXY(L,f.from.x,f.from.y),[X,Y]=cellXY(L,f.to.x,f.to.y),k=age/2400;
   const alpha=Math.min(1,age/80)*(1-k),u=motion?clamp(age/340):1,dx=X-x,dy=Y-y;
   c.save();c.globalCompositeOperation='screen';c.globalAlpha=alpha;
+  if(scene.cinematicV2!==false){
+   drawSeal(c,'jade',x,y,L.cell*.84,motion?age*.001:0,.88);
+   drawSeal(c,'void',X,Y,L.cell*.84,motion?-age*.001:0,.88);
+   drawAura(c,'void',X,Y,L.cell*.72,.44);
+   if(u<1)drawTrail(c,'jade',x+dx*u,y+dy*u,Math.atan2(dy,dx),Math.min(L.cell*2,Math.hypot(dx,dy)),.88);
+  }else{
   for(const [px,py] of [[x,y],[X,Y]]){
    glow(c,px,py,L.cell*(.9+k),'rgba(128,179,255,A)',.65);
    for(let i=0;i<(light?2:3);i++){
@@ -118,6 +128,7 @@ function drawMazePortals(scene,c,e,L,now,H){
    c.globalAlpha=alpha*(1-settle)*.9;
    c.strokeStyle='#ccf7ff';c.lineWidth=3;
    c.beginPath();c.ellipse(X,Y,L.cell*(.35+settle),L.cell*(.18+settle*.42),0,0,TAU);c.stroke();
+  }
   }
   c.restore();c.save();c.globalAlpha=alpha;
   txt(c,f.name+' · TỐC BIẾN',Math.max(145,Math.min(755,X)),Math.min(H*.8,Y+52),'900 21px Segoe UI','#eaffff',5);c.restore();

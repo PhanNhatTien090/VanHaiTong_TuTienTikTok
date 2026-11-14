@@ -1,3 +1,5 @@
+import {sourceVisualPreferences} from './visual-preferences.js';
+import {cinematicQuality,VFX_LIMITS} from './cinematic-vfx.js';
 import {renderMiniEvent} from './mini-event-ui.js?v=polish-20261114';
 import {eventDonationContext,majorEventActive} from './event-donations.js';
 import {ManagementState} from './management-state.js';
@@ -109,31 +111,53 @@ setInterval(()=>honorUI.tick(busy),1000);
 const scene=overlay?new Scene($('#sceneCanvas'),id=>selectPlayer(id)):new ManagementState($('#sceneCanvas'));if(overlay)prepareAscensionStage(scene); // 4/11: nạp sẵn ảnh thiên đài
 const ascensionStage=overlay&&params.get('stage')==='ascension';scene.showcase=ascensionStage;document.body.classList.toggle('ascension-stage',ascensionStage);const ascensionLobby=ascensionStage?mountAscensionStage($('.scene-shell'),scene):null;
 const qualitySelect=$('#qualityMode');
-let savedQuality='auto';try{savedQuality=localStorage.getItem('vanhai-quality')||'auto';}catch{}
 const shakeSelect=$('#shakeMode'),motionToggle=$('#reduceMotion'),flashToggle=$('#reduceFlash');
 const motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
 function applyVisualPreferences(){
-  const shake=params.get('shake')||localStorage.getItem('vanhai-camera-shake')||'low';
-  scene.shakeLevel=['off','low','medium','high'].includes(shake)?shake:'low';
-  scene.motion=!motionPreference.matches&&localStorage.getItem('vanhai-reduce-motion')!=='1';
-  scene.reduceFlash=!scene.motion||localStorage.getItem('vanhai-reduce-flash')==='1';
-  shakeSelect.value=scene.shakeLevel;
-  motionToggle.checked=!scene.motion;
-  flashToggle.checked=scene.reduceFlash;
+const visualKeys={quality:'quality',shake:'camera-shake',motion:'reduce-motion',flash:'reduce-flash'};
+let sharedVisual=null,visualSaving=0,visualWrites=Promise.resolve();
+function localVisual(){
+  const values={};
+  for(const [key,storage] of Object.entries(visualKeys)){
+    const value=localStorage.getItem('vanhai-'+storage);
+    values[key]=key==='motion'||key==='flash'?value==='1':value;
+  }
+  return values;
+}
+  const preferences=sourceVisualPreferences(overlay?params:new URLSearchParams(),localVisual(),sharedVisual);
+  if(scene.budget.mode!==preferences.quality)scene.setQuality(preferences.quality);
+  scene.shakeLevel=preferences.shake;
+  scene.motion=!motionPreference.matches&&!preferences.motion;
+  scene.reduceFlash=!scene.motion||preferences.flash;
+  qualitySelect.value=preferences.quality;
+  shakeSelect.value=preferences.shake;
+  motionToggle.checked=preferences.motion;
+  flashToggle.checked=preferences.flash;
   document.body.classList.toggle('reduced-flash',scene.reduceFlash);
 }
-for(const [element,key] of [[shakeSelect,'camera-shake'],[motionToggle,'reduce-motion'],[flashToggle,'reduce-flash']]){
-  element.onchange=()=>{localStorage.setItem('vanhai-'+key,element.type==='checkbox'?(element.checked?'1':'0'):element.value);applyVisualPreferences();};
+for(const [key,element] of Object.entries({quality:qualitySelect,shake:shakeSelect,motion:motionToggle,flash:flashToggle})){
+  element.onchange=()=>{
+    const value=element.type==='checkbox'?element.checked:element.value;
+    localStorage.setItem('vanhai-'+visualKeys[key],typeof value==='boolean'?String(+value):value);
+    const next={...(sharedVisual||localVisual()),[key]:value};
+    if(!overlay){
+      sharedVisual=next;
+      visualSaving++;
+      visualWrites=visualWrites.then(async()=>{
+        const result=await fetch('/api/source-visual?world='+mode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(next)});
+        if(!result.ok)throw Error('Lưu thiết lập cảnh thất bại');
+      }).catch(()=>toast('Không đồng bộ được thiết lập nguồn Link.')).finally(()=>visualSaving--);
+    }
+    applyVisualPreferences();
+  };
 }
-window.addEventListener('storage',event=>{if(['vanhai-camera-shake','vanhai-reduce-motion','vanhai-reduce-flash'].includes(event.key))applyVisualPreferences();});
 motionPreference.addEventListener('change',applyVisualPreferences);
-applyVisualPreferences();
-const requestedQuality=params.get('quality')||savedQuality;scene.renderPreview=!overlay;scene.setQuality(requestedQuality);qualitySelect.value=scene.budget.mode;
-qualitySelect.onchange=e=>{scene.setQuality(e.target.value);try{localStorage.setItem('vanhai-quality',e.target.value);}catch{}toast('Đã đổi chất lượng cảnh.');};
-window.addEventListener('storage',e=>{if(e.key==='vanhai-quality'&&!params.has('quality')){scene.setQuality(e.newValue||'auto');qualitySelect.value=scene.budget.mode;}});
+scene.renderPreview=!overlay;applyVisualPreferences();
 
 let voiceCaptionTimer;
 scene.onWarSound=(kind,side,strength)=>cultivationAudio.war(kind,side,strength);scene.onAlchemySound=(kind,strength)=>cultivationAudio.alchemy(kind,strength);scene.onSpectacleImpact=()=>cultivationAudio.play('impact',true);
+scene.onCinematicSound=(...args)=>cultivationAudio.cinematicCue(...args);
+scene.onCinematicCancel=id=>cultivationAudio.cinematic?.cancel(id);
 scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);scene.onBonkSound=(kind,o)=>cultivationAudio.bonk(kind,o); /* 10/11: Hội Gõ Đầu */
 scene.onGiftSound=kind=>cultivationAudio.play(kind,true);
 scene.onMazePortalSound=()=>cultivationAudio.play('maze-portal',true);
@@ -168,6 +192,8 @@ if(!overlay){
   const {w,h,dpr}=source.view,layout=source.renderLayout;
   el.textContent='Trang nguồn báo '+w+' × '+h+' · DPR '+dpr+(layout?' · vùng game '+Math.round(layout.css.width)+' × '+Math.round(layout.css.height)+' · canvas '+layout.backing.width+' × '+layout.backing.height:' · làm mới nguồn để đo vùng game')+(Math.abs(w/h-9/16)>.005?' · Trang nguồn hiện chưa đúng tỷ lệ 9:16.':layout?.fillsViewport?' · Đã phủ đầy khung.':'');
  }catch{el.textContent='Chưa đọc được kích thước nguồn Link.';}};
+  const v=source.visualStatus;
+  if(v)el.textContent+=' · Yêu cầu '+v.requested+' / đang dùng '+v.applied+' · VFX '+v.vfx.particles+' hạt / '+v.vfx.rings+' vòng / '+v.vfx.glows+' glow · rung '+v.shake+' · giảm chuyển động '+(v.reduceMotion?'bật':'tắt')+' · giảm chớp '+(v.reduceFlash?'bật':'tắt')+' · '+(source.fps||'—')+' FPS'+(v.reason?' · '+v.reason:'');
  showSourceLayout();setInterval(showSourceLayout,10000);
 }
 $('#overlayUrl').textContent=overlayUrl();$('#exportLink').href=`/api/export?world=${mode}`;
@@ -280,7 +306,7 @@ $('#idleToggle').checked=idleOn;$('#idleToggle').onchange=e=>{idleOn=e.target.ch
 // Trang tự báo tình trạng âm thanh về máy chủ (xem tại /api/client-status) để chẩn đoán LIVE Studio.
 const clientId=Math.random().toString(36).slice(2,10);let lastAudioError='';
 window.addEventListener('error',e=>{lastAudioError='JS: '+e.message;});
-function reportStatus(){fetch('/api/client-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({diag:liveDiagSnapshot(),renderPerf:renderMetrics?.snapshot(scene),audioPerf:renderMetrics?cultivationAudio.voiceLoad():undefined,view:{w:innerWidth,h:innerHeight,dpr:devicePixelRatio,px:Math.round(innerWidth*devicePixelRatio)+"x"+Math.round(innerHeight*devicePixelRatio)},voiceLag:narrator.lagStats?.(),id:clientId,ua:navigator.userAgent.slice(-60),overlay,world:mode,audioEnabled:cultivationAudio.enabled,audioLevels:{master:cultivationAudio.volume,music:cultivationAudio.ambient,sfx:cultivationAudio.sfx,ducked:cultivationAudio.ducked,musicOutput:cultivationAudio.music?.volume},ctx:cultivationAudio.ctx?.state||'none',music:cultivationAudio.music?(cultivationAudio.music.paused?'paused':'playing'):'none',voiceOn:narrator.enabled,idleOn,running:narrator.running,queue:narrator.queue.length,status:$('#audioStatus').textContent,error:lastAudioError,zoom:scene.zoom,camera:scene.cameraEnabled,motion:scene.motion,opportunityVisible:!!$('#opportunityHud')&&!$('#opportunityHud').hidden,caption:$('#voiceCaption').textContent,spot:$('#spotlight').textContent,residents:residentsOn,acts:residentActs,skip:residentSkip,q:queue.length,busy,fps:scene.fps,frameMs:scene.frameMs,frameP95:scene.frameP95,cacheMiB:scene.cacheMiB,active:state?.players?.filter(p=>p.active).length,onStage:scene.targets?.length,trips:scene.mover?[...scene.mover.trips.values()].filter(x=>x.kind!=='hover'&&performance.now()-x.t0<4200).length:0,bubbles:scene.mover?.bubbles.size,voiceQ:narrator.queue.length,activeVoiceId:narrator.activeVoiceId,voicePriorities:narrator.queue.map(x=>x.e.raceEntry?"race-entry":x.e.effect),version:90,managementOnly:!overlay,quality:scene.budget.level,renderWidth:scene.canvas.width,renderLayout:scene.renderLayout?.(),cachedActors:scene.characterFrames.frames.size,visualQueue:queue.length,coalesced:presentations.coalesced,solo:scene.presentation?.until>performance.now()})}).catch(()=>{});}
+function reportStatus(){fetch('/api/client-status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({diag:liveDiagSnapshot(),renderPerf:renderMetrics?.snapshot(scene),audioPerf:renderMetrics?cultivationAudio.voiceLoad():undefined,view:{w:innerWidth,h:innerHeight,dpr:devicePixelRatio,px:Math.round(innerWidth*devicePixelRatio)+"x"+Math.round(innerHeight*devicePixelRatio)},voiceLag:narrator.lagStats?.(),id:clientId,ua:navigator.userAgent.slice(-60),overlay,world:mode,visualStatus:{requested:scene.budget.mode,applied:scene.budget.level,vfx:VFX_LIMITS[cinematicQuality(scene)],shake:scene.shakeLevel,reduceMotion:!scene.motion,reduceFlash:scene.reduceFlash,reason:scene.budget.pressured?'Tải kéo dài':scene.budget.crowded?'Đông nhân vật':scene.budget.level!==scene.budget.mode&&scene.budget.mode!=='auto'?'FPS thấp':''},audioEnabled:cultivationAudio.enabled,audioLevels:{master:cultivationAudio.volume,music:cultivationAudio.ambient,sfx:cultivationAudio.sfx,ducked:cultivationAudio.ducked,musicOutput:cultivationAudio.music?.volume},ctx:cultivationAudio.ctx?.state||'none',music:cultivationAudio.music?(cultivationAudio.music.paused?'paused':'playing'):'none',voiceOn:narrator.enabled,idleOn,running:narrator.running,queue:narrator.queue.length,status:$('#audioStatus').textContent,error:lastAudioError,zoom:scene.zoom,camera:scene.cameraEnabled,motion:scene.motion,opportunityVisible:!!$('#opportunityHud')&&!$('#opportunityHud').hidden,caption:$('#voiceCaption').textContent,spot:$('#spotlight').textContent,residents:residentsOn,acts:residentActs,skip:residentSkip,q:queue.length,busy,fps:scene.fps,frameMs:scene.frameMs,frameP95:scene.frameP95,cacheMiB:scene.cacheMiB,active:state?.players?.filter(p=>p.active).length,onStage:scene.targets?.length,trips:scene.mover?[...scene.mover.trips.values()].filter(x=>x.kind!=='hover'&&performance.now()-x.t0<4200).length:0,bubbles:scene.mover?.bubbles.size,voiceQ:narrator.queue.length,activeVoiceId:narrator.activeVoiceId,voicePriorities:narrator.queue.map(x=>x.e.raceEntry?"race-entry":x.e.effect),version:90,managementOnly:!overlay,quality:scene.budget.level,renderWidth:scene.canvas.width,renderLayout:scene.renderLayout?.(),cachedActors:scene.characterFrames.frames.size,visualQueue:queue.length,coalesced:presentations.coalesced,solo:scene.presentation?.until>performance.now()})}).catch(()=>{});}
 const renderMetrics=overlay&&params.get('perf')==='1'?new RenderMetrics():null;
 if(overlay)scene.metrics=renderMetrics;
 startLiveDiag(renderMetrics);setInterval(reportStatus,5000);setTimeout(reportStatus,1500);
@@ -513,6 +539,9 @@ function receive(s){
   document.querySelector('.live-disclosure').textContent=mode==='live'&&s.liveIntegrityVersion!==1?'M\u00c1Y CH\u1ee6 CH\u01afA \u00c1P D\u1ee4NG LU\u1eacT LIVE M\u1edaI':'TRÒ CHƠI TU TIÊN';
   const previous=state;state=s;if(overlay&&s.raceStatus?.entryAnnouncement)narrator.add(s.raceStatus.entryAnnouncement);honorUI.update(s);if(initialized&&previous){const previousPlayers=new Map(previous.players.map(p=>[p.id,p]));for(const p of s.players){const old=previousPlayers.get(p.id);if(old&&skinFor(p.giftCoins).level>skinFor(old.giftCoins).level)enqueue({id:'skin:'+p.id+':'+p.giftCoins,user:p.id,name:p.name,effect:'skin',text:skinFor(p.giftCoins).name});}}online=true;$('#disconnectBanner').hidden=true;$('#saveStatus').textContent='● Đã kết nối · tự lưu mỗi 3s';if(!selected||!state.players.some(p=>p.id===selected))selected=state.players[0]?.id||null;
   for(let e of s.events){if(e.effect==='breakthrough'){const old=previous?.players.find(p=>p.id===e.user),next=s.players.find(p=>p.id===e.user);e={...e,visualFrom:e.visualFrom||(old?{...old,realm:e.fromRealm??old.realm}:undefined),visualTo:e.visualTo||(next?{...next,realm:breakthroughRealm(e)}:undefined)};}if(!seen.has(e.id)&&(initialized||e.autoArrival&&s.serverNow-e.at<8000)){enqueue(e);lastViewerAt=Date.now();}seen.add(e.id);}if(seen.size>1000)seen=new Set([...seen].slice(-300));
+  if(!visualSaving&&JSON.stringify(s.sourceVisual??null)!==JSON.stringify(sharedVisual)){
+    sharedVisual=s.sourceVisual??null;applyVisualPreferences();
+  }
   if(!initialized){initialized=true;const p=player();if(p)$('#simName').value=p.name;renderGifts();renderGuide();renderLiveRanks(true);}
   scheduleRender();
 }

@@ -96,7 +96,9 @@ export function renderTower(el,state,scene,esc,now=Date.now()){
  if(t.last&&t.last.seq!==view.resultSeq){
   view.resultSeq=t.last.seq;
   if(t.last.won&&now-t.last.at>=0&&now-t.last.at<1600){
-   scene.onTowerSound?.(t.last.mile?'milestone':'clear');
+   if(t.last.mile&&scene.cinematicV2!==false&&scene.onCinematicSound){
+    scene.onCinematicSound(t.id+':floor:'+t.last.seq,'resonance',0,{priority:3,gain:.66});
+   }else scene.onTowerSound?.(t.last.mile?'milestone':'clear');
    if(!scene.reduceFlash){
     clearTimeout(view.flare);
     el.classList.add('tw-flash');

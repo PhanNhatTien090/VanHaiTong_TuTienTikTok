@@ -16,6 +16,22 @@ export function cameraShakeStrength(scene){
   return STRENGTH[scene.shakeLevel??'low']??STRENGTH.low;
 }
 
+const IMPULSES={
+  minor:[2,105],medium:[4,165],major:[7,240],legendary:[9,285]
+};
+export function cameraImpulse(scene,preset,age,seed=0,light=feedbackBudget(scene)){
+  const [offset,span]=IMPULSES[preset]||[0,1];
+  const strength=cameraShakeStrength(scene);
+  if(!strength||age<0||age>=span)return ZERO;
+  const gain=offset*strength*(light?.56:1)*(1-age/span)**2*Math.min(1,age/24);
+  return {x:Math.sin(age*.048+seed*6.28)*gain,y:Math.cos(age*.053+seed*6.28)*gain*.64};
+}
+
+export function mixCameraImpulses(main,secondary){
+  const weight=(main.x||main.y)?.15:1;
+  return {x:clamp(main.x+secondary.x*weight,-10,10),y:clamp(main.y+secondary.y*weight,-10,10)};
+}
+
 export function giftCameraImpulse(scene,event,t){
   const strength=cameraShakeStrength(scene);
   if(!event||!strength||event.value<500)return ZERO;
@@ -27,7 +43,7 @@ export function giftCameraImpulse(scene,event,t){
 }
 
 export function boundedCameraJolt(base,jolt,H,allowPadding=false){
-  const cap=12;
+  const cap=10;
   const dx=clamp(jolt.x||0,-cap,cap),dy=clamp(jolt.y||0,-cap,cap);
   if(!dx&&!dy)return base;
   const padding=allowPadding?Math.max(Math.abs(dx)/420,Math.abs(dy)/(H*.46)):0;

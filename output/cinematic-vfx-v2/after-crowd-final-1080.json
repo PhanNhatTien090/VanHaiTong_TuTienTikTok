@@ -1,0 +1,236 @@
+{
+  "result": [
+    {
+      "count": 1,
+      "group": "ritual",
+      "event": "6",
+      "section": "charge",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 1,
+      "fps": 28.9,
+      "frame": [
+        33.3,
+        38.9,
+        128.1
+      ],
+      "js": [
+        1.2,
+        2.7,
+        8.1
+      ],
+      "loaf": 6,
+      "cache": {
+        "hits": 0,
+        "misses": 0,
+        "allocations": 0,
+        "evictions": 0,
+        "repaints": 0,
+        "clears": 0,
+        "bytes": 0
+      },
+      "effects": 1
+    },
+    {
+      "count": 10,
+      "group": "gift",
+      "event": "5000",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 1,
+      "fps": 23.3,
+      "frame": [
+        43.9,
+        55.6,
+        83.6
+      ],
+      "js": [
+        4,
+        8.8,
+        73.2
+      ],
+      "loaf": 10,
+      "cache": {
+        "hits": 97,
+        "misses": 58,
+        "allocations": 6,
+        "evictions": 0,
+        "repaints": 58,
+        "clears": 2,
+        "bytes": 3528000
+      },
+      "effects": 1
+    },
+    {
+      "count": 20,
+      "group": "support",
+      "event": "war",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 12,
+      "fps": 23.8,
+      "frame": [
+        39.3,
+        44.7,
+        66.7
+      ],
+      "js": [
+        3.5,
+        6.6,
+        8.2
+      ],
+      "loaf": 3,
+      "cache": {
+        "hits": 1982,
+        "misses": 94,
+        "allocations": 41,
+        "evictions": 0,
+        "repaints": 94,
+        "clears": 4,
+        "bytes": 5400000
+      },
+      "effects": 0
+    },
+    {
+      "count": 30,
+      "group": "support",
+      "event": "race",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 10,
+      "fps": 11.7,
+      "frame": [
+        78.1,
+        166.4,
+        299.9
+      ],
+      "js": [
+        6.5,
+        10.6,
+        24.5
+      ],
+      "loaf": 54,
+      "cache": {
+        "hits": 2079,
+        "misses": 837,
+        "allocations": 64,
+        "evictions": 0,
+        "repaints": 837,
+        "clears": 6,
+        "bytes": 4500000
+      },
+      "effects": 0
+    },
+    {
+      "count": 50,
+      "group": "combat",
+      "event": "boss",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 50,
+      "fps": 22.5,
+      "frame": [
+        39.5,
+        44.8,
+        77.5
+      ],
+      "js": [
+        7.3,
+        10.2,
+        11.7
+      ],
+      "loaf": 4,
+      "cache": {
+        "hits": 9379,
+        "misses": 937,
+        "allocations": 154,
+        "evictions": 0,
+        "repaints": 937,
+        "clears": 7,
+        "bytes": 22500000
+      },
+      "effects": 0
+    },
+    {
+      "count": 80,
+      "group": "gift",
+      "event": "5000",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 1,
+      "fps": 24,
+      "frame": [
+        41.4,
+        44.8,
+        53.7
+      ],
+      "js": [
+        2.7,
+        4.9,
+        10
+      ],
+      "loaf": 1,
+      "cache": {
+        "hits": 9518,
+        "misses": 977,
+        "allocations": 158,
+        "evictions": 0,
+        "repaints": 977,
+        "clears": 7,
+        "bytes": 25578000
+      },
+      "effects": 1
+    },
+    {
+      "count": 500,
+      "group": "support",
+      "event": "war",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 12,
+      "fps": 23.9,
+      "frame": [
+        39.5,
+        49.9,
+        66.7
+      ],
+      "js": [
+        5.3,
+        7.9,
+        11
+      ],
+      "loaf": 0,
+      "cache": {
+        "hits": 11641,
+        "misses": 978,
+        "allocations": 158,
+        "evictions": 0,
+        "repaints": 978,
+        "clears": 7,
+        "bytes": 25578000
+      },
+      "effects": 0
+    }
+  ],
+  "errors": []
+}

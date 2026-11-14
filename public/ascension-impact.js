@@ -1,3 +1,4 @@
+import {drawEnergyOrb,drawShockwave} from './cinematic-vfx.js';
 import {MAX_REALM} from './progression.js';
 import {makeSurface} from './performance.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),mix=(a,b,u)=>a+(b-a)*u;
@@ -14,19 +15,21 @@ function cracks(c,x,y,k,realm,H,light,color){
  for(let i=0;i<n;i++){const angle=i*TAU/n+.14*Math.sin(i*17),length=(i%3===0?H*.6:430+80*Math.sin(i*7))*reach;let px=x,py=y;c.strokeStyle=i%2?'#c1fbff':color;c.lineWidth=i%3===0?2.4:1.2;c.beginPath();c.moveTo(x,y);for(let j=1;j<=6;j++){const d=j/6*length,offset=Math.sin(i*13+j*9)*15*(j/6),nx=x+Math.cos(angle)*d+Math.sin(angle)*offset,ny=y+Math.sin(angle)*d-Math.cos(angle)*offset;c.lineTo(nx,ny);if(j===3||j===5){const ba=angle+(i%2?1:-1)*.5,bl=length*.12;c.moveTo(nx+Math.cos(ba)*bl,ny+Math.sin(ba)*bl);c.lineTo(nx,ny);}px=nx;py=ny;}c.stroke();}
  const u=clamp((k-.72)/.18),shards=light?7:12;c.lineWidth=1;for(let i=0;i<shards;i++){const a=i*2.399,d=85+u*u*(180+i*15);c.save();c.translate(x+Math.cos(a)*d,y+Math.sin(a)*d*.75);c.rotate(a+u*(i%2?1:-1));c.fillStyle='#c9f5ff18';c.strokeStyle='#c6eaff80';c.beginPath();c.moveTo(-10,-18);c.lineTo(14,-4);c.lineTo(4,24);c.closePath();c.fill();c.stroke();c.restore();}c.restore();
 }
-export function drawAscensionImpact(scene,c,{k,realm,color},clock,H,layer='back'){
+export function drawAscensionImpact(scene,c,{k,realm,color,duration=12000},clock,H,layer='back'){
  const motion=scene.motion!==false,p=impactChoreography(realm,k,motion),x=450,chest=H*.62-200,light=scene.budget?.level==='light',u=p.absorb;
  c.save();
  if(layer==='back'){
   // One synchronized contraction instead of endlessly orbiting particles.
-  if(k>=.49&&k<.71){const n=light?12:Math.min(32,14+realm),baseRadius=360+realm*4;for(let i=0;i<n;i++){const a=i*TAU/n+u*3.4,lag=(i%3)*.035,v=clamp((u-lag)/(1-lag)),r=baseRadius*(1-v)**1.5,px=x+Math.cos(a)*r,py=chest+Math.sin(a)*r*.75;c.globalAlpha=Math.sin(Math.PI*clamp(v*.85+.08))*.85;c.strokeStyle=i%3?color:'#fff6d6';c.lineWidth=2+v*3;c.beginPath();c.moveTo(px+Math.cos(a-.3)*32*(1-v),py+Math.sin(a-.3)*24*(1-v));c.quadraticCurveTo(px+Math.sin(a)*20,py-Math.cos(a)*20,px,py);c.stroke();}}
+  if(scene.cinematicV2===false&&k>=.49&&k<.71){const n=light?12:Math.min(32,14+realm),baseRadius=360+realm*4;for(let i=0;i<n;i++){const a=i*TAU/n+u*3.4,lag=(i%3)*.035,v=clamp((u-lag)/(1-lag)),r=baseRadius*(1-v)**1.5,px=x+Math.cos(a)*r,py=chest+Math.sin(a)*r*.75;c.globalAlpha=Math.sin(Math.PI*clamp(v*.85+.08))*.85;c.strokeStyle=i%3?color:'#fff6d6';c.lineWidth=2+v*3;c.beginPath();c.moveTo(px+Math.cos(a-.3)*32*(1-v),py+Math.sin(a-.3)*24*(1-v));c.quadraticCurveTo(px+Math.sin(a)*20,py-Math.cos(a)*20,px,py);c.stroke();}}
  }else{
   c.globalAlpha=1;
   if(p.phoenix&&k>=.49&&k<.706){const v=motion?u:1,im=scene.breakthroughSpectacle?.[2],px=mix(x-260,x,v)+Math.sin(v*Math.PI)*180,py=mix(chest-370,chest,v);image(c,im,px,py,p.phoenixSize,Math.sin(Math.PI*clamp((k-.49)/.22))*.95,motion?.3*(1-v):0);if(motion)for(let i=1;i<=3;i++){const t=clamp(v-i*.025);image(c,im,mix(x-260,x,t)+Math.sin(t*Math.PI)*180,mix(chest-370,chest,t),mix(480,8,t**1.7),.10/i,.3*(1-t));}}
-  if(k>=.49&&k<.765){const hit=clamp(1-Math.abs(k-.707)/.035),radius=12+u*36+hit*(100+realm*4);glow(c,x,chest,radius,color,clamp((k-.49)/.06)*(.35+hit*.65));}
+  if(scene.cinematicV2!==false&&k>=.49&&k<.705)drawEnergyOrb(c,'void',x,chest,u,(k-.705)*duration,realm*.09,'light',motion);
+  if(scene.cinematicV2===false&&k>=.49&&k<.765){const hit=clamp(1-Math.abs(k-.707)/.035),radius=12+u*36+hit*(100+realm*4);glow(c,x,chest,radius,color,clamp((k-.49)/.06)*(.35+hit*.65));}
   if(p.dragon&&p.flightAlpha>0){const posY=mix(chest-170,H*.49,p.flightProgress);image(c,scene.ascensionImpactArt?.[0],x,posY,p.dragonSize,p.flightAlpha,.035*Math.sin(clock*.002));}
   if(p.palm&&k>=.62&&k<.755){const strike=clamp((k-.62)/.085),alpha=clamp((k-.62)/.025)*clamp((.755-k)/.035);image(c,scene.ascensionImpactArt?.[1],mix(x+140,x,strike),mix(chest-200,H*.48,strike),p.palmSize,motion?alpha:0,-.1*(1-strike));}
-  if(p.crack&&motion)cracks(c,x,H*.49,k,realm,H,light,color);
+  if(scene.cinematicV2!==false&&p.crack)drawShockwave(c,'void',x,H*.49,(k-.705)*duration,{quality:'light',motion,seed:realm*.09,flash:!scene.reduceFlash});
+  else if(p.crack&&motion)cracks(c,x,H*.49,k,realm,H,light,color);
  }
  c.restore();return p;
 }

@@ -42,7 +42,7 @@ export const giftValue=e=>Math.max(0,Number(e?.coins)||0)*Math.max(1,Number(e?.c
 export const smallGift=e=>!!e?.gift&&giftValue(e)<=10;
 export function shouldFocusEvent(e){return !!e?.user&&!e.autoArrival&&!e.newcomerWelcome&&(e.effect==='breakthrough'||e.transform||!!e.gift||e.petAward||e.flowerRank);}
 export function ritualPhase(k){return k<.12?'arrival':k<.34?'gather':k<.59?'formation':k<.69?'surge':k<.76?'burst':k<.94?'reveal':'return';}
-export function ritualState(e,t,motion=true){const k=clamp((t-e.start)/e.duration),realm=breakthroughRealm(e),phase=ritualPhase(k),impact=clamp(1-Math.abs(k-.71)/.035);return {k,realm,phase,revealed:k>=.72,color:ascensionProfile(realm).color,title:REALM_NAMES[realm].normalize('NFC'),name:String(e.name||'Đạo hữu').normalize('NFC'),shake:motion?impact*breakthroughPower(realm).shake:0};}
+export function ritualState(e,t,motion=true){const k=clamp((t-e.start)/e.duration),realm=breakthroughRealm(e),phase=ritualPhase(k),impact=clamp(1-Math.abs(k-.71)/.035);return {k,duration:e.duration,realm,phase,revealed:k>=.72,color:ascensionProfile(realm).color,title:REALM_NAMES[realm].normalize('NFC'),name:String(e.name||'Đạo hữu').normalize('NFC'),shake:motion?impact*breakthroughPower(realm).shake:0};}
 // 09/11: lưới đều như sân Nguyệt Cung cho mọi map — chia đều người giữa các hàng (13 → 5/4/4, không còn 1 người lẻ hàng cuối),
 // cột cách đều, nhân vật to theo số người; cả khối căn giữa quanh centerY (nền của map).
 export function crowdTargets(players,H,centerY=H*.62){const n=players.length;if(!n)return [];

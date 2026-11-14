@@ -1,7 +1,9 @@
 // Luyện Hư v2 — Hư Không Khai Giới · Vạn Kính Quy Nhất (07/11/2026). Bản cũ "Bát Ấn Khai Hư" sao lưu ở data/backups.
+import {cameraImpulse} from './cinematic-feedback.js';
+import {cinematicQuality,drawAura,drawDissolve,drawEnergyOrb,drawSeal,drawShockwave} from './cinematic-vfx.js';
 import {makeSurface} from './performance.js';
 import {setFxPalette,qiVariant,qiRemap,pushFxCamera,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
-import {LH_TIMING as T,prepareLuyenHuArt,luyenHuFormationState,drawLhWorld,drawLhMirrors,drawLhClones,drawLhRifts,drawLhEye,drawLhBody,drawLhBreak,drawLhAfter,drawLhEdges} from './luyen-hu-formation.js';
+import {LH_TIMING as T,LH_RIFTS,prepareLuyenHuArt,luyenHuFormationState,drawLhWorld,drawLhMirrors,drawLhClones,drawLhRifts,drawLhEye,drawLhBody,drawLhBreak,drawLhAfter,drawLhEdges} from './luyen-hu-formation.js';
 export {prepareLuyenHuArt};
 export const LUYEN_HU_DURATION=20800,LUYEN_HU_REVEAL=T.reveal;
 const LH_PALETTE={main:'#b8a6ff',main2:'#9ff3ea',soft:'#f1ecff',gold:'#ffe3a8'};
@@ -35,24 +37,52 @@ export function luyenHuPlayers(scene,e){
  const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user)||{id:e.user,name:e.name,giftCoins:0};
  const pair={from:structuredClone(e.visualFrom||{...live,realm:5}),to:structuredClone(e.visualTo||{...live,realm:6})};snapshots.set(e,pair);return pair;
 }
+function legacyShake(sec,burst){
+ const hit=sec>=T.crack?Math.exp(-(sec-T.crack)*9)*4:0;
+ let rift=0;
+ for(const at of LH_RIFTS)if(sec>=at+.18)rift=Math.max(rift,Math.exp(-(sec-at-.18)*10)*3);
+ return hit+rift+burst*8;
+}
 export function drawLuyenHuAwakening(scene,c,e,t,H){
  prepareLuyenHuArt(scene);const s=luyenHuState((t-e.start)/e.duration,H,scene.motion!==false),sec=s.seconds,st=luyenHuFormationState(sec,H,s.motion);
+ const legacy=scene.cinematicV2===false;
  const {from,to}=luyenHuPlayers(scene,e),p=s.revealed?to:from,v=qiVariant(e),kq=qiRemap(s.k,T.impact/T.duration),origin={x:450,y:st.belly};
  const image=luyenHuActorImage(scene,p,e),g=ghost(luyenHuActorImage(scene,from,e));
+ if(!legacy&&sec<T.enter)luyenHuActorImage(scene,to,e);
  c.save();setFxPalette(LH_PALETTE);
  // Nền thế giới (ngoài camera): nứt → vỡ → hư không → tua ngược → nổ lộ thế giới mới.
  drawLhWorld(scene,c,st,v);
  pushFxCamera(scene,c,kq,v,s.feet);
- const hit=sec>=T.crack?Math.exp(-(sec-T.crack)*9)*4:0,rift=[10.6,11.15,11.7,12.25].reduce((m,a)=>Math.max(m,sec>=a+.18?Math.exp(-(sec-a-.18)*10)*3:0),0),shake=s.motion&&scene.cameraEnabled!==false?hit+rift+s.burst*8:0;
- c.translate(Math.sin(sec*83)*shake,Math.cos(sec*71)*shake*.55);
+ const shake=legacy&&s.motion&&scene.cameraEnabled!==false?legacyShake(sec,s.burst):0;
+ const age=(sec-T.impact)*1000,quality=e.cinematicQuality??cinematicQuality(scene);
+ const jolt=cameraImpulse(scene,'legendary',age,v.phase,quality==='light');
+ const gather=clamp((sec-T.rewind)/(T.impact-T.rewind));
+ c.translate(legacy?Math.sin(sec*83)*shake:jolt.x,legacy?Math.cos(sec*71)*shake*.55:jolt.y);
  drawLhMirrors(scene,c,st,v,g);drawLhEye(scene,c,st,v);drawLhClones(scene,c,st,v,g,'back');
- drawQiAura(scene,c,kq,origin,s.feet);drawLhAfter(scene,c,st,v);drawQiImpact(scene,c,kq,H,origin,s.feet);drawLhBreak(scene,c,st,v);
- // Nhân vật vẽ SAU lớp nổ để mặt không bị cột sáng phủ trắng.
+ if(legacy){
+  drawQiAura(scene,c,kq,origin,s.feet);drawLhAfter(scene,c,st,v);
+  drawQiImpact(scene,c,kq,H,origin,s.feet);drawLhBreak(scene,c,st,v);
+ }else{
+  const settled=clamp(age/330)*s.fade;
+  const spin=s.motion?sec*.68:0;
+  if(scene.cinematicLayers?.energy!==false){
+   drawSeal(c,'void',450,s.feet+20,235,spin,(age<0?gather:settled)*.86);
+   if(age<0)drawSeal(c,'void',450,st.belly-125,155,-spin*.55,gather*.44);
+  }
+  if(scene.cinematicLayers?.tail!==false)drawAura(c,'void',450,s.feet-265,180,(age<0?gather*.16:settled*.55));
+
+  if(scene.cinematicLayers?.impact!==false)drawShockwave(c,'void',450,st.belly,age,{quality,radius:385,seed:v.phase,motion:s.motion,flash:!scene.reduceFlash});
+  if(s.motion&&scene.cinematicLayers?.tail!==false)drawDissolve(c,'void',450,s.feet-210,age-340,v.phase,quality);
+ }
+ // Sóng ở sau nhân vật. Lõi tụ ở trước thân, tại đan điền.
  if(image){c.save();c.globalAlpha=clamp(sec/.12);c.drawImage(image,130,s.feet-590);c.restore();}else scene.drawPlayer?.(c,p,450,s.feet,0);
- drawLhClones(scene,c,st,v,g,'front');drawLhRifts(scene,c,st,v);drawLhBody(scene,c,st);drawQiCompression(c,kq,origin);
+ if(!legacy&&age<0&&scene.cinematicLayers?.energy!==false){
+  drawEnergyOrb(c,'void',450,s.feet-84,gather,age,v.phase,quality,s.motion);
+ }
+ drawLhClones(scene,c,st,v,g,'front');drawLhRifts(scene,c,st,v);if(legacy){drawLhBody(scene,c,st);drawQiCompression(c,kq,origin);}
  c.restore();drawQiMotes(scene,c,kq,H);drawLhEdges(scene,c,st);c.restore();
  const phase=s.revealed?'reveal':sec<T.shatter?'fracture':sec<T.mirrors?'shatter':sec<T.clones?'mirrors':sec<T.rifts?'clones':sec<T.eye?'rifts':sec<T.rewind?'void-eye':sec<T.enter?'rewind':'compression';
- const ui={k:s.k,realm:6,phase,revealed:s.revealed,color:scene.ritualAppearance?.title||'#d9ccff',title:'Luyện Hư',subtitle:'Hư Không Khai Giới',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake};
+ const ui={k:s.k,realm:6,phase,revealed:s.revealed,color:scene.ritualAppearance?.title||'#d9ccff',title:'Luyện Hư',subtitle:'Hư Không Khai Giới',name:String(e.name||'Đạo hữu').normalize('NFC'),label:'',detail:'',shake:legacy?shake:Math.hypot(jolt.x,jolt.y)};
  if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.textAlign='center';c.font='600 26px Arial';c.fillStyle='#ece6ff';c.fillText(ui.name,450,H*.1);if(s.revealed){c.font='700 44px Arial';c.fillText('LUYỆN HƯ',450,H*.145);}}
  return ui;
 }

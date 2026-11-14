@@ -16,10 +16,16 @@
     <label>Sự kiện <select id="event"></select></label>
     <label>Đoạn <select id="section"><option value="all">Toàn bộ</option><option value="charge">Tụ lực</option><option value="impact">Cao trào</option><option value="tail">Dư âm</option></select></label>
     <label>Chất lượng <select id="quality"><option value="light">Nhẹ</option><option value="balanced" selected>Cân bằng</option><option value="high">Điện ảnh</option><option value="auto">Tự động</option></select></label>
-    <label>Nhân vật <input id="actors" type="number" min="1" max="100" value="10"></label>
+    <label>Hồ sơ mô phỏng <input id="actors" type="number" min="1" max="500" value="10"></label>
     <label>Mã dựng lại <input id="seed" value="van-hai" maxlength="48"></label>
     <label><input type="checkbox" id="sound"> Âm thanh</label>
-    <label><input type="checkbox" id="shake" checked> Rung camera</label>
+    <label>Rung camera <select id="shake"><option value="off">Tắt</option><option value="low" selected>Nhẹ</option><option value="medium">Vừa</option><option value="high">Mạnh</option></select></label>
+    <label>Phiên bản <select id="version"><option value="new">V2</option><option value="old">Trước nâng cấp</option></select></label>
+    <fieldset id="visualLayers"><legend>Lớp hình V2</legend>
+      <label><input type="checkbox" name="energy" checked> Pháp trận và tụ lực</label>
+      <label><input type="checkbox" name="impact" checked> Sóng và vệt tác động</label>
+      <label><input type="checkbox" name="tail" checked> Hào quang và hạt tan</label>
+    </fieldset>
     <label><input type="checkbox" id="motion"> Giảm chuyển động</label>
     <label><input type="checkbox" id="flash"> Giảm chớp sáng</label>
     <fieldset id="layers"><legend>Lớp âm đột phá</legend>
@@ -27,6 +33,13 @@
       <label><input type="checkbox" name="impact" checked> Impact phụ</label>
       <label><input type="checkbox" name="boost" checked> Tụ lực phụ</label>
       <label><input type="checkbox" name="variant" checked> Biến thể</label>
+    </fieldset>
+    <fieldset id="cinematicLayers"><legend>Lớp âm V2</legend>
+      <label><input type="checkbox" name="charge" checked> Tụ lực</label>
+      <label><input type="checkbox" name="sub" checked> Hạ trầm</label>
+      <label><input type="checkbox" name="crack" checked> Tiếng va chạm</label>
+      <label><input type="checkbox" name="body" checked> Âm chính</label>
+      <label><input type="checkbox" name="tail" checked> Dư âm</label>
     </fieldset>
     <div class="actions"><button type="submit">Phát thử</button><button type="button" id="stop">Dừng</button></div>
     <output id="stats" aria-live="off">Chờ phát thử</output>

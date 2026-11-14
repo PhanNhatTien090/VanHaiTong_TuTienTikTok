@@ -1,3 +1,4 @@
+import {drawAura,drawSeal} from './cinematic-vfx.js';
 import {petById} from './spirit-pets.js';
 import {drawPetBolt,drawRareFx,petArtFrame} from './spirit-pet-art.js?v=drawn-pets-20261114';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-(1-clamp(v))**3;
@@ -21,13 +22,17 @@ export function drawPetArrival(scene,c,e,t,target,H,layer){
  if(layer==='back'){
   const r=(profile.vip?95:48)*scale*pulse,cy=target.y+10;
   c.strokeStyle=pet.color;c.lineWidth=profile.mythic?2.2:1.5;
-  for(let ring=0;ring<(profile.vip?3:1);ring++){c.save();c.translate(target.x,cy);c.scale(1,.3);c.rotate((ring%2?-1:1)*phase*TAU*.6);c.beginPath();c.ellipse(0,0,r+ring*11,r+ring*11,0,0,TAU);c.stroke();
+  if(scene.cinematicV2!==false){
+   const theme=profile.mythic?'void':profile.vip?'gold':'jade';
+   drawSeal(c,theme,target.x,cy,r,phase*TAU,alpha);
+   if(profile.vip)drawAura(c,theme,path.x,path.y,104,alpha*.55);
+  }else for(let ring=0;ring<(profile.vip?3:1);ring++){c.save();c.translate(target.x,cy);c.scale(1,.3);c.rotate((ring%2?-1:1)*phase*TAU*.6);c.beginPath();c.ellipse(0,0,r+ring*11,r+ring*11,0,0,TAU);c.stroke();
    const n=profile.mythic?10:6;for(let i=0;i<n;i++){const a=i*TAU/n,x=Math.cos(a)*(r+ring*11),y=Math.sin(a)*(r+ring*11);c.fillStyle=pet.color;c.fillRect(x-2,y-2,4,4);}c.restore();}
-  if(profile.vip){const glow=c.createRadialGradient(path.x,path.y,0,path.x,path.y,145);glow.addColorStop(0,pet.color+'70');glow.addColorStop(1,pet.color+'00');c.fillStyle=glow;c.fillRect(path.x-145,path.y-145,290,290);
+  if(profile.vip&&scene.cinematicV2===false){const glow=c.createRadialGradient(path.x,path.y,0,path.x,path.y,145);glow.addColorStop(0,pet.color+'70');glow.addColorStop(1,pet.color+'00');c.fillStyle=glow;c.fillRect(path.x-145,path.y-145,290,290);
    c.strokeStyle=pet.color+'b0';c.lineWidth=2;for(let i=0;i<3;i++){c.beginPath();const a=phase*TAU*(profile.mythic?2:-1)+i*TAU/3;c.arc(path.x,path.y,70+i*13,a,a+Math.PI*.7);c.stroke();}
   }
  }else if(layer==='front'){
-  const n=profile.vip?(light?18:34):8;c.fillStyle=pet.color;
+  const n=scene.cinematicV2===false?(profile.vip?(light?18:34):8):motion?(light?6:12):0;c.fillStyle=pet.color;
   for(let i=0;i<n;i++){const a=i*2.399+phase*TAU,r=25+((i*31+phase*160)%135),x=target.x+Math.cos(a)*r*scale,y=target.y-60-Math.sin(a)*r*.5*scale-phase*35;
    c.globalAlpha=alpha*(.3+.6*(1-(r-25)/135));c.save();c.translate(x,y);c.rotate(a);if(pet.id==='sun-phoenix'){c.beginPath();c.ellipse(0,0,2.4,9,0,0,TAU);c.fill();}else{c.fillRect(-1.5,-4,3,8);c.fillRect(-4,-1,8,2);}c.restore();}
   c.globalAlpha=alpha;

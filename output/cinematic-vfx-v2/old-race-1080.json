@@ -1,0 +1,104 @@
+{
+  "result": [
+    {
+      "count": 30,
+      "group": "support",
+      "event": "race",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 10,
+      "fps": 17.7,
+      "frame": [
+        50.1,
+        122.2,
+        150
+      ],
+      "js": [
+        5.2,
+        7.7,
+        9.5
+      ],
+      "loaf": 23,
+      "cache": {
+        "hits": 108,
+        "misses": 402,
+        "allocations": 30,
+        "evictions": 0,
+        "repaints": 402,
+        "clears": 2,
+        "bytes": 4500000
+      },
+      "effects": 0
+    },
+    {
+      "count": 30,
+      "group": "support",
+      "event": "race",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 10,
+      "fps": 0,
+      "frame": [
+        0,
+        0,
+        0
+      ],
+      "js": [
+        0,
+        0,
+        0
+      ],
+      "loaf": 0,
+      "cache": {
+        "hits": 108,
+        "misses": 402,
+        "allocations": 30,
+        "evictions": 0,
+        "repaints": 402,
+        "clears": 2,
+        "bytes": 4500000
+      },
+      "effects": 0
+    },
+    {
+      "count": 30,
+      "group": "support",
+      "event": "race",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 10,
+      "fps": 0,
+      "frame": [
+        0,
+        0,
+        0
+      ],
+      "js": [
+        0,
+        0,
+        0
+      ],
+      "loaf": 0,
+      "cache": {
+        "hits": 108,
+        "misses": 402,
+        "allocations": 30,
+        "evictions": 0,
+        "repaints": 402,
+        "clears": 2,
+        "bytes": 4500000
+      },
+      "effects": 0
+    }
+  ],
+  "errors": []
+}

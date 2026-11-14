@@ -1,12 +1,14 @@
-import {cameraShakeStrength,drawScreenPulse,feedbackBudget} from './cinematic-feedback.js';
+import {cinematicQuality,cinematicSeed,drawSeal,drawShockwave,drawTrail} from './cinematic-vfx.js';
+import {cameraImpulse,cameraShakeStrength,drawScreenPulse,feedbackBudget} from './cinematic-feedback.js';
 // Chính Ma Đại Chiến — phần hình (07/11/2026). Sân chia đôi theo chiến tuyến 0..100 (100 = Chính Đạo thắng).
 // Trái: Chính Đạo (vàng/lam). Phải: Ma Đạo (đỏ/đen). Bức tường năng lượng ở chiến tuyến; mỗi phe 6 nhân vật đầy đủ + binh sĩ mini.
-import {drawWarForces,warGiftImpact} from './war-impact.js';
+import {drawWarForces,warGiftImpact,warGiftWindup,drawWarReversal,drawWarSeal,WAR_REVERSAL_HIT} from './war-impact.js';
 import {drawWarRoad,truongOf,warCamera,screenX,TRUONG_PER_POINT} from './war-road.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 const rnd=i=>{const v=Math.sin(i*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const hash=s=>{let h=2166136261;for(const ch of String(s||''))h=Math.imul(h^ch.codePointAt(0),16777619);return h>>>0;};
 const COL={chinh:{main:'#ffd36b',soft:'#fff3c8',deep:'#1d3a6b',name:'CHÍNH ĐẠO'},ma:{main:'#ff3b4e',soft:'#ffc2c8',deep:'#3a0710',name:'MA ĐẠO'}};
+const WAR_THEMES=[['chinh','dawn',-1],['ma','dusk',1]];
 const OMEN_NAME={'golden-sun':'☀ KIM DƯƠNG','blood-moon':'🌑 HUYẾT NGUYỆT',chaos:'⚡ HỖN CHIẾN',mist:'🌫 SƯƠNG MÙ'};
 const serverNow=(scene,t)=>(scene.warServerNow||Date.now())+Math.min(2000,t-(scene.warReceivedAt||t));
 export function syncWar(scene,state){if(state.sectWar?.id!==scene.warStatus?.id){scene.warZ=null;scene.warCameraZ=null;scene.warKick=null;}scene.warStatus=state.sectWar||null;scene.warStage=state.warStage||[];scene.warReceivedAt=performance.now();scene.warServerNow=state.serverNow;document.body.classList.toggle('sect-war',!!scene.warStatus?.active);}
@@ -41,19 +43,40 @@ function soldiers(scene,c,e,side,lx,H,t){const roster=e.roster?.[side]||[],shown
   if(i<12){c.font='700 13px Segoe UI';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#05060c';const nm=Array.from(list[i].name||'').slice(0,8).join('');c.strokeText(nm,x,y+14);c.fillStyle=col.soft;c.fillText(nm,x,y+14);}}
  const hidden=roster.length-shown.size-n;c.restore();return Math.max(0,(e.counts?.[side]||0)-Math.min(roster.length,n+6));}
 // Âm thanh: phát một lần cho mỗi biến cố mới + trống trận và tiếng va chạm liên tục khi đang giao chiến.
+function warCinematicSound(scene,f,age){
+ const emit=scene.onCinematicSound;
+ if(scene.cinematicV2===false||!emit)return false;
+ const theme=f.side==='ma'?'dusk':'dawn';
+ if(f.kind==='gift'){
+  emit(f.id+':gift',theme,(warGiftWindup(tierOf(f))-age)/1000,{priority:2,charge:false,gain:.42+powerOf(f)*.33});
+ }else if(f.kind==='flip'||f.kind==='turn'){
+  emit(f.id+':reversal',theme,(WAR_REVERSAL_HIT-age)/1000,{priority:6,charge:false});
+ }else return false;
+ return true;
+}
 function warSounds(scene,e,now,t){const play=scene.onWarSound;if(!play)return;const seen=scene.warSeen??=new Set();
- for(const f of e.fx||[]){if(seen.has(f.id))continue;seen.add(f.id);if(now-f.at>3000)continue;if(f.kind==='gift'){play('cast',f.side,.5+powerOf(f)*1.5);play('gift',f.side,.6+Math.log10(1+(f.value||1))/2);}else if(f.kind==='final')play('final',e.lead||'chinh',f.left===10?1.4:1);else play(f.kind,f.side||'chinh',1);}
+ for(const f of e.fx||[]){if(seen.has(f.id))continue;seen.add(f.id);if(now-f.at>3000||warCinematicSound(scene,f,now-f.at))continue;if(f.kind==='gift'){play('cast',f.side,.5+powerOf(f)*1.5);play('gift',f.side,.6+Math.log10(1+(f.value||1))/2);}else if(f.kind==='final')play('final',e.lead||'chinh',f.left===10?1.4:1);else play(f.kind,f.side||'chinh',1);}
  // 08/11: tiếng vút mỗi cú đẩy rõ + tích tắc 10 giây cuối (3 giây cuối to hơn)
  const kk=scene.warKick;if(kk&&kk.size>=.1&&scene.warKickHeard!==kk.at&&t-kk.at<200){scene.warKickHeard=kk.at;play('push',kk.dir>0?'chinh':'ma',.6+kk.size);}
  if(e.phase==='running'){const left=(e.endsAt||now)-now,sec=Math.ceil(left/1000);if(left>0&&sec<=10&&scene.warTickSec!==sec){scene.warTickSec=sec;play('tick',e.lead||'chinh',sec<=3?2:1);}}
  if(seen.size>200)scene.warSeen=new Set([...seen].slice(-100));
- const key=e.id+':'+e.phase;if(scene.warPhaseKey!==key){scene.warPhaseKey=key;if(e.phase==='running')play('start','chinh');if(e.phase==='finished'&&e.result)play('win',e.result.winner||'chinh');}
+ const key=e.id+':'+e.phase;if(scene.warPhaseKey!==key){scene.warPhaseKey=key;if(e.phase==='running'){
+  if(scene.cinematicV2!==false&&scene.onCinematicSound){if(now-e.startedAt<1000)scene.onCinematicSound(key,'dawn',0,{priority:4,charge:false});}
+  else play('start','chinh');
+ }
+ if(e.phase==='finished'&&e.result){
+  if(scene.cinematicV2!==false&&scene.onCinematicSound){if(now-e.finishedAt<1200)scene.onCinematicSound(key,e.result.winner==='ma'?'dusk':'resonance',0,{priority:6,charge:false});}
+  else play('win',e.result.winner||'chinh');
+ }}
  if(e.phase==='running'){if(t-(scene.warDrumAt||0)>1500){scene.warDrumAt=t;play('drum','chinh');}if(t-(scene.warClashAt||0)>520){scene.warClashAt=t;play('clash','chinh');}}}
 // Rung theo biến cố gần nhất (quà mạnh, cứu nguy rất mạnh, chiêu nhẹ).
 function warShake(e,now){let a=0;for(const f of e.fx||[]){const age=now-f.at;if(age<0)continue;if(f.kind==='gift'&&age<700)a=Math.max(a,(4+Math.log10(1+(f.value||1))*4)*(1-age/700));if(f.kind==='rescue'&&age<1200)a=Math.max(a,14*(1-age/1200));if(f.kind==='strike'&&age<250)a=Math.max(a,3);if(f.kind==='omen'&&age<500)a=Math.max(a,6*(1-age/500));if(f.kind==='flip'&&age<1000)a=Math.max(a,18*(1-age/1000));if(f.kind==='gift'&&(f.value||0)>=99&&age<1200)a=Math.max(a,16*(1-age/1200));}return a;}
 export function drawWar(scene,c,t,layer){
  const e=scene.warStatus;if(!e?.active)return;const H=scene.height,now=serverNow(scene,t),lx=scene.warLineX??lineX(scene,t),motion=scene.motion!==false,fx=e.fx||[];
- if(layer==='back')warSounds(scene,e,now,t);
+ if(layer==='back'){
+  if(scene.warVfxId!==e.id){scene.warVfxId=e.id;scene.warVfxQuality=cinematicQuality(scene);}
+  warSounds(scene,e,now,t);
+ }
  c.save();
  const vel=(lx-(scene.warPrevX??lx));if(layer==='back')scene.warPrevX=lx;
  if(layer==='back'){
@@ -62,17 +85,24 @@ export function drawWar(scene,c,t,layer){
   if(!scene.warLandscape&&typeof Image!=='undefined'){scene.warLandscape=new Image();scene.warLandscape.src='/assets/thien-khuyet/war.webp';}
   drawWarRoad(c,{H,cam,lx,t,light,motion,landscape:scene.warLandscape});
   const om=e.omen?.kind;if(om==='golden-sun')glow(c,200,H*.12,420,'#ffd36b',.45);if(om==='blood-moon')glow(c,700,H*.12,380,'#ff2030',.5);
-  if(motion&&e.phase==='running'){const cyc=t%4200;if(cyc<220){const a=1-cyc/220;c.save();c.globalCompositeOperation='screen';drawScreenPulse(c,H,scene.reduceFlash,Math.floor(t/4200)%2?'#ffe9b0':'#ffb0b8',a*.16,'screen');c.globalAlpha=a;bolt(c,lx+(rnd(Math.floor(t/4200))-.5)*300,0,lx,H*.4,Math.floor(t/4200)*13,'#ffffff',3);c.restore();}}
+  if(scene.cinematicV2===false&&motion&&e.phase==='running'){const cyc=t%4200;if(cyc<220){const a=1-cyc/220;c.save();c.globalCompositeOperation='screen';drawScreenPulse(c,H,scene.reduceFlash,Math.floor(t/4200)%2?'#ffe9b0':'#ffb0b8',a*.16,'screen');c.globalAlpha=a;bolt(c,lx+(rnd(Math.floor(t/4200))-.5)*300,0,lx,H*.4,Math.floor(t/4200)*13,'#ffffff',3);c.restore();}}
   const surge=warSurge(scene,e,now,t),push=Math.max(-1,Math.min(1,vel*.2));
   if(e.phase==='running'){
-   const sh=Math.min(12,warShake(e,now))*cameraShakeStrength(scene)*(light?.6:1);
+   const sh=scene.cinematicV2===false?Math.min(10,warShake(e,now))*cameraShakeStrength(scene)*(light?.6:1):0;
    c.save();
    if(sh)c.translate(Math.sin(t*.09)*sh,Math.cos(t*.077)*sh*.6);
    drawWarForces(c,{H,lx,t,surge,push,light,motion});
+   if(scene.cinematicV2!==false&&scene.cinematicLayers?.energy!==false){
+    const age=Math.max(0,now-(e.startedAt||now));
+    for(const [side,theme,dir] of WAR_THEMES){
+     const x=Math.max(140,Math.min(760,lx+dir*235));
+     drawWarSeal(c,theme,x,H*.58,age,motion&&!light,.36+Math.min(1,surge[side])*.35+Math.max(0,1-age/1200)*.22);
+    }
+   }
    c.restore();
   }
   for(const side of ['chinh','ma'])soldiers(scene,c,e,side,lx,H,t);
-  if(motion)drawPushWave(scene,c,lx,H,t);
+  if(scene.cinematicV2===false&&motion)drawPushWave(scene,c,lx,H,t);
  }else{
   // tên nhân vật + tướng
   for(const a of scene.targets){if(!a.side)continue;const col=COL[a.side];c.font='800 18px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#05060c';const nm=Array.from(a.player.name||'').slice(0,12).join('');const y=a.y-170*(a.scale/1.5);
@@ -81,7 +111,20 @@ export function drawWar(scene,c,t,layer){
   // đại chiêu khi tặng quà (mỗi quà ~2,5 s), cứu nguy, xuất chiêu
   const flipping=fx.some(f=>f.kind==='flip'&&now-f.at>=0&&now-f.at<2800),newestGift=flipping?null:[...fx].reverse().find(f=>f.kind==='gift'&&now-f.at>=0&&now-f.at<giftDur(f));
   const activeGift=new Set(fx.filter(f=>f.kind==='gift'&&now>=f.at&&now-f.at<giftDur(f)).slice(-3));
-  for(const f of fx){const age=now-f.at;if(activeGift.has(f))drawGiftFx(scene,c,f,age,lx,H,t,f===newestGift);
+  let reversal=null;
+  if(scene.cinematicV2!==false){
+   for(let i=fx.length-1;i>=0;i--){
+    const f=fx[i],age=now-f.at;
+    if((f.kind==='turn'||f.kind==='flip')&&age>=0&&age<760){reversal=f;break;}
+   }
+   if(reversal&&scene.cinematicLayers?.impact!==false){
+    const age=now-reversal.at,quality=scene.warVfxQuality;
+    const jolt=cameraImpulse(scene,'major',age-WAR_REVERSAL_HIT,cinematicSeed(reversal.id),quality==='light');
+    drawWarReversal(c,{age,lx,H,side:reversal.side,quality,motion,flash:!scene.reduceFlash,jolt});
+   }
+  }
+  for(const f of fx){const age=now-f.at;
+   if(activeGift.has(f))drawGiftFx(scene,c,f,age,lx,H,t,f===newestGift,!reversal);
    if(f.kind==='flip'&&age>=0&&age<2800)drawFlip(scene,c,f,age,H,t);
    if(f.kind==='turn'&&age>=0&&age<1900)drawTurn(scene,c,f,age,lx,H,t);
    if(f.kind==='final'&&f.left===30&&age>=0&&age<2400)drawFinal30(c,age,H,t);
@@ -139,7 +182,10 @@ export function drawWarResult(scene,c,t){
  const e=scene.warStatus;if(!e?.active||e.phase!=='finished'||!e.result||e.result.empty)return;const H=scene.height,now=serverNow(scene,t),start=e.finishedAt||((e.podiumUntil||now)-20000),age=now-start,end=(e.podiumUntil||now)-now;
  const a=Math.min(1,Math.max(0,age/600),Math.max(0,end/700));if(a<=0)return;const win=e.result.winner,honor=e.result.honor||{},pulse=.5+.5*Math.sin(t*.004);
  c.save();c.globalAlpha=a*.82;c.fillStyle='#04050c';c.fillRect(0,0,900,H);c.globalAlpha=a;c.textAlign='center';c.textBaseline='middle';
- const ty=H*.2;if(win){const g=c.createRadialGradient(450,ty,10,450,ty,360);g.addColorStop(0,COL[win].main+'aa');g.addColorStop(1,COL[win].main+'00');c.globalCompositeOperation='screen';c.globalAlpha=a*(.5+.3*pulse);c.fillStyle=g;c.fillRect(0,ty-260,900,520);c.globalCompositeOperation='source-over';c.globalAlpha=a;}
+ const ty=H*.2;if(win&&scene.cinematicV2!==false&&scene.cinematicLayers?.tail!==false){
+  const theme=win==='chinh'?'dawn':'dusk';
+  drawWarSeal(c,theme,450,ty+90,age,scene.motion!==false,a*.82);
+ }else if(win){const g=c.createRadialGradient(450,ty,10,450,ty,360);g.addColorStop(0,COL[win].main+'aa');g.addColorStop(1,COL[win].main+'00');c.globalCompositeOperation='screen';c.globalAlpha=a*(.5+.3*pulse);c.fillStyle=g;c.fillRect(0,ty-260,900,520);c.globalCompositeOperation='source-over';c.globalAlpha=a;}
  txt(c,win?COL[win].name+' ĐẠI THẮNG':'BẤT PHÂN THẮNG BẠI',450,ty,'900 60px Segoe UI',win?COL[win].main:'#ffffff',9);
  txt(c,win?(win==='chinh'?'Ma Đạo':'Chính Đạo')+' bại trận · tông môn ghi công các đạo hữu':'Hai phe ngang tài · cùng nhận thưởng',450,ty+52,'800 24px Segoe UI','#fff3c8',6);
  for(const [k,side] of ['chinh','ma'].entries()){
@@ -166,10 +212,21 @@ function giftDur(f){return [2200,2800,3600,4200][tierOf(f)];}
 // 08/11 tối: lực chiêu 0..1 theo coin (log, 1 coin ≈ .1, 1000 coin = 1) — hình chiêu, lực đẩy nhìn thấy và âm thanh đều to dần.
 const powerOf=f=>clamp(Math.log10(1+(f.value||1))/3);
 function strokeText(c,s,x,y,font,fill,lw=7,stroke='#05060c'){c.font=font;c.lineWidth=lw;c.strokeStyle=stroke;c.lineJoin='round';c.strokeText(s,x,y);c.fillStyle=fill;c.fillText(s,x,y);}
-function drawGiftFx(scene,c,f,age,lx,H,t,banner){
+function drawGiftFx(scene,c,f,age,lx,H,t,banner,allowImpact){
  const tier=tierOf(f),dur=giftDur(f),k=age/dur,a=Math.sin(Math.min(1,k)*Math.PI),side=f.side,col=COL[side],seed=hash(f.id),light=feedbackBudget(scene);
  c.save();
- warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved:f.truong||0,reducedFlash:scene.reduceFlash});
+ if(scene.cinematicV2===false){
+  warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved:f.truong||0,reducedFlash:scene.reduceFlash});
+ }else if(banner&&allowImpact&&scene.cinematicLayers?.impact!==false){
+  const hit=age-warGiftWindup(tier),theme=side==='chinh'?'dawn':'dusk',dir=side==='chinh'?1:-1;
+  if(hit<0){
+   const u=clamp(age/warGiftWindup(tier)),x=lx-dir*(1-u*u)*360;
+   if(scene.motion!==false)drawTrail(c,theme,x,H*.48,dir>0?0:Math.PI,200+40*tier,.92);
+   drawSeal(c,theme,x,H*.48,45,0,.65);
+  }else{
+   drawShockwave(c,theme,lx,H*.48,hit,{quality:scene.warVfxQuality,radius:105+tier*35,seed:seed/4294967296,motion:scene.motion!==false,flash:!scene.reduceFlash,aspect:.32});
+  }
+ }
  c.restore();
  if(!banner)return;
  // băng rôn: tên đại chiêu + người tặng + coin
@@ -185,7 +242,7 @@ function drawGiftFx(scene,c,f,age,lx,H,t,banner){
 function drawFlip(scene,c,f,age,H,t){
  const k=age/2800,a=age<200?age/200:k>.8?(1-k)/.2:1,col=COL[f.side],sc=pop(age,700)*(age<180?1.8-.8*(age/180):1),y=H*.36;
  c.save();c.globalAlpha=a;c.translate(450,y);
- c.save();c.globalCompositeOperation='screen';c.rotate(t*.0008);for(let i=0;i<16;i++){c.rotate(TAU/16);c.fillStyle=(i%2?col.main:'#ffffff')+'55';c.beginPath();c.moveTo(0,0);c.lineTo(-40,-520);c.lineTo(40,-520);c.closePath();c.fill();}c.restore();
+ if(scene.cinematicV2===false){c.save();c.globalCompositeOperation='screen';c.rotate(t*.0008);for(let i=0;i<16;i++){c.rotate(TAU/16);c.fillStyle=(i%2?col.main:'#ffffff')+'55';c.beginPath();c.moveTo(0,0);c.lineTo(-40,-520);c.lineTo(40,-520);c.closePath();c.fill();}c.restore();}
  c.rotate(-.06);c.scale(sc,sc);c.textAlign='center';c.textBaseline='middle';
  const g=c.createLinearGradient(0,-70,0,60);g.addColorStop(0,'#ffffff');g.addColorStop(.45,col.main);g.addColorStop(1,f.side==='chinh'?'#c98a1a':'#8a0a18');
  strokeText(c,'LẬT KÈO!',0,0,'900 112px Segoe UI',g,14);

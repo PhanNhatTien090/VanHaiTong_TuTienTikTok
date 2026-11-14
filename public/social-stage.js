@@ -1,4 +1,5 @@
-import {duelCastState,drawDuelImpact,drawDuelCutIn} from './duel-combat.js';
+import {drawAura,drawSeal,drawShockwave} from './cinematic-vfx.js';
+import {DUEL_CAST_MS,duelCastState,drawDuelImpact,drawDuelCutIn} from './duel-combat.js';
 import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
 import {drawCombatTechnique} from './combat-techniques.js';
@@ -34,7 +35,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
     for(const [p,i] of [[L,0],[R,1]]){const tech=match.techniques[p.id];beam(c,p.x,p.y-60,orb.x,orb.y,tech?.color||(i?'#c6a0ff':'#a6ecff'),.35+.25*Math.sin((scene.motion?t:0)*.006+i*2));}
     linhChau(c,orb.x,orb.y,scene.motion?t:0);
     const cast=duelCastState(age),turn=cast.turn,a=scene.targets[cast.side],technique=match.techniques[a.id],k=cast.k;
-    if(cast.ready&&technique){if(scene.duelLastCast!==match.id+':'+turn){scene.duelLastCast=match.id+':'+turn;scene.animator?.trigger({id:scene.duelLastCast,user:a.id,effect:'attack',technique},t);scene.onCombatSound?.('cast',technique.id);}drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});drawDuelImpact(c,orb,cast,technique,scene.budget?.level==='light');if(cast.ultimate)drawDuelCutIn(scene,c,a,technique,k,H);else techName(c,a.x,a.y-235,technique,Math.min(1,k/.08,(1-k)/.2));}
+    if(cast.ready&&technique){if(scene.duelLastCast!==match.id+':'+turn){scene.duelLastCast=match.id+':'+turn;scene.animator?.trigger({id:scene.duelLastCast,user:a.id,effect:'attack',technique},t);scene.onCombatSound?.('cast',technique.id);}drawCombatTechnique(c,{technique,target:{x:orb.x,yRatio:orb.y/H}},scene.motion?t:0,k,a,H,{light:scene.budget?.level==='light',signatures:scene.signatureSprites,relics:scene.combatSprites});if(scene.cinematicV2===false)drawDuelImpact(c,orb,cast,technique,scene.budget?.level==='light');else drawShockwave(c,cast.side?'dusk':'jade',orb.x,orb.y,(k-.34)*DUEL_CAST_MS,{quality:'light',radius:cast.ultimate?210:132,seed:cast.turn*.17,motion:scene.motion,flash:cast.ultimate&&!scene.reduceFlash,aspect:.68});if(cast.ultimate)drawDuelCutIn(scene,c,a,technique,k,H);else techName(c,a.x,a.y-235,technique,Math.min(1,k/.08,(1-k)/.2));}
     if(k>.6&&k<.95)image(3,orb.x-60,orb.y-60,120,120,Math.sin((k-.6)/.35*Math.PI)*.55);
     if(age<650)for(const p of scene.targets)bubble(c,p.x,p.y-250,'Mời chỉ giáo',Math.min(1,age/250,(650-age)/200));
    }
@@ -42,7 +43,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
    for(const p of scene.targets)bubble(c,p.x,p.y-250,p.id===bow.loser?'Đa tạ chỉ giáo':'Đã nhường',k);
   }else if(s?.tournament?.podiumUntil>now&&scene.targets[0]){const p=scene.targets[0];if(layer==='back')image(4,p.x-140,p.y-280,280,280,.7);else image(5,p.x+70,p.y-120,100,140);}
  }else if(ceremony&&scene.targets.length===2){const floor=H*.57,k=Math.max(0,Math.min(1,(now-ceremony.startedAt)/Math.max(1,ceremony.endsAt-ceremony.startedAt))),fade=Math.min(1,k*5,(1-k)*5);
-  if(layer==='back'){image(0,190,floor-480,520,520,fade);image(3,210,floor-145,480,260,fade);c.save();c.translate(450,floor-150);c.rotate(scene.motion?Math.sin(t*.0004)*.12:0);image(4,-260,-260,520,520,fade*.4);c.restore();}
+  if(layer==='back'){image(0,190,floor-480,520,520,fade);if(scene.cinematicV2===false)image(3,210,floor-145,480,260,fade);else{drawSeal(c,'gold',450,floor+8,222,scene.motion?t*.0003:0,fade*.72);drawAura(c,'dusk',450,floor-125,155,fade*.36);}c.save();c.translate(450,floor-150);c.rotate(scene.motion?Math.sin(t*.0004)*.12:0);image(4,-260,-260,520,520,fade*.4);c.restore();}
   else {if(ceremony.festivalId){for(let i=0;i<6;i++){const angle=(scene.motion?t*.00035:0)+i*Math.PI/3;image(1,450+Math.cos(angle)*235-22,floor-170+Math.sin(angle)*95-30,44,60,fade*.7);}}image(2,335,floor-160,230,130,fade*.8);if(k>.5)image(1,400,floor-245,100,140,fade);if(k>.75)image(5,365,floor+25,170,100,fade);}
  }
 }

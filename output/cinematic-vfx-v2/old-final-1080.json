@@ -1,0 +1,104 @@
+{
+  "result": [
+    {
+      "count": 20,
+      "group": "ritual",
+      "event": "6",
+      "section": "impact",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 1,
+      "fps": 21,
+      "frame": [
+        44.3,
+        111.1,
+        133.4
+      ],
+      "js": [
+        1.9,
+        56.5,
+        73.2
+      ],
+      "loaf": 6,
+      "cache": {
+        "hits": 0,
+        "misses": 0,
+        "allocations": 0,
+        "evictions": 0,
+        "repaints": 0,
+        "clears": 0,
+        "bytes": 0
+      },
+      "effects": 1
+    },
+    {
+      "count": 20,
+      "group": "gift",
+      "event": "5000",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 1,
+      "fps": 23.8,
+      "frame": [
+        39.3,
+        44.6,
+        50.1
+      ],
+      "js": [
+        3.2,
+        5.3,
+        6.4
+      ],
+      "loaf": 0,
+      "cache": {
+        "hits": 125,
+        "misses": 50,
+        "allocations": 5,
+        "evictions": 0,
+        "repaints": 50,
+        "clears": 1,
+        "bytes": 3528000
+      },
+      "effects": 1
+    },
+    {
+      "count": 20,
+      "group": "support",
+      "event": "war",
+      "section": "all",
+      "canvas": [
+        1080,
+        1920
+      ],
+      "actors": 12,
+      "fps": 23.1,
+      "frame": [
+        44,
+        44.9,
+        127.9
+      ],
+      "js": [
+        5,
+        8.1,
+        13.4
+      ],
+      "loaf": 6,
+      "cache": {
+        "hits": 1961,
+        "misses": 86,
+        "allocations": 40,
+        "evictions": 0,
+        "repaints": 86,
+        "clears": 3,
+        "bytes": 5400000
+      },
+      "effects": 0
+    }
+  ],
+  "errors": []
+}

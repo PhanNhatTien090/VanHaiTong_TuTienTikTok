@@ -1,0 +1,16 @@
+[
+  {
+    "upgrade": false,
+    "peak": -3.77,
+    "impact": -3.77,
+    "rms": -25.14,
+    "bad": 0
+  },
+  {
+    "upgrade": true,
+    "peak": -9.71,
+    "impact": -9.71,
+    "rms": -32.01,
+    "bad": 0
+  }
+]

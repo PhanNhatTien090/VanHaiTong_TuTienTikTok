@@ -1,3 +1,4 @@
+import {cinematicQuality,cinematicSeed} from './cinematic-vfx.js';
 import {encounterPhase} from './boss-encounters.js';
 const CLAN={slash:'blade',sword:'blade',bamboo:'blade',flowersword:'blade',stararrow:'blade',thunder:'thunder',flame:'fire',dragon:'dragon',bell:'bell',soul:'dark',vortex:'wind',frost:'ice',petal:'magic',lotus:'magic',celestial:'thunder',meteor:'thunder'};
 export const combatVoice=technique=>CLAN[technique]||'magic';
@@ -10,7 +11,13 @@ export function tickBattleSound(scene,b,now){
  if(phase!==s.phase){
   if(now-s.at<1500){
    if(phase==='charge')scene.onCombatSound?.('boss-charge',b.species);
-   if(phase==='strike')scene.onCombatSound?.('boss-strike',b.species);
+   if(phase==='strike'){
+    if(scene.cinematicV2!==false){
+     s.impactAt=now;s.quality=cinematicQuality(scene);s.seed=cinematicSeed(b.id);
+     if(scene.onCinematicSound)scene.onCinematicSound(b.id+':strike:'+now,b.species==='storm-tiger'?'void':'dusk',0,{priority:5,charge:false});
+     else scene.onCombatSound?.('boss-strike',b.species);
+    }else scene.onCombatSound?.('boss-strike',b.species);
+   }
    if(phase==='shield')scene.onCombatSound?.('boss-shield',b.species);
   }
   s.phase=phase;

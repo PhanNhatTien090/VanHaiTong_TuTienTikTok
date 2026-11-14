@@ -1,3 +1,6 @@
+import {drawAura,drawSeal,drawShockwave,drawTrail} from './cinematic-vfx.js';
+export const warGiftWindup=tier=>430-tier*42;
+export const WAR_REVERSAL_HIT=260;
 const TAU=Math.PI*2;
 const clamp=v=>Math.max(0,Math.min(1,v));
 const random=n=>((Math.imul(n+193,1664525)^Math.imul(n+7,1013904223))>>>0)/4294967296;
@@ -9,7 +12,7 @@ function arc(c,x,y,rx,ry,angle,color,width){
 }
 export function warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved,reducedFlash=false}){
  const dir=side==='chinh'?1:-1, hue=dir>0?'#69eadf':'#ff506a', gold=dir>0?'#ffe7a9':'#ffb988';
- const y=H*.48, windup=430-tier*42, hit=age-windup, origin=dir>0?-95:995;
+ const y=H*.48, windup=warGiftWindup(tier), hit=age-windup, origin=dir>0?-95:995;
  const power=Math.min(1,moved/450), scale=.72+tier*.32+power*.4;
  c.save();c.globalCompositeOperation='screen';c.lineCap='round';
  if(hit<0){
@@ -47,6 +50,30 @@ export function warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved,reducedFlas
   for(let i=0;i<3;i++){
    const u=clamp(k-i*.09);if(!u)continue;
    c.globalAlpha=(1-u)*.55;arc(c,lx,y,(22+u*198)*scale,(35+u*235)*scale,dir*.14,i%2?gold:hue,2+i);
+  }
+ }
+ c.restore();
+}
+
+export function drawWarSeal(c,theme,x,y,age,motion,alpha){
+ drawSeal(c,theme,x,y,160,motion?age*.0007:0,alpha);
+ drawAura(c,theme,x,y-30,92,alpha*.4);
+}
+
+export function drawWarReversal(c,{age,lx,H,side,quality,motion,flash,jolt}){
+ const theme=side==='chinh'?'dawn':'dusk',y=H*.48;
+ const u=clamp(age/WAR_REVERSAL_HIT),hit=age-WAR_REVERSAL_HIT;
+ c.save();c.translate(jolt.x,jolt.y);
+ if(hit<0){
+  const reach=motion?(1-u)*350:110;
+  drawTrail(c,'dawn',lx-reach,y-14,0,260,.62);
+  drawTrail(c,'dusk',lx+reach,y+14,Math.PI,260,.62);
+ }else{
+  drawShockwave(c,theme,lx,y,hit,{quality,radius:345,motion,flash,aspect:.19});
+  if(hit<390&&motion){
+   const sweep=hit*.76;
+   drawTrail(c,theme,lx-sweep,y,Math.PI,230,.78*(1-hit/390));
+   drawTrail(c,theme,lx+sweep,y,0,230,.78*(1-hit/390));
   }
  }
  c.restore();

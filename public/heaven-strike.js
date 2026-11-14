@@ -90,7 +90,7 @@ export function drawHeavenStrike(c,profile,t,view,{light=false,reducedFlash=fals
  // 7) Chớp trắng toàn màn hình mỗi lần lôi chạm.
  let flash=0;for(const b of profile.bolts){const age=t-b.at;if(age>=0&&age<.42)flash=Math.max(flash,(b.main?1:.62)*Math.pow(1-age/.42,2));}
  const pre=t<STRIKE_AT&&t>1.4?(rng(profile.seed+Math.floor(t*9))()<.18?.18:0):0;flash=Math.max(flash,pre);
- if(reducedFlash)flash*=.18;
+ if(reducedFlash)flash=0;
  if(flash>0){c.globalCompositeOperation='source-over';c.globalAlpha=flash*.78;c.fillStyle=pal.core;c.fillRect(0,0,W,H);c.globalCompositeOperation='lighter';c.globalAlpha=flash*.45;c.fillStyle=pal.glow;c.fillRect(0,0,W,H);}
  // 8) Dư điện quấn người, khói bốc.
  const after=smooth(STRIKE_AT+.2,STRIKE_AT+.6,t)*fade;if(after>0){c.globalCompositeOperation='lighter';const ar=rng(profile.seed+99+Math.floor(t*14));const n=light?2:4;for(let i=0;i<n;i++){if(ar()<.35)continue;const a=ar()*6.28,len=(22+ar()*36)*scale*.7,sx=x+(ar()-.5)*30*scale*.6,sy=body+(ar()-.5)*50*scale*.6;glowStroke(c,pathPoints(boltPath(ar,4,.55),sx,sy,sx+Math.cos(a)*len,sy+Math.sin(a)*len),pal,1.3,after*.85);}

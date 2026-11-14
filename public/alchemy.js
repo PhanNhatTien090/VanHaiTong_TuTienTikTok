@@ -1,3 +1,4 @@
+import {drawSeal} from './cinematic-vfx.js';
 import {drawScreenPulse,feedbackBudget} from './cinematic-feedback.js';
 // Khai Lò Cửu Chuyển — phần hình (08/11/2026). Nguyên tắc: GIỌNG NÓI ÍT, HÌNH NÓI NHIỀU.
 // Màn hình luôn trả lời 3 câu: "giờ phải làm gì" (bảng lệnh lớn đổi màu), "lò đang thế nào" (nhiệt kế + vùng vàng), "quà để làm gì" (chú thích quà cố định).
@@ -78,7 +79,8 @@ function drawFx(scene,c,e,t,H,now){
   if(f.kind==='herb'&&age<2400){const k=age/2400,a=Math.sin(Math.min(1,k*1.3)*Math.PI),src=scene.targets?.find(x=>x.id===f.user),x0=src?.x??(hash(f.id)%2?80:820),y0=src?(src.y-120):H*.75,u=clamp(k*1.6),x=x0+(CX-x0)*u,yy=y0+(y-90-y0)*u-Math.sin(u*Math.PI)*160;
    c.save();c.globalCompositeOperation='screen';c.globalAlpha=a;if(u<1){glow(c,x,yy,60,'#9bff8a',.9);c.fillStyle='#d4ffb0';c.beginPath();c.ellipse(x,yy,10,22,u*6,0,TAU);c.fill();}else{glow(c,CX,y-70,220,'#9bff8a',.7*a);}
    txt(c,'🌿 LINH DƯỢC +PHẨM · '+nm(f.name),CX,H*.36,'900 28px Segoe UI','#c8ffb0',7);c.restore();}
-  if(f.kind==='fire'&&age<3200){const k=age/3200,a=Math.sin(Math.min(1,k*1.2)*Math.PI);c.save();c.globalCompositeOperation='screen';drawScreenPulse(c,H,scene.reduceFlash,'#ffb347',a*.25,'screen');c.globalAlpha=a;glow(c,CX,y,420,'#ffe9a0',.8);
+  if(f.kind==='fire'&&age<3200){const k=age/3200,a=Math.sin(Math.min(1,k*1.2)*Math.PI);c.save();c.globalCompositeOperation='screen';if(scene.cinematicV2===false){drawScreenPulse(c,H,scene.reduceFlash,'#ffb347',a*.25,'screen');c.globalAlpha=a;glow(c,CX,y,420,'#ffe9a0',.8);}
+   else drawSeal(c,'gold',CX,y+42,205,scene.motion?age*.001:0,a*.8);
    txt(c,'🐉 TIÊN HỎA HỘ LÔ · '+nm(f.name),CX,H*.36,'900 34px Segoe UI','#ffe066',8);txt(c,'khóa lửa 10 giây · +phẩm',CX,H*.36+40,'800 22px Segoe UI','#fff3c8',5);c.restore();}
   if(f.kind==='shield'&&age<1600){const a=1-age/1600;c.save();c.globalCompositeOperation='screen';c.globalAlpha=a;txt(c,'🛡 '+nm(f.name)+' gia cố kết giới',CX,H*.36,'900 26px Segoe UI','#bfe6ff',6);c.restore();}
   if(f.kind==='round'&&age<2200){const a=Math.sin(clamp(age/2200)*Math.PI);c.save();c.globalAlpha=a;txt(c,'CHUYỂN '+f.round+' / 3',CX,H*.33,'900 64px Segoe UI','#ffe9b0',10);c.restore();}

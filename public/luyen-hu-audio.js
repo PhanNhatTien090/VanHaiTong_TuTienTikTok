@@ -63,12 +63,14 @@ const LOUD=1.32;
 const banks=new WeakMap();
 function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=40917,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}
 export function luyenHuMusicDuck(ms){const t=ms/1000;return t<T.eye?.2:t<T.impact?.08:t<19.2?.12:Math.min(1,.12+(t-19.2)/1.6*.88);}
-export function scheduleLuyenHuAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={}){
+export function scheduleLuyenHuAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={},revised=false){
  const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),nodes=[bus],sources=[];let stopped=false,echo=null;
- bus.gain.value=strength;bus.connect(destination);
+ bus.gain.value=strength*(revised?.75:1);bus.connect(destination);
  // Vang dài hơn Hóa Thần (không gian hư không rộng).
  if(c.createDelay){echo=c.createDelay(.6);const wet=c.createGain(),fb=c.createGain();echo.delayTime.value=.23;wet.gain.value=.16;fb.gain.value=.28;echo.connect(wet);wet.connect(bus);echo.connect(fb);fb.connect(echo);nodes.push(echo,wet,fb);}
- for(const cue of LUYEN_HU_SCORE){const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;
+ for(const cue of LUYEN_HU_SCORE){
+  if(revised&&(cue.at>=T.impact-.1&&cue.at<T.reveal||cue.tag==='sub-boom'&&cue.at!==T.shatter))continue;
+  const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;
   const level=cue.level*LOUD,start=now+Math.max(0,at-elapsed),noisy=['wind','thunder','crack','rise'].includes(cue.kind),source=noisy?c.createBufferSource():c.createOscillator(),g=c.createGain();let param;
   if(noisy){source.buffer=noise(c);source.loop=true;}else if((cue.kind==='strings'||cue.kind==='choir')&&c.createPeriodicWave)source.setPeriodicWave(warmWave(c));else source.type=['strings','choir','brass'].includes(cue.kind)?'sawtooth':cue.kind;
   if(noisy||['strings','choir','brass'].includes(cue.kind)){const filter=c.createBiquadFilter();filter.type=noisy||cue.kind==='choir'?'bandpass':'lowpass';if(filter.Q)filter.Q.value=cue.kind==='crack'?.9:cue.kind==='choir'?1.4:.55;source.connect(filter);filter.connect(g);nodes.push(filter);if(noisy)param=filter.frequency;else{filter.frequency.value=cue.kind==='choir'?760:cue.kind==='brass'?950:1300;param=source.frequency;}}else{source.connect(g);param=source.frequency;}
@@ -80,7 +82,7 @@ export function scheduleLuyenHuAudio(c,destination,elapsed=0,duration=T.duration
   source.start(start);source.stop(start+remain+.025);sources.push(source);nodes.push(source,g);
  }
  // Nền chìm 120 ms ngay trước nổ.
- if(elapsed<(T.impact-.12)*scale){const at=now+(T.impact-.12)*scale-elapsed,hit=now+T.impact*scale-elapsed;bus.gain.setValueAtTime(strength,at);bus.gain.linearRampToValueAtTime(strength*.22,hit-.012);bus.gain.setValueAtTime(strength,hit);}
+ if(elapsed<(T.impact-.12)*scale){const at=now+(T.impact-.12)*scale-elapsed,hit=now+T.impact*scale-elapsed;const level=bus.gain.value;bus.gain.setValueAtTime(level,at);bus.gain.linearRampToValueAtTime(level*.22,hit-.012);bus.gain.linearRampToValueAtTime(level,hit+.045);}
  const cleanup=()=>nodes.forEach(n=>{try{n.disconnect();}catch{}}),timer=setTimeout(cleanup,Math.max(0,(duration-elapsed+2)*1000));timer.unref?.();
  return {endAt:now+Math.max(0,duration-elapsed)+2,stop(){if(stopped)return;stopped=true;clearTimeout(timer);for(const source of sources)try{source.stop();}catch{}cleanup();}};
 }

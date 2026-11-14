@@ -49,3 +49,7 @@ Nguồn tải: MP3 chính thức tại incompetech.com/music/royalty-free/mp3-ro
 Thêm dòng này vào mô tả LIVE: **Music: Crusade, Dragon and Toast, Cherry Blossom by Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License https://creativecommons.org/licenses/by/4.0/ . Volume normalized.**
 
 Tự động: tỷ thí / Đường chiến / chính ma / yêu thú dùng nhóm chiến trận; kết duyên dùng nhóm nhẹ vui; luyện đan dùng nhóm phương Đông; mê cung dùng nhóm huyền cảnh. Map thường đổi trong nhóm theo không khí map mỗi 30 phút. Giữ bài ổn định trong suốt sự kiện, chuyển âm nhẹ khi đổi cảnh; trò nhỏ không đổi nhạc. Chọn bài thủ công sẽ giữ lựa chọn, chọn Tự đổi để quay về theo map/sự kiện.
+
+## Cinematic VFX/SFX V2
+
+Các cue Hư Không, Long Phượng, Chính Đạo, Ma Đạo, cộng hưởng và ngọc được tổng hợp từ sóng và noise có seed trong `public/cinematic-sfx.js`. Cue mới là mã và âm tổng hợp nguyên bản, không sử dụng sample hay bản ghi bên ngoài. Bộ đệm mono 24 kHz được tạo khi mở AudioContext và dùng lại qua các lần phát. BGM và VieNeu tiếp tục phát qua phần tử media riêng.

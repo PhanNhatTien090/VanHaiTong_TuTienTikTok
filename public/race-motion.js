@@ -1,3 +1,4 @@
+import {drawTrail} from './cinematic-vfx.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
 const seed=id=>Array.from(String(id||'')).reduce((n,ch)=>(n*31+ch.codePointAt(0))%997,0);
 export function raceFlightPose(a,t,motion=true){
@@ -21,11 +22,13 @@ export function drawRaceMotion(scene,c,t,layer){
    // Braided wind ribbons continuously corkscrew behind the sword.
    const length=(a.finished?65:135+power*105+level*18)*s;
    c.lineWidth=(power?2.8:1.5)*s;c.strokeStyle=color;
-   for(let side=-1;side<=1;side+=2){c.beginPath();const steps=light?7:12;
+   if(scene.cinematicV2!==false){
+    drawTrail(c,a.gift?'gold':'jade',a.x,a.y+length*.35,-Math.PI/2,length,power?.68:.26);
+   }else for(let side=-1;side<=1;side+=2){c.beginPath();const steps=light?7:12;
     for(let j=0;j<=steps;j++){const u=j/steps,x=a.x+side*(9+Math.sin(phase-u*7)*(9+power*8))*s*(1-u),y=a.y+35*s+u*length;j?c.lineTo(x,y):c.moveTo(x,y);}
     c.globalAlpha=power?.7:.28;c.stroke();
    }
-   if(motion&&a.boost){
+   if(motion&&a.boost&&scene.cinematicV2===false){
     for(let i=0;i<(light?2:4);i++){const u=(time*.0009+i/4)%1;c.globalAlpha=(1-u)*.55;c.lineWidth=2;c.beginPath();c.ellipse(a.x,a.y+25*s+u*110*s,(18+u*48)*s,(5+u*13)*s,0,0,TAU);c.stroke();}
    }
    if(motion&&featured.has(a.id)){
