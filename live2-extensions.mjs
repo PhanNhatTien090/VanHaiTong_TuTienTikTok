@@ -43,7 +43,8 @@ function startGuildWar(w,p,now,ctx,wanted){
  const world=guildWorld(w),g=world.guilds[p.live2?.guildId];
  if(!g||g.leader!==p.id&&g.deputy!==p.id)return fail('Hội Chủ hoặc Phó Hội mới được phát động Hội Chiến.');
  if(world.guildWar?.endsAt>now)return fail('Hội Chiến đang diễn ra.');
- if(world.guildWar?.finishedAt&&now-world.guildWar.finishedAt<10*60000)return fail('Hội Chiến nghỉ 10 phút trước trận tiếp theo.');
+ if(w.settings?.live2GuildWarEnabled!==true&&w.mode!=='demo')return fail('Hội Chiến cần được người điều hành bật trong cấu hình LIVE.');
+ if(world.guildWar?.finishedAt&&now-world.guildWar.finishedAt<20*60000)return fail('Hội Chiến nghỉ 20 phút trước trận tiếp theo.');
  const conflict=stageConflict(w,now);
  if(conflict)return fail('Đang có '+conflict+' • Hội Chiến đợi sân trống.');
  const opponents=Object.values(world.guilds).filter(x=>x.id!==g.id&&x.members.some(id=>active(w.players[id],now)));
@@ -52,6 +53,7 @@ function startGuildWar(w,p,now,ctx,wanted){
  if(!g.members.some(id=>active(w.players[id],now)))return fail('Bang cần có thành viên hoạt động.');
  const roster=ids=>ids.filter(id=>active(w.players[id],now));
  const ga=roster(g.members),gb=roster(other.members);
+ if(ga.length<2||gb.length<2)return fail('Mỗi bang cần ít nhất 2 thành viên đang hoạt động để mở Hội Chiến.');
  world.guildWar={id:'gwar-'+now,startedAt:now,endsAt:now+90000,groups:[{id:g.id,name:g.name,score:0,byUser:{}},{id:other.id,name:other.name,score:0,byUser:{}}],eligible:[...ga,...gb],lastHitAt:{},event:'HỘI CHIẾN'};
  announce(w,p,'HỘI CHIẾN • '+g.name+' VS '+other.name+' • gõ chiến hội để công kích',now,ctx,{guildWarStart:true,live2Kind:'guild'});
  return ok('Hội Chiến bắt đầu 90 giây.',{warId:world.guildWar.id});

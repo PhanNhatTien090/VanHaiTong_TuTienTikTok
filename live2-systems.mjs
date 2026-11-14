@@ -147,19 +147,22 @@ export function live2Command(w,p,words,now,ctx){
   return ok('Đại Điện lên cấp '+g.buildings.hall+' • tăng thêm 2 vị trí thành viên.');
  }
  if(cmd==='hoi'&&rest===''){
-  const g=guilds(w)[s.guildId];const msg=g?'Bang '+g.name+' #'+g.id+' • '+g.members.length+'/24 thành viên • '+(g.points||0)+' cống hiến':'Chưa gia nhập bang • lập hội + tên hoặc vào hội + mã';
+  const g=guilds(w)[s.guildId];const msg=g?'Bang '+g.name+' #'+g.id+' • '+g.members.length+'/'+(24+(g.buildings?.hall||0)*2)+' thành viên • '+(g.points||0)+' cống hiến':'Chưa gia nhập bang • lập hội + tên hoặc vào hội + mã';
   announce(w,p,msg,now,emit,{guildCard:g?{id:g.id,name:g.name,members:g.members.length,points:g.points}:null});return ok(msg);
  }
  if(cmd==='lap'&&rest.startsWith('hoi ')){
   if(p.realm<2||s.guildId)return fail('Cần Trúc Cơ và chưa ở trong bang khác.');
   const name=cleanName(rest.slice(4));if(name.length<3)return fail('Tên bang cần ít nhất 3 ký tự.');
-  const all=guilds(w);if(Object.values(all).some(g=>g.name.toLowerCase()===name.toLowerCase()))return fail('Tên bang đã có người sử dụng.');
+  if(now-(s.lastGuildLeaveAt||-Infinity)<600000)return fail('Lập bang mới sau 10 phút kể từ lúc rời bang.');
+  const all=guilds(w);if(Object.keys(all).length>=200)return fail('Bang hội đã đạt giới hạn hiện tại; đợi Hội Chủ giải tán bang cũ.');
+  if(Object.values(all).some(g=>g.name.toLowerCase()===name.toLowerCase()))return fail('Tên bang đã có người sử dụng.');
   const n=w.live2World.nextGuildId++,id=n.toString(36).toUpperCase().padStart(3,'0');
   all[id]={id,name,leader:p.id,deputy:null,elders:[],buildings:{hall:0},spentPoints:0,members:[p.id],points:0,contributions:{[p.id]:0},createdAt:now};
   s.guildId=id;announce(w,p,'KHAI TÔNG LẬP HỘI • '+name,now,emit,{guildFounded:true,live2Kind:'guild',guildId:id});return ok('Đã lập hội '+name+' #'+id);
  }
  if(cmd==='vao'&&rest.startsWith('hoi ')){
   if(s.guildId)return fail('Cần rời bang hiện tại trước.');
+  if(now-(s.lastGuildLeaveAt||-Infinity)<600000)return fail('Chuyển bang sau 10 phút kể từ lúc rời bang.');
   if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Hội Chiến đang diễn ra, chưa thể đổi bang.');
   const id=rest.slice(4).trim().toUpperCase(),g=guilds(w)[id];
   if(!g)return fail('Không tìm thấy mã bang.');
@@ -172,7 +175,7 @@ export function live2Command(w,p,words,now,ctx){
   const all=guilds(w),g=all[s.guildId];if(!g)return fail('Chưa gia nhập bang.');
   if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Hội Chiến đang diễn ra, chưa thể rời bang.');
   if(g.leader===p.id&&g.members.length>1)return fail('Hội chủ cần chuyển quyền hoặc bang chỉ còn một người mới có thể rời.');
-  g.members=g.members.filter(id=>id!==p.id);delete g.contributions[p.id];if(g.deputy===p.id)g.deputy=null;g.elders=(g.elders||[]).filter(id=>id!==p.id);if(!g.members.length)delete all[g.id];s.guildId=null;
+  g.members=g.members.filter(id=>id!==p.id);delete g.contributions[p.id];if(g.deputy===p.id)g.deputy=null;g.elders=(g.elders||[]).filter(id=>id!==p.id);if(!g.members.length)delete all[g.id];s.guildId=null;s.lastGuildLeaveAt=now;
   announce(w,p,'RỜI BANG HỘI • '+g.name,now,emit,{guildLeft:true,live2Kind:'guild'});return ok('Đã rời bang.');
  }
  if(cmd==='xin'&&rest.startsWith('su ')){
