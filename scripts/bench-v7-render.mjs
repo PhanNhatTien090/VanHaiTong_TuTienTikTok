@@ -5,12 +5,19 @@ import {drawV7Variant} from '../public/ultimate-variants-v7.js';
 import {drawDuelV6Ultimate,V6_ASSETS} from '../public/duel-showcase-v6.js';
 import {drawGiftOverdriveV7} from '../public/gift-overdrive-v7.js';
 import {drawOverdriveV7} from '../public/cinematic-overdrive-v7.js';
+import {V7_PREMIUM_ENABLED} from '../public/v7-premium-config.js';
 const W=900,H=1600,out='output/v7-visual-proof';
 await mkdir(out,{recursive:true});
 const v6={},v7={};
 for(const [id,url] of Object.entries(V6_ASSETS))try{v6[id]=await loadImage('public'+url);}catch{}
 for(const [id,file]of Object.entries({void:'void-rift.svg',soul:'soul-phantom.svg',stars:'seven-stars.svg',lotus:'holy-lotus.svg',bell:'celestial-bell.svg',meteor:'meteor-judgment.svg',blossom:'blossom-sword.svg'}))v7[id]=await loadImage('public/assets/v7/'+file);
 const shatter=await loadImage('public/assets/v7/screen-shatter.svg');
+const premium={};
+if(V7_PREMIUM_ENABLED)for(const [key,file]of Object.entries({
+ thunderDragon:'thunder-dragon.webp',thunderImpact:'thunder-dragon-impact.webp',
+ swordStorm:'divine-sword-storm.webp',phoenix:'flame-phoenix.webp',
+ phoenixImpact:'phoenix-impact.webp',taiji:'taiji-seal.webp',shatter:'screen-shatter.webp'
+}))premium[key]=await loadImage('public/assets/v7-premium/'+file);
 const actor={x:225,y:1245},target={x:450,y:890},skills=['thunder','bamboo','flame','dragon','frost','celestial','dora-door','soul','sevenstars','lotus','bell','meteor','petal'];
 const percentile=(values,p)=>{values.sort((a,b)=>a-b);return Number(values[Math.min(values.length-1,Math.ceil(values.length*p)-1)].toFixed(2));};
 const results=[];
@@ -18,7 +25,7 @@ for(const tier of ['high','crowded']){
  const canvas=createCanvas(540,960),c=canvas.getContext('2d');
  const scene={canvas,height:H,budget:{level:tier,crowded:tier==='crowded',pressured:tier==='crowded'},
   fps:tier==='crowded'?24:30,motion:true,reduceFlash:tier==='crowded',
-  cinematicV2:true,v6Showcase:true,v7Overdrive:true,v6Assets:v6,v7VariantArt:v7,v7ShatterArt:shatter};
+  cinematicV2:true,v6Showcase:true,v7Overdrive:true,v6Assets:v6,v7VariantArt:v7,v7ShatterArt:shatter,v7PremiumArt:premium};
  c.setTransform(.6,0,0,.6,0,0);
  const costs=[],types={ultimate:[],gift:[],shatter:[]};let count=0;
  const sample=(type,fn)=>{const time=performance.now();fn();const ms=performance.now()-time;costs.push(ms);types[type].push(ms);count++;};
