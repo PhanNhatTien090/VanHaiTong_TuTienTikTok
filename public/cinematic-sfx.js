@@ -56,7 +56,30 @@ function voiceSamples(c,preset,layer){
         value=(tone(root*body[1],t)*.066+tone(root*body[2]*1.003,t)*.031+low*.025)*Math.exp(-t*3.3)*Math.min(1,t/.08);
         break;
     }
-    data[i]=value*fade(t,length);
+    // Give key dramatic moments a real timbral identity, not just pitch-shifted
+    // sine waves. Still renders ONCE into a 24k mono buffer, never in the hit frame.
+    if(preset==='fracture'){
+      if(layer==='charge')value+=.13*(band-low)*u*u;
+      else if(layer==='sub')value+=.10*tone(42+22*Math.exp(-t*9),t)*Math.exp(-t*12);
+      else if(layer==='crack'){
+        const burst=Math.exp(-t*51)+.42*Math.exp(-Math.max(0,t-.018)*125)*(t>=.018);
+        value=(band-low)*.31*burst+tone(1700-350*u,t)*.11*Math.exp(-t*42);
+      }else if(layer==='body'){
+        value=.075*tone(677,t)*Math.exp(-t*11)+.054*tone(1023.4,t)*Math.exp(-t*13)+
+          .062*(band-low)*Math.exp(-t*9);
+      }else if(layer==='tail')value+=.051*tone(1432.7,t)*Math.exp(-t*7)+
+        .038*tone(2131,t)*Math.exp(-t*8);
+    }else if(preset==='storm'&&layer==='body'){
+      value+=.12*low*Math.exp(-t*5)+.08*tone(67-12*u,t)*Math.exp(-t*6);
+    }else if(preset==='meteor'&&layer==='body'){
+      value+=.115*(band-low)*Math.exp(-t*8)+.075*tone(52+25/(1+t*25),t)*Math.exp(-t*4);
+    }else if(preset==='holy-bell'&&(layer==='body'||layer==='tail')){
+      value+=.068*tone(root*2.397,t)*Math.exp(-t*4)+.037*tone(root*3.958,t)*Math.exp(-t*6);
+    }else if(preset==='void-blade'&&layer==='charge'){
+      value+=.077*tone(root*(1.6-.86*u),t)*u*u;
+    }
+    const sample=value*fade(t,length);
+    data[i]=Math.max(-.78,Math.min(.78,sample));
   }
   return out;
 }
