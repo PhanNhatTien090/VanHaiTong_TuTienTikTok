@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {prepareCinematicAudio,CINEMATIC_SOUND,CinematicSfx} from '../public/cinematic-sfx.js';
 import {premiumArtKeys} from '../public/v7-premium-art.js';
+import {duelCastState,duelImpactAt} from '../public/duel-combat.js';
+import {overdriveMoment} from '../public/cinematic-overdrive-v7.js';
 
 const M=Math.max;
 const peak=b=>b.reduce((max,v)=>M(max,Math.abs(v)),0);
@@ -69,4 +71,19 @@ test('premium artwork matches ONLY actual V6 visuals, not V7 variants overridden
  assert.deepEqual(premiumArtKeys(m),['shatter']);
  assert.deepEqual(premiumArtKeys({...m,techniques:{x:{id:'thunder'},y:{id:'flame'}}}),
   ['thunderDragon','thunderImpact','phoenix','phoenixImpact','shatter']);
+});
+
+test('late browser rejoin does not invent a new screen-break or replay a stale impact',()=>{
+ const T=1800000000000,start=T+19800,period=3500;
+ const earlyK=.69,lateK=.91;
+ const earlyNow=start+period*earlyK,lateNow=start+period*lateK;
+ const early=duelCastState(19800+period*earlyK),late=duelCastState(19800+period*lateK);
+ assert.equal(Math.round(duelImpactAt(earlyNow,early)),Math.round(start+period*.67));
+ assert.equal(Math.round(duelImpactAt(lateNow,late)),Math.round(start+period*.67));
+ const scene={cinematicV2:true,v7Overdrive:true,socialScene:'tournament',height:1600,
+  duelImpact:{at:duelImpactAt(lateNow,late),ultimate:true,x:450,y:900},
+  eventGiftQueue:{activeRows:[]}};
+ assert.equal(overdriveMoment(scene,1200,lateNow),null,'no late glass crack');
+ scene.duelImpact.at=duelImpactAt(earlyNow,early);
+ assert.equal(overdriveMoment(scene,1200,earlyNow)?.kind,'duel');
 });
