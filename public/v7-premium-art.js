@@ -52,7 +52,7 @@ export function prewarmV7GiftArt(scene,rows=[]){
  let loaded=0;
  for(const row of rows){
   const v=Number(row?.value)||0;
-  const key=v>=2000?'goldenAtlas':v>=1000?'formationAtlas':v>=700?'thunderAtlas':null;
+  const key=v>=2000?'goldenAtlas':v>=1500?null:v>=1000?'formationAtlas':v>=700?'thunderAtlas':v>=500?'phoenix':null;
   if(key&&!scene.premiumRequested.has(key)){
    requestOne(scene,key,scene.premiumMatchId);loaded++;
   }
