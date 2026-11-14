@@ -30,8 +30,15 @@ const text=s=>String(s||'').trim().slice(0,40);
 const cleanName=s=>text(s).replace(/[^a-zA-Z0-9À-ỹ \-]/gu,'').replace(/\s+/g,' ').trim().slice(0,24);
 export const live2Level=p=>LIVE2_LEVELS.reduce((n,c)=>Number(p?.live2?.insight||0)>=c?n+1:n,0);
 export const live2Path=p=>LIVE2_PATHS[p?.live2?.path]||null;
-function ensure(p){return p.live2??={v:1,path:null,insight:0,selectedAt:0,lastChangeAt:0,daily:{day:'',earned:0},cooldowns:{},refinements:{},guildId:null,masterId:null,students:[],lessonDay:'',bondSkillUntil:0};}
-function guilds(w){w.live2World??={v:1,nextGuildId:1,guilds:{}};return w.live2World.guilds;}
+// Tolerate old/partial optional save objects: never reset their earned fields.
+function ensure(p){
+ const s=p.live2??={v:1};
+ s.path??=null;s.insight??=0;s.selectedAt??=0;s.lastChangeAt??=0;
+ s.daily??={day:'',earned:0};s.cooldowns??={};s.refinements??={};
+ s.guildId??=null;s.masterId??=null;s.students??=[];s.lessonDay??='';s.bondSkillUntil??=0;
+ return s;
+}
+function guilds(w){const x=w.live2World??={v:1,nextGuildId:1,guilds:{}};x.guilds??={};if(!Number.isInteger(x.nextGuildId)||x.nextGuildId<1)x.nextGuildId=1;return x.guilds;}
 function announce(w,p,message,now,emit,extra={}){emit(w,p,message,'daoPath',now,{live2:true,...extra});}
 const alias={kiem:'sword',ma:'demon',the:'body',thu:'beast',dan:'alchemy'};
 const personKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().trim();
@@ -64,7 +71,7 @@ export function live2Insight(w,p,input,result,now,emit){
  const add=Math.max(0,Math.min(weights[type],LIVE2_DAILY_INSIGHT-s.daily.earned));
  if(!add)return 0;
  s.cooldowns['insight:'+type]=now;s.daily.earned+=add;s.insight+=add;
- const g=guilds(w)[s.guildId];if(g&&g.members.includes(p.id)){g.points=(g.points||0)+add;g.contributions[p.id]=(g.contributions[p.id]||0)+add;}
+ const g=guilds(w)[s.guildId];if(g&&g.members?.includes(p.id)){g.contributions??={};g.points=(g.points||0)+add;g.contributions[p.id]=(g.contributions[p.id]||0)+add;}
  const prevLevel=LIVE2_LEVELS.reduce((v,n)=>s.insight-add>=n?v+1:v,0);
  if(live2Level(p)>prevLevel)announce(w,p,'ĐẠO NGỘ THĂNG CẤP • '+live2Path(p).name+' '+live2Level(p),now,emit,{daoPath:s.path,daoLevelUp:true});
  return add;

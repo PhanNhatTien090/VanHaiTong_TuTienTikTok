@@ -7,7 +7,7 @@ const fail=message=>({ok:false,message}),ok=(message,more={})=>({ok:true,message
 const dFmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'});
 const day=t=>dFmt.format(t);
 const eligible=p=>!!p&&!p.resident&&!p.puppet&&!p.webOnly;
-const guildWorld=w=>(w.live2World??={v:1,nextGuildId:1,guilds:{}});
+const guildWorld=w=>{const x=w.live2World??={v:1,nextGuildId:1,guilds:{}};x.guilds??={};if(!Number.isInteger(x.nextGuildId)||x.nextGuildId<1)x.nextGuildId=1;return x;};
 const announce=(w,p,msg,now,ctx,data={})=>ctx.emit(w,p,msg,'daoPath',now,{live2:true,daoPath:p?.live2?.path||'body',...data});
 const active=(p,now)=>eligible(p)&&p.lastActive>=now-300000;
 const WORDS=Object.freeze({
