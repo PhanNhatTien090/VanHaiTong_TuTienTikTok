@@ -9,6 +9,7 @@ const mix=(a,b,k)=>a+(b-a)*k;
 
 export const V6_ASSETS=Object.freeze({
  thunder:'/assets/god-forms-v1/thunder-dragon.png',
+ thunderSeal:'/assets/v6/thunder-sigil.svg',
  flame:'/assets/god-forms-v1/phoenix-fire.png'
 });
 export const V6_SKILL_FAMILY=Object.freeze({
@@ -32,7 +33,8 @@ export function prewarmDuelV6(scene,match){
  scene.v6Assets={};
  if(typeof Image==='undefined')return;
  const ids=[match.a,match.b].map(id=>v6SkillFamily(match.techniques?.[id]?.id));
- for(const family of new Set(ids)){
+ const families=new Set(ids);if(families.has('thunder'))families.add('thunderSeal');
+ for(const family of families){
   if(!V6_ASSETS[family])continue;
   const img=new Image();
   img.decoding='async';
@@ -86,7 +88,7 @@ function thunder(c,x0,y0,x1,y1,seed,color,width,alpha){
  }
 }
 function apparition(c,img,x,y,w,h,alpha,flip=false){
- if(!img?.naturalWidth||alpha<=0)return false;
+ if(!(img?.naturalWidth||img?.width)||alpha<=0)return false;
  c.save();c.globalAlpha=alpha;c.translate(x,y);if(flip)c.scale(-1,1);
  c.drawImage(img,-w/2,-h/2,w,h);c.restore();return true;
 }
@@ -108,6 +110,11 @@ function charge(scene,c,actor,tech,family,k,t,b,counter){
  c.fillStyle='#080c24';c.globalAlpha=.23*u;
  c.beginPath();c.ellipse(x,y,r*.68,r*.55,0,0,TAU);c.fill();
  groundSeal(c,x,actor.y+12,r*.83,color,.36+.5*u,clock);
+ if(family==='thunder'&&scene.v6Assets?.thunderSeal){
+  const img=scene.v6Assets.thunderSeal,size=r*2.18;
+  c.save();c.globalAlpha=.22+.48*u;c.translate(x,actor.y-42);
+  c.rotate(clock*.35);c.drawImage(img,-size*.5,-size*.5,size,size);c.restore();
+ }
  ring(c,x,y,r,r*.29,color,3.5,.29+.53*u,-.2);
  ring(c,x,y,r*.6,r*.60,'#f0f7ff',2,.24+.45*u,clock);
  if(family==='thunder'){
