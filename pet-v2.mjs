@@ -3,6 +3,7 @@
 import {petById} from './public/spirit-pets.js';
 import {petV2Skill,petStageName,petXpNext,petBasePoints,petStageUnlocked} from './public/pet-v2-catalog.js';
 import {stageConflict} from './stage-lock.mjs';
+import {petV2Traits} from './pet-v2-combat.mjs';
 import {petV2GearResonance,petV2Route,petV2ExpeditionAffinity,petV2Combination} from './pet-v2-systems.mjs';
 const V2_DEFAULTS=Object.freeze({enabled:false,progression:false,combat:false,evolutionArt:false,coveV2:false,expedition:false,synergy:false,quality:'auto'});
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
@@ -177,6 +178,13 @@ export function petV2DuelPoints(w,p){
  const o=owner(w,p);
  if(o?.expedition&&!o.expedition.resolvedAt&&o.expedition.petId===p.spiritPet)return 0;
  return Math.min(4,petBasePoints(growth(w,p))+(petV2GearResonance(p)?1:0));
+}
+export function petV2DuelTraits(w,p){
+ if(!petV2On(w,'combat')||!allowedPlayer(w,p))return null;
+ const o=owner(w,p);
+ if(o?.expedition&&!o.expedition.resolvedAt&&o.expedition.petId===p.spiritPet)return null;
+ const g=growth(w,p),points=petV2DuelPoints(w,p);
+ return petV2Traits(p.spiritPet,g.level,g.stage,g.bond,points);
 }
 export function petV2BossDamage(w,p,base,now){
  if(!petV2On(w,'combat')||!allowedPlayer(w,p)||!w.boss?.hp||base<=0)return 0;

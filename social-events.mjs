@@ -1,6 +1,7 @@
 import {activeBonds,syncBondRefs,bondAllowance,alreadyBonded} from './bond-relations.mjs';
 import {stageConflict} from './stage-lock.mjs';
-import {petV2DuelPoints} from './pet-v2.mjs';
+import {petV2DuelPoints,petV2DuelTraits} from './pet-v2.mjs';
+import {petV2TacticalScore} from './pet-v2-combat.mjs';
 import {FESTIVAL_ITEM,festivalEnroll,tickBondFestival,festivalView} from './bond-festival.mjs';
 export const SOCIAL_ITEMS=[FESTIVAL_ITEM,
  {id:'tournament-laurel',type:'artifact',name:'Kiếm Khôi Ngọc Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:0,bonus:0,exclusive:true,eventReward:'Vô địch Luận Kiếm',description:'Kỷ vật vinh danh quán quân; không cộng sức mạnh.'},
@@ -27,7 +28,7 @@ function giveItem(p,id){if(!p.artifacts.includes(id))p.artifacts.push(id);}
 function reward(w,p,eventId,medals,now,c,quiet=false){const e=w.tournament;if(e.awarded[eventId])return;e.awarded[eventId]=true;p.tournamentMedals=(p.tournamentMedals||0)+medals;if(!quiet)notify(w,p,'Luận Kiếm • +'+medals+' huy chương • tổng '+p.tournamentMedals,now,c);}
 // Quy tắc thắng thua (không đổi): tổng tu vi cao hơn từ 3% trở lên thì thắng chắc; sát nhau mới so điểm + trợ lực; hòa điểm ưu tiên đăng ký trước.
 function decide(t,a,b,strengths,boosts={}){
- const score=id=>strengths[id]+Math.min(3,boosts[id]||0)*2+Math.min(4,(t.fighters[id]?.petPoints||0)+(t.current?.[id===t.current?.a?'a':'b']===id&&t.current.petCasts?.[id]?1:0)),qa=t.fighters[a]?.totalQi||0,qb=t.fighters[b]?.totalQi||0,decided=qa>=qb*1.03?a:qb>=qa*1.03?b:null;
+ const score=id=>{const foe=id===a?b:a,me=t.fighters[id],enemy=t.fighters[foe];return strengths[id]+Math.min(3,boosts[id]||0)*2+petV2TacticalScore(me?.petTraits||(me?.petPoints?{points:me.petPoints}:null),enemy?.petTraits,{cast:!!t.current?.petCasts?.[id],enemyCast:!!t.current?.petCasts?.[foe]});},qa=t.fighters[a]?.totalQi||0,qb=t.fighters[b]?.totalQi||0,decided=qa>=qb*1.03?a:qb>=qa*1.03?b:null;
  const tie=!decided&&score(a)===score(b),aEarlier=(t.entries.find(e=>e.id===a)?.at||0)<=(t.entries.find(e=>e.id===b)?.at||0),winner=decided||(score(a)>score(b)||tie&&aEarlier?a:b);
  return {winner,loser:winner===a?b:a,scoreA:score(a),scoreB:score(b),tie};
 }
@@ -59,7 +60,7 @@ function beginRound(w,now,c){
  // Tỷ thí xét TỔNG TU VI: tu vi cao hơn thì mạnh hơn (thanh máu cũng theo đó). Sức mạnh trang bị chỉ cộng rất nhỏ để phân định khi bằng nhau.
  const duelPower=p=>Math.log10((Number(p.totalQi)||0)+10)*100+c.power(p)*0.05;
  const powers=selected.map(e=>duelPower(w.players[e.id])).sort((a,b)=>a-b),median=powers[Math.floor(powers.length/2)]||1;
- for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0,realm:Number(p.realm)||0,petPoints:petV2DuelPoints(w,p)};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
+ for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0,realm:Number(p.realm)||0,petPoints:petV2DuelPoints(w,p),petTraits:petV2DuelTraits(w,p)};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
  pairRound(w,selected.map(e=>e.id),now,c);
  c.emit(w,null,'Luận Kiếm bắt đầu • '+selected.length+' đấu thủ • '+(selected.length>STAGED_MAX?'vòng loại so tài nhanh, tối đa 3 ván cuối lên đài':'các ván lên đài')+' • ghép cặp gần cảnh giới và tổng tu vi • đấu thủ gõ kiem tiếp linh lực','tournament',now);
 }
