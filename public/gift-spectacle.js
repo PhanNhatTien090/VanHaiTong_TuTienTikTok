@@ -50,7 +50,7 @@ export function drawGiftSpectacle(c,e,t,k,p,H,{light=true,reducedFlash=false,art
   if(upgrade){
    const seed=qiVariant(e).phase,age=(k-GIFT_HITS[0])*q.duration,echo=(k-GIFT_HITS[1])*q.duration;
    if(layers?.impact!==false)drawShockwave(c,'gold',x,cy+55,age,{quality:q.min>=3000?quality:'light',radius:q.min>=3000?345:180,seed,motion,flash:!reducedFlash&&q.min>=3000});
-   if(layers?.impact!==false&&echo>=0&&echo<650){
+   if(q.min>=3000&&layers?.impact!==false&&echo>=0&&echo<650){
     const u=echo/650,alpha=(1-u)*.76;
     drawSeal(c,'gold',x,cy+90-u*95,122+150*u,motion?-u*1.2:0,alpha);
     if(motion){
