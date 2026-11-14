@@ -5,6 +5,7 @@ import {drawDuelV6Ultimate,V6_ASSETS,v6SkillFamily} from '../public/duel-showcas
 import {drawV7Variant,v7SkillSpec} from '../public/ultimate-variants-v7.js';
 import {drawOverdriveV7} from '../public/cinematic-overdrive-v7.js';
 import {drawGiftOverdriveV7,giftV7Spell} from '../public/gift-overdrive-v7.js';
+import {V7_PREMIUM_ENABLED} from '../public/v7-premium-config.js';
 const ROOT='output/v7-visual-proof',W=900,H=1600,S=.48;
 await mkdir(ROOT,{recursive:true});
 const bg=await loadImage('public/assets/maps-v3/tournament-arena.png');
@@ -21,6 +22,12 @@ for(const [id,file] of Object.entries({
  variants[id]=await loadImage('public/assets/v7/'+file);
 }
 const shatter=await loadImage('public/assets/v7/screen-shatter.svg');
+const premium={};
+if(V7_PREMIUM_ENABLED)for(const [key,file]of Object.entries({
+ thunderDragon:'thunder-dragon.webp',thunderImpact:'thunder-dragon-impact.webp',
+ swordStorm:'divine-sword-storm.webp',phoenix:'flame-phoenix.webp',
+ phoenixImpact:'phoenix-impact.webp',taiji:'taiji-seal.webp',shatter:'screen-shatter.webp'
+}))premium[key]=await loadImage('public/assets/v7-premium/'+file);
 const types=[
  ['thunder','CỬU THIÊN LÔI LONG'],['bamboo','VẠN KIẾM DIỆT THẾ'],
  ['flame','PHƯỢNG HOÀNG NIẾT BÀN'],['dragon','THƯƠNG LONG PHÁ HẢI'],
@@ -43,7 +50,7 @@ function stage(title,subtitle){
 }
 const scene={budget:{level:'balanced'},motion:true,reduceFlash:false,
  fps:30,v6Showcase:true,v7Overdrive:true,cinematicV2:true,
- v6Assets:art,v7VariantArt:variants,v7ShatterArt:shatter};
+ v6Assets:art,v7VariantArt:variants,v7ShatterArt:shatter,v7PremiumArt:premium};
 for(const [id,title] of types){
  for(const [phase,k]of [['charge',.40],['release',.79]]){
   const {cv,c}=stage(title,phase==='charge'?'TỤ LỰC · VẬN CÔNG':'GIẢI PHÓNG · TUYỆT KỸ');
@@ -73,5 +80,5 @@ for(const value of [100,500,700,1000,1500,2000]){
  const dest=ROOT+'/screen-shatter.png';await writeFile(dest,cv.toBuffer('image/png'));
  manifest.push({type:'impact',path:dest});
 }
-await writeFile(ROOT+'/manifest.json',JSON.stringify({count:manifest.length,source:'actual-V7-canvas-runtime',manifest},null,2));
+await writeFile(ROOT+'/manifest.json',JSON.stringify({count:manifest.length,source:'actual-V7-canvas-runtime',premiumAssets:Object.keys(premium),manifest},null,2));
 console.log('V7 actual renderer gallery OK: '+manifest.length+' frames');
