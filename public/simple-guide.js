@@ -61,7 +61,7 @@ export function simpleSteps(s={},page=0){
   {cmd:'trang bị',text:'đeo đồ mạnh nhất'}
  ];
  const race=s.raceStatus,t=s.socialStatus?.tournament;
- const hint=s.quick?.event?'gõ 6 · '+s.quick.event.text:race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':s.bonkFest?.active?'Gõ đầu: go tên':'';
+ const hint=s.quick?.event?'gõ 6 · '+s.quick.event.text:race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':t?.current?'Tỷ thí: đấu thủ gõ kiem (3 lần)':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':s.bonkFest?.active?'Gõ đầu: go tên':'';
  if(pick===4)return {...GUIDE_PAGES[3],rows:hallGuideRows(s.halls?.halls),hint};
  if(pick)return {...GUIDE_PAGES[pick-1],hint};
  return {title:'CÁCH CHƠI',rows,hint};

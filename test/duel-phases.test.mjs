@@ -32,3 +32,10 @@ test('V4 tỷ thí: thanh tụ khí đầy dần trong pha Tụ Khí, không có
  assert.equal(a.phase,'charge');assert.ok(b.charge>a.charge&&b.charge<=1);
  assert.equal(duelVisualState(m,'a',T+500).charge,0);assert.equal('hp' in a,false);
 });
+
+test('V4 tỷ thí: góc hướng dẫn nhắc đấu thủ gõ kiem khi đang có ván trên đài',async()=>{
+ const {simpleSteps}=await import('../public/simple-guide.js');
+ const s={players:[],realms:Array(19),serverNow:1e12};
+ assert.match(simpleSteps({...s,socialStatus:{tournament:{phase:'running',current:{a:'x',b:'y'}}}}).hint,/gõ kiem/);
+ assert.match(simpleSteps({...s,socialStatus:{tournament:{phase:'registration'}}}).hint,/gõ tỷ thí/);
+});
