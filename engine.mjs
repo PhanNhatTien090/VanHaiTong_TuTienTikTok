@@ -584,7 +584,7 @@ function actionCore(w,input,now) {
     recordDailyAscension(w,p,now);
     p.qi-=requiredQi(p);p.stones-=requiredStones(p);p.realm++;
     const helpers=finishGuard(w,p,p.realm-1,now,companionContext);
-    emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{fromRealm:p.realm-1,toRealm:p.realm,guardHelpers:helpers});
+    emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{fromRealm:p.realm-1,toRealm:p.realm,guardHelpers:helpers,...(helpers.length?{guardNames:helpers.map(id=>String(w.players[id]?.name||'').slice(0,24))}:{})}); /* V4: tên hộ pháp đi kèm để overlay luôn ghi đúng tên */
   } else if(type==='attack') {
     if(!w.boss||w.boss.endsAt<=now||w.boss.hp<=0)return fail('Chưa có yêu thú. Bí cảnh sẽ mở theo lịch.');
     const wait=cooldown(p,'attack',4000,now);if(wait)return fail(`Chiêu thức hồi sau ${wait}s.`);

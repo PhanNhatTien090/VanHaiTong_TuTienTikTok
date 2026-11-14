@@ -39,3 +39,14 @@ test('V4 tỷ thí: góc hướng dẫn nhắc đấu thủ gõ kiem khi đang c
  assert.match(simpleSteps({...s,socialStatus:{tournament:{phase:'running',current:{a:'x',b:'y'}}}}).hint,/gõ kiem/);
  assert.match(simpleSteps({...s,socialStatus:{tournament:{phase:'registration'}}}).hint,/gõ tỷ thí/);
 });
+
+test('V4 hộ kiếp: kết giới đỡ đúng mốc nổ của cảnh giới, tên hộ pháp từ server, không có hộ pháp thì không vẽ',async()=>{
+ const {guardianTribulationState,guardName,GUARD_MIN_REALM}=await import('../public/guardian-tribulation-v3.js');
+ const {ascensionImpactRatio}=await import('../public/audio.js');
+ for(const realm of [6,8,12,22]){const e={toRealm:realm,guardHelpers:['a','b']},at=ascensionImpactRatio(realm);
+  const before=guardianTribulationState(e,at-.02),hit=guardianTribulationState(e,at+.005),after=guardianTribulationState(e,Math.min(1,at+.3));
+  assert.ok(before.shield>.8,'realm '+realm+': kết giới dựng trước mốc nổ');assert.ok(hit.hit>.8,'realm '+realm+': đỡ đúng mốc nổ');assert.equal(after.energy,0,'realm '+realm+': tan sau đó');}
+ assert.equal(guardianTribulationState({toRealm:GUARD_MIN_REALM,guardHelpers:[]},.7).active,false);
+ assert.equal(guardName({playerIndex:new Map()},{guardHelpers:['x'],guardNames:['Lâm Phong']},0),'Lâm Phong');
+ assert.equal(guardName({playerIndex:new Map([['x',{name:'Bạch Y'}]])},{guardHelpers:['x']},0),'Bạch Y');
+});
