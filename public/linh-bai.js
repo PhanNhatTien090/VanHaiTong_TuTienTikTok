@@ -27,7 +27,7 @@ function inventoryHTML(e,esc){
   head=`<span class="lb-path">TÚI ĐỒ</span><span class="lb-need"><b>${fmt(c.stones)}</b> linh thạch · <b>${fmt(c.herbs)}</b> linh thảo</span>`;
   body=listHTML('Pháp bảo',c.artifacts,(x,esc)=>`<li${x.on?' class="on"':''}>${esc(x.name)}${x.on?' <em>đang đeo</em>':''}</li>`,esc,'chưa có · gõ 7 rèn')
    +listHTML('Đan dược',c.pills,(x,esc)=>`<li>${esc(x.name)} <em>×${fmt(x.n)}</em></li>`,esc,'chưa có · gõ 4 luyện đan')
-   +listHTML('Bí pháp',c.manuals,(x,esc)=>`<li>${esc(x)}</li>`,esc,'chưa học · gõ học');
+   +listHTML('Bí pháp',c.manuals,(x,esc)=>`<li>${esc(typeof x==='string'?x:x.name||'Bí pháp')}</li>`,esc,'chưa học · gõ học');
  }else if(c.kind==='pets'){
   head=`<span class="lb-path">LINH THÚ</span><span class="lb-need">Đồng hành: <b>${esc(c.current||'chưa có')}</b></span>`;
   body=listHTML(`Đã thu phục (${c.owned.items.length+c.owned.more}/${c.total})`,c.owned,(x,esc)=>`<li${x.on?' class="on"':''}><em>${x.no}</em> ${esc(x.name)}</li>`,esc,'chưa có linh thú nào');
