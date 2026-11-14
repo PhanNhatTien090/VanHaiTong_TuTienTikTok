@@ -180,7 +180,8 @@ export function drawDuelCinematic(scene,c,t,H,serverNow=Date.now()){
   }
   c.restore();
   // High-contrast asymmetric rails and angular ends.
-  c.globalAlpha=alpha;c.strokeStyle='#090e24';c.lineWidth=12;c.stroke();
+  c.globalAlpha=alpha;c.strokeStyle='#090e24';c.lineWidth=12;
+  c.beginPath();c.moveTo(0,y-h*.32);c.lineTo(900,y-h*.58);c.lineTo(900,y+h*.32);c.lineTo(0,y+h*.58);c.closePath();c.stroke();
   c.strokeStyle=color;c.lineWidth=5;c.beginPath();
   c.moveTo(0,y-h*.32);c.lineTo(900,y-h*.58);
   c.moveTo(0,y+h*.58);c.lineTo(900,y+h*.32);c.stroke();
