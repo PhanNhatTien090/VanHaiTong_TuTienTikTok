@@ -1,5 +1,6 @@
 import {drawDuelGiftStrike} from './duel-combat.js';
 import {drawGiftOverdriveV7} from './gift-overdrive-v7.js';
+import {prewarmV7GiftArt} from './v7-premium-art.js';
 import {drawShockwave,drawCelestialImpact} from './cinematic-vfx.js';
 import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {drawSpiritGift,loadSpiritBeasts} from './gift-spirit-beasts.js';
@@ -55,7 +56,7 @@ export class EventGiftQueue{
 }
 export function syncEventGiftFx(scene,state){const race=state.raceStatus,match=state.socialStatus?.tournament?.current,context=race?.active&&race.phase==='running'?'race:'+race.id:state.socialScene==='tournament'&&match?'duel:'+match.id:null;
  const rows=(context?.startsWith('race:')?race.giftFx:match?.giftFx)||[],players=new Map(state.players.map(p=>[p.id,p]));
- (scene.eventGiftQueue??=new EventGiftQueue()).sync(context,rows.map(e=>{const p=players.get(e.user);const row={...e,avatar:p?.avatar||e.avatar,name:p?.name||e.name};donorPortrait(row.avatar);return row;}),state.serverNow||Date.now());if(scene.eventGiftQueue.pending.length){loadEventGiftArt(scene);if(scene.eventGiftQueue.pending.some(e=>e.value>=500))loadSpiritBeasts(scene);}
+ (scene.eventGiftQueue??=new EventGiftQueue()).sync(context,rows.map(e=>{const p=players.get(e.user);const row={...e,avatar:p?.avatar||e.avatar,name:p?.name||e.name};donorPortrait(row.avatar);return row;}),state.serverNow||Date.now());if(scene.eventGiftQueue.pending.length){loadEventGiftArt(scene);if(scene.eventGiftQueue.pending.some(e=>e.value>=500))loadSpiritBeasts(scene);if(context?.startsWith('duel:'))prewarmV7GiftArt(scene,scene.eventGiftQueue.pending);}
 }
 function img(c,im,x,y,w,h,rot=0,alpha=1,flip=false){if(!im||alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(rot);if(flip)c.scale(-1,1);c.drawImage(im,-w/2,-h/2,w,h);c.restore();}
 function flowingSprite(c,im,x,y,w,h,time,alpha){if(!im)return;c.save();c.globalAlpha*=alpha;for(let i=0;i<6;i++){const u=i/6,shift=Math.sin(time*.011-u*8)*w*.035*u;c.drawImage(im,0,i*im.height/6,im.width,im.height/6,x-w/2+shift,y-h/2+i*h/6,w,h/6+1);}c.restore();}
