@@ -3,6 +3,7 @@
 import {duelCastState} from './duel-combat.js';
 import {portraitCanvas} from './linh-bai.js';
 import {donorPortrait} from './gift-donor.js';
+import {v6SkillTitle} from './duel-showcase-v6.js';
 import {drawAura,drawSeal,drawCelestialImpact} from './cinematic-vfx.js';
 
 export const DUEL_RELEASE_AT=.56;
@@ -32,7 +33,7 @@ export function duelCutinPlan(match,serverNow,gifts=[],performanceNow=0,light=fa
   if(tech)result.push({id:match.id+':cast:'+cast.turn,user:id,name:match.names?.[id]||'Đạo hữu',
    kind:'cast',priority:cast.ultimate?6:cast.guard?3:2,ultimate:!!cast.ultimate,
    progress:clamp(cast.k/DUEL_RELEASE_AT),color:validColor(tech.color),
-   title:String(tech.name||'TUYỆT KỸ').slice(0,36),side:cast.side});
+   title:String((enhanced&&cast.ultimate?v6SkillTitle(tech.id):null)||tech.name||'TUYỆT KỸ').slice(0,36),side:cast.side});
  }
  if(enhanced&&cast.ready&&cast.ultimate&&cast.k>=.16&&cast.k<=DUEL_RELEASE_AT){
   const other=cast.side?match.a:match.b,otherTech=match.techniques?.[other];
@@ -40,7 +41,7 @@ export function duelCutinPlan(match,serverNow,gifts=[],performanceNow=0,light=fa
    id:match.id+':counter:'+cast.turn,user:other,
    name:match.names?.[other]||'Đạo hữu',kind:'counter',priority:4.5,
    ultimate:true,progress:clamp((cast.k-.16)/(DUEL_RELEASE_AT-.16)),
-   color:validColor(otherTech.color),title:String(otherTech.name||'PHẢN CHIÊU').slice(0,36),
+   color:validColor(otherTech.color),title:String(v6SkillTitle(otherTech.id)||otherTech.name||'PHẢN CHIÊU').slice(0,36),
    side:1-cast.side
   });
  }
