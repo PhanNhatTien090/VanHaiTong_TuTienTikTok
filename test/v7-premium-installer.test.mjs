@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {deflateRawSync} from 'node:zlib';
 import {PREMIUM_FILES,installV7Premium,readPremiumPack} from '../scripts/install-v7-premium.mjs';
 import {V7_PREMIUM_ENABLED, V7_PREMIUM_FILES} from '../public/v7-premium-config.js';
-import {prewarmV7Premium,premiumArtKeys,drawPremiumArt} from '../public/v7-premium-art.js';
+import {prewarmV7Premium,premiumArtKeys,premiumGiftArtKey,drawPremiumArt} from '../public/v7-premium-art.js';
 import {createCanvas} from '@napi-rs/canvas';
 
 function fakeWebp(tag){
@@ -42,6 +42,10 @@ test('premium art is opt-in and only prewarms the skills actually competing',()=
  assert.equal(prewarmV7Premium({},match),false);
 });
 
+test('gift premium atlas selection is strictly tier-scoped and bounded',()=>{
+ assert.deepEqual([100,500,700,1000,1500,2000,5000].map(premiumGiftArtKey),
+  [null,'phoenix','thunderAtlas','formationAtlas',null,'goldenAtlas','goldenAtlas']);
+});
 test('installer validates a local extracted folder and its own generated switch without touching the real repo',async()=>{
  const tmp=await mkdtemp(join(tmpdir(),'v7-install-'));
  try{
