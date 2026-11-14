@@ -22,7 +22,8 @@ function ensure(p){return p.live2??={v:1,path:null,insight:0,selectedAt:0,lastCh
 function guilds(w){w.live2World??={v:1,nextGuildId:1,guilds:{}};return w.live2World.guilds;}
 function announce(w,p,message,now,emit,extra={}){emit(w,p,message,'daoPath',now,{live2:true,...extra});}
 const alias={kiem:'sword',ma:'demon',the:'body',thu:'beast',dan:'alchemy'};
-function findPlayer(w,query){const q=String(query||'').trim().toLowerCase().replace(/^#/,''),arr=Object.values(w.players).filter(p=>p.id===query||p.socialCode?.toLowerCase()===q||p.name?.toLowerCase()===q||p.handle?.toLowerCase()===q);return arr.length===1?arr[0]:null;}
+const personKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().trim();
+function findPlayer(w,query){const q=personKey(query).replace(/^#/,'');const arr=Object.values(w.players).filter(p=>p.id===query||personKey(p.socialCode)===q||personKey(p.name)===q||personKey(p.handle)===q);return arr.length===1?arr[0]:null;}
 export function live2CombatBonus(p,now=Date.now(),kind='boss'){
  const s=p?.live2;if(!s)return 1;
  const lvl=live2Path(p)?live2Level(p):0;
@@ -143,7 +144,7 @@ export function live2Command(w,p,words,now,ctx){
   if(!master||!real(master)||master.lastActive<now-5*60000)return fail('Sư phụ cần đang có mặt.');
   const d=day(now);if(s.lessonDay===d)return fail('Hôm nay đã nhận truyền đạo.');
   s.lessonDay=d; // One meaningful mentor lesson per day; avoid free qi inflation.
-  if(s.path){s.insight+=Math.max(0,Math.min(2,LIVE2_DAILY_INSIGHT-(s.daily?.day===d?s.daily.earned:0)));s.daily=s.daily?.day===d?s.daily:{day:d,earned:0};s.daily.earned=Math.min(LIVE2_DAILY_INSIGHT,s.daily.earned+2);}
+  if(s.path){s.daily=s.daily?.day===d?s.daily:{day:d,earned:0};const lesson=Math.max(0,Math.min(2,LIVE2_DAILY_INSIGHT-s.daily.earned));s.insight+=lesson;s.daily.earned+=lesson;}
   announce(w,p,'SƯ PHỤ TRUYỀN ĐẠO • '+master.name,now,emit,{mentorLesson:true,daoPath:s.path});
   return ok('Truyền đạo viên mãn.');
  }
@@ -156,6 +157,7 @@ export function live2Command(w,p,words,now,ctx){
   const bonds=Object.values(w.social?.bonds||{}).filter(b=>!b.endedAt&&(b.a===p.id||b.b===p.id));
   const other=bonds.map(b=>w.players[b.a===p.id?b.b:b.a]).find(o=>real(o)&&o.lastActive>=now-5*60000);
   if(!other)return fail('Đạo lữ cần đang hoạt động trên LIVE.');
+  if(!((w.boss?.hp>0&&w.boss.endsAt>now)||w.tower?.cur?.id===p.id))return fail('Đồng Tâm chỉ kích hoạt trong Boss hoặc lượt vượt Tháp.');
   if(now-(s.cooldowns.bond??-Infinity)<15*60000)return fail('Đồng Tâm hồi sau 15 phút.');
   s.cooldowns.bond=now;s.bondSkillUntil=now+120000;
   announce(w,p,'SONG TINH ĐỒNG TÂM • '+other.name,now,emit,{bondSkill:true,daoPath:s.path});
