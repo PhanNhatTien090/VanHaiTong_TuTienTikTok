@@ -1,5 +1,6 @@
 // V7: six NEW authored ultimate families alongside V6's thunder/sword/fire/water/ice/yinyang.
 // Actual technique IDs are mapped to distinct silhouettes, not just a recolored laser.
+import {makeSurface} from './performance.js';
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=x=>1-(1-clamp(x))**3;
 const specs=Object.freeze({
  void:{name:'Hư Không Vạn Hồn',asset:'void-rift.svg',color:'#ce9dff'},
@@ -26,7 +27,19 @@ export function prewarmVariantArt(scene,match){
  if(typeof Image==='undefined')return;
  for(const group of new Set([match.a,match.b].map(id=>V7_VARIANTS[match.techniques?.[id]?.id]).filter(Boolean))){
   const img=new Image();img.decoding='async';
-  img.onload=()=>{if(scene.v7VariantMatch===match.id&&img.naturalWidth)scene.v7VariantArt[group]=img;};
+  img.onload=()=>{
+   if(scene.v7VariantMatch!==match.id||!img.naturalWidth)return;
+   // Rasterize complex SVG once, up to 20 seconds BEFORE the finisher.
+   // A 256px offscreen glyph is ample for crowded mode; High gets 384px.
+   const sz=scene.budget?.crowded||scene.budget?.level==='light'?256:384;
+   const frame=makeSurface(sz,sz);
+   if(frame)try{
+    frame.getContext('2d').drawImage(img,0,0,sz,sz);
+    frame.naturalWidth=sz;frame.naturalHeight=sz;
+    scene.v7VariantArt[group]=frame;return;
+   }catch{}
+   scene.v7VariantArt[group]=img;
+  };
   img.onerror=()=>{if(scene.v7VariantMatch===match.id)scene.v7VariantErrors.add(group);};
   img.src='/assets/v7/'+specs[group].asset;
  }
