@@ -22,7 +22,7 @@ export function drawLive2Fx(c,e,t,k,p,{light=false,motion=true}={}){
  const img=cache.get(path),centerX=p?.x??450,centerY=(p?.y??650)-70;
  const alpha=Math.max(0,Math.min(1,k*5,(1-k)*5));
  if(!alpha)return;
- const r=e.daoChoose?130:e.guildWarStart?122:e.daoSkill?95:72,size=e.daoChoose?230:e.guildWarStart?215:e.daoSkill?155:120;
+ const r=e.daoChoose||e.daoUltimate?130:e.guildWarStart?122:e.daoSkill?95:72,size=e.daoChoose||e.daoUltimate?230:e.guildWarStart?215:e.daoSkill?155:120;
  c.save();c.globalAlpha*=alpha;
  c.translate(centerX,centerY);
  if(!light){

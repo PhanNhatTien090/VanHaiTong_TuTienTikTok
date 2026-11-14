@@ -32,7 +32,10 @@ export function live2CombatBonus(p,now=Date.now(),kind='boss'){
  let rate=0;
  if(lvl&&((kind==='boss'&&['sword','demon','beast'].includes(s.path))||(kind==='tower'&&['sword','body','beast'].includes(s.path))))rate+=.02+lvl*.006;
  if(s.path==='beast'&&p.spiritPet)rate+=.01;
- if(s.skillUntil>now)rate+=.06;
+ if(s.skillUntil>now){
+  const f={sword:0.065,demon:kind==='boss'?0.075:0.035,body:kind==='tower'?0.075:0.03,beast:p.spiritPet?0.075:0.04,alchemy:s.elixirActive?.until>now?0.075:0.045};
+  rate+=f[s.path]||0;
+ }
  if(s.relicActive?.until>now&&s.relicActive.id===p.equipped)rate+=.04;
  const refine=Number(s.refinements?.[p.equipped]||0);rate+=Math.min(3,Math.max(0,refine))*.008;
  if(s.bondSkillUntil>now)rate+=.015;
@@ -84,10 +87,11 @@ export function live2Command(w,p,words,now,ctx){
  }
  if(cmd==='dao'&&rest==='ky'){
   if(!s.path)return fail('Chưa chọn đường tu.');
+  if(live2Level(p)<2)return fail('Cần Đạo Ngộ cấp II (15 điểm) để sử dụng Đạo Kỹ.');
   if(now-(s.cooldowns.skill??-Infinity)<30000)return fail('Đạo kỹ hồi chiêu 30 giây.');
   if(!((w.boss?.hp>0&&w.boss.endsAt>now)||(w.tower?.cur&&w.tower.endsAt>now&&w.tower.cur.id===p.id)))return fail('Đạo kỹ dùng khi đánh Boss hoặc đến lượt vượt Tháp.');
   s.cooldowns.skill=now;s.skillUntil=now+9000;
-  announce(w,p,LIVE2_PATHS[s.path].skill,now,emit,{daoPath:s.path,daoSkill:true,daoLevel:live2Level(p)});
+  announce(w,p,LIVE2_PATHS[s.path].skill,now,emit,{daoPath:s.path,daoSkill:true,daoUltimate:live2Level(p)===5,daoLevel:live2Level(p)});
   return ok('Đã vận '+LIVE2_PATHS[s.path].skill);
  }
  if(cmd==='tinh'&&rest.startsWith('luyen')){
@@ -97,7 +101,7 @@ export function live2Command(w,p,words,now,ctx){
   const stones=80*(lvl+1),herbs=4*(lvl+1);
   if(p.stones<stones||p.herbs<herbs)return fail('Cần '+stones+' linh thạch và '+herbs+' linh thảo.');
   p.stones-=stones;p.herbs-=herbs;s.refinements[id]=lvl+1;
-  announce(w,p,'TINH LUYỆN PHÁP BẢO +'+(lvl+1),now,emit,{daoForge:true,daoPath:s.path});
+  announce(w,p,'TINH LUYỆN PHÁP BẢO +'+(lvl+1),now,emit,{daoForge:true,live2Kind:'relic',daoPath:s.path});
   return ok('Tinh luyện thành công +'+(lvl+1));
  }
  if(cmd==='hoi'&&rest===''){
@@ -110,7 +114,7 @@ export function live2Command(w,p,words,now,ctx){
   const all=guilds(w);if(Object.values(all).some(g=>g.name.toLowerCase()===name.toLowerCase()))return fail('Tên bang đã có người sử dụng.');
   const n=w.live2World.nextGuildId++,id=n.toString(36).toUpperCase().padStart(3,'0');
   all[id]={id,name,leader:p.id,members:[p.id],points:0,contributions:{[p.id]:0},createdAt:now};
-  s.guildId=id;announce(w,p,'KHAI TÔNG LẬP HỘI • '+name,now,emit,{guildFounded:true,guildId:id});return ok('Đã lập hội '+name+' #'+id);
+  s.guildId=id;announce(w,p,'KHAI TÔNG LẬP HỘI • '+name,now,emit,{guildFounded:true,live2Kind:'guild',guildId:id});return ok('Đã lập hội '+name+' #'+id);
  }
  if(cmd==='vao'&&rest.startsWith('hoi ')){
   if(s.guildId)return fail('Cần rời bang hiện tại trước.');
@@ -119,7 +123,7 @@ export function live2Command(w,p,words,now,ctx){
   if(!g)return fail('Không tìm thấy mã bang.');
   if(g.members.length>=24)return fail('Bang đã đủ 24 thành viên.');
   g.members.push(p.id);s.guildId=id;
-  announce(w,p,'GIA NHẬP BANG • '+g.name,now,emit,{guildJoined:true,guildId:id});
+  announce(w,p,'GIA NHẬP BANG • '+g.name,now,emit,{guildJoined:true,live2Kind:'guild',guildId:id});
   return ok('Đã vào '+g.name);
  }
  if(cmd==='roi'&&rest==='hoi'){
@@ -127,7 +131,7 @@ export function live2Command(w,p,words,now,ctx){
   if(w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return fail('Hội Chiến đang diễn ra, chưa thể rời bang.');
   if(g.leader===p.id&&g.members.length>1)return fail('Hội chủ cần chuyển quyền hoặc bang chỉ còn một người mới có thể rời.');
   g.members=g.members.filter(id=>id!==p.id);delete g.contributions[p.id];if(!g.members.length)delete all[g.id];s.guildId=null;
-  announce(w,p,'RỜI BANG HỘI • '+g.name,now,emit,{guildLeft:true});return ok('Đã rời bang.');
+  announce(w,p,'RỜI BANG HỘI • '+g.name,now,emit,{guildLeft:true,live2Kind:'guild'});return ok('Đã rời bang.');
  }
  if(cmd==='xin'&&rest.startsWith('su ')){
   if(s.masterId)return fail('Đã có sư phụ cá nhân.');
@@ -135,14 +139,14 @@ export function live2Command(w,p,words,now,ctx){
   if(!master||!real(master)||master.id===p.id||master.realm<p.realm+2||master.realm<4)return fail('Không tìm thấy sư phụ phù hợp (ít nhất Nguyên Anh, cao hơn đệ tử 2 cảnh giới).');
   if((m.students||[]).length>=2)return fail('Sư phụ đã nhận đủ 2 đệ tử.');
   if(master.lastActive<now-5*60000)return fail('Sư phụ cần đang hoạt động trên LIVE.');
-  m.mentorInvite={from:p.id,until:now+120000};announce(w,master,p.name+' xin bái sư • gõ nhận đồ để đồng ý',now,emit,{mentorInvite:true});
+  m.mentorInvite={from:p.id,until:now+120000};announce(w,master,p.name+' xin bái sư • gõ nhận đồ để đồng ý',now,emit,{mentorInvite:true,live2Kind:'mentor'});
   return ok('Đã gửi lời xin bái sư.');
  }
  if(cmd==='nhan'&&rest==='do'){
   const invite=s.mentorInvite,student=invite&&w.players[invite.from],ss=student&&ensure(student);
   if(!invite||invite.until<=now||!real(student)||ss.masterId||(s.students||[]).length>=2)return fail('Không có lời xin bái sư hợp lệ.');
   ss.masterId=p.id;s.students.push(student.id);delete s.mentorInvite;
-  announce(w,student,'BÁI SƯ THÀNH CÔNG • '+p.name,now,emit,{mentorJoined:true,mentorId:p.id});
+  announce(w,student,'BÁI SƯ THÀNH CÔNG • '+p.name,now,emit,{mentorJoined:true,live2Kind:'mentor',mentorId:p.id});
   return ok('Đã nhận '+student.name+' làm đệ tử.');
  }
  if(cmd==='truyen'&&rest==='dao'){
@@ -151,13 +155,13 @@ export function live2Command(w,p,words,now,ctx){
   const d=day(now);if(s.lessonDay===d)return fail('Hôm nay đã nhận truyền đạo.');
   s.lessonDay=d; // One meaningful mentor lesson per day; avoid free qi inflation.
   if(s.path){s.daily=s.daily?.day===d?s.daily:{day:d,earned:0};const lesson=Math.max(0,Math.min(2,LIVE2_DAILY_INSIGHT-s.daily.earned));s.insight+=lesson;s.daily.earned+=lesson;}
-  announce(w,p,'SƯ PHỤ TRUYỀN ĐẠO • '+master.name,now,emit,{mentorLesson:true,daoPath:s.path});
+  announce(w,p,'SƯ PHỤ TRUYỀN ĐẠO • '+master.name,now,emit,{mentorLesson:true,live2Kind:'mentor',daoPath:s.path});
   return ok('Truyền đạo viên mãn.');
  }
  if(cmd==='xuat'&&rest==='su'){
   if(!s.masterId)return fail('Chưa có sư phụ.');
   const master=w.players[s.masterId];if(master?.live2)master.live2.students=(master.live2.students||[]).filter(id=>id!==p.id);
-  s.masterId=null;announce(w,p,'XUẤT SƯ • Độc lập tu hành',now,emit,{mentorGraduated:true});return ok('Đã xuất sư.');
+  s.masterId=null;announce(w,p,'XUẤT SƯ • Độc lập tu hành',now,emit,{mentorGraduated:true,live2Kind:'mentor'});return ok('Đã xuất sư.');
  }
  if(cmd==='dong'&&rest==='tam'){
   const bonds=Object.values(w.social?.bonds||{}).filter(b=>!b.endedAt&&(b.a===p.id||b.b===p.id));
@@ -166,7 +170,7 @@ export function live2Command(w,p,words,now,ctx){
   if(!((w.boss?.hp>0&&w.boss.endsAt>now)||w.tower?.cur?.id===p.id))return fail('Đồng Tâm chỉ kích hoạt trong Boss hoặc lượt vượt Tháp.');
   if(now-(s.cooldowns.bond??-Infinity)<15*60000)return fail('Đồng Tâm hồi sau 15 phút.');
   s.cooldowns.bond=now;s.bondSkillUntil=now+120000;
-  announce(w,p,'SONG TINH ĐỒNG TÂM • '+other.name,now,emit,{bondSkill:true,daoPath:s.path});
+  announce(w,p,'SONG TINH ĐỒNG TÂM • '+other.name,now,emit,{bondSkill:true,live2Kind:'bond',daoPath:s.path});
   return ok('Đồng tâm hỗ trợ Boss/Tháp trong 2 phút.');
  }
  return null;

@@ -44,11 +44,26 @@ export const GUIDE_PAGES=[
   {cmd:'6 · cơ duyên',text:'nhận quà khách quý'},
   {cmd:'❤ thả tim',text:'đánh yêu thú, nuôi thú'},
   {cmd:'4 · luyện đan',text:'góp lửa lò đan'},
-  {cmd:'gợi ý',text:'hỏi việc nên làm'}]}
+  {cmd:'gợi ý',text:'hỏi việc nên làm'}]},
+ {title:'ĐẠO THỐNG · PHÁP BẢO',rows:[
+  {cmd:'đạo tu',text:'xem 5 đường tu'},
+  {cmd:'chọn đạo kiếm',text:'mở từ Trúc Cơ'},
+  {cmd:'đạo ngộ',text:'xem cấp Đạo Ngộ'},
+  {cmd:'đạo kỹ',text:'dùng khi đánh Boss / leo Tháp'},
+  {cmd:'tinh luyện',text:'nâng cấp pháp bảo đang đeo'},
+  {cmd:'đan phương',text:'xem cách chế đan'}]},
+ {title:'BANG HỘI · SƯ ĐỒ',rows:[
+  {cmd:'lập hội + tên',text:'thành lập bang'},
+  {cmd:'vào hội + mã',text:'tham gia bang'},
+  {cmd:'hội chiến',text:'hội chủ mở sự kiện'},
+  {cmd:'chiến hội',text:'góp chiến khí khi có trận'},
+  {cmd:'xin sư + tên',text:'bái sư cá nhân'},
+  {cmd:'sư môn',text:'xem nhiệm vụ sư đồ'}]}
 ];
 const ORDER=[0,1,0,2,0,5,0,3]; // 11/11: thêm trang XEM NHÂN VẬT
 export function simpleSteps(s={},page=0){
- const order=s.halls?[...ORDER,0,4]:ORDER;
+ const baseOrder=s.halls?[...ORDER,0,4]:ORDER;
+ const order=s?.mode==='demo'||s?.settings?.live2Enabled===true?[...baseOrder,0,6,0,7]:baseOrder;
  const pick=order[((page%order.length)+order.length)%order.length];
  const rows=[
   // 4/11/2026 heartPlay: tim là cách vận công, trò chuyện để luận đạo — không cần spam tu luyện.
@@ -61,7 +76,7 @@ export function simpleSteps(s={},page=0){
   {cmd:'trang bị',text:'đeo đồ mạnh nhất'}
  ];
  const race=s.raceStatus,t=s.socialStatus?.tournament;
- const hint=s.quick?.event?'gõ 6 · '+s.quick.event.text:race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':t?.current?'Tỷ thí: đấu thủ gõ kiem (3 lần)':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':s.bonkFest?.active?'Gõ đầu: go tên':'';
+ const hint=s.live2GuildWar?.active?'Hội Chiến: gõ chiến hội':s.quick?.event?'gõ 6 · '+s.quick.event.text:race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':t?.current?'Tỷ thí: đấu thủ gõ kiem (3 lần)':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':s.bonkFest?.active?'Gõ đầu: go tên':'';
  if(pick===4)return {...GUIDE_PAGES[3],rows:hallGuideRows(s.halls?.halls),hint};
  if(pick)return {...GUIDE_PAGES[pick-1],hint};
  return {title:'CÁCH CHƠI',rows,hint};
