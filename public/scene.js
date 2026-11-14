@@ -199,6 +199,10 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       this.effects=[];this.fxQueue=[];
       if(!blackGold)this.focus(event.user,ms,2.3);
     }
+    else if(event.daoChoose&&event.user&&!this.boss&&!this.raceStatus?.active&&!this.warStatus?.active&&!this.alcStatus?.active&&(this.presentation?.until||0)<=performance.now()){
+      const duration=3800;this.presentation={id:event.user,kind:'dao',until:performance.now()+duration};
+      this.focus(event.user,duration,1.85);
+    }
     else if((event.gift||event.flowerRank)&&event.user&&!this.effects.some(e=>e.luxury||e.effect==='breakthrough')){const d=event.flowerRank?7000:tributeProfile(event)?.duration||4500,value=(Number(event.coins)||0)*(Number(event.count)||1);this.presentation={id:event.user,kind:event.gift?'gift':'flower',until:performance.now()+d};this.effects=[];this.fxQueue=[];this.focus(event.user,d,event.gift?1.45:2.2);}
     // Giữ hoạt cảnh quà đang chạy; hành động thường (tim, bình luận, thường trú) không được xóa nó giữa chừng.
     else this.effects=this.effects.filter(e=>e.luxury||e.effect==='breakthrough'||signatureVisitor(e.transform)||(e.kind&&e.gift)||(e.effect==='attack'&&e.technique)); // v76: giữ các đòn đánh song song
@@ -210,7 +214,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     // New Dao visual/audio cues reuse the existing cinematic mixer (3 voices max).
     // Do not play new sounds from the game update loop or on every attack.
     if(event.effect==='daoPath'&&(event.daoChoose||event.daoSkill||event.daoUltimate||event.daoBrew||event.daoPill||event.daoRelic||event.daoForge||event.guildWarStart||event.guildWarEnd||event.guildFounded||event.guildBuild||event.mentorJoined||event.mentorGraduated||event.bondSkill)){
-      const cue={sword:'jade',demon:'void',body:'gold',beast:'resonance',alchemy:'dawn',guild:'dusk',mentor:'resonance',relic:'void',bond:'gold',tribulation:'void'}[event.live2Kind||event.daoPath]||'jade';
+      const cue={sword:'jade',demon:'void',body:'gold',beast:'resonance',alchemy:'dawn',alchemyFx:'dawn',guild:'dusk',mentor:'resonance',relic:'void',bond:'gold',tribulation:'void'}[event.live2Kind||event.daoPath]||'jade';
       this.onCinematicSound?.('live2:'+event.id,cue,.10,{gain:.27,priority:1,charge:false});
     }
     // Only one premium skill title may own the ribbon at any time.

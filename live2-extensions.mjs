@@ -85,7 +85,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
  if(cmd==='dan'&&rest==='phuong'){
   const names=Object.entries(WORDS).filter(([,v])=>(p.realm||0)>=v.level).map(([key,v])=>key+' ('+v.herbs+' thảo, '+v.stones+' đá)');
   const msg='Đan phương: '+names.join(' • ')+' • gõ chế đan + tên';
-  announce(w,p,msg,now,ctx,{live2Kind:'alchemy'});return ok(msg);
+  announce(w,p,msg,now,ctx,{live2Kind:'alchemyFx'});return ok(msg);
  }
  if(cmd==='che'&&rest.startsWith('dan ')){
   if(!s?.path)return fail('Cần chọn Đạo Thống trước khi chế đan.');
@@ -95,7 +95,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   if(p.stones<recipe.stones||p.herbs<recipe.herbs)return fail('Cần '+recipe.stones+' linh thạch và '+recipe.herbs+' linh thảo.');
   p.stones-=recipe.stones;p.herbs-=recipe.herbs;
   s.elixirs??={};s.elixirs[recipe.id]=Math.min(30,(s.elixirs[recipe.id]||0)+1);
-  announce(w,p,'LUYỆN ĐAN THÀNH CÔNG • '+recipe.name,now,ctx,{live2Kind:'alchemy',daoBrew:true});
+  announce(w,p,'LUYỆN ĐAN THÀNH CÔNG • '+recipe.name,now,ctx,{live2Kind:'alchemyFx',daoBrew:true});
   return ok('Nhận '+recipe.name+' (tổng '+s.elixirs[recipe.id]+').');
  }
  if(cmd==='dan'&&rest.startsWith('dung ')){
@@ -109,7 +109,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
    s.insight++;s.daily.earned++;
   }else s.elixirActive={id:recipe.id,until:now+recipe.duration};
   s.elixirs[recipe.id]--;s.lastElixirAt=now;
-  announce(w,p,'PHỤC ĐAN • '+recipe.name,now,ctx,{live2Kind:'alchemy',daoPill:true});
+  announce(w,p,'PHỤC ĐAN • '+recipe.name,now,ctx,{live2Kind:'alchemyFx',daoPill:true});
   return ok('Đã dùng '+recipe.name);
  }
  if(cmd==='phap'&&rest==='an'){
