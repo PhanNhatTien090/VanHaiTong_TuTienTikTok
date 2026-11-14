@@ -19,7 +19,7 @@ function create(){
  resultNode=make('div','l2-tip',wrap);
 }
 function set(n,v){if(n.textContent!==v)n.textContent=v;}
-export function renderLive2Hud(state,overlay){
+function renderGuildWarHud(state,overlay){
  if(!overlay){if(root)root.hidden=true;return;}
  const e=state?.live2GuildWar;if(!e){if(root)root.hidden=true;return;}
  create();if(!root)return;
@@ -35,4 +35,39 @@ export function renderLive2Hud(state,overlay){
  set(clock,e.active?'Giao chiến còn '+seconds+' giây':'Hội Chiến đã kết thúc');
  const winner=e.result?.winner;
  set(resultNode,e.active?'Thành viên gõ: chiến hội · mỗi 6 giây':winner?'Chiến thắng: '+(a.find(g=>g.id===winner)?.name||'Bang hội'):'Hai bang hòa nhau');
+}
+
+
+// A small contextual help HUD (event-driven DOM, no canvas overdraw or timers).
+let trialRoot=null,trialTitle=null,trialProgress=null,trialText=null;
+function ensureTrial(){
+ if(trialRoot||typeof document==='undefined')return;
+ const css=document.createElement('style');
+ css.textContent='#live2-trial-hud{position:fixed;z-index:15;right:15px;top:25%;width:min(286px,32vw);pointer-events:none;color:#ffe8aa;font:700 15px Segoe UI,Arial,sans-serif;text-shadow:0 2px 4px #050818}#live2-trial-hud[hidden]{display:none!important}#live2-trial-hud .l2-trial-panel{border:1px solid #b7a2f899;background:linear-gradient(130deg,#0a1029eb,#34244ce8);border-radius:16px;padding:11px 13px;box-shadow:0 4px 18px #0008}#live2-trial-hud .l2-trial-head{display:flex;align-items:center;gap:9px;font-weight:900;letter-spacing:1px}#live2-trial-hud .l2-trial-head img{width:36px;height:36px;object-fit:contain}#live2-trial-hud .l2-trial-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:5px 0;font-size:17px}#live2-trial-hud .l2-trial-step{font-size:14px;color:#cbddf0}#live2-trial-hud .l2-trial-hint{margin-top:6px;color:#fff1cd;font-size:13px;font-weight:500}body.ritual-active #live2-trial-hud,body.hall-dueling #live2-trial-hud{display:none!important}@media(max-width:620px){#live2-trial-hud{top:19%;right:5px;width:min(240px,43vw)}#live2-trial-hud .l2-trial-panel{padding:7px 9px}#live2-trial-hud .l2-trial-name{font-size:13px}}';
+ document.head.appendChild(css);
+ trialRoot=document.createElement('aside');trialRoot.id='live2-trial-hud';trialRoot.hidden=true;
+ const p=make('div','l2-trial-panel',trialRoot),h=make('div','l2-trial-head',p),img=make('img','',h);
+ img.src='/assets/live2-paths/tribulation.svg';img.alt='';img.decoding='async';
+ const label=make('span','',h);label.textContent='✦ THIÊN KIẾP HỘ ĐẠO';
+ trialTitle=make('div','l2-trial-name',p);trialProgress=make('div','l2-trial-step',p);trialText=make('div','l2-trial-hint',p);
+ document.body.appendChild(trialRoot);
+}
+function renderTrialHud(state,overlay){
+ const list=state?.live2Trial;
+ if(!overlay||!Array.isArray(list)||!list.some(t=>!t.completed)){
+  if(trialRoot)trialRoot.hidden=true;return;
+ }
+ const t=list.find(t=>!t.completed);
+ if(!t||state?.live2GuildWar?.active||state?.boss?.hp>0||state?.tower?.active||state?.hallWar?.active){
+  if(trialRoot)trialRoot.hidden=true;return;
+ }
+ ensureTrial();if(!trialRoot)return;
+ trialRoot.hidden=false;
+ set(trialTitle,String(t.name||'Đạo hữu'));
+ set(trialProgress,String(Math.max(0,Math.min(3,t.helpers||0)))+'/3 đạo hữu • '+Math.max(0,Math.ceil((t.endsAt-(state.serverNow||Date.now()))/1000))+' giây');
+ set(trialText,'Gõ hộ kiếp '+String(t.name||'tên')+' để góp hộ pháp');
+}
+export function renderLive2Hud(state,overlay){
+ renderGuildWarHud(state,overlay);
+ renderTrialHud(state,overlay);
 }

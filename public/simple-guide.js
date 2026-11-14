@@ -58,12 +58,19 @@ export const GUIDE_PAGES=[
   {cmd:'hội chiến',text:'hội chủ mở sự kiện'},
   {cmd:'chiến hội',text:'góp chiến khí khi có trận'},
   {cmd:'xin sư + tên',text:'bái sư cá nhân'},
-  {cmd:'sư môn',text:'xem nhiệm vụ sư đồ'}]}
+  {cmd:'sư môn',text:'xem nhiệm vụ sư đồ'}]},
+ {title:'THIÊN KIẾP · HỘ PHÁP',rows:[
+  {cmd:'thiên kiếp',text:'xem ai đang hộ kiếp'},
+  {cmd:'hộ kiếp + tên',text:'3 người giúp mở ấn'},
+  {cmd:'đạo kỹ',text:'kỹ năng lưu phái'},
+  {cmd:'hội top',text:'xem Thiên Bảng bang hội'},
+  {cmd:'đan phương',text:'xem đan chiến thuật'},
+  {cmd:'pháp ấn',text:'vận pháp bảo đánh Boss / Tháp'}]}
 ];
 const ORDER=[0,1,0,2,0,5,0,3]; // 11/11: thêm trang XEM NHÂN VẬT
 export function simpleSteps(s={},page=0){
  const baseOrder=s.halls?[...ORDER,0,4]:ORDER;
- const order=s?.mode==='demo'||s?.settings?.live2Enabled===true?[...baseOrder,0,6,0,7]:baseOrder;
+ const order=s?.mode==='demo'||s?.settings?.live2Enabled===true?[...baseOrder,0,6,0,7,0,8]:baseOrder;
  const pick=order[((page%order.length)+order.length)%order.length];
  const rows=[
   // 4/11/2026 heartPlay: tim là cách vận công, trò chuyện để luận đạo — không cần spam tu luyện.
