@@ -1,6 +1,7 @@
 // V7: screen-wide compositing without a second rAF, screen filter or true game pause.
 // The illusion of impact-stop is a 90ms static artwork hold while simulation proceeds.
 import {duelCastState} from './duel-combat.js';
+import {makeSurface} from './performance.js';
 const TAU=Math.PI*2;
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 const easeOut=u=>1-(1-u)**3;
@@ -13,11 +14,22 @@ export function overdriveBudget(scene){
   motion:scene.motion!==false};
 }
 export function prewarmOverdrive(scene){
- if(!scene||scene.v7ShatterLoading||scene.v7ShatterFailed||scene.v7ShatterArt||typeof Image==='undefined')return;
+ if(!scene||scene.v7ShatterLoading||scene.v7ShatterFailed||scene.v7ShatterArt||
+  scene.budget?.crowded||scene.budget?.pressured||scene.budget?.level==='light'||typeof Image==='undefined')return;
  scene.v7ShatterLoading=true;
  const img=new Image();
  img.decoding='async';
- img.onload=()=>{scene.v7ShatterLoading=false;scene.v7ShatterArt=img;};
+ img.onload=()=>{
+  scene.v7ShatterLoading=false;
+  // One-time vector raster before the hero's 19.8s charge avoids first-hit SVG decoding.
+  const frame=makeSurface(540,960);
+  if(frame)try{
+   frame.getContext('2d').drawImage(img,0,0,540,960);
+   frame.naturalWidth=540;frame.naturalHeight=960;
+   scene.v7ShatterArt=frame;return;
+  }catch{}
+  scene.v7ShatterArt=img;
+ };
  img.onerror=()=>{scene.v7ShatterLoading=false;scene.v7ShatterFailed=true;};
  img.src=SHATTER_URL;
 }
