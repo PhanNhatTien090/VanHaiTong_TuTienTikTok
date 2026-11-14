@@ -69,3 +69,9 @@
 
 body.ritual-active .inventory-deck,body.hall-dueling .inventory-deck,body.ascension-stage .inventory-deck,body.breakthrough-title-active .inventory-deck{visibility:hidden}
 @media(prefers-reduced-motion:reduce){.inventory-deck *{animation:none!important;transition:none!important}}
+
+/* LIVE pet evolution summary: only lightweight flex/bars, no per-frame CSS animation. */
+.vd-pet-progress{display:flex;flex-wrap:wrap;align-items:center;gap:.3em .7em;padding:.3em .45em;margin:.1em 0 .35em;background:#152b36bb;border:1px solid #d4b87666;border-radius:.45em;font-size:.72em;line-height:1.2}
+.vd-pet-progress strong{color:#ffe4a4}.vd-pet-progress span{color:#d4e0e7}.vd-pet-progress small{color:#e7d6a9}
+.vd-pet-exp{height:.34em;width:100%;background:#0d1724;border-radius:1em;overflow:hidden}
+.vd-pet-exp i{display:block;height:100%;background:#8cdbc9;border-radius:inherit}

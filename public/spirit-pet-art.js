@@ -1,5 +1,7 @@
 import {petById,petPose} from './spirit-pets.js';
 import {makeSurface} from './performance.js';
+import {PET_V2_ART_APPROVED,petV2AssetSpec} from './pet-v2-art-manifest.js';
+import {drawPetV2Adornment} from './pet-v2-fx.js';
 import {PREMIUM_PET_ATLAS,PREMIUM_PET_PERIODS,petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
 export {petArtFrame,premiumPetPose} from './premium-pet-motion.js?v=drawn-v2';
 // 07/11: Lôi Oa — tia sét gấp khúc nhỏ quanh thân (không phủ màn hình).
@@ -63,17 +65,113 @@ function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
  });
 }
 // 15/11: ảnh nhỏ cho bảng xem linh thú — dùng chung cache khung với sân khấu.
-export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));return PET_FRAME_CACHE.get(id);}
+const PET_V2_THUMB_CACHE=new Map();
+export function petThumbFrames(id,stage=0){
+ if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);
+ const base=()=>{
+  if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));
+  return PET_FRAME_CACHE.get(id);
+ };
+ if(!PET_V2_ART_APPROVED||!Number.isInteger(stage)||stage<1||stage>3)return base();
+ const spec=petV2AssetSpec(id,stage);if(!spec)return base();
+ const key=id+':'+stage;if(PET_V2_THUMB_CACHE.has(key))return PET_V2_THUMB_CACHE.get(key);
+ const result=new Promise((resolve)=>{
+  const im=new Image();im.decoding='async';
+  im.onload=()=>{
+   if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size){base().then(resolve).catch(()=>resolve(null));return;}
+   const f=makeSurface(spec.size,spec.size);
+   if(!f){base().then(resolve).catch(()=>resolve(null));return;}
+   f.getContext('2d').drawImage(im,0,0,spec.size,spec.size,0,0,spec.size,spec.size);
+   resolve([f]);
+  };
+  im.onerror=()=>base().then(resolve).catch(()=>resolve(null));
+  im.src=spec.path;
+ });
+ PET_V2_THUMB_CACHE.set(key,result);
+ while(PET_V2_THUMB_CACHE.size>16)PET_V2_THUMB_CACHE.delete(PET_V2_THUMB_CACHE.keys().next().value);
+ return result;
+}
+// Evolved animation loads lazily; never replaces any of the thirteen original pose atlases.
+// Absent/unapproved stage artwork immediately falls back to all original moving frames.
+// Unlike legacy astral-dragon.png (three unequal cropped source columns), each
+// generated V2 stage atlas has equal-size 160px cells. Never use slicePetFrames
+// here: it would break the original dragon's separate proportions.
+export function slicePetEvolutionFrames(image,spec,make=makeSurface){
+ if(!spec||image.width!==spec.cols*spec.size||image.height!==spec.rows*spec.size)throw Error('Invalid evolution atlas dimensions');
+ const frames=Array.from({length:spec.frames},(_,i)=>{
+  const f=make(spec.size,spec.size);if(!f)throw Error('Could not allocate evolved pet frame');
+  f.getContext('2d').drawImage(image,(i%spec.cols)*spec.size,Math.floor(i/spec.cols)*spec.size,spec.size,spec.size,0,0,spec.size,spec.size);
+  return f;
+ });
+ if(spec.frames===8)frames.period=PREMIUM_PET_PERIODS[spec.id];
+ return frames;
+}
+const PET_V2_FRAME_CACHE=new Map(),PET_V2_BAD_ASSETS=new Set();
+const PET_V2_CACHE_LIMIT=8*1024*1024, PET_V2_MAX_LOADING=2;
+const petV2Key=(id,stage)=>id+':stage'+stage;
+const petV2LoadQueue=[];let petV2ActiveLoads=0;
+function pumpPetV2Loads(){
+ while(petV2ActiveLoads<PET_V2_MAX_LOADING&&petV2LoadQueue.length){
+  const task=petV2LoadQueue.shift();
+  petV2ActiveLoads++;
+  const finish=(value,error)=>{petV2ActiveLoads--;if(error)task.reject(error);else task.resolve(value);pumpPetV2Loads();};
+  const im=new Image();im.decoding='async';
+  im.onload=()=>{try{
+   const {spec,id}=task;
+   if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size)throw Error('Evolved atlas dimensions invalid');
+   const frames=slicePetEvolutionFrames(im,spec);
+   if(frames.length!==spec.frames||frames.some(f=>!f))throw Error('Evolved atlas frame coverage invalid');
+   finish(frames,null);
+  }catch(err){finish(null,err);}};
+  im.onerror=()=>finish(null,Error('Evolved atlas unavailable: '+task.key));
+  im.src=task.spec.path;
+ }
+}
+function requestPetV2Frames(spec,id,key){
+ return new Promise((resolve,reject)=>{petV2LoadQueue.push({spec,id,key,resolve,reject});pumpPetV2Loads();});
+}
+export function petV2FramesFor(scene,p){
+ const id=p?.spiritPet;
+ const stage=Math.max(0,Math.min(3,Math.floor(p?.petView?.stage||0)));
+ return (PET_V2_ART_APPROVED&&scene.petV2Settings?.evolutionArt===true&&stage&&scene.petArt?.get(petV2Key(id,stage)))||scene.petArt?.get(id)||null;
+}
+function loadPetEvolution(scene,id,stage){
+ if(!PET_V2_ART_APPROVED||scene.petV2Settings?.evolutionArt!==true||!stage||typeof Image==='undefined')return;
+ const spec=petV2AssetSpec(id,stage);
+ if(!spec)return;
+ const key=petV2Key(id,stage);
+ if(scene.petArt.has(key)||PET_V2_BAD_ASSETS.has(key))return;
+ scene.petArt.set(key,null);
+ if(!PET_V2_FRAME_CACHE.has(key)){
+  const job=requestPetV2Frames(spec,id,key);
+  PET_V2_FRAME_CACHE.set(key,job);
+ }
+ PET_V2_FRAME_CACHE.get(key).then(frames=>{
+  if(!scene.petArt||!scene.petArt.has(key))return;
+  const bytes=frames.reduce((n,f)=>n+f.width*f.height*4,0);
+  // Keep a hard limit for evictable evolved art; base sprite cache remains untouched.
+  if(!scene.petV2FrameLru)scene.petV2FrameLru=new Map();
+  scene.petV2FrameLru.set(key,bytes);
+  while([...scene.petV2FrameLru.values()].reduce((a,b)=>a+b,0)>PET_V2_CACHE_LIMIT&&scene.petV2FrameLru.size>1){
+   const oldest=scene.petV2FrameLru.keys().next().value;
+   scene.petV2FrameLru.delete(oldest);scene.petArt.delete(oldest);PET_V2_FRAME_CACHE.delete(oldest);
+  }
+  scene.petArt.set(key,frames);
+ }).catch(()=>{PET_V2_BAD_ASSETS.add(key);scene.petArt?.delete(key);PET_V2_FRAME_CACHE.delete(key);});
+}
+
 export function loadPetArt(scene,players){
  scene.petArt??=new Map();if(typeof Image==='undefined')return;
- for(const p of players){const pet=petById(p.spiritPet);if(!pet||scene.petArt.has(pet.id))continue;
+ for(const p of players){const pet=petById(p.spiritPet);if(!pet)continue;
+  if(PET_V2_ART_APPROVED&&p.petView?.stage>0)loadPetEvolution(scene,pet.id,p.petView.stage);
+  if(scene.petArt.has(pet.id))continue;
   scene.petArt.set(pet.id,null);
   if(!PET_FRAME_CACHE.has(pet.id))PET_FRAME_CACHE.set(pet.id,fetchPetFrames(pet.id).catch(e=>{PET_FRAME_CACHE.delete(pet.id);throw e;}));
   PET_FRAME_CACHE.get(pet.id).then(frames=>scene.petArt.set(pet.id,frames)).catch(()=>scene.petArt.delete(pet.id));
  }
 }
 export function drawPet(scene,c,target,t){
- const p=target.player,pet=petById(p.spiritPet),frames=pet&&scene.petArt?.get(pet.id);if(!frames)return;
+ const p=target.player,pet=petById(p.spiritPet),frames=pet&&petV2FramesFor(scene,p);if(!frames)return;
  let seed=0;for(const ch of p.id)seed=(seed*31+ch.charCodeAt(0))>>>0;
  const pose=premiumPetPose(pet.id,t,seed%1000,scene.motion)||petPose(t,seed%1000,scene.motion),scale=target.scale||1.4;
  // Small follower beside the feet: no full-screen halo, no additional stage actors.
@@ -82,6 +180,7 @@ export function drawPet(scene,c,target,t){
  c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
  if(grand){c.strokeStyle=pet.color+'80';c.lineWidth=1.2;c.beginPath();c.ellipse(0,size*.29,size*.34,size*.08,0,0,Math.PI*2);c.stroke();}
  c.drawImage(image,-size/2,-size*.65,size,size);
+ if(!scene.petV2Settings?.evolutionArt||!scene.petArt?.get(petV2Key(p.spiritPet,p.petView?.stage)))drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;
  if(progress>=0&&progress<1){c.globalAlpha=1-progress;c.strokeStyle=pet.color;c.lineWidth=1.5;c.beginPath();c.ellipse(0,0,size*(.2+progress*.6),size*(.1+progress*.3),0,0,Math.PI*2);c.stroke();c.globalAlpha=1;}
  if(pet.rare&&scene.motion&&scene.budget?.level!=='light')drawRareFx(c,pet,size,t,seed);

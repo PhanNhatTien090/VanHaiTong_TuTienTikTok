@@ -49,12 +49,12 @@ function drawRelic(ctx,scene,player,id){
 // spec: {kind:'pet'|'skin'|'artifact', id}. Trả về true nếu đã có ảnh thật (không cần icon dự phòng).
 export function paintThumb(canvas,spec,scene,player){
  const ctx=canvas?.getContext?.('2d');if(!ctx||!spec?.id)return false;
- const key=spec.kind+':'+spec.id+(spec.kind==='skin'?':'+(player?.gender||''):'');
+ const key=spec.kind+':'+spec.id+(spec.kind==='pet'?':stage'+(spec.stage||0):spec.kind==='skin'?':'+(player?.gender||''):'');
  const cached=done.get(key);if(cached){ctx.clearRect(0,0,THUMB,THUMB);ctx.drawImage(cached,0,0);canvas.dataset.ready='1';return true;}
  const keep=()=>{const c=scratch(THUMB);if(!c)return;c.getContext('2d').drawImage(canvas,0,0);done.set(key,c);if(done.size>96)done.delete(done.keys().next().value);};
  if(spec.kind==='pet'){
   if(!petById(spec.id))return false;
-  petThumbFrames(spec.id).then(frames=>{const f=frames?.[0];if(f&&fit(ctx,f,4)){canvas.dataset.ready='1';keep();}}).catch(()=>{});
+  petThumbFrames(spec.id,Number(spec.stage)||0).then(frames=>{const f=frames?.[0];if(f&&fit(ctx,f,4)){canvas.dataset.ready='1';keep();}}).catch(()=>{});
   return true;
  }
  if(spec.kind==='artifact'){

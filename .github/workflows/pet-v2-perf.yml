@@ -1,0 +1,29 @@
+name: Pet V2 Animation Performance Gate
+on:
+  pull_request:
+    paths:
+      - 'public/spirit-pet-art.js'
+      - 'public/pet-v2-*.js'
+      - 'public/assets/spirit-pets-v2/evolutions/**'
+      - 'scripts/benchmark-pet-v2-runtime.mjs'
+      - '.github/workflows/pet-v2-perf.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Headless Canvas animation and cache benchmark (10–100 actors)
+        env:
+          PET_V2_PERF_STRICT: '1'
+        run: node scripts/benchmark-pet-v2-runtime.mjs
+      - name: Verify all 39 evolved atlases (192 frames)
+        run: node scripts/verify-pet-v2-art.mjs
