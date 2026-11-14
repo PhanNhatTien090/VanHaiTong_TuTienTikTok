@@ -20,6 +20,9 @@ const events={
 let scene,metrics,meter,timeout,warTimer,entry=0,voice=null,generation=0;
 const meterSamples=new Float32Array(2048);
 let peak=0,interval=null;
+const duelSkillGear=Object.freeze({thunder:'nine-heaven-seal',sword:'hanlap-bamboo-swords',
+ flame:'phoenix-blade',azure:'vip-dragon-orb',frost:'frost-sword',yinYang:'vip-heaven-seal'});
+const showDuelOptions=()=>{$('duelSkillLabel').hidden=$('group').value!=='support'||$('event').value!=='duel';};
 const toggles=id=>Object.fromEntries([...$(id).querySelectorAll('input')].map(input=>[input.name,input.checked]));
 
 function options(){
@@ -27,8 +30,10 @@ function options(){
   $('event').replaceChildren(...events[group].map(([value,name])=>new Option(name,value)));
   $('section').disabled=!['ritual','gift','support'].includes(group);
   $('layers').disabled=group!=='ritual';
+  showDuelOptions();
 }
 $('group').onchange=options;
+$('event').onchange=showDuelOptions;
 options();
 
 function setup(){
@@ -103,12 +108,13 @@ document.querySelector('form').onsubmit=async event=>{
     if(choice==='race')state.raceStage=players.slice(0,10).map(player=>player.id);
     if(choice==='duel'){
       const opponent=players[1]||{...p,id:'demo-duel',name:'Đối thủ'};
-      // V6 preview: a real thunder-seal against bamboo-sword magic, not tinted copies.
-      p.equipped='nine-heaven-seal';opponent.equipped='hanlap-bamboo-swords';
+      // V6: operator can preview each actual skill family using real gear mapping.
+      p.equipped=duelSkillGear[$('duelSkill').value]||duelSkillGear.thunder;
+      opponent.equipped=$('duelSkill').value==='sword'?duelSkillGear.thunder:duelSkillGear.sword;
       if(!players[1])players.push(opponent);
       state.socialScene='tournament';
       state.socialStage=[p.id,opponent.id];
-      const age=part==='charge'?19800:part==='impact'?21700:part==='tail'?23000:8900;
+      const age=part==='charge'?20550:part==='impact'?22180:part==='tail'?22850:8900;
       const duelGift={...support,id:support.id+':super',value:2000,coins:2000,fighter:true,wardEffect:{kind:'shield-break',amount:35000,source:p.id,target:opponent.id,after:65000,max:100000}};
       const secondGift={...support,id:support.id+':other',user:opponent.id,name:opponent.name,value:1000,coins:1000,fighter:true,wardEffect:{kind:'shield-heal',amount:20000,source:opponent.id,target:opponent.id,after:80000,max:100000}};
       state.socialStatus={tournament:{phase:'running',current:{id,a:p.id,b:opponent.id,
