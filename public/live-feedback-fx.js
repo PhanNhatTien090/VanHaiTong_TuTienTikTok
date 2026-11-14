@@ -31,7 +31,27 @@ function image(kind){
  }
  c.restore();images.set(kind,s);return s;
 }
-export function prepareFeedbackArt(){for(const key of ['heart','spark','blue','violet','gold'])image(key);}
+// High-fidelity SVG crystals and hearts are decoded outside the frame loop;
+// procedural Canvas stamps remain as zero-network fallbacks.
+const newArt=Object.freeze({
+ heart:'/assets/vfx-v35/heart-spark.svg',
+ blue:'/assets/vfx-v35/crystal-blue.svg',
+ violet:'/assets/vfx-v35/crystal-violet.svg',
+ gold:'/assets/vfx-v35/crystal-gold.svg'
+});
+const imageRequested=new Set();
+export function prepareFeedbackArt(){
+ for(const key of ['heart','spark','blue','violet','gold'])image(key);
+ if(typeof Image==='undefined')return;
+ for(const [key,src] of Object.entries(newArt)){
+  if(imageRequested.has(key))continue;
+  imageRequested.add(key);
+  const img=new Image();
+  img.decoding='async';
+  img.onload=()=>images.set(key,img);
+  img.src=src;
+ }
+}
 export function feedbackPlan(event){
  if(!event||event.resident||event.actorKind==='npc'||event.puppet)return null;
  if(Number.isInteger(event.stageUp)&&event.stageUp>=1&&event.stageUp<=3)return {kind:'stage',priority:4,level:event.stageUp,name:event.name,title:STAGE_NAMES[event.stageUp]};
