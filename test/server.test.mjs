@@ -26,7 +26,14 @@ test('HTTP simulator, LIVE isolation, gift settings and persisted restart',async
   const invalid=structuredClone(w.gifts);invalid[0].min=5;assert.equal((await post('/api/gifts',{gifts:invalid})).status,400);
   const good=structuredClone(w.gifts);good[0].qi=14;assert.equal((await post('/api/gifts',{gifts:good})).data.ok,true);
   const hostile=await fetch(server.url+'/api/action',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://example.org'},body:JSON.stringify(data)});assert.equal(hostile.status,403);
-  const stored=JSON.parse(await readFile(path.join(dir,'demo.json'),'utf8'));assert.equal(stored.players.integration.qi,27);
+  // Writes are intentionally coalesced; wait for the persisted snapshot instead of racing the disk.
+   let stored;
+   for(let tries=0;tries<30;tries++){
+     try{stored=JSON.parse(await readFile(path.join(dir,'demo.json'),'utf8'));}catch{stored=null;}
+     if(stored?.players?.integration?.qi===27)break;
+     await new Promise(resolve=>setTimeout(resolve,50));
+   }
+   assert.equal(stored?.players?.integration?.qi,27);
   server.child.kill();await new Promise(r=>server.child.once('exit',r));server=await launch(dir);const restored=await(await fetch(server.url+'/api/state')).json();assert.equal(restored.players.find(p=>p.id==='integration').qi,27);assert.equal(restored.gifts[0].qi,14);
 }finally{server.child.kill();}});
 test('TikFinity WebSocket bridge routes real-shaped events only to LIVE',async()=>{const dir=await mkdtemp(path.join(tmpdir(),'van-hai-bridge-'));const ws=new WebSocketServer({host:'127.0.0.1',port:0});await new Promise(r=>ws.once('listening',r));const server=await launch(dir,{VAN_HAI_TIKFINITY_URL:`ws://127.0.0.1:${ws.address().port}/`});try{
