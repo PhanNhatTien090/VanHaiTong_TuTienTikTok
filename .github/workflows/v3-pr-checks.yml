@@ -63,3 +63,10 @@ jobs:
           node --check public/cinematic-vfx.js
       - name: Game and VFX regression tests
         run: npm test
+      - name: Verify and render LIVE 2.0 artwork at 1080x1920
+        run: node scripts/render-live2-preview.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: live2-visual-preview
+          path: output/live2-preview/
+          retention-days: 7

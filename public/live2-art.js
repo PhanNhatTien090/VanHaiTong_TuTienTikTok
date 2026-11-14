@@ -17,6 +17,8 @@ export function prepareLive2Art(path){
  img.onerror=()=>cache.delete(path);
  img.src='/assets/live2-paths/'+ART[path].asset+'.svg';
 }
+// Visual regression harness injects the exact predecoded asset, runtime continues to lazy-load.
+export function setLive2ArtForPreview(path,image){if(Object.hasOwn(ART,path)&&image)cache.set(path,image);}
 export function drawLive2Fx(c,e,t,k,p,{light=false,motion=true}={}){
  const path=e.live2Kind||(e.daoTribulation?'tribulation':e.daoPath),def=ART[path];if(!def)return;
  const img=cache.get(path),centerX=p?.x??450,centerY=(p?.y??650)-70;
