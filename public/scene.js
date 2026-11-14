@@ -199,6 +199,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
     (this.animator??=new CharacterAnimator()).trigger(event,performance.now());const cinematic=event.gift&&giftSpectacleTier(event);if(cinematic){const action=this.animator.actions.get(event.user);if(action)action.duration=cinematic.duration*.85;}
     this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?TRANSFORM_MS:event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
+    // Only one premium skill title may own the ribbon at any time.
+    if(event.effect==='attack'&&Number(event.technique?.intensity)>=2&&event.id&&performance.now()-(this.skillBannerTime??-1e9)>1200){this.skillBannerId=event.id;this.skillBannerTime=performance.now();}
     const limit=this.budget?.config.effects||5;
     while(this.effects.length>limit){
       const expendable=this.effects.findIndex(e=>!e.gift&&!e.luxury&&e.effect!=='breakthrough');
