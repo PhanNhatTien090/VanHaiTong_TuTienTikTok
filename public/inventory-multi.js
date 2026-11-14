@@ -24,7 +24,7 @@ export function itemStats(i,category='artifact'){
  if(i.bonus>0)parts.push('+'+(Math.round(i.bonus*share*1000)/10).toLocaleString('vi-VN')+'% tu vi');
  return parts.length>1||i.on||i.secondary?parts.join(' · '):'';
 }
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin'};
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',dao:'Đạo Thống'};
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
@@ -61,6 +61,14 @@ export function inventoryDeckHTML(e,esc){
   const {p,ps,qiShort,stonesShort,state}=tuviBody({...card,next:card.next&&esc(card.next)});
   const bar=(cls,label,k,a,b,lack)=>`<div class="vd-stat ${cls}${lack?'':' is-full'}"><label>${label}</label><div class="vd-bar"><i style="width:${k.toFixed(1)}%"></i><span>${short(a)} / ${short(b)}${lack?'':' ✓'}</span></div></div>`;
   body=`<div class="vd-tuvi-body"><span class="vd-portrait" aria-hidden="true"></span><div class="vd-tuvi-info"><strong class="vd-realm">${esc(realmWithStage(card.realmName,card.stage))}</strong>${card.next?bar('vd-qi','Tu vi',p,card.qi,card.needQi,qiShort)+bar('vd-stone','Linh thạch',ps,card.stones,card.needStones,stonesShort):''}<div class="vd-state">${state}</div><div class="vd-rank">Hạng <b>#${fmt(card.rank)}</b> / ${fmt(card.players)}</div></div></div>`;
+ }else if(kind==='dao'){
+  const id=['sword','demon','body','beast','alchemy'].includes(card.path)?card.path:null;
+  const pathLabel=esc(card.pathName||'Chưa chọn Đạo Thống'),level=Math.max(0,Math.min(5,Number(card.level)||0)),score=fmt(Math.max(0,Number(card.insight)||0));
+  const next=[0,15,40,80,140][level]??140;
+  const lines=(card.paths||[]).slice(0,5).map(v=>`<span style="font-weight:700;font-size:13px;color:#eeddb8">${esc(v.name||'')}</span>`).join(' · ');
+  body=`<div class="vd-chips"><span>✦ ${pathLabel}</span><span>Cấp ${level||'—'} · ${score} Đạo Ngộ</span></div>`
+    +(id?`<div style="display:flex;align-items:center;justify-content:center;gap:14px;min-height:110px"><img src="/assets/live2-paths/${id}.svg" width="104" height="104" alt="" decoding="async"><div style="font-size:18px;font-weight:700;color:#f9dda5">${esc(card.pathName)}<small style="display:block;font-size:13px;color:#cbd3e5;font-weight:500">${level<5?`Mốc tiếp: ${next} Đạo Ngộ`:'Đạo Ngộ Đại Thành'}<br>Hôm nay ${fmt(card.progress)} / ${fmt(card.maxDaily)}</small></div></div>`:`<div style="text-align:center;padding:10px"><b>CHỌN CON ĐƯỜNG TU</b><p style="font-size:14px">Gõ chọn đạo kiếm, ma, thể, thú hoặc đan từ Trúc Cơ.</p></div>`)
+    +`<div style="text-align:center;padding:4px 12px 8px;font-size:13px;color:#d8cbad">${lines}</div>`;
  }else if(kind==='bag'){
   body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span>${card.daoPath?`<span>✦ ${esc(card.daoPath.name)} · Đạo Ngộ ${fmt(card.daoPath.insight)}</span>`:''}</div>`
    +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.live2Pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');

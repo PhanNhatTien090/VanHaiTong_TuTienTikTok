@@ -93,8 +93,9 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   if(!recipe)return fail('Đan phương: hộ mạch, chiến ý, thanh tâm.');
   if(p.realm<recipe.level)return fail('Cần đạt cảnh giới phù hợp để luyện '+recipe.name+'.');
   if(p.stones<recipe.stones||p.herbs<recipe.herbs)return fail('Cần '+recipe.stones+' linh thạch và '+recipe.herbs+' linh thảo.');
+  s.elixirs??={};if((s.elixirs[recipe.id]||0)>=30)return fail('Đã có 30 viên, sử dụng bớt trước khi chế thêm.');
   p.stones-=recipe.stones;p.herbs-=recipe.herbs;
-  s.elixirs??={};s.elixirs[recipe.id]=Math.min(30,(s.elixirs[recipe.id]||0)+1);
+  s.elixirs[recipe.id]=(s.elixirs[recipe.id]||0)+1;
   announce(w,p,'LUYỆN ĐAN THÀNH CÔNG • '+recipe.name,now,ctx,{live2Kind:'alchemyFx',daoBrew:true});
   return ok('Nhận '+recipe.name+' (tổng '+s.elixirs[recipe.id]+').');
  }
@@ -102,6 +103,8 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   const recipe=getRecipe(rest.slice(5));
   if(!recipe||!s?.elixirs?.[recipe.id])return fail('Chưa có loại đan này.');
   if(recipe.id!=='clarity'&&!canFight(w,p,now))return fail('Đan này chỉ được sử dụng trong Boss hoặc lượt vượt Tháp.');
+  if(recipe.id==='guard'&&w.tower?.cur?.id!==p.id)return fail('Hộ Mạch Đan dành cho lượt vượt Tháp.');
+  if(recipe.id==='fury'&&!(w.boss?.hp>0&&w.boss.endsAt>now))return fail('Chiến Ý Đan dùng khi đánh Boss.');
   if(now-(s.lastElixirAt||-Infinity)<20000)return fail('Hấp thu đan dược cần 20 giây.');
   if(recipe.id==='clarity'){
    const d=day(now);s.daily=s.daily?.day===d?s.daily:{day:d,earned:0};
