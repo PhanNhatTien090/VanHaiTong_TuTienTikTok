@@ -3,6 +3,7 @@
 import {duelCastState} from './duel-combat.js';
 const TAU=Math.PI*2;
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
+const easeOut=u=>1-(1-u)**3;
 const WINDOW=680;
 export const SHATTER_URL='/assets/v7/screen-shatter.svg';
 export const V7_SOUND_HIT_AT=.67;
@@ -105,6 +106,22 @@ export function drawOverdriveV7(scene,c,t,H,wallNow=Date.now()){
    c.drawImage(scene.v7ShatterArt,0,yy,w,h);
   }else if(!premium?.naturalWidth)fractureLines(c,x,y,span,budget.cracks,strength,3.1,moment.color);
  }else fractureLines(c,x,y,span,budget.cracks,strength,3.1,moment.color);
+ // Three diagonal screen tears sweep past the impact, revealing dark negative
+ // space instead of blowing out the game with an expensive white full-screen flash.
+ // Reduced motion/flash and crowded modes omit this layer entirely.
+ if(!budget.low&&budget.motion&&scene.reduceFlash!==true&&moment.age<310){
+  const duration=clamp((310-moment.age)/310),shift=easeOut(clamp(moment.age/140));
+  c.globalAlpha=.24*strength*duration;c.fillStyle='#04071a';
+  for(let i=0;i<3;i++){
+   const off=(i-1)*90+(shift-.5)*75;
+   c.beginPath();c.moveTo(-60,y+off-90);c.lineTo(960,y+off-230);
+   c.lineTo(960,y+off-213);c.lineTo(-60,y+off-73);c.closePath();c.fill();
+   c.globalAlpha=.65*strength*duration;c.lineWidth=i===1?3:1.5;
+   c.strokeStyle=i===1?'#fff8e6':moment.color;
+   c.beginPath();c.moveTo(-60,y+off-90);c.lineTo(960,y+off-230);c.stroke();
+   c.globalAlpha=.24*strength*duration;
+  }
+ }
  // Static contact core for ~90ms: hit-stop *appearance* without delaying gameplay.
  const radius=(26+315*clamp(u*2))* (budget.low?.83:1);
  c.globalAlpha=strength*.92;c.strokeStyle=moment.color;c.lineWidth=budget.low?4:6;
