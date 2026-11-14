@@ -35,13 +35,14 @@ test('all 13 original animals retain IDs and a distinct role/skill',()=>{
  for(let level=1;level<40;level++) assert.ok(petXpNext(level)>0);
  assert.equal(petXpNext(40),0);
 });
-test('disabled by default, forbidden unapproved evolution art and no mutation of ownership',()=>{
+test('disabled by default, vetted evolution art requires opt-in and does not mutate ownership',()=>{
  const {w,p}=make(),owned=JSON.stringify(p.spiritPets);
  assert.equal(petV2Flags(w).enabled,false);
  assert.equal(petV2Earn(w,p,'cultivate',N),0);
  assert.equal(w.petGrowthV2,undefined);
  assert.equal(petV2Configure(w,{enabled:'yes'}).ok,false);
- assert.equal(petV2Configure(w,{evolutionArt:true}).ok,false);
+ assert.equal(petV2Configure(w,{evolutionArt:true}).ok,true);
+ assert.equal(petV2Flags(w).enabled,false);
  assert.equal(JSON.stringify(p.spiritPets),owned);
  assert.equal(petV2View(w,p),null);
 });

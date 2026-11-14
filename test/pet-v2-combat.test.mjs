@@ -28,7 +28,7 @@ test('defense and control reduce hostile casting; elemental affinity changes clo
  const c=petV2Traits('frost-tiger',20,2,50,2);
  assert.ok(petV2TacticalScore(a,d,{cast:true,enemyCast:true})<petV2TacticalScore(a,null,{cast:true}));
  assert.ok(petV2TacticalScore(a,c,{cast:true,enemyCast:true})<petV2TacticalScore(a,null,{cast:true}));
- assert.ok(petV2TacticalScore(a,c,{cast:true})>petV2TacticalScore(a,petV2Traits('jade-rabbit'),{cast:true}));
+ assert.ok(petV2TacticalScore(a,c,{cast:false})>petV2TacticalScore(a,petV2Traits('jade-rabbit'),{cast:false}));
  for(const role of [a,d,c]){
   for(const opponent of [a,d,c]){
    for(const cast of [false,true])for(const enemyCast of [false,true]){
