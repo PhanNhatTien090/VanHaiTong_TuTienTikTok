@@ -21,7 +21,21 @@ export function loadEventGiftArt(scene){if(scene.eventGiftArt||scene.eventGiftLo
 export class EventGiftQueue{
  constructor(){this.seen=new Set();this.pending=[];this.active=null;this.activeRows=[];this.context=null;}
  sync(context,rows,serverNow){if(context!==this.context){this.context=context;this.pending=[];this.active=null;this.activeRows=[];}if(!context)return;for(const row of rows||[]){if(this.seen.has(row.id))continue;this.seen.add(row.id);if(serverNow-row.at>15000||row.at>serverNow+2000||!eventGiftTier(row.value))continue;
-  const same=this.pending.find(e=>e.user===row.user&&e.value<500&&row.value<500&&(row.comboKey?e.comboKey===row.comboKey&&e.gift===row.gift:Math.abs(e.at-row.at)<1200));if(same){same.value+=row.value;same.count=(same.count||1)+(row.count||1);same.at=row.at;same.comboFinal=row.comboFinal;if(row.comboKey)same.readyAt=Math.min(same.firstAt+20000,performance.now()+1500);}else this.pending.push({...row,firstAt:performance.now(),readyAt:row.comboKey?performance.now()+1500:0});}
+  const same=this.pending.find(e=>e.user===row.user&&(row.comboKey?e.comboKey===row.comboKey&&e.gift===row.gift:e.value<100&&row.value<100&&Math.abs(e.at-row.at)<1200));if(same){
+   same.value+=row.value;same.count=(same.count||1)+(row.count||1);
+   same.at=row.at;same.comboFinal=row.comboFinal;
+   // Keep server-authoritative shield receipts when a high-value combo is merged.
+   // Aggregate equal outcome+target; never fabricate damage from the summed coins.
+   if(row.wardEffect){
+    const effects=same.wardEffects|| (same.wardEffect?[{...same.wardEffect}]:[]);
+    const hit=effects.find(e=>e.kind===row.wardEffect.kind&&e.target===row.wardEffect.target);
+    if(hit)hit.amount+=Number(row.wardEffect.amount)||0;
+    else effects.push({...row.wardEffect});
+    same.wardEffects=effects.slice(-4);
+    same.wardEffect=same.wardEffects[0];
+   }
+   if(row.comboKey)same.readyAt=Math.min(same.firstAt+20000,performance.now()+1500);
+  }else this.pending.push({...row,firstAt:performance.now(),readyAt:row.comboKey?performance.now()+1500:0});}
   while(this.seen.size>256)this.seen.delete(this.seen.values().next().value);this.pending=this.pending.filter(e=>serverNow-e.at<15000).sort((a,b)=>b.value-a.value||a.at-b.at).slice(0,8);
  }
  sampleAll(t,cap=1){
@@ -99,13 +113,15 @@ export function drawEventGiftFx(scene,c,t,layer,mode){
   c.globalAlpha=fade;drawGiftDonor(c,e,x,Math.max(H*.19,y-(mode==='race'?155*s:205)),{color:q.color,radius:mode==='race'?25:34,width:mode==='race'?200:290,caption:e.value.toLocaleString('vi-VN')+' coin · '+q.name});
   c.globalAlpha=fade;c.font='bold '+(mode==='race'?15:18)+'px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#101422';c.fillStyle=q.color;const label=(mode==='duel'&&!e.fighter?e.name+' · ':'')+q.name+(mode==='race'?(e.boost?' · BỨT TỐC':' · VINH DANH'):' · CỔ VŨ');const yy=mode==='race'?y+70*s:y+90;c.strokeText(label,x,yy,mode==='race'?170:370);c.fillText(label,x,yy,mode==='race'?170:370);
   // Display ONLY server-accepted barrier damage/restoration. No invented HP.
-  if(mode==='duel'&&e.wardEffect?.amount>0){
-   const effect=e.wardEffect,pulse=clamp((raw-.31)/.26),visibility=Math.sin(pulse*Math.PI);
-   if(raw>=.31&&raw<.57&&visibility>0){
+  if(mode==='duel'){
+   const effects=e.wardEffects?.length?e.wardEffects:e.wardEffect?[e.wardEffect]:[];
+   const pulse=clamp((raw-.31)/.26),visibility=Math.sin(pulse*Math.PI);
+   if(raw>=.31&&raw<.57&&visibility>0)for(const [index,effect] of effects.slice(0,2).entries()){
+    if(!(effect.amount>0))continue;
     const healed=effect.kind==='shield-heal',target=targets.find(p=>p.id===effect.target);
-    const tx=target?.x??450,ty=(target?.y??H*.65)-215-(scene.motion?pulse*65:0);
+    const tx=target?.x??450,ty=(target?.y??H*.65)-215-(scene.motion?pulse*65:0)+index*38;
     const text=(healed?'HỒI HỘ THUẪN +':'PHÁ HỘ THUẪN -')+Math.round(effect.amount).toLocaleString('vi-VN');
-    c.globalAlpha=visibility*fade;c.font='900 32px "Segoe UI",sans-serif';
+    c.globalAlpha=visibility*fade;c.font='900 30px "Segoe UI",sans-serif';
     c.strokeStyle='#071120';c.lineWidth=7;c.strokeText(text,tx,ty,560);
     c.fillStyle=healed?'#95ffd2':'#ffd28a';c.fillText(text,tx,ty,560);
     c.globalAlpha=fade;
