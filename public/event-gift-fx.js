@@ -46,7 +46,7 @@ function img(c,im,x,y,w,h,rot=0,alpha=1,flip=false){if(!im||alpha<=0)return;c.sa
 function flowingSprite(c,im,x,y,w,h,time,alpha){if(!im)return;c.save();c.globalAlpha*=alpha;for(let i=0;i<6;i++){const u=i/6,shift=Math.sin(time*.011-u*8)*w*.035*u;c.drawImage(im,0,i*im.height/6,im.width,im.height/6,x-w/2+shift,y-h/2+i*h/6,w,h/6+1);}c.restore();}
 export function eventGiftImpulse(scene,t){return giftCameraImpulse(scene,scene.eventGiftQueue?.active,t);}
 export function drawEventGiftFx(scene,c,t,layer,mode){
- const light=feedbackBudget(scene),rows=scene.eventGiftQueue?.sampleAll(t,mode==='duel'&&!light?2:1)||[];
+ const light=feedbackBudget(scene),available=scene.eventGiftQueue?.sampleAll(t,mode==='duel'&&!light?2:1)||[],rows=light?available.slice(0,1):available;
  if(!rows.length)return false;
  let shown=false;
  for(const e of rows){
