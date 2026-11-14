@@ -9,6 +9,16 @@ export const LIVE2_PATHS=Object.freeze({
 });
 export const LIVE2_LEVELS=[0,15,40,80,140];
 export const LIVE2_DAILY_INSIGHT=12;
+// Count real chat gameplay actions for persistence and activity reporting,
+// without treating read-only status commands as farmable progression actions.
+export function live2RecordAction(w,p,words,result){
+ if(!result?.ok||result.duplicate||result.cooldown)return false;
+ const msg=(words||[]).join(' '), mutates=/^(?:chon dao |doi dao |dao ky$|tinh luyen|lap hoi |vao hoi |roi hoi$|hoi (?:pho |truong lao |xay$|chien)|xin su |nhan do$|truyen dao$|xuat su$|dong tam$|che dan |dan dung |phap an$|chien hoi$)/.test(msg);
+ if(!mutates)return false;
+ p.interactions=(p.interactions||0)+1;w.totalInteractions=(w.totalInteractions||0)+1;
+ return true;
+}
+
 // LIVE is opt-in only; DEMO is safe to explore and never uses a real TikTok stream.
 export const live2Enabled=w=>w?.mode==='demo'||w?.settings?.live2Enabled===true;
 const DAY=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'});
