@@ -1,0 +1,43 @@
+name: Cinematic V3 Pull Request Checks
+on:
+  pull_request:
+    paths:
+      - 'public/**'
+      - 'test/**'
+      - 'inventory.mjs'
+      - 'engine.mjs'
+      - 'social-events.mjs'
+      - 'companions.mjs'
+      - 'package*.json'
+      - '.github/workflows/v3-pr-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: Validate game and V3 modules
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Syntax check
+        run: |
+          npm run check
+          node --check inventory.mjs
+          node --check social-events.mjs
+          node --check public/inventory-multi.js
+          node --check public/live-feedback-fx.js
+          node --check public/feedback-audio.js
+          node --check public/skill-impact-v3.js
+          node --check public/guardian-tribulation-v3.js
+          node --check public/duel-feedback-v3.js
+          node --check public/live-feedback-preview.js
+          node --check public/cinematic-vfx.js
+      - name: Game and VFX regression tests
+        run: npm test
