@@ -3,6 +3,7 @@
 import {createCanvas,loadImage} from '@napi-rs/canvas';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {drawLive2Fx,setLive2ArtForPreview} from '../public/live2-art.js';
+import {drawLive2ScreenFx} from '../public/live2-cinematic.js';
 const root='output/live2-preview',WIDTH=1080,HEIGHT=1920;
 await mkdir(root,{recursive:true});
 const themes=[
@@ -12,6 +13,7 @@ const themes=[
  {id:'beast',label:'NGỰ THÚ ĐẠO',caption:'Vạn Linh Triều Tông'},
  {id:'alchemy',label:'ĐAN ĐẠO',caption:'Cửu Chuyển Tạo Hóa'},
  {id:'guild',label:'HỘI CHIẾN',caption:'Chư Tông Tranh Bá'},
+ {id:'boss',label:'BOSS THIÊN KIẾP',caption:'Phá Vỡ Huyền Ấn'},
  {id:'mentor',label:'SƯ ĐỒ',caption:'Truyền Thừa Đại Đạo'},
  {id:'relic',label:'PHÁP BẢO',caption:'Tụ Linh Pháp Ấn'},
  {id:'bond',label:'ĐẠO LỮ',caption:'Tam Sinh Đồng Tâm'},
@@ -27,10 +29,12 @@ for(const entry of themes){
  ctx.drawImage(background,0,0,WIDTH,HEIGHT);
  ctx.fillStyle='rgba(5,7,26,.39)';ctx.fillRect(0,0,WIDTH,HEIGHT);
  ctx.save();ctx.scale(1.2,1.2);
- const event={daoPath:entry.id,live2Kind:['guild','mentor','relic','bond','tribulation'].includes(entry.id)?entry.id:null,
-  daoChoose:true,daoSkill:true,daoLevelUp:true,guildWarStart:entry.id==='guild',daoTribulation:entry.id==='tribulation'};
+ const event={daoPath:entry.id,live2Kind:['guild','mentor','relic','bond','tribulation','boss'].includes(entry.id)?entry.id:null,
+  daoChoose:true,daoSkill:true,daoUltimate:['sword','demon','body','beast','alchemy'].includes(entry.id),daoLevelUp:true,
+  bossPhase:entry.id==='boss'?'seal-break':null,tribulationComplete:entry.id==='tribulation',guildWarStart:entry.id==='guild',daoTribulation:entry.id==='tribulation'};
  // Native Scene coordinates are 900x1600; the image is scaled exactly as the game.
  drawLive2Fx(ctx,event,2000,.55,{x:450,y:770},{light:false,motion:true});
+ drawLive2ScreenFx(ctx,event,.55,2000,1600,{light:false,motion:true,reducedFlash:false});
  ctx.restore();
  ctx.textAlign='center';ctx.shadowColor='#120b25';ctx.shadowBlur=15;
  ctx.fillStyle='#ffe5a3';ctx.font='bold 54px Georgia';ctx.fillText(entry.label,WIDTH/2,245);
