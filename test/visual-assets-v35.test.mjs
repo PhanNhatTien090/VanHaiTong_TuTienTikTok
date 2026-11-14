@@ -31,8 +31,9 @@ test('inventory art is restricted to local assets and shows player items using a
  assert.equal(card.secondaryEquipped,1);
  const html=inventoryDeckHTML({name:'Hỏa & <script>',card},esc);
  assert.match(html,/Thanh Ngọc Kiếm/);
- assert.match(html,/CHỦ · /);
- assert.match(html,/TRỢ ½/);
+ assert.match(html,/vd-cell is-on"><span class="vd-pic"><canvas[^>]*data-thumb="artifact:jade"/,'món đang đeo có viền sáng + ảnh thật');
+ assert.match(html,/vd-cell is-sub/);
+ assert.match(html,/×2/);
  assert.match(html,/crystal\.svg/);
  assert.doesNotMatch(html,/<script>/);
 });

@@ -62,6 +62,8 @@ function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
   image.src='/assets/spirit-pets-v1/'+(animated?'animated/'+id+'-'+PREMIUM_PET_ATLAS.version+'.webp':id+'.png');
  });
 }
+// 15/11: ảnh nhỏ cho bảng xem linh thú — dùng chung cache khung với sân khấu.
+export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));return PET_FRAME_CACHE.get(id);}
 export function loadPetArt(scene,players){
  scene.petArt??=new Map();if(typeof Image==='undefined')return;
  for(const p of players){const pet=petById(p.spiritPet);if(!pet||scene.petArt.has(pet.id))continue;

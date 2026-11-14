@@ -1,36 +1,62 @@
-/* LIVE Inventory Deck V3.5 — fixed layout, no per-frame DOM or CSS filters. */
-.inventory-deck{position:absolute;z-index:19;top:22%;left:3%;width:94%;max-height:70%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;pointer-events:none;contain:layout style;isolation:isolate;color:#f6edcf}
+/* 15/11/2026: BẢNG XEM (tu vi · túi đồ · linh thú · skin) — hiện giữa màn rồi bay ra 4 góc.
+   Kích thước theo bề rộng sân khấu (cqw: .scene-shell là container), 100cqw = 1080 px trên LIVE.
+   Chỉ animate transform/opacity; không filter, không box-shadow động. */
+.inventory-deck{position:absolute;inset:0;z-index:19;pointer-events:none;contain:layout style;color:#f6edcf}
 .inventory-deck[hidden]{display:none}
-.inventory-deck .inv-queue{grid-column:1/-1;justify-self:center;font:700 13px "Segoe UI",sans-serif;color:#ffe7b0;background:#0b1a2ef0;border:1px solid #d6af6299;border-radius:999px;padding:4px 14px;letter-spacing:.3px}
-.inventory-deck[data-count="1"]{grid-template-columns:minmax(0,1fr);width:min(82%,540px);left:50%;transform:translateX(-50%)}
-.inventory-deck .inv-card{min-width:0;background:linear-gradient(145deg,#0c2038fa,#12253cf7 62%,#17223bee);border:1.5px solid #d6af62;border-radius:15px;box-shadow:0 8px 25px #0009,inset 0 0 0 1px #ffffff1b;overflow:hidden}
-.inventory-deck .inv-card header{padding:11px 14px 8px;text-align:center;background:linear-gradient(90deg,#26477088,#6c4e2777,#26477088);border-bottom:1px solid #f6d29355;display:grid;gap:2px}
-.inventory-deck .inv-card header small{letter-spacing:1.5px;font-size:11px;color:#f7dfa4;font-weight:700}
-.inventory-deck .inv-card header strong{font:700 20px Georgia,serif;color:#fff4d5;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
-.inventory-deck .inv-owner{display:flex;align-items:center;gap:8px;padding:5px 13px;min-height:60px}
-.inventory-deck .inv-portrait{width:54px;height:58px;display:grid;place-items:center;flex:none;color:#f4d88c;font-size:24px}
-.inventory-deck .inv-owner>canvas{width:54px;height:62px;object-fit:contain;flex:none}
-.inventory-deck .inv-resource{font-size:12px;color:#dbedf9;display:flex;gap:5px 7px;align-items:center;flex-wrap:wrap;line-height:1.4}
-.inventory-deck .inv-resource .inv-art{width:23px;height:23px}
-.inventory-deck .inv-resource i{font-style:normal;color:#ffd78e}
-.inventory-deck .inv-sections{padding:4px 11px 11px;display:grid;gap:7px;overflow:hidden;max-height:min(40vh,460px)}
-.inventory-deck .inv-sections section{min-width:0}
-.inventory-deck h4{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:#f0d795;margin:0 0 5px}
-.inventory-deck .inv-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-.inventory-deck .inv-item{min-width:0;display:flex;align-items:center;gap:5px;background:#101a32a5;border:1px solid #8d9dc342;border-radius:7px;padding:4px}
-.inventory-deck .inv-item.is-equipped{background:#2f3b3977;border-color:#e7c27d}.inventory-deck .inv-item.is-secondary{border-color:#9fc7e58c}
-.inventory-deck .inv-item .inv-art{width:32px;height:32px;object-fit:contain;flex:none}
-.inventory-deck .inv-item-info{display:grid;min-width:0;line-height:1.2;gap:3px}
-.inventory-deck .inv-item-info b{font-size:10px;color:#eff7ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.inventory-deck .inv-item-info small{font-size:9px;color:#e6c680;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inventory-deck .inv-empty,.inventory-deck .inv-more{font-size:10px;color:#c8d3e7;display:block}
-.inventory-deck .inv-card footer{font-size:10px;color:#cdd9e9;padding:7px 12px;background:#07172a;border-top:1px solid #c6a97849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.inventory-deck[data-count="3"],.inventory-deck[data-count="4"]{gap:8px}
-.inventory-deck[data-count="3"] .inv-owner,.inventory-deck[data-count="4"] .inv-owner{min-height:46px}
-.inventory-deck[data-count="3"] .inv-sections,.inventory-deck[data-count="4"] .inv-sections{max-height:min(30vh,430px)}
-.inventory-deck[data-count="3"] .inv-card header,.inventory-deck[data-count="4"] .inv-card header{padding:6px}
-.inventory-deck[data-count="3"] .inv-item .inv-art,.inventory-deck[data-count="4"] .inv-item .inv-art{width:26px;height:26px}
-.inventory-deck[data-count="3"] .inv-card header strong,.inventory-deck[data-count="4"] .inv-card header strong{font-size:16px}
+.inventory-deck .inv-queue{position:absolute;left:50%;top:12%;transform:translateX(-50%);font:700 max(13px,1.7cqw) "Segoe UI",sans-serif;color:#ffe7b0;background:#0b1a2ef0;border:1px solid #d6af6299;border-radius:999px;padding:.25em .9em;white-space:nowrap}
+
+.inventory-deck .vd-card{position:absolute;width:42cqw;box-sizing:border-box;font:600 max(14px,2.3cqw)/1.15 "Segoe UI",sans-serif;
+ background:linear-gradient(160deg,#0d2340f7,#122640f4 60%,#1b2238ee);border:2px solid #d6af62;border-radius:.7em;box-shadow:0 .35em 1.1em #000a;
+ padding:.45em .5em .55em;overflow:hidden;opacity:1;transform:translate(0,0) scale(1);transform-origin:50% 50%;
+ transition:transform .45s cubic-bezier(.2,.85,.25,1),opacity .3s ease,border-color .3s}
+.inventory-deck .vd-card[data-slot="0"]{left:2%;top:13%}
+.inventory-deck .vd-card[data-slot="1"]{right:2%;top:13%}
+.inventory-deck .vd-card[data-slot="2"]{left:2%;top:38%}
+.inventory-deck .vd-card[data-slot="3"]{right:2%;top:38%}
+/* Pha: chờ lượt → hiện giữa (to) → bay về góc → mờ dần. */
+.inventory-deck .vd-card.vd-wait{opacity:0;transition:none}
+.inventory-deck .vd-card.vd-center{transform:translate(var(--vd-dx,0),var(--vd-dy,0)) scale(1.32);z-index:2}
+.inventory-deck .vd-card.vd-enter{opacity:0;transform:translate(var(--vd-dx,0),var(--vd-dy,0)) scale(1.12);transition:none}
+.inventory-deck .vd-card.vd-leave{opacity:0;transform:scale(.9);transition:transform .32s ease-in,opacity .32s ease-in}
+.inventory-deck .vd-card.vd-pulse{animation:vd-pulse .7s ease-out}
+@keyframes vd-pulse{0%{border-color:#fff6d0}100%{border-color:#d6af62}}
+
+.inventory-deck .vd-card header{display:flex;align-items:baseline;justify-content:space-between;gap:.4em;padding:0 .15em .3em;border-bottom:1px solid #f6d29355;margin-bottom:.35em}
+.inventory-deck .vd-card header strong{font:700 1.08em Georgia,serif;color:#fff4d5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.inventory-deck .vd-card header small{flex:none;font-size:.62em;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1d1405;background:#e6c27a;border-radius:999px;padding:.12em .55em}
+
+.inventory-deck .vd-chips{display:flex;gap:.35em;flex-wrap:wrap;margin:0 0 .35em;font-size:.82em;color:#e4f1fb}
+.inventory-deck .vd-chips span{display:inline-flex;align-items:center;gap:.2em;background:#ffffff12;border:1px solid #ffffff22;border-radius:999px;padding:.08em .5em}
+.inventory-deck .vd-chips img{width:1.15em;height:1.15em}
+
+.inventory-deck .vd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3em}
+.inventory-deck .vd-cell{min-width:0;display:grid;justify-items:center;gap:.12em;background:#0a1530b0;border:1.5px solid #8d9dc340;border-radius:.45em;padding:.2em .15em .25em}
+.inventory-deck .vd-cell.is-on{border-color:#ffd77e;background:#3a321c99}
+.inventory-deck .vd-cell.is-on .vd-cap{color:#ffe39d}
+.inventory-deck .vd-cell.is-sub{border-color:#9fc7e5a0}
+.inventory-deck .vd-pic{position:relative;width:100%;aspect-ratio:1;display:grid;place-items:center}
+.inventory-deck .vd-pic>canvas,.inventory-deck .vd-pic>img{grid-area:1/1;width:100%;height:100%;object-fit:contain}
+.inventory-deck .vd-pic>img{width:72%;height:72%;opacity:.9}
+.inventory-deck .vd-pic>canvas:not([data-ready])+img{opacity:.9}
+.inventory-deck .vd-pic>canvas[data-ready]+img{display:none}
+.inventory-deck .vd-n{position:absolute;right:.05em;bottom:.05em;font:800 .78em "Segoe UI",sans-serif;font-style:normal;color:#fff;background:#b2451fe6;border-radius:.5em;padding:0 .3em}
+.inventory-deck .vd-cap{max-width:100%;font-size:.76em;font-weight:700;color:#f1f6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inventory-deck .vd-more .vd-pic b{font:800 1.6em Georgia,serif;color:#ffe2a0}
+.inventory-deck .vd-empty{margin:.3em 0;font-size:.85em;color:#c8d3e7;text-align:center}
+
+.inventory-deck .vd-tuvi-body{display:flex;gap:.45em;align-items:center}
+.inventory-deck .vd-portrait{flex:none;width:34%;aspect-ratio:220/260;height:auto}
+.inventory-deck span.vd-portrait{display:block}
+.inventory-deck .vd-tuvi-info{display:grid;gap:.3em;min-width:0;flex:1}
+.inventory-deck .vd-realm{font:700 1.02em Georgia,serif;color:#ffe9b0;line-height:1.15}
+.inventory-deck .vd-bar{position:relative;height:1.15em;border-radius:999px;background:#06101fcc;border:1px solid #e6c27a88;overflow:hidden}
+.inventory-deck .vd-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#3fb5ff,#9df3ff)}
+.inventory-deck .vd-bar span{position:relative;display:block;text-align:center;font-size:.78em;font-weight:800;line-height:1.45;color:#fff;text-shadow:0 1px 2px #000}
+.inventory-deck .vd-state{font-size:.82em;color:#d6e7f5}
+.inventory-deck .vd-ready{color:#ffd76a}
+.inventory-deck .vd-short{color:#ffb38a}
+.inventory-deck .vd-rank{font-size:.82em;color:#cfdcec}
+.inventory-deck .vd-rank b{color:#ffe39d}
+
 body.ritual-active .inventory-deck,body.hall-dueling .inventory-deck,body.ascension-stage .inventory-deck,body.breakthrough-title-active .inventory-deck{visibility:hidden}
-@media(max-width:650px){.inventory-deck{left:1.5%;width:97%;gap:6px}.inventory-deck .inv-card header strong{font-size:15px}.inventory-deck .inv-item-info b{font-size:9px}.inventory-deck .inv-item .inv-art{width:25px;height:25px}.inventory-deck .inv-sections{max-height:min(28vh,250px);gap:4px}.inventory-deck .inv-list{gap:3px}.inventory-deck .inv-owner>canvas{display:none}}
 @media(prefers-reduced-motion:reduce){.inventory-deck *{animation:none!important;transition:none!important}}

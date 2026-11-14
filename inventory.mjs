@@ -30,14 +30,14 @@ export function petCard(p){
  const owned=(p.spiritPets||[]).map(petById).filter(Boolean);
  const cur=p.spiritPet&&petById(p.spiritPet);
  return {kind:'pets',current:cur?.name||null,currentId:cur?.id||null,
-  owned:cap(owned.map((x,i)=>({name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id})),6),
+  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id})),6),
   total:ALL_PETS.length,tip:owned.length?'Gõ thu + số để đổi linh thú đồng hành':'Linh thú có trong sự kiện Linh Thú Cốc'};
 }
 export function skinCard(p){
  const owned=(p.rewardSkins||[]).map(id=>SPECIAL_SKINS.find(s=>s.id===id)).filter(Boolean);
  const cur=p.skinChoice&&SPECIAL_SKINS.find(s=>s.id===p.skinChoice);
  return {kind:'skins',current:cur?.name||'Áo cảnh giới',
-  owned:cap(owned.map(s=>({name:s.name,on:s.id===cur?.id})),6),
+  owned:cap(owned.map(s=>({id:s.id,name:s.name,on:s.id===cur?.id})),6),
   tip:owned.length?'Gõ skin + tên để mặc · skin macdinh để về áo cảnh giới':'Skin mở từ sự kiện, đua kiếm, rèn pháp bảo'};
 }
 // Trả về {kind, text} nếu là lệnh xem; null nếu không phải.

@@ -1,8 +1,12 @@
-// V3.5 inventory deck: multiple independent, read-only bag/pet/skin cards.
-// All HTML updates are event-driven (no DOM reads or layout on the render loop).
+// 15/11/2026: BẢNG XEM — tu vi · túi đồ · linh thú · skin (kế hoạch BANG-XEM-PLAN-2026-11-15.md).
+// Bảng hiện GIỮA màn (to) → bay ra 1 trong 4 GÓC → mờ dần. Tối đa 4 bảng cùng lúc, người thứ 5+ xếp hàng.
+// Gọn: ít chữ, ảnh vật phẩm to (ảnh thật từ item-thumbs.js), chữ to. Chuyển động chỉ bằng CSS transform/opacity,
+// HTML dựng theo sự kiện (không chạy gì theo khung hình).
 import {portraitCanvas} from './linh-bai.js';
+import {realmWithStage} from './realm-stage.js';
+import {paintThumb,THUMB} from './item-thumbs.js';
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
-const MAX_CARDS=4,TTL_MS=8100;
+const MAX_CARDS=4,TTL_MS=8100,CENTER_MS=1600,STAGGER_MS=250,LEAVE_MS=320,CELLS=6;
 const fallback={artifact:'relic',pill:'elixir',manual:'book',pets:'spirit',skins:'robe',stones:'crystal'};
 export function safeInventoryArt(item,category='artifact'){
  const input=String(item?.art||'');
@@ -12,8 +16,7 @@ export function safeInventoryArt(item,category='artifact'){
  const kind=category==='artifact'?(specialized[type]||'relic'):category==='manual'?(specialized[type]||'book'):category==='pill'?'elixir':fallback[category]||'relic';
  return '/assets/ui-inventory/'+kind+'.svg';
 }
-const img=(item,category,esc)=>`<img class="inv-art" src="${esc(safeInventoryArt(item,category))}" width="42" height="42" alt="" loading="eager" decoding="async">`;
-// V4: chỉ số = mức ĐÓNG GÓP THẬT vào nhân vật (engine: pháp bảo phụ tính 50% — extraStat). Đồ cất: chỉ số gốc + "cất".
+// Chỉ số đóng góp thật (pháp bảo phụ 50%). Bảng gọn không in nữa, giữ cho trang quản lý/test.
 export function itemStats(i,category='artifact'){
  if(category!=='artifact')return i.n?'×'+fmt(i.n):'';
  const share=i.on?1:i.secondary?.5:1,parts=[i.on?'CHỦ':i.secondary?'TRỢ ½':'cất'];
@@ -21,44 +24,54 @@ export function itemStats(i,category='artifact'){
  if(i.bonus>0)parts.push('+'+(Math.round(i.bonus*share*1000)/10).toLocaleString('vi-VN')+'% tu vi');
  return parts.length>1||i.on||i.secondary?parts.join(' · '):'';
 }
-// V4: mỗi mục tối đa N ô để 4 thẻ cùng lúc không bị cắt; phần dư cộng vào "+N vật phẩm khác".
-const SHOW_LIMIT={artifact:6,pill:4,manual:4,pets:6,skins:6};
-function entries(box,category,esc){
- const limit=SHOW_LIMIT[category]||6;if(box?.items?.length>limit)box={items:box.items.slice(0,limit),more:(box.more||0)+box.items.length-limit};
- if(!box?.items?.length)return `<span class="inv-empty">Chưa sở hữu</span>`;
- return `<div class="inv-list">${box.items.map(item=>{
-  const i=typeof item==='string'?{name:item}:item;
-  const stats=itemStats(i,category);
-  return `<div class="inv-item${i.on?' is-equipped':i.secondary?' is-secondary':''}">${img(i,category,esc)}<span class="inv-item-info"><b>${esc(i.name||'Vật phẩm')}</b>${stats?`<small>${esc(stats)}</small>`:''}</span></div>`;
- }).join('')}${box.more?`<span class="inv-more">+ ${fmt(box.more)} vật phẩm khác</span>`:''}</div>`;
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin'};
+export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
+const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
+function cell(i,category,esc){
+ const item=typeof i==='string'?{name:i}:i;
+ const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"`:'';
+ const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
+ return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
+}
+// Ghép nhiều nhóm vào tối đa 6 ô; dư thì ô cuối ghi "+N".
+function grid(groups,esc,empty){
+ const all=[];let more=0;
+ for(const [box,category] of groups){for(const i of box?.items||[])all.push([i,category]);more+=box?.more||0;}
+ if(!all.length&&!more)return `<p class="vd-empty">${empty}</p>`;
+ const total=all.length+more,shown=total>CELLS?all.slice(0,CELLS-1):all,rest=total-shown.length;
+ return `<div class="vd-grid">${shown.map(([i,c])=>cell(i,c,esc)).join('')}${rest>0?`<div class="vd-cell vd-more"><span class="vd-pic"><b>+${fmt(rest)}</b></span><span class="vd-cap">món khác</span></div>`:''}</div>`;
+}
+const pct=(a,b)=>Math.max(0,Math.min(100,(Number(a)||0)/Math.max(1,Number(b)||1)*100));
+function tuviBody(c){
+ const p=pct(c.qi,c.needQi),stonesShort=Math.max(0,(c.needStones||0)-(c.stones||0));
+ const state=!c.next?'<b class="vd-ready">ĐỈNH TU TIÊN</b>':c.ready?'<b class="vd-ready">ĐỦ ĐỘT PHÁ</b>':p>=100&&stonesShort?`<span class="vd-short">thiếu ${fmt(stonesShort)} linh thạch</span>`:`<span class="vd-next">→ ${c.next}</span>`;
+ return {p,state};
 }
 export function inventoryDeckHTML(e,esc){
- const card=e.card;
- if(!card?.kind)return '';
- let body='',title='',resource='';
- if(card.kind==='bag'){
-  title='TÚI ĐỒ TU TIÊN';
-  resource=`<div class="inv-resource">${img({},'stones',esc)}<span>${fmt(card.stones)} linh thạch</span><i>✦</i><span>${fmt(card.herbs)} linh thảo</span></div>`;
-  body=`<section><h4>Pháp bảo & trang bị</h4>${entries(card.artifacts,'artifact',esc)}</section>
-  <section><h4>Đan dược</h4>${entries(card.pills,'pill',esc)}</section>
-  <section><h4>Bí pháp đã học</h4>${entries(card.manuals,'manual',esc)}</section>`;
- }else if(card.kind==='pets'){
-  title='LINH THÚ CỦA ĐẠO HỮU';
-  resource=`<div class="inv-resource">Đồng hành: ${esc(card.current||'Chưa có')}</div>`;
-  body=`<section><h4>Linh thú đã thu phục</h4>${entries(card.owned,'pets',esc)}</section>`;
- }else if(card.kind==='skins'){
-  title='TIÊN Y ĐÃ SỞ HỮU';
-  resource=`<div class="inv-resource">Đang mặc: ${esc(card.current||'Áo cảnh giới')}</div>`;
-  body=`<section><h4>Tủ skin</h4>${entries(card.owned,'skins',esc)}</section>`;
- }else return '';
- return `<article class="inv-card"><header><small>✦ ${title} ✦</small><strong>${esc(e.name||'Đạo hữu')}</strong></header><div class="inv-owner"><span class="inv-portrait" aria-hidden="true">✦</span>${resource}</div><div class="inv-sections">${body}</div><footer>${esc(card.tip||'')}</footer></article>`;
+ const card=e.card,kind=cardKind(card);
+ if(!kind)return '';
+ let body='';
+ if(kind==='tuvi'){
+  const {p,state}=tuviBody({...card,next:card.next&&esc(card.next)});
+  body=`<div class="vd-tuvi-body"><span class="vd-portrait" aria-hidden="true"></span><div class="vd-tuvi-info"><strong class="vd-realm">${esc(realmWithStage(card.realmName,card.stage))}</strong><div class="vd-bar"><i style="width:${p.toFixed(1)}%"></i><span>${p>=100?'100':p.toFixed(p<10?1:0)}%</span></div><div class="vd-state">${state}</div><div class="vd-rank">Hạng <b>#${fmt(card.rank)}</b></div></div></div>`;
+ }else if(kind==='bag'){
+  const manuals=(card.manuals?.items?.length||0)+(card.manuals?.more||0);
+  body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)}</span><span>🌿 ${fmt(card.herbs)}</span>${manuals?`<span>📜 ${fmt(manuals)}</span>`:''}</div>`
+   +grid([[card.artifacts,'artifact'],[card.pills,'pill']],esc,'Túi trống');
+ }else if(kind==='pets'){
+  body=grid([[card.owned,'pets']],esc,'Chưa có linh thú');
+ }else{
+  body=grid([[card.owned,'skins']],esc,'Chưa có skin riêng');
+ }
+ return `<article class="vd-card vd-${kind}"><header><strong>${esc(e.name||'Đạo hữu')}</strong><small>${KIND_LABEL[kind]}</small></header>${body}</article>`;
 }
-// V4 (14/11): hàng đợi công bằng + tạm dừng thật + DOM theo từng thẻ.
-// - Tối đa 4 thẻ cùng lúc; người thứ 5+ vào hàng chờ (mỗi người 1 chỗ), hiện "N đạo hữu chờ xem túi" — không mất âm thầm.
-// - Gõ lại khi đang hiện: chỉ cập nhật nội dung; gia hạn tối đa 2×TTL kể từ lúc hiện và KHÔNG gia hạn khi có người chờ.
-// - Đột phá / đấu Ngũ Đường / chữ cảnh giới (CSS ẩn khung): đóng băng thời gian còn lại, xong cảnh mới chạy tiếp.
-// - Chỉ thêm/bớt thẻ thay đổi; chân dung vẽ 1 lần cho mỗi thẻ. Không có gì chạy theo khung hình.
-export const DECK_LIMITS=Object.freeze({active:MAX_CARDS,queue:16,ttl:TTL_MS,maxHold:TTL_MS*2,resume:2500,queuedTtl:6500});
+// Hàng đợi công bằng + tạm dừng thật + DOM theo từng thẻ (giữ từ V4, 14/11).
+// - Tối đa 4 thẻ; người thứ 5+ vào hàng chờ (mỗi người 1 chỗ), hiện "N đạo hữu chờ xem".
+// - Gõ lại khi đang hiện: đổi nội dung tại chỗ, không bay lại vào giữa; gia hạn tối đa 2×TTL, không gia hạn khi có người chờ.
+// - Đột phá / đấu Ngũ Đường / chữ cảnh giới (CSS ẩn khung): đóng băng thời gian còn lại.
+// - 15/11: mỗi thẻ giữ 1 ô góc (0 trên trái · 1 trên phải · 2 dưới trái · 3 dưới phải). Hai thẻ cùng lúc thì thẻ sau
+//   chờ thẻ trước rời giữa màn mới hiện (introAt), để không chồng nhau ở giữa.
+export const DECK_LIMITS=Object.freeze({active:MAX_CARDS,queue:16,ttl:TTL_MS,maxHold:TTL_MS*2,resume:2500,queuedTtl:6500,center:CENTER_MS,stagger:STAGGER_MS});
 export const DECK_PAUSE_CLASSES=Object.freeze(['ritual-active','hall-dueling','breakthrough-title-active','ascension-stage']);
 export class InventoryDeck{
  constructor(container,scene,esc,{doc=globalThis.document,observe=true}={}){
@@ -71,22 +84,28 @@ export class InventoryDeck{
   }
  }
  show(event,player,now=performance.now()){
-  if(!event?.card?.kind||!event?.user||!this.container)return false;
+  if(!cardKind(event?.card)||!event?.user||!this.container)return false;
   this.expire(now);
   const active=this.cards.find(x=>x.user===event.user);
   if(active){
    active.event=event;active.player=player;active.version++;this.stats.refreshed++;
    if(!this.queue.length&&!this.paused)active.until=Math.max(active.until,Math.min(now+DECK_LIMITS.ttl,active.shownAt+DECK_LIMITS.maxHold));
-   this.render();this.schedule(now);return true;
+   this.render(now);this.schedule(now);return true;
   }
   const waiting=this.queue.find(x=>x.user===event.user);
-  if(waiting){waiting.event=event;waiting.player=player;this.render();return true;}
+  if(waiting){waiting.event=event;waiting.player=player;this.render(now);return true;}
   if(this.cards.length<DECK_LIMITS.active&&!this.queue.length){this.promote({user:event.user,event,player},now,DECK_LIMITS.ttl);}
   else if(this.queue.length<DECK_LIMITS.queue){this.queue.push({user:event.user,event,player,at:now});this.stats.queued++;}
   else{this.stats.dropped++;return false;}
-  this.render();this.schedule(now);return true;
+  this.render(now);this.schedule(now);return true;
  }
- promote(x,now,ttl){this.cards.push({user:x.user,event:x.event,player:x.player,shownAt:now,until:now+ttl,version:0,...(this.paused?{left:ttl}:{})});this.stats.shown++;}
+ freeSlot(){const used=new Set(this.cards.map(x=>x.slot));for(let i=0;i<MAX_CARDS;i++)if(!used.has(i))return i;return 0;}
+ promote(x,now,ttl){
+  // Thẻ trước còn đang ở giữa màn → thẻ này đợi nó bắt đầu bay đi (chồng nhẹ 0,25 s cho liền mạch).
+  const lastCenter=Math.max(0,...this.cards.map(c=>c.introAt+DECK_LIMITS.center));
+  const introAt=Math.max(now,lastCenter-DECK_LIMITS.stagger);
+  this.cards.push({user:x.user,event:x.event,player:x.player,slot:this.freeSlot(),introAt,shownAt:introAt,until:introAt+ttl,version:0,...(this.paused?{left:introAt-now+ttl}:{})});this.stats.shown++;
+ }
  expire(now){
   if(this.paused)return false;
   const size=this.cards.length;this.cards=this.cards.filter(x=>x.until>now);
@@ -98,38 +117,77 @@ export class InventoryDeck{
   on=!!on;if(on===this.paused)return;
   if(on){for(const x of this.cards)x.left=Math.max(0,x.until-now);clearTimeout(this.timer);this.timer=null;this.paused=true;return;}
   this.paused=false;
-  for(const x of this.cards){x.until=now+Math.max(x.left??0,DECK_LIMITS.resume);x.shownAt=now-(DECK_LIMITS.ttl-Math.max(x.left??0,DECK_LIMITS.resume));delete x.left;}
-  if(this.expire(now))this.render();this.schedule(now);
+  for(const x of this.cards){const left=Math.max(x.left??0,DECK_LIMITS.resume);x.until=now+left;x.shownAt=now-(DECK_LIMITS.ttl-left);x.introAt=Math.min(x.introAt,now-DECK_LIMITS.center);delete x.left;}
+  if(this.expire(now))this.render(now);this.schedule(now);
  }
  cardNode(x){
   const html=inventoryDeckHTML(x.event,this.esc);
   const holder=this.doc.createElement('div');holder.innerHTML=html;const node=holder.firstElementChild;if(!node)return null;
-  const slot=node.querySelector?.('.inv-portrait'),art=x.player&&slot?portraitCanvas(this.scene,x.player):null;
-  if(art){const v=this.doc.createElement('canvas');v.width=88;v.height=104;v.getContext('2d')?.drawImage(art,0,0,88,104);slot.replaceWith(v);}
+  const slot=node.querySelector?.('.vd-portrait'),art=x.player&&slot?portraitCanvas(this.scene,x.player):null;
+  if(art){const v=this.doc.createElement('canvas');v.width=art.width;v.height=art.height;v.getContext('2d')?.drawImage(art,0,0);v.className='vd-portrait';slot.replaceWith(v);}
+  for(const canvas of node.querySelectorAll?.('canvas[data-thumb]')||[]){
+   const [kind,...id]=canvas.dataset.thumb.split(':');
+   if(!paintThumb(canvas,{kind,id:id.join(':')},this.scene,x.player||{}))canvas.remove();
+  }
   return node;
  }
- render(){
+ // Vị trí giữa màn so với ô góc: đọc kích thước 1 lần lúc thẻ xuất hiện (theo sự kiện, không theo khung hình).
+ centerOffset(node){
+  const box=this.container,W=box.clientWidth||0,H=box.clientHeight||0;
+  if(!W||!H||!node.offsetWidth)return null;
+  const cx=node.offsetLeft+node.offsetWidth/2,cy=node.offsetTop+node.offsetHeight/2;
+  return {dx:W/2-cx,dy:H*.4-cy};
+ }
+ phase(entry,x,now){
+  const n=entry.node;if(!n.classList)return;
+  n.dataset.slot=String(x.slot);
+  if(now<x.introAt){n.classList.add('vd-wait');return;}
+  if(n.classList.contains('vd-wait')||!entry.placed){
+   entry.placed=true;n.classList.remove('vd-wait');
+   const o=this.centerOffset(n);
+   if(o&&now<x.introAt+DECK_LIMITS.center){
+    n.style.setProperty('--vd-dx',o.dx.toFixed(0)+'px');n.style.setProperty('--vd-dy',o.dy.toFixed(0)+'px');
+    n.classList.add('vd-enter','vd-center');void n.offsetWidth;n.classList.remove('vd-enter');
+   }
+  }
+  if(now>=x.introAt+DECK_LIMITS.center)n.classList.remove('vd-center');
+ }
+ render(now=performance.now()){
   const node=this.container;if(!node)return;
-  node.hidden=this.cards.length===0;node.dataset.count=String(this.cards.length);node.dataset.waiting=String(this.queue.length);
+  node.hidden=this.cards.length===0&&!this.leaving;node.dataset.count=String(this.cards.length);node.dataset.waiting=String(this.queue.length);
   if(!this.doc?.createElement){node.innerHTML=this.cards.map(x=>inventoryDeckHTML(x.event,this.esc)).join('');return;}
   const keep=new Set(this.cards.map(x=>x.user));
-  for(const [user,entry] of this.nodes)if(!keep.has(user)){entry.node.remove();this.nodes.delete(user);}
+  for(const [user,entry] of this.nodes)if(!keep.has(user)){
+   this.nodes.delete(user);const n=entry.node;
+   if(n.classList){n.classList.add('vd-leave');this.leaving=(this.leaving||0)+1;setTimeout(()=>{n.remove();this.leaving--;if(!this.cards.length&&!this.leaving)node.hidden=true;},LEAVE_MS);}else n.remove();
+  }
   for(const x of this.cards){
    let entry=this.nodes.get(x.user);
-   if(!entry||entry.version!==x.version||entry.event!==x.event){const fresh=this.cardNode(x);if(!fresh)continue;if(entry)entry.node.replaceWith(fresh);entry={node:fresh,version:x.version,event:x.event};this.nodes.set(x.user,entry);}
-   if(entry.node.parentNode!==node||entry.node!==node.children[this.cards.indexOf(x)])node.insertBefore(entry.node,node.children[this.cards.indexOf(x)]||null);
+   if(!entry||entry.version!==x.version||entry.event!==x.event){
+    const fresh=this.cardNode(x);if(!fresh)continue;
+    if(entry){
+     // Gõ lại: thay tại chỗ, giữ nguyên vị trí/pha, nháy viền.
+     const old=entry.node;if(fresh.classList&&old.classList){for(const c of ['vd-center','vd-wait'])if(old.classList.contains(c))fresh.classList.add(c);fresh.style.cssText=old.style.cssText;fresh.dataset.slot=old.dataset.slot;}
+     old.replaceWith(fresh);if(fresh.classList&&entry.placed)fresh.classList.add('vd-pulse');
+     entry={node:fresh,version:x.version,event:x.event,placed:entry.placed};
+    }else{entry={node:fresh,version:x.version,event:x.event,placed:false};node.appendChild(fresh);}
+    this.nodes.set(x.user,entry);
+   }
+   if(entry.node.parentNode!==node)node.appendChild(entry.node);
+   this.phase(entry,x,now);
   }
   if(this.queue.length){
    if(!this.badge){this.badge=this.doc.createElement('div');this.badge.className='inv-queue';}
-   this.badge.textContent='⏳ '+this.queue.length+' đạo hữu chờ xem túi';
+   this.badge.textContent='⏳ '+this.queue.length+' đạo hữu chờ xem';
    if(this.badge.parentNode!==node||node.lastElementChild!==this.badge)node.appendChild(this.badge);
   }else this.badge?.remove();
  }
  schedule(now=performance.now()){
   clearTimeout(this.timer);this.timer=null;
   if(this.paused||!this.cards.length)return;
-  const next=Math.min(...this.cards.map(x=>x.until));
-  this.timer=setTimeout(()=>{const t=performance.now();if(this.expire(t))this.render();this.schedule(t);},Math.max(40,next-now+25));
+  const marks=[];for(const x of this.cards){marks.push(x.until);if(x.introAt>now)marks.push(x.introAt);if(x.introAt+DECK_LIMITS.center>now)marks.push(x.introAt+DECK_LIMITS.center);}
+  const next=Math.min(...marks);
+  this.timer=setTimeout(()=>{const t=performance.now();this.expire(t);this.render(t);this.schedule(t);},Math.max(40,next-now+25));
   this.timer.unref?.();
  }
  clear(){clearTimeout(this.timer);this.timer=null;this.cards=[];this.queue=[];this.render();}
