@@ -5,7 +5,7 @@ import {live2ExtraCommand,live2Tick,live2GuildWarView,live2ExtraBonus,live2Mento
 function game(){
  const n=1000000000,p={id:'u',name:'Tu sĩ A',realm:5,lastActive:n,stones:3000,herbs:100,artifacts:['a'],equipped:'a'},
  q={id:'v',name:'Tu sĩ B',realm:5,lastActive:n,stones:3000,herbs:100,artifacts:['b'],equipped:'b'},
- w={players:{u:p,v:q},settings:{},social:{bonds:{}},events:[]},events=[],ctx={emit:(_w,_p,msg,effect,at,extra)=>events.push({msg,effect,at,...extra})};
+ w={players:{u:p,v:q},settings:{live2Enabled:true},social:{bonds:{}},events:[]},events=[],ctx={emit:(_w,_p,msg,effect,at,extra)=>events.push({msg,effect,at,...extra})};
  const l=(pl,str,time=n)=>live2Command(w,pl,str.split(' '),time,ctx);
  const e=(pl,str,time=n)=>live2ExtraCommand(w,pl,str.split(' '),time,ctx);
  return {w,p,q,ctx,events,l,e,n};

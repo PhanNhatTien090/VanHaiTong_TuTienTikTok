@@ -4,7 +4,7 @@
 // • Thắng: +tu vi / linh thạch theo cảnh giới; mỗi 5 tầng thưởng ×2 + thẻ Báo Hỷ. Thua: không mất gì, gõ 6 xếp lượt lại.
 // • Chỉ dùng lệnh chơi miễn phí — không gắn quà / tim (luật LIVE sau đợt bị hạn chế 03/11).
 import {stageConflict} from './stage-lock.mjs';
-import {live2CombatBonus} from './live2-systems.mjs';
+import {live2CombatBonus,live2Enabled} from './live2-systems.mjs';
 import {live2ExtraBonus} from './live2-extensions.mjs';
 import {towerRule,towerRuleMultiplier,towerRuleAction} from './tower-rules.mjs';
 
@@ -35,7 +35,7 @@ export function stopTower(w,now,c){if(!towerOpen(w,now))return fail('Không có 
 
 function beginTurn(w,e,p,now){
  const floor=(Number(p.towerFloor)||0)+1;
- e.cur={id:p.id,name:p.name,floor,rule:towerRule(floor),hp:100,startedAt:now,endsAt:now+TOWER.turnMs,lastAt:now,helpers:{},helpHits:0,hits:0,next:{}};
+ e.cur={id:p.id,name:p.name,floor,rule:live2Enabled(w)?towerRule(floor):null,hp:100,startedAt:now,endsAt:now+TOWER.turnMs,lastAt:now,helpers:{},helpHits:0,hits:0,next:{}};
 }
 function finishTurn(w,e,now,c,won){
  const t=e.cur;e.cur=null;const p=w.players[t.id];e.seq++;
@@ -57,7 +57,7 @@ export function tickTower(w,now,c){
  const t=e.cur;
  if(t){
   const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
-  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower'))*towerRuleMultiplier(t,p,now)*dt);
+  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*(live2Enabled(w)?Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower'))*towerRuleMultiplier(t,p,now):1)*dt);
   if(t.hp<=0)finishTurn(w,e,now,c,true);
   else if(now>=t.endsAt||!p)finishTurn(w,e,now,c,false);
  }
@@ -76,7 +76,7 @@ export function tickTower(w,now,c){
 
 export function towerCommand(w,p,cmd,now,c){
  if(!towerOpen(w,now))return null;
- const join=TOWER_JOIN.includes(cmd),hit=HIT.includes(cmd),special=['phatran','hoiphap','tamtinh','tamlinh'].includes(cmd);if(!join&&!hit&&!special)return null;
+ const join=TOWER_JOIN.includes(cmd),hit=HIT.includes(cmd),special=live2Enabled(w)&&['phatran','hoiphap','tamtinh','tamlinh'].includes(cmd);if(!join&&!hit&&!special)return null;
  if(!real(p))return fail('Vân Hải Tháp dành cho người xem thật.');
  const e=w.tower,t=e.cur;
  if(join){
@@ -93,8 +93,8 @@ export function towerCommand(w,p,cmd,now,c){
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
   t.next[p.id]=now+TOWER.hitCdMs;t.hits++;const ability=special?towerRuleAction(t,p,cmd,now):null;
   if(special&&!ability?.ok)return fail(ability?.message||'Tầng này không dùng đạo thuật đó.');
-  const mult=Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower'));
-  t.hp=Math.max(0,t.hp-(hit?hitDamage(p.realm,t.floor)*towerRuleMultiplier(t,p,now):ability.damage)*mult);
+  const mult=live2Enabled(w)?Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower')):1;
+  t.hp=Math.max(0,t.hp-(hit?hitDamage(p.realm,t.floor)*(live2Enabled(w)?towerRuleMultiplier(t,p,now):1):ability.damage)*mult);
  }else{
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
   t.next[p.id]=now+TOWER.helpCdMs;t.helpers[p.id]=(t.helpers[p.id]||0)+1;t.helpHits++;t.hp=Math.max(0,t.hp-HELP_DAMAGE);

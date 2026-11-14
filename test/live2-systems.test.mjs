@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {LIVE2_PATHS,live2Command,live2Insight,live2CombatBonus,live2PlayerView} from '../live2-systems.mjs';
 const make=()=>{
  const p={id:'u',name:'Tiến',realm:2,stones:999,herbs:999,artifacts:['jade'],equipped:'jade',cooldowns:{},lastActive:10e6},
- w={mode:'live',players:{u:p},settings:{},social:{bonds:{}},events:[]},
+ w={mode:'live',players:{u:p},settings:{live2Enabled:true},social:{bonds:{}},events:[]},
  events=[],emit=(_w,_p,message,effect,now,extra)=>events.push({message,effect,now,...extra});
  return {p,w,events,ctx:{emit},call:(raw,now=10e6)=>live2Command(w,p,raw.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().split(' '),now,{emit})};
 };

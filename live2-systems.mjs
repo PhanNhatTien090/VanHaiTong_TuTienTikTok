@@ -9,6 +9,8 @@ export const LIVE2_PATHS=Object.freeze({
 });
 export const LIVE2_LEVELS=[0,15,40,80,140];
 export const LIVE2_DAILY_INSIGHT=12;
+// LIVE is opt-in only; DEMO is safe to explore and never uses a real TikTok stream.
+export const live2Enabled=w=>w?.mode==='demo'||w?.settings?.live2Enabled===true;
 const DAY=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'});
 const day=now=>DAY.format(now);
 const real=p=>!!p&&!p.resident&&!p.puppet&&!p.webOnly;
@@ -38,7 +40,7 @@ export function live2CombatBonus(p,now=Date.now(),kind='boss'){
 }
 export function live2PlayerView(p){const s=p.live2;if(!s?.path)return null;return {path:s.path,pathName:live2Path(p)?.name,level:live2Level(p),insight:s.insight,guildId:s.guildId||null,masterId:s.masterId||null};}
 export function live2Insight(w,p,input,result,now,emit){
- if(w.settings?.live2Enabled===false||!real(p)||!p.live2?.path||!result?.ok||result.duplicate||result.pending||result.cooldown||result.xpCooldown)return 0;
+ if(!live2Enabled(w)||!real(p)||!p.live2?.path||!result?.ok||result.duplicate||result.pending||result.cooldown||result.xpCooldown)return 0;
  const type=result.heartCultivated?'cultivate':input.type;
  const weights={cultivate:1,gather:2,attack:2,checkin:2,craft:2,brew:2,breakthrough:3};
  if(!weights[type])return 0;
@@ -55,7 +57,7 @@ export function live2Insight(w,p,input,result,now,emit){
  return add;
 }
 export function live2Command(w,p,words,now,ctx){
- if(w.settings?.live2Enabled===false||!real(p))return null;
+ if(!live2Enabled(w)||!real(p))return null;
  const cmd=words[0],rest=words.slice(1).join(' '),s=ensure(p),emit=ctx.emit;
  if(cmd==='dao'&&['tu','ngo',''].includes(rest)){
   const desc=s.path?live2Path(p).name+' cấp '+live2Level(p)+' • Đạo Ngộ '+s.insight+' • hôm nay '+(s.daily.day===day(now)?s.daily.earned:0)+'/'+LIVE2_DAILY_INSIGHT:'Trúc Cơ mở chọn đạo: chọn đạo kiếm/ma/thể/thú/đan';

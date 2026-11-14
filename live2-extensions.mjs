@@ -1,7 +1,7 @@
 // LIVE 2.0 optional gameplay extensions.
 // Existing guild/hall/bond/tower/currency schemas remain authoritative; this module never replaces them.
 import {stageConflict} from './stage-lock.mjs';
-import {live2Level,live2Path,LIVE2_DAILY_INSIGHT} from './live2-systems.mjs';
+import {live2Level,live2Path,LIVE2_DAILY_INSIGHT,live2Enabled} from './live2-systems.mjs';
 
 const fail=message=>({ok:false,message}),ok=(message,more={})=>({ok:true,message,...more});
 const dFmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -26,7 +26,7 @@ export function live2ExtraBonus(p,now,kind='boss'){
  return 1;
 }
 export function live2MentorActivity(w,p,input,result,now,ctx){
- if(w.settings?.live2Enabled===false||!eligible(p)||!p.live2?.masterId||!result?.ok||result.duplicate||result.pending||result.cooldown)return 0;
+ if(!live2Enabled(w)||!eligible(p)||!p.live2?.masterId||!result?.ok||result.duplicate||result.pending||result.cooldown)return 0;
  const type=result.heartCultivated?'cultivate':input.type;
  if(!['cultivate','gather','attack','checkin','breakthrough'].includes(type))return 0;
  const s=p.live2,today=day(now);
@@ -57,12 +57,14 @@ function startGuildWar(w,p,now,ctx,wanted){
  return ok('Hội Chiến bắt đầu 90 giây.',{warId:world.guildWar.id});
 }
 export function live2GuildWarView(w,now){
+ if(!live2Enabled(w))return null;
  const e=w.live2World?.guildWar;
  if(!e||!(e.endsAt>now||e.finishedAt&&now-e.finishedAt<10000))return null;
  return {id:e.id,active:e.endsAt>now,endsAt:e.endsAt,groups:e.groups.map(g=>({id:g.id,name:g.name,score:g.score})),result:e.result||null};
 }
 export function live2Tick(w,now,ctx){
  const e=w.live2World?.guildWar;
+ if(e&&!live2Enabled(w)){e.finishedAt??=now;e.cancelled=true;return;}
  if(!e||e.finishedAt||now<e.endsAt)return;
  e.finishedAt=now;
  const a=e.groups[0],b=e.groups[1],winner=a.score===b.score?null:a.score>b.score?a.id:b.id;
@@ -79,7 +81,7 @@ export function live2Tick(w,now,ctx){
 }
 export function live2ExtraCommand(w,p,words,now,ctx){
  const cmd=words[0],rest=words.slice(1).join(' '),s=p?.live2;
- if(w.settings?.live2Enabled===false||!eligible(p))return null;
+ if(!live2Enabled(w)||!eligible(p))return null;
  if(cmd==='dan'&&rest==='phuong'){
   const names=Object.entries(WORDS).filter(([,v])=>(p.realm||0)>=v.level).map(([key,v])=>key+' ('+v.herbs+' thảo, '+v.stones+' đá)');
   const msg='Đan phương: '+names.join(' • ')+' • gõ chế đan + tên';
