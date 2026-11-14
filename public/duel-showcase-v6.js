@@ -35,7 +35,7 @@ export function v6Budget(scene){
 export function prewarmDuelV6(scene,match){
  if(!match?.id||scene.v6AssetMatch===match.id)return;
  scene.v6AssetMatch=match.id;
- scene.v6Assets={};
+ scene.v6Assets={};scene.v6MissingAssets=new Set();
  if(typeof Image==='undefined')return;
  const ids=[match.a,match.b].map(id=>v6SkillFamily(match.techniques?.[id]?.id));
  const families=new Set(ids);if(families.has('thunder'))families.add('thunderSeal');
