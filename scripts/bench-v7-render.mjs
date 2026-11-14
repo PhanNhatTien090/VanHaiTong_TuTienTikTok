@@ -27,7 +27,7 @@ for(const tier of ['high','crowded']){
   fps:tier==='crowded'?24:30,motion:true,reduceFlash:tier==='crowded',
   cinematicV2:true,v6Showcase:true,v7Overdrive:true,v6Assets:v6,v7VariantArt:v7,v7ShatterArt:shatter,v7PremiumArt:premium};
  c.setTransform(.6,0,0,.6,0,0);
- const costs=[],types={ultimate:[],gift:[],shatter:[]};let count=0;
+ const costs=[],types={ultimate:[],gift:[],shatter:[],concurrent:[]};let count=0;
  const sample=(type,fn)=>{const time=performance.now();fn();const ms=performance.now()-time;costs.push(ms);types[type].push(ms);count++;};
  for(const id of skills)for(let f=0;f<20;f++){
   c.clearRect(0,0,W,H);
@@ -50,7 +50,29 @@ for(const tier of ['high','crowded']){
     eventGiftQueue:{activeRows:[]}};
   sample('shatter',()=>drawOverdriveV7(ss,c,ms,H,1000+ms));
  }
- results.push({tier,frames:count,cpuMeanMs:Number((costs.reduce((a,b)=>a+b,0)/count).toFixed(2)),
+ // Worst-case collision: dual-caster finale + two major gifts + fullscreen break.
+ // Exactly one real render surface, bounded 4 effects; no make-believe 80 spells.
+ for(let f=0;f<40;f++){
+  c.clearRect(0,0,W,H);
+  const k=.57+f*.009;
+  const gifts=[1000,2000].map((value,i)=>({id:'stress:'+i,mode:'duel',user:i?'b':'a',
+   value,profile:{duration:4200},start:0,
+   wardEffect:{kind:i?'shield-heal':'shield-break',target:i?'b':'a',amount:12000}}));
+  const shatterMoment=900+f*12;
+  const ss={...scene,socialScene:'tournament',height:H,duelImpact:{ultimate:true,at:900,x:450,y:890},
+   eventGiftQueue:{activeRows:[]}};
+  sample('concurrent',()=>{
+   drawV7Variant(scene,c,f*32,actor,target,{id:'soul'},k);
+   drawDuelV6Ultimate(scene,c,f*32,{...actor,x:675},target,{id:'thunder'},k,{counter:true});
+   for(const g of gifts)drawGiftOverdriveV7(scene,c,g,4200*.36+f*19,actor,target,H);
+   drawOverdriveV7(ss,c,f*25,H,shatterMoment);
+  });
+ }
+ const p95Concurrent=percentile(types.concurrent,.95);
+ // CI CPU render budget, not a guarantee of system GPU/video output.
+ if(tier==='crowded'&&p95Concurrent>18)throw Error('Crowded worst-case V7 CPU p95 exceeds 18 ms: '+p95Concurrent);
+ results.push({tier,frames:count,p95ConcurrentCpuMs:p95Concurrent,
+  cpuMeanMs:Number((costs.reduce((a,b)=>a+b,0)/count).toFixed(2)),
   p95TotalCpuMs:percentile(costs,.95),maxCpuMs:Number(Math.max(...costs).toFixed(2)),
   individual:Object.fromEntries(Object.entries(types).map(([id,values])=>[id,{count:values.length,p95CpuMs:percentile(values,.95)}]))});
 }
