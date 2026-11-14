@@ -4,9 +4,19 @@ import {DUEL_RELEASE_AT,drawDuelCharge,drawDuelRelease,duelSoundPreset} from './
 import {drawDuelFeedback} from './duel-feedback-v3.js';
 import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
+import {portraitCanvas} from './linh-bai.js';
 import {drawCombatTechnique} from './combat-techniques.js';
 export function syncSocialStage(scene,state){
  scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;
+ const match=state.socialStatus?.tournament?.current;
+ if(match?.id&&match.id!==scene.duelPortraitMatchId){
+  scene.duelPortraitMatchId=match.id;
+  const fighters=(state.players||[]).filter(p=>p.id===match.a||p.id===match.b);
+  // Pre-raster the two existing in-game character portraits outside the render frame.
+  // Do not cache an empty portrait before sprite sheets have decoded.
+  setTimeout(()=>{if(scene.duelPortraitMatchId!==match.id||!scene.standingArt?.naturalWidth)return;
+   for(const p of fighters)try{portraitCanvas(scene,p);}catch{}},0);
+ }
  const kind=state.socialScene;document.body.classList.toggle('social-stage',!!kind);document.body.classList.toggle('social-podium',kind==='tournament'&&scene.socialStage.length===1);
  if(kind===scene.socialArtKind)return;scene.socialArtKind=kind;scene.socialArt=null;if(!kind)return;
  const image=new Image();image.onload=()=>{if(scene.socialArtKind!==kind)return;const size=scene.budget?.level==='light'?256:384,frames=[];for(let i=0;i<6;i++){const frame=makeSurface(size,size);if(!frame)continue;frame.getContext('2d').drawImage(image,i%3*image.naturalWidth/3,Math.floor(i/3)*image.naturalHeight/2,image.naturalWidth/3,image.naturalHeight/2,0,0,size,size);frames.push(frame);}scene.socialArt=frames;};image.src='/assets/events-v1/'+kind+'-effects.png';
