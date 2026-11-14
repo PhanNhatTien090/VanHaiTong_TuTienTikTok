@@ -6,6 +6,13 @@ import {donorPortrait} from './gift-donor.js';
 import {drawAura,drawSeal,drawCelestialImpact} from './cinematic-vfx.js';
 
 export const DUEL_RELEASE_AT=.56;
+export function duelSoundPreset(tech){
+ const id=String(tech?.id||'');
+ if(['thunder','celestial','meteor','sevenstars'].includes(id))return 'storm';
+ if(['flame','dragon','dora-cannon','soul'].includes(id))return 'flame';
+ if(['slash','sword','bamboo','flowersword','stararrow','frost'].includes(id))return 'blade';
+ return 'void';
+}
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
 const fadeInOut=(k,a=.14,b=.15)=>Math.min(1,clamp(k/a),clamp((1-k)/b));
 const validColor=color=>/^#[0-9a-f]{6}$/i.test(color||'')?color:'#9cecff';
