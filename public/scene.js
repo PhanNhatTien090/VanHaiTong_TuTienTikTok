@@ -46,7 +46,7 @@ import {linWanWorn,loadLinWanArt,drawLinWanBody,drawLinWanQi,drawLinWanVisitor} 
 import {loadSpiritBeasts} from './gift-spirit-beasts.js';
 import {cinematicQuality,cinematicSeed,drawLightning,drawShockwave,drawAura,drawEnergyOrb,drawSeal,drawDissolve,drawTrail,prepareCinematicArt} from './cinematic-vfx.js';
 import {boundedCameraJolt,cameraImpulse,cameraShakeStrength,feedbackBudget,mixCameraImpulses,takeFeedbackCue} from './cinematic-feedback.js';
-import {syncEventGiftFx,eventGiftImpulse,drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
+import {syncEventGiftFx,eventGiftImpulse,drawEventGiftFx} from './event-gift-fx.js?v=v7-overdrive-premium-20261115';
 import {eventDonationContext,addEventDonation,drawEventDonations} from './event-donations.js';
 import {giftSpectacleTier,loadGiftSpectacle,drawGiftSpectacle,spectacleShake,spectacleV2,GIFT_HITS} from './gift-spectacle.js';
 import {loadFish,floatingTargets,drawWorldAmbience} from './world-ambience.js';
@@ -61,7 +61,7 @@ import {syncMaze,mazeOn,drawMaze,drawMazeResult} from './maze.js';
 import {syncTease,teaseIds,drawTease} from './tease.js';
 import {syncBonk,bonkIds,applyBonkWalk,drawBonk} from './bonk.js?v=minor-overlay-20261114';
 import {syncAlchemy,alchemyTargets,drawAlchemy,drawAlchemyResult,drawAlchemySoot} from './alchemy.js';
-import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=event-donors-20261114';
+import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=v7-overdrive-premium-20261115';
 import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';
