@@ -39,7 +39,12 @@ export function feedbackPlan(event){
  const stones=Number(event.reward?.stones)||0;
  if(stones>0&&!event.gift)return {kind:'stones',priority:stones>=200?3:1,level:stones>=200?3:stones>=30?2:1,name:event.name,title:'LINH THẠCH THIÊN GIÁNG',amount:stones};
  if(event.achieve?.kind==='disciple')return {kind:'stage',priority:4,level:2,name:event.name,title:'CHÂN TRUYỀN ĐỆ TỬ'};
- if(event.miniReward||event.hallWarReward||event.visitorAward||event.petAward)return {kind:'celebrate',priority:2,level:1,name:event.name,title:'PHÚC DUYÊN GIÁNG LÂM'};
+ if(event.warTurn)return {kind:'celebrate',priority:3,level:2,name:event.name,title:'CHIẾN TUYẾN ĐẢO CHIỀU'};
+ if(event.warFinal||event.warEnd)return {kind:'celebrate',priority:3,level:3,name:event.name,title:'CHÍNH MA ĐẠI CHIẾN'};
+ if(event.hallWarEnd||event.tournamentChampion)return {kind:'celebrate',priority:3,level:3,name:event.name,title:'CỬU PHONG VINH QUANG'};
+ if(event.alchemyEnd)return {kind:'celebrate',priority:2,level:2,name:event.name,title:'THÀNH ĐAN PHÚC LỘC'};
+ if(event.mazeFinishRank||event.mazeEnd)return {kind:'celebrate',priority:2,level:2,name:event.name,title:'BÍ CẢNH THẮNG LỢI'};
+ if(event.miniReward||event.hallWarReward||event.visitorAward||event.petAward||event.opportunityEnd)return {kind:'celebrate',priority:2,level:1,name:event.name,title:'PHÚC DUYÊN GIÁNG LÂM'};
  return null;
 }
 export function feedbackParticles(kind,light=false,level=1){
