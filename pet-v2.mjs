@@ -224,7 +224,7 @@ export function petV2Tick(w,now,emit){
  if(session&&!session.rewarded&&['community','settlement'].includes(cove.phase)&&
     Object.keys(session.participants||{}).length>=session.goal){
    session.rewarded=true;
-   const participants=Object.keys(session.participants).filter(id=>valid(w.players[id])&&!w.playTransfers?.[id]?.phase==='web');
+   const participants=Object.keys(session.participants).filter(id=>valid(w.players[id])&&w.playTransfers?.[id]?.phase!=='web');
    for(const id of participants){const p=w.players[id],o=owner(w,p,true);if(!o)continue;
     o.inventory.evolutionShards=Math.min(999,(o.inventory.evolutionShards||0)+1);
     gainXp(w,p,'cove',10,now);
