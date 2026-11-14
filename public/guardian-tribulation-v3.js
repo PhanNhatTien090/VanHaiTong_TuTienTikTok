@@ -1,3 +1,4 @@
+import {drawOrnateSeal,drawCelestialImpact} from './cinematic-vfx.js';
 // Guardian Tribulation V3.5 — shows real pre-registered disciples assisting.
 const TAU=Math.PI*2,clamp=n=>Math.max(0,Math.min(1,n));
 export function guardianTribulationState(event,phase){
@@ -32,6 +33,11 @@ export function drawGuardianTribulation(scene,c,event,phase,H){
   const name=String(scene.playerIndex?.get(g.helpers[i])?.name||'Hộ pháp').slice(0,16);
   c.globalAlpha=g.energy;c.font='700 14px Segoe UI,Arial';c.fillStyle='#f6e7bd';c.textAlign='center';c.fillText(name,x,py-52,152);
  }
+ if(g.shield>.01&&!light){
+  drawOrnateSeal(c,450,targetY-112,145,clock*.035,g.shield*.58);
+ }
+ // A single localized impact at the breakthrough point; no full screen flash.
+ if(!light)drawCelestialImpact(c,450,targetY-112,(phase-.70)*Math.max(1,event.duration||20000),155,.46);
  if(g.shield>.01){
   c.globalAlpha=g.energy*g.shield*.6;c.strokeStyle='#ffda96';c.lineWidth=light?2:3;
   c.beginPath();c.ellipse(450,targetY-112,95+g.shield*80,32+g.shield*50,0,0,TAU);c.stroke();
