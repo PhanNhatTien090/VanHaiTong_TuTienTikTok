@@ -16,15 +16,16 @@ export function premiumArtKeys(match){
  const ids=[match?.a,match?.b].map(id=>match?.techniques?.[id]?.id);
  const keys=[];
  for(const id of ids){
-  if(['thunder','meteor','sevenstars'].includes(id))keys.push('thunderDragon','thunderImpact');
-  if(['sword','slash','bamboo','flowersword','stararrow'].includes(id))keys.push('swordStorm');
-  if(['flame','petal'].includes(id))keys.push('phoenix','phoenixImpact');
-  if(['celestial','lotus','stars','starmirror','bell'].includes(id))keys.push('taiji');
+  if(id==='thunder')keys.push('thunderDragon','thunderImpact');
+  if(['sword','slash','bamboo','stararrow'].includes(id))keys.push('swordStorm');
+  if(id==='flame')keys.push('phoenix','phoenixImpact');
+  if(id==='celestial')keys.push('taiji');
  }
  return [...new Set([...keys,'shatter'])];
 }
 export function prewarmV7Premium(scene,match){
- if(!V7_PREMIUM_ENABLED||!scene||!match?.id||typeof Image==='undefined')return false;
+ if(!V7_PREMIUM_ENABLED||!scene||!match?.id||typeof Image==='undefined'||
+   scene.budget?.crowded||scene.budget?.pressured||scene.budget?.level==='light')return false;
  if(scene.premiumMatchId===match.id)return true;
  scene.premiumMatchId=match.id;scene.v7PremiumArt={};scene.v7PremiumErrors=new Set();
  const valid=new Set(V7_PREMIUM_FILES);
