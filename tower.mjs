@@ -7,6 +7,7 @@ import {stageConflict} from './stage-lock.mjs';
 import {live2CombatBonus,live2Enabled} from './live2-systems.mjs';
 import {live2ExtraBonus} from './live2-extensions.mjs';
 import {towerRule,towerRuleMultiplier,towerRuleAction} from './tower-rules.mjs';
+import {live2TribulationBonus} from './live2-tribulation.mjs';
 
 export const TOWER=Object.freeze({durationMs:240000,turnMs:25000,gapMs:2500,hitCdMs:900,helpCdMs:2000,maxQueue:20,podiumMs:8000,milestone:5});
 export const TOWER_JOIN=['leothap','thap','vaothap'];
@@ -57,7 +58,7 @@ export function tickTower(w,now,c){
  const t=e.cur;
  if(t){
   const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
-  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*(live2Enabled(w)?Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower'))*towerRuleMultiplier(t,p,now):1)*dt);
+  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*(live2Enabled(w)?Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower')*live2TribulationBonus(p,now))*towerRuleMultiplier(t,p,now):1)*dt);
   if(t.hp<=0)finishTurn(w,e,now,c,true);
   else if(now>=t.endsAt||!p)finishTurn(w,e,now,c,false);
  }
@@ -94,7 +95,7 @@ export function towerCommand(w,p,cmd,now,c){
   const ability=special?towerRuleAction(t,p,cmd,now):null;
   if(special&&!ability?.ok)return fail(ability?.message||'Tầng này không dùng đạo thuật đó.');
   t.next[p.id]=now+TOWER.hitCdMs;t.hits++;
-  const mult=live2Enabled(w)?Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower')):1;
+  const mult=live2Enabled(w)?Math.min(1.17,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower')*live2TribulationBonus(p,now)):1;
   t.hp=Math.max(0,t.hp-(hit?hitDamage(p.realm,t.floor)*(live2Enabled(w)?towerRuleMultiplier(t,p,now):1):ability.damage)*mult);
  }else{
   if(t.next[p.id]>now)return {ok:true,cooldown:true};

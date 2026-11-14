@@ -13,7 +13,7 @@ export const LIVE2_DAILY_INSIGHT=12;
 // without treating read-only status commands as farmable progression actions.
 export function live2RecordAction(w,p,words,result){
  if(!result?.ok||result.duplicate||result.cooldown)return false;
- const msg=(words||[]).join(' '), mutates=/^(?:chon dao |doi dao |dao ky$|tinh luyen|lap hoi |vao hoi |roi hoi$|hoi (?:pho |truong lao |xay$|chien)|xin su |nhan do$|truyen dao$|xuat su$|dong tam$|che dan |dan dung |phap an$|chien hoi$)/.test(msg);
+ const msg=(words||[]).join(' '), mutates=/^(?:chon dao |doi dao |dao ky$|tinh luyen|lap hoi |vao hoi |roi hoi$|hoi (?:pho |truong lao |xay$|chien)|xin su |nhan do$|truyen dao$|xuat su$|dong tam$|ho kiep |che dan |dan dung |phap an$|chien hoi$)/.test(msg);
  if(!mutates)return false;
  p.interactions=(p.interactions||0)+1;w.totalInteractions=(w.totalInteractions||0)+1;
  return true;
