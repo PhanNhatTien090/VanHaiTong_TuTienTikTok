@@ -12,7 +12,7 @@ export function overdriveBudget(scene){
   motion:scene.motion!==false};
 }
 export function prewarmOverdrive(scene){
- if(!scene||scene.v7ShatterLoading||scene.v7ShatterArt||typeof Image==='undefined')return;
+ if(!scene||scene.v7ShatterLoading||scene.v7ShatterFailed||scene.v7ShatterArt||typeof Image==='undefined')return;
  scene.v7ShatterLoading=true;
  const img=new Image();
  img.decoding='async';
