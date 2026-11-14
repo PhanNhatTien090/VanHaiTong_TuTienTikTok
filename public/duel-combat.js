@@ -1,7 +1,29 @@
 import {portraitCanvas} from './linh-bai.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
 export const DUEL_CAST_MS=1150;
-export function duelCastState(age){const elapsed=Math.max(0,age-650),turn=Math.floor(elapsed/DUEL_CAST_MS);return {turn,side:turn%2,k:elapsed%DUEL_CAST_MS/DUEL_CAST_MS,ultimate:turn%6===5,ready:age>=650};}
+// V4 (15/11): trận Luận Kiếm 25 s có nhịp thay vì vòng lặp đổi bên đều đều.
+// Mở trận → Thăm dò (chiêu nhẹ, chậm) → Tụ khí (không ra chiêu) → Công kích (liên chiêu) → Phòng thủ
+// (bên đang kém linh áp dựng kết giới, bên dẫn đánh vào kết giới) → Tuyệt kỹ (bên dẫn, theo linh áp THẬT của server) → Kết thúc.
+// Chỉ là trình diễn: thắng thua vẫn do decide() ở server (tổng tu vi ≥3% hoặc điểm + trợ lực).
+export const DUEL_PHASES=Object.freeze([
+ {id:'open',from:0,to:1500},
+ {id:'probe',from:1500,to:6300,period:1600,label:'THĂM DÒ'},
+ {id:'charge',from:6300,to:8900,label:'TỤ KHÍ'},
+ {id:'attack',from:8900,to:17000,period:DUEL_CAST_MS,label:'CÔNG KÍCH'},
+ {id:'guard',from:17000,to:19800,period:1400,label:'PHÒNG THỦ'},
+ {id:'ultimate',from:19800,to:23300,period:3500,label:'TUYỆT KỸ'},
+ {id:'finish',from:23300,to:Infinity}
+]);
+export const duelPhase=age=>DUEL_PHASES.find(p=>age>=p.from&&age<p.to)||DUEL_PHASES[0];
+// lead = linh áp trái − linh áp phải (server). leader 0 = bên trái.
+export function duelCastState(age,lead=0){
+ const phase=duelPhase(Math.max(0,age)),index=DUEL_PHASES.indexOf(phase),local=Math.max(0,age-phase.from),span=phase.to-phase.from;
+ const leader=lead>=0?0:1,phaseK=Number.isFinite(span)?Math.min(1,local/span):1;
+ if(!phase.period)return {phase:phase.id,label:phase.label||'',phaseK,leader,turn:index*100,side:leader,k:0,ultimate:false,ready:false};
+ const n=Math.floor(local/phase.period),k=local%phase.period/phase.period,fits=(n+1)*phase.period<=span+1;
+ const side=phase.id==='guard'||phase.id==='ultimate'?leader:n%2;
+ return {phase:phase.id,label:phase.label,phaseK,leader,turn:index*100+n,side,k,ultimate:phase.id==='ultimate',light:phase.id==='probe',guard:phase.id==='guard',ready:fits,period:phase.period};
+}
 export function drawDuelImpact(c,orb,cast,tech,light=false){
  const k=cast.k;if(k<.34||k>.94)return;
  const u=(k-.34)/.6,fade=Math.sin(u*Math.PI),color=tech.color||'#a9eaff',power=cast.ultimate?1.7:1;

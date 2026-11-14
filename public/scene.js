@@ -569,7 +569,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       const jolt=boss?.impactAt?cameraImpulse(this,'major',Date.now()-boss.impactAt,boss.seed,boss.quality==='light'):null;
       const attack=this.effects.find(e=>e.effect==='attack'&&e.technique&&impactSeverity(e)>=2&&t-e.start-e.duration*.55>=0&&t-e.start-e.duration*.55<300);
       const hit=attack?cameraImpulse(this,impactSeverity(attack)>=3?'medium':'minor',t-attack.start-attack.duration*.55,attack.cinematicSeed,feedbackBudget(this)):null;
-      const baseJolt=jolt?mixCameraImpulses(jolt,gift):gift;
+      const duelJolt=this.duelImpact&&this.socialScene==='tournament'?cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37):null; /* V4: tỷ thí — minor mỗi đòn công kích, medium lúc tuyệt kỹ */
+      const baseJolt0=jolt?mixCameraImpulses(jolt,gift):gift,baseJolt=duelJolt?mixCameraImpulses(baseJolt0,duelJolt):baseJolt0;
       const mixed=hit?mixCameraImpulses(baseJolt,hit):baseJolt;
       return boundedCameraJolt(base,mixed,H,!!(mixed.x||mixed.y));
     }

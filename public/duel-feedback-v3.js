@@ -1,14 +1,15 @@
 // V3.5 Duel HUD — reflects server-authoritative duel aura and accepted boosts.
 // Does not invent HP or change tournament winner logic.
+import {duelCastState} from './duel-combat.js';
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
 export function duelVisualState(match,id,now){
  const age=Math.max(0,now-(match?.startedAt||now)),boosts=Math.max(0,Math.min(3,Number(match?.boosts?.[id])||0));
  const aura=clamp((Number(match?.aura?.[id])||0)/100);
  const boostAge=Math.max(0,now-(Number(match?.lastBoost?.[id])||-1e9));
  // This secondary bar is a telegraphed casting phase, not a fake combat stat.
- const castClock=Math.max(0,age-650),phase=castClock%1150/1150;
- const recharge=clamp(.25+.75*phase);
- return {age,aura,boosts,boostAge,charge:recharge,recovery:boostAge<1450?1-clamp(boostAge/1450):0};
+ // V4: thanh tụ khí theo pha thật của trận (đầy dần lúc Tụ Khí, nạp theo từng chiêu lúc ra chiêu).
+ const cast=duelCastState(age),recharge=cast.phase==='charge'?cast.phaseK:cast.ready?clamp(.25+.75*cast.k):cast.phase==='open'?0:1;
+ return {age,aura,boosts,boostAge,phase:cast.phase,charge:recharge,recovery:boostAge<1450?1-clamp(boostAge/1450):0};
 }
 export function drawDuelFeedback(scene,c,match,targets,now){
  if(!match||!targets||targets.length!==2)return;
