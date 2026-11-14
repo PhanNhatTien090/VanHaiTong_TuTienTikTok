@@ -6,15 +6,23 @@ const N=Date.now();
 function world(){const w=createWorld('live');w.settings.ascensionShowcase=true;w.settings.goldenHour=true;action(w,{type:'join',userId:'a',name:'An'},N);return w;}
 test('real free progression reaches every realm at a bounded, progressively slower cadence',()=>{
  const w=world(),p=w.players.a,milestones=[],breaks=new Set();w.settings.dailyPracticeLimit=0;w.settings.dailyRealmLimit=0;let now=N;
- for(let r=0;r<REALMS.length-1;r++){
+ // 12/11: từ realm 24 requiredQi = qiCurve(23)·4^(realm−23), cố ý tách khỏi bảng lượt → cày thật tới 24, phần sau đo nhịp riêng.
+ const FREE_TOP=ASCENSION_PRACTICE_STEPS.length-1;
+ for(let r=0;r<FREE_TOP;r++){
   let count=0;while(!readyToBreak(p)){p.engagedAt=now; /* 09/11: người chơi thật có trò chuyện → Đạo tâm không chặn */assert.equal(action(w,{type:'cultivate',userId:p.id},now).ok,true);now+=10000;assert.ok(++count<=ASCENSION_PRACTICE_STEPS[r]);}
   const qi=p.qi,stones=p.stones,needQi=requiredQi(p),needStones=requiredStones(p);
   assert.equal(action(w,{type:'breakthrough',userId:p.id},now-1).ok,true);assert.equal(p.realm,r+1);breaks.add(w.events.findLast(e=>e.effect==='breakthrough').id);
   assert.equal(p.qi,qi-needQi);assert.equal(p.stones,stones-needStones);milestones.push({realm:p.realm,seconds:(now-N)/1000,actions:count});
  }
- assert.equal(p.giftCoins,0);assert.equal(p.realm,REALMS.length-1);assert.equal(breaks.size,REALMS.length-1);
+ assert.equal(p.giftCoins,0);assert.equal(p.realm,FREE_TOP);assert.equal(breaks.size,FREE_TOP);
  assert.ok(milestones[3].seconds<=150);assert.ok(milestones[17].seconds<=ASCENSION_PRACTICE_STEPS.reduce((n,x)=>n+x,0)*10);assert.ok(milestones[8].actions>=20);assert.ok(milestones[17].actions>milestones[3].actions);
- assert.equal(action(w,{type:'breakthrough',userId:p.id},now).ok,false);
+ // Realm 24→28: đo số lượt tu luyện miễn phí cần thật (tu vi mỗi lượt đo từ game) — phải chậm dần và chậm hơn mốc 36.000.
+ let previous=ASCENSION_PRACTICE_STEPS[FREE_TOP];
+ for(let r=FREE_TOP;r<REALMS.length-1;r++){
+  p.realm=r;p.qi=0;p.readyRealm=null;p.engagedAt=now;assert.equal(action(w,{type:'cultivate',userId:p.id},now).ok,true);now+=10000;
+  const actions=Math.ceil(requiredQi(p)/p.qi);assert.ok(actions>previous,`realm ${r}: ${actions} lượt phải > ${previous}`);previous=actions;
+ }
+ p.realm=REALMS.length-1;p.qi=1e18;p.stones=1e12;assert.equal(action(w,{type:'breakthrough',userId:p.id},now).ok,false);
 });
 test('cooldown, duplicate chat, likes and failed attacks cannot manufacture showcase progress (strict mode heartPlay=false)',()=>{
  const w=world();w.settings.heartPlay=false;const p=w.players.a;action(w,{type:'cultivate',userId:'a'},N);const after=[p.qi,p.stones];
