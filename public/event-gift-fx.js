@@ -21,7 +21,7 @@ export function loadEventGiftArt(scene){if(scene.eventGiftArt||scene.eventGiftLo
 export class EventGiftQueue{
  constructor(){this.seen=new Set();this.pending=[];this.active=null;this.activeRows=[];this.context=null;}
  sync(context,rows,serverNow){if(context!==this.context){this.context=context;this.pending=[];this.active=null;this.activeRows=[];}if(!context)return;for(const row of rows||[]){if(this.seen.has(row.id))continue;this.seen.add(row.id);if(serverNow-row.at>15000||row.at>serverNow+2000||!eventGiftTier(row.value))continue;
-  const same=this.pending.find(e=>e.user===row.user&&(row.comboKey?e.comboKey===row.comboKey&&e.gift===row.gift:e.value<100&&row.value<100&&Math.abs(e.at-row.at)<1200));if(same){same.value+=row.value;same.count=(same.count||1)+(row.count||1);same.at=row.at;same.comboFinal=row.comboFinal;if(row.comboKey)same.readyAt=Math.min(same.firstAt+20000,performance.now()+1500);}else this.pending.push({...row,firstAt:performance.now(),readyAt:row.comboKey?performance.now()+1500:0});}
+  const same=this.pending.find(e=>e.user===row.user&&e.value<500&&row.value<500&&(row.comboKey?e.comboKey===row.comboKey&&e.gift===row.gift:Math.abs(e.at-row.at)<1200));if(same){same.value+=row.value;same.count=(same.count||1)+(row.count||1);same.at=row.at;same.comboFinal=row.comboFinal;if(row.comboKey)same.readyAt=Math.min(same.firstAt+20000,performance.now()+1500);}else this.pending.push({...row,firstAt:performance.now(),readyAt:row.comboKey?performance.now()+1500:0});}
   while(this.seen.size>256)this.seen.delete(this.seen.values().next().value);this.pending=this.pending.filter(e=>serverNow-e.at<15000).sort((a,b)=>b.value-a.value||a.at-b.at).slice(0,8);
  }
  sampleAll(t,cap=1){
