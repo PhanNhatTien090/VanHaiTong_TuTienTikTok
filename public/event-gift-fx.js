@@ -1,4 +1,5 @@
 import {drawDuelGiftStrike} from './duel-combat.js';
+import {drawGiftOverdriveV7} from './gift-overdrive-v7.js';
 import {drawShockwave,drawCelestialImpact} from './cinematic-vfx.js';
 import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {drawSpiritGift,loadSpiritBeasts} from './gift-spirit-beasts.js';
@@ -69,7 +70,10 @@ export function drawEventGiftFx(scene,c,t,layer,mode){
  const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion?raw:.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,art=scene.eventGiftArt?.[mode];
  if(!fade)continue;const a=caster||{x:450,y:H*.42,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
  if(layer==='back'&&takeFeedbackCue(e,'castStarted',raw,0,.22)){if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',mode);if(mode==='duel'&&e.value>=1000)scene.onCinematicSound?.('duel-gift:'+e.id,e.wardEffect?.kind==='shield-heal'?'healing':'gold',q.duration*.30/1000,{priority:e.value>=2000?5:4,charge:true,gain:.5});}
- if(layer==='front'&&takeFeedbackCue(e,'impactSound',raw,.3,.43)&&e.value>=500&&e.value<1000)scene.onSpectacleImpact?.();
+ if(layer==='front'&&takeFeedbackCue(e,'impactSound',raw,.3,.43)&&e.value>=500){
+   if(e.value<1000)scene.onSpectacleImpact?.();
+   if(e.value>=2000&&scene.v7Overdrive!==false)scene.onCinematicSound?.('gift-v7-fracture:'+e.id,'fracture',0,{priority:4,charge:false,gain:.16});
+  }
  c.save();c.globalAlpha=fade;
  if(layer==='back')drawSpiritGift(c,e.value,k,a,H,{art:scene.spiritBeasts,time,light,motion:scene.motion,mode});
  if(mode==='race'){
@@ -91,6 +95,7 @@ export function drawEventGiftFx(scene,c,t,layer,mode){
    else {c.strokeStyle=q.color;c.lineWidth=3;c.beginPath();c.ellipse(x,y+25,80*open,20*open,0,0,TAU);c.stroke();}
   }else{
    drawDuelGiftStrike(c,{x,y:y-90,toX:to.x,toY:to.y-90,k,color:q.color,power:Math.min(2,.7+q.blades/10),light});
+   drawGiftOverdriveV7(scene,c,e,t,caster,to,H);
    if(e.value>=500){
     const impactAge=(raw-.30)*q.duration,tx=caster?to.x:450,ty=caster?to.y-80:H*.49;
     if(impactAge>=0&&impactAge<420){
