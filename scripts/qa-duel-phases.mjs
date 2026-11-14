@@ -27,8 +27,8 @@ try{
  let state;for(;;){state=(await(await fetch(base+'/api/state?world=demo')).json());const t=state.socialStatus?.tournament;if(t?.current)break;if(t&&!['registration','running'].includes(t.phase)){console.log('tournament ended early',t.phase);break;}for(const u of users)await act({type:'chat',userId:u.id,name:u.name,text:'tuvi'});await pause(4000);}
  const m=state.socialStatus?.tournament?.current;if(!m)throw Error('no duel');
  const startedAt=m.startedAt,serverNow=state.serverNow,skew=Date.now()-serverNow;
+ await act({type:'chat',userId:'qa-l',name:'Thanh Vân',text:'kiem'}); // kiểm số đếm trợ lực trên đài
  const marks=[['1-thamdo',3300],['2-tukhi',8200],['3-congkich',12900],['4-phongthu',18000],['5-tuyetky',20600],['6-tuyetky-va',21300],['7-ketthuc',24000]];
  for(const [name,at] of marks){const wait=startedAt+skew+at-Date.now();if(wait>0)await pause(wait);await shot(name);}
- if(marks.length)await act({type:'chat',userId:'qa-r',name:'Bạch Nguyệt',text:'kiem'});
  console.log(logs.length?logs.join('\n'):'no console errors');
 }finally{ws?.close();ch?.kill();server.kill();await pause(500);await fs.rm(data,{recursive:true,force:true}).catch(()=>{});}
