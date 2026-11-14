@@ -17,7 +17,9 @@ export function sliceSpectacleAtlas(im,factory=makeSurface,size=320){const w=im.
 export function loadGiftSpectacle(scene){if(scene.giftSpectacleArt||scene.giftSpectacleLoading||scene.giftSpectacleRetry>Date.now()||typeof Image==='undefined')return;scene.giftSpectacleLoading=true;Promise.all(['formations','impacts'].map(name=>new Promise((resolve,reject)=>{let im=new Image();im.onload=()=>{const cells=sliceSpectacleAtlas(im);im=null;resolve(cells);};im.onerror=reject;im.src='/assets/gift-spectacle-v1/'+name+'.png';}))).then(([formations,impacts])=>{scene.giftSpectacleArt={formations,impacts};scene.giftSpectacleLoading=false;}).catch(()=>{scene.giftSpectacleLoading=false;scene.giftSpectacleRetry=Date.now()+15000;});}
 const envelope=(k,center,width)=>clamp(1-Math.abs(k-center)/width);
 export const GIFT_HITS=Object.freeze([.32,.66]);
-export function spectacleV2(tier){return tier?.min>=3000;}
+// All cinematic gift tiers (500+) receive the optimized V2 feedback.
+// Per-tier budgets avoid giving a small gift the same intensity as a 5000 coin gift.
+export function spectacleV2(tier){return (tier?.min??0)>=500;}
 export function spectacleShake(e,t,motion=true){const q=giftSpectacleTier(e);if(!q||!motion)return {x:0,y:0};const age=t-e.start,k=age/(e.duration||q.duration);if(k<0||k>1)return {x:0,y:0};const amp=q.shake*(envelope(k,.34,.045)+.65*envelope(k,.68,.035));if(!amp)return {x:0,y:0};return {x:Math.sin(age*.046)*amp,y:Math.sin(age*.061+1)*amp*.65};}
 function sprite(c,im,x,y,w,h=w,angle=0,alpha=1){if(!im||alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(angle);c.drawImage(im,-w/2,-h/2,w,h);c.restore();}
 export function drawGiftSpectacle(c,e,t,k,p,H,{light=true,reducedFlash=false,art=null,layer='back',motion=true,beasts=null,upgrade=false,quality='balanced',layers,tier}={}){
@@ -38,16 +40,16 @@ export function drawGiftSpectacle(c,e,t,k,p,H,{light=true,reducedFlash=false,art
   const n=light?3:5;c.strokeStyle=color+'65';c.lineWidth=2;for(let i=0;i<n;i++){const a=i*TAU/n+time*.0006,r=size*.43;c.beginPath();c.moveTo(x+Math.cos(a)*r,cy+Math.sin(a)*r);c.lineTo(x+Math.cos(a+.2)*r*.63,cy+Math.sin(a+.2)*r*.63);c.stroke();}
   if(upgrade&&layers?.energy!==false){
    const charge=clamp((k-.08)/.24),age=(k-GIFT_HITS[0])*q.duration;
-   drawSeal(c,'gold',x,p.y+55,245,motion?time*.0009:0,.78);
+   drawSeal(c,'gold',x,p.y+55,q.min>=3000?245:175,motion?time*.0009:0,q.min>=3000?.78:.58);
    if(age<0)drawEnergyOrb(c,'gold',x,cy+60,charge,age,qiVariant(e).phase,quality,motion);
-   drawAura(c,'gold',x,cy,240,k>GIFT_HITS[0]?.33:.24*charge);
+   drawAura(c,'gold',x,cy,q.min>=3000?240:155,k>GIFT_HITS[0]?(q.min>=3000?.33:.2):.24*charge);
   }
   if(!f?.[q.cell]){c.strokeStyle=color;c.lineWidth=4;c.beginPath();c.arc(x,cy,size*.45,0,TAU);c.stroke();}
  }else{
   // Impact image expands rapidly, twists and dissolves rather than sitting on the avatar.
   if(upgrade){
    const seed=qiVariant(e).phase,age=(k-GIFT_HITS[0])*q.duration,echo=(k-GIFT_HITS[1])*q.duration;
-   if(layers?.impact!==false)drawShockwave(c,'gold',x,cy+55,age,{quality,radius:345,seed,motion,flash:!reducedFlash});
+   if(layers?.impact!==false)drawShockwave(c,'gold',x,cy+55,age,{quality:q.min>=3000?quality:'light',radius:q.min>=3000?345:180,seed,motion,flash:!reducedFlash&&q.min>=3000});
    if(layers?.impact!==false&&echo>=0&&echo<650){
     const u=echo/650,alpha=(1-u)*.76;
     drawSeal(c,'gold',x,cy+90-u*95,122+150*u,motion?-u*1.2:0,alpha);
