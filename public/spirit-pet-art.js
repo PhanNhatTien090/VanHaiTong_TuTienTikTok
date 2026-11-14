@@ -68,6 +68,19 @@ function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
 export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));return PET_FRAME_CACHE.get(id);}
 // Evolved animation loads lazily; never replaces any of the thirteen original pose atlases.
 // Absent/unapproved stage artwork immediately falls back to all original moving frames.
+// Unlike legacy astral-dragon.png (three unequal cropped source columns), each
+// generated V2 stage atlas has equal-size 160px cells. Never use slicePetFrames
+// here: it would break the original dragon's separate proportions.
+export function slicePetEvolutionFrames(image,spec,make=makeSurface){
+ if(!spec||image.width!==spec.cols*spec.size||image.height!==spec.rows*spec.size)throw Error('Invalid evolution atlas dimensions');
+ const frames=Array.from({length:spec.frames},(_,i)=>{
+  const f=make(spec.size,spec.size);if(!f)throw Error('Could not allocate evolved pet frame');
+  f.getContext('2d').drawImage(image,(i%spec.cols)*spec.size,Math.floor(i/spec.cols)*spec.size,spec.size,spec.size,0,0,spec.size,spec.size);
+  return f;
+ });
+ if(spec.frames===8)frames.period=PREMIUM_PET_PERIODS[spec.id];
+ return frames;
+}
 const PET_V2_FRAME_CACHE=new Map(),PET_V2_BAD_ASSETS=new Set();
 const PET_V2_CACHE_LIMIT=8*1024*1024, PET_V2_MAX_LOADING=2;
 const petV2Key=(id,stage)=>id+':stage'+stage;
@@ -81,7 +94,7 @@ function pumpPetV2Loads(){
   im.onload=()=>{try{
    const {spec,id}=task;
    if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size)throw Error('Evolved atlas dimensions invalid');
-   const frames=spec.frames===8?slicePremiumPetFrames(im,id):slicePetFrames(im,id);
+   const frames=slicePetEvolutionFrames(im,spec);
    if(frames.length!==spec.frames||frames.some(f=>!f))throw Error('Evolved atlas frame coverage invalid');
    finish(frames,null);
   }catch(err){finish(null,err);}};
