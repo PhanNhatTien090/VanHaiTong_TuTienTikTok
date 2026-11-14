@@ -46,6 +46,7 @@ function setup(){
   scene.onGiftSound=kind=>audio.play(kind,true);
   scene.onEventGiftSound=(kind,context)=>audio.eventGift(kind,context);
   scene.onCombatSound=(kind,variant)=>audio.combat(kind,variant);
+  scene.onFeedbackSound=(kind,level)=>audio.feedback(kind,level);
   scene.onRitualSound=kind=>audio.play(kind==='gather'?'qi':kind==='reveal'?'victory':'impact',true);
   scene.onRitualAudio=(event,elapsed)=>{
     if(!event){voice?.audio.stop();voice=null;return;}
