@@ -3,6 +3,7 @@
 import {petById} from './public/spirit-pets.js';
 import {petV2Skill,petStageName,petXpNext,petBasePoints,petStageUnlocked} from './public/pet-v2-catalog.js';
 import {stageConflict} from './stage-lock.mjs';
+import {PET_V2_ART_APPROVED} from './public/pet-v2-art-manifest.js';
 import {petV2Traits} from './pet-v2-combat.mjs';
 import {petV2GearResonance,petV2Route,petV2ExpeditionAffinity,petV2Combination} from './pet-v2-systems.mjs';
 const V2_DEFAULTS=Object.freeze({enabled:false,progression:false,combat:false,evolutionArt:false,coveV2:false,expedition:false,synergy:false,quality:'auto'});
@@ -15,7 +16,7 @@ export function petV2Configure(w,settings={}){
  const allowed=['enabled','progression','combat','evolutionArt','coveV2','expedition','synergy'];
  if(!settings||typeof settings!=='object'||Object.keys(settings).some(k=>!allowed.includes(k)||typeof settings[k]!=='boolean'))return {ok:false,message:'Cấu hình Linh Thú V2 không hợp lệ.'};
  // Animation gate: do not activate evolved artwork before 39 fully verified new atlases exist.
- if(settings.evolutionArt===true)return {ok:false,message:'Chưa có đủ 39 atlas tiến hóa đã kiểm thử; tiếp tục dùng đủ animation gốc.'};
+ if(settings.evolutionArt===true&&!PET_V2_ART_APPROVED)return {ok:false,message:'Chưa có đủ 39 atlas tiến hóa đã kiểm thử; tiếp tục dùng đủ animation gốc.'};
  w.settings??={};w.settings.petV2={...petV2Flags(w),...settings};return {ok:true,petV2:w.settings.petV2};
 }
 function allowedPlayer(w,p,id=p?.spiritPet){

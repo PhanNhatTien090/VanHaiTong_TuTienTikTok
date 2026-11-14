@@ -2,6 +2,7 @@
 // No new anatomy, no static substitutions; low-cost arcs and glyphs are purely additive.
 import {petById} from './spirit-pets.js';
 import {petArtFrame} from './premium-pet-motion.js';
+// Resolve evolved poses from the scene cache without importing the animation renderer (no module cycle).
 const TAU=Math.PI*2;
 const clamp=x=>Math.max(0,Math.min(1,x));
 const ease=x=>1-(1-clamp(x))**3;
@@ -58,7 +59,8 @@ export function drawPetV2Event(scene,c,e,t,k,target,H,layer){
   c.fillRect(x+Math.cos(theta)*radius,py,light?2:3,light?3:6);
  }
  c.globalAlpha=alpha;
- const frames=scene.petArt?.get(pet.id);
+ const stage=e.petStage||target.player?.petView?.stage||0;
+ const frames=scene.petV2Settings?.evolutionArt===true&&stage?scene.petArt?.get(pet.id+':stage'+stage)||scene.petArt?.get(pet.id):scene.petArt?.get(pet.id);
  const sprite=petArtFrame(frames,t,0,motion);
  // Never show replacement/stock art when the correct animated species has not loaded.
  if(sprite){

@@ -95,10 +95,10 @@ function requestPetV2Frames(spec,id,key){
 export function petV2FramesFor(scene,p){
  const id=p?.spiritPet;
  const stage=Math.max(0,Math.min(3,Math.floor(p?.petView?.stage||0)));
- return (PET_V2_ART_APPROVED&&stage&&scene.petArt?.get(petV2Key(id,stage)))||scene.petArt?.get(id)||null;
+ return (PET_V2_ART_APPROVED&&scene.petV2Settings?.evolutionArt===true&&stage&&scene.petArt?.get(petV2Key(id,stage)))||scene.petArt?.get(id)||null;
 }
 function loadPetEvolution(scene,id,stage){
- if(!PET_V2_ART_APPROVED||!stage||typeof Image==='undefined')return;
+ if(!PET_V2_ART_APPROVED||scene.petV2Settings?.evolutionArt!==true||!stage||typeof Image==='undefined')return;
  const spec=petV2AssetSpec(id,stage);
  if(!spec)return;
  const key=petV2Key(id,stage);
@@ -142,7 +142,7 @@ export function drawPet(scene,c,target,t){
  c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
  if(grand){c.strokeStyle=pet.color+'80';c.lineWidth=1.2;c.beginPath();c.ellipse(0,size*.29,size*.34,size*.08,0,0,Math.PI*2);c.stroke();}
  c.drawImage(image,-size/2,-size*.65,size,size);
- drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
+ if(!scene.petV2Settings?.evolutionArt||!scene.petArt?.get(petV2Key(p.spiritPet,p.petView?.stage)))drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;
  if(progress>=0&&progress<1){c.globalAlpha=1-progress;c.strokeStyle=pet.color;c.lineWidth=1.5;c.beginPath();c.ellipse(0,0,size*(.2+progress*.6),size*(.1+progress*.3),0,0,Math.PI*2);c.stroke();c.globalAlpha=1;}
  if(pet.rare&&scene.motion&&scene.budget?.level!=='light')drawRareFx(c,pet,size,t,seed);

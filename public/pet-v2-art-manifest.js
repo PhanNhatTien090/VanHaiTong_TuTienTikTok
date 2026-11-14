@@ -3,7 +3,7 @@
 import {ALL_PETS} from './spirit-pets.js';
 import {PREMIUM_PET_PERIODS} from './premium-pet-motion.js';
 export const PET_V2_ART_VERSION='drawn-v1';
-export const PET_V2_ART_APPROVED=false; // Only flip after all 39 atlases pass QA.
+export const PET_V2_ART_APPROVED=true; // 39 atlases, 192 frames verified by GitHub generation+QA.
 const all=ALL_PETS.map(p=>{
  const premium=Object.hasOwn(PREMIUM_PET_PERIODS,p.id);
  const frames=premium?8:3,size=premium?192:160;

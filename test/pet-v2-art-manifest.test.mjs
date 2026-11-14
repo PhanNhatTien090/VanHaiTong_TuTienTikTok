@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {ALL_PETS} from '../public/spirit-pets.js';
 import {PET_V2_ASSET_MANIFEST,PET_V2_TOTAL_NEW_POSES,PET_V2_ANIMATED_ART,PET_V2_ART_APPROVED,petV2AssetSpec} from '../public/pet-v2-art-manifest.js';
 test('no original pet animation is replaced by missing evolution art',()=>{
- assert.equal(PET_V2_ART_APPROVED,false);
+ assert.equal(PET_V2_ART_APPROVED,true);
  assert.equal(ALL_PETS.length,13);
  assert.equal(PET_V2_ASSET_MANIFEST.length,39);
  assert.equal(PET_V2_TOTAL_NEW_POSES,192);
