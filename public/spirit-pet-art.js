@@ -65,7 +65,32 @@ function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
  });
 }
 // 15/11: ảnh nhỏ cho bảng xem linh thú — dùng chung cache khung với sân khấu.
-export function petThumbFrames(id){if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));return PET_FRAME_CACHE.get(id);}
+const PET_V2_THUMB_CACHE=new Map();
+export function petThumbFrames(id,stage=0){
+ if(typeof Image==='undefined'||!petById(id))return Promise.resolve(null);
+ const base=()=>{
+  if(!PET_FRAME_CACHE.has(id))PET_FRAME_CACHE.set(id,fetchPetFrames(id).catch(e=>{PET_FRAME_CACHE.delete(id);throw e;}));
+  return PET_FRAME_CACHE.get(id);
+ };
+ if(!PET_V2_ART_APPROVED||!Number.isInteger(stage)||stage<1||stage>3)return base();
+ const spec=petV2AssetSpec(id,stage);if(!spec)return base();
+ const key=id+':'+stage;if(PET_V2_THUMB_CACHE.has(key))return PET_V2_THUMB_CACHE.get(key);
+ const result=new Promise((resolve)=>{
+  const im=new Image();im.decoding='async';
+  im.onload=()=>{
+   if(im.width!==spec.cols*spec.size||im.height!==spec.rows*spec.size){base().then(resolve).catch(()=>resolve(null));return;}
+   const f=makeSurface(spec.size,spec.size);
+   if(!f){base().then(resolve).catch(()=>resolve(null));return;}
+   f.getContext('2d').drawImage(im,0,0,spec.size,spec.size,0,0,spec.size,spec.size);
+   resolve([f]);
+  };
+  im.onerror=()=>base().then(resolve).catch(()=>resolve(null));
+  im.src=spec.path;
+ });
+ PET_V2_THUMB_CACHE.set(key,result);
+ while(PET_V2_THUMB_CACHE.size>16)PET_V2_THUMB_CACHE.delete(PET_V2_THUMB_CACHE.keys().next().value);
+ return result;
+}
 // Evolved animation loads lazily; never replaces any of the thirteen original pose atlases.
 // Absent/unapproved stage artwork immediately falls back to all original moving frames.
 // Unlike legacy astral-dragon.png (three unequal cropped source columns), each

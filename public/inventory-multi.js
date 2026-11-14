@@ -30,7 +30,7 @@ const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
  const raw=typeof i==='string'?{name:i}:i;
  const item=category==='pets'&&raw.level?{...raw,name:raw.name+' · Lv'+raw.level}:raw;
- const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"`:'';
+ const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"${category==='pets'?` data-pet-stage="${esc(String(item.stage||0))}"`:''}`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
  const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
  return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
@@ -137,7 +137,7 @@ export class InventoryDeck{
   if(art){const v=this.doc.createElement('canvas');v.width=art.width;v.height=art.height;v.getContext('2d')?.drawImage(art,0,0);v.className='vd-portrait';slot.replaceWith(v);}
   for(const canvas of node.querySelectorAll?.('canvas[data-thumb]')||[]){
    const [kind,...id]=canvas.dataset.thumb.split(':');
-   if(!paintThumb(canvas,{kind,id:id.join(':')},this.scene,x.player||{}))canvas.remove();
+   if(!paintThumb(canvas,{kind,id:id.join(':'),stage:kind==='pet'?Number(canvas.dataset.petStage)||0:0},this.scene,x.player||{}))canvas.remove();
   }
   return node;
  }
