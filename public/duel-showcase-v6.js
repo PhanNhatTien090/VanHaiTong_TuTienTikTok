@@ -91,17 +91,19 @@ function crystal(c,x,y,size,a,alpha=1){
  c.moveTo(-size*.33,-size*.12);c.lineTo(0,size*.10);c.lineTo(size*.33,-size*.12);c.stroke();
  c.restore();
 }
-function thunder(c,x0,y0,x1,y1,seed,color,width,alpha){
- // Two nested strokes from one stable seed. No allocations, randomness or filters.
- const dx=x1-x0,dy=y1-y0,cross=Math.hypot(dx,dy)||1;
- for(const [shade,w,a] of [[color,width,alpha],['#ffffff',Math.max(1,width*.24),alpha*.94]]){
-  c.globalAlpha=a;c.strokeStyle=shade;c.lineWidth=w;c.beginPath();c.moveTo(x0,y0);
-  for(let j=1;j<6;j++){
-   const u=j/6,shift=Math.sin(seed*4.2+j*2.7)*Math.min(27,cross*.12)*(1-Math.abs(u-.5));
-   c.lineTo(x0+dx*u-dy/cross*shift,y0+dy*u+dx/cross*shift);
-  }
-  c.lineTo(x1,y1);c.stroke();
+function zigzag(c,x0,y0,x1,y1,seed,shade,width,alpha,dx,dy,cross){
+ c.globalAlpha=alpha;c.strokeStyle=shade;c.lineWidth=width;c.beginPath();c.moveTo(x0,y0);
+ for(let j=1;j<6;j++){
+  const u=j/6,shift=Math.sin(seed*4.2+j*2.7)*Math.min(27,cross*.12)*(1-Math.abs(u-.5));
+  c.lineTo(x0+dx*u-dy/cross*shift,y0+dy*u+dx/cross*shift);
  }
+ c.lineTo(x1,y1);c.stroke();
+}
+function thunder(c,x0,y0,x1,y1,seed,color,width,alpha){
+ // Two sharp strokes, zero allocated arrays or randomized work per bolt.
+ const dx=x1-x0,dy=y1-y0,cross=Math.hypot(dx,dy)||1;
+ zigzag(c,x0,y0,x1,y1,seed,color,width,alpha,dx,dy,cross);
+ zigzag(c,x0,y0,x1,y1,seed,'#ffffff',Math.max(1,width*.24),alpha*.94,dx,dy,cross);
 }
 function apparition(c,img,x,y,w,h,alpha,flip=false){
  if(!(img?.naturalWidth||img?.width)||alpha<=0)return false;
@@ -260,9 +262,14 @@ export function drawDuelV6Ultimate(scene,c,t,actor,target,tech,k,{counter=false}
  // One large hero draw and one smaller counter. On pressured hardware keep
  // only the counter ground-seal to avoid overdraw while retaining its timing.
  if(counter&&b.pressed){
-  if(k<.56){
-   c.save();groundSeal(c,actor.x,actor.y+8,75,'#a7d5ff',.43,0);c.restore();
+  c.save();
+  if(k<.56)groundSeal(c,actor.x,actor.y+8,75,'#a7d5ff',.43,0);
+  else {
+   const pulse=clamp((k-.56)/.44),r=35+110*pulse;
+   ring(c,target.x,target.y-26,r,r*.35,'#a7eaff',3,(1-pulse)*.7);
+   ring(c,target.x,target.y-26,r*.75,r*.22,'#fff3c9',2,(1-pulse)*.5);
   }
+  c.restore();
   return true;
  }
  const kSafe=scene.motion===false?(k<.56?.40:.83):k;
