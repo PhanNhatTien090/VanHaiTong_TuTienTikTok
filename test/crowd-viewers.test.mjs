@@ -19,7 +19,7 @@ test('audience rises and falls through 10, 15, 20 without lowering output sharpn
 test('wings draw at the strongest crowd level',()=>{
  let drawn=0;const scene={heavyCrowd:true,crowded:true,compact:false,motion:false,arenaArt:{wings:{complete:true,naturalWidth:400,naturalHeight:200}}},c={save(){},restore(){},translate(){},scale(){},drawImage(){drawn++;}};drawWings(scene,c,{x:200,y:300,scale:1,player:{id:'a',giftCoins:1}},0);assert.equal(drawn,1);
 });
-test('breakthrough drawing always gets full detail and restores crowd state afterwards',()=>{
+test('focused breakthrough keeps usable detail without violating manual Performance, and restores crowd budget',()=>{
  const budget=new RenderBudget('light');budget.setAudience(40);const seen=[],scene={budget,crowded:true,heavyCrowd:true,reducePresence:true,compact:true,motion:false,players:[],drawPlayer(){seen.push([this.budget.level,this.crowded,this.heavyCrowd,this.compact]);},drawFlyingSword(){}};
- const e={effect:'breakthrough',user:'a',name:'A',start:0,duration:26000,toRealm:11,fromRealm:10,visualFrom:{id:'a',realm:10},visualTo:{id:'a',realm:11}};drawRitual(scene,createCanvas(900,1600).getContext('2d'),e,4000,1600);assert.ok(seen.length>0);assert.ok(seen.every(x=>x[0]==='high'&&x.slice(1).every(v=>v===false)));assert.equal(scene.budget,budget);assert.equal(scene.heavyCrowd,true);assert.equal(scene.crowded,true);
+ const e={effect:'breakthrough',user:'a',name:'A',start:0,duration:26000,toRealm:11,fromRealm:10,visualFrom:{id:'a',realm:10},visualTo:{id:'a',realm:11}};drawRitual(scene,createCanvas(900,1600).getContext('2d'),e,4000,1600);assert.ok(seen.length>0);assert.ok(seen.every(x=>x[0]==='light'&&x.slice(1).every(v=>v===false)));assert.equal(scene.budget,budget);assert.equal(scene.heavyCrowd,true);assert.equal(scene.crowded,true);
 });
