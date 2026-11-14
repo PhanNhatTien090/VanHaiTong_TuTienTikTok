@@ -8,7 +8,8 @@ import {pathToFileURL} from 'node:url';
 export const PREMIUM_FILES=Object.freeze([
  'thunder-dragon.webp','thunder-dragon-impact.webp',
  'divine-sword-storm.webp','flame-phoenix.webp','phoenix-impact.webp',
- 'taiji-seal.webp','screen-shatter.webp'
+ 'taiji-seal.webp','screen-shatter.webp',
+ 'golden-sword-atlas.webp','thunder-parts-atlas.webp','sword-formation-atlas.webp'
 ]);
 const MAX_ARCHIVE=45*1024*1024;
 const MAX_IMAGE=900000;
