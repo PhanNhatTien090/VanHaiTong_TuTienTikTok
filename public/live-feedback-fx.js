@@ -64,7 +64,10 @@ export class LiveFeedbackDirector{
   if(now-prev<(type==='stones'?800:type==='hearts'?1600:750))return false;
   this.lastByType.set(byUser,now);
   if(this.lastByType.size>80)this.lastByType.delete(this.lastByType.keys().next().value);
-  const row={...event,id,start:now,seed:Math.abs([...id].reduce((n,ch)=>Math.imul(n,31)+ch.charCodeAt(0)|0,1337)),duration:type==='stones'?1450:type==='hearts'?1580:1900};
+  const n=Math.round(Number(event.amount)||0).toLocaleString('vi-VN');
+  const row={...event,id,start:now,seed:Math.abs([...id].reduce((n,ch)=>Math.imul(n,31)+ch.charCodeAt(0)|0,1337)),duration:type==='stones'?1450:type==='hearts'?1580:1900,
+   labelTitle:String(event.title||'').slice(0,38),labelName:String(event.name||'Đạo hữu').slice(0,24),
+   labelValue:type==='stones'?' +'+n+' linh thạch':type==='hearts'?' ❤ '+n+' tim':''};
   this.rows.push(row);
   this.rows.sort((a,b)=>b.priority-a.priority||a.start-b.start);
   if(this.rows.length>6)this.rows.length=6;
@@ -94,15 +97,15 @@ export class LiveFeedbackDirector{
   }
  }
  draw(scene,c,now,H){
-  this.rows=this.rows.filter(e=>now-e.start<e.duration);
+  for(let i=this.rows.length-1;i>=0;i--)if(now-this.rows[i].start>=this.rows[i].duration)this.rows.splice(i,1);
   if(!this.rows.length)return;
   // Let the hero ritual, large gift or full-screen cinematic own the frame.
   if(scene.effects?.some(e=>e.effect==='breakthrough'&&now-e.start<e.duration)||scene.heavenStrike?.locked)return;
   const light=!!(scene.budget?.pressured||scene.budget?.level==='light'||(scene.fps>0&&scene.fps<18)||scene.visibleActors>30);
-  const max=light?1:2,shown=this.rows.slice(0,max);
+  const max=Math.min(this.rows.length,light?1:2),motion=scene.motion!==false;
   c.save();c.setTransform(scene.canvas.width/900,0,0,scene.canvas.height/H,0,0);
-  for(let index=0;index<shown.length;index++){
-   const e=shown[index],age=now-e.start,k=clamp(age/e.duration),intro=clamp(age/230),fade=clamp((e.duration-age)/350)*intro;
+  for(let index=0;index<max;index++){
+   const e=this.rows[index],age=now-e.start,k=clamp(age/e.duration),intro=clamp(age/230),fade=clamp((e.duration-age)/350)*intro;
    const actor=scene.targets?.find(a=>a.id===e.user);
    const cam=scene.lastCam||{s:1,x:0,y:0};
    const x=actor?clamp(actor.x*cam.s+cam.x,95,805):450,y=actor?clamp((actor.y-75)*cam.s+cam.y,H*.28,H*.72):H*.43;
@@ -111,34 +114,33 @@ export class LiveFeedbackDirector{
    const radius=e.kind==='hearts'?112:94;
    if(e.kind==='hearts'){
     for(let i=0;i<count;i++){
-     const a=(i+sample(e.seed,i))*(TAU/count),u=clamp((age-i*35)/(e.duration-150));
+     const a=(i+sample(e.seed,i))*(TAU/count),u=motion?clamp((age-i*35)/(e.duration-150)):.62;
      if(u<=0)continue;
      const xx=x+Math.cos(a)*(18+radius*ease(u)),yy=y-18+Math.sin(a)*(16+55*ease(u))-u*66;
      const img=image('heart');if(img)c.drawImage(img,xx-10,yy-10,20,20);
     }
    }else if(e.kind==='stones'){
-    if(e.level>=2){const glow=image('spark');if(glow){c.globalAlpha=fade*.24;c.drawImage(glow,x-115,y-175,230,230);c.globalAlpha=fade;}}
+    if(e.level>=2&&!scene.reduceFlash){const glow=image('spark');if(glow){c.globalAlpha=fade*.24;c.drawImage(glow,x-115,y-175,230,230);c.globalAlpha=fade;}}
     for(let i=0;i<count;i++){
-     const a=sample(e.seed,i),b=sample(e.seed,i+100),delay=i*45,u=clamp((age-delay)/(650+400*b));
+     const a=sample(e.seed,i),b=sample(e.seed,i+100),delay=i*45,u=motion?clamp((age-delay)/(650+400*b)):.72;
      if(u<=0)continue;
      const xx=x+(a-.5)*(e.level>=3?270:185),yy=y-155-b*70+ease(u)*(170+b*100),size=17+9*b;
      const img=image(i%7===0&&e.level>=3?'gold':i%3===0?'violet':'blue');if(img)c.drawImage(img,xx-size/2,yy-size/2,size,size*1.2);
-     if(u>.7&&u<.9){const spark=image('spark');if(spark){c.globalAlpha=fade*(1-Math.abs(u-.8)/.1)*.65;c.drawImage(spark,xx-18,yy-18,36,36);c.globalAlpha=fade;}}
+     if(!scene.reduceFlash&&u>.7&&u<.9){const spark=image('spark');if(spark){c.globalAlpha=fade*(1-Math.abs(u-.8)/.1)*.65;c.drawImage(spark,xx-18,yy-18,36,36);c.globalAlpha=fade;}}
     }
    }else{
-    const glow=image('spark');if(glow){c.globalAlpha=fade*.37;c.drawImage(glow,x-90,y-105,180,180);c.globalAlpha=fade;}
-    c.strokeStyle=e.kind==='stage'?'#ffda85':'#8de6ff';c.lineWidth=3;c.beginPath();c.ellipse(x,y,28+125*ease(k),10+49*ease(k),0,0,TAU);c.stroke();
-    const spark=image('spark');for(let i=0;i<count;i++){const a=TAU*i/count+sample(e.seed,i),r=30+105*ease(k),xx=x+Math.cos(a)*r,yy=y+Math.sin(a)*r*.5;
+    const glow=image('spark');if(glow&&!scene.reduceFlash){c.globalAlpha=fade*.37;c.drawImage(glow,x-90,y-105,180,180);c.globalAlpha=fade;}
+    c.strokeStyle=e.kind==='stage'?'#ffda85':'#8de6ff';c.lineWidth=3;c.beginPath();c.ellipse(x,y,28+125*ease(motion?k:.6),10+49*ease(motion?k:.6),0,0,TAU);c.stroke();
+    const spark=image('spark');for(let i=0;i<count;i++){const a=TAU*i/count+sample(e.seed,i),r=30+105*ease(motion?k:.6),xx=x+Math.cos(a)*r,yy=y+Math.sin(a)*r*.5;
       if(spark)c.drawImage(spark,xx-8,yy-8,16,16);}
    }
    // Readable spotlight ribbon (never covers the global HUD).
-   const text=String(e.title||'').slice(0,38),name=String(e.name||'Đạo hữu').slice(0,24),font='700 19px Georgia';
-   c.font=font;const width=clamp(c.measureText(text).width+48,154,490),bx=clamp(x-width/2,15,885-width),by=clamp(y-125,H*.23,H*.73);
+   const text=e.labelTitle,name=e.labelName,font='700 19px Georgia';
+   c.font=font;const width=e.labelWidth??(e.labelWidth=clamp(c.measureText(text).width+48,154,490)),bx=clamp(x-width/2,15,885-width),by=clamp(y-125,H*.23,H*.73);
    c.globalAlpha=fade*.90;c.fillStyle='#081323db';c.beginPath();c.roundRect(bx,by,width,53,14);c.fill();
    c.lineWidth=1.5;c.strokeStyle=e.kind==='hearts'?'#ff9fd0':e.kind==='stones'?'#91f1e9':'#f1d48e';c.stroke();
    c.textAlign='center';c.fillStyle='#fff5d8';c.fillText(text,bx+width/2,by+23);
-   c.font='500 13px Segoe UI';c.fillStyle='#e0ebff';const value=e.kind==='stones'?' +'+Math.round(e.amount||0).toLocaleString('vi-VN')+' linh thạch':e.kind==='hearts'?' ❤ '+Math.round(e.amount||0).toLocaleString('vi-VN')+' tim':'';
-   c.fillText((name+value).slice(0,65),bx+width/2,by+42);
+   c.font='500 13px Segoe UI';c.fillStyle='#e0ebff';c.fillText((name+e.labelValue).slice(0,65),bx+width/2,by+42);
   }
   c.restore();
  }
