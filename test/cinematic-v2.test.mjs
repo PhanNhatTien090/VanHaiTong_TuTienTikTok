@@ -2,9 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {cameraImpulse,boundedCameraJolt,mixCameraImpulses} from '../public/cinematic-feedback.js';
-import {cinematicQuality,cinematicSeed,drawShockwave,VFX_LIMITS} from '../public/cinematic-vfx.js';
+import {cinematicQuality,cinematicSeed,drawShockwave,voidGateFrame,VFX_LIMITS} from '../public/cinematic-vfx.js';
 import {CinematicSfx} from '../public/cinematic-sfx.js';
-import {GIFT_HITS,giftSpectacleTier} from '../public/gift-spectacle.js';
+import {GIFT_HITS,giftSpectacleTier,spectacleV2} from '../public/gift-spectacle.js';
 import {LH_TIMING,luyenHuFormationState} from '../public/luyen-hu-formation.js';
 import {sourceVisualPreferences} from '../public/visual-preferences.js';
 
@@ -74,4 +74,33 @@ test('prewarmed SFX buffers, cue deduplication, priority and cleanup',()=>{
   assert.equal(mixer.sourceCount,0);
   assert.equal(mixer.schedule('first','gold',.3),true);
   mixer.clear();
+});
+
+test('V3 solo effects ignore previous plaza actor load, but respect real pressure and Performance mode',()=>{
+  const plaza={actorLoad:{activePlayers:80},visibleActors:40,targets:Array.from({length:40}),budget:{mode:'auto',level:'light',crowded:true}};
+  assert.equal(cinematicQuality(plaza),'light');
+  assert.equal(cinematicQuality(plaza,{focused:true}),'balanced');
+  assert.equal(cinematicQuality({...plaza,budget:{...plaza.budget,pressured:true}},{focused:true}),'light');
+  assert.equal(cinematicQuality({...plaza,budget:{mode:'light',level:'light'}},{focused:true}),'light');
+  assert.equal(cinematicQuality({...plaza,budget:{mode:'high',level:'light'}},{focused:true}),'high');
+});
+
+test('V3 original void gate has a deterministic rise, split and fading tail',()=>{
+  const before=voidGateFrame(0,-800),charging=voidGateFrame(1,-100);
+  assert.equal(before.opacity,0);
+  assert.equal(charging.split,0);
+  assert.ok(charging.opacity>0);
+  assert.equal(voidGateFrame(1,0).split,0);
+  assert.equal(voidGateFrame(1,550).split,1);
+  assert.equal(voidGateFrame(1,1500).opacity,0);
+});
+
+test('V3 gift VFX covers all existing spectacle tiers without changing coin thresholds',()=>{
+  for(const value of [500,700,1000,1500,2000,3000,5000,10000]){
+    const profile=giftSpectacleTier({coins:value,count:1});
+    assert.ok(profile);
+    assert.equal(spectacleV2(profile),true);
+  }
+  assert.equal(spectacleV2(giftSpectacleTier({coins:499,count:1})),false);
+  assert.equal(giftSpectacleTier({coins:5000,count:1}).min,3000);
 });
