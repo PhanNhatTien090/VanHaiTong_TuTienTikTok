@@ -161,7 +161,7 @@ document.querySelector('form').onsubmit=async event=>{
   scene.showcase=group==='ritual';
   scene.cinematicV2=$('version').value==='new';
   scene.v6Showcase=scene.cinematicV2;
-  scene.v7Overdrive=scene.cinematicV2;
+  scene.v7Overdrive=scene.cinematicV2&&$('overdrive').checked;
   scene.cinematicLayers=toggles('visualLayers');
   scene.shakeLevel=$('shake').value;
   scene.cameraEnabled=true;
