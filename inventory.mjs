@@ -26,11 +26,11 @@ export function bagCard(p,catalog){
   artifacts:cap(arts,12),pills:cap(pills,8),manuals:cap(manuals,8), // 15/11: bảng xem hiện hết món (user)
   tip:arts.length?(pills.length?'Gõ 5 dùng đan · 7 rèn thêm':'Gõ 4 luyện đan · 7 rèn thêm'):'Gõ 7 rèn pháp bảo đầu tiên'};
 }
-export function petCard(p){
+export function petCard(p,growth={}){
  const owned=(p.spiritPets||[]).map(petById).filter(Boolean);
  const cur=p.spiritPet&&petById(p.spiritPet);
  return {kind:'pets',current:cur?.name||null,currentId:cur?.id||null,
-  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id})),ALL_PETS.length),
+  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id,...(growth[x.id]?{level:growth[x.id].level,stage:growth[x.id].stage,skill:growth[x.id].skill}:{} )})),ALL_PETS.length),
   total:ALL_PETS.length,tip:owned.length?'Gõ thu + số để đổi linh thú đồng hành':'Linh thú có trong sự kiện Linh Thú Cốc'};
 }
 export function skinCard(p){
@@ -47,7 +47,7 @@ export function inventoryRequest(w,p,cmd,rest,now){
  if(cmd==='skin'&&!rest)return {kind:'skins'};
  return null;
 }
-export function inventoryCard(kind,p,catalog){return kind==='bag'?bagCard(p,catalog):kind==='pets'?petCard(p):skinCard(p);}
+export function inventoryCard(kind,p,catalog,growth=null){return kind==='bag'?bagCard(p,catalog):kind==='pets'?petCard(p,growth||{}):skinCard(p);}
 export function inventoryText(c){
  if(c.kind==='bag')return `Túi đồ • ${c.artifacts.items.length+c.artifacts.more} pháp bảo • ${c.pills.items.reduce((s,x)=>s+x.n,0)} viên đan • ${c.stones.toLocaleString('vi-VN')} linh thạch`;
  if(c.kind==='pets')return `Linh thú • ${c.current||'chưa có đồng hành'} • sở hữu ${c.owned.items.length+c.owned.more}/${c.total}`;

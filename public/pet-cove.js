@@ -16,7 +16,7 @@ export function drawPetCove(scene,c,t,H){
  const seconds=Math.max(0,Math.ceil((scene.petEvent.endsAt-Date.now())/1000));
  c.save();
  const shade=c.createLinearGradient(0,0,0,H*.60);shade.addColorStop(0,'#041323c9');shade.addColorStop(.7,'#071b3666');shade.addColorStop(1,'#071b3600');c.fillStyle=shade;c.fillRect(0,0,900,H*.60);
- c.textAlign='center';c.fillStyle='#e9f8e5';c.font='bold 32px Arial';c.fillText('LINH THÚ CỐC',450,H*.125);c.font='20px Arial';c.fillStyle='#99dccf';c.fillText(`BẮT LINH THÚ · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`,450,H*.149);
+ c.textAlign='center';c.fillStyle='#e9f8e5';c.font='bold 32px Arial';c.fillText('LINH THÚ CỐC',450,H*.125);c.font='20px Arial';c.fillStyle='#99dccf';c.fillText(`BẮT LINH THÚ · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`,450,H*.149);if(scene.petCovePhase?.phase){c.font='bold 16px Arial';c.fillStyle='#ffe39e';c.fillText(({opening:'THIÊN MÔN KHAI MỞ',exploration:'TÌM LINH DUYÊN · THÚ DUYÊN',community:'CỘNG ĐỒNG LINH THÚ',settlement:'TỔNG KẾT LINH CỐC'})[scene.petCovePhase.phase]||'',450,H*.169);}
  for(const [i,spot] of petCoveSpots(H,featured,premium).entries()){
   const {pet,x,y,size}=spot,pose=premiumPetPose(pet.id,t,i*193,scene.motion)||petPose(t,i*193,scene.motion),im=petArtFrame(scene.petArt?.get(pet.id),t,i*193,scene.motion);
   // Requirement is directly ABOVE each animal, never hidden in a rotating table.

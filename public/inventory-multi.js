@@ -28,7 +28,8 @@ const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin'};
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
- const item=typeof i==='string'?{name:i}:i;
+ const raw=typeof i==='string'?{name:i}:i;
+ const item=category==='pets'&&raw.level?{...raw,name:raw.name+' · Lv'+raw.level}:raw;
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
  const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
