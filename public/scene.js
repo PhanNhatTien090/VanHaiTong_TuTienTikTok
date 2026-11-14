@@ -196,7 +196,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(!luxury&&event.kind&&event.kind!=='blessing'&&this.effects.filter(x=>x.kind&&x.kind!=='blessing').length>=(this.budget?.level==='light'?1:2)){(this.fxQueue??=[]).push(event);if(this.fxQueue.length>6)this.fxQueue.shift();return;}
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
     (this.animator??=new CharacterAnimator()).trigger(event,performance.now());const cinematic=event.gift&&giftSpectacleTier(event);if(cinematic){const action=this.animator.actions.get(event.user);if(action)action.duration=cinematic.duration*.85;}
-    this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&(!!event.gift||event.effect==='breakthrough')}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?TRANSFORM_MS:event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
+    this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?TRANSFORM_MS:event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
     const limit=this.budget?.config.effects||5;
     while(this.effects.length>limit){
       const expendable=this.effects.findIndex(e=>!e.gift&&!e.luxury&&e.effect!=='breakthrough');
@@ -538,7 +538,9 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     const strike=this.heavenStrike;
     if(!strike&&this.cinematicV2!==false&&spectacleV2(spectacle?.spectacleTier)){
       const age=t-spectacle.start-GIFT_HITS[0]*spectacle.duration;
-      const jolt=cameraImpulse(this,'major',age,spectacle.cinematicSeed,spectacle.cinematicQuality==='light');
+      const giftTier=spectacle.spectacleTier?.min||500;
+      const impactPreset=giftTier>=3000?'major':giftTier>=1500?'medium':'minor';
+      const jolt=cameraImpulse(this,impactPreset,age,spectacle.cinematicSeed,spectacle.cinematicQuality==='light');
       const mixed=mixCameraImpulses(jolt,gift);
       return boundedCameraJolt(base,mixed,H,!!(mixed.x||mixed.y));
     }
@@ -559,9 +561,13 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       if(this.cinematicV2!==false&&this.onCinematicSound&&spectacleV2(event.spectacleTier)){
         if(!event.cinematicSound){
           event.cinematicSound=true;
-          this.onCinematicSound(event.id+':charge','gold',(GIFT_HITS[0]*event.duration-age)/1000,{priority:5});
+          const large=event.spectacleTier.min>=3000;
+          const mid=event.spectacleTier.min>=1500;
+          this.onCinematicSound(event.id+':charge',large?'gold':mid?'resonance':'jade',
+            (GIFT_HITS[0]*event.duration-age)/1000,
+            {priority:large?5:2,charge:large,gain:large?.82:mid?.48:.34});
         }
-        if(!event.cinematicEcho&&progress>=GIFT_HITS[1]-.08){
+        if(event.spectacleTier.min>=3000&&!event.cinematicEcho&&progress>=GIFT_HITS[1]-.08){
           event.cinematicEcho=true;
           this.onCinematicSound(event.id+':echo','resonance',(GIFT_HITS[1]*event.duration-age)/1000,{priority:4,charge:false,gain:.6});
         }
