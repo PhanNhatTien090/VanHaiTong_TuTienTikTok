@@ -13,7 +13,7 @@ export function drawSkillImpact(scene,c,e,age,k,H){
  const tr=e.technique;if(!tr)return;
  const color=tr.color||'#bdefff',severity=impactSeverity(e),light=scene.budget?.pressured||scene.budget?.level==='light'||scene.visibleActors>25;
  // One short, readable skill identity strip; do not obscure the stage UI.
- if(tr.ultimate||severity>=2){
+ if((tr.ultimate||severity>=2)&&(!scene.skillBannerId||scene.skillBannerId===e.id)){
   const appear=clamp((k-.055)/.10),hide=clamp((.50-k)/.12),alpha=appear*hide;
   if(alpha>.01){
    const name=String(tr.name||'TUYỆT KỸ').slice(0,32);
