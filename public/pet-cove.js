@@ -1,4 +1,5 @@
 import {eventPets,petRequirement,petPose} from './spirit-pets.js';
+import {drawPetV2CoveScene} from './pet-v2-cove-fx.js';
 import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {loadPetArt} from './spirit-pet-art.js?v=drawn-pets-20261114';
 export const PET_COVE_MAP={id:'pet-cove',name:'Linh Thú Cốc',image:'/assets/maps-v3/pet-cove.png',ambience:'jade',floorY:.76,layout:'ground'};
@@ -16,6 +17,7 @@ export function drawPetCove(scene,c,t,H){
  const seconds=Math.max(0,Math.ceil((scene.petEvent.endsAt-Date.now())/1000));
  c.save();
  const shade=c.createLinearGradient(0,0,0,H*.60);shade.addColorStop(0,'#041323c9');shade.addColorStop(.7,'#071b3666');shade.addColorStop(1,'#071b3600');c.fillStyle=shade;c.fillRect(0,0,900,H*.60);
+ drawPetV2CoveScene(scene,c,t,H,'back');
  c.textAlign='center';c.fillStyle='#e9f8e5';c.font='bold 32px Arial';c.fillText('LINH THÚ CỐC',450,H*.125);c.font='20px Arial';c.fillStyle='#99dccf';c.fillText(`BẮT LINH THÚ · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`,450,H*.149);if(scene.petCovePhase?.phase){c.font='bold 16px Arial';c.fillStyle='#ffe39e';c.fillText(({opening:'THIÊN MÔN KHAI MỞ',exploration:'TÌM LINH DUYÊN · THÚ DUYÊN',community:'CỘNG ĐỒNG LINH THÚ',settlement:'TỔNG KẾT LINH CỐC'})[scene.petCovePhase.phase]||'',450,H*.169);}
  for(const [i,spot] of petCoveSpots(H,featured,premium).entries()){
   const {pet,x,y,size}=spot,pose=premiumPetPose(pet.id,t,i*193,scene.motion)||petPose(t,i*193,scene.motion),im=petArtFrame(scene.petArt?.get(pet.id),t,i*193,scene.motion);
@@ -30,5 +32,6 @@ export function drawPetCove(scene,c,t,H){
   if(im)c.drawImage(im,-size/2,-size*.52,size,size);
   c.restore();
  }
+ drawPetV2CoveScene(scene,c,t,H,'front');
  c.restore();
 }
