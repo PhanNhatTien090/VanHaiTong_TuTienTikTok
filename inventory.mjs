@@ -29,8 +29,8 @@ export function bagCard(p,catalog){
 export function petCard(p,growth={}){
  const owned=(p.spiritPets||[]).map(petById).filter(Boolean);
  const cur=p.spiritPet&&petById(p.spiritPet);
- return {kind:'pets',current:cur?.name||null,currentId:cur?.id||null,
-  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id,...(growth[x.id]?{level:growth[x.id].level,stage:growth[x.id].stage,skill:growth[x.id].skill}:{} )})),ALL_PETS.length),
+ return {kind:'pets',current:cur?.name||null,currentId:cur?.id||null,currentGrowth:cur?growth[cur.id]||null:null,
+  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id,...(growth[x.id]?{level:growth[x.id].level,stage:growth[x.id].stage,stageName:growth[x.id].stageName,skill:growth[x.id].skill}:{} )})),ALL_PETS.length),
   total:ALL_PETS.length,tip:owned.length?'Gõ thu + số để đổi linh thú đồng hành':'Linh thú có trong sự kiện Linh Thú Cốc'};
 }
 export function skinCard(p){

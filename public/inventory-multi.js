@@ -66,7 +66,9 @@ export function inventoryDeckHTML(e,esc){
    +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');
  }else if(kind==='pets'){
   const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
-  body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
+  const growth=card.currentGrowth;
+   const summary=growth?`<div class="vd-pet-progress"><strong>${esc(growth.stageName||'Ấu Linh')} · Lv${fmt(growth.level)}</strong><span>Thân thiết ${fmt(growth.bond)}/100</span><span>${esc(growth.skill||'')}</span>${growth.xpNext?`<div class="vd-pet-exp"><i style="width:${pct(growth.xp,growth.xpNext).toFixed(1)}%"></i></div><small>XP ${fmt(growth.xp)}/${fmt(growth.xpNext)}</small>`:'<small>Đã đạt cấp tối đa</small>'}${growth.resonance?'<small>✦ Pháp bảo cộng hưởng</small>':''}</div>`:'';
+   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+summary+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
  }else{
   const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}</span><span>Mặc: ${esc(card.current||'Áo cảnh giới')}</span></div>`+grid([[card.owned,'skins']],esc,'Chưa có skin riêng');
