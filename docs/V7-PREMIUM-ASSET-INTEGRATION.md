@@ -52,5 +52,12 @@ The gallery switches to premium artwork automatically when the enabled config is
 
 A GitHub Actions runner tests the SVG-only version by default. Its CPU draw timings are **not** a guarantee of TikTok LIVE Studio FPS. Before production, capture at least one full 25-second match, a two-gift collision, and the same scene while streaming with actual LIVE overlays.
 
+## Emergency LIVE rollback (no save-data changes)
+For a TikTok LIVE Studio/OBS browser source, append a URL query parameter and refresh:
+- `?v7Premium=off`: immediately switch from high-detail WebP layers back to the existing lightweight SVG/Canvas visuals
+- `?v7=off`: disable all V7 overdrive (break-glass, extra spell schools and six gift-special animations), retaining the established V6/V5 timeline
+
+If the URL already has a query string, append `&v7Premium=off` or `&v7=off` instead of another `?`. These flags affect **presentation only**. Server event history, coins, scores, winner logic and saved players stay unchanged. Lower the quality selector to Light first if audience pressure is high.
+
 ## Release policy
 The V7 PR is stacked on V6 and V5; these are drafts. Do not merge into main, change player state, or deploy to production without explicit review. The original exported asset pack remains a separate conversation artifact; the GitHub PR does not contain its binary WebPs unless you complete the installation and commit those files.
