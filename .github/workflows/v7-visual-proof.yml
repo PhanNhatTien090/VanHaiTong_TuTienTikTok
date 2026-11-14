@@ -7,6 +7,7 @@ on:
       - 'public/gift-overdrive-v7.js'
       - 'public/assets/v7/**'
       - 'scripts/render-v7-overdrive-gallery.mjs'
+      - 'scripts/bench-v7-render.mjs'
       - '.github/workflows/v7-visual-proof.yml'
   workflow_dispatch:
 permissions:
