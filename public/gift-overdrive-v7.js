@@ -88,6 +88,21 @@ export function drawGiftOverdriveV7(scene,c,e,t,actor,target,H){
   }
   sword(c,x,y,Math.atan2(hitY-sourceY,hitX-sourceX)+Math.PI/2,110,'#fff8cf',fade);
  }
+ // Optional authentic alpha sprite cutouts from the actual generated atlases.
+ // Draw exactly one crop in Balanced/High and NONE in Light/Crowded.
+ if(!low&&p>.20&&p<.60&&scene.v7PremiumArt){
+  const art=scene.v7PremiumArt;
+  const img=spec.key==='phoenix'?art.phoenix:spec.key==='thunder'?art.thunderAtlas:
+   spec.key==='dual'?art.formationAtlas:spec.key==='judgment'?art.goldenAtlas:null;
+  if(img?.naturalWidth){
+   c.save();c.globalAlpha=.56*fade;
+   if(spec.key==='phoenix')c.drawImage(img,x-142,y-180,284,284);
+   else if(spec.key==='thunder')c.drawImage(img,0,0,350,190,x-170,y-160,340,185);
+   else if(spec.key==='dual')c.drawImage(img,0,0,425,287,x-265,y-190,530,360);
+   else c.drawImage(img,0,170,620,155,hitX-390,hitY-180,780,195);
+   c.restore();
+  }
+ }
  if(attack>.45){
   const hit=clamp((attack-.45)/.55),r=70+hit*(spec.key==='judgment'?340:245);
   ring(c,hitX,hitY,r,spec.color,(1-hit)*fade);
