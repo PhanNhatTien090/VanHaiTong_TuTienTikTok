@@ -16,12 +16,13 @@ export function bagCard(p,catalog){
     damage:Math.max(0,Number(item?.damage)||0),bonus:Math.max(0,Number(item?.bonus)||0),
     description:String(item?.description||'').slice(0,180),...extra};
  };
- const arts=[...new Set(p.artifacts||[])].map(id=>entry(id,{on:id===p.equipped}));
- arts.sort((a,b)=>Number(b.on)-Number(a.on));
+ const secondary=new Set((p.equippedExtra||[]).filter(id=>id!==p.equipped));
+ const arts=[...new Set(p.artifacts||[])].map(id=>entry(id,{on:id===p.equipped,secondary:secondary.has(id)}));
+ arts.sort((a,b)=>Number(b.on)-Number(a.on)||Number(b.secondary)-Number(a.secondary));
  const pills=Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>entry(id,{n}));
  const manuals=[...new Set(p.manuals||[])].map(id=>entry(id));
  return {kind:'bag',stones:Math.floor(p.stones||0),herbs:Math.floor(p.herbs||0),
-  equipped:arts.find(x=>x.on)||null,
+  equipped:arts.find(x=>x.on)||null,secondaryEquipped:arts.filter(x=>x.secondary).length,
   artifacts:cap(arts,8),pills:cap(pills,6),manuals:cap(manuals,5),
   tip:arts.length?(pills.length?'Gõ 5 dùng đan · 7 rèn thêm':'Gõ 4 luyện đan · 7 rèn thêm'):'Gõ 7 rèn pháp bảo đầu tiên'};
 }
