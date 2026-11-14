@@ -98,6 +98,19 @@ export function drawEventGiftFx(scene,c,t,layer,mode){
   const n=Math.min(light?12:20,q.blades);c.fillStyle=q.color;for(let i=0;i<n;i++){const u=(k*1.7+i/n)%1,xx=x+Math.cos(i*2.399)*(25+u*q.size*.55),yy=y+20+u*u*170;c.globalAlpha=fade*(1-u)*.65;c.fillRect(xx,yy,2,5);}
   c.globalAlpha=fade;drawGiftDonor(c,e,x,Math.max(H*.19,y-(mode==='race'?155*s:205)),{color:q.color,radius:mode==='race'?25:34,width:mode==='race'?200:290,caption:e.value.toLocaleString('vi-VN')+' coin · '+q.name});
   c.globalAlpha=fade;c.font='bold '+(mode==='race'?15:18)+'px Segoe UI';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#101422';c.fillStyle=q.color;const label=(mode==='duel'&&!e.fighter?e.name+' · ':'')+q.name+(mode==='race'?(e.boost?' · BỨT TỐC':' · VINH DANH'):' · CỔ VŨ');const yy=mode==='race'?y+70*s:y+90;c.strokeText(label,x,yy,mode==='race'?170:370);c.fillText(label,x,yy,mode==='race'?170:370);
+  // Display ONLY server-accepted barrier damage/restoration. No invented HP.
+  if(mode==='duel'&&e.wardEffect?.amount>0){
+   const effect=e.wardEffect,pulse=clamp((raw-.31)/.26),visibility=Math.sin(pulse*Math.PI);
+   if(raw>=.31&&raw<.57&&visibility>0){
+    const healed=effect.kind==='shield-heal',target=targets.find(p=>p.id===effect.target);
+    const tx=target?.x??450,ty=(target?.y??H*.65)-215-(scene.motion?pulse*65:0);
+    const text=(healed?'HỒI HỘ THUẪN +':'PHÁ HỘ THUẪN -')+Math.round(effect.amount).toLocaleString('vi-VN');
+    c.globalAlpha=visibility*fade;c.font='900 32px "Segoe UI",sans-serif';
+    c.strokeStyle='#071120';c.lineWidth=7;c.strokeText(text,tx,ty,560);
+    c.fillStyle=healed?'#95ffd2':'#ffd28a';c.fillText(text,tx,ty,560);
+    c.globalAlpha=fade;
+   }
+  }
  }
  c.restore();
  }
