@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {access,stat} from 'node:fs/promises';
 import {createCanvas,loadImage} from '@napi-rs/canvas';
 import {duelCutinPlan,drawDuelCinematic,duelChargingPose} from '../public/duel-cinematic.js';
-import {v6SkillFamily,V6_ASSETS,v6Budget,prewarmDuelV6,v6CounterProgress,drawDuelV6Ultimate} from '../public/duel-showcase-v6.js';
+import {v6SkillFamily,v6SkillTitle,V6_ASSETS,v6Budget,prewarmDuelV6,v6CounterProgress,drawDuelV6Ultimate} from '../public/duel-showcase-v6.js';
 
 const T=1800000000000;
 const duel=()=>({id:'V6-live-a',a:'a',b:'b',startedAt:T,endsAt:T+25000,
@@ -20,6 +20,9 @@ test('V6 reuses existing small sprite assets and includes an original loaded sig
  assert.equal(v6SkillFamily('frost'),'frost');
  assert.equal(v6SkillFamily('celestial'),'yinYang');
  assert.equal(v6SkillFamily('unknown'),null);
+ assert.equal(v6SkillTitle('thunder'),'Cửu Thiên Lôi Long');
+ assert.equal(v6SkillTitle('bamboo'),'Vạn Kiếm Diệt Thế');
+ assert.equal(v6SkillTitle('unknown'),null);
  for(const url of Object.values(V6_ASSETS)){
   const path='public'+url;
   await access(path);
@@ -54,6 +57,8 @@ test('V6 includes both opposing ultimate cut-ins while the old duel planner rema
  assert.equal(upgraded.length,2);
  assert.deepEqual(new Set(upgraded.map(x=>x.user)),new Set(['a','b']));
  assert.ok(upgraded.some(x=>x.kind==='counter'));
+ assert.equal(upgraded.find(x=>x.kind==='cast')?.title,'Cửu Thiên Lôi Long');
+ assert.equal(upgraded.find(x=>x.kind==='counter')?.title,'Vạn Kiếm Diệt Thế');
  assert.equal(duelCutinPlan(m,now,[],1200,true,true).length,1);
  assert.equal(duelChargingPose(m,{id:'b'},now),null);
  assert.equal(duelChargingPose(m,{id:'b'},now,true)?.mode,'cast');
