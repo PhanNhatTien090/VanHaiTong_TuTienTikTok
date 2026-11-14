@@ -5,6 +5,7 @@ import {prepareCinematicAudio,CINEMATIC_SOUND,CinematicSfx} from '../public/cine
 import {premiumArtKeys} from '../public/v7-premium-art.js';
 import {duelCastState,duelImpactAt} from '../public/duel-combat.js';
 import {overdriveMoment} from '../public/cinematic-overdrive-v7.js';
+import {duelChargingPose,duelCutinPlan,DUEL_RELEASE_AT,DUEL_COUNTER_RELEASE_AT} from '../public/duel-cinematic.js';
 
 const M=Math.max;
 const peak=b=>b.reduce((max,v)=>M(max,Math.abs(v)),0);
@@ -86,4 +87,20 @@ test('late browser rejoin does not invent a new screen-break or replay a stale i
  assert.equal(overdriveMoment(scene,1200,lateNow),null,'no late glass crack');
  scene.duelImpact.at=duelImpactAt(earlyNow,early);
  assert.equal(overdriveMoment(scene,1200,earlyNow)?.kind,'duel');
+});
+
+test('counter cut-in and caster pose remain until the actual counter release, not the leading caster release',()=>{
+ const start=1800000000000,match={id:'clock',a:'a',b:'b',startedAt:start,endsAt:start+25000,
+  names:{a:'Kiếm tu',b:'Lôi tu'},aura:{a:75,b:20},
+  techniques:{a:{id:'soul',name:'Hồn',color:'#c6a0ff'},b:{id:'bell',name:'Kim Chung',color:'#ffd36a'}}};
+ assert.ok(DUEL_COUNTER_RELEASE_AT>DUEL_RELEASE_AT);
+ const mid=start+19800+3500*.6;
+ const banners=duelCutinPlan(match,mid,[],200,false,true);
+ assert.equal(banners.length,1);
+ assert.equal(banners[0].kind,'counter');
+ assert.equal(duelChargingPose(match,{id:'a'},mid,true),null);
+ assert.equal(duelChargingPose(match,{id:'b'},mid,true)?.mode,'cast');
+ const ended=start+19800+3500*.65;
+ assert.equal(duelChargingPose(match,{id:'b'},ended,true),null);
+ assert.equal(duelCutinPlan(match,ended,[],200,false,true).length,0);
 });
