@@ -11,7 +11,7 @@ test('random mode picks varied events, never repeats the last one, and never ove
 test('shuffle-bag: every 10 successful picks cover all 10 events (bond, race, tournament included)',()=>{
  const w=createWorld('live');let now=1e7;for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'nhapmon'},now);
  setEventSettings(w,{autoRandom:true,autoEventMinutes:5});w.settings.visitorRotation=false;w.settings.towerAuto=false; /* 11/11: túi 10 cũ, tháp kiểm riêng */ /* 09/11: khi bật luân phiên, khách mời có lịch 10 phút riêng */w.nextBossAt=now+1e12;const picks=[];
- for(let i=0;i<60&&picks.length<10;i++){for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'tuvi'},now);w.nextAutoEventAt=now;const before=w.randomBag?.length;const last=w.lastRandomEvent;tick(w,now);
+ for(let i=0;i<120&&picks.length<30;i++){for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'tuvi'},now);w.nextAutoEventAt=now;const before=w.randomBag?.length;const last=w.lastRandomEvent;tick(w,now);
   if(w.lastRandomEvent&&(w.lastRandomEvent!==last||w.randomBag?.length!==before))picks.push(w.lastRandomEvent);now+=20*60000;if(w.boss)w.boss=null;}
- assert.equal(new Set(picks).size,10,'picks: '+picks.join(','));for(const id of ['bond','race','tournament'])assert.ok(picks.includes(id),id);
+ /* 14/11: số sự kiện trong túi tùy cài đặt (hiện 11) — N lượt đầu (một túi) phải khác nhau và đủ cả bộ */const N=new Set(picks).size;assert.ok(N>=10,'túi quá ít: '+N);assert.equal(new Set(picks.slice(0,N)).size,N,'picks: '+picks.join(','));picks.length=N;for(const id of ['bond','race','tournament'])assert.ok(picks.includes(id),id);
 });
