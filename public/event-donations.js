@@ -1,3 +1,4 @@
+import {feedbackBudget,takeFeedbackCue} from './cinematic-feedback.js';
 import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {eventGiftTier} from './event-gift-fx.js?v=event-donors-20261114';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
@@ -32,12 +33,13 @@ function sigil(c,x,y,r,angle,color,glyph){
 export function drawEventDonations(scene,c,t,H=scene.height){
  const queue=scene.eventDonations,context=eventDonationContext(scene);if(!queue)return;
  if(!context||queue.key!==context.key){queue.pending=[];queue.active=[];return;}
- const light=scene.budget?.level==='light',podium=context.kind==='hallwar'&&scene.hallWarStatus?.phase==='finished';queue.active=queue.active.filter(e=>t-e.start<e.profile.duration);
+ const light=feedbackBudget(scene),podium=context.kind==='hallwar'&&scene.hallWarStatus?.phase==='finished';queue.active=queue.active.filter(e=>t-e.start<e.profile.duration);
  queue.pending=queue.pending.filter(e=>t-e.receivedAt<12000);
- while(queue.active.length<(light||context.kind==='hallwar'?1:2)&&queue.pending.length){const e=queue.pending.shift();e.start=t;queue.active.push(e);scene.onEventGiftSound?.(e.value>=100?'dragon':'sword');}
+ while(queue.active.length<(light||['hallwar','pet'].includes(context.kind)?1:2)&&queue.pending.length){const e=queue.pending.shift();e.start=t;queue.active.push(e);scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',context.kind);}
  for(const [slot,e] of queue.active.entries()){
   const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion===false?.45:raw,fade=clamp(Math.min(raw/.09,(1-raw)/.17));
-  const [color,title,glyph]=e.context.theme,x=context.kind==='hallwar'?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='hallwar'?.425:slot?.34:.245),impactY=H*(context.kind==='hallwar'?.53:.49),large=e.value>=100;
+  if(takeFeedbackCue(e,'impactPlayed',raw,.3,.43)&&e.value>=500)scene.onSpectacleImpact?.();
+  const [color,title,glyph]=e.context.theme,x=context.kind==='hallwar'?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='pet'?.73:context.kind==='hallwar'?.425:slot?.34:.245),impactY=H*(context.kind==='pet'?.86:context.kind==='hallwar'?.53:.49),large=e.value>=100;
   c.save();c.globalAlpha=fade;c.lineCap='round';c.lineJoin='round';
   // Avatar is the casting origin; energy travels into the event, without moving its camera or actors.
   if(scene.motion!==false&&!podium){
@@ -53,7 +55,7 @@ export function drawEventDonations(scene,c,t,H=scene.height){
    c.globalAlpha=fade*(1-hit)*.65;sigil(c,x,impactY,radius,k*TAU*.35,color,glyph);
    if(large){c.beginPath();c.ellipse(x,impactY,radius*1.35,radius*.38,-.15,0,TAU);c.stroke();}
    // The low-cost petal/flame/star burst is local to the impact, never a full-screen flash.
-   const n=light?8:Math.min(20,q.blades+6);c.fillStyle=color;
+   const n=light?5:Math.min(12,q.blades+4);c.fillStyle=color;
    for(let i=0;i<n;i++){const a=i*2.399,kick=hit*(80+e.profile.waves*12),px=x+Math.cos(a)*kick,py=impactY+Math.sin(a)*kick*.6;
     c.save();c.translate(px,py);c.rotate(a+k);c.beginPath();
     if(e.context.kind==='alchemy'){c.moveTo(0,10);c.bezierCurveTo(-10,0,5,-5,1,-17);c.bezierCurveTo(14,-4,7,7,0,10);}

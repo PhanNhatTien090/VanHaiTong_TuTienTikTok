@@ -1,3 +1,4 @@
+import {drawScreenPulse} from './cinematic-feedback.js';
 // Ma Thần v1 — Ma Thần Giáng Thế (08/11/2026). 46 s; nổ 40,0; đổi skin 40,3.
 // Cơ chế riêng (không lặp Tiên Đế/Đại La): huyết nguyệt mọc rồi nhật thực → đất nứt thành phù văn dung nham, đập 6 nhịp tim →
 // 9 xích ma từ vực trói người → mặt quỷ thần hiện trên trời, mở mắt, gầm, giáng 4 lôi đỏ → giật đứt 9 xích →
@@ -52,7 +53,7 @@ function assets(scene,H){
 }
 function halo(c,im,x,y,w,h,a){if(!im||a<=0)return;c.save();c.globalAlpha*=clamp(a);c.globalCompositeOperation='lighter';c.drawImage(im,x-w/2,y-h/2,w,h);c.restore();}
 function ring(c,x,y,r,col,w,a,ry=r){if(a<=.01||r<1)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.ellipse(x,y,r,ry,0,0,TAU);c.stroke();c.restore();}
-function flash(c,H,col,a){if(a<=.01)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=clamp(a);c.fillStyle=col;c.fillRect(0,0,900,H);c.restore();}
+
 function bolt(c,x0,y0,x1,y1,seed,col,w,a){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=w;c.lineJoin='round';c.beginPath();c.moveTo(x0,y0);for(let i=1;i<=12;i++){const u=i/12,j=(rnd(seed+i)-.5)*80*Math.sin(u*Math.PI);c.lineTo(mix(x0,x1,u)+j,mix(y0,y1,u));}c.stroke();c.lineWidth=w*.35;c.strokeStyle='#ffffff';c.stroke();c.restore();}
 // Nhân vật: ảnh vẽ một lần cho mỗi ngoại hình (trước/sau), giữ ngoại hình cũ tới lúc nổ.
 export function maThanActorImage(scene,p,e){
@@ -153,7 +154,7 @@ export function drawMaThanAwakening(scene,c,e,t,H){
  if(a.sky)c.drawImage(a.sky,0,0,900,H);else{c.fillStyle='#1a0408';c.fillRect(0,0,900,H);}
  c.save();c.globalAlpha=1-s.night;c.fillStyle='#2a1a2a';c.fillRect(0,0,900,H);c.restore();
  drawMoon(c,a,s,moonX,moonY);
- flash(c,H,'#ff3a2a',hit*.1);
+ drawScreenPulse(c,H,scene.reduceFlash,'#ff3a2a',hit*.1);
  pushFxCamera(scene,c,kq,v,s.feet);const shake=s.motion&&scene.cameraEnabled!==false?hit*14+s.bang*14+s.roar*10:0;c.translate(Math.sin(T*83)*shake,Math.cos(T*71)*shake*.6);
  drawMist(c,s,H);
  // mặt quỷ thần phía sau nhân vật
@@ -189,7 +190,7 @@ export function drawMaThanAwakening(scene,c,e,t,H){
  c.restore();
  // ngoài camera: tối sập trước nổ, chớp lúc nổ, tro lửa, viền tối
  if(s.dark>0){c.save();c.globalAlpha=s.dark*.78;c.fillStyle='#000';c.fillRect(0,0,900,H);c.restore();}
- flash(c,H,'#ff6a4a',s.bang*.35);
+ drawScreenPulse(c,H,scene.reduceFlash,'#ff6a4a',s.bang*.35);
  drawEmbers(c,s,H,light);
  drawQiMotes(scene,c,kq,H);
  if(a.vignette)c.drawImage(a.vignette,0,0,900,H);

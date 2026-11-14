@@ -1,3 +1,4 @@
+import {drawScreenPulse} from './cinematic-feedback.js';
 // Tiên Đế v1 — Tiên Đế Đăng Cơ · Vạn Tiên Triều Bái (07/11/2026). 34 s; nổ 30,0; đổi skin 30,3.
 // Cơ chế riêng (không lặp Thái Ất/Đại La): cổng Nam Thiên Môn che kín màn hình, gõ 3 lần rồi mở → 9 bậc thềm ngọc bay vào từng bậc →
 // thiên binh giáng thành cột sáng hai bên rồi quỳ bái 6 làn sóng → Cửu Đỉnh rơi từng cái, bốc lửa → thánh chỉ trải ra, đóng 4 chữ
@@ -64,7 +65,7 @@ function assets(scene,H){
 }
 function halo(c,im,x,y,w,h,a){if(!im||a<=0)return;c.save();c.globalAlpha*=clamp(a);c.globalCompositeOperation='lighter';c.drawImage(im,x-w/2,y-h/2,w,h);c.restore();}
 function ring(c,x,y,r,col,w,a,ry=r){if(a<=.01||r<1)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.ellipse(x,y,r,ry,0,0,TAU);c.stroke();c.restore();}
-function flash(c,H,col,a){if(a<=.01)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=a;c.fillStyle=col;c.fillRect(0,0,900,H);c.restore();}
+
 // Bậc thềm i (0 = dưới cùng) — hình thang phối cảnh dưới chân.
 function stepBox(s,i){const h=(s.H-s.feet)/9,y1=s.H-i*h,y0=y1-h,hw=y=>mix(110,300,(y-s.feet)/(s.H-s.feet));return {y0,y1,w0:hw(y0),w1:hw(y1)};}
 // Thiên binh: 4 hàng mỗi bên (hàng 0 ở xa).
@@ -94,7 +95,7 @@ export function drawTienDeAwakening(scene,c,e,t,H){
  const {from,to}=players(scene,e),p=s.revealed?to:from,image=tienDeActorImage(scene,p,e),hit=hitPower(T)*(s.motion?1:.3),headY=s.feet-338;
  c.save();setFxPalette(PALETTE);
  if(a.world)c.drawImage(a.world,0,0,900,H);else{c.fillStyle='#3a1a10';c.fillRect(0,0,900,H);}
- flash(c,H,'#fff0c8',hit*.12);
+ drawScreenPulse(c,H,scene.reduceFlash,'#fff0c8',hit*.12);
  pushFxCamera(scene,c,kq,v,s.feet);const shake=s.motion&&scene.cameraEnabled!==false?hit*14+s.bang*12:0;c.translate(Math.sin(T*83)*shake,Math.cos(T*71)*shake*.6);
  // 12 tia hào quang đế vương sau ngai
  if(T>=TD_RAYS[0]&&s.rays>0){const ox=450,oy=s.feet-560;c.save();c.globalCompositeOperation='lighter';TD_RAYS.forEach((at,i)=>{const g0=clamp((T-at)/.25);if(g0<=0)return;const ang=-Math.PI+(i+.5)/12*Math.PI,len=900*g0*s.rays*(1+.05*Math.sin(T*3+i)),wid=.05;c.globalAlpha=.45*s.fade+(T-at<.3?(1-(T-at)/.3)*.5:0);const gr=c.createLinearGradient(ox,oy,ox+Math.cos(ang)*len,oy+Math.sin(ang)*len);gr.addColorStop(0,'#fff6d0');gr.addColorStop(1,'#ffb84a00');c.fillStyle=gr;c.beginPath();c.moveTo(ox,oy);c.lineTo(ox+Math.cos(ang-wid)*len,oy+Math.sin(ang-wid)*len);c.lineTo(ox+Math.cos(ang+wid)*len,oy+Math.sin(ang+wid)*len);c.closePath();c.fill();});c.restore();
@@ -139,7 +140,7 @@ export function drawTienDeAwakening(scene,c,e,t,H){
   if(T>=TD.stamp)imprint(c,450,sy,al);}
  // ngọc tỷ giáng xuống đóng ấn
  if(T>=TD.seal&&T<TD.stamp+.8){const hover=ease((T-TD.seal)/.8),y=T<TD.stamp-.12?mix(-100,sy-150,hover)+Math.sin(T*6)*6:T<TD.stamp?mix(sy-150,sy+90,(T-TD.stamp+.12)/.12):mix(sy+90,sy-260,ease((T-TD.stamp)/.6));seal(c,450,y,T<TD.stamp?1:1-ease((T-TD.stamp)/.7));if(T<TD.stamp)halo(c,a.glow,450,y-120,420,420,.5*hover);}
- {const age=T-TD.stamp;if(age>=0&&age<.9){flash(c,H,'#ffffff',(1-age/.9)*.5);ring(c,450,sy,90+age*1200,'#ff5a3a',14*(1-age/.9)+2,1-age/.9);ring(c,450,sy,60+age*800,'#ffd36a',8*(1-age/.9)+1,1-age/.9);}}
+ {const age=T-TD.stamp;if(age>=0&&age<.9){drawScreenPulse(c,H,scene.reduceFlash,'#ffffff',(1-age/.9)*.5);ring(c,450,sy,90+age*1200,'#ff5a3a',14*(1-age/.9)+2,1-age/.9);ring(c,450,sy,60+age*800,'#ffd36a',8*(1-age/.9)+1,1-age/.9);}}
  // thánh chỉ tan thành chữ vàng rơi
  if(T>=TD.dissolve&&T<TD.dissolve+2){const u=(T-TD.dissolve)/2;c.save();c.globalCompositeOperation='lighter';for(let i=0;i<(light?40:90);i++){const x=450+(rnd(i)-.5)*780,y=sy+(rnd(i+1)-.5)*200+u*u*900*(.5+rnd(i+2));c.globalAlpha=(1-u)*.9;c.fillStyle=i%4?'#ffd36a':'#ff5a3a';c.fillRect(x,y,4,4);}c.restore();}
  // chữ lớn: VẠN TIÊN TRIỀU BÁI / VẠN TUẾ
@@ -150,9 +151,9 @@ export function drawTienDeAwakening(scene,c,e,t,H){
   if(op>0){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=Math.min(1,op*3)*(1-clamp((T-TD.opened)/.4));const g=c.createLinearGradient(wl,0,900-wl,0);g.addColorStop(0,'#fff6d000');g.addColorStop(.5,'#ffffff');g.addColorStop(1,'#fff6d000');c.fillStyle=g;c.fillRect(wl-60,0,900-2*wl+120,H);c.restore();}
   if(a.leafL)c.drawImage(a.leafL,0,0,wl,H);if(a.leafR)c.drawImage(a.leafR,900-wl,0,wl,H);c.save();c.globalAlpha=op*.6;c.fillStyle='#000';c.fillRect(0,0,wl,H);c.fillRect(900-wl,0,wl,H);c.restore();
   if(op<.05){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.2+knocks*.25;c.fillStyle='#fff0b0';c.fillRect(444,0,12,H);c.restore();}
-  TD_KNOCKS.forEach((at,i)=>{const age=T-at;if(age>=0&&age<.5){const k=1-age/.5;for(const x of [380,520]){ring(c,x,H*.52+20,40+age*500,'#ffd36a',10*k+1,k);}halo(c,a.glow,450,H*.52,700,700,k*.8);flash(c,H,'#ffb84a',k*.15);}});
+  TD_KNOCKS.forEach((at,i)=>{const age=T-at;if(age>=0&&age<.5){const k=1-age/.5;for(const x of [380,520]){ring(c,x,H*.52+20,40+age*500,'#ffd36a',10*k+1,k);}halo(c,a.glow,450,H*.52,700,700,k*.8);drawScreenPulse(c,H,scene.reduceFlash,'#ffb84a',k*.15);}});
   c.save();c.globalAlpha=s.gate;const py=H*.1-(1-s.gate)*200;c.fillStyle='#10204a';c.fillRect(250,py-55,400,110);c.strokeStyle='#e8b84a';c.lineWidth=8;c.strokeRect(250,py-55,400,110);c.fillStyle='#ffd77a';c.textAlign='center';c.textBaseline='middle';c.font='900 58px "Times New Roman", serif';c.fillText('NAM THIÊN MÔN',450,py+2,370);c.restore();}
- {const age=T-TD.open;if(age>=0&&age<1.2)flash(c,H,'#ffffff',(1-age/1.2)*.55);}
+ {const age=T-TD.open;if(age>=0&&age<1.2)drawScreenPulse(c,H,scene.reduceFlash,'#ffffff',(1-age/1.2)*.55);}
  // ánh sáng bị hút sạch trước nổ
  if(s.dark>0){c.save();c.globalAlpha=s.dark*.93;c.fillStyle='#000000';c.fillRect(0,0,900,H);c.restore();halo(c,a.glow,450,s.belly,90,90,s.dark);}
  drawQiMotes(scene,c,kq,H);if(a.vignette)c.drawImage(a.vignette,0,0,900,H);c.restore();

@@ -43,7 +43,7 @@ function drawBolt(c,b,pal,x0,y0,x1,y1,alpha,w){const pts=pathPoints(b.path,x0,y0
  for(const br of b.branches){const i=Math.floor(br.at*(pts.length-1)),[bx,by]=pts[i],len=Math.hypot(x1-x0,y1-y0)*br.len,ang=Math.atan2(y1-y0,x1-x0)+br.dir*.6;glowStroke(c,pathPoints(br.path,bx,by,bx+Math.cos(ang)*len,by+Math.sin(ang)*len),pal,w*br.w,alpha*.8);}}
 
 // t: giây kể từ lúc bắt đầu. view: {W,H,x,y,scale} — x,y là chân nhân vật trong toạ độ màn hình (900 × H).
-export function drawHeavenStrike(c,profile,t,view,{light=false,name='',loss=0}={}){
+export function drawHeavenStrike(c,profile,t,view,{light=false,reducedFlash=false,name='',loss=0}={}){
  const {W=900,H,x,y}=view,S=view.scale||1.4,scale=Math.min(S,2.1),pal=profile.palette,end=HEAVEN_STRIKE_MS/1000;if(t<0||t>end)return;
  const head=y-Math.min(64*S,H*.3),body=y-Math.min(34*S,H*.16),eyeX=clamp(x+profile.eyeDx,140,W-140),eyeY=H*.055,hitTimes=profile.bolts.map(b=>b.at);
  const sinceHit=Math.min(...hitTimes.map(h=>t>=h?t-h:99)),fade=1-smooth(end-1.1,end,t);
@@ -90,6 +90,7 @@ export function drawHeavenStrike(c,profile,t,view,{light=false,name='',loss=0}={
  // 7) Chớp trắng toàn màn hình mỗi lần lôi chạm.
  let flash=0;for(const b of profile.bolts){const age=t-b.at;if(age>=0&&age<.42)flash=Math.max(flash,(b.main?1:.62)*Math.pow(1-age/.42,2));}
  const pre=t<STRIKE_AT&&t>1.4?(rng(profile.seed+Math.floor(t*9))()<.18?.18:0):0;flash=Math.max(flash,pre);
+ if(reducedFlash)flash*=.18;
  if(flash>0){c.globalCompositeOperation='source-over';c.globalAlpha=flash*.78;c.fillStyle=pal.core;c.fillRect(0,0,W,H);c.globalCompositeOperation='lighter';c.globalAlpha=flash*.45;c.fillStyle=pal.glow;c.fillRect(0,0,W,H);}
  // 8) Dư điện quấn người, khói bốc.
  const after=smooth(STRIKE_AT+.2,STRIKE_AT+.6,t)*fade;if(after>0){c.globalCompositeOperation='lighter';const ar=rng(profile.seed+99+Math.floor(t*14));const n=light?2:4;for(let i=0;i<n;i++){if(ar()<.35)continue;const a=ar()*6.28,len=(22+ar()*36)*scale*.7,sx=x+(ar()-.5)*30*scale*.6,sy=body+(ar()-.5)*50*scale*.6;glowStroke(c,pathPoints(boltPath(ar,4,.55),sx,sy,sx+Math.cos(a)*len,sy+Math.sin(a)*len),pal,1.3,after*.85);}

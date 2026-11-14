@@ -9,9 +9,26 @@ export function mountEventTab(post){
  document.querySelector('#socialControl').addEventListener('click',e=>{const b=e.target.closest('[data-social]');if(!b)return;const action=b.dataset.social;if(action==='mini-game'){post('/api/engage',{kind:b.dataset.kind});return;}if(action==='tease-pair'){const v=id=>document.querySelector(id)?.value||'';post('/api/social-control',{action,a:v('#teaseA'),b:v('#teaseB')});return;}if(action==='start-lantern'||action==='stop-lantern')post('/api/lantern-event',{action:action==='start-lantern'?'start':'stop'});else if(action==='world-scene')post('/api/world-scene',{scene:b.dataset.kind});else if(action==='pet-start'||action==='pet-stop')post('/api/pet-event',{action:action==='pet-start'?'start':'stop',minutes:5});else if(action==='blessing')post('/api/blessing',{count:3});else if(action==='visitor')post('/api/visitor-event',{kind:b.dataset.kind});else if(action==='flower')post('/api/flower-event',{minutes:2,kind:b.dataset.kind});else if(action==='boss')post('/api/boss',b.dataset.species?{species:b.dataset.species}:{});else if(action==='sea-event')post('/api/visitor-event',{kind:'hailam'});else if(action==='opportunity')post('/api/opportunity');else post('/api/social-control',{action,kind:b.dataset.kind});});
  document.querySelector('#socialControl').addEventListener('change',e=>{if(e.target.id==='bondEnabled')post('/api/social-control',{action:'bond-enabled',enabled:e.target.checked});});
 }
+function renderTournamentRegistration(tournament,now,overlay){
+ const guide=document.getElementById('tournamentRegistrationGuide');
+ if(!guide)return false;
+ const remaining=tournament?.registrationEndsAt-now;
+ const visible=overlay&&tournament?.phase==='registration'&&remaining>0;
+ guide.hidden=!visible;
+ if(!visible)return false;
+ const time=guide.querySelector('.tournament-registration-time');
+ const count=guide.querySelector('.tournament-registration-count');
+ const timeLabel='Còn '+clock(remaining);
+ const countLabel=(tournament.entries?.length||0)+' đạo hữu đã ghi danh';
+ if(time.textContent!==timeLabel)time.textContent=timeLabel;
+ if(count.textContent!==countLabel)count.textContent=countLabel;
+ return true;
+}
 export function renderSocialUI(state,admin=true){
  const practice=state.liveIntegrityVersion===1&&state.mode==='live'&&state.settings?.engagementRewards!==true;
- const s=state.socialStatus;if(!s)return;const t=s.tournament,now=state.serverNow,players=new Map(state.players.map(p=>[p.id,p])),name=id=>players.get(id)?.name||t?.fighters?.[id]?.name||'Đạo hữu';
+ const s=state.socialStatus;
+ const registrationGuide=renderTournamentRegistration(s?.tournament,state.serverNow,!admin);
+ if(!s)return;const t=s.tournament,now=state.serverNow,players=new Map(state.players.map(p=>[p.id,p])),name=id=>players.get(id)?.name||t?.fighters?.[id]?.name||'Đạo hữu';
  const active=t&&['registration','running'].includes(t.phase),phase={registration:'Đang tuyển',running:'Đang đấu',finished:'Đã hoàn tất',cancelled:'Đã dừng'}[t?.phase]||'Chưa mở';
  const current=t?.current,waiting=t?.waiting?.length||0;
  const html=eventDashboardHTML(state),root=document.querySelector('#socialControl');
@@ -27,13 +44,14 @@ export function renderSocialUI(state,admin=true){
  else if(race?.phase==='registration')h='<b>PHI KIẾM · '+clock(race.registrationEndsAt-now)+'</b><span>Gõ bay · '+race.entries.length+' người đăng ký</span>';
  else if(race?.phase==='running')h='<b>PHI KIẾM · '+clock(race.endsAt-now)+'</b><span>Gõ danh để bứt tốc · hồi 10 giây · không giới hạn số lần</span>';
  else if(race?.active)h='<b>VỀ ĐÍCH · '+esc(race.results?.[0]?.name||'Chờ thêm đấu thủ')+'</b><span>Lượt tuyển tiếp theo sau '+clock(race.podiumUntil-now)+'</span>';
- else if(t?.phase==='registration')h='<b>LUẬN KIẾM · '+clock(t.registrationEndsAt-now)+'</b><span>Gõ tythi · '+t.entries.length+' người đăng ký</span>';
+ else if(t?.phase==='registration'&&!registrationGuide&&admin)h='<b>LUẬN KIẾM · '+clock(t.registrationEndsAt-now)+'</b><span>Gõ tythi · '+t.entries.length+' người đăng ký</span>';
  else if(current){const au=current.aura||{};h='<b>'+esc(short(current.a))+' ✦ '+(au[current.a]||0)+' · '+esc(short(current.b))+' ✦ '+(au[current.b]||0)+'</b><span>Linh áp · đấu thủ gõ kiem tiếp linh lực '+(current.boosts[current.a]||0)+'/3 — '+(current.boosts[current.b]||0)+'/3 · '+clock(current.endsAt-now)+'</span>';}
  else if(t?.quick)h='<b>LUẬN KIẾM · VÒNG '+t.quick.round+'</b><span>So tài nhanh · '+(t.roundSize||'')+' đấu thủ · '+(t.results?.length||0)+' ván đã xong</span>';
  else if(t?.phase==='running')h='<b>LUẬN KIẾM · VÒNG '+t.round+'</b><span>Đang chuẩn bị cặp tiếp theo</span>';
  else if(s.ceremony)h='<b>'+(s.ceremony.festivalId?'NGUYỆT HẠ THÀNH DUYÊN':'TAM SINH ƯỚC')+'</b><span>'+esc(name(s.ceremony.a))+' ♥ '+esc(name(s.ceremony.b))+'</span>';
  else if(s.invites.length){const i=s.invites[0];h='<b>'+esc(i.fromName)+' mời '+esc(i.toName)+'</b><span>'+esc(i.toName)+' gõ dongy · '+clock(i.expiresAt-now)+'</span>';}
- if(!h&&f?.active&&!state.boss)h='<b>NGUYỆT HẠ KẾT DUYÊN · '+clock(f.endsAt-now)+'</b><span>ketduyen tên → dongy · '+(practice?'điểm tu luyện ':'tim chúc phúc ')+f.blessings+'/'+f.goal+'</span>';
+ if(registrationGuide)h='';
+ if(!registrationGuide&&!h&&f?.active&&!state.boss)h='<b>NGUYỆT HẠ KẾT DUYÊN · '+clock(f.endsAt-now)+'</b><span>ketduyen tên → dongy · '+(practice?'điểm tu luyện ':'tim chúc phúc ')+f.blessings+'/'+f.goal+'</span>';
  hud.hidden=!h;if(hud._last!==h){hud.innerHTML=h;hud._last=h;}
  renderQuickBoard(t,now,players);
 }

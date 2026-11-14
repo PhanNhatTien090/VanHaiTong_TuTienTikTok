@@ -58,14 +58,14 @@ for(let i=0;i<20;i++)add(14.7+i*.075,.03,.03,7000,3000,'crack',(i%2?1:-1)*.4,tru
 sub(T.enter,.18);swellTo(T.impact,1.6,.08);for(let i=0;i<10;i++)drum(16.4+i*.07,.3+i*.05);
 sub(T.impact,.35,80,24,2.2);brass(T.impact,1.6,82.41,.09);choir(T.reveal,3,[196,246.94,293.66,392],.035);brass(T.reveal+.2,2.2,98,.05);
 export const LUYEN_HU_SCORE=Object.freeze(score.sort((a,b)=>a.at-b.at).map(Object.freeze));
-// Độ lớn ×1,9 theo yêu cầu chủ game 07/11; limiter cuối giữ đỉnh dưới ngưỡng vỡ tiếng.
-const LOUD=1.9;
+// Mức cue dành khoảng trống cho các lớp cộng trên bus nghi thức.
+const LOUD=1.32;
 const banks=new WeakMap();
 function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=40917,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}
 export function luyenHuMusicDuck(ms){const t=ms/1000;return t<T.eye?.2:t<T.impact?.08:t<19.2?.12:Math.min(1,.12+(t-19.2)/1.6*.88);}
 export function scheduleLuyenHuAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={}){
- const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),limiter=c.createDynamicsCompressor(),nodes=[bus,limiter],sources=[];let stopped=false,echo=null;
- bus.gain.value=strength;limiter.threshold.value=-10;limiter.knee.value=8;limiter.ratio.value=1;limiter.attack.value=.003;limiter.release.value=.22;const ceiling=c.createDynamicsCompressor();ceiling.threshold.value=-6;ceiling.knee.value=0;ceiling.ratio.value=1;ceiling.attack.value=.001;ceiling.release.value=.12;nodes.push(ceiling);bus.connect(limiter);limiter.connect(ceiling);ceiling.connect(destination);
+ const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),nodes=[bus],sources=[];let stopped=false,echo=null;
+ bus.gain.value=strength;bus.connect(destination);
  // Vang dài hơn Hóa Thần (không gian hư không rộng).
  if(c.createDelay){echo=c.createDelay(.6);const wet=c.createGain(),fb=c.createGain();echo.delayTime.value=.23;wet.gain.value=.16;fb.gain.value=.28;echo.connect(wet);wet.connect(bus);echo.connect(fb);fb.connect(echo);nodes.push(echo,wet,fb);}
  for(const cue of LUYEN_HU_SCORE){const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;

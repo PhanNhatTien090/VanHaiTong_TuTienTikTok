@@ -8,6 +8,7 @@ test('complete renderer with 500 profiles caps a >30 crowd at 50 skin-only seats
  globalThis.document={body:{classList:{contains:()=>true,toggle(){}}},createElement:()=>createCanvas(1,1)};globalThis.requestAnimationFrame=()=>{};
  try{
   const canvas=createCanvas(540,960);canvas.clientWidth=540;
+  canvas.getBoundingClientRect=()=>({width:540,height:960});
   const s=Object.create(Scene.prototype);Object.assign(s,{canvas,ctx:canvas.getContext('2d'),background:createCanvas(540,960),height:1600,visible:true,motion:true,showNames:true,worldLife:{environment:false,npcs:false},residents:false,cameraEnabled:false,camera:{s:1,x:0,y:0},zoom:1,targets:[],effects:[],budget:new RenderBudget('light'),characterFrames:new CharacterFrames(createCanvas),animator:new CharacterAnimator(),characterArt:await loadImage('public/assets/cultivators-v3.png'),standingArt:await loadImage('public/assets/cultivators-standing-v14.png')});
   s.divineArt=new Map();for(let group=0;group<5;group++){const im=await loadImage('public/assets/divine-war-v1/'+(group===4?'honors':'realms-'+group)+'.png');s.divineArt.set(group,sliceDivineAtlas(im,group,createCanvas));}
   const players=Array.from({length:500},(_,i)=>({id:'p'+i,name:'P'+i,active:true,joinedAt:i,realm:8,giftCoins:0,qi:20,neededQi:100,stones:5,neededStones:20}));

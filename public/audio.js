@@ -25,16 +25,68 @@ const IMPACT_LAYERS={3:[9.4,11.8,174.6],4:[10.75,14.4,146.8],5:[14.4,17.6,110],6
 import {scheduleTrucCoAudio,trucCoMusicDuck} from './truc-co-audio.js';
 import {scheduleKimDanAudio,kimDanMusicDuck} from './kim-dan-audio.js';
 import {scheduleNguyenAnhAudio,nguyenAnhMusicDuck} from './nguyen-anh-audio.js';
+import {lateAscension} from './late-ascension-data.js';
 import {breakthroughRealm} from './breakthrough-fx.js';
 // Original procedural audio: no external samples, music service, or credentials.
 // 08/11: bo đỉnh mềm cuối chuỗi — dưới 0,8 giữ nguyên, trên đó uốn dần tới 0,98: không bao giờ cắt cứng (tiếng rẹt).
 export function softClipCurve(n=4096){const a=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1,m=Math.abs(x);a[i]=Math.sign(x)*(m<=.8?m:.8+.18*Math.tanh((m-.8)/.18));}return a;}
-function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.createWaveShaper();w.curve=softClipCurve();w.oversample='4x';return w;}
+function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.createWaveShaper();w.curve=softClipCurve();w.oversample='2x';return w;}
 // 08/11 tối: 3 bản nhạc nền tu tiên, chuẩn hóa -19 LUFS (to hơn bản cũ -23 LUFS ~4 dB). Nguồn + giấy phép: public/assets/AUDIO.md.
 // 09/11: 8 bài; mỗi bài lặp tới lúc đổi (tự đổi mỗi 30 phút hoặc theo trang quản lý) — xem music-rotation.js.
 // 10/11 (chủ game): nhạc nền to hơn ~4 dB, chỉ nhạc nền (không đụng tiếng hiệu ứng).
 export const MUSIC_GAIN=1.6;
+export function ascensionImpactRatio(realm){
+  if(EARLY_IMPACT[realm])return EARLY_IMPACT[realm];
+  if(IMPACT_LAYERS[realm])return IMPACT_LAYERS[realm][0]/IMPACT_LAYERS[realm][1];
+  if(realm===9)return 18.1/26;
+  if(realm===10)return 20.2/28;
+  const late=realm>=25?lateAscension(realm):null;
+  return late?late.impact*1000/late.duration:.7;
+}
+const REALM_CUES={
+  2:scheduleTrucCoAudio,3:scheduleKimDanAudio,4:scheduleNguyenAnhAudio,5:scheduleHoaThanAudio,
+  6:scheduleLuyenHuAudio,7:scheduleDaiThuaAudio,8:scheduleChanTienAudio,9:scheduleHuyenTienAudio,
+  10:scheduleKimTienAudio,11:scheduleThaiAtAudio,12:scheduleDaiLaAudio,13:scheduleTienDeAudio,
+  22:scheduleMaThanAudio,23:scheduleThienMaAudio,24:scheduleDietTheAudio
+};
 export const BGM_TRACKS=Object.freeze(BGM_LIST.map(t=>t.src));
+const divineNotes=[
+  [146.83,174.61,220,293.66],[130.81,164.81,196,261.63],
+  [123.47,146.83,185,246.94],[110,130.81,164.81,220],
+  [103.83,123.47,155.56,207.65],[98,146.83,196,246.94],
+  [92.5,123.47,138.59,185],[82.41,110,164.81,220]
+];
+
+function scheduleDivineCue(c,destination,elapsed,duration,realm){
+  const now=c.currentTime,hit=duration*.70,notes=divineNotes[realm-14],sources=[];
+  function tone(at,length,frequency,volume,wave,attack=.03,end=frequency){
+    const offset=Math.max(0,elapsed-at),remaining=length-offset;
+    if(remaining<=0)return;
+    const start=now+Math.max(0,at-elapsed),finish=start+remaining;
+    const source=c.createOscillator(),gain=c.createGain();
+    source.type=wave;
+    source.frequency.setValueAtTime(frequency,start);
+    if(end!==frequency)source.frequency.exponentialRampToValueAtTime(end,finish);
+    gain.gain.setValueAtTime(.0001,start);
+    gain.gain.linearRampToValueAtTime(volume,start+Math.min(attack,remaining*.6));
+    gain.gain.exponentialRampToValueAtTime(.0001,finish);
+    source.connect(gain);gain.connect(destination);
+    source.onended=()=>{source.disconnect();gain.disconnect();};
+    source.start(start);source.stop(finish);
+    sources.push(source);
+  }
+  for(let i=0;i<4;i++){
+    tone(duration*(.12+i*.123),1.45,notes[i],.055,'sine',.15);
+    tone(duration*(.155+i*.123),2,notes[i]/2,.042,'triangle',.5);
+  }
+  for(let i=0;i<5;i++)tone(hit-2+i*.33,.22,155+i*13,.053,'triangle',.02,60);
+  if(elapsed<hit+.08)tone(hit,.62,notes[0],.17,'triangle',.012,43);
+  for(let i=0;i<4;i++)tone(hit+.20+i*.21,2.8,notes[i]*2,.052,'sine',.14);
+  return {endAt:now+Math.max(0,duration-elapsed),stop(){
+    for(const source of sources)try{source.stop();}catch{}
+  }};
+}
+
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.45;this.ambient=.6;this.sfx=.85;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){
@@ -72,11 +124,11 @@ export class CultivationAudio {
     },40);
   }
 
-  init(){const C=globalThis.AudioContext||globalThis.webkitAudioContext;this.ctx=new C();const c=this.ctx;
+  init(context=null){const C=globalThis.AudioContext||globalThis.webkitAudioContext;this.ctx=context||new C();const c=this.ctx;
     this.master=c.createGain();this.ambBus=c.createGain();this.fxBus=c.createGain();this.limiter=c.createDynamicsCompressor();
-    this.limiter.threshold.value=-14;this.limiter.knee.value=12;this.limiter.ratio.value=4;this.limiter.attack.value=.01;this.limiter.release.value=.4;
+    this.limiter.threshold.value=-15;this.limiter.knee.value=9;this.limiter.ratio.value=3;this.limiter.attack.value=.004;this.limiter.release.value=.25;
     // 08/11: chống rè — chỉ còn 1 tầng nén chung (các màn đột phá bỏ nén riêng) + trần an toàn chỉ chạm ở đỉnh hiếm.
-    this.ceiling=c.createDynamicsCompressor();this.ceiling.threshold.value=-1.5;this.ceiling.knee.value=1;this.ceiling.ratio.value=20;this.ceiling.attack.value=.002;this.ceiling.release.value=.15;
+    this.ceiling=c.createDynamicsCompressor();this.ceiling.threshold.value=-5;this.ceiling.knee.value=1;this.ceiling.ratio.value=18;this.ceiling.attack.value=.001;this.ceiling.release.value=.12;
     this.ambBus.connect(this.master);this.fxBus.connect(this.master);this.master.connect(this.limiter);this.limiter.connect(this.ceiling);this.softClip=softClipper(c);this.ceiling.connect(this.softClip);this.softClip.connect(c.destination);
     // A quiet fifth drone with a slow breath envelope, kept below event sounds.
     for(const f of (typeof Audio==='undefined'?[110,164.81,220]:[])){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;g.gain.value=.018;o.connect(g);g.connect(this.ambBus);o.start();this.drone.push({o,g});}
@@ -93,29 +145,75 @@ export class CultivationAudio {
     const realm=breakthroughRealm(event),duck=realm>=25?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
     this.qiSession?.audio.stop();
-    const variant=this.ritualVariant(event,realm,elapsed),boost=realm>=6&&realm<25?createRitualBoostBus(this.ctx,this.fxBus,realm):null,out=variant?.input||boost?.input||this.fxBus;
-    const schedule=realm===24?scheduleDietTheAudio:realm===23?scheduleThienMaAudio:realm===22?scheduleMaThanAudio:realm===13?scheduleTienDeAudio:realm===12?scheduleDaiLaAudio:realm===11?scheduleThaiAtAudio:realm===10?scheduleKimTienAudio:realm===9?scheduleHuyenTienAudio:realm===8?scheduleChanTienAudio:realm===7?scheduleDaiThuaAudio:realm===6?scheduleLuyenHuAudio:realm===5?scheduleHoaThanAudio:realm===4?scheduleNguyenAnhAudio:realm===3?scheduleKimDanAudio:realm===2?scheduleTrucCoAudio:scheduleQiAudio;
-    const baseCue=realm>=25?scheduleLateAudio(this.ctx,out,elapsed/1000,event.duration/1000,realm):(schedule===scheduleHuyenTienAudio||schedule===scheduleKimTienAudio||schedule===scheduleHoaThanAudio||schedule===scheduleLuyenHuAudio||schedule===scheduleDaiThuaAudio||schedule===scheduleChanTienAudio||schedule===scheduleThaiAtAudio||schedule===scheduleDaiLaAudio||schedule===scheduleTienDeAudio||schedule===scheduleMaThanAudio||schedule===scheduleThienMaAudio||schedule===scheduleDietTheAudio)?schedule(this.ctx,out,elapsed/1000,event.duration/1000,1,event):schedule===scheduleQiAudio?schedule(this.ctx,out,elapsed/1000,event.duration/1000,1,qiVariant(event).pitch):schedule===scheduleTrucCoAudio?schedule(this.ctx,out,elapsed/1000,event.duration/1000,1,'mix',qiVariant(event).pitch):schedule(this.ctx,out,elapsed/1000,event.duration/1000);const hit=IMPACT_LAYERS[realm],extra=hit?scheduleImpactLayers(this.ctx,out,{elapsed:elapsed/1000,at:hit[0],duration:hit[1],scale:(event.duration/1000)/hit[1],pitch:qiVariant(event).pitch,root:hit[2]}):null;const layer=boost?scheduleRitualBoostLayer(this.ctx,out,{realm,elapsed:elapsed/1000,duration:event.duration/1000}):null;const cue0=extra?{stop(){baseCue.stop();extra.stop();},endAt:Math.max(baseCue.endAt||0,extra.endAt||0)}:baseCue;const cue=boost?{stop(){cue0.stop();layer?.stop();boost.stop();},endAt:Math.max(cue0.endAt||0,layer?.endAt||0)}:cue0;this.qiSession={event,duck,audio:variant?{stop(){cue.stop();variant.stop();},endAt:cue.endAt}:cue};this.sync();
+    this.qiSession={event,duck,audio:this.scheduleRitual(event,realm,elapsed)};this.sync();
+  }
+  scheduleRitual(event,realm,elapsed=0,{base=true,impact=true,boost=true,variant=true}={}){
+    const c=this.ctx,seconds=elapsed/1000,duration=event.duration/1000;
+    const output=c.createGain();
+    output.connect(this.fxBus);
+    const appearance=variant?this.ritualVariant(event,realm,elapsed,output):null;
+    const enhancement=boost&&realm>=6&&realm<25?createRitualBoostBus(c,output,realm):null;
+    const schedule=REALM_CUES[realm]||scheduleQiAudio;
+    const baseOut=appearance?.input||output, cues=[];
+    if(base){
+      const cue=realm>=14&&realm<=21?scheduleDivineCue(c,baseOut,seconds,duration,realm)
+        :realm>=25?scheduleLateAudio(c,baseOut,seconds,duration,realm)
+        :schedule===scheduleQiAudio?schedule(c,baseOut,seconds,duration,1,qiVariant(event).pitch)
+        :schedule===scheduleTrucCoAudio?schedule(c,baseOut,seconds,duration,1,'mix',qiVariant(event).pitch)
+        :schedule===scheduleKimDanAudio||schedule===scheduleNguyenAnhAudio?schedule(c,baseOut,seconds,duration)
+        :schedule(c,baseOut,seconds,duration,1,event);
+      cues.push(cue);
+    }
+    const hit=IMPACT_LAYERS[realm];
+    if(impact&&hit)cues.push(scheduleImpactLayers(c,output,{
+      elapsed:seconds,at:hit[0],duration:hit[1],scale:duration/hit[1],
+      pitch:qiVariant(event).pitch,root:hit[2],level:realm>=6?.53:.72
+    }));
+    if(enhancement)cues.push(scheduleRitualBoostLayer(c,enhancement.input,{
+      realm,elapsed:seconds,duration,impactBody:!hit
+    }));
+    let stopping=false,disposed=false;
+    const dispose=()=>{
+      if(disposed)return;
+      disposed=true;
+      appearance?.stop();
+      for(const cue of cues)cue?.stop();
+      enhancement?.stop();
+      output.disconnect();
+    };
+    const tail=setTimeout(dispose,Math.max(0,(duration-seconds+3.5)*1000));
+    tail.unref?.();
+    return {endAt:c.currentTime+Math.max(0,duration-seconds),stop(){
+      if(stopping||disposed)return;
+      stopping=true;clearTimeout(tail);
+      const t=c.currentTime;
+      output.gain.setTargetAtTime(.0001,t,.008);
+      const timer=setTimeout(dispose,50);
+      timer.unref?.();
+    }};
   }
   // 07/11: biến thể âm thanh cho Phàm nhân → Kim Đan: to hơn (×1,25–1,7), đổi âm sắc, lệch cao độ, thêm 1 tiếng nhấn
   // ngẫu nhiên (chiêng / chuông / trống / khánh / sấm) đúng lúc nổ. Mỗi lần đột phá nghe khác nhau.
-  ritualVariant(event,realm,elapsed=0){
+  ritualVariant(event,realm,elapsed=0,destination=this.fxBus){
     if(realm>3||!this.ctx)return null;const a=ritualAppearance(event)?.audio;if(!a)return null;
-    const c=this.ctx,now=c.currentTime,input=c.createGain(),tone=c.createBiquadFilter?.(),out=c.createGain(),comp=c.createDynamicsCompressor?.();
-    input.gain.value=1;if(tone){tone.type=a.tone==='bright'?'highshelf':a.tone==='air'?'peaking':'lowshelf';tone.frequency.value=a.tone==='bright'?3200:a.tone==='air'?6500:a.tone==='deep'?140:320;if(tone.Q)tone.Q.value=.8;tone.gain.value=a.tone==='deep'?7:a.tone==='warm'?4:5;}
-    if(comp){comp.threshold.value=-14;comp.knee.value=8;comp.ratio.value=3;comp.attack.value=.004;comp.release.value=.25;}out.gain.value=a.gain;
-    const chain=[input,tone,comp,out].filter(Boolean);chain.forEach((n,i)=>i&&chain[i-1].connect(n));out.connect(this.fxBus);
+    const c=this.ctx,now=c.currentTime,input=c.createGain(),tone=c.createBiquadFilter?.(),out=c.createGain();
+    input.gain.value=1;if(tone){tone.type=a.tone==='bright'?'highshelf':a.tone==='air'?'peaking':'lowshelf';tone.frequency.value=a.tone==='bright'?3200:a.tone==='air'?6500:a.tone==='deep'?140:320;if(tone.Q)tone.Q.value=.8;tone.gain.value=a.tone==='deep'?3:a.tone==='warm'?2:2.5;}
+    out.gain.value=Math.min(1.18,.80+.22*a.gain);
+    const chain=[input,tone,out].filter(Boolean);chain.forEach((n,i)=>i&&chain[i-1].connect(n));out.connect(destination);
     const at=now+(event.duration/1000)*(EARLY_IMPACT[realm]||.7)-elapsed/1000,f=[98,110,123.5,130.8,146.8][Math.abs(a.detune/100+2)%5]*2**(a.detune/1200),nodes=[];
     let timer=null,stopped=false;
     // Tiếng nhấn chỉ được lên lịch ~0,3 s trước lúc nổ, nên dừng sớm (tắt tiếng / cắt cảnh) thì không còn nguồn âm treo.
-    const accent=at=>{const g=c.createGain();g.gain.value=a.gain*.9;g.connect(this.fxBus);nodes.push(g);
+    const accent=at=>{const g=c.createGain();g.gain.value=.56+.16*a.gain;g.connect(destination);nodes.push(g);
       if(a.accent==='gong'){[1,1.48,2.02,2.74].forEach((r,i)=>this.note(f*r,at,3.6-i*.6,.11/(1+i*1.5),g,'sine'));this.note(f/2,at,2.2,.12,g,'triangle');}
       else if(a.accent==='bell')this.bell(f*4,at,.12,g);
       else if(a.accent==='chime'){for(let i=0;i<5;i++)this.note(f*[6,8,9,12,16][i],at+i*.07,1.6,.05,g,'sine');}
       else if(a.accent==='drum'){const o=c.createOscillator(),dg=c.createGain();o.frequency.setValueAtTime(130,at);o.frequency.exponentialRampToValueAtTime(42,at+.35);dg.gain.setValueAtTime(0,at);dg.gain.linearRampToValueAtTime(.42,at+.01);dg.gain.exponentialRampToValueAtTime(.0001,at+.7);o.connect(dg);dg.connect(g);o.start(at);o.stop(at+.75);this.note(f/2,at+.18,.6,.12,g,'sine');}
       else{const len=Math.ceil(c.sampleRate*2.2),b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let low=0;for(let i=0;i<len;i++){low=.92*low+.08*(Math.random()*2-1);d[i]=low*4*Math.exp(-i/len*4)*(i<c.sampleRate*.02?i/(c.sampleRate*.02):1);}const src=c.createBufferSource(),lp=c.createBiquadFilter(),tg=c.createGain();src.buffer=b;lp.type='lowpass';lp.frequency.value=900;tg.gain.value=.55;src.connect(lp);lp.connect(tg);tg.connect(g);src.start(at);}};
-    if(at>now+.05)timer=setTimeout(()=>{if(!stopped&&this.ctx===c)accent(Math.max(c.currentTime+.02,c.currentTime+.3));},Math.max(0,(at-now-.3)*1000));
-    return {input,stop:()=>{stopped=true;clearTimeout(timer);const t=c.currentTime;out.gain.setTargetAtTime(0,t,.08);for(const n of nodes)n.gain.setTargetAtTime(0,t,.08);setTimeout(()=>{try{input.disconnect();out.disconnect();for(const n of nodes)n.disconnect();}catch{}},900);}};
+    if(at>now+.05){
+      if(typeof c.startRendering==='function')accent(at);
+      else timer=setTimeout(()=>{if(!stopped&&this.ctx===c&&c.currentTime<at+.08)accent(Math.max(c.currentTime+.015,at));},Math.max(0,(at-now-.3)*1000));
+    }
+    return {input,stop:()=>{stopped=true;clearTimeout(timer);const t=c.currentTime;out.gain.setTargetAtTime(0,t,.08);for(const n of nodes)n.gain.setTargetAtTime(0,t,.08);setTimeout(()=>{try{for(const n of chain)n.disconnect();for(const n of nodes)n.disconnect();}catch{}},900);}};
   }
   duck(on){this.ducked=on;this.duckUntil=on?Date.now()+20000:0;this.sync();}
   set(kind,value){this[kind]=Math.max(0,Math.min(1,Number(value)||0));this.sync();}
@@ -148,9 +246,24 @@ export class CultivationAudio {
     this.last[key]=now;const cue=scheduleBattleSound(this.ctx,this.fxBus,kind,kind==='cast'?combatVoice(variant):variant,this.ducked?.72:1);
     this.battleVoices.push({...cue,until:now+1.4});
   }
-  play(type){if(!this.enabled||!this.ctx)return;const c=this.ctx,t=c.currentTime;
+  voiceLoad(){
+    const now=this.ctx?.currentTime??0;
+    return {activeCues:this.voices.filter(until=>until>now).length,
+      battleCues:(this.battleVoices||[]).filter(cue=>cue.until>now).length,ritual:!!this.qiSession};
+  }
+  eventGift(kind,context){
+    if(kind==='dragon'){this.play(kind,true);return;}
+    const voices={race:'sword',duel:'sword',war:'sword',hallwar:'sword',hall:'sword',
+      pet:'pet',alchemy:'alchemy-gift',maze:'maze-gift',tower:'tower-gift',
+      visitor:'lotus',flower:'petal',bond:'petal',bonk:'lotus',honor:'victory'};
+    this.play(voices[context]||kind,true);
+  }
+  play(type,priority=false){
+    if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;
+    if(this.qiSession&&!priority&&['join','qi','petal','lotus','attack','breakthrough'].includes(type))return;
+    const c=this.ctx,t=c.currentTime;
     const cooldown=['qi','petal','attack'].includes(type)?1.3:.25;if(t-(this.last[type]??-100)<cooldown)return;
-    this.voices=this.voices.filter(v=>v>t);if(this.voices.length>=6)return;this.voices.push(t+1);this.last[type]=t;
+    this.voices=this.voices.filter(v=>v>t);if(this.voices.length>=(priority?7:5))return;this.voices.push(t+1);this.last[type]=t;
     if(['breakthrough','dragon','victory','skin'].includes(type)){this.ambBus.gain.cancelScheduledValues(t);this.ambBus.gain.setTargetAtTime(this.ambient*.35,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t+2,.8);}
     if(type==='impact'){this.wind(t,.65,.11);this.note(65.4,t,.65,.10);this.note(98,t+.06,.8,.06);this.bell(196,t+.12,.035);}
     else if(type==='ascension-charge'){this.wind(t,1.4,.065);[130.81,196,261.63,392].forEach((f,i)=>this.note(f,t+i*.23,1.5,.035));}
@@ -163,6 +276,15 @@ export class CultivationAudio {
     else if(type==='qi-return'){this.note(523.25,t,.7,.02);this.note(392,t+.12,.8,.023);this.note(261.63,t+.26,1,.028);}
     else if(type==='qi-complete'){this.bell(392,t,.034);this.note(523.25,t+.15,1.3,.025);}
     else if(type==='qi'){this.note(261.63,t,1.4,.045);this.note(392,t+.14,1.4,.025);}
+    else if(type==='alchemy-gift'){this.note(155.56,t,.54,.065,undefined,'triangle');this.wind(t+.04,.35,.035);this.bell(466.16,t+.13,.038);}
+    else if(type==='maze-portal'){this.wind(t,.33,.056);this.note(246.94,t+.06,.62,.051);this.bell(739.99,t+.19,.043);}
+    else if(type==='maze-gift'){this.note(329.63,t,.6,.04);this.note(220,t+.15,.9,.037);this.bell(659.25,t+.24,.025);}
+    else if(type==='tower-clear'||type==='tower-milestone'){
+      this.bell(196,t,.07);
+      this.note(392,t+.12,.7,.038);
+      if(type==='tower-milestone'){this.note(523.25,t+.25,1.05,.045);this.bell(783.99,t+.34,.034);}
+    }
+    else if(type==='tower-gift'){this.bell(196,t,.066);this.note(293.66,t+.12,.8,.04);this.note(440,t+.25,1.2,.027);}
     else if(type==='pet'){[523.25,659.25,783.99].forEach((f,i)=>this.note(f,t+i*.12,.9,.035));}
     else if(type==='petal'){this.note(523.25,t,.65,.035);this.note(659.25,t+.13,.8,.025);}
     else if(type==='attack'||type==='sword'){this.wind(t,.42,.09);this.note(type==='attack'?196:293.66,t+.08,.5,.04);}

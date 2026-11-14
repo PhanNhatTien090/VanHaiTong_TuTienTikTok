@@ -5,6 +5,7 @@ import {ritualAppearance,ritualAppearanceFrame,drawRitualAppearance,drawRitualWe
 const FULL_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
 export function drawRitual(scene,...args){
  const [c,e,t,H]=args,a=scene.ritualVariantsEnabled===false?null:ritualAppearance(e),restorePalette=beginRitualPalette(a?.palette||null);
+ const reduceDecor=scene.budget?.pressured||scene.heavyCrowd;
  const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,minimalCrowd:scene.minimalCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
  Object.assign(scene,{budget:breakthroughRealm(e)>=25&&saved.budget?.level==='light'?saved.budget:FULL_RITUAL_BUDGET,crowded:false,heavyCrowd:false,minimalCrowd:false,reducePresence:false,compact:false,ritualAppearance:a});
  if(a&&typeof saved.onRitualFrame==='function')scene.onRitualFrame=ui=>saved.onRitualFrame.call(scene,ritualAppearanceFrame(ui,a));
@@ -12,7 +13,7 @@ export function drawRitual(scene,...args){
  const framed=!!(a?.zoom&&(a.mirror||a.zoom!==1||a.dy));
  try{if(framed){c.save();const cy=H*.62;c.translate(450,cy);c.scale(a.mirror?-a.zoom:a.zoom,a.zoom);c.translate(-450,-cy+a.dy/a.zoom);}
   let result;try{result=drawRitualFull(scene,...args);}finally{if(framed)c.restore();}
-  drawRitualGrade(scene,c,e,t,H,a);drawRitualWeather(scene,c,e,t,H,a);drawRitualAppearance(scene,c,e,t,H,a);return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
+  if(!scene.reduceFlash)drawRitualGrade(scene,c,e,t,H,a);if(!reduceDecor)drawRitualWeather(scene,c,e,t,H,a);drawRitualAppearance(scene,c,e,t,H,a);return ritualAppearanceFrame(result,a);}finally{restorePalette();Object.assign(scene,saved);}
 }
 import {drawHuyenTienAwakening} from './huyen-tien-awakening.js';
 import {drawDaiThuaAwakening} from './dai-thua-awakening.js';

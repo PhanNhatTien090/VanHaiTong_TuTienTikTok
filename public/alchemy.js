@@ -1,3 +1,4 @@
+import {drawScreenPulse,feedbackBudget} from './cinematic-feedback.js';
 // Khai Lò Cửu Chuyển — phần hình (08/11/2026). Nguyên tắc: GIỌNG NÓI ÍT, HÌNH NÓI NHIỀU.
 // Màn hình luôn trả lời 3 câu: "giờ phải làm gì" (bảng lệnh lớn đổi màu), "lò đang thế nào" (nhiệt kế + vùng vàng), "quà để làm gì" (chú thích quà cố định).
 const TAU=Math.PI*2,clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
@@ -48,7 +49,7 @@ function drawCauldron(scene,c,e,t,H,heat,zone,now){
  // lửa dưới lò: cao theo nhiệt, màu theo vùng
  const fire=e.phase==='finished'?0:clamp(heat/100),fc=heatColor(heat,zone),locked=e.lockUntil>now;
  if(fire>0){c.save();c.globalCompositeOperation='screen';glow(c,0,150,170+fire*120,locked?'#ffe9a0':fc,.55+fire*.3);
-  const n=scene.budget?.level==='light'?12:22;for(let i=0;i<n;i++){const u=(t*.0016*(1+fire)+i/n)%1,x=(rnd(i)-.5)*220*(1-u*.5),h=(40+fire*190)*(1-u);c.globalAlpha=(1-u)*.9;c.fillStyle=i%3?fc:'#ffffff';c.beginPath();c.ellipse(x,170-u*(60+fire*170),9*(1-u)+4,h*.18+6,0,0,TAU);c.fill();}
+  const n=feedbackBudget(scene)?12:22;for(let i=0;i<n;i++){const u=(t*.0016*(1+fire)+i/n)%1,x=(rnd(i)-.5)*220*(1-u*.5),h=(40+fire*190)*(1-u);c.globalAlpha=(1-u)*.9;c.fillStyle=i%3?fc:'#ffffff';c.beginPath();c.ellipse(x,170-u*(60+fire*170),9*(1-u)+4,h*.18+6,0,0,TAU);c.fill();}
   c.restore();}
  // chân + thân + vành + quai
  c.fillStyle=S.body;[-1,0,1].forEach(k=>{c.beginPath();c.moveTo(k*110-14,90);c.lineTo(k*120-20,175);c.lineTo(k*120+8,175);c.lineTo(k*110+14,90);c.closePath();c.fill();});
@@ -63,28 +64,28 @@ function drawCauldron(scene,c,e,t,H,heat,zone,now){
  if(exploded){c.strokeStyle='#05060c';c.lineWidth=5;c.beginPath();c.moveTo(-30,-40);c.lineTo(-5,10);c.lineTo(-40,60);c.lineTo(-10,110);c.stroke();}
  c.restore();
  // khói từ miệng lò — màu theo phẩm hiện tại
- if(e.phase!=='finished'||!exploded){c.save();const col=GRADE_COL[e.grade||1],n=scene.budget?.level==='light'?6:12;for(let i=0;i<n;i++){const u=(t*.00035+i/n)%1,x=CX+sx+(rnd(i+3)-.5)*120+Math.sin(u*5+i)*30*u,yy=y-70-u*H*.18;c.globalAlpha=(1-u)*.38;c.fillStyle=col;c.beginPath();c.arc(x,yy,20+u*50,0,TAU);c.fill();}c.restore();}
+ if(e.phase!=='finished'||!exploded){c.save();const col=GRADE_COL[e.grade||1],n=feedbackBudget(scene)?6:12;for(let i=0;i<n;i++){const u=(t*.00035+i/n)%1,x=CX+sx+(rnd(i+3)-.5)*120+Math.sin(u*5+i)*30*u,yy=y-70-u*H*.18;c.globalAlpha=(1-u)*.38;c.fillStyle=col;c.beginPath();c.arc(x,yy,20+u*50,0,TAU);c.fill();}c.restore();}
  // Tiên Hỏa Hộ Lô: rồng lửa quấn lò
  if(locked&&motion){c.save();c.globalCompositeOperation='screen';for(let i=0;i<40;i++){const a=t*.004+i*.16,r=200+Math.sin(i*.4)*14;c.globalAlpha=1-i/40;c.fillStyle=i<3?'#ffffff':'#ffc34a';c.beginPath();c.arc(CX+Math.cos(a)*r,y+30+Math.sin(a)*r*.45,12-i*.25,0,TAU);c.fill();}c.restore();}
 }
 // ---------- hiệu ứng quà / biến cố ----------
 function drawFx(scene,c,e,t,H,now){
- const y=cy(H);for(const f of e.fx||[]){const age=now-f.at;if(age<0)continue;
+ const y=cy(H),light=feedbackBudget(scene);for(const f of e.fx||[]){const age=now-f.at;if(age<0)continue;
   if(f.kind==='rose'&&age<2600){const k=age/2600,a=Math.sin(Math.min(1,k*1.4)*Math.PI);c.save();c.globalCompositeOperation='screen';
-   for(let i=0;i<34;i++){const u=(k*1.8+rnd(i+hash(f.id)))%1;c.globalAlpha=a*(1-u*.4);c.fillStyle=i%4?'#7fd4ff':'#ffffff';c.beginPath();c.ellipse(CX+(rnd(i)-.5)*180,-40+u*(y-20),4,12,0,0,TAU);c.fill();}
-   for(let i=0;i<10;i++){const r=40+k*170+i*8;c.globalAlpha=a*.25;c.fillStyle='#e8f6ff';c.beginPath();c.arc(CX+(rnd(i+9)-.5)*260,y-80-k*120-rnd(i)*60,r*.4,0,TAU);c.fill();}
+   for(let i=0;i<(light?14:24);i++){const u=(k*1.8+rnd(i+hash(f.id)))%1;c.globalAlpha=a*(1-u*.4);c.fillStyle=i%4?'#7fd4ff':'#ffffff';c.beginPath();c.ellipse(CX+(rnd(i)-.5)*180,-40+u*(y-20),4,12,0,0,TAU);c.fill();}
+   for(let i=0;i<(light?4:8);i++){const r=40+k*170+i*8;c.globalAlpha=a*.25;c.fillStyle='#e8f6ff';c.beginPath();c.arc(CX+(rnd(i+9)-.5)*260,y-80-k*120-rnd(i)*60,r*.4,0,TAU);c.fill();}
    c.globalAlpha=a;txt(c,(f.saved?'🌹 CỨU LÒ! · ':'🌹 BĂNG TÂM THỦY · ')+nm(f.name),CX,H*.36,'900 30px Segoe UI',f.saved?'#9fe8ff':'#d6f3ff',7);c.restore();}
   if(f.kind==='herb'&&age<2400){const k=age/2400,a=Math.sin(Math.min(1,k*1.3)*Math.PI),src=scene.targets?.find(x=>x.id===f.user),x0=src?.x??(hash(f.id)%2?80:820),y0=src?(src.y-120):H*.75,u=clamp(k*1.6),x=x0+(CX-x0)*u,yy=y0+(y-90-y0)*u-Math.sin(u*Math.PI)*160;
    c.save();c.globalCompositeOperation='screen';c.globalAlpha=a;if(u<1){glow(c,x,yy,60,'#9bff8a',.9);c.fillStyle='#d4ffb0';c.beginPath();c.ellipse(x,yy,10,22,u*6,0,TAU);c.fill();}else{glow(c,CX,y-70,220,'#9bff8a',.7*a);}
    txt(c,'🌿 LINH DƯỢC +PHẨM · '+nm(f.name),CX,H*.36,'900 28px Segoe UI','#c8ffb0',7);c.restore();}
-  if(f.kind==='fire'&&age<3200){const k=age/3200,a=Math.sin(Math.min(1,k*1.2)*Math.PI);c.save();c.globalCompositeOperation='screen';c.globalAlpha=a*.5;c.fillStyle='#ffb347';c.fillRect(0,0,900,H);c.globalAlpha=a;glow(c,CX,y,420,'#ffe9a0',.8);
+  if(f.kind==='fire'&&age<3200){const k=age/3200,a=Math.sin(Math.min(1,k*1.2)*Math.PI);c.save();c.globalCompositeOperation='screen';drawScreenPulse(c,H,scene.reduceFlash,'#ffb347',a*.25,'screen');c.globalAlpha=a;glow(c,CX,y,420,'#ffe9a0',.8);
    txt(c,'🐉 TIÊN HỎA HỘ LÔ · '+nm(f.name),CX,H*.36,'900 34px Segoe UI','#ffe066',8);txt(c,'khóa lửa 10 giây · +phẩm',CX,H*.36+40,'800 22px Segoe UI','#fff3c8',5);c.restore();}
   if(f.kind==='shield'&&age<1600){const a=1-age/1600;c.save();c.globalCompositeOperation='screen';c.globalAlpha=a;txt(c,'🛡 '+nm(f.name)+' gia cố kết giới',CX,H*.36,'900 26px Segoe UI','#bfe6ff',6);c.restore();}
   if(f.kind==='round'&&age<2200){const a=Math.sin(clamp(age/2200)*Math.PI);c.save();c.globalAlpha=a;txt(c,'CHUYỂN '+f.round+' / 3',CX,H*.33,'900 64px Segoe UI','#ffe9b0',10);c.restore();}
   if(f.kind==='quiz'&&age<2500){const a=Math.sin(clamp(age/2500)*Math.PI);c.save();c.globalAlpha=a;txt(c,f.right?'✔ CHỌN ĐÚNG · +PHẨM':'✘ CHỌN SAI · −PHẨM',CX,H*.33,'900 44px Segoe UI',f.right?'#9bff8a':'#ff7a7a',9);c.restore();}
   if(f.kind==='rat-end'&&age<2500){const a=Math.sin(clamp(age/2500)*Math.PI);c.save();c.globalAlpha=a;txt(c,f.ok?'🐀 ĐUỔI ĐƯỢC CHUỘT TINH!':'🐀 CHUỘT TRỘM MẤT DƯỢC LIỆU',CX,H*.33,'900 40px Segoe UI',f.ok?'#9bff8a':'#ff9a7a',9);c.restore();}
-  if(f.kind==='strike'&&age<700){const a=1-age/700;c.save();c.globalCompositeOperation='screen';c.globalAlpha=a*.5;c.fillStyle='#d8e4ff';c.fillRect(0,0,900,H);c.globalAlpha=a;for(let i=0;i<3;i++)bolt(c,CX+(rnd(hash(f.id)+i)-.5)*500,0,CX+(rnd(i)-.5)*60,y-60,hash(f.id)+i*17,i?'#bcd0ff':'#ffffff',i?3:6);c.restore();}
-  if(f.kind==='explode'&&age<5000){const k=age/5000;c.save();if(age<350){c.globalAlpha=1-age/350;c.fillStyle='#ffffff';c.fillRect(0,0,900,H);}
+  if(f.kind==='strike'&&age<700){const a=1-age/700;c.save();c.globalCompositeOperation='screen';drawScreenPulse(c,H,scene.reduceFlash,'#d8e4ff',a*.36,'screen');c.globalAlpha=a;for(let i=0;i<3;i++)bolt(c,CX+(rnd(hash(f.id)+i)-.5)*500,0,CX+(rnd(i)-.5)*60,y-60,hash(f.id)+i*17,i?'#bcd0ff':'#ffffff',i?3:6);c.restore();}
+  if(f.kind==='explode'&&age<5000){const k=age/5000;c.save();if(age<350){drawScreenPulse(c,H,scene.reduceFlash,'#fff3d2',.48*(1-age/350),'screen');glow(c,CX,y,210+age*.62,'#fff3d2',.75*(1-age/350));}
    c.globalAlpha=1;for(let i=0;i<3;i++){const R=(k*1.6+i*.12)*900;c.globalAlpha=clamp(1-R/900)*.8;c.lineWidth=14-i*4;c.strokeStyle=i?'#ff8a3d':'#ffe9a0';c.beginPath();c.ellipse(CX,y,R,R*.55,0,0,TAU);c.stroke();}
    for(let i=0;i<26;i++){const a=rnd(i)*TAU,d=k*(300+rnd(i+5)*500);c.globalAlpha=clamp(1-k*1.2);c.fillStyle=i%2?'#3a2a1a':'#ff8a3d';c.fillRect(CX+Math.cos(a)*d,y+Math.sin(a)*d*.7-k*k*-200,10,10);}
    for(let i=0;i<16;i++){const a=rnd(i+40)*TAU,d=60+k*380*rnd(i+2);c.globalAlpha=clamp(.85-k*.6);c.fillStyle='#14100e';c.beginPath();c.arc(CX+Math.cos(a)*d,y-40+Math.sin(a)*d*.6-k*160,70+k*120,0,TAU);c.fill();}
@@ -108,7 +109,7 @@ function drawHud(scene,c,e,t,H,heat,zone,now){
  if(e.phase==='opening'){msg='❤ THẢ TIM ĐỂ NHÓM LỬA';col='#120a04';bg='#ffd36b';}
  else if(e.phase==='tribulation'){msg='⚡ THẢ TIM GIỮ KẾT GIỚI · 🌹 GIA CỐ';col='#ffffff';bg='#3b5bd6';}
  else if(e.lockUntil>now){msg='🔒 TIÊN HỎA ĐANG GIỮ LỬA';col='#120a04';bg='#ffe066';}
- else if(heat>=(e.danger||88)){msg='🌹 SẮP NỔ! TẶNG HOA HỒNG DẬP LỬA';col='#ffffff';bg=Math.floor(t/250)%2?'#d61a1a':'#7a0a0a';}
+ else if(heat>=(e.danger||88)){msg='🌹 SẮP NỔ! TẶNG HOA HỒNG DẬP LỬA';col='#ffffff';bg=scene.reduceFlash?'#aa211f':Math.floor(t/500)%2?'#c12822':'#861916';}
  else if(heat>zone.hi){msg='✋ DỪNG TIM! LỬA QUÁ TO';col='#ffffff';bg='#e0532a';}
  else if(heat>=zone.lo){msg='✔ GIỮ NHỊP · thả tim nhẹ tay';col='#0c2a10';bg='#9bff8a';}
  else{msg='❤ THẢ TIM! LỬA SẮP TẮT';col='#120a04';bg='#ffb347';}

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xem thử hiệu ứng · Vân Hải Tông</title>
+<link rel="stylesheet" href="/live-clarity.css">
+<link rel="stylesheet" href="/event-vfx-preview.css">
+</head>
+<body class="overlay">
+<main>
+  <div class="preview-stage"><canvas id="preview" aria-label="Sân xem thử hiệu ứng"></canvas><div class="tower-stage" id="previewTower" hidden></div></div>
+  <form class="preview-panel">
+    <h1>Xem thử hiệu ứng</h1>
+    <label>Nhóm <select id="group"><option value="ritual">Đột phá</option><option value="combat">Chiến đấu</option><option value="gift">Quà</option><option value="support">Trợ lực sự kiện</option><option value="daily">Sinh hoạt</option></select></label>
+    <label>Sự kiện <select id="event"></select></label>
+    <label>Đoạn <select id="section"><option value="all">Toàn bộ</option><option value="charge">Tụ lực</option><option value="impact">Cao trào</option><option value="tail">Dư âm</option></select></label>
+    <label>Chất lượng <select id="quality"><option value="light">Nhẹ</option><option value="balanced" selected>Cân bằng</option><option value="high">Điện ảnh</option><option value="auto">Tự động</option></select></label>
+    <label>Nhân vật <input id="actors" type="number" min="1" max="100" value="10"></label>
+    <label>Mã dựng lại <input id="seed" value="van-hai" maxlength="48"></label>
+    <label><input type="checkbox" id="sound"> Âm thanh</label>
+    <label><input type="checkbox" id="shake" checked> Rung camera</label>
+    <label><input type="checkbox" id="motion"> Giảm chuyển động</label>
+    <label><input type="checkbox" id="flash"> Giảm chớp sáng</label>
+    <fieldset id="layers"><legend>Lớp âm đột phá</legend>
+      <label><input type="checkbox" name="base" checked> Cue gốc</label>
+      <label><input type="checkbox" name="impact" checked> Impact phụ</label>
+      <label><input type="checkbox" name="boost" checked> Tụ lực phụ</label>
+      <label><input type="checkbox" name="variant" checked> Biến thể</label>
+    </fieldset>
+    <div class="actions"><button type="submit">Phát thử</button><button type="button" id="stop">Dừng</button></div>
+    <output id="stats" aria-live="off">Chờ phát thử</output>
+  </form>
+</main>
+<script type="module" src="/event-vfx-preview.js"></script>
+</body>
+</html>

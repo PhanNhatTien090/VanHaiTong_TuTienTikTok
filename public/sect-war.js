@@ -1,3 +1,4 @@
+import {cameraShakeStrength,drawScreenPulse,feedbackBudget} from './cinematic-feedback.js';
 // Chính Ma Đại Chiến — phần hình (07/11/2026). Sân chia đôi theo chiến tuyến 0..100 (100 = Chính Đạo thắng).
 // Trái: Chính Đạo (vàng/lam). Phải: Ma Đạo (đỏ/đen). Bức tường năng lượng ở chiến tuyến; mỗi phe 6 nhân vật đầy đủ + binh sĩ mini.
 import {drawWarForces,warGiftImpact} from './war-impact.js';
@@ -53,17 +54,23 @@ function warShake(e,now){let a=0;for(const f of e.fx||[]){const age=now-f.at;if(
 export function drawWar(scene,c,t,layer){
  const e=scene.warStatus;if(!e?.active)return;const H=scene.height,now=serverNow(scene,t),lx=scene.warLineX??lineX(scene,t),motion=scene.motion!==false,fx=e.fx||[];
  if(layer==='back')warSounds(scene,e,now,t);
- c.save();const sh=motion?warShake(e,now):0;if(sh)c.translate(Math.sin(t*.09)*sh,Math.cos(t*.077)*sh*.6);
+ c.save();
  const vel=(lx-(scene.warPrevX??lx));if(layer==='back')scene.warPrevX=lx;
  if(layer==='back'){
   // 08/11 tối: bản đồ riêng VẠN LÝ CHIẾN ĐẠO (đè sân thường) + hai luồng khí đâm nhau ở điểm giao tranh
-  const light=scene.budget?.level==='light',cam=scene.warCam??0;
+  const light=feedbackBudget(scene),cam=scene.warCam??0;
   if(!scene.warLandscape&&typeof Image!=='undefined'){scene.warLandscape=new Image();scene.warLandscape.src='/assets/thien-khuyet/war.webp';}
   drawWarRoad(c,{H,cam,lx,t,light,motion,landscape:scene.warLandscape});
   const om=e.omen?.kind;if(om==='golden-sun')glow(c,200,H*.12,420,'#ffd36b',.45);if(om==='blood-moon')glow(c,700,H*.12,380,'#ff2030',.5);
-  if(motion&&e.phase==='running'){const cyc=t%4200;if(cyc<220){const a=1-cyc/220;c.save();c.globalCompositeOperation='screen';c.globalAlpha=a*.22;c.fillStyle=Math.floor(t/4200)%2?'#ffe9b0':'#ffb0b8';c.fillRect(0,0,900,H);c.globalAlpha=a;bolt(c,lx+(rnd(Math.floor(t/4200))-.5)*300,0,lx,H*.4,Math.floor(t/4200)*13,'#ffffff',3);c.restore();}}
+  if(motion&&e.phase==='running'){const cyc=t%4200;if(cyc<220){const a=1-cyc/220;c.save();c.globalCompositeOperation='screen';drawScreenPulse(c,H,scene.reduceFlash,Math.floor(t/4200)%2?'#ffe9b0':'#ffb0b8',a*.16,'screen');c.globalAlpha=a;bolt(c,lx+(rnd(Math.floor(t/4200))-.5)*300,0,lx,H*.4,Math.floor(t/4200)*13,'#ffffff',3);c.restore();}}
   const surge=warSurge(scene,e,now,t),push=Math.max(-1,Math.min(1,vel*.2));
-  if(e.phase==='running')drawWarForces(c,{H,lx,t,surge,push,light,motion});
+  if(e.phase==='running'){
+   const sh=Math.min(12,warShake(e,now))*cameraShakeStrength(scene)*(light?.6:1);
+   c.save();
+   if(sh)c.translate(Math.sin(t*.09)*sh,Math.cos(t*.077)*sh*.6);
+   drawWarForces(c,{H,lx,t,surge,push,light,motion});
+   c.restore();
+  }
   for(const side of ['chinh','ma'])soldiers(scene,c,e,side,lx,H,t);
   if(motion)drawPushWave(scene,c,lx,H,t);
  }else{
@@ -160,9 +167,9 @@ function giftDur(f){return [2200,2800,3600,4200][tierOf(f)];}
 const powerOf=f=>clamp(Math.log10(1+(f.value||1))/3);
 function strokeText(c,s,x,y,font,fill,lw=7,stroke='#05060c'){c.font=font;c.lineWidth=lw;c.strokeStyle=stroke;c.lineJoin='round';c.strokeText(s,x,y);c.fillStyle=fill;c.fillText(s,x,y);}
 function drawGiftFx(scene,c,f,age,lx,H,t,banner){
- const tier=tierOf(f),dur=giftDur(f),k=age/dur,a=Math.sin(Math.min(1,k)*Math.PI),side=f.side,col=COL[side],seed=hash(f.id),light=scene.budget?.level==='light';
+ const tier=tierOf(f),dur=giftDur(f),k=age/dur,a=Math.sin(Math.min(1,k)*Math.PI),side=f.side,col=COL[side],seed=hash(f.id),light=feedbackBudget(scene);
  c.save();
- warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved:f.truong||0});
+ warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved:f.truong||0,reducedFlash:scene.reduceFlash});
  c.restore();
  if(!banner)return;
  // băng rôn: tên đại chiêu + người tặng + coin

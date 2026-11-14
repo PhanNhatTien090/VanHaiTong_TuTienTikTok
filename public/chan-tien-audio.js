@@ -54,14 +54,14 @@ add(T.impact+.12,1.3,.07,850,110,'thunder',-.35,true,'release-wave');add(T.impac
 strings(T.reveal,3.2,[110,138.59,164.81,220,277.18],.028);choir(T.reveal,3,[220,277.18,329.63,440],.035);brass(T.reveal+.2,2.2,110,.05);
 for(const [i,hz]of [554.37,659.25,880,1108.73,880,659.25].entries())pluck(27.8+i*.3,hz,.04-i*.003,(i%2?1:-1)*.3);bell(29.8,1760,.03);add(29.5,1.4,.022,650,160,'wind',0,false,'release-breath');
 export const CHAN_TIEN_SCORE=Object.freeze(score.sort((a,b)=>a.at-b.at).map(Object.freeze));
-// Độ lớn ×1,9 theo yêu cầu chủ game 07/11; limiter cuối giữ đỉnh dưới ngưỡng vỡ tiếng.
-const LOUD=1.9;
+// Mức cue dành khoảng trống cho các lớp cộng trên bus nghi thức.
+const LOUD=1.32;
 const banks=new WeakMap();
 function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=31337,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}
 export function chanTienMusicDuck(ms){const t=ms/1000;return t<T.gate?.18:t<T.impact?.08:t<29.6?.12:Math.min(1,.12+(t-29.6)/1.6*.88);}
 export function scheduleChanTienAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={}){
- const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),limiter=c.createDynamicsCompressor(),nodes=[bus,limiter],sources=[];let stopped=false,echo=null;
- bus.gain.value=strength;limiter.threshold.value=-10;limiter.knee.value=8;limiter.ratio.value=1;limiter.attack.value=.003;limiter.release.value=.22;const ceiling=c.createDynamicsCompressor();ceiling.threshold.value=-6;ceiling.knee.value=0;ceiling.ratio.value=1;ceiling.attack.value=.001;ceiling.release.value=.12;nodes.push(ceiling);bus.connect(limiter);limiter.connect(ceiling);ceiling.connect(destination);
+ const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),nodes=[bus],sources=[];let stopped=false,echo=null;
+ bus.gain.value=strength;bus.connect(destination);
  // Vang thung lũng: trễ dài, phản hồi vừa.
  if(c.createDelay){echo=c.createDelay(.6);const wet=c.createGain(),fb=c.createGain();echo.delayTime.value=.34;wet.gain.value=.16;fb.gain.value=.28;echo.connect(wet);wet.connect(bus);echo.connect(fb);fb.connect(echo);nodes.push(echo,wet,fb);}
  for(const cue of CHAN_TIEN_SCORE){const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;

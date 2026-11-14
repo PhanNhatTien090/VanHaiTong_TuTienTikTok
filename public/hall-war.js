@@ -121,4 +121,5 @@ export function drawHallWar(scene,c,t,H){
  const guideY=H*.79;box(c,145,guideY-29,610,78,'#b9d7c9','#071725f2');
  text(c,done?'TRẬN ĐÃ KHÉP · KẾT QUẢ ĐÃ LƯU':registration?'Gõ 6 để tập hợp · trận dài 2 phút':'Gõ 6 / đánh · liên chiêu hồi 3,5 giây',450,guideY-7,20,'#ffffff',585);
  text(c,done?'Top 3 Đường nhận điểm tuần · quà theo đóng góp':'Quà trợ lực đúng Đường · phá trận hồi sau 5 giây',450,guideY+21,16,'#ffe6a0',585);
+ return done?0:places.size;
 }

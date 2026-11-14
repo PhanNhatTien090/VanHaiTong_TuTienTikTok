@@ -1,3 +1,4 @@
+import {drawScreenPulse} from './cinematic-feedback.js';
 // Diệt Thế Chí Tôn v1 — Diệt Thế Quy Hư (09/11/2026). 50 s; nổ 44,0; đổi skin 44,3.
 // Cơ chế riêng (không lặp Ma Thần/Thiên Ma: không trăng, xích, mặt quỷ, khe trời, vạn nhãn, luân hoàn, miện kiếm):
 // điểm đen hiện giữa vũ trụ → hố đen thành hình 4 nhịp, đĩa bồi tụ quay, vòng thấu kính →
@@ -55,7 +56,7 @@ function assets(scene,H){
 }
 function halo(c,im,x,y,w,h,a){if(!im||a<=0)return;c.save();c.globalAlpha*=clamp(a);c.globalCompositeOperation='lighter';c.drawImage(im,x-w/2,y-h/2,w,h);c.restore();}
 function ring(c,x,y,r,col,w,a,ry=r){if(a<=.01||r<1)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=clamp(a);c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.ellipse(x,y,r,ry,0,0,TAU);c.stroke();c.restore();}
-function flash(c,H,col,a){if(a<=.01)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=clamp(a);c.fillStyle=col;c.fillRect(0,0,900,H);c.restore();}
+
 const snapshots=new WeakMap();
 function players(scene,e){if(snapshots.has(e))return snapshots.get(e);const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user)||{id:e.user,name:e.name,giftCoins:0};const pair={from:structuredClone(e.visualFrom||{...live,realm:23}),to:structuredClone(e.visualTo||{...live,realm:24})};snapshots.set(e,pair);return pair;}
 // Hố đen: đĩa bồi tụ nghiêng (nửa sau vẽ trước lõi, nửa trước vẽ sau), lõi đen, vòng photon; nhịp đập to dần.
@@ -72,7 +73,7 @@ function drawHole(c,a,s,T){if(T<DT.dot||s.desc>=1&&T<DT.reveal)return;const r=ho
  c.save();c.fillStyle='#000';c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.restore();ring(c,x,y,r+1.5,'#ffd8a0',2,clamp(s.hole*2));
  if(s.hole>0)drawDisk(c,s,T,true,r);
  DT_PULSES.forEach((at,i)=>{const age=T-at;if(age>=0&&age<.6){ring(c,x,y,r+age*(500+i*120),i%2?EMBER:PLAT,8*(1-age/.6)+1,1-age/.6,(r+age*(500+i*120))*.4);}});
- {const age=T-DT.dot;if(age>=0&&age<.7){ring(c,x,y,10+age*900,PLAT,6*(1-age/.7)+1,1-age/.7);flash(c,s.H,'#ffffff',(1-age/.7)*.12);}}
+ {const age=T-DT.dot;if(age>=0&&age<.7){ring(c,x,y,10+age*900,PLAT,6*(1-age/.7)+1,1-age/.7);drawScreenPulse(c,s.H,s.reduceFlash,'#ffffff',(1-age/.7)*.12);}}
  {const age=T-DT.lens;if(age>=0&&age<.6)ring(c,x,y,r*1.35+age*500,'#ffe8c0',8*(1-age/.6)+1,1-age/.6);}}
 // 5 hành tinh trên quỹ đạo quanh hố; mỗi cái bị kéo giãn rồi vỡ thành 14 mảnh xoáy vào hố.
 function planetOrbit(i,s,T){const ang=i/5*TAU+(T-DT.planets)*(.22+i*.03),R=210+i*34;return {x:s.holeX+Math.cos(ang)*R,y:s.holeY+Math.sin(ang)*R*.42,ang};}
@@ -82,7 +83,7 @@ function drawPlanets(c,a,s,T){if(T<DT.planets||T>DT.swallowed+.8)return;const ap
   else{const age=T-tear;if(age<.5){halo(c,a.warm,p.x,p.y,320,320,1-age/.5);ring(c,p.x,p.y,R+age*500,c1,8*(1-age/.5)+1,1-age/.5);}
    for(let j=0;j<14;j++){const u=clamp((age-rnd(i*31+j)*.3)/1.4);if(u>=1)continue;const a0=Math.atan2(p.y-s.holeY,p.x-s.holeX)+u*2.6+(rnd(j+i)-.5)*.6,d=mix(Math.hypot(p.x-s.holeX,p.y-s.holeY)+(rnd(j)-.3)*60,8,u*u),x=s.holeX+Math.cos(a0)*d,y=s.holeY+Math.sin(a0)*d*.42,sz=(4+rnd(j+5)*8)*(1-u*.6);
     c.save();c.globalAlpha=1-u*.5;c.fillStyle=j%3?c1:c2;c.translate(x,y);c.rotate(u*9+j);c.fillRect(-sz/2,-sz/2,sz,sz*.7);c.restore();if(j%3===0){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=(1-u)*.6;c.strokeStyle=EMBER;c.lineWidth=1.5;c.beginPath();c.moveTo(x,y);c.lineTo(x-Math.cos(a0+1.57)*16,y-Math.sin(a0+1.57)*7);c.stroke();c.restore();}}}}
- {const age=T-DT.swallowed;if(age>=0&&age<.6){halo(c,a.warm,s.holeX,s.holeY,500,300,1-age/.6);flash(c,s.H,'#ffd8a0',(1-age/.6)*.1);}}}
+ {const age=T-DT.swallowed;if(age>=0&&age<.6){halo(c,a.warm,s.holeX,s.holeY,500,300,1-age/.6);drawScreenPulse(c,s.H,s.reduceFlash,'#ffd8a0',(1-age/.6)*.1);}}}
 // Hư hỏa: lưỡi lửa lõi đen, viền trắng tím; vòng quanh chân và 8 cột phun.
 function flame(c,x,y,h,w,seed,T,al){const sway=Math.sin(T*6+seed)*w*.3;c.beginPath();c.moveTo(x-w,y);c.bezierCurveTo(x-w*.8,y-h*.4,x+sway-w*.3,y-h*.7,x+sway,y-h);c.bezierCurveTo(x+sway+w*.3,y-h*.6,x+w*.8,y-h*.35,x+w,y);c.closePath();c.save();c.globalAlpha=al*.8;c.fillStyle='#0a0614';c.fill();c.globalCompositeOperation='lighter';const g=c.createLinearGradient(x,y,x+sway,y-h);g.addColorStop(0,seed%2?'#b9a8ffb0':'#dfe6ffa0');g.addColorStop(.55,'#6a4ad040');g.addColorStop(1,'#6a4ad000');c.fillStyle=g;c.globalAlpha=al;c.fill();c.strokeStyle=seed%2?'#b9a8ff90':'#dfe6ff80';c.lineWidth=1.4;c.stroke();c.restore();}
 function drawVoidFire(c,a,s,T,front){if(s.fire<=0)return;const n=front?11:15;for(let i=0;i<n;i++){const ang=(i+(front?.5:0))/n*Math.PI+(front?0:Math.PI),x=450+Math.cos(ang)*230,y=s.feet+10+Math.sin(ang)*44,h=(70+rnd(i+(front?50:0))*70)*(.75+.25*Math.sin(T*5+i*1.7))*s.fire;flame(c,x,y,h,24,i+(front?20:0),T,s.fire*(front?.8:1));}
@@ -109,7 +110,7 @@ function drawSlashes(c,a,s,T,dir){DT_SLASHES.forEach((at,i)=>{const age=T-at;if(
   c.globalCompositeOperation='lighter';for(const side of [1,-1]){c.strokeStyle=side>0?PLAT:VOID;c.lineWidth=3;c.beginPath();c.moveTo(L.x0+ox*gap*side,L.y0+oy*gap*side);c.lineTo(x1+ox*gap*side,y1+oy*gap*side);c.stroke();}
   c.globalAlpha=f*(1-ease(age/.3));c.strokeStyle='#ffffff';c.lineWidth=10;c.beginPath();c.moveTo(L.x0,L.y0);c.lineTo(x1,y1);c.stroke();
   for(let j=0;j<16;j++){const v=rnd(i*40+j),x=mix(L.x0,L.x1,v),y=mix(L.y0,L.y1,v),d=age*(80+rnd(j+i)*200)*(j%2?1:-1);c.globalAlpha=f*.9;c.fillStyle=j%3?PLAT:'#ffffff';c.fillRect(x+ox*d,y+oy*d,3,3);}c.restore();
-  if(age<.25)flash(c,s.H,'#e8ecff',(1-age/.25)*.22);});}
+  if(age<.25)drawScreenPulse(c,s.H,s.reduceFlash,'#e8ecff',(1-age/.25)*.22);});}
 // Cánh vỡ: 16 mảnh giáp bạch kim, 8 mỗi bên, xoè từ bả vai.
 function wingSlot(i,s,spread,T){const side=i%2?1:-1,k=Math.floor(i/2),ang=mix(-.25,.95,k/7)*spread+(1-spread)*.1,len=70+k*30,flap=Math.sin(s.clock*1.4)*.05*spread,sx=450+side*40,sy=s.head+110;return {x:sx+side*Math.cos(-ang-flap)*len*1.6,y:sy+Math.sin(-ang-flap)*len*1.3-(spread*30),rot:side*(Math.PI/2-ang)*.9,side,k};}
 function plate(c,k,al){const w=20+k*3,h=60+k*8;c.save();c.globalAlpha=al;c.beginPath();c.moveTo(0,-h*.55);c.lineTo(w*.55,-h*.2);c.lineTo(w*.3,h*.5);c.lineTo(-w*.4,h*.4);c.lineTo(-w*.5,-h*.25);c.closePath();const g=c.createLinearGradient(-w,0,w,0);g.addColorStop(0,'#5a6480');g.addColorStop(.5,'#e8ecff');g.addColorStop(1,'#3a4058');c.fillStyle=g;c.fill();c.strokeStyle='#1a1c28';c.lineWidth=1.5;c.stroke();c.strokeStyle='#05060a';c.beginPath();c.moveTo(-w*.1,-h*.4);c.lineTo(w*.1,0);c.lineTo(-w*.05,h*.3);c.stroke();c.globalCompositeOperation='lighter';c.strokeStyle=VOID;c.lineWidth=2;c.globalAlpha=al*.8;c.beginPath();c.moveTo(0,-h*.55);c.lineTo(w*.55,-h*.2);c.stroke();c.restore();}
@@ -133,12 +134,13 @@ function drawErase(c,s,T,H){if(s.erase<=0)return;c.save();DT_SWEEPS.forEach((at,
 function drawBigBang(c,a,s,T,light){const age=T-DT.impact;if(age<0||age>3.2)return;const f=1-age/3.2,n=light?60:140;c.save();c.globalCompositeOperation='lighter';for(let i=0;i<n;i++){const ang=rnd(i+70)*TAU,sp=300+rnd(i)*900,d=age*sp,x=450+Math.cos(ang)*d,y=s.belly+Math.sin(ang)*d,tail=Math.min(d,40+sp*.08);c.globalAlpha=f;c.strokeStyle=i%5===0?EMBER:i%3?PLAT:'#ffffff';c.lineWidth=1.5+rnd(i+3)*2;c.beginPath();c.moveTo(x,y);c.lineTo(x-Math.cos(ang)*tail,y-Math.sin(ang)*tail);c.stroke();}c.restore();}
 export function drawDietTheAwakening(scene,c,e,t,H){
  const s=dietTheState((t-e.start)/e.duration,H,scene.motion!==false),a=assets(scene,H),v=qiVariant(e),kq=qiRemap(s.k,DT.impact/DT.duration),origin={x:450,y:s.belly},light=scene.budget?.level==='light',T=s.t,dir=v.flip?-1:1;
+ s.reduceFlash=scene.reduceFlash;
  const {from,to}=players(scene,e),p=s.revealed?to:from,image=maThanActorImage(scene,p,e),hit=hitPower(T)*(s.motion?1:.3);
  c.save();setFxPalette(PALETTE);
  c.fillStyle='#020208';c.fillRect(0,0,900,H);
  if(a.space){c.save();c.globalAlpha=s.revealed?1:s.stars;c.drawImage(a.space,0,0,900,H);c.restore();}
  if(a.reborn&&s.after>0){c.save();c.globalAlpha=s.after*s.fade;c.drawImage(a.reborn,0,0,900,H);c.restore();}
- flash(c,H,'#9aa8ff',hit*.07);
+ drawScreenPulse(c,H,scene.reduceFlash,'#9aa8ff',hit*.07);
  pushFxCamera(scene,c,kq,v,s.feet);const shake=s.motion&&scene.cameraEnabled!==false?hit*14+s.bang*16:0;c.translate(Math.sin(T*83)*shake,Math.cos(T*71)*shake*.6);
  // hố đen + hành tinh (sau lưng)
  drawHole(c,a,s,T);drawPlanets(c,a,s,T);
@@ -163,7 +165,7 @@ export function drawDietTheAwakening(scene,c,e,t,H){
  drawSlashes(c,a,s,T,dir);
  drawErase(c,s,T,H);
  if(s.dark>0){c.save();c.globalAlpha=s.dark*.9;c.fillStyle='#000';c.fillRect(0,0,900,H);c.restore();const beat=Math.max(0,...DT_BEATS.map(at=>pulse(T-at,.3)));ring(c,450,s.belly,14+beat*30,EMBER,2+beat*3,s.dark*(.5+beat*.5));}
- flash(c,H,'#f0f2ff',s.bang*.36);
+ drawScreenPulse(c,H,scene.reduceFlash,'#f0f2ff',s.bang*.36);
  drawQiMotes(scene,c,kq,H);
  if(a.vignette)c.drawImage(a.vignette,0,0,900,H);
  c.restore();

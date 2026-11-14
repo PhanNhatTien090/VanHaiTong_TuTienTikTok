@@ -3,10 +3,12 @@ import {unlockedPets,SPIRIT_PETS,petRequirement} from '../public/spirit-pets.js'
 import {createWorld,action,controlPetEvent,snapshot} from '../engine.mjs';
 import {petCoveOn,petCoveTargets,petCoveSpots} from '../public/pet-cove.js';
 const N=1800000000000;
-test('only hearts unlock first three; phoenix 3000 hearts OR 100 coins; dragon strictly 200 coins',()=>{
- const ids=(h,c)=>unlockedPets(h,c).map(p=>p.id);
- assert.deepEqual(ids(0,99),[]);assert.deepEqual(ids(0,100),['sun-phoenix']);assert.deepEqual(ids(0,199),['sun-phoenix']);assert.deepEqual(ids(0,200),['sun-phoenix','astral-dragon']);
- assert.deepEqual(ids(99,0),[]);assert.deepEqual(ids(100,0),['jade-rabbit']);assert.deepEqual(ids(400,0),['jade-rabbit','ember-fox']);assert.equal(ids(1000,0).length,3);assert.equal(ids(2999,0).length,3);assert.equal(ids(3000,0).length,4);assert.ok(!ids(1e9,0).includes('astral-dragon'));
+test('only hearts unlock first three; phoenix 3000 hearts OR 100 coins; selected rare pet strictly 200 coins',()=>{
+ const ids=(h,c,featured)=>unlockedPets(h,c,featured).map(p=>p.id);
+ assert.deepEqual(ids(0,99),[]);assert.deepEqual(ids(0,100),['sun-phoenix']);assert.deepEqual(ids(0,199),['sun-phoenix']);assert.deepEqual(ids(0,200),['sun-phoenix']);
+ assert.deepEqual(ids(0,200,'astral-dragon'),['sun-phoenix','astral-dragon']);
+ assert.deepEqual(ids(0,200,'ky-lan'),['sun-phoenix','ky-lan']);
+ assert.deepEqual(ids(99,0),[]);assert.deepEqual(ids(100,0),['jade-rabbit']);assert.deepEqual(ids(400,0),['jade-rabbit','ember-fox']);assert.equal(ids(1000,0).length,3);assert.equal(ids(2999,0).length,3);assert.equal(ids(3000,0).length,4);assert.ok(!ids(1e9,0,'astral-dragon').includes('astral-dragon'));
  assert.equal(petRequirement(SPIRIT_PETS[4]),'200 coin · chỉ quà');
 });
 test('exact event rules apply during cultivation cooldown, and returning to normal map preserves owned pets',()=>{

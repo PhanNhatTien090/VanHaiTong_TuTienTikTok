@@ -7,7 +7,7 @@ function path(c,points){
 function arc(c,x,y,rx,ry,angle,color,width){
  c.beginPath();c.ellipse(x,y,rx,ry,angle,0,TAU);c.strokeStyle=color;c.lineWidth=width;c.stroke();
 }
-export function warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved}){
+export function warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved,reducedFlash=false}){
  const dir=side==='chinh'?1:-1, hue=dir>0?'#69eadf':'#ff506a', gold=dir>0?'#ffe7a9':'#ffb988';
  const y=H*.48, windup=430-tier*42, hit=age-windup, origin=dir>0?-95:995;
  const power=Math.min(1,moved/450), scale=.72+tier*.32+power*.4;
@@ -23,8 +23,12 @@ export function warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved}){
   for(let i=0;i<3+tier;i++)arc(c,head-dir*i*19*scale,y,19*scale,34*scale+i*4,-dir*.26,i%2?gold:hue,3.5);
  }else{
   const k=clamp(hit/(1250+150*tier)), fade=1-k;
-  if(hit<250){
-   c.globalAlpha=(1-hit/250)*.24*(.5+scale*.45);c.fillStyle=hue;c.fillRect(0,0,900,H);
+  if(hit<380){
+   const strike=1-hit/380,r=42+(1-strike)*156;
+   c.globalAlpha=strike*(reducedFlash?.35:.8);
+   arc(c,lx,y,r,r*.35,-dir*.13,hue,6*strike+2);
+   c.globalAlpha*=.7;
+   arc(c,lx,y,r*.75,r*.3,dir*.13,gold,2.4);
   }
   if(moved>0){
    const sweep=(80+Math.min(435,moved*.8))*Math.sin(k*Math.PI/2),x=lx+dir*sweep;
@@ -34,11 +38,11 @@ export function warGiftImpact(c,{age,lx,H,side,tier,seed,light,moved}){
     c.bezierCurveTo(x+dir*100*scale,y-48*scale,x+dir*100*scale,y+74*scale,x-dir*(35+i*15),y+(102+i*28)*scale);c.stroke();
    }
   }
-  for(let i=0;i<(light?14:34)+tier*4;i++){
+  for(let i=0;i<(light?10:22)+tier*3;i++){
    const a=(random(seed+i)-.5)*Math.PI*1.5,v=(75+random(seed+i*3+6)*260)*scale,d=k*v;
    const x=lx+dir*Math.cos(a)*d,y2=y+Math.sin(a)*d+(k*k*100);
    c.globalAlpha=fade*(.38+random(i)*.6);c.strokeStyle=i%3?hue:'#fff6dc';c.lineWidth=i%4?2:4;
-   path(c,[[x-dir*13,y2-7],[x+dir*5,y2],[x-dir*7,y2+5]]);c.stroke();
+   c.beginPath();c.moveTo(x-dir*13,y2-7);c.lineTo(x+dir*5,y2);c.lineTo(x-dir*7,y2+5);c.stroke();
   }
   for(let i=0;i<3;i++){
    const u=clamp(k-i*.09);if(!u)continue;

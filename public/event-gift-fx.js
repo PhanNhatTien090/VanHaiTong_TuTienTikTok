@@ -1,6 +1,7 @@
 import {drawDuelGiftStrike,drawDuelCutIn} from './duel-combat.js';
 import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {drawSpiritGift,loadSpiritBeasts} from './gift-spirit-beasts.js';
+import {giftCameraImpulse,boundedCameraJolt,feedbackBudget,takeFeedbackCue} from './cinematic-feedback.js';
 import {makeSurface} from './performance.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>1-(1-clamp(x))**3;
 export const EVENT_GIFT_TIERS=Object.freeze([
@@ -30,10 +31,11 @@ export function syncEventGiftFx(scene,state){const race=state.raceStatus,match=s
 }
 function img(c,im,x,y,w,h,rot=0,alpha=1,flip=false){if(!im||alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(rot);if(flip)c.scale(-1,1);c.drawImage(im,-w/2,-h/2,w,h);c.restore();}
 function flowingSprite(c,im,x,y,w,h,time,alpha){if(!im)return;c.save();c.globalAlpha*=alpha;for(let i=0;i<6;i++){const u=i/6,shift=Math.sin(time*.011-u*8)*w*.035*u;c.drawImage(im,0,i*im.height/6,im.width,im.height/6,x-w/2+shift,y-h/2+i*h/6,w,h/6+1);}c.restore();}
-export function eventGiftImpulse(scene,t){return {x:0,y:0};}
-export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQueue?.sample(t);if(!e||e.mode!==mode)return false;const q=e.profile,k=scene.motion?clamp((t-e.start)/q.duration):.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,light=scene.budget?.level==='light',art=scene.eventGiftArt?.[mode];
+export function eventGiftImpulse(scene,t){return giftCameraImpulse(scene,scene.eventGiftQueue?.active,t);}
+export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQueue?.sample(t);if(!e||e.mode!==mode)return false;const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion?raw:.45,time=scene.motion?t-e.start:0,fade=clamp(Math.min(k/.1,(1-k)/.18)),open=ease(k/.22),targets=scene.targets||[],caster=targets.find(a=>a.id===e.user),H=scene.height,light=feedbackBudget(scene),art=scene.eventGiftArt?.[mode];
  if(!fade)return true;const a=caster||{x:450,y:H*.32,scale:1.5},x=a.x,y=a.y,s=a.scale/1.5,im=art?.[q.cell];
- if(layer==='back'&&!e.castStarted){e.castStarted=true;if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword');}if(layer==='front'&&k>=.3&&!e.impactSound){e.impactSound=true;if(e.value>=500)scene.onSpectacleImpact?.();}
+ if(layer==='back'&&takeFeedbackCue(e,'castStarted',raw,0,.22)){if(caster){scene.animator?.trigger({id:'event-gift:'+e.id,user:e.user,effect:mode==='race'?'dragon':'attack',gift:'quà'},t);const action=scene.animator?.actions.get(e.user);if(action)action.duration=q.duration;}scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',mode);}
+ if(layer==='front'&&takeFeedbackCue(e,'impactSound',raw,.3,.43)&&e.value>=500)scene.onSpectacleImpact?.();
  c.save();c.globalAlpha=fade;
  if(layer==='back')drawSpiritGift(c,e.value,k,a,H,{art:scene.spiritBeasts,time,light,motion:scene.motion,mode});
  if(mode==='race'){
@@ -55,7 +57,7 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
    else {c.strokeStyle=q.color;c.lineWidth=3;c.beginPath();c.ellipse(x,y+25,80*open,20*open,0,0,TAU);c.stroke();}
   }else{
    drawDuelGiftStrike(c,{x,y:y-90,toX:to.x,toY:to.y-90,k,color:q.color,power:Math.min(2,.7+q.blades/10),light});
-   if(e.value>=500&&caster)drawDuelCutIn(scene,c,caster,{name:q.name+' · GIÁNG THẾ',color:q.color},k,H,{gift:true});
+   if(e.value>=500&&caster?.player)drawDuelCutIn(scene,c,caster,{name:q.name+' · GIÁNG THẾ',color:q.color},k,H,{gift:true});
    for(let wave=0;wave<Math.min(light?6:8,q.waves);wave++){
     const u=clamp((k-.10-wave*.085)/.30);if(u<=0||u>=1)continue;const travel=ease(u),xx=x+(to.x-x)*travel,yy=y-90+(to.y-y)*travel-Math.sin(u*Math.PI)*(35+wave*14),w=q.size*(.55+Math.sin(u*Math.PI)*.4);
     img(c,im,xx,yy,w,w*.74,Math.sin(u*Math.PI)*side*.14,Math.sin(u*Math.PI)*.90,side<0);
@@ -73,4 +75,4 @@ export function drawEventGiftFx(scene,c,t,layer,mode){const e=scene.eventGiftQue
  c.restore();return true;
 }
 
-export function eventGiftCamera(base,jolt,H){if(!jolt.x&&!jolt.y)return base;const pad=.012,s=base.s*(1+pad),x=base.x-900*base.s*pad/2,y=base.y-H*base.s*pad/2;return {s,x:Math.min(0,Math.max(900*(1-s),x+jolt.x)),y:Math.min(0,Math.max(H*(1-s),y+jolt.y))};}
+export const eventGiftCamera=(base,jolt,H)=>boundedCameraJolt(base,jolt,H,true);

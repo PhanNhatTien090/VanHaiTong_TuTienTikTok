@@ -17,7 +17,7 @@ export function loadGiftSpectacle(scene){if(scene.giftSpectacleArt||scene.giftSp
 const envelope=(k,center,width)=>clamp(1-Math.abs(k-center)/width);
 export function spectacleShake(e,t,motion=true){const q=giftSpectacleTier(e);if(!q||!motion)return {x:0,y:0};const age=t-e.start,k=age/(e.duration||q.duration);if(k<0||k>1)return {x:0,y:0};const amp=q.shake*(envelope(k,.34,.045)+.65*envelope(k,.68,.035));if(!amp)return {x:0,y:0};return {x:Math.sin(age*.046)*amp,y:Math.sin(age*.061+1)*amp*.65};}
 function sprite(c,im,x,y,w,h=w,angle=0,alpha=1){if(!im||alpha<=0)return;c.save();c.globalAlpha*=alpha;c.translate(x,y);c.rotate(angle);c.drawImage(im,-w/2,-h/2,w,h);c.restore();}
-export function drawGiftSpectacle(c,e,t,k,p,H,{light=true,art=null,layer='back',motion=true,beasts=null}={}){
+export function drawGiftSpectacle(c,e,t,k,p,H,{light=true,reducedFlash=false,art=null,layer='back',motion=true,beasts=null}={}){
  const q=giftSpectacleTier(e);if(!q||k<0||k>1)return false;
  // Four continuous phases: gather -> summon -> impact -> disperse. No frame-triggered spawning.
  const time=(motion?(t-e.start):q.duration*.45)+qiVariant(e).phase*1600,phase=motion?k:.45,fade=clamp(Math.min(phase/.10,(1-phase)/.14)),open=ease(phase/.30),impact=clamp((phase-.32)/.23),second=clamp((phase-.66)/.22),exit=ease((phase-.82)/.18),x=p.x,cy=Math.max(H*.25,p.y-170),size=q.size*open*(1-exit*.18),color=q.color,rank=GIFT_SPECTACLES.findIndex(v=>v.min===q.min),f=art?.formations,b=art?.impacts;
@@ -48,7 +48,7 @@ export function drawGiftSpectacle(c,e,t,k,p,H,{light=true,art=null,layer='back',
   // Bounded debris moves radially out of the impact, then falls and fades.
   if(phase>.32){const n=light?q.particles:Math.round(q.particles*1.5),u=clamp((phase-.32)/.60);c.fillStyle=color;for(let i=0;i<n;i++){const a=i*2.399,dist=(70+(i%7)*33)*ease(u),xx=x+Math.cos(a)*dist,yy=cy+Math.sin(a)*dist*.6+u*u*150;c.globalAlpha=fade*(1-u);c.save();c.translate(xx,yy);c.rotate(a+u*7);c.fillRect(-2,-5,3+i%3,8+i%4);c.restore();}}
   // One soft localized impact bloom; no repeated fullscreen flashes.
-  const pulse=envelope(phase,.34,.035);if(pulse){c.globalAlpha=fade*pulse*.20;const g=c.createRadialGradient(x,cy,0,x,cy,size*.6);g.addColorStop(0,'#fff4de');g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-size,cy-size,size*2,size*2);}
+  const pulse=envelope(phase,.34,.035);if(pulse&&!reducedFlash){c.globalAlpha=fade*pulse*.20;const g=c.createRadialGradient(x,cy,0,x,cy,size*.6);g.addColorStop(0,'#fff4de');g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-size,cy-size,size*2,size*2);}
  }
  c.restore();return true;
 }

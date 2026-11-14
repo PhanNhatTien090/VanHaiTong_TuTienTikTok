@@ -3,6 +3,7 @@
 // tâm ngân hà mở thành Thiên Đạo Chi Nhãn bắn 5 tia phán xét, khiên đỡ → bàn cờ vây trên mặt đài, 12 quân giáng xuống vây mắt →
 // thời gian đình chỉ (mất màu, đứng hình, tích tắc) → búng tay → 9 thế giới đâm vào nhau thành lõi → lõi nhập đan điền, ánh sáng bị hút
 // sạch → vụ nổ khai thiên đủ màu → đổi skin. Bản v1 sao lưu ở data/backups/dai-la-awakening.js.v1-20261107.
+import {drawScreenPulse} from './cinematic-feedback.js';
 import {makeSurface} from './performance.js';
 import {setFxPalette,qiVariant,qiRemap,pushFxCamera,drawQiCompression,drawQiImpact,drawQiAura,drawQiMotes} from './qi-impact.js';
 export const DL=Object.freeze({duration:32,drop:.3,worlds:2.5,align:7,eye:11,board:15.5,freeze:19,snap:21.6,crunch:22,core:26,dark:27.2,absorbed:27.85,impact:28,reveal:28.3,fade:30.8});
@@ -79,7 +80,7 @@ export function drawDaiLaAwakening(scene,c,e,t,H){
  const {from,to}=players(scene,e),p=s.revealed?to:from,image=daiLaActorImage(scene,p,e),hit=hitPower(T)*(s.motion?1:.3);
  c.save();setFxPalette(PALETTE);
  if(a.world)c.drawImage(a.world,0,0,900,H);else{c.fillStyle='#05061a';c.fillRect(0,0,900,H);}
- if(hit>.05&&!s.freeze){c.save();c.globalCompositeOperation='screen';c.globalAlpha=hit*.2;c.fillStyle='#d8eeff';c.fillRect(0,0,900,H);c.restore();}
+ if(!scene.reduceFlash&&hit>.05&&!s.freeze){c.save();c.globalCompositeOperation='screen';c.globalAlpha=hit*.2;c.fillStyle='#d8eeff';c.fillRect(0,0,900,H);c.restore();}
  // Thiên Đạo Chi Nhãn ở tâm ngân hà
  if(s.eye>0){const open=ease((T-DL.eye)/.6)*(1-ease((T-DL.crunch-.2)/1)),look=Math.sin(s.clock*1.3)*40;halo(c,a.glow,s.eyeX,s.eyeY,700,360,s.eye*.7);eye(c,s.eyeX,s.eyeY,230,open,look,s.eye);
   DL_RAYS.forEach((at,i)=>{const age=T-at;if(age<0||age>.45)return;const w=worldPos(s,(i*2)%9),k=1-age/.45;c.save();c.globalCompositeOperation='screen';c.globalAlpha=k;c.strokeStyle='#ff4a3a';c.lineWidth=18*k+2;c.beginPath();c.moveTo(s.eyeX,s.eyeY);c.lineTo(w.x,w.y);c.stroke();c.strokeStyle='#ffffff';c.lineWidth=4;c.stroke();c.restore();
@@ -117,7 +118,7 @@ export function drawDaiLaAwakening(scene,c,e,t,H){
  if(s.freeze>0){c.save();c.globalCompositeOperation='saturation';c.globalAlpha=s.freeze;c.fillStyle='#808080';c.fillRect(0,0,900,H);c.restore();c.save();c.globalAlpha=s.freeze*.35;c.fillStyle='#0a0a14';c.fillRect(0,0,900,H);c.restore();
   const cx=450,cy=s.feet-470;c.save();c.globalAlpha=s.freeze;c.strokeStyle='#e8e8f0';c.lineWidth=3;c.beginPath();c.arc(cx,cy,230,0,TAU);c.stroke();for(let i=0;i<12;i++){const aa=i*TAU/12;c.beginPath();c.moveTo(cx+Math.cos(aa)*205,cy+Math.sin(aa)*205);c.lineTo(cx+Math.cos(aa)*228,cy+Math.sin(aa)*228);c.stroke();}
   const tk=DL_TICKS.filter(x=>T>=x).length,ang=-Math.PI/2+tk*TAU/12;c.lineWidth=6;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(ang)*180,cy+Math.sin(ang)*180);c.stroke();c.restore();}
- if(s.snap>0){c.save();c.globalCompositeOperation='screen';c.globalAlpha=s.snap*.6;c.fillStyle='#ffffff';c.fillRect(0,0,900,H);c.restore();ring(c,450,s.feet-300,40+(1-s.snap)*900,'#ffffff',10*s.snap+1,s.snap);}
+ if(s.snap>0){drawScreenPulse(c,H,scene.reduceFlash,'#fff',s.snap*.6,'screen');ring(c,450,s.feet-300,40+(1-s.snap)*900,'#ffffff',10*s.snap+1,s.snap);}
  // ánh sáng bị hút sạch trước nổ
  if(s.dark>0){c.save();c.globalAlpha=s.dark*.92;c.fillStyle='#000000';c.fillRect(0,0,900,H);c.restore();halo(c,a.glow,450,s.belly,80,80,s.dark);}
  drawQiMotes(scene,c,kq,H);if(a.vignette)c.drawImage(a.vignette,0,0,900,H);c.restore();

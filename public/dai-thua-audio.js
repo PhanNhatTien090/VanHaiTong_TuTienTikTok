@@ -55,14 +55,14 @@ choir(T.tower,2.8,[146.83,174.61,220,293.66],.035);for(let i=0;i<14;i++)drum(15.
 sub(T.absorbed,.2);swellTo(T.impact,1.5,.08);
 sub(T.impact,.35,80,24,2.2);brass(T.impact,1.6,87.31,.09);choir(T.reveal,3,[174.61,220,261.63,349.23],.035);brass(T.reveal+.2,2.2,87.31,.05);
 export const DAI_THUA_SCORE=Object.freeze(score.sort((a,b)=>a.at-b.at).map(Object.freeze));
-// Độ lớn ×1,9 theo yêu cầu chủ game 07/11; limiter cuối giữ đỉnh dưới ngưỡng vỡ tiếng.
-const LOUD=1.9;
+// Mức cue dành khoảng trống cho các lớp cộng trên bus nghi thức.
+const LOUD=1.32;
 const banks=new WeakMap();
 function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=77213,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}
 export function daiThuaMusicDuck(ms){const t=ms/1000;return t<T.trial?.2:t<T.impact?.08:t<21?.12:Math.min(1,.12+(t-21)/1.6*.88);}
 export function scheduleDaiThuaAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={}){
- const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),limiter=c.createDynamicsCompressor(),nodes=[bus,limiter],sources=[];let stopped=false,echo=null;
- bus.gain.value=strength;limiter.threshold.value=-10;limiter.knee.value=8;limiter.ratio.value=1;limiter.attack.value=.003;limiter.release.value=.22;const ceiling=c.createDynamicsCompressor();ceiling.threshold.value=-6;ceiling.knee.value=0;ceiling.ratio.value=1;ceiling.attack.value=.001;ceiling.release.value=.12;nodes.push(ceiling);bus.connect(limiter);limiter.connect(ceiling);ceiling.connect(destination);
+ const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),nodes=[bus],sources=[];let stopped=false,echo=null;
+ bus.gain.value=strength;bus.connect(destination);
  // Vang thung lũng: trễ dài, phản hồi vừa.
  if(c.createDelay){echo=c.createDelay(.6);const wet=c.createGain(),fb=c.createGain();echo.delayTime.value=.31;wet.gain.value=.16;fb.gain.value=.28;echo.connect(wet);wet.connect(bus);echo.connect(fb);fb.connect(echo);nodes.push(echo,wet,fb);}
  for(const cue of DAI_THUA_SCORE){const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;

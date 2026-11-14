@@ -87,7 +87,7 @@ export function drawQiImpact(scene,c,k,H,origin,feet,{flash:showFlash=true,pilla
  for(let j=0;j<2;j++){const u=out((sec-j*.06)/.7);if(u<=0||u>=1)continue;const r=40+u*620;c.globalAlpha=(1-u)*.8;c.strokeStyle=j?P.gold:P.soft;c.lineWidth=1+5*(1-u);c.beginPath();c.ellipse(origin.x,origin.y,r,r*.62,0,0,TAU);c.stroke();}
  c.restore();
  // Chớp trắng toàn màn (ngắn để không chói trên điện thoại).
- const flash=Math.exp(-sec*9)*ease(sec/.02);if(showFlash&&flash>.01){c.save();c.globalAlpha=flash*(motion?.75:.35);c.fillStyle=P.soft;c.fillRect(0,0,900,H);c.restore();}
+ const flash=Math.exp(-sec*9)*ease(sec/.02);if(showFlash&&!scene.reduceFlash&&flash>.01){c.save();c.globalAlpha=flash*(motion?.75:.35);c.fillStyle=P.soft;c.fillRect(0,0,900,H);c.restore();}
 }
 // Dư âm: hào quang linh khí bốc lên quanh thân (phía sau nhân vật).
 export function drawQiAura(scene,c,k,origin,feet){

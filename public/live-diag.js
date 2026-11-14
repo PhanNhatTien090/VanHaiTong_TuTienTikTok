@@ -4,9 +4,9 @@
 const W={raf:0,rafGapMax:0,lastRaf:0,longMs:0,longN:0,longMax:0,loafMs:0,loafN:0,blockMs:0,styleMs:0,scripts:new Map(),lagMax:0,hiddenMs:0,since:performance.now()};
 let started=false,lastTick=0,hiddenAt=0;
 function src(s){const u=String(s.sourceURL||'').split('/').pop().split('?')[0];return `${s.invoker||s.invokerType||'?'}@${u}${s.sourceFunctionName?':'+s.sourceFunctionName:''}`.slice(0,90);}
-export function startLiveDiag(){
+export function startLiveDiag(metrics){
   if(started)return;started=true;
-  const loop=t=>{W.raf++;if(W.lastRaf)W.rafGapMax=Math.max(W.rafGapMax,t-W.lastRaf);W.lastRaf=t;requestAnimationFrame(loop);};requestAnimationFrame(loop);
+  const loop=t=>{W.raf++;if(W.lastRaf){const gap=t-W.lastRaf;W.rafGapMax=Math.max(W.rafGapMax,gap);metrics?.add("rafInterval",gap);}W.lastRaf=t;requestAnimationFrame(loop);};requestAnimationFrame(loop);
   try{new PerformanceObserver(l=>{for(const e of l.getEntries()){W.longN++;W.longMs+=e.duration;W.longMax=Math.max(W.longMax,e.duration);}}).observe({type:'longtask'});}catch{}
   try{new PerformanceObserver(l=>{for(const e of l.getEntries()){W.loafN++;W.loafMs+=e.duration;W.blockMs+=e.blockingDuration||0;W.styleMs+=Math.max(0,(e.startTime+e.duration)-(e.styleAndLayoutStart||e.startTime+e.duration));for(const s of e.scripts||[]){const k=src(s);W.scripts.set(k,(W.scripts.get(k)||0)+s.duration);}}}).observe({type:'long-animation-frame'});}catch{}
   // Độ trễ hẹn giờ: setInterval 100 ms bị trễ bao nhiêu (luồng chính bận).
@@ -21,4 +21,32 @@ export function liveDiagSnapshot(){
   const out={win:+sec.toFixed(1),rafFps:+(W.raf/sec).toFixed(1),rafGapMax:r(W.rafGapMax),longN:W.longN,longMs:r(W.longMs),longMax:r(W.longMax),loafN:W.loafN,loafMs:r(W.loafMs),blockMs:r(W.blockMs),styleMs:r(W.styleMs),lagMax:r(W.lagMax),hidden:document.hidden,vis:document.visibilityState,hiddenMs:r(W.hiddenMs+(hiddenAt?now-hiddenAt:0)),heapMiB:performance.memory?r(performance.memory.usedJSHeapSize/1048576):null,gpu:gpuInfo(),dpr:devicePixelRatio,top};
   Object.assign(W,{raf:0,rafGapMax:0,longMs:0,longN:0,longMax:0,loafMs:0,loafN:0,blockMs:0,styleMs:0,lagMax:0,hiddenMs:0,since:now});W.scripts.clear();if(hiddenAt)hiddenAt=now;
   return out;
+}
+
+export class RenderMetrics{
+  constructor(){this.windows=new Map();this.cacheBaseline={};}
+  add(name,value){
+    let window=this.windows.get(name);
+    if(!window){window={values:new Float64Array(512),count:0};this.windows.set(name,window);}
+    window.values[window.count++%window.values.length]=value;
+  }
+  snapshot(scene){
+    const timings={};
+    for(const [name,window] of this.windows){
+      if(!window.count)continue;
+      const values=window.values.subarray(0,Math.min(window.values.length,window.count)).slice().sort();
+      const percentile=q=>+values[Math.max(0,Math.ceil(values.length*q)-1)].toFixed(2);
+      timings[name]={samples:values.length,p50:percentile(.5),p95:percentile(.95),p99:percentile(.99)};
+      window.count=0;
+    }
+    const stats=scene.characterFrames.stats;
+    const cache=Object.fromEntries(Object.entries(stats).map(([name,value])=>[name,value-(this.cacheBaseline[name]||0)]));
+    this.cacheBaseline={...stats};
+    return {timings,cache:{...cache,bytes:scene.characterFrames.bytes},actors:{
+      ...scene.actorLoad,onStageActors:scene.onStageActors??0,visibleActors:scene.visibleActors??0,
+      rasterizedActors:scene.rasterizedActors??0
+    },effects:{scene:scene.effects?.length??0,gifts:scene.eventDonations?.active.length??0,
+      eventGift:scene.eventGiftQueue?.active?1:0},
+      fps:scene.fps,targetFps:scene.targetFps,pressured:!!scene.budget?.pressured};
+  }
 }

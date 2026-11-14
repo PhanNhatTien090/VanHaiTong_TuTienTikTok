@@ -269,7 +269,7 @@ export function drawLateAwakening(scene,c,e,t,H,realm){
  }
  c.restore();
  c.restore();
- if(s.after>=0&&s.after<.26){c.save();c.globalAlpha=(1-s.after/.26)*.45;c.fillStyle='#fff3db';c.fillRect(0,0,900,H);c.restore();}
+ if(!scene.reduceFlash&&s.after>=0&&s.after<.26){c.save();c.globalAlpha=(1-s.after/.26)*.45;c.fillStyle='#fff3db';c.fillRect(0,0,900,H);c.restore();}
  drawQiMotes(scene,c,kq,H);
  const ui={realm,k:s.k,revealed:s.revealed,phase:s.revealed?'reveal':'gather',color:spec.color,title:REALM_NAMES[realm],subtitle:spec.title,name:e.name,label:spec.beats[s.b][1],detail:'',shake};
  if(scene.onRitualFrame)scene.onRitualFrame(ui);

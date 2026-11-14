@@ -178,7 +178,6 @@ body.overlay .tower-stage:not([hidden]){display:block;position:absolute;left:50%
 .tower-stage .tw-beast{width:9.5em;aspect-ratio:512/1024;max-height:11em;background:url(/assets/events-v1/celestial-bosses-v1.png) calc(var(--art)*50%) 0/300% 100% no-repeat;
   filter:hue-rotate(var(--hue)) drop-shadow(0 0 8px rgba(255,120,120,.45));-webkit-mask-image:radial-gradient(ellipse 48% 50% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 48% 50% at 50% 50%,#000 70%,transparent 100%)}
 .tower-stage .tw-guard{position:relative}
-.tower-stage .tw-guard.tw-hit .tw-beast{animation:twShake .28s ease}
 .tower-stage .tw-dmg{position:absolute;top:30%;left:50%;font:900 1.6em/1 Georgia,serif;color:#ffd76a;text-shadow:0 0 2px #000,0 2px 4px #000;animation:twDmg .7s ease-out forwards}
 .tower-stage .tw-vs{font:900 1.6em/1 Georgia,serif;color:#ffd76a;text-shadow:0 0 10px rgba(255,200,90,.8),0 2px 3px #000;padding-bottom:3em}
 .tower-stage .tw-result{position:absolute;left:0;right:0;top:35%;text-align:center;font:800 1.15em/1.2 Georgia,serif;text-shadow:0 0 2px #000,0 2px 5px #000}
@@ -197,7 +196,6 @@ body.overlay .tower-stage:not([hidden]){display:block;position:absolute;left:50%
 .tower-stage .tw-pod i{font:900 1.4em/1 Georgia,serif;font-style:normal;color:#ffd76a}.tower-stage .tw-pod1{transform:scale(1.15)}
 .tower-stage .tw-empty{color:#cfe3ef}
 body.overlay .tower-stage.tw-flash{box-shadow:0 0 0 1px #000a,0 0 40px rgba(255,220,120,.85)}
-@keyframes twShake{0%,100%{transform:none}25%{transform:translateX(-6px) rotate(-2deg)}75%{transform:translateX(6px) rotate(2deg)}}
 @keyframes twDmg{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,-2.2em)}}
 body.overlay.tower-on .stage-queue{display:none!important}
 body.overlay:is(.sword-race,.social-stage,.ritual-active) .tower-stage{display:none!important}
@@ -210,8 +208,8 @@ body.overlay:is(.sword-race,.social-stage,.ritual-active) .tower-stage{display:n
 .linh-bai .lb-list li.on{color:#ffd76a}.linh-bai .lb-list li em{font-style:normal;color:#9ff0d0;font-size:.9em}
 .linh-bai .lb-list .lb-more{color:#bfe9ff}.linh-bai .lb-none{margin:0;font-size:.82em;color:#cfd8d4}
 
-body.overlay.pet-cove-stage :is(#liveRanks,#giftRanks,#basicCommands,#commandRail,.scene-guide-dock,#spotlight,#likeGoal,#giftBoard){
- visibility:hidden;
+body.overlay.pet-cove-stage :is(#phoneHudLeft,#phoneHudRight,#giftRanks,#honorBanner,.scene-guide-dock,#spotlight,#likeGoal){
+ display:none!important;
 }
 
 /* Góc dưới phải: hướng dẫn Ngũ Đường cố định, độc lập bảng lệnh chung. */
@@ -328,3 +326,8 @@ body.overlay.has-major-event #envelopeBox .env-card{position:static;transform:no
 body.overlay.has-major-event #envelopeBox .env-top,body.overlay.has-major-event #envelopeBox .env-seal,body.overlay.has-major-event #envelopeBox .env-coin{display:none}
 body.overlay.has-major-event #envelopeBox b,body.overlay.has-major-event #envelopeBox span,body.overlay.has-major-event #envelopeBox small{position:static;display:block;transform:none;margin:3px 0;text-align:center;font:inherit}
 body.overlay.has-major-event #quizBox p{font-size:1em}body.overlay.has-major-event #quizBox ol{gap:3px}body.overlay.has-major-event #quizBox li{padding:2px}
+
+/* Keep optional small activities below the animal display. */
+body.overlay.pet-cove-stage.has-major-event :is(#miniEventBox,#quizBox,#envelopeBox):not([hidden]){top:auto;bottom:2%}
+
+.tower-stage .tw-dmg-static{animation:none}

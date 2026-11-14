@@ -10,16 +10,42 @@ export const QUALITY={
 };
 export class RenderBudget{
   constructor(mode='auto'){this.set(mode);this.mean=0;this.samples=0;this.changedAt=0;}
-  set(mode){this.mode=['light','balanced','high'].includes(mode)?mode:'auto';this.level=this.mode==='auto'?'balanced':this.mode;if(this.crowded){this.beforeCrowd=this.level;this.level='light';}this.config=this.heavyCrowd?QUALITY.crowded:QUALITY[this.level];}
-  setCrowded(active,heavy=false){active=!!active;heavy=active&&!!heavy;if(active===!!this.crowded&&heavy===!!this.heavyCrowd)return false;if(active&&!this.crowded)this.beforeCrowd=this.level;this.crowded=active;this.heavyCrowd=heavy;this.level=active?'light':this.mode==='auto'?(this.beforeCrowd||'balanced'):this.mode;this.config=heavy?QUALITY.crowded:QUALITY[this.level];this.samples=0;this.mean=0;return true;}
+  set(mode){
+    this.pressured=false;
+    this.mode=['light','balanced','high'].includes(mode)?mode:'auto';
+    this.level=this.mode==='auto'?'balanced':this.mode;
+    if(this.crowded){
+      this.beforeCrowd=this.level;
+      const tier=this.audienceTier;
+      this.level=tier===10?'balanced':'light';
+      this.config=tier===21||this.heavyCrowd?QUALITY.crowded:QUALITY['audience'+tier]||QUALITY.light;
+    }else this.config=QUALITY[this.level];
+    this.baseCrowdConfig=this.config;
+    this.samples=0;
+    this.mean=0;
+  }
+  setCrowded(active,heavy=false){active=!!active;heavy=active&&!!heavy;if(active===!!this.crowded&&heavy===!!this.heavyCrowd)return false;if(active&&!this.crowded)this.beforeCrowd=this.level;this.crowded=active;this.heavyCrowd=heavy;this.level=active?'light':this.mode==='auto'?(this.beforeCrowd||'balanced'):this.mode;this.config=heavy?QUALITY.crowded:QUALITY[this.level];this.pressured=false;this.baseCrowdConfig=this.config;this.samples=0;this.mean=0;return true;}
   setAudience(count){let tier=count>20?21:count>=20?20:count>=15?15:count>=10?10:0;
-    // 08/11: chỉ hạ bậc khi số người tụt hẳn (đệm 3 người) — đổi bậc xóa cache ảnh nhân vật, dao động 9↔10 người làm khựng liên tục.
+    // Giữ cùng một mức dựng khi tải dao động trong khoảng 3 nhân vật.
     if(this.audienceTier&&tier<this.audienceTier&&count>=this.audienceTier-3)tier=this.audienceTier;
-    if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.samples=0;this.mean=0;return true;}
+    if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.pressured=false;this.baseCrowdConfig=this.config;this.samples=0;this.mean=0;return true;}
   sample(ms,t,fps=30){if(!Number.isFinite(ms))return false;this.mean=this.samples?this.mean*.94+ms*.06:ms;this.samples++;
     // 08/11: FPS thật tụt (<15) thì hạ một bậc kể cả khi đặt cứng 'high' (LIVE Studio + GPU tích hợp). Vẫn 1080 px.
     if(!this.crowded&&fps>0&&fps<15&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
-    if(this.crowded||this.mode!=='auto'||this.samples<45||t-this.changedAt<10000)return false;
+    if(this.crowded){
+      if(this.samples<45||t-this.changedAt<10000)return false;
+      const slow=fps>0&&fps<18;
+      if(!this.pressured&&(this.mode==='auto'?(slow||this.mean>28):fps>0&&fps<15)){
+        this.baseCrowdConfig=this.config;this.pressured=true;
+        this.config={...this.config,poseFps:Math.max(3,this.config.poseFps-2),atmosphereFps:Math.min(2,this.config.atmosphereFps)};
+        this.changedAt=t;this.samples=0;return true;
+      }
+      if(this.pressured&&this.mean<15&&fps>=22&&t-this.changedAt>=30000){
+        this.config=this.baseCrowdConfig;this.pressured=false;this.changedAt=t;this.samples=0;return true;
+      }
+      return false;
+    }
+    if(this.mode!=='auto'||this.samples<45||t-this.changedAt<10000)return false;
     if(this.level==='balanced'&&(this.mean>25||fps>0&&fps<18)){this.level='light';this.config=QUALITY.light;this.changedAt=t;return true;}
     if(this.level==='light'&&this.mean<11&&fps>=22&&t-this.changedAt>30000){this.level='balanced';this.config=QUALITY.balanced;this.changedAt=t;return true;}return false;
   }
@@ -41,16 +67,16 @@ export function makeSurface(w,h){
 }
 // One raster frame per actor, never an unbounded animation-frame history.
 export class CharacterFrames{
-  constructor(factory=makeSurface){this.frames=new Map();this.factory=factory;this.maxBytes=32*1024*1024;this.bytes=0;}
+  constructor(factory=makeSurface){this.frames=new Map();this.factory=factory;this.maxBytes=32*1024*1024;this.bytes=0;this.stats={hits:0,misses:0,allocations:0,evictions:0,repaints:0,clears:0};}
   draw(c,id,key,paint,scale=2){
     let f=this.frames.get(id);if(f&&f.scale<scale){this.bytes-=f.canvas.width*f.canvas.height*4;this.frames.delete(id);f=null;}
-    if(!f){const canvas=this.factory(Math.round(120*scale),Math.round(150*scale));if(!canvas)return false;f={canvas,key:null,scale};this.frames.set(id,f);this.bytes+=canvas.width*canvas.height*4;while(this.frames.size>1&&(this.frames.size>64||this.bytes>this.maxBytes)){const key=this.frames.keys().next().value,old=this.frames.get(key);this.bytes-=old.canvas.width*old.canvas.height*4;this.frames.delete(key);}}
+    if(!f){const canvas=this.factory(Math.round(120*scale),Math.round(150*scale));if(!canvas)return false;this.stats.allocations++;f={canvas,key:null,scale};this.frames.set(id,f);this.bytes+=canvas.width*canvas.height*4;while(this.frames.size>1&&(this.frames.size>64||this.bytes>this.maxBytes)){const key=this.frames.keys().next().value,old=this.frames.get(key);this.bytes-=old.canvas.width*old.canvas.height*4;this.frames.delete(key);this.stats.evictions++;}}
     // Refresh LRU on a hit; shrinking camera zoom reuses the larger raster.
     this.frames.delete(id);this.frames.set(id,f);
-    if(f.key!==key){const x=f.canvas.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,f.canvas.width,f.canvas.height);x.setTransform(f.scale,0,0,f.scale,60*f.scale,115*f.scale);paint(x);f.key=key;}
+    if(f.key!==key){this.stats.misses++;this.stats.repaints++;const x=f.canvas.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,f.canvas.width,f.canvas.height);x.setTransform(f.scale,0,0,f.scale,60*f.scale,115*f.scale);paint(x);f.key=key;}else this.stats.hits++;
     c.drawImage(f.canvas,-60,-115,120,150);return true;
   }
-  clear(){this.frames.clear();this.bytes=0;}
+  clear(){if(this.frames.size)this.stats.clears++;this.frames.clear();this.bytes=0;}
 }
 
 export function actorSample(t,fps,id,motion=true){
@@ -75,7 +101,7 @@ export class BitmapCache{
 // Retain fractional frame time, so a 30fps cap does not accidentally fall to 20fps on a 60Hz display.
 export class FrameClock{
   constructor(){this.last=null;}
-  ready(t,fps){const interval=1000/fps;if(this.last===null){this.last=t;return true;}const elapsed=t-this.last;if(elapsed+.1<interval)return false;this.last+=Math.max(1,Math.floor((elapsed+.1)/interval))*interval;return true;}
+  ready(t,fps){const interval=1000/fps;if(this.last===null){this.last=t;return true;}const elapsed=t-this.last;if(elapsed+.1<interval)return false;if(elapsed>=250){this.last=t;return true;}this.last+=Math.max(1,Math.floor((elapsed+.1)/interval))*interval;return true;}
 }
 export function inView(target,camera,height){const s=camera?.s||1,x=target.x*s+(camera?.x||0),y=target.y*s+(camera?.y||0),r=(target.scale||1.4)*s;return x+65*r>=0&&x-65*r<=900&&y+45*r>=0&&y-120*r<=height;}
 

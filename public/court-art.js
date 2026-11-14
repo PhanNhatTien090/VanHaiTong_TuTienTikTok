@@ -22,8 +22,10 @@ export function drawCourtSkin(c,p,pose,t){
  c.save();c.translate(0,pose.lift||0);c.rotate(pose.lean||0);
  for(const [img,a,h] of [[seated,1-stand,91],[standing,stand,125]]){
   if(!img||a<=.001)continue;
-  const w=h*img.naturalWidth/img.naturalHeight;
-  c.save();c.globalAlpha*=a;c.drawImage(img,-w/2,25-h,w,h);c.restore();
+  // The seated exports include the bottom edge of the standing cell above them.
+  const trimTop=img===seated?Math.round(img.naturalHeight*54/618):0;
+  const sourceHeight=img.naturalHeight-trimTop,w=h*img.naturalWidth/sourceHeight;
+  c.save();c.globalAlpha*=a;c.drawImage(img,0,trimTop,img.naturalWidth,sourceHeight,-w/2,25-h,w,h);c.restore();
  }
  c.restore();return true;
 }

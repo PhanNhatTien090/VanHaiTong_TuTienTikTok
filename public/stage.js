@@ -20,23 +20,30 @@ export class StageDirector{
   /** players: người thật đang hoạt động; residents: nhân vật thường trú; required: id bắt buộc có mặt (đang có hiệu ứng / đang chọn). */
   update(players,residents,t,required=new Set()){
     const byId=new Map(players.map(p=>[p.id,p]));
+    const scores=new Map();
+    const score=player=>{
+      if(!scores.has(player.id))scores.set(player.id,this.score(player,t));
+      return scores.get(player.id);
+    };
     const useResidents=players.length<RESIDENT_LIMIT;
     for(const r of residents)if(useResidents)byId.set(r.id,r);
     // Rời sân: người không còn hoạt động, hoặc thường trú khi đã đông.
     const now=[];for(const id of this.order){if(byId.has(id))now.push(id);else{this.left.push({id,t});this.seatedAt.delete(id);}}
     this.order=now;
-    if(this.order.length>this.seats){const keep=[...this.order].sort((a,b)=>(required.has(b)-required.has(a))||this.score(byId.get(b),t)-this.score(byId.get(a),t)).slice(0,this.seats);const ids=new Set(keep);for(const id of this.order)if(!ids.has(id))this.seatedAt.delete(id);this.order=this.order.filter(id=>ids.has(id));}
+    if(this.order.length>this.seats){const keep=[...this.order].sort((a,b)=>(required.has(b)-required.has(a))||score(byId.get(b))-score(byId.get(a))).slice(0,this.seats);const ids=new Set(keep);for(const id of this.order)if(!ids.has(id))this.seatedAt.delete(id);this.order=this.order.filter(id=>ids.has(id));}
     this.tokens=Math.min(SWAPS_PER_SEC,this.tokens+Math.max(0,t-this.tokenAt)*SWAPS_PER_SEC/1000);this.tokenAt=t;
     for(const [id,at]of this.waiting)if(t-at>WAIT_MAX||this.order.includes(id)||!byId.has(id))this.waiting.delete(id);
     const seated=new Set(this.order);
-    const want=[...byId.values()].filter(p=>!seated.has(p.id)).sort((a,b)=>(required.has(b.id)-required.has(a.id))||(this.score(b,t)-this.score(a,t)));
+    let needsCandidates=this.order.length<this.seats||this.waiting.size>0;
+    if(!needsCandidates)for(const id of required)if(byId.has(id)&&!seated.has(id)){needsCandidates=true;break;}
+    const want=needsCandidates?[...byId.values()].filter(p=>!seated.has(p.id)).sort((a,b)=>(required.has(b.id)-required.has(a.id))||(score(b)-score(a))):[];
     for(const p of want){
       if(this.order.length<this.seats){this.seat(p.id,t);continue;}
       const urgent=required.has(p.id)||this.waiting.has(p.id);if(!urgent)break;
       if(this.tokens<1&&!required.has(p.id))break;
       // Thay người im lâu nhất đã ngồi đủ MIN_STAY (thường trú bị thay trước).
       let victim=-1,worst=Infinity;
-      this.order.forEach((id,i)=>{if(required.has(id))return;const q=byId.get(id);const stay=t-(this.seatedAt.get(id)||0);const intro=this.introAt.has(p.id)&&t-this.introAt.get(p.id)<15000;if(stay<(intro?4000:MIN_STAY)&&!q?.resident&&!required.has(p.id))return;const s=q?.resident?-1e9:this.score(q,t);if(s<worst){worst=s;victim=i;}});
+      this.order.forEach((id,i)=>{if(required.has(id))return;const q=byId.get(id);const stay=t-(this.seatedAt.get(id)||0);const intro=this.introAt.has(p.id)&&t-this.introAt.get(p.id)<15000;if(stay<(intro?4000:MIN_STAY)&&!q?.resident&&!required.has(p.id))return;const s=q?.resident?-1e9:score(q);if(s<worst){worst=s;victim=i;}});
       if(victim<0)break;
       this.left.push({id:this.order[victim],t});this.seatedAt.delete(this.order[victim]);this.order[victim]=p.id;this.seatedAt.set(p.id,t);this.waiting.delete(p.id);this.tokens--;
     }

@@ -29,3 +29,20 @@ body.sword-race #spotlight{display:none!important}
 .duel-card{grid-template-rows:auto auto auto}.duel-portrait{grid-row:1/4!important}
 .duel-card .duel-tech{font-size:1.8cqw;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 1cqw currentColor}
 .duel-pair .duel-card:last-child .duel-tech{grid-column:1}
+
+/* Direct scene child so registration stays visible while the event dock is hidden. */
+.tournament-registration-guide[hidden]{display:none}
+body.overlay .scene-shell>.tournament-registration-guide:not([hidden]){
+ position:absolute;z-index:15;top:32%;left:20%;right:20%;box-sizing:border-box;
+ padding:clamp(8px,1.4cqw,15px);border:1px solid #e7c27e;border-radius:10px;
+ background:#071827;color:#f2f7fb;text-align:center;pointer-events:none;
+ font:700 clamp(12px,2.15cqw,24px)/1.35 "Segoe UI",Arial,sans-serif;
+}
+.tournament-registration-guide header{
+ display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:0 .8em;
+ color:#ffe2a3;
+}
+.tournament-registration-guide p{margin:.26em 0}
+.tournament-registration-guide p:first-of-type{font-size:1.14em}
+.tournament-registration-guide code{font:inherit;color:#a5ffe5;background:#163c46;border-radius:4px;padding:0 .28em}
+.tournament-registration-guide small,.tournament-registration-time{color:#cce4f0;font-size:.88em}

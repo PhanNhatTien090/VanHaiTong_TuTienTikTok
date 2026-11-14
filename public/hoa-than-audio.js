@@ -32,8 +32,8 @@ const banks=new WeakMap();
 function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=18716,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}
 export function hoaThanMusicDuck(ms){const t=ms/1000;return t<12.8?.19:t<14.4?.075:t<16.2?.12:Math.min(1,.12+(t-16.2)/1.4*.88);}
 export function scheduleHoaThanAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={}){
- const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),limiter=c.createDynamicsCompressor(),nodes=[bus,limiter],sources=[];let stopped=false,echo=null;
- bus.gain.value=strength;limiter.threshold.value=-10;limiter.knee.value=8;limiter.ratio.value=1;limiter.attack.value=.003;limiter.release.value=.22;bus.connect(limiter);limiter.connect(destination);
+ const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),nodes=[bus],sources=[];let stopped=false,echo=null;
+ bus.gain.value=strength;bus.connect(destination);
  if(c.createDelay){echo=c.createDelay(.4);const wet=c.createGain();echo.delayTime.value=.137;wet.gain.value=.14;echo.connect(wet);wet.connect(bus);nodes.push(echo,wet);}
  for(const cue of HOA_THAN_SCORE){const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;
   const start=now+Math.max(0,at-elapsed),noisy=['wind','thunder','crack','rise'].includes(cue.kind),source=noisy?c.createBufferSource():c.createOscillator(),g=c.createGain();let param;

@@ -1,10 +1,13 @@
+import {MAZE_SPRITE_CAP} from './crowd-policy.js';
+import {feedbackBudget} from './cinematic-feedback.js';
 // 10/11/2026: BÍ CẢNH MÊ CUNG — vẽ mê cung chung + chấm sáng mỗi người (server: maze.mjs).
 // Tường dựng sẵn vào 1 lớp cache theo mã mê cung (vẽ lại chỉ khi đổi mê cung/cỡ màn) → 300 người vẫn nhẹ.
 // Tên: chỉ hiện top dẫn đầu + người vừa đi/vừa tặng quà (≤22 tên) để chữ không chồng nhau.
 import {makeSurface} from './performance.js';
+const mistColor='rgba(90,200,190,A)';
 const TAU=Math.PI*2,clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const serverNow=(scene,t)=>(scene.mazeServerNow||Date.now())+Math.min(2000,t-(scene.mazeReceivedAt||t));
-export function syncMaze(scene,state){const e=state.maze||null;if(e?.id!==scene.mazeId){scene.mazeId=e?.id;scene.mazeRunPos=new Map();}scene.mazeStatus=e?.active?e:null;scene.mazeReceivedAt=performance.now();scene.mazeServerNow=state.serverNow;
+export function syncMaze(scene,state){const e=state.maze||null;if(e?.id!==scene.mazeId){scene.mazeId=e?.id;scene.mazeRunPos=new Map();scene.mazeHeard=new Set();}scene.mazeStatus=e?.active?e:null;scene.mazeReceivedAt=performance.now();scene.mazeServerNow=state.serverNow;
  if(typeof document!=='undefined')document.body?.classList?.toggle('maze-on',!!scene.mazeStatus);}
 export const mazeOn=scene=>!!scene.mazeStatus;
 const hue=id=>{let n=0;for(const ch of String(id))n=(Math.imul(n,31)+ch.charCodeAt(0))|0;return Math.abs(n)%360;};
@@ -34,9 +37,14 @@ function displayPos(scene,r,L,tt){const st=scene.mazeRunPos??=new Map(),[tx,ty]=
 export function drawMaze(scene,c,t,layer){
  const e=scene.mazeStatus;if(!e?.cells)return;const H=scene.height,now=serverNow(scene,t),L=mazeLayout(H,e.cols,e.rows);
  if(layer==='back'){
-  const bg=c.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#04101a');bg.addColorStop(.5,'#071c22');bg.addColorStop(1,'#03080d');c.fillStyle=bg;c.fillRect(-20,-20,940,H+40);
+  if(scene.mazeBackground?.context!==c||scene.mazeBackground.height!==H||scene.mazeBackground.width!==c.canvas.width){
+   const gradient=c.createLinearGradient(0,0,0,H);
+   gradient.addColorStop(0,'#04101a');gradient.addColorStop(.5,'#071c22');gradient.addColorStop(1,'#03080d');
+   scene.mazeBackground={context:c,height:H,width:c.canvas.width,gradient};
+  }
+  c.fillStyle=scene.mazeBackground.gradient;c.fillRect(-20,-20,940,H+40);
   // sương bí cảnh trôi chậm
-  if(scene.motion!==false)for(let i=0;i<5;i++){const x=(i*233+t*.012*(i%2?1:-1))%1100-100,y=H*(.2+i*.15);glow(c,x,y,260,'rgba(90,200,190,A)',.07);}
+  if(scene.motion!==false&&!feedbackBudget(scene))for(let i=0;i<5;i++){const x=(i*233+t*.012*(i%2?1:-1))%1100-100,y=H*(.2+i*.15);glow(c,x,y,260,mistColor,.07);}
   const wl=wallLayer(scene,e,H);if(wl)c.drawImage(wl.surface,L.ox-wl.pad,L.oy-wl.pad);
   // cửa ra (trên) + mốc xuất phát (dưới)
   const [gx]=cellXY(L,e.exit.x,0),gy=L.oy,pulse=.5+.5*Math.sin(t*.004);
@@ -50,48 +58,66 @@ export function drawMaze(scene,c,t,layer){
    c.fillStyle=`rgba(190,230,220,${(1-k).toFixed(2)})`;for(let i=0;i<7;i++){const a=i*.9+b.at%7,d=L.cell*(.1+k*.55);c.fillRect(px+Math.cos(a)*d-2,py+Math.sin(a)*d-2+k*k*L.cell*.3,4,4);}}
   return;}
  // ---------- front: người chạy + HUD ----------
- const tt=performance.now(),runners=e.runners||[],seen=new Map(),pos=[];
+ const tt=t,runners=e.runners||[],seen=new Map(),pos=[];
  for(const r of runners){if(r.f)continue;const p=displayPos(scene,r,L,tt),k=r.x+','+r.y,n=seen.get(k)||0;seen.set(k,n+1);
   // nhiều người cùng ô: xếp xoắn ốc nhỏ quanh tâm ô
-  const ang=n*2.4,rad=n?Math.min(L.cell*.3,5+Math.sqrt(n)*6):0;let x=p.x+Math.cos(ang)*rad,y=p.y+Math.sin(ang)*rad;
-  if(now-r.b<320)x+=Math.sin(tt*.09)*3;pos.push({r,x,y,p});}
+  const ang=n*2.4,rad=n?Math.min(L.cell*.3,5+Math.sqrt(n)*6):0;let x=(scene.motion===false?p.tx:p.x)+Math.cos(ang)*rad,y=(scene.motion===false?p.ty:p.y)+Math.sin(ang)*rad;
+  if(scene.motion!==false&&now-r.b<320)x+=Math.sin(tt*.09)*3;pos.push({r,x,y,p});}
  const dot=Math.max(7,L.cell*.12);
  // chỉ skin: bỏ pháp bảo, linh thú, hiệu ứng skin (minimalCrowd tắt VFX khi vẽ thân)
- const bare=pl=>({...pl,equipped:null,equippedExtra:[],relicVariant:null,spiritPet:null,skinGear:[],artifacts:[]});
+ const projections=scene.mazeActorProjections??=new WeakMap();
+ const bare=pl=>{
+  if(!projections.has(pl))projections.set(pl,{...pl,equipped:null,equippedExtra:[],relicVariant:null,spiritPet:null,skinGear:[],artifacts:[]});
+  return projections.get(pl);
+ };
 // 10/11 tối (chủ game): hiện SKIN thật của từng người (ảnh nhân vật cache, thu nhỏ vừa ô); quá 40 người (10/11: hạ từ 80 vì lag) thì người xếp sau là chấm sáng cho nhẹ.
  const sprite=L.cell/72*.4;let sprites=0;pos.sort((a,b)=>a.y-b.y);
- for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000,pl=sprites<40?scene.playerIndex?.get(r.id):null;
-  if(p.moving&&p.dur>300){c.strokeStyle=`hsla(${h},95%,75%,.6)`;c.lineWidth=dot;c.lineCap='round';c.beginPath();c.moveTo(p.fx,p.fy);c.lineTo(x,y);c.stroke();}
+ for(const {r,x,y,p} of pos){const h=hue(r.id),fresh=now-(r.g||0)<4000,pl=sprites<MAZE_SPRITE_CAP?scene.playerIndex?.get(r.id):null;
+  if(scene.motion!==false&&p.moving&&p.dur>300){c.strokeStyle=`hsla(${h},95%,75%,.6)`;c.lineWidth=dot;c.lineCap='round';c.beginPath();c.moveTo(p.fx,p.fy);c.lineTo(x,y);c.stroke();}
   if(fresh)glow(c,x,y,dot*4,`hsla(${h},95%,70%,A)`,.6);
-  if(pl){sprites++;c.save();c.translate(x,y+L.cell*.2);c.scale(sprite,sprite);/* chống lag: 1 tư thế tĩnh (compact+motion tắt) → mỗi người dựng ảnh 1 lần rồi dùng lại; ảnh cache nhỏ (bareCrowd) */const keep=[scene.minimalCrowd,scene.compact,scene.motion,scene.bareCrowd];scene.minimalCrowd=scene.compact=scene.bareCrowd=true;scene.motion=false;try{scene.drawPlayer(c,bare(pl),0,0,t);}catch{}finally{[scene.minimalCrowd,scene.compact,scene.motion,scene.bareCrowd]=keep;}c.restore();continue;}
+  if(pl){sprites++;c.save();c.translate(x,y+L.cell*.2);c.scale(sprite,sprite);/* chống lag: 1 tư thế tĩnh (compact+motion tắt) → mỗi người dựng ảnh 1 lần rồi dùng lại; giữ raster theo budget chung */const keep=[scene.minimalCrowd,scene.compact,scene.motion,scene.bareCrowd];scene.minimalCrowd=scene.compact=scene.bareCrowd=true;scene.motion=false;try{scene.drawPlayer(c,bare(pl),0,0,t,1.42);}catch{}finally{[scene.minimalCrowd,scene.compact,scene.motion,scene.bareCrowd]=keep;}c.restore();continue;}
   c.fillStyle=`hsl(${h},85%,62%)`;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(x,y,r.r?dot*1.2:dot,0,TAU);c.fill();c.stroke();}
  // tên: top 5 + người vừa đi/tặng quà gần nhất, tối đa 22
  // mỗi ô tối đa 1 tên (+số người cùng ô) để chữ không chồng nhau; ưu tiên top 5 rồi người vừa đi/tặng quà
  const want=[...runners.filter(r=>!r.f).slice(0,5),...[...runners].filter(r=>!r.f&&(now-r.m<2500||now-(r.g||0)<6000)).sort((a,b)=>Math.max(b.m,b.g||0)-Math.max(a.m,a.g||0))],byId=new Map(pos.map(o=>[o.r.id,o])),usedCell=new Set();let shown=0;
  for(const r of want){if(shown>=22)break;const k=r.x+','+r.y;if(usedCell.has(k)||usedCell.has((r.x-1)+','+r.y)||usedCell.has((r.x+1)+','+r.y))continue;const o=byId.get(r.id);if(!o)continue;usedCell.add(k);shown++;const more=(seen.get(k)||1)-1,[cx,cy]=cellXY(L,r.x,r.y);txt(c,String(r.n).slice(0,11)+(more?' +'+more:'')+(r.k?' ⛏'+r.k:''),cx,cy-L.cell*.5+4,'800 14px Segoe UI','#ffffff',4);}
- drawMazePortals(c,e,L,now,H,scene.budget?.level==='light');
+ scene.onStageActors=sprites;scene.visibleActors=sprites;
+ drawMazePortals(scene,c,e,L,now,H);
  drawHud(scene,c,e,t,H,now,L);
 }
-function drawMazePortals(c,e,L,now,H,light){
+function drawMazePortals(scene,c,e,L,now,H){
+ const light=feedbackBudget(scene),motion=scene.motion!==false;
  for(const f of (e.teleports||[]).slice(-3)){
   const age=now-f.at;if(age<0||age>2400)continue;
+  const heard=scene.mazeHeard??=new Set(),key=f.id??f.at+':'+f.name;
+  if(!heard.has(key)){
+   heard.add(key);
+   if(heard.size>32)heard.delete(heard.values().next().value);
+   if(age<550)scene.onMazePortalSound?.();
+  }
   const [x,y]=cellXY(L,f.from.x,f.from.y),[X,Y]=cellXY(L,f.to.x,f.to.y),k=age/2400;
-  const alpha=Math.min(1,age/80)*(1-k),u=clamp(age/360),dx=X-x,dy=Y-y;
+  const alpha=Math.min(1,age/80)*(1-k),u=motion?clamp(age/340):1,dx=X-x,dy=Y-y;
   c.save();c.globalCompositeOperation='screen';c.globalAlpha=alpha;
   for(const [px,py] of [[x,y],[X,Y]]){
    glow(c,px,py,L.cell*(.9+k),'rgba(128,179,255,A)',.65);
-   for(let i=0;i<4;i++){
+   for(let i=0;i<(light?2:3);i++){
     const r=L.cell*(.25+k*.8+i*.11);
     c.strokeStyle=i%2?'#bdffff':'#ab8bff';c.lineWidth=5-i;
-    c.beginPath();c.ellipse(px,py,r,r*.66,age*.002+i,0,TAU);c.stroke();
+    c.beginPath();c.ellipse(px,py,r,r*.66,(motion?age*.002:0)+i,0,TAU);c.stroke();
    }
   }
   if(u<1){
    c.lineCap='round';
-   for(let i=0;i<(light?3:6);i++){
+   for(let i=0;i<(light?2:4);i++){
     c.strokeStyle=i%2?'#dffeff':'#83aaff';c.lineWidth=4+i;
     c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+dx*.65+Math.sin(i*3)*105,y+dy*.28,x+dx*u,y+dy*u);c.stroke();
    }
+  }
+  if(age>=250){
+   const settle=clamp((age-250)/800);
+   c.globalAlpha=alpha*(1-settle)*.9;
+   c.strokeStyle='#ccf7ff';c.lineWidth=3;
+   c.beginPath();c.ellipse(X,Y,L.cell*(.35+settle),L.cell*(.18+settle*.42),0,0,TAU);c.stroke();
   }
   c.restore();c.save();c.globalAlpha=alpha;
   txt(c,f.name+' · TỐC BIẾN',Math.max(145,Math.min(755,X)),Math.min(H*.8,Y+52),'900 21px Segoe UI','#eaffff',5);c.restore();

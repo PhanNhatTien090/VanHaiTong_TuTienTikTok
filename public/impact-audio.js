@@ -9,7 +9,7 @@ export function scheduleImpactLayers(c,destination,{elapsed=0,at,duration,scale=
  const none={stop(){},endAt:now};
  if(!Number.isFinite(at)||elapsed>(at+.3)*scale)return none;
  const bus=c.createGain();bus.gain.value=level;graph.push(bus);
- if(c.createDynamicsCompressor){const k=c.createDynamicsCompressor();k.threshold.value=-9;k.knee.value=6;k.ratio.value=1;k.attack.value=.003;k.release.value=.2;bus.connect(k);k.connect(destination);graph.push(k);}else bus.connect(destination);
+ bus.connect(destination);
  const dispose=()=>graph.forEach(n=>n.disconnect?.());const release=ms=>{clearTimeout(timer);timer=setTimeout(dispose,ms);timer.unref?.();};
  const track=(o,parts)=>{active++;o.onended=()=>{parts.forEach(n=>n?.disconnect?.());if(--active===0)release(stopped?0:900);};nodes.push(o);};
  function voice(t0,len,lv,from,to,{isNoise=false,kind='sine',attack=.01,hold=.1,filter='lowpass',fixed=false}={}){
@@ -30,10 +30,10 @@ export function scheduleImpactLayers(c,destination,{elapsed=0,at,duration,scale=
  }
  swell(at-1.35,1.35,.12,500,6500,true);
  swell(at-1.1,1.1,.04,root*1.89,root*7.55,false);
- voice(at,1.8,.32,110,32,{attack:.004,hold:.12,fixed:true});
+ voice(at,.52,.24,112,42,{attack:.004,hold:.12,fixed:true});
  [1,1.48,2.05,2.76].forEach((r,i)=>voice(at+.012,3.2-i*.4,[.06,.042,.03,.02][i],root*r,root*r*.997,{attack:.004,hold:.02}));
  [12,16,20.17,24].forEach((r,i)=>voice(at+.06+i*.03,2.3-i*.25,.014,root*r,root*r*1.003,{attack:.06,hold:.25}));
- voice(at+.04,1.5,.05,9000,2500,{isNoise:true,filter:'highpass',attack:.02,hold:.15});
+ voice(at+.04,.62,.043,5400,2100,{isNoise:true,filter:'highpass',attack:.02,hold:.15});
  [1.122,1.414,1.682,2.245].forEach((r,i)=>voice(at+.2,2.2,.022-i*.003,root*r,root*r*1.001,{attack:.4,hold:.55}));
  if(!active){dispose();return none;}
  return {stop(){if(stopped)return;stopped=true;const t=c.currentTime;bus.gain.cancelScheduledValues(t);bus.gain.setTargetAtTime(.0001,t,.012);for(const o of nodes)try{o.stop(t+.05);}catch{}release(80);},endAt:now+Math.max(0,duration*scale-elapsed)+1};

@@ -1,3 +1,4 @@
+import {drawScreenPulse} from './cinematic-feedback.js';
 // Thiên Ma Thánh Đế v1 — Thiên Ma Đăng Thánh (09/11/2026). 48 s; nổ 42,0; đổi skin 42,3.
 // Cơ chế riêng (không lặp Ma Thần: không trăng, xích, dung nham, mặt quỷ, kích, mảnh giáp, sừng):
 // trời bị xé dọc 3 nhát thành khe Thiên Ma → 7 thánh ấn hình học phi Euclid rơi vào khoá quanh thân →
@@ -62,7 +63,7 @@ function assets(scene,H){
 const feetOf=H=>H*.74;
 function halo(c,im,x,y,w,h,a){if(!im||a<=0)return;c.save();c.globalAlpha*=clamp(a);c.globalCompositeOperation='lighter';c.drawImage(im,x-w/2,y-h/2,w,h);c.restore();}
 function ring(c,x,y,r,col,w,a,ry=r){if(a<=.01||r<1)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=clamp(a);c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.ellipse(x,y,r,ry,0,0,TAU);c.stroke();c.restore();}
-function flash(c,H,col,a){if(a<=.01)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=clamp(a);c.fillStyle=col;c.fillRect(0,0,900,H);c.restore();}
+
 const snapshots=new WeakMap();
 function players(scene,e){if(snapshots.has(e))return snapshots.get(e);const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user)||{id:e.user,name:e.name,giftCoins:0};const pair={from:structuredClone(e.visualFrom||{...live,realm:22}),to:structuredClone(e.visualTo||{...live,realm:23})};snapshots.set(e,pair);return pair;}
 // Khe Thiên Ma: 3 nhát xé, mỗi nhát mở rộng thêm; trong khe tím sáng, viền vàng.
@@ -98,7 +99,7 @@ function drawEyes(c,a,s,T){if(T<TM.eyes)return;const pull=s.eyePull;if(pull>=1)r
   const age=T-at;if(age<.3)halo(c,a.gold,x,y,r*5,r*5,1-age/.3);
   if(s.gaze>0){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=s.gaze*.55;c.strokeStyle=i%2?GOLD:VIOLET2;c.lineWidth=1.4+s.gaze*1.6;c.beginPath();c.moveTo(x,y);c.lineTo(tx,ty);c.stroke();c.restore();}}
  if(s.gaze>0){halo(c,a.gold,tx,ty,260,260,s.gaze);ring(c,tx,ty,40+pulse(T-TM.gaze,1.2)*120,GOLD2,4,s.gaze*.8);}
- TM_EYE_WAVES.forEach((at,i)=>{const age=T-at;if(age>=0&&age<.25)flash(c,s.H,'#d9a6ff',(1-age/.25)*.12);});}
+ TM_EYE_WAVES.forEach((at,i)=>{const age=T-at;if(age>=0&&age<.25)drawScreenPulse(c,s.H,s.reduceFlash,'#d9a6ff',(1-age/.25)*.12);});}
 // Luân hoàn cơ khí: 12 đốt cung có răng và mắt nhỏ, bay ra từ khe, ráp thành vòng sau lưng; quay sau khi đủ.
 const HALO_R=190;
 function haloCenter(s){return {x:450,y:s.head+70};}
@@ -129,7 +130,7 @@ function drawBigEye(c,a,s,T){if(s.bigEye<=0&&T<TM.mark)return;const x=450,y=s.H*
   const beam=ease((T-TM.beam)/.15)*(1-ease((T-TM.mark+.6)/.4));if(beam>0){const hx=450,hy=haloCenter(s).y-HALO_R;c.save();c.globalCompositeOperation='lighter';for(const [w,col,al] of [[60,VIOLET,.35],[22,'#ff9aff',.7],[7,'#ffffff',.9]]){c.globalAlpha=beam*al;c.strokeStyle=col;c.lineWidth=w*(1+pulse(T-TM.beam,.6)*.6);c.beginPath();c.moveTo(cx,cy+r*.6);c.lineTo(hx,hy);c.stroke();}c.restore();halo(c,a.glow,hx,hy,500,500,beam*.8);}}
  // ấn thoi trên đầu (không chạm mặt): hiện từ khi thu, mờ trước nổ, hiện lại sau reveal
  const mk=s.revealed?s.after*s.fade:ease((T-TM.mark)/.3)*(1-ease((T-TM_PULLS[2])/1)),my=s.head-74;if(mk>0){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=mk;c.translate(450,my);c.fillStyle=VIOLET2;c.beginPath();c.moveTo(0,-20);c.lineTo(9,0);c.lineTo(0,20);c.lineTo(-9,0);c.closePath();c.fill();c.strokeStyle=GOLD;c.lineWidth=2;c.stroke();c.restore();halo(c,a.glow,450,my,90,90,mk*.8);}
- {const age=T-TM.open;if(age>=0&&age<.6){flash(c,s.H,'#d9a6ff',(1-age/.6)*.25);ring(c,x,y,R+age*800,VIOLET2,10*(1-age/.6)+1,1-age/.6);}}
+ {const age=T-TM.open;if(age>=0&&age<.6){drawScreenPulse(c,s.H,s.reduceFlash,'#d9a6ff',(1-age/.6)*.25);ring(c,x,y,R+age*800,VIOLET2,10*(1-age/.6)+1,1-age/.6);}}
  {const age=T-TM.mark;if(age>=0&&age<.5){ring(c,450,my,20+age*400,GOLD2,6*(1-age/.5)+1,1-age/.5);}}}
 // 9 lưỡi kiếm: rơi cắm ngược quanh đầu, lật lên thành vương miện lơ lửng; sau reveal hiện lại.
 function blade(c,len,w,al){c.save();c.globalAlpha=al;c.beginPath();c.moveTo(0,-len);c.lineTo(w,-len*.15);c.lineTo(w*.5,0);c.lineTo(-w*.5,0);c.lineTo(-w,-len*.15);c.closePath();const g=c.createLinearGradient(-w,0,w,0);g.addColorStop(0,'#3a2a5a');g.addColorStop(.5,'#f0e8ff');g.addColorStop(1,'#3a2a5a');c.fillStyle=g;c.fill();c.strokeStyle=GOLD;c.lineWidth=1.6;c.stroke();c.fillStyle='#c8a04a';c.fillRect(-w*1.3,0,w*2.6,4);c.fillRect(-2,4,4,len*.18);c.restore();}
@@ -150,13 +151,14 @@ function drawSigil(c,a,s){const k=s.after*s.fade;if(k<=0)return;const cx=450,cy=
 function drawMotesUp(c,s,H,light){if(s.after<=0)return;const n=light?22:56;c.save();c.globalCompositeOperation='lighter';for(let i=0;i<n;i++){const u=((s.clock*.1+rnd(i))%1),x=450+(rnd(i+5)-.5)*760+Math.sin(s.clock*1.1+i)*24,y=s.feet+40-u*H*.75;c.globalAlpha=s.after*s.fade*(1-u)*.9;c.fillStyle=i%3?VIOLET2:GOLD;c.save();c.translate(x,y);c.rotate(i+s.clock);c.fillRect(-2,-2,4+rnd(i)*3,4+rnd(i)*3);c.restore();}c.restore();}
 export function drawThienMaAwakening(scene,c,e,t,H){
  const s=thienMaState((t-e.start)/e.duration,H,scene.motion!==false),a=assets(scene,H),v=qiVariant(e),kq=qiRemap(s.k,TM.impact/TM.duration),origin={x:450,y:s.belly},light=scene.budget?.level==='light',T=s.t;
+ s.reduceFlash=scene.reduceFlash;
  const {from,to}=players(scene,e),p=s.revealed?to:from,image=maThanActorImage(scene,p,e),hit=hitPower(T)*(s.motion?1:.3);
  c.save();setFxPalette(PALETTE);
  // trời: xoay theo càn khôn đảo
  c.fillStyle='#06020e';c.fillRect(0,0,900,H);
  if(a.sky){c.save();c.translate(450,H*.42);c.rotate(s.turn*(v.flip?-1:1));c.globalAlpha=.25+s.night*.75;c.drawImage(a.sky,-750,-750,1500,1500);c.restore();}
- TM_TURNS.forEach(at=>{const age=T-at;if(age>=0&&age<.35)flash(c,H,'#a24bff',(1-age/.35)*.18);});
- flash(c,H,'#a24bff',hit*.08);
+ TM_TURNS.forEach(at=>{const age=T-at;if(age>=0&&age<.35)drawScreenPulse(c,H,scene.reduceFlash,'#a24bff',(1-age/.35)*.18);});
+ drawScreenPulse(c,H,scene.reduceFlash,'#a24bff',hit*.08);
  pushFxCamera(scene,c,kq,v,s.feet);const shake=s.motion&&scene.cameraEnabled!==false?hit*13+s.bang*14:0;c.translate(Math.sin(T*83)*shake,Math.cos(T*71)*shake*.6);
  {const rot=s.turn*(v.flip?-1:1);c.save();if(rot){c.translate(450,H*.22);c.rotate(rot);c.translate(-450,-H*.22);}drawRift(c,a,s,T);drawEyes(c,a,s,T);c.restore();}
  drawBigEye(c,a,s,T);
@@ -179,7 +181,7 @@ export function drawThienMaAwakening(scene,c,e,t,H){
  // ngoài camera: tối, 3 nhịp mắt tím, chớp nổ, khe khép bằng chỉ vàng
  if(s.dark>0){c.save();c.globalAlpha=s.dark*.86;c.fillStyle='#000';c.fillRect(0,0,900,H);c.restore();const beat=Math.max(0,...TM_BEATS.map(at=>pulse(T-at,.4)));c.save();c.globalAlpha=s.dark;c.translate(450,s.belly);eyeShape(c,0,0,26,.25+beat*.75);c.fillStyle=VIOLET2;c.globalCompositeOperation='lighter';c.fill();c.restore();halo(c,a.glow,450,s.belly,120+beat*200,120+beat*200,s.dark*(.4+beat*.6));}
  {const age=T-TM.impact;if(age>=0&&age<1.6){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=(1-age/1.6);c.strokeStyle=GOLD2;c.lineWidth=4+(1-age/1.6)*6;c.beginPath();for(const p of a.riftPts)c.lineTo(p.x,p.y);c.stroke();c.restore();}}
- flash(c,H,'#e0b8ff',s.bang*.33);
+ drawScreenPulse(c,H,scene.reduceFlash,'#e0b8ff',s.bang*.33);
  drawMotesUp(c,s,H,light);
  drawQiMotes(scene,c,kq,H);
  if(a.vignette)c.drawImage(a.vignette,0,0,900,H);

@@ -75,7 +75,7 @@ export function drawThaiAtAwakening(scene,c,e,t,H){
  const jolt=s.tear*46*(s.motion?1:.3);if(a.world){c.save();c.beginPath();c.rect(0,0,900,s.horizon);c.clip();c.drawImage(a.world,0,-jolt,900,H);c.restore();c.save();c.beginPath();c.rect(0,s.horizon,900,H-s.horizon);c.clip();c.drawImage(a.world,0,jolt,900,H);c.restore();}else{c.fillStyle='#fff3d0';c.fillRect(0,0,900,s.horizon);c.fillStyle='#0b0820';c.fillRect(0,s.horizon,900,H-s.horizon);}
  // trời tối dần để hiệu ứng sáng nổi (ảnh nền vẫn đọc được)
  c.save();c.globalAlpha=.3*clamp(T/1.2)*(1-s.after*.7);c.fillStyle='#1a1430';c.fillRect(0,0,900,H);c.restore();
- if(hit>.05){c.save();c.globalCompositeOperation='screen';c.globalAlpha=hit*.22;c.fillStyle='#fff3d0';c.fillRect(0,0,900,H);c.restore();}
+ if(!scene.reduceFlash&&hit>.05){c.save();c.globalCompositeOperation='screen';c.globalAlpha=hit*.22;c.fillStyle='#fff3d0';c.fillRect(0,0,900,H);c.restore();}
  // lưỡi vàng xẻ trời đất
  if(T<TA.ring+1&&s.split>0){const w=900*s.split;c.save();c.globalAlpha=1-s.split*.5;c.fillStyle='#ffcf5a';c.fillRect(450-w/2,s.horizon-6,w,12);c.fillStyle='#ffffff';c.fillRect(450-w/2,s.horizon-2,w,4);c.restore();halo(c,a.glow,450,s.horizon,w*1.3,160,(1-s.split)*.9);}
  // sóng vàng đổ xuống / sóng tím dâng lên → va ở chân trời

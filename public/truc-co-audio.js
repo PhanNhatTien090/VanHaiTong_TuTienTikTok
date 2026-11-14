@@ -18,7 +18,7 @@ export function trucCoMusicDuck(elapsed){
 export function scheduleTrucCoAudio(c,destination,elapsed=0,duration=10.8,strength=1,stem='mix',pitch=1){
  const scale=duration/(TRUC_CO_DURATION/1000),now=c.currentTime,bank=assets(c),bus=c.createGain(),sources=[],graph=[bus];let active=0,stopped=false,timer;
  bus.gain.value=1.55*strength;
- if(c.createDynamicsCompressor){const limiter=c.createDynamicsCompressor();limiter.threshold.value=-7;limiter.knee.value=5;limiter.ratio.value=1;limiter.attack.value=.002;limiter.release.value=.18;bus.connect(limiter);limiter.connect(destination);graph.push(limiter);}else bus.connect(destination);
+ bus.connect(destination);
  let reverb=null;if(c.createConvolver){reverb=c.createConvolver();reverb.buffer=bank.impulse;const wet=c.createGain();wet.gain.value=.12;reverb.connect(wet);wet.connect(bus);graph.push(reverb,wet);}
  const dispose=()=>graph.forEach(n=>n.disconnect?.());
  const release=ms=>{clearTimeout(timer);timer=setTimeout(dispose,ms);timer.unref?.();};

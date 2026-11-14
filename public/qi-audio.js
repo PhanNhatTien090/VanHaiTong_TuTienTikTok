@@ -12,7 +12,7 @@ export function scheduleQiAudio(c,destination,elapsed=0,duration=8.8,strength=1,
  const dispose=()=>{for(const node of graph)node.disconnect?.();};
  // Quay lại tab sau cú nổ: không phát lại cú nổ cũ.
  if(elapsed>(QI_IMPACT_AT+.3)*scale){dispose();return {stop(){},endAt:now};}
- if(c.createDynamicsCompressor){const ceiling=c.createDynamicsCompressor();ceiling.threshold.value=-8;ceiling.knee.value=6;ceiling.ratio.value=1;ceiling.attack.value=.003;ceiling.release.value=.2;bus.connect(ceiling);ceiling.connect(destination);graph.push(ceiling);}else bus.connect(destination);
+ bus.connect(destination);
  const release=delay=>{clearTimeout(cleanupTimer);cleanupTimer=setTimeout(dispose,delay);cleanupTimer.unref?.();};
  let reverb=null;if(c.createConvolver){reverb=c.createConvolver();reverb.buffer=hallIR(c);const wet=c.createGain();wet.gain.value=.22;reverb.connect(wet);wet.connect(bus);graph.push(reverb,wet);}
  const track=(source,parts)=>{active++;source.onended=()=>{source.disconnect?.();for(const p of parts)p?.disconnect?.();if(--active===0)release(stopped?0:900);};nodes.push(source);};
