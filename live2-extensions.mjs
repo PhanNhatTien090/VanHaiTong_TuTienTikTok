@@ -41,7 +41,7 @@ export function live2MentorActivity(w,p,input,result,now,ctx){
 }
 function startGuildWar(w,p,now,ctx,wanted){
  const world=guildWorld(w),g=world.guilds[p.live2?.guildId];
- if(!g||g.leader!==p.id)return fail('Hội chủ mới có thể phát động Hội Chiến.');
+ if(!g||g.leader!==p.id&&g.deputy!==p.id)return fail('Hội Chủ hoặc Phó Hội mới được phát động Hội Chiến.');
  if(world.guildWar?.endsAt>now)return fail('Hội Chiến đang diễn ra.');
  if(world.guildWar?.finishedAt&&now-world.guildWar.finishedAt<10*60000)return fail('Hội Chiến nghỉ 10 phút trước trận tiếp theo.');
  const conflict=stageConflict(w,now);
