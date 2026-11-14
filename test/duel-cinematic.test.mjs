@@ -40,6 +40,17 @@ test('donor event queue can activate two large gifts without replaying them',()=
  assert.equal(q.activeRows.length,0);
  assert.equal(q.active,null);
 });
+test('large duel gift combo merges visually but keeps exact authoritative shield totals',()=>{
+ const q=new EventGiftQueue(),ward=n=>({kind:'shield-break',target:'b',source:'a',amount:n});
+ q.sync('duel:merge',[{id:'m1',user:'a',mode:'duel',gift:'Phoenix',comboKey:'series',value:500,at:T,wardEffect:ward(15000)}],T);
+ assert.equal(q.sample(0),null);
+ q.sync('duel:merge',[{id:'m2',user:'a',mode:'duel',gift:'Phoenix',comboKey:'series',comboFinal:true,value:500,at:T+10,wardEffect:ward(8000)}],T+10);
+ assert.equal(q.pending.length,1);
+ const entry=q.sample(100);
+ assert.equal(entry.value,1000);
+ assert.equal(entry.wardEffects[0].amount,23000);
+ assert.equal(q.sampleAll(120,2).length,1);
+});
 test('charge pose and release drawing stay bounded and respect low-motion and flash settings',()=>{
  const screen=createCanvas(900,1600),c=screen.getContext('2d');
  const scene={budget:{level:'light'},motion:false,reduceFlash:true,targets:[{id:'a',x:225,y:1248},{id:'b',x:675,y:1248}],canvas:screen,cinematicV2:true,

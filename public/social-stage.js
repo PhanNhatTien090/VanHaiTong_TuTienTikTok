@@ -58,6 +58,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
      // release are one-shot, keyed by this server match/cast, never by a frame.
      if(scene.duelLastCharge!==key){
       scene.duelLastCharge=key;
+      if(cast.ultimate)scene.duelChargeAt=now;
       scene.onCombatSound?.('cast',technique.id);
       scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),cast.period*.67/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
      }
@@ -69,7 +70,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
      if(k>=.67&&scene.duelHitKey!==key){
       scene.duelHitKey=key;
       if(!cast.light){
-       scene.duelImpact={at:now,preset:cast.ultimate?'major':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
+       scene.duelImpact={at:now,preset:cast.ultimate?'legendary':'minor',ultimate:!!cast.ultimate,x:aim.x,y:aim.y};
        scene.onFeedbackSound?.('hit',cast.ultimate?3:cast.guard?2:1);
        // The scheduled elemental SFX owns the impact beat; do not double it.
       }

@@ -571,10 +571,14 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       const jolt=boss?.impactAt?cameraImpulse(this,'major',Date.now()-boss.impactAt,boss.seed,boss.quality==='light'):null;
       const attack=this.effects.find(e=>e.effect==='attack'&&e.technique&&impactSeverity(e)>=2&&t-e.start-e.duration*.55>=0&&t-e.start-e.duration*.55<300);
       const hit=attack?cameraImpulse(this,impactSeverity(attack)>=3?'medium':'minor',t-attack.start-attack.duration*.55,attack.cinematicSeed,feedbackBudget(this)):null;
-      const duelJolt=this.duelImpact&&this.socialScene==='tournament'?cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37):null; /* V4: tỷ thí — minor mỗi đòn công kích, medium lúc tuyệt kỹ */
-      const baseJolt0=jolt?mixCameraImpulses(jolt,gift):gift,baseJolt=duelJolt?mixCameraImpulses(baseJolt0,duelJolt):baseJolt0;
+      const duelJolt=this.duelImpact&&this.socialScene==='tournament'?cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37):null;
+      const chargeJolt=this.socialScene==='tournament'&&this.duelChargeAt?cameraImpulse(this,'minor',Date.now()-this.duelChargeAt,.27):null; /* V4: tỷ thí — minor mỗi đòn công kích, medium lúc tuyệt kỹ */
+      const baseJolt0=jolt?mixCameraImpulses(jolt,gift):gift,chargeMixed=chargeJolt?mixCameraImpulses(baseJolt0,chargeJolt):baseJolt0,baseJolt=duelJolt?mixCameraImpulses(chargeMixed,duelJolt):chargeMixed;
       const mixed=hit?mixCameraImpulses(baseJolt,hit):baseJolt;
-      return boundedCameraJolt(base,mixed,H,!!(mixed.x||mixed.y));
+      const duelAge=this.duelImpact?.ultimate&&this.socialScene==='tournament'?Date.now()-this.duelImpact.at:-1;
+      const zoom=duelAge>=0&&duelAge<285&&this.motion?.045*strength*Math.sin(Math.PI*duelAge/285):0;
+      const centerZoom=zoom?{s:base.s+zoom,x:base.x-450*zoom,y:base.y-H*.5*zoom}:base;
+      return boundedCameraJolt(centerZoom,mixed,H,!!(mixed.x||mixed.y||zoom));
     }
     const gain=strength*(feedbackBudget(this)?.55:1);
     const mixed={x:gift.x+secondary.x*gain,y:gift.y+secondary.y*gain};
