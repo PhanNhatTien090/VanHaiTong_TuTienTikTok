@@ -8,9 +8,12 @@ import {drawAura,drawSeal,drawCelestialImpact} from './cinematic-vfx.js';
 export const DUEL_RELEASE_AT=.56;
 export function duelSoundPreset(tech){
  const id=String(tech?.id||'');
- if(['thunder','celestial','meteor','sevenstars'].includes(id))return 'storm';
- if(['flame','dragon','dora-cannon','soul'].includes(id))return 'flame';
- if(['slash','sword','bamboo','flowersword','stararrow','frost'].includes(id))return 'blade';
+ if(['thunder','meteor','sevenstars'].includes(id))return 'storm';
+ if(['flame','dora-cannon'].includes(id))return 'flame';
+ if(['dragon','vortex'].includes(id))return 'tide';
+ if(id==='frost')return 'crystal';
+ if(['celestial','lotus','stars','starmirror','bell'].includes(id))return 'gold';
+ if(['slash','sword','bamboo','flowersword','stararrow'].includes(id))return 'blade';
  return 'void';
 }
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
