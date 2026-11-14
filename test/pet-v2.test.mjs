@@ -98,7 +98,8 @@ test('expedition resolves exactly once across JSON restart and awards no repeate
 test('combat: rarity never multiplies pet boost, total cultivation floor stays in tournament',()=>{
  const {w,p}=make();enable(w);
  assert.equal(petV2DuelPoints(w,p),1);
- const o=w.petGrowthV2.players.owner; // petV2DuelPoints above is read-only
+ petV2Earn(w,p,'cultivate',N);
+ const o=w.petGrowthV2.players.owner;
  o.pets['jade-rabbit']={level:40,bond:100,stage:3};
  assert.equal(petV2DuelPoints(w,p),4);
  p.spiritPet='ember-fox';assert.equal(petV2DuelPoints(w,p),1);
@@ -108,6 +109,7 @@ test('combat: rarity never multiplies pet boost, total cultivation floor stays i
 });
 test('boss damage capped per hit, player, and whole boss; synergy cosmetic is cooldown-controlled',()=>{
  const {w,p}=make();enable(w);
+ p.spiritPet='ember-fox';
  w.boss={id:'boss-test',hp:10000,maxHp:10000,endsAt:N+200000,startedAt:N,participants:{},damage:{}};
  let bonus=petV2BossDamage(w,p,1000,N);assert.ok(bonus>0&&bonus<=100);
  petV2CommitBossDamage(w,p,bonus,N,emit);
