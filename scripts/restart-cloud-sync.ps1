@@ -1,11 +1,15 @@
 # Restart LIVE server + watchdog so both carry WEB_SYNC_SECRET (read from the private agent config, never stored here).
-# Saves both worlds and buffers incoming gifts before stopping. Run only when not streaming.
+# Saves both worlds and buffers incoming gifts before stopping.
+param([string]$RequiredArtifact, [switch]$DuringLive)
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $project
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $node = (Get-Command node.exe).Source
 $base = 'http://127.0.0.1:4317'
+$liveStatus = $null
+try { $liveStatus = Invoke-RestMethod "$base/api/state?world=live" -TimeoutSec 3 } catch {}
+if ($liveStatus.connection.roomLive -eq $true -and !$DuringLive) { throw 'TikFinity bao phong dang LIVE. Dung -DuringLive de cap nhat khi phong dang phat.' }
 $configFile = Join-Path $project 'data/web-cloud-agent.json'
 $cfg = Get-Content -LiteralPath $configFile -Raw -Encoding UTF8 | ConvertFrom-Json
 if (-not $cfg.secret -or $cfg.secret.Length -lt 48) { throw 'Cloud secret missing in data/web-cloud-agent.json' }
@@ -31,10 +35,16 @@ try {
   $disk = Get-Content -LiteralPath 'data/live.json' -Raw -Encoding UTF8 | ConvertFrom-Json
   if ($live.createdAt -ne $disk.createdAt) { throw 'Running server belongs to a different data folder.' }
   $buffer = Start-Process -FilePath $node -ArgumentList @('scripts/capture-restart-gifts.mjs',"data/gift-handover-cloud-sync-$stamp.json") -WorkingDirectory $project -WindowStyle Hidden -RedirectStandardOutput "data/cloud-sync-buffer-$stamp.log" -RedirectStandardError "data/cloud-sync-buffer-$stamp-error.log" -PassThru
-  Start-Sleep -Milliseconds 700
-  $buffer.Refresh()
+  $bufferLog = "data/cloud-sync-buffer-$stamp.log"
+  $bufferReady = $false
+  for ($attempt=0; $attempt -lt 20; $attempt++) {
+   $buffer.Refresh()
+   if ($buffer.HasExited) { break }
+   if (Select-String -LiteralPath $bufferLog -Pattern 'Gift recovery buffer connected' -Quiet) { $bufferReady=$true; break }
+   Start-Sleep -Milliseconds 150
+  }
   $status = Invoke-RestMethod "$base/api/state?world=live"
-  if ($status.connection.status -eq 'connected' -and $buffer.HasExited) { throw 'Gift buffer failed; original server left running.' }
+  if (($DuringLive -or $status.connection.status -eq 'connected') -and !$bufferReady) { throw 'Gift buffer failed; original server left running.' }
   foreach ($world in @('live','demo')) { Invoke-WebRequest "$base/api/export?world=$world" -UseBasicParsing -OutFile "data/$world-pre-cloud-sync-$stamp.json" }
   $serverId = $servers[0].ProcessId
   $workers = @(Get-CimInstance Win32_Process -Filter "ParentProcessId = $serverId" | Where-Object { $_.Name -eq 'python.exe' -and $_.CommandLine -match 'vieneu_worker.py' })
@@ -52,10 +62,14 @@ try {
  for ($attempt=0; $attempt -lt 40; $attempt++) {
   $process.Refresh()
   if ($process.HasExited) { throw "New server exited. Check data/server-cloud-sync-$stamp-error.log" }
-  try { $status = Invoke-RestMethod "$base/api/state?world=live" -TimeoutSec 2; if ($status.bondRulesVersion -eq 1) { $ready=$true; break } } catch {}
+  try {
+   $status = Invoke-RestMethod "$base/api/state?world=live" -TimeoutSec 2
+   $hasArtifact = !$RequiredArtifact -or ($status.catalog.id -contains $RequiredArtifact)
+   if ($status.bondRulesVersion -eq 1 -and $hasArtifact) { $ready=$true; break }
+  } catch {}
   Start-Sleep -Milliseconds 500
  }
- if (!$ready) { throw "Server did not start. Check data/server-cloud-sync-$stamp-error.log" }
+ if (!$ready) { throw "Server did not start with the requested build. Check data/server-cloud-sync-$stamp-error.log" }
  Remove-Item Env:VAN_HAI_RECOVERY_FILE -ErrorAction SilentlyContinue
  Write-Host "Server ready, PID $($process.Id), cloud transfer secret loaded."
 } finally {

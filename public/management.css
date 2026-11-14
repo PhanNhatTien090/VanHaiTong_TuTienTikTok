@@ -6,3 +6,29 @@ body.management-only #audioClose{display:none}
 body.management-only #managementDisplaySettings{width:100%}
 body.management-only .settings-card:has(#managementDisplaySettings)>div{width:100%}
 body.management-only #sceneView .live-people{margin-top:18px}
+.hall-admin-panel{padding:18px;margin-bottom:16px;border:1px solid #759c8248;border-radius:12px;background:#102423}
+.hall-admin-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.hall-admin-heading h2,.hall-admin-dialog h2{font-size:1.2rem;margin:0 0 4px;color:#f5e6bb}
+.hall-admin-heading p{margin:0;color:#b4cfcb}
+.hall-admin-scroll{overflow-x:auto}
+.hall-admin-panel table{width:100%;border-collapse:collapse;text-align:left;font-size:.9rem}
+.hall-admin-panel td,.hall-admin-panel th{padding:9px 7px;border-bottom:1px solid #72968436}
+.hall-admin-panel thead th{color:#c5d7ce;font-weight:650}
+.hall-admin-panel td small,.hall-admin-panel th small{display:block;color:#b4cfcb;font-weight:400}
+.hall-admin-panel small:empty{display:none}
+.hall-admin-swatch{display:inline-block;width:.65em;height:.65em;margin-right:.45em;border-radius:50%;border:1px solid #ffffff65}
+.hall-admin-actions{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.hall-admin-actions button{padding:5px 8px}
+.hall-admin-search{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin:0 0 12px}
+.hall-admin-search label{display:grid;gap:5px;flex:1;min-width:min(240px,100%)}
+.hall-admin-search input{width:100%}
+[data-roster-position]{align-self:center;color:#b4cfcb}
+[data-roster-note]:empty{display:none}
+.hall-admin-delete{color:#ffc2b5}
+.hall-admin-dialog{box-sizing:border-box;width:min(440px,calc(100% - 28px));padding:20px;border:1px solid #779882;border-radius:12px;background:#142a28;color:#f1f6ef}
+.hall-admin-dialog::backdrop{background:#000a}
+.hall-admin-dialog form{display:grid;gap:12px}
+.hall-admin-dialog label:not([hidden]){display:grid;gap:5px}
+.hall-admin-dialog input[type=color]{width:65px;height:36px;padding:3px}
+.hall-admin-dialog p{margin:0}
+.hall-admin-dialog p:empty{display:none}

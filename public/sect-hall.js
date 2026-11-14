@@ -3,6 +3,7 @@ import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
 import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
+import {drawCourtAdornment,showsBlackGoldGear} from './court-art.js?v=tieu-viem-transform-v2';
 // 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.
 const AVATARS=new Map(), SEATS=new Map();
 function courtSeat(kind){
@@ -20,31 +21,33 @@ function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar
  c.save();c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();if(img)c.drawImage(img,-r,-r,r*2,r*2);else{c.fillStyle='#ffe7a0';c.font='900 30px Georgia';c.textAlign='center';c.textBaseline='middle';c.fillText(Array.from(p.name||'Đ')[0]||'Đ',0,2);}c.restore();
  c.lineWidth=4;c.strokeStyle=ring;c.beginPath();c.arc(0,0,r+2,0,Math.PI*2);c.stroke();c.restore();}
 export function sectHallTargets(players,H,withHalls=false){
- if(withHalls){
-  const groups=Array.from({length:5},()=>[]),visitors=[];
+ const halls=Array.isArray(withHalls)?withHalls:withHalls?Array.from({length:5},(_,index)=>({index})):[];
+ if(halls.length){
+  const cols=halls.length,columns=new Map(halls.map((h,i)=>[h.index,i]));
+  const groups=halls.map(()=>[]),visitors=[];
   for(const player of players){
-   if(Number.isInteger(player.sectHallIndex)&&player.sectHallIndex>=0&&player.sectHallIndex<5)groups[player.sectHallIndex].push(player);
+   if(columns.has(player.sectHallIndex))groups[columns.get(player.sectHallIndex)].push(player);
    else visitors.push(player);
   }
   // Keep feet and nameplates above the bottom 30% occupied by LIVE comments.
-  const rows=Math.max(2,...groups.map(g=>g.length),Math.ceil(players.length/5));
+  const rows=Math.max(2,...groups.map(g=>g.length),Math.ceil(players.length/cols));
   const top=H*.54,bottom=H*.675,step=(bottom-top)/(rows-1);
-  const scale=Math.max(.55,Math.min(1.1,step/105)),targets=[],occupied=new Set();
+  const scale=Math.min(Math.max(.55,Math.min(1.1,step/105)),5/cols),targets=[],occupied=new Set();
   for(const [index,members] of groups.entries()){
    members.sort((a,b)=>(a.sectHallDiscipleRank??999)-(b.sectHallDiscipleRank??999)||(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
    members.forEach((player,row)=>{
-    occupied.add(row*5+index);
-    targets.push({id:player.id,player,x:hallX(index),y:top+row*step,scale,lift:0});
+    occupied.add(row*cols+index);
+    targets.push({id:player.id,player,x:hallX(index,cols),y:top+row*step,scale,lift:0});
    });
   }
   // Scatter visitors into free places around the columns, never into the comment area.
   const seed=id=>{let h=2166136261;for(const ch of String(id))h=Math.imul(h^ch.charCodeAt(0),16777619);return (h>>>0)/4294967296;};
-  const free=Array.from({length:rows*5},(_,i)=>i).filter(i=>!occupied.has(i));
+  const free=Array.from({length:rows*cols},(_,i)=>i).filter(i=>!occupied.has(i));
   free.sort((a,b)=>seed('seat:'+a)-seed('seat:'+b));
   visitors.sort((a,b)=>seed(a.id)-seed(b.id));
   visitors.forEach((player,i)=>{
-   const slot=free[i],row=Math.floor(slot/5),col=slot%5;
-   const x=hallX(col)+(seed(player.id+':x')-.5)*58;
+   const slot=free[i],row=Math.floor(slot/cols),col=slot%cols;
+   const x=hallX(col,cols)+(seed(player.id+':x')-.5)*Math.min(58,290/cols);
    const y=Math.max(top,Math.min(bottom,top+row*step+(seed(player.id+':y')-.5)*Math.min(H*.015,step*.2)));
    targets.push({id:player.id,player,x,y,scale:scale*.92,lift:0});
   });
@@ -69,12 +72,19 @@ export function drawSectMaster(scene,c,t){
  const throne=courtSeat('throne');
  const p={id:'resident:sect-master',name:'Tông chủ',resident:true,gender:'nam',realm:3,giftCoins:500,equipped:null};
  let throneTier=-1;loadSectMasterArt(scene);c.save();c.globalAlpha=appear;
- if(host.source==='gift'&&host.player){
+ if(host.player){
   const height=seat.height,scale=height/120,tier=masterTier(host.player.giftCoins);throneTier=tier;
   if(throne)paintSeat(c,throne,x,y,height*1.85);else drawThroneBack(c,x,y,height,tier,t,motion); // 12/11: ngai rồng vàng vẽ 1 lần (cache) + hiệu ứng theo cấp
-  drawWings(scene,c,{id:host.player.id,player:host.player,x,y,scale},t);
-  c.translate(x,y);c.scale(scale,scale);const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
-  try{scene.drawCharacterBody(c,host.player,skinFor(host.player.giftCoins),t);}finally{scene.compact=compact;scene.cinematicPose=pose;}
+  const target={id:host.player.id,player:host.player,x,y,scale};
+  drawWings(scene,c,target,t);
+  const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
+  try{
+   const blackGold=showsBlackGoldGear(host.player);
+   if(blackGold)drawCourtAdornment(scene,c,target,t,'back');
+   c.save();
+   try{c.translate(x,y);c.scale(scale,scale);scene.drawCharacterBody(c,host.player,skinFor(host.player.giftCoins),t);}finally{c.restore();}
+   if(blackGold)drawCourtAdornment(scene,c,target,t,'front');
+  }finally{scene.compact=compact;scene.cinematicPose=pose;}
  }
  else if(throne){paintSeat(c,throne,x,y,seat.height*1.85);}
  else if(scene.sectMasterArt){const im=scene.sectMasterArt,w=seat.height*(im.naturalWidth||im.width)/(im.naturalHeight||im.height);c.translate(x,seat.top+seat.height*.35);c.rotate(nod*.25);c.scale(1,1+breathe*.0015);c.imageSmoothingQuality='high';c.drawImage(im,-w/2,-seat.height*.35,w,seat.height);}
@@ -82,22 +92,26 @@ export function drawSectMaster(scene,c,t){
  c.restore();
  if(throneTier>=0)drawThroneFront(c,x,y,seat.height,throneTier,t,motion,host.player.name||'Đạo hữu');
  c.save();if(throneTier>=0)drawMasterPlate(c,x,seat.top+seat.height+8,'',throneTier);else{c.textAlign='center';c.textBaseline='middle';c.font='700 19px Georgia';const label='TÔNG CHỦ',w=c.measureText(label).width+28;c.fillStyle='#102632ed';c.fillRect(x-w/2,seat.top+seat.height+8,w,28);c.strokeStyle='#c8ab68';c.strokeRect(x-w/2,seat.top+seat.height+8,w,28);c.fillStyle='#ffe0a0';c.fillText(label,x,seat.top+seat.height+22);}
- if(throneTier<0&&host.source==='gift'&&host.player){c.font='700 18px Georgia';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}
+ if(throneTier<0&&host.player){c.font='700 18px Georgia';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}
  if(speaking&&age<12000){const raw=host.text||'Chư vị đạo hữu, cùng tu luyện!',words=raw.split(/\s+/),lines=[''];c.font='600 18px Georgia';for(const word of words){const at=lines.length-1,next=(lines[at]+' '+word).trim();if(c.measureText(next).width>270&&lines[at]){if(lines.length===2){lines[at]+='…';break;}lines.push(word);}else lines[at]=next;}const width=Math.min(310,Math.max(...lines.map(s=>c.measureText(s).width))+28),h=lines.length*25+18,by=y-190-h;c.fillStyle='#0b2332f0';c.fillRect(x-width/2,by,width,h);c.strokeStyle='#d9bd7777';c.strokeRect(x-width/2,by,width,h);c.fillStyle='#f8ecd0';lines.forEach((line,i)=>c.fillText(line,x,by+21+i*25));}
  c.restore();return true;
 }
 
 // The server's active flag is the existing recent-LIVE-activity signal, not an exact viewer roster.
 export function sectElders(players,hostId){return players.filter(p=>p.active&&!p.resident&&!p.puppet&&!p.webOnly&&p.id!==hostId).slice().sort((a,b)=>(Number(b.realm)||0)-(Number(a.realm)||0)||(Number(b.totalQi)||0)-(Number(a.totalQi)||0)||String(a.id).localeCompare(String(b.id))).slice(0,2);}
-const hallX=index=>96+index*177;
-export function seatSectElders(targets,elders,H){const ids=new Set(elders.map(p=>p.id));return [...targets.filter(a=>!ids.has(a.id)),...elders.map((player,i)=>({id:player.id,player,x:player.hallIndex==null?(i===0?260:640):hallX(player.hallIndex),y:H*(player.hallIndex==null?.435:.463),scale:player.hallIndex==null?1.9:1.42,lift:0,sectElder:i+1}))];}
+const hallX=(column,count=5)=>450+(column-(count-1)/2)*(885/Math.max(5,count));
+export function seatSectElders(targets,elders,H,halls){
+ const ids=new Set(elders.map(p=>p.id)),count=halls?.length||5;
+ return [...targets.filter(a=>!ids.has(a.id)),...elders.map((player,i)=>({id:player.id,player,x:player.hallIndex==null?(i===0?260:640):hallX(halls?halls.findIndex(h=>h.index===player.hallIndex):player.hallIndex,count),y:H*(player.hallIndex==null?.435:.463),scale:player.hallIndex==null?1.9:1.42*Math.min(1,5/count),lift:0,sectElder:i+1}))];
+}
 export function drawSectCourt(scene,c,t){
  if(!sectCourtVisible(scene)||scene.presentation?.until>t)return;
  const y=scene.height*.435;
  if(scene.sectHalls){
   const y=scene.height*.463, active=new Set(scene.sectElders.map(p=>p.id));
-  for(const hall of scene.sectHalls){
-   c.save();c.translate(hallX(hall.index),y);
+  const count=scene.sectHalls.length,scale=Math.min(1,5/count);
+  for(const [column,hall] of scene.sectHalls.entries()){
+   c.save();c.translate(hallX(column,count),y);c.scale(scale,scale);
    const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,150);
    c.fillStyle='#102b32';c.strokeStyle=hall.color;c.lineWidth=2;
    c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();if(!elder){c.fill();c.stroke();}

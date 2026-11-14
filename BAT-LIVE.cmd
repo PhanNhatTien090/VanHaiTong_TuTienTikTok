@@ -13,6 +13,7 @@ if errorlevel 1 (
   )
 ) else (
   echo Server LIVE da chay san.
+  echo De nap ban moi sau khi tat LIVE, chay CAP-NHAT-LIVE.cmd.
 )
 set "OVERLAY=http://127.0.0.1:4317/?overlay=1&world=live&stage=world&sound=1&voice=1&idle=1&quality=auto#tiktok.studio"
 powershell -NoProfile -Command "Set-Clipboard -Value $env:OVERLAY"

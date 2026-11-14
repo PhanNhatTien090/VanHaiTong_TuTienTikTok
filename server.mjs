@@ -1,5 +1,6 @@
 import {visualPreferences} from './public/visual-preferences.js';
 import {giftMasterView} from './master-rewards.mjs';
+import {editHall,editHallMember,hallRoster} from './ngu-duong.mjs';
 import {createLiveTransfers} from './web/cloud/live-transfers.mjs';
 import {authenticate} from './web/cloud/protocol.mjs';
 import {raceEntryAnnouncement} from './sword-race.mjs';
@@ -10,7 +11,7 @@ import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
 import {startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
-import {controlPetEvent} from './engine.mjs';
+import {controlPetEvent,currentParticipant} from './engine.mjs';
 import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
 import {GIFT_POLICY_VERSION,GIFT_TIERS} from './public/gift-rewards.js';
@@ -78,10 +79,10 @@ function persistPlayTransfer(){
 }
 const liveTransfers=createLiveTransfers({world:worlds.live,save:persistPlayTransfer});
 const voiceLatency=[]; // 08/11: đo thời gian tạo giọng (ms) và tuổi sự kiện khi client xin giọng
-const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
 const visualSettingsFile=path.join(dataDir,'source-visual.json');
 let visualSettings={};
 try{visualSettings=JSON.parse(fs.readFileSync(visualSettingsFile,'utf8'))||{};}catch{}
+const clients=new Set(),clientStatus=new Map(),bridgeSamples=[];let bridge=null,retry=null,closing=false;
 const connection={enabled:false,status:'disconnected',lastEvent:null,lastError:null,received:0,roomLive:null,lastViewerEvent:null};
 // Chỉ ghi file khi thế giới thay đổi (hoặc 30 giây một lần cho lastActive).
 // Lưu định kỳ (3 s) ghi đĩa ở nền để quà/lệnh không phải chờ ổ đĩa + Defender quét file ~8 MB.
@@ -103,7 +104,7 @@ function payload(mode,view='full'){
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
   let value;
   if(view==='overlay'){
-    const full=payload(mode),fields=['signatureArtifactOwned','sectHallIndex','puppet','resident','id','name','realmStage','gender','realm','giftCoins','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','raceMounts','sectMasterUnlocked','sectMasterGiftAt'];
+    const full=payload(mode),fields=['signatureArtifactOwned','sectHallIndex','puppet','resident','id','name','realmStage','gender','realm','giftCoins','wingChoice','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','isPatronLeader','avatar','honor','relicVariant','socialCode','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','raceMounts','sectMasterUnlocked','sectMasterGiftAt'];
     // Cảnh LIVE chỉ cần: người đang hoạt động (sân khấu) + top 10 (bảng xếp hạng nhỏ) + 30 sự kiện mới nhất.
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
@@ -189,13 +190,13 @@ const server=http.createServer(async(req,res)=>{
       try{const t0=Date.now(),file=await synthesizeSpeech(event);voiceLatency.push({at:t0,age:voiceAge,synthMs:Date.now()-t0,gift:event.gift?1:0});if(voiceLatency.length>60)voiceLatency.shift();res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'private, max-age=86400'});fs.createReadStream(file).pipe(res);}
       catch(e){json(res,{ok:false,message:e.message},503);}return;
     }
-    if(url.pathname==='/api/client-status'&&req.method==='POST'){const b=await body(req);const id=String(b.id||'').slice(0,40);if(id){clientStatus.set(id,{...b,at:Date.now()});if(clientStatus.size>30)clientStatus.delete(clientStatus.keys().next().value);}json(res,{ok:true});return;}
     if(url.pathname==='/api/source-visual'&&req.method==='POST'){
       const next={...visualSettings,[mode]:visualPreferences(await body(req))};
       const temp=visualSettingsFile+'.tmp';
       fs.writeFileSync(temp,JSON.stringify(next));fs.renameSync(temp,visualSettingsFile);
       visualSettings=next;broadcast();json(res,next[mode]);return;
     }
+    if(url.pathname==='/api/client-status'&&req.method==='POST'){const b=await body(req);const id=String(b.id||'').slice(0,40);if(id){clientStatus.set(id,{...b,at:Date.now()});if(clientStatus.size>30)clientStatus.delete(clientStatus.keys().next().value);}json(res,{ok:true});return;}
     if(url.pathname==='/api/client-status'){json(res,[...clientStatus.values()].filter(s=>Date.now()-s.at<120000));return;}
     if(url.pathname==='/api/sect-master'&&req.method==='GET'){json(res,sectMaster.view());return;}
     if(url.pathname==='/api/sect-master'&&req.method==='POST'){try{const config=sectMaster.configure(await body(req));worlds.live.settings.sectMasterUsername=config.username;payloadCache.clear();broadcast();json(res,{ok:true,...config});}catch(e){json(res,{ok:false,message:e.message},400);}return;}
@@ -249,6 +250,24 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const patch={...(b.patch||{})};if(b.base&&typeof b.base==='object')for(const k of Object.keys(patch))if(Object.hasOwn(b.base,k)&&patch[k]===b.base[k])delete patch[k];/* 08/11: bỏ ô không đổi so với lúc mở form */const result=adminEditPlayer(worlds[mode],b.id,patch,Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/lantern-event'&&req.method==='POST'){const b=await body(req);const r=controlLanternEvent(worlds[mode],b.action,Date.now());if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/pet-event'&&req.method==='POST'){const b=await body(req);const r=controlPetEvent(worlds[mode],b.action,Date.now(),b.minutes??5);if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
+    if(url.pathname==='/api/halls'&&req.method==='POST'){
+      const result=editHall(worlds[mode],await body(req));
+      if(result.ok){persist(true);broadcast();}
+      json(res,result,result.ok?200:400);return;
+    }
+    if(url.pathname==='/api/hall-members'){
+      const w=worlds[mode],now=Date.now();
+      if(req.method==='GET'){
+        const index=url.searchParams.has('index')?Number(url.searchParams.get('index')):NaN;
+        const result=hallRoster(w,index,(url.searchParams.get('q')||'').slice(0,80),Number(url.searchParams.get('page')));
+        json(res,result,result.ok?200:400);return;
+      }
+      if(req.method==='POST'){
+        const result=editHallMember(w,await body(req),now,currentParticipant);
+        if(result.ok){persist(true);broadcast();}
+        json(res,result,result.ok?200:400);return;
+      }
+    }
     if(url.pathname==='/api/flower-event'&&req.method==='POST'){const b=await body(req);const result=startFlowerEvent(worlds[mode],Date.now(),b.minutes,b.kind||'flower');if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/world-scene'&&req.method==='POST'){const b=await body(req);if(b.scene!=='auto'&&!SCENES.some(s=>s.id===b.scene)){json(res,{ok:false,message:'Cảnh không hợp lệ.'},400);return;}worlds[mode].settings.sceneMode=b.scene;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,scene:b.scene});return;}
     // 09/11: nhạc nền LIVE — 'auto' (tự đổi mỗi 30 phút), số thứ tự (giữ cố định), 'next' (bài kế).

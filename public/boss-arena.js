@@ -37,10 +37,10 @@ export function arenaTargets(players, H) {
 
 // 3/11: CHỈ người đã tặng quà mới có cánh; kiểu cánh theo tổng coin đã tặng.
 export const WING_TIERS = [
-  { min: 1, cell: 0 },     // tặng quà: cánh ngọc trắng
-  { min: 100, cell: 3 },   // 100+ coin: cánh long vũ lam
-  { min: 500, cell: 2 },   // 500+ coin: cánh pha lê tím
-  { min: 2000, cell: 1 },  // 2000+ coin: cánh phượng hoàng vàng
+  { min: 1, cell: 0, name:'Cánh Ngọc Trắng' },
+  { min: 100, cell: 3, name:'Long Vũ Lam' },
+  { min: 500, cell: 2, name:'Pha Lê Tím' },
+  { min: 2000, cell: 1, name:'Phượng Hoàng Vàng' },
   { min: 3000, name:'Ngọc Long Vũ', art:'wings-3000-ngoc-long.webp', width:1.07, pivot:.48 },
   { min: 4000, name:'Xích Diệm Hoàng Dực', art:'wings-4000-xich-diem.webp', width:1.10, pivot:.50 },
   { min: 5000, name:'Tử Nguyệt Điệp Dực', art:'wings-5000-nguyet-diep.webp', width:1.12, pivot:.43 },
@@ -48,11 +48,15 @@ export const WING_TIERS = [
   { min: 7000, name:'Cửu Nhật Thần Dực', art:'wings-7000-cuu-nhat.webp', width:1.19, pivot:.48 },
 ];
 export const wingTier = coins => WING_TIERS.findLast(w => coins >= w.min);
+export function playerWing(p){
+  if(!p||p.resident||p.puppet||p.wingChoice===0)return undefined;
+  const coins=Number(p.giftCoins)||0,chosen=WING_TIERS[p.wingChoice-1];
+  return chosen&&coins>=chosen.min?chosen:wingTier(coins);
+}
 /** Cánh tiên sau lưng (vẽ trước thân). Chưa tặng quà / NPC / tu sĩ giả thì không có cánh. */
 export function drawWings(scene, c, target, t) {
-  const p = target.player; if (!p || p.resident || p.puppet) return;
-  const coins = Number(p.giftCoins) || 0; if (coins < 1) return;
-  const tier = wingTier(coins);
+  const p=target.player,tier=playerWing(p);if(!tier)return;
+  const coins=Number(p.giftCoins)||0;
   const cache = scene.premiumWingArt ??= new Map();
   if(tier.art&&!cache.has(tier.art)&&typeof Image!=='undefined'){
     const image=load('/assets/arena-v1/'+tier.art);

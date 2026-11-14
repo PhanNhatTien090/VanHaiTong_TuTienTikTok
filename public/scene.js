@@ -22,7 +22,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
-import {sectHallTargets,drawSectCourt,sectElders,seatSectElders,sectCourtVisible} from './sect-hall.js?v=event-court-hidden-20261113';
+import {sectHallTargets,drawSectCourt,sectElders,seatSectElders,sectCourtVisible} from './sect-hall.js?v=hall-management';
 import {loadImpactArt} from './ascension-impact.js';
 import {prepareBreakthroughSpectacle} from './breakthrough-spectacle.js';
 import {smallGift,compactPlaza,crowdTargets,stableTargets,PLAZA_CAPACITY,drawRitual} from './live-cinema.js';
@@ -72,7 +72,8 @@ import {appearanceFor,drawRealmClothes,drawRealmAscension,drawRealmQiFront,REALM
 import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,BitmapCache,renderDimensions} from './performance.js';
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
-import {drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature} from './court-art.js?v=skin-price-20261114';
+import {BLACK_GOLD_VISITOR} from './court-rewards.js';
+import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=tieu-viem-transform-v2';
 import {skinFor,layoutPlayers,layoutLabels,wrapName,spriteCell,visualGender} from './cosmetics.js';
 import {residentPlayers} from './residents.js';
 import {arenaOn,arenaBackground,arenaTargets,drawWings,drawArenaShots,drawArenaCasts,ARENA_BOSS_Y} from './boss-arena.js';
@@ -188,10 +189,16 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(big&&this.presentation?.until>performance.now()&&this.effects.some(e=>e.luxury||e.effect==='breakthrough')){queueLuxury(this.luxuryQueue??=[],event);return;}
     if(big&&event.user){this.presentation={id:event.user,kind:event.effect==='breakthrough'?'breakthrough':'gift',spectacle:!!giftSpectacleTier(event),until:performance.now()+(luxury?.duration||breakthroughDuration(event))};this.effects=[];this.fxQueue=[];this.focus(event.user,luxury?.duration||breakthroughDuration(event),luxury?1.45:2.1);}
     // v33: quà thường cũng "solo" người tặng (giống đột phá) trong 4,5 giây, trừ khi đang có màn đột phá / quà lớn.
-    else if(event.transform&&event.user&&!smallGift(event)){this.presentation={id:event.user,until:performance.now()+TRANSFORM_MS};this.transforming={id:event.user,revealAt:performance.now()+TRANSFORM_MS*REVEAL_AT};this.effects=[];this.fxQueue=[];this.focus(event.user,TRANSFORM_MS,2.3);}
+    else if(event.transform&&event.user&&!smallGift(event)){
+      const start=performance.now(),blackGold=event.transform===BLACK_GOLD_VISITOR.kind;
+      this.presentation={id:event.user,kind:blackGold?'black-gold':'transform',until:start+TRANSFORM_MS};
+      this.transforming=event.hacKimArtifact?null:{id:event.user,revealAt:start+TRANSFORM_MS*REVEAL_AT};
+      this.effects=[];this.fxQueue=[];
+      if(!blackGold)this.focus(event.user,TRANSFORM_MS,2.3);
+    }
     else if((event.gift||event.flowerRank)&&event.user&&!this.effects.some(e=>e.luxury||e.effect==='breakthrough')){const d=event.flowerRank?7000:tributeProfile(event)?.duration||4500,value=(Number(event.coins)||0)*(Number(event.count)||1);this.presentation={id:event.user,kind:event.gift?'gift':'flower',until:performance.now()+d};this.effects=[];this.fxQueue=[];this.focus(event.user,d,event.gift?1.45:2.2);}
     // Giữ hoạt cảnh quà đang chạy; hành động thường (tim, bình luận, thường trú) không được xóa nó giữa chừng.
-    else this.effects=this.effects.filter(e=>e.luxury||e.effect==='breakthrough'||(e.kind&&e.gift)||(e.effect==='attack'&&e.technique)); // v76: giữ các đòn đánh song song
+    else this.effects=this.effects.filter(e=>e.luxury||e.effect==='breakthrough'||e.transform===BLACK_GOLD_VISITOR.kind||(e.kind&&e.gift)||(e.effect==='attack'&&e.technique)); // v76: giữ các đòn đánh song song
     if(luxury&&this.effects.some(e=>e.luxury)){queueLuxury(this.luxuryQueue??=[],event);return;}
     if(!luxury&&event.kind&&event.kind!=='blessing'&&this.effects.filter(x=>x.kind&&x.kind!=='blessing').length>=(this.budget?.level==='light'?1:2)){(this.fxQueue??=[]).push(event);if(this.fxQueue.length>6)this.fxQueue.shift();return;}
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
@@ -199,7 +206,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?TRANSFORM_MS:event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
     const limit=this.budget?.config.effects||5;
     while(this.effects.length>limit){
-      const expendable=this.effects.findIndex(e=>!e.gift&&!e.luxury&&e.effect!=='breakthrough');
+      const ordinary=this.effects.findIndex(e=>!e.gift&&!e.luxury&&e.effect!=='breakthrough'&&e.transform!==BLACK_GOLD_VISITOR.kind);
+      const expendable=ordinary>=0?ordinary:this.effects.findIndex(e=>e.transform===BLACK_GOLD_VISITOR.kind);
       if(expendable<0)break;
       this.effects.splice(expendable,1);
     }
@@ -437,6 +445,13 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(e.gift&&giftSpectacleTier(e)){drawGiftTribute(this,c,e,t,k,p,this.height,layer);drawGiftSpectacle(c,e,t,k,p,this.height,{light:feedbackBudget(this),reducedFlash:this.reduceFlash,art:this.giftSpectacleArt,beasts:this.spiritBeasts,layer,motion:this.motion,upgrade:this.cinematicV2!==false&&spectacleV2(e.spectacleTier),quality:e.cinematicQuality,layers:this.cinematicLayers,tier:e.spectacleTier});return;}
     // v43: hiệu ứng lớn vẽ SAU nhân vật, hiệu ứng nhỏ vẽ TRƯỚC. Quà thường: sân khấu (đèn, hoa nở, lụa) ở sau, hoạt cảnh quà nhỏ ở trước.
     if(e.gift){drawGiftTribute(this,c,e,t,k,p,this.height,layer);if(e.transform)drawTransform(c,e,t,k,p,this.height,layer);return;}
+    if(e.transform===BLACK_GOLD_VISITOR.kind){
+      if(layer==='front'&&k>=REVEAL_AT&&!e.courtImpact){
+        e.courtImpact=true;if(k<REVEAL_AT+.1)this.onGiftSound?.(e.hacKimArtifact?'ascension-screen-impact':'ascension-echo');
+      }
+      drawBlackGoldAward(this,c,e,t,k,p,layer,REVEAL_AT);
+      return;
+    }
     if(e.transform){
       if(layer==='front'&&isCourtTransform(e.transform)&&k>=REVEAL_AT&&!e.courtImpact){
         e.courtImpact=true;if(k<REVEAL_AT+.10)this.onGiftSound?.(e.transform==='xich-vu'?'ascension-screen-impact':'ascension-echo');
@@ -589,8 +604,9 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(!soloPlayer&&(this.stageDirty||!this.orderedIds||t-(this.stageUpdatedAt||0)>=250)){const stageStart=this.metrics?performance.now():0;this.orderedIds=st.update(this.realPlayers||this.players.filter(p=>!p.resident),this.residentActors||[],t,required).map(p=>p.id);this.stageUpdatedAt=t;this.stageDirty=false;if(this.metrics)this.metrics.add("stage",performance.now()-stageStart);}
     const socialActors=(this.raceStatus?.active?raceActorIds(this,t):this.warStatus?.active?(this.warStage||[]):this.alcStatus?.active?(this.alcStage||[]):this.socialStage||[]).map(id=>this.playerIndex?.get(id)).filter(Boolean);
     const ordered=this.raceStatus?.active?socialActors:soloPlayer?[soloPlayer]:socialActors.length?socialActors:(this.orderedIds||[]).map(id=>this.playerIndex?.get(id)||this.players.find(p=>p.id===id)).filter(Boolean);
-    this.floorY=this.courtyardY(H);this.targets=!solo&&!socialActors.length&&sectCourtVisible(this)?sectHallTargets(ordered.filter(p=>!this.sectElders?.some(e=>e.id===p.id)),H,!!this.sectHalls):this.compact?stableTargets(this.plazaSeats??=new Map(),ordered,H,p=>isFake(p),this.courtyardY(H),p=>courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES)):!solo&&!socialActors.length&&this.environment?.layout==='float'?floatingTargets(this,ordered,H,t):this.raceStatus?.active?raceTargets(this,ordered,H,t):!solo&&socialActors.length?socialTargets(this,ordered,H):this.layoutTargets(ordered,H);if(!solo&&!socialActors.length&&sectCourtVisible(this))this.targets=seatSectElders(this.targets,this.sectElders||[],H);if(soloPlayer&&solo.kind==='gift')this.targets=[{id:soloPlayer.id,player:soloPlayer,x:450,y:H*.65,scale:4.2,lift:0}];companionPlaces(this,this.targets,t,this.environment?.layout!=='sect'&&!solo&&!this.socialScene&&!this.raceStatus?.active);if(!this.compact&&!this.raceStatus?.active&&!socialActors.length&&this.environment?.layout!=='float')constrainGroundTargets(this.targets,projectedGround(this.environment,H,this.art));if(!this.compact&&!['sect','float'].includes(this.environment?.layout)&&!this.raceStatus?.active&&!solo&&!socialActors.length)mv.place(this.targets,t,H,this.floorY,this.motion);if(!this.raceStatus?.active&&!solo&&!socialActors.length){if(this.environment?.layout==='float')for(const a of this.targets){mv.pos.set(a.id,{x:a.x,y:a.y});mv.info.set(a.id,{player:a.player,scale:a.scale});}mv.drawLeaving(c,this,st.left,t);}
+    this.floorY=this.courtyardY(H);this.targets=!solo&&!socialActors.length&&sectCourtVisible(this)?sectHallTargets(ordered.filter(p=>!this.sectElders?.some(e=>e.id===p.id)),H,this.sectHalls):this.compact?stableTargets(this.plazaSeats??=new Map(),ordered,H,p=>isFake(p),this.courtyardY(H),p=>courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES)):!solo&&!socialActors.length&&this.environment?.layout==='float'?floatingTargets(this,ordered,H,t):this.raceStatus?.active?raceTargets(this,ordered,H,t):!solo&&socialActors.length?socialTargets(this,ordered,H):this.layoutTargets(ordered,H);if(!solo&&!socialActors.length&&sectCourtVisible(this))this.targets=seatSectElders(this.targets,this.sectElders||[],H,this.sectHalls);if(soloPlayer&&solo.kind==='gift')this.targets=[{id:soloPlayer.id,player:soloPlayer,x:450,y:H*.65,scale:4.2,lift:0}];companionPlaces(this,this.targets,t,this.environment?.layout!=='sect'&&!solo&&!this.socialScene&&!this.raceStatus?.active);if(!this.compact&&!this.raceStatus?.active&&!socialActors.length&&this.environment?.layout!=='float')constrainGroundTargets(this.targets,projectedGround(this.environment,H,this.art));if(!this.compact&&!['sect','float'].includes(this.environment?.layout)&&!this.raceStatus?.active&&!solo&&!socialActors.length)mv.place(this.targets,t,H,this.floorY,this.motion);if(!this.raceStatus?.active&&!solo&&!socialActors.length){if(this.environment?.layout==='float')for(const a of this.targets){mv.pos.set(a.id,{x:a.x,y:a.y});mv.info.set(a.id,{player:a.player,scale:a.scale});}mv.drawLeaving(c,this,st.left,t);}
     if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.phase==='registration')this.targets=tournamentLobbyTargets(ordered,H);
+    if(soloPlayer&&solo.kind==='black-gold')this.targets=[{id:soloPlayer.id,player:soloPlayer,x:450,y:H*.58,scale:Math.min(4.5,H*.003),lift:0}];
     if(this.warStatus?.active)this.targets=warTargets(this,ordered,H,t);
     if(this.alcStatus?.active)this.targets=alchemyTargets(this,ordered,H,t);
     const arena=!solo&&arenaOn(this);tickBattleSound(this,arena&&!this.boss?.sealing?this.boss:null,Date.now());if(arena)this.targets=arenaTargets(ordered,H);else if(!solo&&petCoveOn(this))this.targets=petCoveTargets(ordered,H); // màn đánh boss: tu sĩ xếp hàng phía dưới
@@ -607,7 +623,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     for(const e of this.effects)this.drawEffect(c,e,t,'back');
     // All wearable auras are behind ALL bodies, never interleaved with another player.
     // 07/11: skin nạp tiền (Hải Lam / Tư Đồ / Khuy Niết + pháp bảo) LUÔN có hiệu ứng kể cả sân đông (>20 người): bản nhẹ, tối đa 8 người.
-    const premium=p=>courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES);
+    const premium=p=>showsBlackGoldGear(p)||courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES);
     this.premiumTargets=this.raceStatus?.active?[]:this.heavyCrowd?this.targets.filter(a=>premium(a.player)).slice(0,8):this.targets;
     for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.drawCompactGear(c,target,t,'back');}
     if(!this.raceStatus?.active&&!solo&&!arena&&!petCoveOn(this)&&!mazeOn(this))drawSectCourt(this,c,t); // màn đánh boss: ẩn ngai tông chủ để yêu thú chiếm trời

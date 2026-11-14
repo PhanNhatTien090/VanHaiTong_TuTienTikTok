@@ -2,19 +2,23 @@ import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
 const MARKS=['功','寶','丹','山','藥'],SKILLS=['THIÊN CÔNG KIẾM TRẬN','VẠN BẢO TỀ XUẤT','TỬ LIÊN ĐAN HỎA','THIÊN SƠN TRẤN ẤN','THẦN MỘC LINH TRIỀU'];
 const CAMPS=[[165,.345],[735,.345],[155,.53],[745,.53],[450,.655]];
+function camps(teams){
+ const spots=teams.length<=5?CAMPS:Array.from({length:teams.length},(_,i)=>[150+i%3*300,.315+Math.floor(i/3)*.16]);
+ return new Map(teams.map((team,i)=>[team.index,spots[i]]));
+}
 const nowAt=(scene,t)=>(scene.stateServerNow||Date.now())+Math.min(2000,Math.max(0,t-(scene.stateReceivedAt||t)));
 export function syncHallWar(scene,state){
  const next=state.hallWar||null;if(scene.hallWarStatus?.id!==next?.id){scene.hallWarHeard=new Set();scene.hallWarLastBeat=-1;}
  scene.hallWarStatus=next;document.body.classList.toggle('hall-war',!!next?.active);document.body.classList.toggle('hall-war-podium',!!next?.active&&next.phase==='finished');
  if(next?.active)for(const p of next.members||[])donorPortrait(p.avatar);
 }
-export function hallWarPlaces(event,H,now=event.battleStartedAt||event.startedAt||0){
+export function hallWarPlaces(event,H,now=event.battleStartedAt||event.startedAt||0,layout=camps(event.teams||[])){
  const places=new Map(),rotation=Math.floor(Math.max(0,now-(event.battleStartedAt||event.startedAt||now))/8000);
  for(const team of event.teams||[]){
   const members=(event.members||[]).filter(p=>p.index===team.index).sort((a,b)=>b.score-a.score||a.joinedAt-b.joinedAt||a.id.localeCompare(b.id));
   // The leading contributor stays visible; every other participant rotates through the two side slots.
   const others=members.slice(1),offset=others.length?rotation*2%others.length:0;
-  const shown=[members[0],...Array.from({length:Math.min(2,others.length)},(_,i)=>others[(offset+i)%others.length])].filter(Boolean),[cx,cy]=CAMPS[team.index];
+  const shown=[members[0],...Array.from({length:Math.min(2,others.length)},(_,i)=>others[(offset+i)%others.length])].filter(Boolean),[cx,cy]=layout.get(team.index);
   shown.forEach((p,i)=>places.set(p.id,{...p,x:cx+(i-(shown.length-1)/2)*84,y:H*cy+14,color:team.color}));
  }
  return places;
@@ -54,7 +58,7 @@ function spell(c,from,to,fx,k,light,motion){
   for(let i=0;i<n;i++){const a=i*2.399+fx.index,d=hit*(big?100:52);shard(c,fx.index,to.x+Math.cos(a)*d,to.y+Math.sin(a)*d*.65,Math.max(1,(big?10:6)*(1-hit)),a+hit,color);}
   text(c,fx.knockout?'PHÁ TRẬN':'−'+fx.damage,to.x,to.y-38-hit*35,fx.knockout?24:big?27:21,fx.knockout?'#ffe29d':'#fff3cd',190);
  }
- if(big&&k<.5)text(c,SKILLS[fx.index],from.x,from.y-35,14,color,160);
+ if(big&&k<.5)text(c,SKILLS[fx.index]||'HỘ ĐƯỜNG KIẾM TRẬN',from.x,from.y-35,14,color,160);
  c.restore();
 }
 function podium(c,e,H){
@@ -64,7 +68,7 @@ function podium(c,e,H){
  for(let slot=0;slot<3;slot++){
   const rank=order[slot],team=e.results?.[rank];if(!team)continue;const pos=positions[slot],x=pos.x,y=H*pos.y;
   box(c,x-108,y-42,216,rank===0?210:190,team.color,rank===0?'#604518a0':'#142840c9');
-  sigil(c,x,y-12,rank===0?42:30,team.color,MARKS[team.index]);
+  sigil(c,x,y-12,rank===0?42:30,team.color,team.mark||MARKS[team.index]);
   text(c,'HẠNG '+(rank+1),x,y+42,19,'#fff0bb');text(c,team.name.replace(' Đường',''),x,y+70,21,team.color,200);
   text(c,Math.round(team.score).toLocaleString('vi-VN')+' chiến công',x,y+99,16,'#fff',200);
   text(c,'+'+[80,50,30][rank]+' điểm tuần',x,y+124,16,'#e2f6ed',200);
@@ -81,21 +85,23 @@ export function drawHallWar(scene,c,t,H){
  text(c,'NGŨ ĐƯỜNG TRANH PHONG',450,H*.042,33,'#ffe3a0');
  text(c,(registration?'TẬP HỢP ĐỒNG MÔN':done?'LỄ VINH DANH':'NGŨ HÀNH GIAO CHIẾN')+' · '+Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0'),450,H*.074,20,'#d7f5ff');
  const ranked=[...(e.teams||[])].sort((a,b)=>b.score-a.score||b.kills-a.kills||a.index-b.index),leader=ranked[0]?.score>0?ranked[0].index:-1;
- for(const team of e.teams||[]){
-  const x=10+team.index*180,count=(e.members||[]).filter(p=>p.index===team.index).length;
-  box(c,x,H*.103,160,92,team.index===leader?'#ffe2a0':team.color,team.index===leader?'#51401de8':'#061625e8');
-  text(c,team.name.replace(' Đường',''),x+80,H*.103+18,18,team.color,149);
-  text(c,Math.round(team.score).toLocaleString('vi-VN'),x+80,H*.103+46,27,'#ffffff');text(c,count+' người · '+team.kills+' hạ trận',x+80,H*.103+74,14,'#d3e7ed',149);
+ const teams=e.teams||[],layout=camps(teams),teamColors=new Map(teams.map(team=>[team.index,team.color]));
+ const width=Math.min(180,900/Math.max(1,teams.length));
+ for(const [slot,team] of teams.entries()){
+  const mid=450+(slot-(teams.length-1)/2)*width,count=(e.members||[]).filter(p=>p.index===team.index).length;
+  box(c,mid-width/2+5,H*.103,width-10,92,team.index===leader?'#ffe2a0':team.color,team.index===leader?'#51401de8':'#061625e8');
+  text(c,team.name.replace(' Đường',''),mid,H*.103+18,18,team.color,width-20);
+  text(c,Math.round(team.score).toLocaleString('vi-VN'),mid,H*.103+46,27,'#ffffff');text(c,count+' người · '+team.kills+' hạ trận',mid,H*.103+74,14,'#d3e7ed',width-20);
  }
  const elapsed=registration?clamp((now-e.startedAt)/30000):clamp((now-e.battleStartedAt)/120000);
  c.fillStyle='#fff2';c.fillRect(110,H*.177,680,4);c.fillStyle=done?'#ffda83':'#8edbd1';c.fillRect(110,H*.177,680*(1-elapsed),4);
  // Five colored gates surround one arena; backgrounds remain cached, no blur filters.
  const center={x:450,y:H*.47};
  c.save();c.translate(center.x,center.y);c.scale(1,.65);c.rotate(moving?t*.00008:0);sigil(c,0,0,170,'#bfe0ff42','',0);
- for(let i=0;i<5;i++){const a=i*TAU/5-Math.PI/2,b=a+TAU*2/5;c.strokeStyle=e.teams[i]?.color+'55';c.beginPath();c.moveTo(Math.cos(a)*160,Math.sin(a)*160);c.lineTo(Math.cos(b)*160,Math.sin(b)*160);c.stroke();}c.restore();
- const places=hallWarPlaces(e,H,now);
- if(!done)for(const team of e.teams||[]){
-  const [cx,cy]=CAMPS[team.index],members=(e.members||[]).filter(p=>p.index===team.index),active=members.filter(p=>p.hp>0).length;
+ for(const [i,team] of teams.entries()){const a=i*TAU/teams.length-Math.PI/2,b=a+TAU*2/teams.length;c.strokeStyle=team.color+'55';c.beginPath();c.moveTo(Math.cos(a)*160,Math.sin(a)*160);c.lineTo(Math.cos(b)*160,Math.sin(b)*160);c.stroke();}c.restore();
+ const places=hallWarPlaces(e,H,now,layout);
+ if(!done)for(const team of teams){
+  const [cx,cy]=layout.get(team.index),members=(e.members||[]).filter(p=>p.index===team.index),active=members.filter(p=>p.hp>0).length;
   c.save();c.globalAlpha=members.length?1:.45;
   c.strokeStyle=team.color+'60';c.lineWidth=2;c.beginPath();c.ellipse(cx,H*cy+80,135,34,0,0,TAU);c.stroke();
   box(c,cx-124,H*cy-60,248,32,team.color,'#071725dd',8);text(c,team.name,cx,H*cy-44,19,team.color,230);
@@ -111,7 +117,8 @@ export function drawHallWar(scene,c,t,H){
   text(c,members.length>3?active+' / '+members.length+' đang giao chiến · luân phiên hiện tên':registration?'Gõ 6 để tập hợp cùng Đường':active+' / '+members.length+' đang giao chiến',cx,H*cy+112,13,'#d5e3e9',270);c.restore();
  }
  if(!done)for(const fx of (e.fx||[]).slice(-(light?6:12))){
-  const from=places.get(fx.from)||(()=>{const p=e.members.find(p=>p.id===fx.from);return p?{x:CAMPS[p.index][0],y:H*CAMPS[p.index][1],color:e.teams[p.index].color}:null;})(),to=places.get(fx.to)||(()=>{const p=e.members.find(p=>p.id===fx.to);return p?{x:CAMPS[p.index][0],y:H*CAMPS[p.index][1]}:null;})();
+  const place=id=>{const p=e.members.find(p=>p.id===id),spot=layout.get(p?.index);return places.get(id)||(spot?{x:spot[0],y:H*spot[1],color:teamColors.get(p.index)}:null);};
+  const from=place(fx.from),to=place(fx.to);
   if(!from||!to)continue;const k=(now-fx.at)/(fx.ultimate?1750:1100);if(k<0||k>1)continue;
   if(!scene.hallWarHeard?.has(fx.id)&&k<.4){scene.hallWarHeard??=new Set();scene.hallWarHeard.add(fx.id);if(scene.hallWarHeard.size>80)scene.hallWarHeard.delete(scene.hallWarHeard.values().next().value);if(t-(scene.hallWarLastSound||0)>220){scene.onCombatSound?.(fx.ultimate?'impact':'cast',['sword','bell','flame','thunder','lotus'][fx.index]);scene.hallWarLastSound=t;}}
   spell(c,from,to,fx,moving?k:.72,light,moving);

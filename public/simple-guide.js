@@ -1,5 +1,19 @@
 // 08/11: bảng xoay vòng — trang chính (thả tim…) xen kẽ các trang lệnh khác, mỗi trang 12 s: chính → hằng ngày → chính → đồng môn → chính → sự kiện.
 // 10/11: thêm trang SỰ KIỆN + mỗi trang 6 lệnh; trên LIVE là dải ngang sát đáy, dưới hàng ghế cuối (ghế tới 85% chiều cao).
+export const HALL_GUIDE_ROWS=[
+  {cmd:'đường',text:'Xem các Đường'},
+  {cmd:'vào đường 1–5',text:'Gia nhập Đường'},
+  {cmd:'rời đường',text:'Rời Đường'},
+  {cmd:'đường chiến',text:'Vào trận Ngũ Đường'},
+  {cmd:'thách đấu 1–5',text:'Tranh ghế Trưởng Lão'},
+  {cmd:'trợ lực',text:'Hỗ trợ Vân Đài'},
+  {cmd:'chân truyền + tên',text:'Mời Chân Truyền'},
+  {cmd:'bái sư',text:'Nhận lời Chân Truyền'}
+];
+export function hallGuideRows(halls=[]){
+ const standard=halls.length===5&&halls.every((hall,i)=>hall.index===i);
+ return standard?HALL_GUIDE_ROWS:HALL_GUIDE_ROWS.map(row=>({...row,cmd:row.cmd.replace('1–5','+ số')}));
+}
 export const GUIDE_PAGES=[
  {title:'LỆNH HẰNG NGÀY',rows:[
   {cmd:'điểm danh',text:'thưởng mỗi ngày'},
@@ -21,15 +35,9 @@ export const GUIDE_PAGES=[
   {cmd:'thú',text:'linh thú đã có'},
   {cmd:'skin',text:'tủ skin đang có'},
   {cmd:'skin + tên',text:'mặc skin đó'},
-  {cmd:'thu + số',text:'gọi linh thú'}]},
- {title:'NGŨ ĐƯỜNG',rows:[
-  {cmd:'đường',text:'xem Trưởng Lão và điểm tuần'},
-  {cmd:'đường chiến',text:'vào trận Ngũ Đường, xuất chiêu'},
-  {cmd:'vào đường 1–5',text:'gia nhập một Đường'},
-  {cmd:'thách đấu 1–5',text:'Thiên Bảng tranh ghế'},
-  {cmd:'3 · trợ lực',text:'hỗ trợ khi Vân Đài mở'},
-  {cmd:'chân truyền + tên',text:'Trưởng Lão mời đệ tử'},
-  {cmd:'bái sư',text:'nhận lời Chân Truyền'}]},
+  {cmd:'thú + số',text:'gọi linh thú'},
+  {cmd:'cánh + số · hủy cánh',text:'đổi hoặc cất cánh'}]},
+ {title:'NGŨ ĐƯỜNG',rows:HALL_GUIDE_ROWS},
  {title:'SỰ KIỆN',rows:[
   {cmd:'6 · bay',text:'đua phi kiếm khi mở'},
   {cmd:'6 · tỷ thí',text:'ghi danh tỷ thí'},
@@ -54,6 +62,7 @@ export function simpleSteps(s={},page=0){
  ];
  const race=s.raceStatus,t=s.socialStatus?.tournament;
  const hint=s.quick?.event?'gõ 6 · '+s.quick.event.text:race?.phase==='registration'?'Đua: gõ bay':race?.phase==='running'?'Đua: phi kiếm tranh tốc':t?.phase==='registration'?'Tỷ thí: gõ tỷ thí':s.boss?.hp>0&&s.boss.endsAt>s.serverNow?'Yêu thú: thả tim':s.bonkFest?.active?'Gõ đầu: go tên':'';
+ if(pick===4)return {...GUIDE_PAGES[3],rows:hallGuideRows(s.halls?.halls),hint};
  if(pick)return {...GUIDE_PAGES[pick-1],hint};
  return {title:'CÁCH CHƠI',rows,hint};
 }

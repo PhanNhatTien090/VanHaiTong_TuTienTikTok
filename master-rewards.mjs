@@ -24,5 +24,7 @@ export function unlockMasterLoadout(w,p,catalog,now=Date.now(),itemCoins=0){
 export function resetHistoricMasters(w){if((w.masterRuleVersion||0)>=2)return 0;let n=0;for(const p of Object.values(w.players||{}))if(p.sectMasterUnlocked&&!p.sectMasterGiftAt){delete p.sectMasterUnlocked;delete p.sectMasterUnlockedAt;n++;}w.masterRuleVersion=2;return n;}
 export function giftMasterView(players,host={}){
  const p=players.filter(p=>real(p)&&p.active&&p.sectMasterUnlocked&&p.sectMasterGiftAt).sort((a,b)=>(b.sectMasterGiftAt||0)-(a.sectMasterGiftAt||0)||String(a.id).localeCompare(String(b.id)))[0];
- return p?{enabled:true,source:'gift',userId:p.id,name:p.name,player:p,active:false}:host;
+ if(p)return {enabled:true,source:'gift',userId:p.id,name:p.name,player:p,active:false};
+ /* 10/11: ghế Tông chủ của chủ kênh vẽ đúng nhân vật + tên của tài khoản đã đặt, không dùng ảnh Tông chủ chung */
+ const own=host?.userId&&players.find(x=>x.id===host.userId);return own?{...host,name:own.name,player:own}:host;
 }

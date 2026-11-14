@@ -1,4 +1,4 @@
-import {HALLS} from './ngu-duong.mjs';
+import {activeHalls} from './ngu-duong.mjs';
 import {stageConflict} from './stage-lock.mjs';
 const REGISTER_MS=30000,BATTLE_MS=120000,PODIUM_MS=14000;
 const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
@@ -15,7 +15,7 @@ export function startHallWar(w,now,ctx){
  const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc trước khi mở Ngũ Đường Tranh Phong.');
  const active=Object.values(w.players).filter(p=>real(p)&&ctx.active(w,p,now)&&hallOf(w,p.id)!=null);
  if(new Set(active.map(p=>hallOf(w,p.id))).size<2)return fail('Cần ít nhất 2 Đường có người đang hoạt động.');
- w.hallWar={id:'hall-war-'+now,phase:'registration',startedAt:now,registrationEndsAt:now+REGISTER_MS,members:{},teams:HALLS.map((h,index)=>({index,name:h.name,color:h.color,score:0,kills:0})),fx:[],seq:0};
+ w.hallWar={id:'hall-war-'+now,phase:'registration',startedAt:now,registrationEndsAt:now+REGISTER_MS,members:{},teams:activeHalls(w).map(({index,name,color,mark})=>({index,name,color,mark,score:0,kills:0})),fx:[],seq:0};
  for(const p of active)enroll(w,p,now);
  ctx.emit(w,null,'NGŨ ĐƯỜNG TRANH PHONG • 30 giây tập hợp • gõ đường chiến hoặc 6 để vào trận theo Đường đã gia nhập','hall-war',now,{hallWarStart:true});
  return {ok:true};
@@ -30,11 +30,11 @@ function strike(w,member,now,ctx,{value=0,manual=false}={}){
  const enemies=Object.values(e.members).filter(m=>m.index!==member.index&&m.hp>0&&(m.shieldUntil||0)<=now&&real(w.players[m.id])&&w.playTransfers?.[m.id]?.phase!=='web'&&ctx.active(w,w.players[m.id],now));
  if(!enemies.length)return false;
  enemies.sort((a,b)=>Math.abs((w.players[a.id].realm||0)-(p.realm||0))-Math.abs((w.players[b.id].realm||0)-(p.realm||0))||Math.abs(Math.log((w.players[a.id].totalQi+10)/(p.totalQi+10)))-Math.abs(Math.log((w.players[b.id].totalQi+10)/(p.totalQi+10)))||a.id.localeCompare(b.id));
- const candidates=value>=300?enemies.slice(0,3):[enemies[(e.seq++)%Math.min(3,enemies.length)]];
+ const candidates=value>=300?enemies.slice(0,3):[enemies[(e.seq++)%Math.min(3,enemies.length)]],team=e.teams.find(t=>t.index===member.index);
  for(const target of candidates){
   const damage=Math.round(Math.min(90,power(p)*(manual?1.5:1)*(member.boostUntil>now?1.5:1)*(value?1+Math.log10(value+1):1)));
-  const actual=Math.min(target.hp,damage);target.hp-=actual;member.score+=actual;e.teams[member.index].score+=actual;
-  if(target.hp<=0){target.respawnAt=now+5000;member.kills++;e.teams[member.index].kills++;e.teams[member.index].score+=25;}
+  const actual=Math.min(target.hp,damage);target.hp-=actual;member.score+=actual;team.score+=actual;
+  if(target.hp<=0){target.respawnAt=now+5000;member.kills++;team.kills++;team.score+=25;}
   e.fx.push({id:e.id+':'+(e.seq++),from:member.id,to:target.id,index:member.index,at:now,damage:actual,value,knockout:target.hp<=0,ultimate:value>=100||member.kills>0&&e.seq%7===0});
  }
  e.fx=e.fx.slice(-36);ctx.contribute(w,p,now,'event');return true;
@@ -50,7 +50,8 @@ export function hallWarCommand(w,p,words,now,ctx){
   if(member.hp<=0)return fail('Đang hồi trận • chờ vài giây.');
   member.lastManual=now;strike(w,member,now,ctx,{manual:true});
  }
- ctx.emit(w,p,e.phase==='registration'?'Đã tập hợp cùng '+HALLS[member.index].name:'Xuất chiêu vì '+HALLS[member.index].name,'hall-war',now,{hallWarAction:true});return {ok:true};
+ const name=e.teams.find(t=>t.index===member.index).name;
+ ctx.emit(w,p,(e.phase==='registration'?'Đã tập hợp cùng ':'Xuất chiêu vì ')+name,'hall-war',now,{hallWarAction:true});return {ok:true};
 }
 export function hallWarGift(w,p,value,now,ctx){
  const e=w.hallWar;if(!['registration','running'].includes(e?.phase)||!enroll(w,p,now)||value<1)return null;
@@ -65,11 +66,11 @@ function finish(w,now,ctx){
  e.results=e.teams.filter(t=>present.has(t.index)&&t.score>0).sort((a,b)=>b.score-a.score||b.kills-a.kills||a.index-b.index);
  for(const [rank,team] of e.results.entries()){
   if(team.score<=0)continue;
-  ctx.hallPoints(w,team.index,[80,50,30,15,10][rank],now);
+  ctx.hallPoints(w,team.index,[80,50,30,15][rank]??10,now);
   for(const m of Object.values(e.members).filter(m=>m.index===team.index&&m.score>0)){
    const p=w.players[m.id];if(!real(p)||w.playTransfers?.[p.id]?.phase==='web')continue;
    p.hallWarMedals=(p.hallWarMedals||0)+Math.max(1,5-rank);
-   const stones=Math.max(10,60-rank*10),qi=ctx.gain(w,p,[600,400,250,150,100][rank],stones,5,now,false,'event');
+   const stones=Math.max(10,60-rank*10),qi=ctx.gain(w,p,[600,400,250,150][rank]??100,stones,5,now,false,'event');
    (e.rewards??=[]).push({id:p.id,name:p.name,index:team.index,rank:rank+1,qi,stones,herbs:5});
    ctx.emit(w,p,team.name+' hạng '+(rank+1)+' • +'+qi+' tu vi • điểm chiến đấu đã cộng vào bảng tuần','hall-war',now,{hallWarReward:true,hallIndex:team.index,rank:rank+1,reward:{qi,stones,herbs:5}});
   }

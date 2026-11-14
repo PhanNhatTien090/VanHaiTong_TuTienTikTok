@@ -1,4 +1,12 @@
+export const BLACK_GOLD_VISITOR=Object.freeze({
+ kind:'hac-kim',aliases:['tieu viem'],skin:'hac-kim-chien-y',name:'Đấu Đế Tiêu Viêm',
+ artifact:'hac-kim-hoa-dao',relic:'Hắc Kim Hỏa Đao & Hỏa Luân',
+ color:'#ff953f',trim:'#ffe6a3',dark:'#280e0a',technique:'flame',icon:'sword',
+ aura:'Hỏa ấn · tàn lửa · đao và hỏa luân đồng bộ',
+ artwork:{blade:'/assets/thien-khuyet/relic-hac-kim-hoa-dao.webp',halo:'/assets/thien-khuyet/hac-kim-halo.webp'}
+});
 export const COURT_VISITORS=[
+ BLACK_GOLD_VISITOR,
  {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},
  {kind:'xich-vu',skin:'xich-vu-nu-de',name:'Xích Vũ Nữ Đế',artifact:'xich-vu-thien-kich',relic:'Xích Vũ Thiên Kích',color:'#ff925e',trim:'#ffe8a6',dark:'#511020',technique:'flame'}
 ];

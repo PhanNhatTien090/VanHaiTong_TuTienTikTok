@@ -1,5 +1,8 @@
-import {COURT_VISITORS,courtRelic} from './court-rewards.js';
+import {BLACK_GOLD_VISITOR,COURT_VISITORS,courtRelic} from './court-rewards.js';
 import {drawCourtAuraLayer} from './court-skin-fx.js';
+import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
+import {feedbackBudget} from './cinematic-feedback.js';
+import {ownsGear} from './skin-gear.js';
 const skinOf=p=>COURT_VISITORS.find(v=>v.skin===p?.skinChoice&&p.rewardSkins?.includes(v.skin));
 export const courtWorn=p=>!!skinOf(p);
 const images=new Map(), pending=new Map();
@@ -10,9 +13,17 @@ function load(file,onReady){
  if(onReady){if(!pending.has(file))pending.set(file,new Set());pending.get(file).add(onReady);}return null;
 }
 const figure=(spec,pose,onReady)=>load('/assets/thien-khuyet/'+spec.kind+'-'+pose+'.webp',onReady);
+const blackGoldGear={blade:null,halo:null};
+function blackGoldArt(){
+ blackGoldGear.blade??=load(BLACK_GOLD_VISITOR.artwork.blade);
+ blackGoldGear.halo??=load(BLACK_GOLD_VISITOR.artwork.halo);
+ return blackGoldGear;
+}
+export const showsBlackGoldGear=p=>ownsGear(p,BLACK_GOLD_VISITOR.artifact);
 export function warmCourtSkin(scene,p){
  const spec=COURT_VISITORS.find(x=>x.skin===p.skinChoice);
  if(spec){const refresh=scene.refreshCourtSkins??=()=>scene.characterFrames?.clear();figure(spec,'seated',refresh);figure(spec,'standing',refresh);}
+ if(showsBlackGoldGear(p))blackGoldArt();
 }
 export function drawCourtSkin(c,p,pose,t){
  const spec=skinOf(p);
@@ -23,14 +34,26 @@ export function drawCourtSkin(c,p,pose,t){
  for(const [img,a,h] of [[seated,1-stand,91],[standing,stand,125]]){
   if(!img||a<=.001)continue;
   // The seated exports include the bottom edge of the standing cell above them.
-  const trimTop=img===seated?Math.round(img.naturalHeight*54/618):0;
+  const trimTop=img===seated&&spec!==BLACK_GOLD_VISITOR?Math.round(img.naturalHeight*54/618):0;
   const sourceHeight=img.naturalHeight-trimTop,w=h*img.naturalWidth/sourceHeight;
   c.save();c.globalAlpha*=a;c.drawImage(img,0,trimTop,img.naturalWidth,sourceHeight,-w/2,25-h,w,h);c.restore();
  }
  c.restore();return true;
 }
 export function drawCourtAdornment(scene,c,target,t,layer){
- const p=target.player,spec=skinOf(p);if(!spec)return;
+ const p=target.player,spec=skinOf(p);
+ if(spec===BLACK_GOLD_VISITOR||showsBlackGoldGear(p)){
+  const motion=scene.motion!==false,light=feedbackBudget(scene);
+  const pose=scene.cinematicPose||scene.animator?.pose(p,t,motion&&!scene.compact)||{};
+  const scale=target.scale||1.4;
+  c.save();c.translate(target.x,target.y+(pose.lift||0));c.scale(scale,scale);
+  const revealing=scene.transforming?.id===p.id&&t<scene.transforming.revealAt;
+  if(spec===BLACK_GOLD_VISITOR&&!revealing)drawBlackGoldAura(c,t,pose.stand||0,layer,{motion,light});
+  const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
+  if(showsBlackGoldGear(p)&&!unlocking&&!revealing)drawBlackGoldGear(c,blackGoldArt(),t,pose,layer,{motion,light});
+  c.restore();return;
+ }
+ if(!spec)return;
  if(scene.transforming?.id===p.id&&t<scene.transforming.revealAt)return;
  if(scene.effects?.some(e=>e.user===p.id&&e.transform&&t<e.start+e.duration))return;
  const motion=scene.motion!==false,light=scene.crowded||scene.budget?.level==='light';
@@ -48,7 +71,8 @@ export function drawCourtAdornment(scene,c,target,t,layer){
  }
  c.restore();
 }
-export const courtShowsSignature=(scene,p)=>!scene.crowded&&scene.budget?.level!=='light'&&!scene.minimalCrowd&&!scene.ritualDrawing&&!scene.raceStatus?.active&&skinOf(p)?.artifact===p.equipped&&p.signatureArtifactOwned!==false&&!!p.equipped;
+export const courtShowsSignature=(scene,p)=>showsBlackGoldGear(p)&&p.equipped===BLACK_GOLD_VISITOR.artifact&&!scene.raceStatus?.active&&!scene.ritualDrawing
+ ||!scene.crowded&&scene.budget?.level!=='light'&&!scene.minimalCrowd&&!scene.ritualDrawing&&!scene.raceStatus?.active&&skinOf(p)?.artifact===p.equipped&&p.signatureArtifactOwned!==false&&!!p.equipped;
 export function drawCourtVisitor(c,event,H,t,now=Date.now()){
  const spec=COURT_VISITORS.find(x=>x.kind===event?.kind);
  if(!spec||event.closedAt||now>=event.endsAt)return false;
@@ -56,6 +80,17 @@ export function drawCourtVisitor(c,event,H,t,now=Date.now()){
  if(!image)return true;
  const h=315,w=h*image.naturalWidth/image.naturalHeight,y=H*.38+Math.sin(t*.0015)*5;
  c.save();c.globalAlpha=Math.min(1,(now-event.startedAt)/850,(event.endsAt-now)/650);
+ if(spec===BLACK_GOLD_VISITOR){
+  const scale=h/125;
+  c.save();c.translate(450,y-25*scale);c.scale(scale,scale);
+  drawBlackGoldAura(c,t,1,'back',{motion:t!==0});
+  const art=blackGoldArt();
+  drawBlackGoldGear(c,art,t,{stand:1},'back',{motion:t!==0});
+  c.drawImage(image,-w/(2*scale),-100,w/scale,125);
+  drawBlackGoldGear(c,art,t,{stand:1},'front',{motion:t!==0});
+  drawBlackGoldAura(c,t,1,'front',{motion:t!==0});
+  c.restore();c.restore();return true;
+ }
  const scale=2.52;
  c.save();c.translate(450,y-52);c.scale(scale,scale);
  drawCourtAuraLayer(c,spec.kind,t,1,'back',{motion:t!==0});c.restore();
@@ -72,4 +107,12 @@ export function drawCourtRelic(c,id,t,motion=true){
  const a=motion?t*.001:0,k=38/Math.max(image.naturalWidth,image.naturalHeight);
  const w=image.naturalWidth*k,h=image.naturalHeight*k,x=Math.cos(a)*32,y=-25+Math.sin(a)*9;
  c.save();c.translate(x,y);c.rotate(-.35+Math.sin(a)*.1);c.drawImage(image,-w/2,-h/2,w,h);c.restore();return true;
+}
+
+export function drawBlackGoldAward(scene,c,e,t,k,target,layer,reveal){
+ const motion=scene.motion!==false;
+ const pose=scene.animator?.pose(target.player||{},t,motion&&!scene.compact)||{};
+ drawBlackGoldReveal(c,t,k,{...target,y:target.y+(pose.lift||0)},layer,reveal,e.hacKimArtifact?blackGoldArt():null,{
+  motion,light:feedbackBudget(scene),pose
+ });
 }

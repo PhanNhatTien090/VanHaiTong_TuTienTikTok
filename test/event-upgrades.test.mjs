@@ -6,8 +6,11 @@ import {eventDonationContext,addEventDonation} from '../public/event-donations.j
 import {duelCastState,DUEL_CAST_MS} from '../public/duel-combat.js';
 import {tournamentLobbyTargets} from '../public/social-stage.js';
 import {CultivationAudio} from '../public/audio.js';
+import {PresentationQueue} from '../public/presentation.js';
+import {showsBlackGoldGear} from '../public/court-art.js';
+import {SKIN_GEAR} from '../public/skin-gear.js';
 test('court skin 300; no artifact at 300 or 499; artifact at 500 exactly once',()=>{
- for(const kind of ['nguyet-lien','xich-vu']){
+ for(const kind of ['nguyet-lien','xich-vu','hac-kim']){
   const r=VISITOR_GIFT_REWARDS[kind],p={id:'p',artifacts:[],rewardSkins:[]};
   const w={visitor:{id:'v',kind,startedAt:100,endsAt:10000}};
   const a=creditVisitorGift(w,p,300,200);assert.ok(p.rewardSkins.includes(r.skin));assert.deepEqual(a.items,[]);assert.ok(!p.artifacts.includes(r.artifact));
@@ -15,6 +18,17 @@ test('court skin 300; no artifact at 300 or 499; artifact at 500 exactly once',(
   assert.deepEqual(creditVisitorGift(w,p,1,400).items,[r.artifact]);assert.equal(p.visitorArtifactUnlocks[r.artifact].coins,500);
   assert.deepEqual(creditVisitorGift(w,p,1,500).items,[]);
  }
+});
+test('Tiêu Viêm displays owned relic with stronger gear equipped and prioritizes reveal',()=>{
+ const {skin,artifact}=VISITOR_GIFT_REWARDS['hac-kim'];
+ const p={id:'p',equipped:'vip-heaven-seal',artifacts:['vip-heaven-seal']};
+ const w={visitor:{id:'v',kind:'hac-kim',startedAt:100,endsAt:10000}};
+ creditVisitorGift(w,p,300,200);assert.equal(p.skinChoice,skin);assert.equal(showsBlackGoldGear(p),false);
+ creditVisitorGift(w,p,200,300);assert.equal(p.equipped,'vip-heaven-seal');assert.equal(showsBlackGoldGear(p),true);
+ assert.equal(showsBlackGoldGear({equipped:p.equipped,skinGear:p.artifacts.filter(id=>SKIN_GEAR.includes(id))}),true);
+ const queue=new PresentationQueue(2),award={id:'award',effect:'transform',transform:'hac-kim'};
+ queue.push({id:'gift-a',gift:'Money Gun',coins:500},500);queue.push(award,500);queue.push({id:'gift-b',gift:'Money Gun',coins:500},501);
+ assert.equal(queue.take(502).id,'award');
 });
 test('pairing follows cultivation rather than equipment; odd outlier takes bye',()=>{
  const fighters={a:{realm:3,totalQi:1000,power:900},b:{realm:3,totalQi:1010,power:1},c:{realm:9,totalQi:9000000,power:2},d:{realm:9,totalQi:9100000,power:10},z:{realm:20,totalQi:900000000}};

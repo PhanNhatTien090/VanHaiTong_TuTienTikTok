@@ -1,4 +1,5 @@
 import {SPECIAL_SKINS} from './patrons.js';
+import {BLACK_GOLD_VISITOR} from './court-rewards.js';
 import {DIVINE_REALMS,DIVINE_ROLES} from './divine-wardrobe.js';
 import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -14,7 +15,10 @@ export function reviewActor(spec,{gender='nam',gear=false}={}){
  equipped:gear?spec.relic||null:null,artifacts:gear&&spec.relic?[spec.relic]:[],skinGear:gear&&spec.relic?[spec.relic]:[],signatureArtifactOwned:!!(gear&&spec.relic),manuals:[]};
 }
 export function mountSkinReview(root,{Scene,realmNames=[]}){
- const catalog=skinReviewCatalog(realmNames);let selected=catalog.find(s=>s.skin==='nguyet-lien-tien-co')||catalog[0],gender='nam',stand=1,gear=false,active=false,raf=0,last=0,actor;
+ const catalog=skinReviewCatalog(realmNames);
+ const featured=catalog.find(s=>s.skin===BLACK_GOLD_VISITOR.skin);
+ if(featured)catalog.unshift(...catalog.splice(catalog.indexOf(featured),1));
+ let selected=catalog[0],gender='nam',stand=1,gear=false,active=false,raf=0,last=0,actor;
  root.innerHTML='<div class="skin-review-toolbar"><label>Skin<select id="reviewSkin"></select></label><label>Nhân vật<select id="reviewGender"><option value="nam">Nam</option><option value="nu">Nữ</option></select></label><div class="review-pose" role="group" aria-label="Tư thế"><button type="button" data-review-pose="1" aria-pressed="true">Đứng</button><button type="button" data-review-pose="0" aria-pressed="false">Ngồi</button></div><label class="review-gear"><input id="reviewGear" type="checkbox"> Kèm pháp bảo</label></div><figure class="skin-review-stage"><canvas id="skinReviewCanvas" aria-label="Xem thử skin và hiệu ứng"></canvas><figcaption id="reviewSkinName"></figcaption></figure>';
  const picker=root.querySelector('#reviewSkin');for(const group of [...new Set(catalog.map(s=>s.group))])picker.insertAdjacentHTML('beforeend','<optgroup label="'+esc(group)+'">'+catalog.filter(s=>s.group===group).map(s=>'<option value="'+esc(s.key)+'">'+esc(s.name)+'</option>').join('')+'</optgroup>');
  picker.value=selected.key;const canvas=root.querySelector('canvas'),renderer=new Scene(canvas,()=>{},{autoFrame:false});renderer.renderPreview=true;renderer.setQuality('balanced');renderer.motion=true;

@@ -10,19 +10,21 @@ import {streamState,participantCounts,liveRulesActive} from './live-integrity.js
 import {smallGift,shouldFocusEvent,mountRitualHud} from './live-cinema.js';
 import {isNewbie} from './vip.js';
 import {ArrivalWelcomes,isArrivalWelcome} from './arrival-welcome.js';
-import {renderSimpleGuide} from './simple-guide.js?v=hall-war-20261114';
+import {hallGuideRows,renderSimpleGuide} from './simple-guide.js?v=hall-management';
+import {mountHallAdmin} from './hall-admin.js';
 import {GiftComboBuffer} from './gift-combos.js';
 import {renderCompanionHUD} from './companion-fx.js';
-import {mountPetUI,renderPetUI} from './spirit-pet-ui.js';
+import {mountPetUI,renderPetUI,showPetGiftAward} from './spirit-pet-ui.js?v=pet-gifting-20261114';
 import {ALL_PETS,petById} from './spirit-pets.js';
 import {isEventAnnouncement} from './event-announcements.js';
 import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
 import {divineSelection} from './divine-wardrobe.js';
-import {mountEventTab,renderSocialUI} from './social-ui.js?v=tournament-registration';
+import {mountEventTab,renderSocialUI} from './social-ui.js?v=hall-management';
+import {BLACK_GOLD_VISITOR} from './court-rewards.js';
 import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 import {VISITORS} from './visitor-event.js';
 import {HonorUI} from './honor-ui.js';
-import {PresentationQueue,presentationDuration,presentationPriority} from './presentation.js';
+import {PresentationQueue,presentationDuration,presentationPriority,isBlackGoldAward} from './presentation.js?v=tieu-viem-transform-v2';
 import {strikeProfile,HEAVEN_STRIKE_MS} from './heaven-strike.js';
 import {scheduleHeavenStrikeAudio} from './heaven-strike-audio.js';
 import {luxuryTier} from './luxury-fx.js';
@@ -30,14 +32,14 @@ import {highGiftName} from './high-gift-fx.js';
 import {railHTML} from './command-rail.js';
 import {divinePreview} from './skin-guide.js';
 let skinReviewRequest=null;
-function renderSkinReview(){if(overlay||!state)return;skinReviewRequest??=import('./skin-review.js?v=20261114').then(m=>m.mountSkinReview(document.querySelector('#skinReview'),{Scene,realmNames:state.realms}));skinReviewRequest.then(view=>view.setActive(currentTab==='skins'));}
+function renderSkinReview(){if(overlay||!state)return;skinReviewRequest??=import('./skin-review.js?v=dau-de-tieu-viem').then(m=>m.mountSkinReview(document.querySelector('#skinReview'),{Scene,realmNames:state.realms}));skinReviewRequest.then(view=>view.setActive(currentTab==='skins'));}
 // v42: bảng lệnh / trang bị dọc bên phải, đổi trang mỗi 12 giây.
 let railPage=0;function renderRail(){if(state)renderSimpleGuide(state,esc,railPage);const el=document.querySelector('#commandRail');if(!el||!state)return;const html=railHTML(state,railPage,esc);if(el._last!==html){el.innerHTML=html;el._last=html;}}
 setInterval(()=>{railPage++;renderRail();},12000);
 import {safeAvatar} from './honors.js';
 import {topPatron,SPECIAL_SKINS} from './patrons.js';
 import {appearanceFor} from './realm-outfits.js';
-import {Scene,portrait,symbols} from './scene.js?v=hall-war-drawn-pets-20261114';
+import {Scene,portrait,symbols} from './scene.js?v=tieu-viem-transform-v2';
 import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
@@ -47,7 +49,7 @@ import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=event-guidance-20261113';
 import {renderStageQueue} from './stage-queue.js';
-import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-war-20261114';
+import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-management';
 import {showLinhBai} from './linh-bai.js';
 import {realmWithStage} from './realm-stage.js';
 import {showBaoHy} from './bao-hy.js';
@@ -97,7 +99,6 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
     right.insertBefore(dock,right.firstChild);dock.classList.add('rail-dock');
     const guideDock=document.createElement('aside');guideDock.id='lowerRightGuide';
     guideDock.setAttribute('aria-label','Hướng dẫn lệnh Ngũ Đường');
-    guideDock.innerHTML='<b>NGŨ ĐƯỜNG</b><p class="hall-guide-names">1 Truyền Công · 2 Tàng Bảo<br>3 Đan Đỉnh · 4 Tuần Sơn<br>5 Linh Dược</p><ol><li><code>đường</code><span>xem các Đường, điểm tuần</span></li><li><code>vào đường 1–5</code><span>chọn số Đường muốn gia nhập</span></li><li><code>thách đấu 1–5</code><span>Thiên Bảng tranh ghế Trưởng Lão</span></li><li><code>trợ lực</code><span>hỗ trợ trận Vân Đài đang diễn ra</span></li><li><code>đường chiến</code><span>vào trận, trợ lực cho Đường</span></li><li><code>chân truyền + tên</code><span>Trưởng Lão mời đệ tử</span></li><li><code>bái sư</code><span>nhận lời mời Chân Truyền</span></li></ol>';
     root.appendChild(guideDock);
   }}
 }
@@ -113,7 +114,6 @@ const ascensionStage=overlay&&params.get('stage')==='ascension';scene.showcase=a
 const qualitySelect=$('#qualityMode');
 const shakeSelect=$('#shakeMode'),motionToggle=$('#reduceMotion'),flashToggle=$('#reduceFlash');
 const motionPreference=matchMedia('(prefers-reduced-motion: reduce)');
-function applyVisualPreferences(){
 const visualKeys={quality:'quality',shake:'camera-shake',motion:'reduce-motion',flash:'reduce-flash'};
 let sharedVisual=null,visualSaving=0,visualWrites=Promise.resolve();
 function localVisual(){
@@ -124,6 +124,7 @@ function localVisual(){
   }
   return values;
 }
+function applyVisualPreferences(){
   const preferences=sourceVisualPreferences(overlay?params:new URLSearchParams(),localVisual(),sharedVisual);
   if(scene.budget.mode!==preferences.quality)scene.setQuality(preferences.quality);
   scene.shakeLevel=preferences.shake;
@@ -155,9 +156,9 @@ motionPreference.addEventListener('change',applyVisualPreferences);
 scene.renderPreview=!overlay;applyVisualPreferences();
 
 let voiceCaptionTimer;
-scene.onWarSound=(kind,side,strength)=>cultivationAudio.war(kind,side,strength);scene.onAlchemySound=(kind,strength)=>cultivationAudio.alchemy(kind,strength);scene.onSpectacleImpact=()=>cultivationAudio.play('impact',true);
 scene.onCinematicSound=(...args)=>cultivationAudio.cinematicCue(...args);
 scene.onCinematicCancel=id=>cultivationAudio.cinematic?.cancel(id);
+scene.onWarSound=(kind,side,strength)=>cultivationAudio.war(kind,side,strength);scene.onAlchemySound=(kind,strength)=>cultivationAudio.alchemy(kind,strength);scene.onSpectacleImpact=()=>cultivationAudio.play('impact',true);
 scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);scene.onBonkSound=(kind,o)=>cultivationAudio.bonk(kind,o); /* 10/11: Hội Gõ Đầu */
 scene.onGiftSound=kind=>cultivationAudio.play(kind,true);
 scene.onMazePortalSound=()=>cultivationAudio.play('maze-portal',true);
@@ -191,19 +192,20 @@ if(!overlay){
   if(!source){el.textContent='Chưa có nguồn Link báo kích thước. Mở nguồn rồi xem lại tại đây.';return;}
   const {w,h,dpr}=source.view,layout=source.renderLayout;
   el.textContent='Trang nguồn báo '+w+' × '+h+' · DPR '+dpr+(layout?' · vùng game '+Math.round(layout.css.width)+' × '+Math.round(layout.css.height)+' · canvas '+layout.backing.width+' × '+layout.backing.height:' · làm mới nguồn để đo vùng game')+(Math.abs(w/h-9/16)>.005?' · Trang nguồn hiện chưa đúng tỷ lệ 9:16.':layout?.fillsViewport?' · Đã phủ đầy khung.':'');
- }catch{el.textContent='Chưa đọc được kích thước nguồn Link.';}};
   const v=source.visualStatus;
   if(v)el.textContent+=' · Yêu cầu '+v.requested+' / đang dùng '+v.applied+' · VFX '+v.vfx.particles+' hạt / '+v.vfx.rings+' vòng / '+v.vfx.glows+' glow · rung '+v.shake+' · giảm chuyển động '+(v.reduceMotion?'bật':'tắt')+' · giảm chớp '+(v.reduceFlash?'bật':'tắt')+' · '+(source.fps||'—')+' FPS'+(v.reason?' · '+v.reason:'');
+ }catch{el.textContent='Chưa đọc được kích thước nguồn Link.';}};
  showSourceLayout();setInterval(showSourceLayout,10000);
 }
 $('#overlayUrl').textContent=overlayUrl();$('#exportLink').href=`/api/export?world=${mode}`;
-const titles={puppets:['TU SĨ GIẢ','Tu sĩ giả','Tạo nhân vật và kích hoạt hành động bằng tay.'],skins:['SKIN','Xem skin',''],events:['SỰ KIỆN','Sự kiện tông môn','Mở hoạt động, theo dõi tỷ thí và quản lý lễ kết duyên.'],scene:['NGƯỜI TRÊN LIVE','Đạo hữu đang tu luyện','Quản lý người đang hoạt động, hồ sơ và trang bị từng đạo hữu.'],rules:['LỆNH & QUÀ','Lệnh và điều kiện nhận quà','Lệnh bình luận, mốc quà, skin và giá vật phẩm.'],settings:['THIẾT LẬP','Thiết lập','Kết nối TikFinity, link cảnh, sự kiện và sao lưu.']};
+const titles={halls:['NGŨ ĐƯỜNG','Quản lý Ngũ Đường','Danh sách Đường, thành viên và bảng xếp hạng theo tuần.'],puppets:['TU SĨ GIẢ','Tu sĩ giả','Tạo nhân vật và kích hoạt hành động bằng tay.'],skins:['SKIN','Xem skin',''],events:['SỰ KIỆN','Sự kiện tông môn','Mở hoạt động, theo dõi tỷ thí và quản lý lễ kết duyên.'],scene:['NGƯỜI TRÊN LIVE','Đạo hữu đang tu luyện','Quản lý người đang hoạt động, hồ sơ và trang bị từng đạo hữu.'],rules:['LỆNH & QUÀ','Lệnh và điều kiện nhận quà','Lệnh bình luận, mốc quà, skin và giá vật phẩm.'],settings:['THIẾT LẬP','Thiết lập','Kết nối TikFinity, link cảnh, sự kiện và sao lưu.']};
 // Thế giới LIVE: ẩn bộ mô phỏng cho gọn (chỉ dùng ở thế giới thử nghiệm).
 if(mode!=='demo')document.querySelector('.simulator').hidden=true;
 $('#peopleSearch').addEventListener('input',()=>renderRank());$('#peopleFilter').addEventListener('change',()=>renderRank());
-function tab(name){currentTab=name;document.body.classList.toggle('skin-review-open',!overlay&&name==='skins');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));const a=titles[name];$('#pageCrumb').textContent=a[0];$('#pageTitle').textContent=a[1];$('#pageSubtitle').textContent=a[2];if(name==='scene'){scene.resize();renderRank();}if(name==='skins')renderSkinReview();else skinReviewRequest?.then(view=>view.setActive(false));if(name==='puppets')puppetUI?.refresh();}
+function tab(name){currentTab=name;document.body.classList.toggle('skin-review-open',!overlay&&name==='skins');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===name+'View'));document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));const a=titles[name];$('#pageCrumb').textContent=a[0];$('#pageTitle').textContent=a[1];$('#pageSubtitle').textContent=a[2];if(name==='scene'){scene.resize();renderRank();}if(name==='skins')renderSkinReview();else skinReviewRequest?.then(view=>view.setActive(false));if(name==='puppets')puppetUI?.refresh();if(name==='halls')updateHallAdmin?.(state);}
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{tab(b.dataset.tab);history.replaceState(null,'','#'+b.dataset.tab);}));
 mountEventTab(post);
+const updateHallAdmin=overlay?null:mountHallAdmin($('#hallAdmin'),post,esc,mode);
 if(titles[location.hash.slice(1)])tab(location.hash.slice(1));
 window.addEventListener('hashchange',()=>{const name=location.hash.slice(1);if(titles[name])tab(name);});
 $('#worldSelect').addEventListener('change',e=>{params.set('world',e.target.value);location.search=params.toString();});
@@ -435,7 +437,7 @@ let engagementSoundAt=-Infinity;
 // Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.
 const GIFT_STALE_MS=10000;let current=null,currentTimer=null;
 const giftValue=e=>(Number(e.coins)||0)*Math.max(1,Number(e.count)||1);
-function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony)return false;if(cur.effect==='breakthrough')return (giftValue(g)>=99||!!luxuryTier(g))&&breakthroughRealm(cur)<=5;return true;}
+function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony||isBlackGoldAward(cur))return false;if(cur.effect==='breakthrough')return (giftValue(g)>=99||!!luxuryTier(g))&&breakthroughRealm(cur)<=5;return true;}
 function interruptShow(){clearTimeout(spotTimer);clearTimeout(currentTimer);$('#spotlight').classList.remove('visible');scene.interruptPresentation?.();cultivationAudio.ritual(null);busy=false;current=null;}
 function showDiscipleNotice(e){
  let box=document.getElementById('discipleNotices');
@@ -457,6 +459,7 @@ function enqueueReady(e){
   if(!e.resident&&!isArrivalWelcome(e))narrator.add(e);
   if(ascensionStage&&!isAscensionEvent(scene,e)){if(!e.resident)narrator.add(e);return;}
   if(e.achieve?.kind==='disciple'){showDiscipleNotice(e);scene.noteEvent(e);tone('lotus');return;}
+  if(e.petAward&&e.giftFrom)showPetGiftAward(e);
   if(isArrivalWelcome(e)){arrivalWelcomes.add(e);return;}
   if(e.engagementAction){scene.noteEvent(e);narrator.add(e);const now=performance.now();if(now-engagementSoundAt>800){tone(e.engagementAction==='follow'?'petal':'lotus');engagementSoundAt=now;}return;}
   if(isEventAnnouncement(e)||e.gift)narrator.add(e);
@@ -489,8 +492,10 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
   if(pulse.length<6){el.hidden=true;return;}
   const n={tu:0,join:0,gift:0,heart:0,other:0};for(const {e}of pulse){if(e.gift)n.gift++;else if(e.effect==='join')n.join++;else if(String(e.text).startsWith('Tụ linh'))n.heart++;else if(/^Vận|^Luận|^Hái/.test(String(e.text)))n.tu++;else n.other++;}
   el.innerHTML=`✦ 10 giây qua: <b>${pulse.length}</b> lượt`+[[n.tu,'tu luyện'],[n.join,'nhập môn'],[n.heart,'thả tim'],[n.gift,'quà']].filter(([k])=>k).map(([k,l])=>` · ${k} ${l}`).join('');el.hidden=false;},1000);
+const ownVisitorReveal=(event,state)=>isBlackGoldAward(event)&&state?.visitor?.kind===BLACK_GOLD_VISITOR.kind
+  &&!state.visitor.closedAt&&state.visitor.endsAt>state.serverNow;
 function playNext(){
- if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>!(majorEventActive(state)&&(e.effect==='breakthrough'||e.effect==='transform'||e.petAward)));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;if(!presentations.start(e))continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
+ if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>ownVisitorReveal(e,state)||!(majorEventActive(state)&&(e.effect==='breakthrough'||e.effect==='transform'||e.petAward)));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;if(!presentations.start(e))continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
  if(e.gift&&eventDonationContext(scene)){scene.noteEvent(e);scene.addEffect(e);showGiftReceipt(e);queueMicrotask(playNext);return;}
  busy=true;current={e,at:Date.now()};
  if(e.heavenStrike){scene.startHeavenStrike(e);const au=cultivationAudio;if(au.enabled&&au.ctx?.state==='running'){au.duck(true);scheduleHeavenStrikeAudio(au.ctx,au.fxBus,strikeProfile(e.heavenStrike.seed));}currentTimer=setTimeout(()=>{au.duck(false);busy=false;current=null;playNext();},HEAVEN_STRIKE_MS+200);return;} // 07/11: Thiên Đạo giáng lôi
@@ -501,8 +506,8 @@ function playNext(){
  if(e.visitorProgress){const r=VISITOR_GIFT_REWARDS[e.visitorProgress.kind];$('#giftReceipt').insertAdjacentHTML('beforeend',`<span>✦ ${esc(r.skinName)}: đã góp ${Math.min(100,Math.round(e.visitorProgress.coins/(r.artifactCoins||500)*100))}% · ${giftTokenHTML(state.giftArt,r.skinCoins||100)} → skin · ${giftTokenHTML(state.giftArt,r.artifactCoins||500)} → ${esc(r.artifactName)}</span>`);}
  if(e.loyaltyAward||e.visitorAward){const el=$('#giftReceipt');el.innerHTML=`<strong>Tri ân ${esc(e.name)}</strong><span>${esc(e.itemNames.join(' · '))}</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,duration);}
  scene.addEffect(e);honorUI.show(e);if(e.effect!=='breakthrough'||![1,2,3,4,5,6,7,8,9,10].includes(breakthroughRealm(e)))tone(e.effect==='breakthrough'?'qi':e.technique?({thunder:'boss',soul:'dragon',lotus:'lotus',stars:'petal',celestial:'breakthrough',bamboo:'sword',vortex:'qi',frost:'sword',flame:'dragon',bell:'boss',dragon:'dragon',petal:'petal',meteor:'boss',flowersword:'petal',peachfan:'petal',flowercage:'lotus',starmirror:'breakthrough',stararrow:'sword',sevenstars:'boss',stardust:'qi'})[e.technique.id]||'attack':e.effect);narrator.add(e);
- if(shouldFocusEvent(e)&&!eventDonationContext(scene)&&!scene.raceStatus?.active&&!scene.socialStage?.length)scene.focus(e.user,duration);
- const label=e.raceGift?(e.raceBoost?'BỨT TỐC +'+e.raceBoost+' trượng':'Quà đã ghi nhận · chờ kết quả xếp hạng'):e.technique?.name||highGiftName(e)||luxury?.name||({breakthrough:'ĐỘT PHÁ · '+REALM_NAMES[breakthroughRealm(e)],join:'Nhập môn',attack:'Xuất chiêu',qi:'Tu luyện',sword:'Ngự kiếm',lotus:'Liên hoa trận',dragon:'Thanh long giáng thế',victory:'Bí cảnh hoàn tất',boss:'Yêu thú giáng thế',opportunity:e.opportunityEnd?'Cơ duyên kết thúc':'Thiên Đạo Cơ Duyên',transform:'BIẾN HÌNH · '+String(e.skinName||'').toUpperCase()})[e.effect]||e.text;
+ if(shouldFocusEvent(e)&&!isBlackGoldAward(e)&&!eventDonationContext(scene)&&!scene.raceStatus?.active&&!scene.socialStage?.length)scene.focus(e.user,duration);
+ const label=e.raceGift?(e.raceBoost?'BỨT TỐC +'+e.raceBoost+' trượng':'Quà đã ghi nhận · chờ kết quả xếp hạng'):e.technique?.name||highGiftName(e)||luxury?.name||(e.hacKimArtifact?'KHAI ẤN · '+BLACK_GOLD_VISITOR.relic:null)||({breakthrough:'ĐỘT PHÁ · '+REALM_NAMES[breakthroughRealm(e)],join:'Nhập môn',attack:'Xuất chiêu',qi:'Tu luyện',sword:'Ngự kiếm',lotus:'Liên hoa trận',dragon:'Thanh long giáng thế',victory:'Bí cảnh hoàn tất',boss:'Yêu thú giáng thế',opportunity:e.opportunityEnd?'Cơ duyên kết thúc':'Thiên Đạo Cơ Duyên',transform:'BIẾN HÌNH · '+String(e.skinName||'').toUpperCase()})[e.effect]||e.text;
  // v39: trên cảnh LIVE chỉ còn 1 khung (khung tên này); phần thưởng gộp thành 1 dòng nhỏ thay cho khung biên nhận riêng.
  const r=e.reward,extra=r&&!e.raceGift&&(e.gift||e.flowerRank||e.loyaltyAward)?[r.qi&&`+${fmt(r.qi)} tu vi`,r.stones&&`+${fmt(r.stones)} linh thạch`,...(r.itemNames||e.itemNames||[]).slice(0,2),e.buff?.mult&&`Phúc duyên ×${String(e.buff.mult).replace('.',',')}`].filter(Boolean).join(' · '):'';
  $('#spotlight').innerHTML=`<strong>${esc(e.name)}</strong><span>${esc(label)}</span>${extra?`<small class="spot-reward">${esc(extra)}</small>`:''}`;
@@ -534,14 +539,14 @@ function withHallMembership(s){
 }
 
 function receive(s){
+  if(!visualSaving&&JSON.stringify(s.sourceVisual??null)!==JSON.stringify(sharedVisual)){
+    sharedVisual=s.sourceVisual??null;applyVisualPreferences();
+  }
   s=withHallMembership(streamState(s,mode));
   ascensionLobby?.update(s,queue);
   document.querySelector('.live-disclosure').textContent=mode==='live'&&s.liveIntegrityVersion!==1?'M\u00c1Y CH\u1ee6 CH\u01afA \u00c1P D\u1ee4NG LU\u1eacT LIVE M\u1edaI':'TRÒ CHƠI TU TIÊN';
   const previous=state;state=s;if(overlay&&s.raceStatus?.entryAnnouncement)narrator.add(s.raceStatus.entryAnnouncement);honorUI.update(s);if(initialized&&previous){const previousPlayers=new Map(previous.players.map(p=>[p.id,p]));for(const p of s.players){const old=previousPlayers.get(p.id);if(old&&skinFor(p.giftCoins).level>skinFor(old.giftCoins).level)enqueue({id:'skin:'+p.id+':'+p.giftCoins,user:p.id,name:p.name,effect:'skin',text:skinFor(p.giftCoins).name});}}online=true;$('#disconnectBanner').hidden=true;$('#saveStatus').textContent='● Đã kết nối · tự lưu mỗi 3s';if(!selected||!state.players.some(p=>p.id===selected))selected=state.players[0]?.id||null;
   for(let e of s.events){if(e.effect==='breakthrough'){const old=previous?.players.find(p=>p.id===e.user),next=s.players.find(p=>p.id===e.user);e={...e,visualFrom:e.visualFrom||(old?{...old,realm:e.fromRealm??old.realm}:undefined),visualTo:e.visualTo||(next?{...next,realm:breakthroughRealm(e)}:undefined)};}if(!seen.has(e.id)&&(initialized||e.autoArrival&&s.serverNow-e.at<8000)){enqueue(e);lastViewerAt=Date.now();}seen.add(e.id);}if(seen.size>1000)seen=new Set([...seen].slice(-300));
-  if(!visualSaving&&JSON.stringify(s.sourceVisual??null)!==JSON.stringify(sharedVisual)){
-    sharedVisual=s.sourceVisual??null;applyVisualPreferences();
-  }
   if(!initialized){initialized=true;const p=player();if(p)$('#simName').value=p.name;renderGifts();renderGuide();renderLiveRanks(true);}
   scheduleRender();
 }
@@ -549,14 +554,25 @@ let renderPending=false;function scheduleRender(){if(renderPending)return;render
 // 08/11 tối: THẺ LUẬT QUÀ (ô #giftBoard cột phải) — ảnh quà thật → kết quả theo sự kiện đang mở.
 function renderGiftRules(){const el=$('#giftBoard');if(!el)return;const r=giftRules(state,state?.serverNow);setHUD(el,giftRuleHTML(r,state?.giftArt));el.hidden=!r?.rows?.length;el.dataset.tone=r?.tone||'';el.classList.add('gift-rule-card');}
 function setHUD(el,html){if(el._lastHUD!==html){el.innerHTML=html;el._lastHUD=html;}}
+function renderHallGuide(){
+ const guide=$('#lowerRightGuide'),halls=state.halls?.halls;
+ if(!guide)return;
+ guide.hidden=!halls?.length;
+ if(guide.hidden)return;
+ const names=halls.map(h=>`${h.index+1} ${esc(h.name.replace(/ Đường$/i,''))}`).join(' · ');
+ setHUD(guide,`<b>LỆNH NGŨ ĐƯỜNG</b><p class="hall-guide-names">${names}</p><ul>`
+  +hallGuideRows(halls).map(({cmd,text})=>`<li><span>${text}:</span> <code>${cmd}</code></li>`).join('')+'</ul>');
+}
 mountPetUI(post);
-function render(){if(!state)return;const renderStart=renderMetrics?performance.now():0;document.body.classList.toggle('has-major-event',majorEventActive(state));if(overlay){document.body.classList.toggle('pet-cove-stage',state.environment?.id==='pet-cove');renderCompanionHUD(state);renderLikeGoal();renderEngagement();}renderPetUI(state,!overlay);if(!overlay){renderScenePicker();renderQuickGift();renderLiveControls();renderHeavenPanel();}renderSocialUI(state,!overlay);if(overlay)renderVisitorHud();const p=player();const sceneStart=renderMetrics?performance.now():0;scene.update(state,selected);const sceneCost=renderMetrics?performance.now()-sceneStart:0;cultivationAudio.setTrack(musicForState(state).index);if(majorEventActive(state)&&busy&&current&&(current.e.effect==='breakthrough'||current.e.effect==='transform'||current.e.petAward)){const deferred=current.e;interruptShow();if(deferred.effect!=='breakthrough')presentations.push(deferred);}if(overlay){if(!busy)playNext();renderFocus();}const active=state.players.filter(p=>p.active),counts=participantCounts(state.players);$('#statPlayers').textContent=fmt(counts.players);$('#statProfiles').textContent=`${fmt(state.playerCount??state.players.length)} hồ sơ được lưu`;$('#statQi').textContent=fmt(state.sectQi);$('#statInteractions').textContent=fmt(state.totalInteractions);$('#sceneCount').textContent=counts.players;$('#worldBadge').textContent=mode==='demo'?'THỬ NGHIỆM':'LIVE';$('#worldNote').textContent=mode==='demo'?'Dữ liệu thử · tách biệt LIVE':'Dữ liệu LIVE · lưu trên máy';$('#demoControls').hidden=mode!=='demo';$('#liveControlsNotice').hidden=mode==='demo';$('#simLabel').textContent=mode==='demo'?'KHÔNG DÙNG QUÀ THẬT':'ĐANG NHẬN SỰ KIỆN THẬT';
+function render(){if(!state)return;const renderStart=renderMetrics?performance.now():0;document.body.classList.toggle('has-major-event',majorEventActive(state));if(overlay){document.body.classList.toggle('pet-cove-stage',state.environment?.id==='pet-cove');renderCompanionHUD(state);renderLikeGoal();renderEngagement();}renderPetUI(state,!overlay);if(!overlay){renderScenePicker();renderQuickGift();renderLiveControls();renderHeavenPanel();}renderSocialUI(state,!overlay);if(overlay)renderVisitorHud();const p=player();const sceneStart=renderMetrics?performance.now():0;scene.update(state,selected);const sceneCost=renderMetrics?performance.now()-sceneStart:0;cultivationAudio.setTrack(musicForState(state).index);if(majorEventActive(state)&&busy&&current&&!ownVisitorReveal(current.e,state)&&(current.e.effect==='breakthrough'||current.e.effect==='transform'||current.e.petAward)){const deferred=current.e;interruptShow();if(deferred.effect!=='breakthrough')presentations.push(deferred);}if(overlay){if(!busy)playNext();renderFocus();}const active=state.players.filter(p=>p.active),counts=participantCounts(state.players);$('#statPlayers').textContent=fmt(counts.players);$('#statProfiles').textContent=`${fmt(state.playerCount??state.players.length)} hồ sơ được lưu`;$('#statQi').textContent=fmt(state.sectQi);$('#statInteractions').textContent=fmt(state.totalInteractions);$('#sceneCount').textContent=counts.players;$('#worldBadge').textContent=mode==='demo'?'THỬ NGHIỆM':'LIVE';$('#worldNote').textContent=mode==='demo'?'Dữ liệu thử · tách biệt LIVE':'Dữ liệu LIVE · lưu trên máy';$('#demoControls').hidden=mode!=='demo';$('#liveControlsNotice').hidden=mode==='demo';$('#simLabel').textContent=mode==='demo'?'KHÔNG DÙNG QUÀ THẬT':'ĐANG NHẬN SỰ KIỆN THẬT';
   const connected=state.connection.status==='connected';setHUD($('.scene-location'),'<i></i> '+esc(state.environment?.name||'Tụ Linh Đài').toUpperCase()+(mode==='demo'?'<small>THỬ</small>':connected?'<small>LIVE</small>':'<small>CHỜ KẾT NỐI</small>'));$('#connectionText').textContent=mode==='demo'?'Bộ mô phỏng sẵn sàng':connected?'TikFinity đã kết nối':'TikFinity chưa kết nối';$('#connectionDot').classList.toggle('off',mode==='live'&&!connected);$('#bridgeStatus').textContent=({connected:'Đã kết nối • đang nhận sự kiện',connecting:'Đang kết nối…',reconnecting:'Đang thử kết nối lại sau mỗi 5 giây',disconnected:'Chưa kết nối'})[state.connection.status]+` · ${fmt(state.connection.received)} sự kiện`;
   $('#bridgeError').textContent=state.connection.lastError||'';$('#bridgeButton').textContent=state.connection.enabled?'Ngắt kết nối':'Kết nối TikFinity';
   const remain=Math.max(0,Math.ceil(((state.boss?.endsAt||state.nextBossAt)-state.serverNow)/1000));$('#scenePhase').textContent=state.raceStatus?.active?'Vân Hải Thiên Lộ':state.socialScene?(state.socialScene==='tournament'?'Luận Kiếm':'Tam Sinh Ước'):state.boss?`Bí cảnh còn ${remain}s`:`♜ ${Math.floor(remain/60)}:${String(remain%60).padStart(2,'0')}`;
   const bh=$('#bossHud');bh.hidden=!state.boss||state.boss.species==='abyss-dragon';bh.classList.toggle('visible',!bh.hidden);document.body.classList.toggle('abyss-fight',state.boss?.species==='abyss-dragon'&&state.boss.hp>0); // 05/11: bảng yêu lực Ma Long vẽ trên canvas, ẩn bảng xếp hạng góc trái để không chồng
   if(state.boss)setHUD(bh,`<div class="boss-line"><span>♜ ${esc(state.boss.name)}</span><span>${fmt(state.boss.hp)} / ${fmt(state.boss.maxHp)}</span></div><div class="progress"><i style="width:${state.boss.hp/state.boss.maxHp*100}%"></i></div><small>Gõ <b>danh</b> · ${remain}s · ${esc(state.boss.encounter?.name||'Top công lực nhận thưởng')}</small>${Object.entries(state.boss.damage||{}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3).map(([id,d],i)=>`<small class="boss-rank">${i+1}. ${esc(state.players.find(p=>p.id===id)?.name||'Đạo hữu')} · ${fmt(d)} công lực</small>`).join('')}`);
-  if(!overlay&&currentTab==='skins')renderSkinReview();if(overlay){renderFlowerHud();renderRail();renderLiveRanks();renderGiftRules();
+  if(!overlay&&currentTab==='skins')renderSkinReview();
+  if(!overlay&&currentTab==='halls')updateHallAdmin(state);
+  if(overlay){renderHallGuide();renderFlowerHud();renderRail();renderLiveRanks();renderGiftRules();
     const duel=$('#hallDuel'),duelHTML=hallDuelHTML(state.halls,esc,state.serverNow);
     duel.hidden=!duelHTML;document.body.classList.toggle('hall-dueling',!!duelHTML);
     if(duelHTML)setHUD(duel,duelHTML);}else syncAutoEvents();

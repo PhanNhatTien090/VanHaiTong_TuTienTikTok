@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWorld,action,startVisitor,controlPetEvent} from '../engine.mjs';
 import {VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
+import {PREMIUM_PETS} from '../public/spirit-pets.js';
 import {announcement} from '../speech-lines.mjs';
 
 const N=Date.parse('2026-11-10T13:00:00Z');
@@ -45,6 +46,24 @@ test('tặng hộ trong Linh Thú Cốc: coin về người nhận, tim không c
  action(w,{type:'like',userId:'a',count:150},N+40);
  assert.equal(w.players.a.petProgress.hearts,150);
  assert.equal(w.players.b.petProgress.hearts||0,0);
+});
+
+test('đủ 300 coin tặng hộ thì người nhận mở khóa linh thú và thông báo ghi tên người tặng',()=>{
+ const w=setup();controlPetEvent(w,'start',N+10);
+ const pet=PREMIUM_PETS[0];w.petEvent.premium=pet.id;
+ assert.equal(chat(w,'a','tặng '+w.players.b.socialCode,N+20).ok,true);
+ gift(w,'a',299,'pet-299',N+30);
+ assert.ok(!w.players.b.spiritPets.includes(pet.id));
+ gift(w,'a',1,'pet-300',N+40);
+ gift(w,'a',1,'pet-300',N+50);
+ assert.ok(w.players.b.spiritPets.includes(pet.id));
+ assert.ok(!w.players.a.spiritPets?.includes(pet.id));
+ assert.equal(w.players.b.spiritPet,pet.id);
+ assert.equal(w.players.a.giftCoins,300);
+ const awards=w.events.filter(e=>e.user==='b'&&e.petAward&&e.petId===pet.id);
+ assert.equal(awards.length,1);
+ assert.equal(awards[0].giftFrom,'An');
+ assert.match(JSON.stringify(announcement(awards[0])),/do An tặng/);
 });
 
 test('chặn: ngoài sự kiện, tự tặng mình, người không ở LIVE, trùng tên',()=>{

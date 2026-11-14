@@ -1,3 +1,4 @@
+import {hallStandingOrder} from './public/ngu-duong-ui.js';
 export const HALL_WEEK_MS=7*86400000;
 export const hallWeekAt=now=>Math.floor((now+7*3600000+3*86400000)/HALL_WEEK_MS);
 export const hallWeekStart=week=>week*HALL_WEEK_MS-7*3600000-3*86400000;
@@ -8,7 +9,7 @@ export function settleHallWeek(w,s,now,defs){
  s.weekHistory??=[];s.weeklyPending??=[];
  if(!s.weekHistory.some(e=>e.week===s.week)){
   const members=Object.entries(s.members).filter(([id,m])=>real(w.players[id])&&m.week===s.week&&(m.weekPoints||0)>0);
-  const standings=s.halls.map((h,index)=>({index,name:defs[index].name,color:defs[index].color,points:h.points||0,activity:{...(h.weekActivity||{})},battlePoints:h.battlePoints||0,elder:h.elder,contributors:members.filter(([,m])=>m.index===index).map(([id,m])=>({id,name:w.players[id].name,points:m.weekPoints,activity:{...(m.weekActivity||{})}})).sort((a,b)=>b.points-a.points||a.id.localeCompare(b.id)).slice(0,100)})).sort((a,b)=>b.points-a.points||b.battlePoints-a.battlePoints||a.index-b.index);
+  const standings=s.halls.map((h,index)=>({index,name:defs[index].name,color:defs[index].color,points:h.points||0,activity:{...(h.weekActivity||{})},battlePoints:h.battlePoints||0,elder:h.elder,contributors:members.filter(([,m])=>m.index===index).map(([id,m])=>({id,name:w.players[id].name,points:m.weekPoints,activity:{...(m.weekActivity||{})}})).sort((a,b)=>b.points-a.points||a.id.localeCompare(b.id)).slice(0,100)})).filter(h=>!defs[h.index].deleted).sort(hallStandingOrder);
   const record={week:s.week,startedAt:hallWeekStart(s.week),endsAt:hallWeekStart(s.week+1),settledAt:now,standings,rewarded:0};
   s.weekHistory.push(record);s.weekHistory=s.weekHistory.slice(-26);
   for(const [rank,hall] of standings.slice(0,3).entries()){
