@@ -5,14 +5,12 @@
 .inventory-deck[hidden]{display:none}
 .inventory-deck .inv-queue{position:absolute;left:50%;top:12%;transform:translateX(-50%);font:700 max(13px,1.7cqw) "Segoe UI",sans-serif;color:#ffe7b0;background:#0b1a2ef0;border:1px solid #d6af6299;border-radius:999px;padding:.25em .9em;white-space:nowrap}
 
-.inventory-deck .vd-card{position:absolute;width:42cqw;box-sizing:border-box;font:600 max(14px,2.3cqw)/1.15 "Segoe UI",sans-serif;
+.inventory-deck .vd-col{position:absolute;top:13%;width:42cqw;max-height:62%;display:flex;flex-direction:column;gap:1.2cqw}
+.inventory-deck .vd-col-left{left:2%}.inventory-deck .vd-col-right{right:2%}
+.inventory-deck .vd-card{position:relative;flex:none;width:42cqw;box-sizing:border-box;font:600 max(14px,2.3cqw)/1.15 "Segoe UI",sans-serif;
  background:linear-gradient(160deg,#0d2340f7,#122640f4 60%,#1b2238ee);border:2px solid #d6af62;border-radius:.7em;box-shadow:0 .35em 1.1em #000a;
  padding:.45em .5em .55em;overflow:hidden;opacity:1;transform:translate(0,0) scale(1);transform-origin:50% 50%;
  transition:transform .45s cubic-bezier(.2,.85,.25,1),opacity .3s ease,border-color .3s}
-.inventory-deck .vd-card[data-slot="0"]{left:2%;top:13%}
-.inventory-deck .vd-card[data-slot="1"]{right:2%;top:13%}
-.inventory-deck .vd-card[data-slot="2"]{left:2%;top:38%}
-.inventory-deck .vd-card[data-slot="3"]{right:2%;top:38%}
 /* Pha: chờ lượt → hiện giữa (to) → bay về góc → mờ dần. */
 .inventory-deck .vd-card.vd-wait{opacity:0;transition:none}
 .inventory-deck .vd-card.vd-center{transform:translate(var(--vd-dx,0),var(--vd-dy,0)) scale(1.32);z-index:2}
@@ -30,6 +28,12 @@
 .inventory-deck .vd-chips img{width:1.15em;height:1.15em}
 
 .inventory-deck .vd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.3em}
+/* 15/11: hiện hết món — nhiều món thì nhiều cột, ô và chữ nhỏ lại theo. */
+.inventory-deck .vd-grid[data-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr));gap:.25em;font-size:.86em}
+.inventory-deck .vd-grid[data-cols="5"]{grid-template-columns:repeat(5,minmax(0,1fr));gap:.22em;font-size:.76em}
+.inventory-deck .vd-grid[data-cols="6"]{grid-template-columns:repeat(6,minmax(0,1fr));gap:.2em;font-size:.68em}
+.inventory-deck .vd-tag{position:absolute;left:.05em;top:.05em;font:800 .66em "Segoe UI",sans-serif;font-style:normal;color:#1d1405;background:#ffd77e;border-radius:.45em;padding:0 .3em}
+.inventory-deck .vd-tag.is-sub{background:#9fc7e5}
 .inventory-deck .vd-cell{min-width:0;display:grid;justify-items:center;gap:.12em;background:#0a1530b0;border:1.5px solid #8d9dc340;border-radius:.45em;padding:.2em .15em .25em}
 .inventory-deck .vd-cell.is-on{border-color:#ffd77e;background:#3a321c99}
 .inventory-deck .vd-cell.is-on .vd-cap{color:#ffe39d}
@@ -40,18 +44,23 @@
 .inventory-deck .vd-pic>canvas:not([data-ready])+img{opacity:.9}
 .inventory-deck .vd-pic>canvas[data-ready]+img{display:none}
 .inventory-deck .vd-n{position:absolute;right:.05em;bottom:.05em;font:800 .78em "Segoe UI",sans-serif;font-style:normal;color:#fff;background:#b2451fe6;border-radius:.5em;padding:0 .3em}
-.inventory-deck .vd-cap{max-width:100%;font-size:.76em;font-weight:700;color:#f1f6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inventory-deck .vd-cap{max-width:100%;font-size:.76em;font-weight:700;line-height:1.08;color:#f1f6ff;text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
 .inventory-deck .vd-more .vd-pic b{font:800 1.6em Georgia,serif;color:#ffe2a0}
 .inventory-deck .vd-empty{margin:.3em 0;font-size:.85em;color:#c8d3e7;text-align:center}
 
 .inventory-deck .vd-tuvi-body{display:flex;gap:.45em;align-items:center}
 .inventory-deck .vd-portrait{flex:none;width:34%;aspect-ratio:220/260;height:auto}
 .inventory-deck span.vd-portrait{display:block}
-.inventory-deck .vd-tuvi-info{display:grid;gap:.3em;min-width:0;flex:1}
+.inventory-deck .vd-tuvi-info{display:grid;gap:.28em;min-width:0;flex:1}
+.inventory-deck .vd-stat{display:grid;gap:.06em}
+.inventory-deck .vd-stat label{font-size:.66em;font-weight:700;color:#cfdcec;letter-spacing:.03em}
+.inventory-deck .vd-stone .vd-bar i{background:linear-gradient(90deg,#c98a2b,#ffd77e)}
+.inventory-deck .vd-stat:not(.is-full) .vd-bar{border-color:#ff9a6a99}
+.inventory-deck .vd-stat.is-full .vd-bar{border-color:#8ff0a6aa}
 .inventory-deck .vd-realm{font:700 1.02em Georgia,serif;color:#ffe9b0;line-height:1.15}
 .inventory-deck .vd-bar{position:relative;height:1.15em;border-radius:999px;background:#06101fcc;border:1px solid #e6c27a88;overflow:hidden}
 .inventory-deck .vd-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#3fb5ff,#9df3ff)}
-.inventory-deck .vd-bar span{position:relative;display:block;text-align:center;font-size:.78em;font-weight:800;line-height:1.45;color:#fff;text-shadow:0 1px 2px #000}
+.inventory-deck .vd-bar span{position:relative;display:block;text-align:center;font-size:.74em;white-space:nowrap;font-weight:800;line-height:1.45;color:#fff;text-shadow:0 1px 2px #000}
 .inventory-deck .vd-state{font-size:.82em;color:#d6e7f5}
 .inventory-deck .vd-ready{color:#ffd76a}
 .inventory-deck .vd-short{color:#ffb38a}

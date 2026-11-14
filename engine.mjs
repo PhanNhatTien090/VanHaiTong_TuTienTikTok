@@ -205,7 +205,19 @@ export const statusText=(p,w=null,now=Date.now())=>`Tu vi ${p.qi}/${requiredQi(p
 // Báo một lần khi người chơi vừa đủ điều kiện đột phá cảnh giới hiện tại.
 function checkReady(w,p,now){
   if(!readyToBreak(p,w,now)||p.readyRealm===p.realm)return;
-  p.readyRealm=p.realm;emit(w,p,`Đủ tu vi đột phá ${REALMS[p.realm+1]} • gõ dotpha`,'ready',now);
+  p.readyRealm=p.realm;p.readyHintAt=now;emit(w,p,`Đủ tu vi đột phá ${REALMS[p.realm+1]} • gõ dotpha`,'ready',now);
+}
+// 15/11/2026: nhiều người đủ đột phá nhưng không biết gõ dotpha (trước chỉ báo 1 lần mỗi cảnh giới).
+// Mỗi 2 phút gộp tối đa 5 người đang có mặt vào MỘT lời nhắc (1 câu giọng + bong bóng trên đầu từng người) — không chiếm hàng hiệu ứng.
+export const READY_REMIND=Object.freeze({everyMs:120000,max:5,activeMs:600000});
+function readyReminderTick(w,now){
+  if(warActive(w)||now-(w.readyRemindAt||0)<READY_REMIND.everyMs||now-(w.lastGuideAt||0)<4000)return;
+  w.readyRemindAt=now;
+  const picks=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&now-(p.lastActive||0)<=READY_REMIND.activeMs&&w.playTransfers?.[p.id]?.phase!=='web'&&now-(p.readyHintAt||0)>=READY_REMIND.everyMs&&readyToBreak(p,w,now))
+    .sort((a,b)=>(a.readyHintAt||0)-(b.readyHintAt||0)||(b.lastActive||0)-(a.lastActive||0)).slice(0,READY_REMIND.max);
+  if(!picks.length)return;
+  for(const p of picks)p.readyHintAt=now;w.lastGuideAt=now;
+  emit(w,null,`Đủ đột phá: ${picks.map(p=>p.name).join(' · ')} • gõ dotpha`,'ready',now,{readyReminder:true,ids:picks.map(p=>p.id),count:picks.length});
 }
 // Gợi ý bước tiếp theo cho từng người: đủ linh thạch thì chỉ đúng lệnh cần gõ.
 // Mỗi gợi ý chỉ nói một lần mỗi người; mỗi người cách nhau ≥3 phút; cả tông môn ≥20 giây một gợi ý.
@@ -260,9 +272,9 @@ export function newbieGuide(w,p,now){
 }
 // v82: đủ tu vi mà THIẾU LINH THẠCH → tự báo (nhiều người không biết vì sao chưa đột phá được).
 // 08/11: nhắc lại mỗi 3 phút khi vẫn còn thiếu (trước chỉ 1 lần mỗi cảnh giới); overlay hiện bong bóng "Gõ hái" trên đầu.
-export const STONE_HINT_MS=180000;
+export const STONE_HINT_MS=120000; // 15/11: 3 → 2 phút (user muốn nhắc nhiều hơn)
 function missingStones(w,p,now){if(p.resident||p.puppet||p.realm>=REALMS.length-1||p.qi<requiredQi(p)||p.stones>=requiredStones(p)||now-(p.stoneHintAt||0)<STONE_HINT_MS||now-(w.lastGuideAt||0)<4000)return false;
-  p.stoneHintRealm=p.realm;p.stoneHintAt=now;w.lastGuideAt=now;emit(w,p,statusText(p,w,now),'status',now,{missing:'stones'});return true;}
+  p.stoneHintRealm=p.realm;p.stoneHintAt=now;w.lastGuideAt=now;emit(w,p,statusText(p,w,now),'status',now,{missing:'stones',lack:Math.ceil(requiredStones(p)-p.stones)});return true;}
 function maybeHint(w,p,now){
   if(p.intro&&!p.intro.advancedAt&&now-p.intro.startedAt<5*60000)return;
   if(readyToBreak(p,w,now)||now-(p.joinedAt||0)<30000)return;const s=suggestion(p);if(!s)return;p.hints??=[];
@@ -567,7 +579,7 @@ function actionCore(w,input,now) {
     if(warActive(w))return fail('Chính Ma Đại Chiến đang diễn ra • tạm ngưng đột phá, dồn sức đẩy chiến tuyến!');
     if(p.realm>=REALMS.length-1)return fail('Đã đạt '+REALMS.at(-1)+'. Hãy hỗ trợ đồng môn!');
     if(!finalRealmEligible(p)){const message='Tiên Đế cần tổng quà ít nhất 100 coin • hiện '+(p.giftCoins||0)+' coin';if(!cooldown(p,'final-realm',15000,now))emit(w,p,message,'status',now);return fail(message);}
-    if(p.qi<requiredQi(p)||p.stones<requiredStones(p)){const onlyStones=p.qi>=requiredQi(p);if(!cooldown(p,'status',15000,now)){emit(w,p,statusText(p,w,now),'status',now,onlyStones?{missing:'stones'}:{});if(onlyStones)p.stoneHintAt=now;}return fail(`Chưa đủ đột phá: ${missingText(p)}.`);}
+    if(p.qi<requiredQi(p)||p.stones<requiredStones(p)){const onlyStones=p.qi>=requiredQi(p);if(!cooldown(p,'status',15000,now)){emit(w,p,statusText(p,w,now),'status',now,onlyStones?{missing:'stones',lack:Math.ceil(requiredStones(p)-p.stones)}:{});if(onlyStones)p.stoneHintAt=now;}return fail(`Chưa đủ đột phá: ${missingText(p)}.`);}
     if(dailyAscensionView(w,p,now).exhausted){const message='Đạo cơ đang lắng đọng • thiên kiếp chưa tới, tiếp tục tích lũy tu vi.'; /* 07/11/2026: ẩn giới hạn */if(!cooldown(p,'daily-break',15000,now))emit(w,p,message,'status',now,{dailyAscensionCap:true});return fail(message);}
     recordDailyAscension(w,p,now);
     p.qi-=requiredQi(p);p.stones-=requiredStones(p);p.realm++;
@@ -930,7 +942,7 @@ function thienTaiTick(w,now){
  emit(w,p,`Thiên tài xuất thế • ${p.name} tu luyện ${f(first.value)} tu vi hôm nay`,'title',now,{achieve:{kind:'genius',item:p.name,value:first.value,runners:top.slice(1).map((r,i)=>`${i+2}. ${r.name} ${f(r.value)}`)}});
 }
 function tickCore(w,now) {
- stoneHintTick(w,now);
+ stoneHintTick(w,now);readyReminderTick(w,now);
  ensurePeriods(w,now); // 07/11: sang ngày/tuần mới → chốt bảng cũ, mở kỳ mới
  automaticEventsPaused(w,now);
  tickLantern(w,now,companionContext);tickCompanions(w,now,companionContext);

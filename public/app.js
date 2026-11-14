@@ -452,6 +452,8 @@ function showDiscipleNotice(e){
  setTimeout(()=>card.remove(),6000);
 }
 function enqueueReady(e){
+  // 15/11: nhắc gộp "đủ đột phá" — chỉ bong bóng trên đầu từng người + 1 câu giọng; không chiếm hàng hiệu ứng.
+  if(e.readyReminder){const t0=performance.now();for(const id of e.ids||[])scene.mover?.onEvent({user:id,effect:'ready'},t0,scene.motion);if(!ascensionStage)narrator.add(e);return;}
   // Event cards and the battlefield own these updates; never queue one spotlight/voice per hit or claim.
   if(e.miniStart||e.miniEnd||e.miniReward||e.hallWarAction||e.hallWarReward||e.hallWarStart||e.hallWarBattle||e.hallWarEnd){
     if(e.miniReward||e.hallWarReward||e.hallWarEnd)scene.feedbackFX?.add(e,performance.now(),scene);

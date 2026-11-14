@@ -23,21 +23,21 @@ export function bagCard(p,catalog){
  const manuals=[...new Set(p.manuals||[])].map(id=>entry(id));
  return {kind:'bag',stones:Math.floor(p.stones||0),herbs:Math.floor(p.herbs||0),
   equipped:arts.find(x=>x.on)||null,secondaryEquipped:arts.filter(x=>x.secondary).length,
-  artifacts:cap(arts,8),pills:cap(pills,6),manuals:cap(manuals,5),
+  artifacts:cap(arts,12),pills:cap(pills,8),manuals:cap(manuals,8), // 15/11: bảng xem hiện hết món (user)
   tip:arts.length?(pills.length?'Gõ 5 dùng đan · 7 rèn thêm':'Gõ 4 luyện đan · 7 rèn thêm'):'Gõ 7 rèn pháp bảo đầu tiên'};
 }
 export function petCard(p){
  const owned=(p.spiritPets||[]).map(petById).filter(Boolean);
  const cur=p.spiritPet&&petById(p.spiritPet);
  return {kind:'pets',current:cur?.name||null,currentId:cur?.id||null,
-  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id})),6),
+  owned:cap(owned.map((x,i)=>({id:x.id,name:x.name,no:ALL_PETS.indexOf(x)+1,on:x.id===cur?.id})),ALL_PETS.length),
   total:ALL_PETS.length,tip:owned.length?'Gõ thu + số để đổi linh thú đồng hành':'Linh thú có trong sự kiện Linh Thú Cốc'};
 }
 export function skinCard(p){
  const owned=(p.rewardSkins||[]).map(id=>SPECIAL_SKINS.find(s=>s.id===id)).filter(Boolean);
  const cur=p.skinChoice&&SPECIAL_SKINS.find(s=>s.id===p.skinChoice);
  return {kind:'skins',current:cur?.name||'Áo cảnh giới',
-  owned:cap(owned.map(s=>({id:s.id,name:s.name,on:s.id===cur?.id})),6),
+  owned:cap(owned.map(s=>({id:s.id,name:s.name,on:s.id===cur?.id})),24),
   tip:owned.length?'Gõ skin + tên để mặc · skin macdinh để về áo cảnh giới':'Skin mở từ sự kiện, đua kiếm, rèn pháp bảo'};
 }
 // Trả về {kind, text} nếu là lệnh xem; null nếu không phải.

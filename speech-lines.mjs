@@ -119,6 +119,7 @@ export function speechPlan(e){
   if(e.guide==='gather')return [say('tongsu',pickBy(seed,[`${Who}, gõ hái để hái linh thảo.`,`Bước ba nè ${who}: gõ hái nhận linh thạch!`]))];
   if(e.effect==='hint'){const cmd=cutWords(gameText(e.say||''),40),why=cutWords(gameText(e.why||'').split('.')[0],60);return [say('tongsu',`${Who}, hãy gõ ${cmd}. ${why}.`)];}
   if(e.effect==='blessing'){const n=Number(e.count);return [say('tiennu',`Thiên đạo ban phúc! ${n>0?cap(viNumber(n))+' vị đồng môn':'Đồng môn'} được đột phá cảnh giới!`)];}
+  if(e.readyReminder){const n=Number(e.count)||1;return [say('tongsu',n===1?`${gameText(String(e.text||'').replace(/^Đủ đột phá: /,'').split(' • ')[0])} đã đủ đột phá, gõ đột phá ngay!`:`${cap(viNumber(n))} đạo hữu đã đủ đột phá, gõ đột phá ngay!`)];}
   if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ đột phá ngay.`)];
   if(e.effect==='status'){
     const mm=text.match(/Tu vi (\d+)\/(\d+) • Linh thạch (\d+)\/(\d+) • ([^•]+)/);

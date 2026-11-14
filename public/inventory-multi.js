@@ -31,37 +31,44 @@ function cell(i,category,esc){
  const item=typeof i==='string'?{name:i}:i;
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
- return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
+ const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
+ return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
 }
-// Ghép nhiều nhóm vào tối đa 6 ô; dư thì ô cuối ghi "+N".
+// 15/11 (user): HIỆN HẾT món — nhiều món thì thêm cột cho ô nhỏ lại (3→4→5→6 cột), bảng không cao quá ô góc.
+// Chỉ khi máy chủ cắt bớt (quá nhiều) mới có ô "+N".
+export const gridCols=n=>n<=6?3:n<=12?4:n<=20?5:6;
 function grid(groups,esc,empty){
  const all=[];let more=0;
  for(const [box,category] of groups){for(const i of box?.items||[])all.push([i,category]);more+=box?.more||0;}
  if(!all.length&&!more)return `<p class="vd-empty">${empty}</p>`;
- const total=all.length+more,shown=total>CELLS?all.slice(0,CELLS-1):all,rest=total-shown.length;
- return `<div class="vd-grid">${shown.map(([i,c])=>cell(i,c,esc)).join('')}${rest>0?`<div class="vd-cell vd-more"><span class="vd-pic"><b>+${fmt(rest)}</b></span><span class="vd-cap">món khác</span></div>`:''}</div>`;
+ const cols=gridCols(all.length+(more?1:0));
+ return `<div class="vd-grid" data-cols="${cols}">${all.map(([i,c])=>cell(i,c,esc)).join('')}${more>0?`<div class="vd-cell vd-more"><span class="vd-pic"><b>+${fmt(more)}</b></span><span class="vd-cap">món khác</span></div>`:''}</div>`;
 }
 const pct=(a,b)=>Math.max(0,Math.min(100,(Number(a)||0)/Math.max(1,Number(b)||1)*100));
+// Số gọn: 6.420.000 → 6,42tr (giữ đủ thông tin, bớt chữ).
+export const short=n=>{n=Math.floor(Number(n)||0);const a=Math.abs(n),f=(v,u)=>(Math.round(v*100)/100).toLocaleString('vi-VN')+u;return a>=1e9?f(n/1e9,'tỷ'):a>=1e6?f(n/1e6,'tr'):a>=1e4?f(n/1e3,'k'):n.toLocaleString('vi-VN');};
 function tuviBody(c){
- const p=pct(c.qi,c.needQi),stonesShort=Math.max(0,(c.needStones||0)-(c.stones||0));
- const state=!c.next?'<b class="vd-ready">ĐỈNH TU TIÊN</b>':c.ready?'<b class="vd-ready">ĐỦ ĐỘT PHÁ</b>':p>=100&&stonesShort?`<span class="vd-short">thiếu ${fmt(stonesShort)} linh thạch</span>`:`<span class="vd-next">→ ${c.next}</span>`;
- return {p,state};
+ const p=pct(c.qi,c.needQi),ps=pct(c.stones,c.needStones),qiShort=Math.max(0,(c.needQi||0)-(c.qi||0)),stonesShort=Math.max(0,(c.needStones||0)-(c.stones||0));
+ const state=!c.next?'<b class="vd-ready">ĐỈNH TU TIÊN</b>':c.ready?`<b class="vd-ready">ĐỦ ĐỘT PHÁ → ${c.next}</b>`:qiShort?`<span class="vd-next">→ ${c.next}</span>`:`<span class="vd-short">thiếu ${fmt(stonesShort)} linh thạch · gõ hái</span>`;
+ return {p,ps,qiShort,stonesShort,state};
 }
 export function inventoryDeckHTML(e,esc){
  const card=e.card,kind=cardKind(card);
  if(!kind)return '';
  let body='';
  if(kind==='tuvi'){
-  const {p,state}=tuviBody({...card,next:card.next&&esc(card.next)});
-  body=`<div class="vd-tuvi-body"><span class="vd-portrait" aria-hidden="true"></span><div class="vd-tuvi-info"><strong class="vd-realm">${esc(realmWithStage(card.realmName,card.stage))}</strong><div class="vd-bar"><i style="width:${p.toFixed(1)}%"></i><span>${p>=100?'100':p.toFixed(p<10?1:0)}%</span></div><div class="vd-state">${state}</div><div class="vd-rank">Hạng <b>#${fmt(card.rank)}</b></div></div></div>`;
+  const {p,ps,qiShort,stonesShort,state}=tuviBody({...card,next:card.next&&esc(card.next)});
+  const bar=(cls,label,k,a,b,lack)=>`<div class="vd-stat ${cls}${lack?'':' is-full'}"><label>${label}</label><div class="vd-bar"><i style="width:${k.toFixed(1)}%"></i><span>${short(a)} / ${short(b)}${lack?'':' ✓'}</span></div></div>`;
+  body=`<div class="vd-tuvi-body"><span class="vd-portrait" aria-hidden="true"></span><div class="vd-tuvi-info"><strong class="vd-realm">${esc(realmWithStage(card.realmName,card.stage))}</strong>${card.next?bar('vd-qi','Tu vi',p,card.qi,card.needQi,qiShort)+bar('vd-stone','Linh thạch',ps,card.stones,card.needStones,stonesShort):''}<div class="vd-state">${state}</div><div class="vd-rank">Hạng <b>#${fmt(card.rank)}</b> / ${fmt(card.players)}</div></div></div>`;
  }else if(kind==='bag'){
-  const manuals=(card.manuals?.items?.length||0)+(card.manuals?.more||0);
-  body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)}</span><span>🌿 ${fmt(card.herbs)}</span>${manuals?`<span>📜 ${fmt(manuals)}</span>`:''}</div>`
-   +grid([[card.artifacts,'artifact'],[card.pills,'pill']],esc,'Túi trống');
+  body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span></div>`
+   +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');
  }else if(kind==='pets'){
-  body=grid([[card.owned,'pets']],esc,'Chưa có linh thú');
+  const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
+  body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
  }else{
-  body=grid([[card.owned,'skins']],esc,'Chưa có skin riêng');
+  const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
+  body=`<div class="vd-chips"><span>Đã có ${fmt(has)}</span><span>Mặc: ${esc(card.current||'Áo cảnh giới')}</span></div>`+grid([[card.owned,'skins']],esc,'Chưa có skin riêng');
  }
  return `<article class="vd-card vd-${kind}"><header><strong>${esc(e.name||'Đạo hữu')}</strong><small>${KIND_LABEL[kind]}</small></header>${body}</article>`;
 }
@@ -131,11 +138,18 @@ export class InventoryDeck{
   }
   return node;
  }
+ // 15/11: 2 cột trái/phải (ô 0,2 trái · 1,3 phải) — thẻ dưới tự xếp ngay dưới thẻ trên, thẻ cao không đè nhau.
+ column(slot){
+  const node=this.container;if(typeof node?.querySelector!=='function'||!this.doc?.createElement)return node;
+  this.cols??=['left','right'].map(side=>{const c=this.doc.createElement('div');c.className='vd-col vd-col-'+side;node.appendChild(c);return c;});
+  return this.cols[slot%2];
+ }
  // Vị trí giữa màn so với ô góc: đọc kích thước 1 lần lúc thẻ xuất hiện (theo sự kiện, không theo khung hình).
  centerOffset(node){
   const box=this.container,W=box.clientWidth||0,H=box.clientHeight||0;
   if(!W||!H||!node.offsetWidth)return null;
-  const cx=node.offsetLeft+node.offsetWidth/2,cy=node.offsetTop+node.offsetHeight/2;
+  const r=node.getBoundingClientRect?.(),b=box.getBoundingClientRect?.();
+  const cx=r&&b?r.left-b.left+r.width/2:node.offsetLeft+node.offsetWidth/2,cy=r&&b?r.top-b.top+r.height/2:node.offsetTop+node.offsetHeight/2;
   return {dx:W/2-cx,dy:H*.4-cy};
  }
  phase(entry,x,now){
@@ -170,10 +184,12 @@ export class InventoryDeck{
      const old=entry.node;if(fresh.classList&&old.classList){for(const c of ['vd-center','vd-wait'])if(old.classList.contains(c))fresh.classList.add(c);fresh.style.cssText=old.style.cssText;fresh.dataset.slot=old.dataset.slot;}
      old.replaceWith(fresh);if(fresh.classList&&entry.placed)fresh.classList.add('vd-pulse');
      entry={node:fresh,version:x.version,event:x.event,placed:entry.placed};
-    }else{entry={node:fresh,version:x.version,event:x.event,placed:false};node.appendChild(fresh);}
+    }else{entry={node:fresh,version:x.version,event:x.event,placed:false};this.column(x.slot).appendChild(fresh);}
     this.nodes.set(x.user,entry);
    }
-   if(entry.node.parentNode!==node)node.appendChild(entry.node);
+   const col=this.column(x.slot);if(entry.node.parentNode!==col)col.appendChild(entry.node);
+   // Trong cột: ô trên (0/1) luôn đứng trước ô dưới (2/3).
+   if(col!==node&&x.slot<2&&col.firstElementChild!==entry.node)col.insertBefore(entry.node,col.firstElementChild);
    this.phase(entry,x,now);
   }
   if(this.queue.length){

@@ -76,11 +76,14 @@ test('V4 túi đồ: chỉ số pháp bảo là mức đóng góp thật (phụ 
  assert.equal(itemStats({n:3},'pill'),'×3');
 });
 
-test('V4 túi đồ: mỗi mục giới hạn số ô, phần dư cộng đúng vào "+N vật phẩm khác"',async()=>{
- const {inventoryDeckHTML}=await import('../public/inventory-multi.js');
+test('15/11 túi đồ: HIỆN HẾT món (pháp bảo + đan + bí pháp), nhiều món thì thêm cột; chỉ phần máy chủ cắt mới ghi +N',async()=>{
+ const {inventoryDeckHTML,gridCols}=await import('../public/inventory-multi.js');
  const arts=Array.from({length:8},(_,i)=>({name:'PB'+i,damage:1}));
- const html=inventoryDeckHTML({name:'A',card:{kind:'bag',stones:0,herbs:0,artifacts:{items:arts,more:3},pills:{items:[],more:0},manuals:{items:[],more:0}}},esc);
- assert.equal((html.match(/class="vd-cell[ "]/g)||[]).length,6,'tối đa 6 ô kể cả ô +N');assert.match(html,/món khác/);assert.ok(html.includes('<b>+6</b>'),'ô cuối ghi +6');
+ const bag=more=>({kind:'bag',stones:0,herbs:0,artifacts:{items:arts,more},pills:{items:[{name:'Đan',n:2}],more:0},manuals:{items:[{name:'Quyết'}],more:0}});
+ const html=inventoryDeckHTML({name:'A',card:bag(0)},esc);
+ assert.equal((html.match(/class="vd-cell[ "]/g)||[]).length,10,'đủ 8 pháp bảo + 1 đan + 1 bí pháp');assert.doesNotMatch(html,/món khác/);assert.match(html,/data-cols="4"/);
+ assert.ok(inventoryDeckHTML({name:'A',card:bag(3)},esc).includes('<b>+3</b>'),'máy chủ cắt bớt thì ô cuối ghi +3');
+ assert.deepEqual([6,7,12,13,20,21].map(gridCols),[3,4,4,5,5,6]);
 });
 
 test('15/11 bảng xem: 4 ô góc khác nhau, thẻ sau đợi thẻ trước rời giữa màn, ô trống được dùng lại',()=>{
@@ -98,7 +101,9 @@ test('15/11 bảng xem: thẻ tu vi (Linh Bài) vào cùng hệ, gọn, không c
  const card={realm:3,realmName:'Kim Đan',stage:1,next:'Nguyên Anh',qi:450,needQi:1000,stones:5,needStones:20,ready:false,rank:12,players:300,tip:'Gõ 1 để vận công'};
  assert.equal(cardKind(card),'tuvi');assert.equal(cardKind({kind:'bag'}),'bag');assert.equal(cardKind({foo:1}),null);
  const html=inventoryDeckHTML({name:'A',card},esc);
- assert.match(html,/Kim Đan · /);assert.match(html,/45%/);assert.match(html,/#12/);assert.match(html,/Nguyên Anh/);
+ assert.match(html,/Kim Đan · /);assert.match(html,/450 \/ 1.000/,'đủ số tu vi');assert.match(html,/Linh thạch/);assert.match(html,/5 \/ 20/,'đủ số linh thạch');assert.match(html,/#12/);assert.match(html,/Nguyên Anh/);
+ const short=inventoryDeckHTML({name:'A',card:{...card,qi:1000,stones:5}},esc);assert.match(short,/thiếu 15 linh thạch/,'đủ tu vi thì nói rõ thiếu bao nhiêu linh thạch');
+ assert.match(inventoryDeckHTML({name:'A',card:{...card,qi:1000,stones:20,ready:true}},esc),/ĐỦ ĐỘT PHÁ/);
  assert.doesNotMatch(html,/Gõ|vận công/,'không in dòng nhắc lệnh');
  const deck=new InventoryDeck(container(),{},esc,{doc:fakeDoc(),observe:false});assert.equal(deck.show({user:'a',name:'A',card},null,1000),true);deck.clear();
 });
