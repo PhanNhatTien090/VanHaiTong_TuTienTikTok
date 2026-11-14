@@ -7,7 +7,7 @@ const PATHS=Object.freeze({
  beast:{title:'NGỰ THÚ ĐẠO',color:'#85edce',asset:'beast'},
  alchemy:{title:'ĐAN ĐẠO',color:'#ffbc80',asset:'alchemy'}
 });
-const EXTRA=Object.freeze({guild:{title:'HỘI CHIẾN',color:'#f2d18c',asset:'guild'},mentor:{title:'SƯ ĐỒ TRUYỀN THỪA',color:'#f9d990',asset:'mentor'},alchemyFx:{title:'CỬU CHUYỂN ĐAN',color:'#ffb77a',asset:'alchemy'},relic:{title:'PHÁP BẢO HIỂN UY',color:'#bc9eff',asset:'relic'},bond:{title:'TAM SINH ĐỒNG TÂM',color:'#ffa4c5',asset:'bond'},tribulation:{title:'THIÊN KIẾP',color:'#b8cfff',asset:'tribulation'}});
+const EXTRA=Object.freeze({guild:{title:'HỘI CHIẾN',color:'#f2d18c',asset:'guild'},mentor:{title:'SƯ ĐỒ TRUYỀN THỪA',color:'#f9d990',asset:'mentor'},alchemyFx:{title:'CỬU CHUYỂN ĐAN',color:'#ffb77a',asset:'alchemy'},relic:{title:'PHÁP BẢO HIỂN UY',color:'#bc9eff',asset:'relic'},boss:{title:'YÊU VƯƠNG BIẾN THIÊN',color:'#bfaaff',asset:'boss'},bond:{title:'TAM SINH ĐỒNG TÂM',color:'#ffa4c5',asset:'bond'},tribulation:{title:'THIÊN KIẾP',color:'#b8cfff',asset:'tribulation'}});
 const ART=Object.freeze({...PATHS,...EXTRA});
 const cache=new Map(),TAU=Math.PI*2;
 export function prepareLive2Art(path){

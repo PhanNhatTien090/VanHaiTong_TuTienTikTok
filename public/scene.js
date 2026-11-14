@@ -214,7 +214,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     // New Dao visual/audio cues reuse the existing cinematic mixer (3 voices max).
     // Do not play new sounds from the game update loop or on every attack.
     if(event.effect==='daoPath'&&(event.daoChoose||event.daoSkill||event.daoUltimate||event.daoBrew||event.daoPill||event.daoRelic||event.daoForge||event.guildWarStart||event.guildWarEnd||event.guildFounded||event.guildBuild||event.mentorJoined||event.mentorGraduated||event.bondSkill)){
-      const cue={sword:'jade',demon:'void',body:'gold',beast:'resonance',alchemy:'dawn',alchemyFx:'dawn',guild:'dusk',mentor:'resonance',relic:'void',bond:'gold',tribulation:'void'}[event.live2Kind||event.daoPath]||'jade';
+      const cue={sword:'jade',demon:'void',body:'gold',beast:'resonance',alchemy:'dawn',alchemyFx:'dawn',boss:'void',guild:'dusk',mentor:'resonance',relic:'void',bond:'gold',tribulation:'void'}[event.live2Kind||event.daoPath]||'jade';
       this.onCinematicSound?.('live2:'+event.id,cue,.10,{gain:.27,priority:1,charge:false});
     }
     // Only one premium skill title may own the ribbon at any time.
