@@ -1,0 +1,32 @@
+name: V6 Duel Visual Proof
+on:
+  pull_request:
+    paths:
+      - 'public/duel-showcase-v6.js'
+      - 'public/assets/v6/**'
+      - 'scripts/render-duel-v6-gallery.mjs'
+      - '.github/workflows/v6-visual-proof.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Render the REAL V6 shader/sprite families
+        run: node scripts/render-duel-v6-gallery.mjs
+      - name: Upload 12 charge/release frames for human QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: duel-v6-gallery
+          path: output/duel-v6-gallery/
+          if-no-files-found: error
+          retention-days: 7

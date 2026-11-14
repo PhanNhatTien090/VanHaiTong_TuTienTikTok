@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<title>V6 Thái Cực Phong Thiên - original rotating seal</title>
+<defs><linearGradient id="jade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a8fff4"/><stop offset=".55" stop-color="#eaf7ff"/><stop offset="1" stop-color="#e4baff"/></linearGradient></defs>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="256" cy="256" r="236" stroke="url(#jade)" stroke-width="8" stroke-dasharray="168 15 18 15"/>
+ <circle cx="256" cy="256" r="211" stroke="#f7efcb" stroke-width="2" stroke-dasharray="8 9"/>
+ <circle cx="256" cy="256" r="178" stroke="#9ce9ff" stroke-width="4"/>
+ <circle cx="256" cy="256" r="150" stroke="url(#jade)" stroke-width="2" stroke-dasharray="4 8"/>
+ <path d="M256 78L284 106L256 134L228 106Z M434 256L406 284L378 256L406 228Z M256 434L228 406L256 378L284 406Z M78 256L106 228L134 256L106 284Z" stroke="#f4e4bd" stroke-width="4"/>
+ <path d="M256 20v32m0 408v32M20 256h32m408 0h32" stroke="#99f2e4" stroke-width="5"/>
+ <g stroke="#bdd9f8" stroke-width="5">
+  <path d="M116 99h46m-40 12h34m-30 12h26M350 99h46m-40 12h34m-30 12h26"/>
+  <path d="M116 389h46m-40 12h34m-30 12h26M350 389h46m-40 12h34m-30 12h26"/>
+ </g>
+</g>
+<circle cx="256" cy="256" r="112" fill="#d7f8ff" stroke="#f8f4e5" stroke-width="4"/>
+<path d="M256 144a112 112 0 0 1 0 224c-31 0-56-25-56-56s25-56 56-56 56-25 56-56-25-56-56-56z" fill="#182a5b"/>
+<circle cx="256" cy="200" r="18" fill="#182a5b"/>
+<circle cx="256" cy="312" r="18" fill="#d7f8ff"/>
+<g fill="none" stroke="#fffbe0" stroke-width="2.5">
+ <circle cx="256" cy="256" r="124"/>
+ <circle cx="256" cy="256" r="140" stroke-dasharray="1 10"/>
+</g>
+</svg>

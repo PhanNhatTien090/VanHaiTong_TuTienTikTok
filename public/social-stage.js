@@ -6,9 +6,11 @@ import {drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
 import {makeSurface} from './performance.js';
 import {portraitCanvas} from './linh-bai.js';
 import {drawCombatTechnique} from './combat-techniques.js';
+import {prewarmDuelV6,drawDuelV6Ultimate,v6SkillFamily,v6CounterProgress} from './duel-showcase-v6.js';
 export function syncSocialStage(scene,state){
  scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;
  const match=state.socialStatus?.tournament?.current;
+ if(match?.id&&scene.v6Showcase!==false)prewarmDuelV6(scene,match);
  if(match?.id&&match.id!==scene.duelPortraitMatchId){
   scene.duelPortraitMatchId=match.id;
   const fighters=(state.players||[]).filter(p=>p.id===match.a||p.id===match.b);
@@ -60,9 +62,13 @@ export function drawSocialStage(scene,c,t,layer,solo){
       scene.duelLastCharge=key;
       if(cast.ultimate)scene.duelChargeAt=now;
       scene.onCombatSound?.('cast',technique.id);
-      scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),cast.period*.67/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
+      scene.onCinematicSound?.(key+':sfx',duelSoundPreset(technique),Math.max(0,(.67-k)*cast.period)/1000,{priority:cast.ultimate?5:2,charge:!!cast.ultimate,gain:cast.ultimate?.55:.29});
      }
-     if(k<DUEL_RELEASE_AT)drawDuelCharge(scene,c,a,technique,k,t,{ultimate:cast.ultimate,light});
+     const v6Hero=cast.ultimate&&scene.cinematicV2!==false&&scene.v6Showcase!==false&&!!v6SkillFamily(technique.id);
+     if(k<DUEL_RELEASE_AT){
+      if(v6Hero)drawDuelV6Ultimate(scene,c,t,a,aim,technique,k);
+      else drawDuelCharge(scene,c,a,technique,k,t,{ultimate:cast.ultimate,light});
+     }
      if(k>=DUEL_RELEASE_AT&&scene.duelLastTrigger!==key){
       scene.duelLastTrigger=key;
       scene.animator?.trigger({id:key,user:a.id,effect:'attack',technique},t);
@@ -77,11 +83,23 @@ export function drawSocialStage(scene,c,t,layer,solo){
      }
      if(k>=DUEL_RELEASE_AT){
       const releaseK=Math.min(1,(k-DUEL_RELEASE_AT)/(1-DUEL_RELEASE_AT));
-      drawCombatTechnique(c,{technique,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,releaseK,a,H,{light:light||cast.light,signatures:scene.signatureSprites,relics:scene.combatSprites});
-      if(scene.cinematicV2===false)drawDuelImpact(c,aim,{...cast,k:releaseK},technique,light);
+      if(v6Hero)drawDuelV6Ultimate(scene,c,t,a,aim,technique,k);
       else {
-       drawDuelRelease(scene,c,a,aim,technique,k,{ultimate:cast.ultimate,light});
-       drawShockwave(c,side?'dusk':'jade',aim.x,aim.y,(k-.67)*cast.period,{quality:light?'light':'balanced',radius:cast.ultimate?280:cast.light?92:cast.guard?120:150,seed:cast.turn*.17,motion:scene.motion,flash:false,aspect:.68});
+       drawCombatTechnique(c,{technique,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,releaseK,a,H,{light:light||cast.light,signatures:scene.signatureSprites,relics:scene.combatSprites});
+       if(scene.cinematicV2===false)drawDuelImpact(c,aim,{...cast,k:releaseK},technique,light);
+       else{
+        drawDuelRelease(scene,c,a,aim,technique,k,{ultimate:cast.ultimate,light});
+        drawShockwave(c,side?'dusk':'jade',aim.x,aim.y,(k-.67)*cast.period,{quality:light?'light':'balanced',radius:cast.ultimate?280:cast.light?92:cast.guard?120:150,seed:cast.turn*.17,motion:scene.motion,flash:false,aspect:.68});
+       }
+      }
+     }
+     // Counter-ultimate: a second REAL fighter charges and releases a distinct
+     // defensive spell. Its position and timing are authored, never a fake hit.
+     if(cast.ultimate&&scene.cinematicV2!==false&&scene.v6Showcase!==false){
+      const other=match.techniques?.[trailer.id],counterK=v6CounterProgress(match,now);
+      if(other&&counterK>=0&&counterK<=1){
+       const shown=drawDuelV6Ultimate(scene,c,t,trailer,aim,other,counterK,{counter:true});
+       if(!shown&&counterK<DUEL_RELEASE_AT)drawDuelCharge(scene,c,trailer,other,counterK,t,{ultimate:true,light:true});
       }
      }
      if(!cast.ultimate)techName(c,a.x,a.y-312,technique,Math.min(1,k/.08,(1-k)/.2));

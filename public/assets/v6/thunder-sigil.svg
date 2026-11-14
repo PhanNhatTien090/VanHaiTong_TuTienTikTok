@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+ <title>V6 Cửu Thiên Lôi Long - original thunder sigil</title>
+ <defs>
+  <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
+   <stop stop-color="#7ef4ff"/><stop offset=".45" stop-color="#e7d4ff"/><stop offset="1" stop-color="#9f82ff"/>
+  </linearGradient>
+  <radialGradient id="core"><stop stop-color="#e5f7ff" stop-opacity=".55"/><stop offset=".42" stop-color="#896cff" stop-opacity=".12"/><stop offset="1" stop-color="#896cff" stop-opacity="0"/></radialGradient>
+ </defs>
+ <circle cx="256" cy="256" r="239" fill="url(#core)"/>
+ <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="256" cy="256" r="196" stroke="url(#violet)" stroke-width="6" stroke-dasharray="155 17 70 17"/>
+  <circle cx="256" cy="256" r="176" stroke="#b4a7ff" stroke-width="2.5" stroke-dasharray="6 12"/>
+  <circle cx="256" cy="256" r="152" stroke="#f9eecd" stroke-width="2.7" opacity=".77"/>
+  <circle cx="256" cy="256" r="131" stroke="#73edff" stroke-width="2.3" stroke-dasharray="76 7" opacity=".68"/>
+  <circle cx="256" cy="256" r="93" stroke="url(#violet)" stroke-width="3" opacity=".82"/>
+  <path d="M256 116L278 145L256 172L234 145Z M396 256L367 278L340 256L367 234Z M256 396L234 367L256 340L278 367Z M116 256L145 234L172 256L145 278Z" stroke="#d9efff" stroke-width="3.3"/>
+  <path d="M256 60V27M256 452V485M60 256H27M452 256H485M117 117L94 94M395 117L418 94M117 395L94 418M395 395L418 418" stroke="#a8dfff" stroke-width="7"/>
+  <path d="M194 78l25 37-30 11 32 36-37 25M318 78l-25 37 30 11-32 36 37 25M194 434l25-37-30-11 32-36-37-25M318 434l-25-37 30-11-32-36 37-25" stroke="#a491ff" stroke-width="4" opacity=".94"/>
+  <path d="M256 186l33 43-20 27 21 33-34 37-34-37 21-33-20-27Z" stroke="#f2e2ff" stroke-width="6"/>
+  <path d="M256 200v111M233 248h46M235 286l42-56" stroke="#c7fcff" stroke-width="4"/>
+  <path d="M94 156h36m-18-18v36M382 156h36m-18-18v36M94 356h36m-18-18v36M382 356h36m-18-18v36" stroke="#cce8ff" stroke-width="3" opacity=".73"/>
+ </g>
+ <g fill="#f1f8ff">
+  <path d="M256 39l8 18-8 13-8-13zM256 473l8-18-8-13-8 13zM39 256l18-8 13 8-13 8zM473 256l-18-8-13 8 13 8z"/>
+  <circle cx="256" cy="256" r="7"/>
+  <circle cx="256" cy="97" r="5"/><circle cx="256" cy="415" r="5"/><circle cx="97" cy="256" r="5"/><circle cx="415" cy="256" r="5"/>
+ </g>
+</svg>

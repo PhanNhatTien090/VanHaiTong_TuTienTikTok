@@ -20,6 +20,9 @@ const events={
 let scene,metrics,meter,timeout,warTimer,entry=0,voice=null,generation=0;
 const meterSamples=new Float32Array(2048);
 let peak=0,interval=null;
+const duelSkillGear=Object.freeze({thunder:'nine-heaven-seal',sword:'hanlap-bamboo-swords',
+ flame:'phoenix-blade',azure:'vip-dragon-orb',frost:'frost-sword',yinYang:'vip-heaven-seal'});
+const showDuelOptions=()=>{$('duelSkillLabel').hidden=$('group').value!=='support'||$('event').value!=='duel';};
 const toggles=id=>Object.fromEntries([...$(id).querySelectorAll('input')].map(input=>[input.name,input.checked]));
 
 function options(){
@@ -27,8 +30,10 @@ function options(){
   $('event').replaceChildren(...events[group].map(([value,name])=>new Option(name,value)));
   $('section').disabled=!['ritual','gift','support'].includes(group);
   $('layers').disabled=group!=='ritual';
+  showDuelOptions();
 }
 $('group').onchange=options;
+$('event').onchange=showDuelOptions;
 options();
 
 function setup(){
@@ -103,10 +108,13 @@ document.querySelector('form').onsubmit=async event=>{
     if(choice==='race')state.raceStage=players.slice(0,10).map(player=>player.id);
     if(choice==='duel'){
       const opponent=players[1]||{...p,id:'demo-duel',name:'Đối thủ'};
+      // V6: operator can preview each actual skill family using real gear mapping.
+      p.equipped=duelSkillGear[$('duelSkill').value]||duelSkillGear.thunder;
+      opponent.equipped=$('duelSkill').value==='sword'?duelSkillGear.thunder:duelSkillGear.sword;
       if(!players[1])players.push(opponent);
       state.socialScene='tournament';
       state.socialStage=[p.id,opponent.id];
-      const age=part==='charge'?19800:part==='impact'?21700:part==='tail'?23000:8900;
+      const age=part==='charge'?20550:part==='impact'?22180:part==='tail'?22850:8900;
       const duelGift={...support,id:support.id+':super',value:2000,coins:2000,fighter:true,wardEffect:{kind:'shield-break',amount:35000,source:p.id,target:opponent.id,after:65000,max:100000}};
       const secondGift={...support,id:support.id+':other',user:opponent.id,name:opponent.name,value:1000,coins:1000,fighter:true,wardEffect:{kind:'shield-heal',amount:20000,source:opponent.id,target:opponent.id,after:80000,max:100000}};
       state.socialStatus={tournament:{phase:'running',current:{id,a:p.id,b:opponent.id,
@@ -150,6 +158,7 @@ document.querySelector('form').onsubmit=async event=>{
   if((group==='combat'||group==='support')&&choice==='boss')state.boss={id,startedAt:now,endsAt:now+12000,species:'storm-tiger',name:'Lôi Hổ',hp:500,maxHp:500,participants:{},damage:{}};
   scene.showcase=group==='ritual';
   scene.cinematicV2=$('version').value==='new';
+  scene.v6Showcase=scene.cinematicV2;
   scene.cinematicLayers=toggles('visualLayers');
   scene.shakeLevel=$('shake').value;
   scene.cameraEnabled=true;
@@ -207,6 +216,9 @@ setInterval(()=>{
   if(performance.now()-entry<650)return;
   const db=peak?(20*Math.log10(peak)).toFixed(1)+' dBFS':'—';
   if((performance.now()-entry)%1000<300)interval=metrics.snapshot(scene).timings.frameInterval;
-  $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db;
+  const v6Report=scene.socialScene==='tournament'&&scene.v6Showcase?
+   ' · ảnh V6: '+(Object.keys(scene.v6Assets||{}).join(', ')||'đang tải')+
+   (scene.v6MissingAssets?.size?' · LỖI '+[...scene.v6MissingAssets].join(', '):''):'';
+  $('stats').value=(scene.fps||'—')+' FPS · P95/P99 '+(interval?.p95??'—')+'/'+(interval?.p99??'—')+' ms · đỉnh mẫu '+db+v6Report;
 },250);
 addEventListener('pagehide',()=>{stop();audio.destroy();});
