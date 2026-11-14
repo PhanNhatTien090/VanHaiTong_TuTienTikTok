@@ -23,6 +23,12 @@ export const V6_SKILL_FAMILY=Object.freeze({
  frost:'frost'
 });
 export function v6SkillFamily(id){return V6_SKILL_FAMILY[id]||null;}
+export const V6_SKILL_TITLES=Object.freeze({
+ thunder:'Cửu Thiên Lôi Long',sword:'Vạn Kiếm Diệt Thế',
+ flame:'Phượng Hoàng Niết Bàn',azure:'Thương Long Phá Hải',
+ frost:'Băng Phách Phong Giới',yinYang:'Thái Cực Phong Thiên'
+});
+export function v6SkillTitle(id){return V6_SKILL_TITLES[v6SkillFamily(id)]||null;}
 
 export function v6Budget(scene){
  const pressed=!!(scene.budget?.pressured||scene.budget?.crowded||scene.budget?.level==='light'||scene.heavyCrowd||(scene.fps>0&&scene.fps<18));
