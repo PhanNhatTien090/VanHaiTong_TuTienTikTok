@@ -158,6 +158,7 @@ let voiceCaptionTimer;
 scene.onWarSound=(kind,side,strength)=>cultivationAudio.war(kind,side,strength);scene.onAlchemySound=(kind,strength)=>cultivationAudio.alchemy(kind,strength);scene.onSpectacleImpact=()=>cultivationAudio.play('impact',true);
 scene.onCinematicSound=(...args)=>cultivationAudio.cinematicCue(...args);
 scene.onCinematicCancel=id=>cultivationAudio.cinematic?.cancel(id);
+scene.onFeedbackSound=(kind,level)=>cultivationAudio.feedback(kind,level);
 scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);scene.onBonkSound=(kind,o)=>cultivationAudio.bonk(kind,o); /* 10/11: Hội Gõ Đầu */
 scene.onGiftSound=kind=>cultivationAudio.play(kind,true);
 scene.onMazePortalSound=()=>cultivationAudio.play('maze-portal',true);
