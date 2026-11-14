@@ -238,6 +238,7 @@ function travel(scene,c,actor,target,family,k,t,b,counter){
     (14+i%3*9)*b.scale*pow,a,fade*.73);
   }
 
+ }
  if(progress>.36){
   const v=clamp((progress-.36)/.64);
   const rr=(28+v*(counter?160:310))*b.scale;
