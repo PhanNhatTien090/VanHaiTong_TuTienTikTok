@@ -449,6 +449,7 @@ function showDiscipleNotice(e){
 function enqueueReady(e){
   // Event cards and the battlefield own these updates; never queue one spotlight/voice per hit or claim.
   if(e.miniStart||e.miniEnd||e.miniReward||e.hallWarAction||e.hallWarReward||e.hallWarStart||e.hallWarBattle||e.hallWarEnd){
+    if(e.miniReward||e.hallWarReward||e.hallWarEnd)scene.feedbackFX?.add(e,performance.now(),scene);
     if(!ascensionStage&&(e.miniStart||e.miniEnd||e.hallWarStart||e.hallWarBattle||e.hallWarEnd))narrator.add(e);
     if(e.miniReward&&performance.now()-engagementSoundAt>1000){tone('lotus');engagementSoundAt=performance.now();}
     return;
