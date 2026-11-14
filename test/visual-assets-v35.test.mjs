@@ -31,22 +31,22 @@ test('inventory art is restricted to local assets and shows player items using a
  assert.equal(card.secondaryEquipped,1);
  const html=inventoryDeckHTML({name:'Hỏa & <script>',card},esc);
  assert.match(html,/Thanh Ngọc Kiếm/);
- assert.match(html,/CHỦ PHÁP BẢO/);
- assert.match(html,/TRỢ PHÁP BẢO/);
+ assert.match(html,/CHỦ · /);
+ assert.match(html,/TRỢ ½/);
  assert.match(html,/crystal\.svg/);
  assert.doesNotMatch(html,/<script>/);
 });
-test('inventory deck caps to 4 unique owners and removes stale event cards',()=>{
+test('inventory deck shows 4 unique owners and queues the rest instead of dropping them',()=>{
  const now=performance.now();
  const container={hidden:true,dataset:{},children:[],replaceChildren(){},set innerHTML(value){this.markup=value;},get innerHTML(){return this.markup;}};
  const deck=new InventoryDeck(container,{},esc);
  const bag={kind:'bag',stones:0,herbs:0,artifacts:{items:[],more:0},pills:{items:[],more:0},manuals:{items:[],more:0}};
  for(let i=0;i<6;i++)deck.show({user:'p'+i,name:'Player '+i,card:bag},null,now+i*10);
  assert.equal(deck.cards.length,4);
- assert.equal(deck.cards[0].user,'p2');
+ assert.equal(deck.cards[0].user,'p0');assert.deepEqual(deck.queue.map(x=>x.user),['p4','p5']);
  deck.show({user:'p5',name:'Latest',card:bag},null,now+65);
  assert.equal(deck.cards.length,4);
- assert.equal(deck.cards.filter(c=>c.user==='p5').length,1);
+ assert.equal(deck.cards.filter(c=>c.user==='p5').length+deck.queue.filter(c=>c.user==='p5').length,1);assert.equal(deck.queue.find(x=>x.user==='p5').event.name,'Latest');
  deck.clear();
  assert.equal(deck.cards.length,0);
  assert.equal(container.hidden,true);
