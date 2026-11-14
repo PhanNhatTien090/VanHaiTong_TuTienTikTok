@@ -17,12 +17,19 @@ test('new elixir recipes use existing stones/herbs and preserve old pills',()=>{
  assert.deepEqual(t.p.pills,{'qi-pill':3});
  assert.equal(t.e(t.p,'dan dung ho mach').ok,false);
  t.w.boss={hp:100,endsAt:t.n+100000};
+ assert.equal(t.e(t.p,'dan dung ho mach').ok,false); // defensive pill is tower-only
+ t.w.tower={cur:{id:t.p.id},endsAt:t.n+100000};
  assert.equal(t.e(t.p,'dan dung ho mach').ok,true);
  assert.equal(live2ExtraBonus(t.p,t.n,'tower')>1,true);
  assert.equal(t.p.live2.elixirs.guard,0);
 });
 test('guild war needs real participation, is one-time rewarded and expires',()=>{
- const t=game();t.l(t.p,'lap hoi Tien Phong');t.l(t.q,'lap hoi Thanh Van');
+ const t=game();t.w.settings.live2GuildWarEnabled=true;
+ t.l(t.p,'lap hoi Tien Phong');t.l(t.q,'lap hoi Thanh Van');
+ const a={id:'a2',name:'Tiên Phong B',realm:5,lastActive:t.n},b={id:'b2',name:'Thanh Vân B',realm:5,lastActive:t.n};
+ t.w.players[a.id]=a;t.w.players[b.id]=b;
+ assert.equal(t.l(a,'vao hoi '+t.p.live2.guildId).ok,true);
+ assert.equal(t.l(b,'vao hoi '+t.q.live2.guildId).ok,true);
  assert.equal(t.e(t.p,'hoi chien').ok,true);
  assert.equal(t.e(t.p,'chien hoi').ok,true);
  assert.equal(t.e(t.q,'chien hoi').ok,true);
