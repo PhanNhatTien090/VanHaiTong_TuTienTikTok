@@ -16,7 +16,8 @@ const premium={};
 if(V7_PREMIUM_ENABLED)for(const [key,file]of Object.entries({
  thunderDragon:'thunder-dragon.webp',thunderImpact:'thunder-dragon-impact.webp',
  swordStorm:'divine-sword-storm.webp',phoenix:'flame-phoenix.webp',
- phoenixImpact:'phoenix-impact.webp',taiji:'taiji-seal.webp',shatter:'screen-shatter.webp'
+ phoenixImpact:'phoenix-impact.webp',taiji:'taiji-seal.webp',shatter:'screen-shatter.webp',
+ goldenAtlas:'golden-sword-atlas.webp',thunderAtlas:'thunder-parts-atlas.webp',formationAtlas:'sword-formation-atlas.webp'
 }))premium[key]=await loadImage('public/assets/v7-premium/'+file);
 const actor={x:225,y:1245},target={x:450,y:890},skills=['thunder','bamboo','flame','dragon','frost','celestial','dora-door','soul','sevenstars','lotus','bell','meteor','petal'];
 const percentile=(values,p)=>{values.sort((a,b)=>a-b);return Number(values[Math.min(values.length-1,Math.ceil(values.length*p)-1)].toFixed(2));};
