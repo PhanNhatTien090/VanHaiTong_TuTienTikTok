@@ -76,7 +76,7 @@ export function tickTower(w,now,c){
 
 export function towerCommand(w,p,cmd,now,c){
  if(!towerOpen(w,now))return null;
- const join=TOWER_JOIN.includes(cmd),hit=HIT.includes(cmd),special=live2Enabled(w)&&['phatran','hoiphap','tamtinh','tamlinh'].includes(cmd);if(!join&&!hit&&!special)return null;
+ const join=TOWER_JOIN.includes(cmd),hit=HIT.includes(cmd),special=live2Enabled(w)&&['phatran','hophap','tamtinh','tamlinh'].includes(cmd);if(!join&&!hit&&!special)return null;
  if(!real(p))return fail('Vân Hải Tháp dành cho người xem thật.');
  const e=w.tower,t=e.cur;
  if(join){
@@ -91,8 +91,9 @@ export function towerCommand(w,p,cmd,now,c){
  if(special&&t.id!==p.id)return fail('Chỉ người đang leo tháp mới dùng đạo thuật đặc biệt.');
  if(t.id===p.id){
   if(t.next[p.id]>now)return {ok:true,cooldown:true};
-  t.next[p.id]=now+TOWER.hitCdMs;t.hits++;const ability=special?towerRuleAction(t,p,cmd,now):null;
+  const ability=special?towerRuleAction(t,p,cmd,now):null;
   if(special&&!ability?.ok)return fail(ability?.message||'Tầng này không dùng đạo thuật đó.');
+  t.next[p.id]=now+TOWER.hitCdMs;t.hits++;
   const mult=live2Enabled(w)?Math.min(1.16,live2CombatBonus(p,now,'tower')*live2ExtraBonus(p,now,'tower')):1;
   t.hp=Math.max(0,t.hp-(hit?hitDamage(p.realm,t.floor)*(live2Enabled(w)?towerRuleMultiplier(t,p,now):1):ability.damage)*mult);
  }else{

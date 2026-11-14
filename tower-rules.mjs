@@ -2,10 +2,10 @@
 // Floors, guardian art, milestone rewards, and historic best-floor storage stay unchanged.
 const RULES=Object.freeze([
  {id:'sword',name:'Vạn Kiếm Trận',hint:'Gõ phá trận để xuyên kiếm ảnh',command:'phatran',bonus:8},
- {id:'shield',name:'Huyền Giáp Trận',hint:'Gõ hộ pháp để phá kết giới',command:'hoiphap',bonus:8},
+ {id:'shield',name:'Huyền Giáp Trận',hint:'Gõ hộ pháp để phá kết giới',command:'hophap',bonus:8},
  {id:'beast',name:'Vạn Linh Trận',hint:'Gõ tâm linh nếu có thú đồng hành',command:'tamlinh',bonus:10},
  {id:'mind',name:'Luyện Tâm Trận',hint:'Gõ tâm tĩnh để vượt ảo cảnh',command:'tamtinh',bonus:9},
- {id:'storm',name:'Thiên Kiếp Trận',hint:'Gõ hộ pháp để vượt lôi kiếp',command:'hoiphap',bonus:9}
+ {id:'storm',name:'Thiên Kiếp Trận',hint:'Gõ hộ pháp để vượt lôi kiếp',command:'hophap',bonus:9}
 ]);
 export const towerRule=floor=>RULES[((Number(floor)||1)-1)%RULES.length];
 export function towerRuleMultiplier(turn,p,now){
