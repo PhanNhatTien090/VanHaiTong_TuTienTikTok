@@ -42,7 +42,7 @@ function requestOne(scene,key,token){
  img.src=URL+supported[key];
 }
 export function prewarmV7Premium(scene,match){
- if(!V7_PREMIUM_ENABLED||!scene||!match?.id||typeof Image==='undefined'||disabled(scene))return false;
+ if(!V7_PREMIUM_ENABLED||!scene||scene.v7PremiumDisabled||!match?.id||typeof Image==='undefined'||disabled(scene))return false;
  if(scene.premiumMatchId===match.id)return true;
  scene.premiumMatchId=match.id;scene.v7PremiumArt={};scene.v7PremiumErrors=new Set();
  scene.premiumRequested=new Set();scene.premiumAllowed=new Set(V7_PREMIUM_FILES);
@@ -52,7 +52,7 @@ export function prewarmV7Premium(scene,match){
 // Called at authoritative receipt sync, NEVER from the draw loop.
 // One atlas per gift tier; 2 concurrent high-value donors => <=2 extra sprites.
 export function prewarmV7GiftArt(scene,rows=[]){
- if(!V7_PREMIUM_ENABLED||!scene?.premiumMatchId||disabled(scene)||typeof Image==='undefined')return 0;
+ if(!V7_PREMIUM_ENABLED||scene?.v7PremiumDisabled||!scene?.premiumMatchId||disabled(scene)||typeof Image==='undefined')return 0;
  let loaded=0;
  for(const row of rows){
   const key=premiumGiftArtKey(row?.value);
