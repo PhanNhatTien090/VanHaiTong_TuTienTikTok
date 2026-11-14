@@ -140,3 +140,24 @@ test('cove phases are calculated server-side without affecting original unlocks'
  assert.equal(w.petGrowthV2.players.owner.inventory.spiritFood,2);
  assert.equal(petV2CovePhase(w,N+301000),null);
 });
+
+test('100-person LIVE payload contains compact pet views, never the persistent evolution ledger',()=>{
+ const w=createWorld('demo');w.settings.autoEvents=false;
+ const now=N+1000000;
+ for(let i=0;i<100;i++){
+  const p=ensurePlayer(w,'crowd-'+i,'Đạo hữu '+i,now);
+  p.spiritPet='jade-rabbit';p.spiritPets=['jade-rabbit'];
+ }
+ const select={select:({players})=>new Set(players.map(p=>p.id))};
+ const initial=JSON.stringify(snapshot(w,now,select));
+ enable(w);
+ for(const p of Object.values(w.players))petV2Earn(w,p,'cultivate',now);
+ const after=snapshot(w,now,select);
+ const encoded=JSON.stringify(after);
+ assert.equal(after.petGrowthV2,undefined);
+ assert.equal(encoded.includes('"petGrowthV2"'),false);
+ assert.equal(after.players.length,100);
+ assert.ok(after.players.every(p=>p.petView?.level===1));
+ assert.ok(encoded.length-initial.length<100*800,'pet V2 must not ship the full growth ledger every state broadcast');
+ assert.equal(Object.keys(w.petGrowthV2.players).length,100);
+});
