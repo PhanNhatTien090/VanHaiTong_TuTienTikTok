@@ -11,7 +11,7 @@ export const KARMA_VISITOR=Object.freeze({
  artifact:'nhan-qua-xich-long-thuong',relic:'Nhân Quả Xích Long Thương',
  color:'#f4f2ee',trim:'#ffffff',dark:'#0b0b0e',technique:'dragon',icon:'sword',skinCoins:500,artifactCoins:500,
  aura:'Âm dương nhân quả · tơ trắng đen · Xích Long Thương',
- artwork:{blade:'/assets/nhan-qua/spear.webp',halo:'/assets/nhan-qua/halo.webp',seated:'/assets/nhan-qua/seated.webp',standing:'/assets/nhan-qua/standing.webp'}
+ artwork:{blade:'/assets/nhan-qua/spear.webp',halo:'/assets/nhan-qua/halo-gold.webp',seated:'/assets/nhan-qua/seated.webp',standing:'/assets/nhan-qua/standing.webp'}
 });
 // Skin có bộ hiệu ứng riêng (màn biến hình ưu tiên cao, pháp bảo theo người).
 export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR];
