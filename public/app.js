@@ -222,28 +222,40 @@ const player=()=>state?.players.find(p=>p.id===selected);
 function selectPlayer(id){selected=id;scene.focusId=id;scene.focusUntil=performance.now()+5000;lastProfile='';const p=player();if(p)$('#simName').value=p.name;render();}
 // v33: khung chỉnh sửa từng người (cột phải). Chỉ dựng lại khi đổi người / sau khi lưu, để không xóa chữ đang gõ.
 let editorFor=null;
+// 15/11 (chủ game): đồ ĐẶC BIỆT (độc quyền/sự kiện/skin) có nhãn nguồn + icon nhỏ để biết là gì; đồ thường để trơn.
+function itemBadge(item){
+ if(!item?.exclusive&&!item?.eventReward)return null;
+ const src=String(item.eventReward||'').split('·')[0].trim(),r=String(item.eventReward||'');
+ const icon=/Thiên Hoa Vũ/.test(r)?'🌸':/Tinh Hà Lưu Tinh/.test(r)?'🌠':/Top công lực/.test(r)?'🐉':/kết duyên|đồng ý/.test(r)?'💞':/Luận Kiếm/.test(r)?'⚔':/Doraemon/.test(r)?'🎁':/Tiên nhân/.test(r)?'🧙':/tích lũy .*coin/.test(r)?'🧙':/^vip-/.test(item.id)?'👑':'✦';
+ return {icon,label:src||(/^vip-/.test(item.id)?'VIP':'Đặc biệt')};
+}
 function renderEditor(force=false){
   const el=$('#playerEditor');if(!el||overlay||!state)return;const p=player();
   if(!force&&editorFor===(p?.id??null))return;editorFor=p?.id??null;
   if(!p){el.innerHTML='';return;}
   const name=id=>state.catalog.find(x=>x.id===id)?.name||id;
+  const badge=id=>itemBadge(state.catalog.find(x=>x.id===id));
+  const tagText=id=>{const b=badge(id);return b?' · '+b.icon+' '+b.label:'';};
+  const tagHTML=id=>{const b=badge(id);return b?' <em class="item-badge" title="'+esc(state.catalog.find(x=>x.id===id)?.eventReward||'Đồ đặc biệt')+'">'+b.icon+' '+esc(b.label)+'</em>':'';};
+  const wearing=[['Skin',p.skinChoice?esc(SPECIAL_SKINS.find(x=>x.id===p.skinChoice)?.name||p.skinChoice):'áo theo cảnh giới'],['Pháp bảo chính',p.equipped?esc(name(p.equipped))+tagHTML(p.equipped):'—'],['Pháp bảo phụ',(p.equippedExtra||[]).filter(Boolean).length?(p.equippedExtra||[]).filter(Boolean).map(id=>esc(name(id))+tagHTML(id)).join(' · '):'—'],['Linh thú',p.spiritPet?esc(petById(p.spiritPet)?.name||p.spiritPet):'—']];
   const owned=[...p.manuals,...p.artifacts];
   const giveable=state.catalog.filter(i=>i.type==='pill'||!owned.includes(i.id));
   const num=(id,label,v)=>`<label>${label}<input id="${id}" type="number" min="0" step="1" value="${Number(v)||0}"></label>`;
   el.innerHTML=`<details class="editor" open><summary>✎ Chỉnh sửa ${esc(p.name)}</summary><form id="editForm">
+  <div class="editor-wearing wide"><b>Đang mặc</b>${wearing.map(([k,v])=>`<span><small>${k}</small> ${v}</span>`).join('')}</div>
   <label class="wide">Tên hiển thị<input id="edName" maxlength="32" value="${esc(p.name)}"></label>
   <label>Xưng hô<select id="edGender"><option value="">Đạo hữu</option><option value="nam" ${p.gender==='nam'?'selected':''}>Sư huynh (nam)</option><option value="nu" ${p.gender==='nu'?'selected':''}>Sư tỷ (nữ)</option></select></label>
   <label>Cảnh giới<select id="edRealm">${state.realms.map((r,i)=>`<option value="${i}" ${i===p.realm?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
   ${num('edQi','Tu vi hiện tại',p.qi)}${num('edStones','Linh thạch',p.stones)}${num('edHerbs','Linh thảo',p.herbs)}${num('edCoins','Coin quà (skin)',p.giftCoins)}
-  <label class="wide">Đang trang bị<select id="edEquip"><option value="">— Không —</option>${p.artifacts.map(id=>`<option value="${esc(id)}" ${id===p.equipped?'selected':''}>${esc(name(id))}</option>`).join('')}</select></label>
+  <label class="wide">Đang trang bị<select id="edEquip"><option value="">— Không —</option>${p.artifacts.map(id=>`<option value="${esc(id)}" ${id===p.equipped?'selected':''}>${esc(name(id)+tagText(id))}</option>`).join('')}</select></label>
   <label class="wide">Skin đang mặc<select id="edSkin"><option value="">Áo theo cảnh giới (mặc định)</option>${SPECIAL_SKINS.map(s=>`<option value="${esc(s.id)}" ${s.id===p.skinChoice?'selected':''}>${esc(s.name)}${p.rewardSkins?.includes(s.id)?'':' · cấp mới'}</option>`).join('')}</select></label>
   <label class="wide">Linh thú đồng hành<select id="edPet"><option value="">— Không dẫn linh thú —</option>${ALL_PETS.map(x=>`<option value="${esc(x.id)}" ${x.id===p.spiritPet?'selected':''}>${esc(x.name)} · ${esc(x.rank)}${p.spiritPets?.includes(x.id)?'':' · cấp mới'}</option>`).join('')}</select></label>
   <label class="wide check"><input id="edHonorWardrobe" type="checkbox" ${!p.divineRoleHidden?'checked':''}> Khi mặc áo tự động: dùng thần trang nếu đang giữ danh hiệu</label>
   <label class="wide check"><input id="edAnnounce" type="checkbox" checked> Hiện hiệu ứng + giọng đọc khi nâng cảnh giới</label>
   <div class="editor-actions wide"><button type="submit" class="gold-button">Lưu thay đổi</button><button type="button" id="edReset" class="soft-button">Hoàn tác</button><button type="button" id="edCooldown" class="soft-button">Xóa thời gian hồi</button></div>
   </form>
-  <div class="editor-items"><b>Linh thú sở hữu</b>${(p.spiritPets||[]).length?p.spiritPets.map(id=>`<span>${esc(petById(id)?.name||id)}${id===p.spiritPet?' ✓':''} <button data-unpet="${esc(id)}" title="Gỡ linh thú">✕</button></span>`).join(''):'<small>Chưa có linh thú.</small>'}<b>Skin sở hữu</b>${(p.rewardSkins||[]).length?p.rewardSkins.map(id=>`<span>${esc(SPECIAL_SKINS.find(s=>s.id===id)?.name||id)}${id===p.skinChoice?' ✓':''} <button data-unskin="${esc(id)}" title="Gỡ skin">✕</button></span>`).join(''):'<small>Chưa có skin đặc biệt.</small>'}<b>Đồ đang có</b>${owned.length?owned.map(id=>`<span>${esc(name(id))} <button data-remove="${esc(id)}" title="Gỡ">✕</button></span>`).join(''):'<small>Chưa có bí pháp / pháp bảo.</small>'}${Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>`<span>${esc(name(id))} ×${n}</span>`).join('')}
-  <div class="editor-give"><select id="edGive">${giveable.map(i=>`<option value="${esc(i.id)}">${esc(i.name)} · ${{manual:'bí pháp',artifact:'pháp bảo',pill:'đan'}[i.type]||i.type}</option>`).join('')}</select><button type="button" id="edGiveBtn" class="soft-button">＋ Trao</button></div></div>
+  <div class="editor-items"><b>Linh thú sở hữu</b>${(p.spiritPets||[]).length?p.spiritPets.map(id=>`<span>${esc(petById(id)?.name||id)}${id===p.spiritPet?' ✓':''} <button data-unpet="${esc(id)}" title="Gỡ linh thú">✕</button></span>`).join(''):'<small>Chưa có linh thú.</small>'}<b>Skin sở hữu</b>${(p.rewardSkins||[]).length?p.rewardSkins.map(id=>`<span>${esc(SPECIAL_SKINS.find(s=>s.id===id)?.name||id)}${id===p.skinChoice?' ✓':''} <button data-unskin="${esc(id)}" title="Gỡ skin">✕</button></span>`).join(''):'<small>Chưa có skin đặc biệt.</small>'}<b>Đồ đang có</b>${owned.length?owned.map(id=>`<span>${esc(name(id))}${tagHTML(id)} <button data-remove="${esc(id)}" title="Gỡ">✕</button></span>`).join(''):'<small>Chưa có bí pháp / pháp bảo.</small>'}${Object.entries(p.pills||{}).filter(([,n])=>n>0).map(([id,n])=>`<span>${esc(name(id))} ×${n}</span>`).join('')}
+  <div class="editor-give"><select id="edGive">${giveable.map(i=>`<option value="${esc(i.id)}">${esc(i.name+tagText(i.id))} · ${{manual:'bí pháp',artifact:'pháp bảo',pill:'đan'}[i.type]||i.type}</option>`).join('')}</select><button type="button" id="edGiveBtn" class="soft-button">＋ Trao</button></div></div>
   <small class="muted">Chỉnh tay ghi vào dữ liệu ${mode==='live'?'LIVE':'thử'} ngay lập tức và được lưu nhật ký.</small></details>`;
   // 08/11: chỉ gửi ô thực sự đổi (kèm số lúc mở form) — trước đây gửi cả form làm lùi tu vi người chơi kiếm được trong lúc đang sửa.
   const base={name:p.name,gender:p.gender||null,realm:p.realm,qi:p.qi,stones:p.stones,herbs:p.herbs,giftCoins:p.giftCoins,equipped:p.equipped||null,skinChoice:p.skinChoice||null,spiritPet:p.spiritPet||null,divineRoleHidden:!!p.divineRoleHidden};
