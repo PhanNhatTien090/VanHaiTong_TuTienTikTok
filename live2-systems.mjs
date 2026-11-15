@@ -13,7 +13,7 @@ export const LIVE2_DAILY_INSIGHT=12;
 // without treating read-only status commands as farmable progression actions.
 export function live2RecordAction(w,p,words,result){
  if(!result?.ok||result.duplicate||result.cooldown)return false;
- const msg=(words||[]).join(' '), mutates=/^(?:chon dao |doi dao |dao ky$|tinh luyen|lap hoi |vao hoi |roi hoi$|hoi (?:pho |truong lao |xay$|chien)|xin su |nhan do$|truyen dao$|xuat su$|dong tam$|ho kiep |che dan |dan dung |phap an$|chien hoi$)/.test(msg);
+ const msg=(words||[]).join(' '), mutates=/^(?:chon dao |doi dao |dao ky$|tinh luyen|lap hoi |vao hoi |roi hoi$|hoi (?:pho |truong lao |nhuong |giang |xay$|chien)|xin su |nhan do$|truyen dao$|xuat su$|dong tam$|ho kiep |che dan |dan dung |phap an$|chien hoi$)/.test(msg);
  if(!mutates)return false;
  p.interactions=(p.interactions||0)+1;w.totalInteractions=(w.totalInteractions||0)+1;
  return true;
@@ -188,7 +188,11 @@ export function live2Command(w,p,words,now,ctx){
   if(now-(s.lastGuildLeaveAt||-Infinity)<600000)return fail('Lập bang mới sau 10 phút kể từ lúc rời bang.');
   const all=guilds(w);if(Object.keys(all).length>=200)return fail('Bang hội đã đạt giới hạn hiện tại; đợi Hội Chủ giải tán bang cũ.');
   if(Object.values(all).some(g=>g.name.toLowerCase()===name.toLowerCase()))return fail('Tên bang đã có người sử dụng.');
-  const n=w.live2World.nextGuildId++,id=n.toString(36).toUpperCase().padStart(3,'0');
+  // Restore partially-upgraded world safely: never overwrite a guild if the counter lags saved IDs.
+  let n=w.live2World.nextGuildId,id='';
+  do{id=n.toString(36).toUpperCase().padStart(3,'0');n++;}while(Object.hasOwn(all,id)&&n<w.live2World.nextGuildId+210);
+  if(Object.hasOwn(all,id))return fail('Không tạo được mã bang không trùng; cần kiểm tra dữ liệu lưu.');
+  w.live2World.nextGuildId=n;
   all[id]={id,name,leader:p.id,deputy:null,elders:[],buildings:{hall:0},spentPoints:0,members:[p.id],points:0,contributions:{[p.id]:0},createdAt:now};
   s.guildId=id;announce(w,p,'KHAI TÔNG LẬP HỘI • '+name,now,emit,{guildFounded:true,live2Kind:'guild',guildId:id});return ok('Đã lập hội '+name+' #'+id);
  }
