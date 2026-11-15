@@ -2,6 +2,7 @@
 // Khi có sự kiện, giữ trang gõ số cố định; thông tin sự kiện nằm ở cột phải.
 // Xoay 3 trang, mỗi trang 10 giây: lệnh pháp bảo → món rèn được (lấy từ danh mục thật) → bí pháp & đan dược.
 import {warGuidePage,warGuideHTML} from './war-guide.js';
+import {HONOR_LEGEND} from './honor-icons.js';
 const PAGE_MS=10000;
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 function rows(list,esc){return list.map(([cmd,txt])=>`<li><code>${esc(cmd)}</code><span>${esc(txt)}</span></li>`).join('');}
@@ -15,6 +16,8 @@ function pages(state,esc){
   return [
     `<b>⚔ PHÁP BẢO &amp; TRANG BỊ</b><ol>${rows([['rèn','rèn pháp bảo tốt nhất đủ linh thạch'],['trang bị','đeo món mạnh nhất đang có'],['trang bị + tên','đeo đúng món mình chọn'],['đánh','pháp bảo tung chiêu, tăng tu vi'],['hồi khí','tỷ thí: hồi linh lực, tối đa 3 lần']],esc)}</ol>`,
     ...forge.map((group,i)=>`<b>🔨 RÈN PHÁP BẢO${forge.length>1?' · '+(i+1)+'/'+forge.length:''}</b><ol>${group.map(a=>`<li><code>${esc(a.name)}</code><span>${fmt(a.price)} linh thạch${a.herbs?' · '+fmt(a.herbs)+' thảo':''}${realm(a.tier)?' · '+esc(realm(a.tier)):''}</span></li>`).join('')}</ol><small>gõ <i>rèn ${esc(group[0].name)}</i> để rèn đúng món</small>`),
+    // 15/11: chú giải huy hiệu cạnh tên trên sân
+    `<b>🏅 HUY HIỆU CẠNH TÊN</b><ol class="honor-legend">${HONOR_LEGEND.map(([i,t])=>`<li><code>${i}</code><span>${esc(t)}</span></li>`).join('')}</ol>`,
     `<b>📜 BÍ PHÁP · ĐAN DƯỢC</b><ol>${rows([['học','học bí pháp mới, tu luyện nhanh hơn'],['luyện đan','luyện viên đan tốt nhất đủ nguyên liệu'],['dùng','uống đan dược, cộng tu vi'],['hái','hái linh thảo làm nguyên liệu']],esc)}</ol>`
   ];
 }

@@ -94,8 +94,7 @@ import {drawTransform,transformMs,REVEAL_AT} from './transform-fx.js';
 import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 // 15/11/2026: chữ trên sân — sans đậm nét, nhỏ gọn kiểu kênh mẫu (user: tên to che hết người, khó nhìn).
-// 15/11: icon danh hiệu theo vai trò / chữ trong tên danh hiệu.
-const honorIcon=h=>{const t=String(h?.title||''),r=h?.role;return r==='sect-master'||/TÔNG CHỦ/.test(t)?'👑':/TRƯỞNG LÃO/.test(t)?'🏯':r==='champion'||/CHIẾN THẦN/.test(t)?'⚔️':/HỘ PHÁP|CUNG PHỤNG/.test(t)||r==='patron'?'🛡️':/NGUYÊN LÃO/.test(t)?'📿':/ĐẾ|TÔN|QUÂN|TIÊN/.test(t)||r==='immortal'?'✨':'🌿';};
+import {honorIcon} from './honor-icons.js';
 const NAME_FONT='800 15px \"Segoe UI\",Arial,sans-serif',TALK_FONT='700 14px "Segoe UI",Arial,sans-serif';
 const TAU=Math.PI*2;
 const palette=['#9dcbbc','#b4bfd0','#d6c29b','#d5aeb3','#b4c69f','#c3b2d5'];

@@ -47,7 +47,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js?v=context-music-20261114';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
-import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=war-guide-20261115';
+import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=honor-legend-20261115';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-management';
 import {showLinhBai} from './linh-bai.js';
