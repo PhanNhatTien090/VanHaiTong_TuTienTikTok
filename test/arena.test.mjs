@@ -119,3 +119,10 @@ test('snapshot có chọn lọc (overlay) không lỗi khi Lôi Đài mở, đư
  const s=snapshot(w,N+2,{select:ctx=>{assert.deepEqual(ctx.socialStage,['a']);return new Set(['a']);}});
  assert.equal(s.socialScene,'arena');assert.deepEqual(s.socialStage,['a']);
 });
+
+test('gõ "chiêu" xem bộ 4 chiêu mọi lúc (cả khi Lôi Đài chưa mở), có chống spam',()=>{
+ const w=world();player(w,'a',1e7);
+ const r=chat(w,'a','chiêu',N);assert.equal(r.ok,true);assert.equal(r.kit.length,4);
+ const e=w.events.findLast(x=>x.arenaKit);assert.match(e.text||e.message,/SK1 .* SK4 /);
+ const before=w.events.length;chat(w,'a','chiêu',N+1000);assert.equal(w.events.filter(x=>x.arenaKit).length,1);
+});

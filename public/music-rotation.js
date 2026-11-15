@@ -67,6 +67,7 @@ export function eventMood(s,now=s?.serverNow||Date.now()){
  const live=e=>e&&!e.closedAt&&(!e.endsAt||now<e.endsAt),social=s?.socialStatus;
  if(s?.hallWar?.active)return ['hall',s.hallWar.id];
  if(s?.sectWar?.active)return ['war',s.sectWar.id];
+ if(s?.socialScene==='arena')return ['duel',s?.arena?.id||'arena']; // 15/11: Vân Hải Lôi Đài
  if(s?.socialScene==='tournament'||['registration','running'].includes(social?.tournament?.phase))return ['duel',social?.tournament?.id||'tournament'];
  if(s?.raceStatus?.active)return ['race',s.raceStatus.id];
  if(s?.boss?.hp>0&&live(s.boss))return ['battle',s.boss.id||s.boss.startedAt];

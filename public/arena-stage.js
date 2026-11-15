@@ -5,6 +5,7 @@ import {drawShockwave,drawAura,drawSeal} from './cinematic-vfx.js';
 import {drawV7Variant,v7SkillSpec,prewarmVariantArt} from './ultimate-variants-v7.js';
 import {drawDuelV6Ultimate,v6SkillFamily,prewarmDuelV6} from './duel-showcase-v6.js';
 import {drawPetV2SkillSignature} from './pet-v2-skill-fx.js';
+import {duelSoundPreset} from './duel-cinematic.js';
 
 export const ARENA_DELAY_MS=1100;
 export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708,.792,.878],cols:8,audienceScale:.98});
@@ -172,7 +173,9 @@ export function drawArena(scene,c,t,layer){
    drawNumbers(scene,c,e,clamp(age/(d+900)),targets);
    // Âm thanh + rung: chỉ 1 lần mỗi đòn
    scene.arenaFxSeen??=new Set();
-   if(!scene.arenaFxSeen.has(e.n+':'+m.id+':c')&&age<d*.3){scene.arenaFxSeen.add(e.n+':'+m.id+':c');if(!e.stunned)scene.onCombatSound?.('cast',e.skill?.tech||'slash');}
+   if(!scene.arenaFxSeen.has(e.n+':'+m.id+':c')&&age<d*.3){scene.arenaFxSeen.add(e.n+':'+m.id+':c');if(!e.stunned)scene.onCombatSound?.('cast',e.skill?.tech||'slash');
+    // Tuyệt kỹ/quà: thêm lớp âm điện ảnh (tụ lực → nổ) như màn tỷ thí V7.
+    if(e.slot===4||e.gift){const tk={id:e.skill?.tech};scene.onCinematicSound?.('arena:'+m.id+':'+e.n,duelSoundPreset(tk),Math.max(0,d*.58-age)/1000,{priority:5,charge:true,gain:.5});}}
    if(!scene.arenaFxSeen.has(e.n+':'+m.id+':h')&&age>=d*.58&&age<d*.85&&(e.dmg||e.heal||e.shield)){scene.arenaFxSeen.add(e.n+':'+m.id+':h');scene.onFeedbackSound?.('hit',e.slot===4||e.gift?3:e.crit?2:1);
     if(e.slot===4||e.gift||e.crit){const B=targets.get(e.to);scene.duelImpact={at:Date.now(),preset:e.slot===4?'legendary':'minor',ultimate:e.slot===4,x:B?.x||450,y:(B?.y||H*.35)-120};}}
    if(scene.arenaFxSeen.size>200)scene.arenaFxSeen=new Set([...scene.arenaFxSeen].slice(-80));
@@ -209,6 +212,6 @@ export function drawArena(scene,c,t,layer){
   panel(c,14,gy,872,52,'#06121fd9','#ffd98a55');
   const q=a.queue.map((x,i)=>(i+1)+'.'+x.name+(x.vs?' vs '+x.vsName:'')).join('  ');
   text(c,'HÀNG CHỜ: '+(q||'trống'),24,gy+15,{size:15,color:'#ffe2a4',weight:'800',align:'left',width:3,max:852});
-  text(c,'lên đài · thách <tên> · nhận · c1–c4 chọn chiêu · cv1 / cv2 cổ vũ · xuống đài',450,gy+38,{size:15,color:'#baffea',weight:'800',width:3,max:860});
+  text(c,'lên đài · thách <tên> · nhận · chiêu xem bộ chiêu · c1–c4 chọn chiêu · cv1 / cv2 cổ vũ',450,gy+38,{size:15,color:'#baffea',weight:'800',width:3,max:860});
  }
 }

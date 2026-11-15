@@ -59,6 +59,12 @@ function enqueue(w,p,now,c,vs=null){
 export function arenaCommand(w,p,cmd,rest,now,c){
  const words=String(rest||'').split(' ').filter(Boolean);
  const chieu=cmd==='chieu'?Number(words[0]):/^c[1-4]$/.test(cmd)?Number(cmd[1]):0;
+ if(cmd==='chieu'&&!words.length){
+  if(now-(p.arenaKitAt||0)<15000)return ok({cooldown:true});p.arenaKitAt=now;
+  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined);
+  c.emit(w,p,'Chiêu Lôi Đài (Lv'+kit[0].lv+') • '+kit.map(k=>'SK'+k.slot+' '+k.name).join(' · '),'status',now,{arenaKit:true});
+  return ok({kit:kit.map(k=>k.name)});
+ }
  const isCmd=['lendai','loidai','xuongdai','thach','thachdau','nhan','cv1','cv2'].includes(cmd)||chieu;
  if(!isCmd)return null;
  if(cmd==='nhan'&&!w.arena?.invites?.[p.id])return null; // "nhận" còn là lệnh nhận hồng bao
