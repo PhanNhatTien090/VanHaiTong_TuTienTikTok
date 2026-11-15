@@ -1,6 +1,6 @@
 import {eventPets,petRequirement,petPose} from './spirit-pets.js';
 import {drawPetV2CoveScene} from './pet-v2-cove-fx.js';
-import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose} from './spirit-pet-art.js?v=drawn-pets-20261114';
+import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose,PET_FACES_RIGHT as FACES_RIGHT} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {loadPetArt} from './spirit-pet-art.js?v=drawn-pets-20261114';
 export const PET_COVE_MAP={id:'pet-cove',name:'Linh Thú Cốc',image:'/assets/maps-v3/pet-cove.png',ambience:'jade',floorY:.76,layout:'ground'};
 export function petCoveOn(scene,now=Date.now()){
@@ -16,8 +16,6 @@ export function petCoveSpots(H,featured=null,premium=null){const pets=eventPets(
 // 15/11 (v3): thú chạy tự do khắp vùng trời Linh Thú Cốc; bảng mốc gọn thành 1 hàng có ảnh;
 // thẻ "Cách nuôi linh thú" xoay từng bước để người xem biết chơi Linh Thú 2.0.
 export const PET_COVE_ROAM={x0:95,x1:805,y0:.33,y1:.57};
-// Ảnh gốc phần lớn nhìn sang TRÁI; các con dưới đây nhìn sang PHẢI.
-const FACES_RIGHT=new Set(['sun-phoenix','hac-tinh-ho','xich-ha-phuong']);
 // 15/11 (user: "họ không biết lệnh gì làm gì"): bảng lệnh cố định, lời thường dễ hiểu, sáng lần lượt từng dòng.
 export const PET_COVE_GUIDE=Object.freeze([
  ['thú','xem thú của mình'],

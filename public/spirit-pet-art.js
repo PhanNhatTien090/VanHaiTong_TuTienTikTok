@@ -170,16 +170,30 @@ export function loadPetArt(scene,players){
   PET_FRAME_CACHE.get(pet.id).then(frames=>scene.petArt.set(pet.id,frames)).catch(()=>scene.petArt.delete(pet.id));
  }
 }
+// Ảnh gốc phần lớn nhìn sang TRÁI; các con dưới đây nhìn sang PHẢI.
+export const PET_FACES_RIGHT=new Set(['sun-phoenix','hac-tinh-ho','xich-ha-phuong']);
+/** Vị trí thú so với chân chủ lúc t. Hàm thuần theo id người chơi → mỗi thú lệch nhịp, mọi máy xem giống nhau. */
+export function petFollowOffset(playerId='',petId='',t=0,scale=1,flying=false,motion=true){
+ let seed=0;for(const ch of String(playerId))seed=(seed*31+ch.charCodeAt(0))>>>0;
+ const period=(flying?7800:6400)+seed%2600,phase=(seed%1000)/1000*Math.PI*2,time=motion===false?0:t;
+ const angleAt=tt=>flying?tt/period*Math.PI*2+phase:Math.PI*(.5+.5*Math.sin(tt/period*Math.PI*2+phase));
+ const a=angleAt(time),a2=angleAt(time+60),rx=(flying?40:36)*scale,ry=(flying?12:11)*scale;
+ const x=Math.cos(a)*rx,y=flying?-26*scale+Math.sin(a)*ry:9*scale+Math.sin(a)*ry,dx=Math.cos(a2)*rx-x;
+ const right=motion===false?true:dx>0;
+ return {x,y,flip:PET_FACES_RIGHT.has(petId)?!right:right,behind:flying&&Math.sin(a)<0};
+}
 export function drawPet(scene,c,target,t){
  const p=target.player,pet=petById(p.spiritPet),frames=pet&&petV2FramesFor(scene,p);if(!frames)return;
  let seed=0;for(const ch of p.id)seed=(seed*31+ch.charCodeAt(0))>>>0;
  const pose=premiumPetPose(pet.id,t,seed%1000,scene.motion)||petPose(t,seed%1000,scene.motion),scale=target.scale||1.4;
  // Small follower beside the feet: no full-screen halo, no additional stage actors.
- const flying=pet.id==='sun-phoenix'||pet.id==='astral-dragon'||!!pet.flying,grand=flying||pet.rare,x=target.x+scale*(30+pose.sway*.3),y=target.y+scale*(flying?-8:8)+pose.bob;
- const size=pet.size*scale,image=petArtFrame(frames,t,seed%1000,scene.motion);if(!image)return;
+ const flying=pet.id==='sun-phoenix'||pet.id==='astral-dragon'||!!pet.flying,grand=flying||pet.rare;
+ // 15/11 (chủ game: linh thú là chủ chốt): thú đi quanh chủ — thú chạy đi chạy lại nửa vòng trước chân, thú bay lượn vòng quanh vai.
+ const at=petFollowOffset(p.id,pet.id,t,scale,flying,scene.motion),x=target.x+at.x+pose.sway*.3*scale,y=target.y+at.y+pose.bob;
+ const size=pet.size*scale*1.2,image=petArtFrame(frames,t,seed%1000,scene.motion);if(!image)return;
  c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
  if(grand){c.strokeStyle=pet.color+'80';c.lineWidth=1.2;c.beginPath();c.ellipse(0,size*.29,size*.34,size*.08,0,0,Math.PI*2);c.stroke();}
- c.drawImage(image,-size/2,-size*.65,size,size);
+ if(at.behind)c.globalAlpha=.78;c.save();if(at.flip)c.scale(-1,1);c.drawImage(image,-size/2,-size*.65,size,size);c.restore();c.globalAlpha=1;
  if(!scene.petV2Settings?.evolutionArt||!scene.petArt?.get(petV2Key(p.spiritPet,p.petView?.stage)))drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;
  if(progress>=0&&progress<1){c.globalAlpha=1-progress;c.strokeStyle=pet.color;c.lineWidth=1.5;c.beginPath();c.ellipse(0,0,size*(.2+progress*.6),size*(.1+progress*.3),0,0,Math.PI*2);c.stroke();c.globalAlpha=1;}

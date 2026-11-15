@@ -37,10 +37,11 @@ test('five premium pets retain 4x2 eight-pose animated webp atlases and original
   assert.notEqual(petArtFrame(frames,0),petArtFrame(frames,frames.period/2),p.id);
  }
 });
-test('existing pet/relic alternating 7.5 minutes and cove override stay unchanged',()=>{
- assert.equal(FOLLOWER_TURN_MS,450000);
- for(const t of [0,10_000,700_000]){
-  assert.equal(followerTurn(t)!==followerTurn(t+FOLLOWER_TURN_MS),true);
+// 15/11 (chủ game): linh thú chủ chốt — chu kỳ 10 phút, pháp bảo chỉ ló 1 phút đầu.
+test('pet/relic schedule: 10-minute cycle, relic 1-minute cameo, cove override unchanged',()=>{
+ assert.equal(FOLLOWER_TURN_MS,600000);
+ for(const t of [0,10_000,700_000,1_000_000]){
+  assert.equal(followerTurn(t),followerTurn(t+FOLLOWER_TURN_MS));
   assert.equal(petTurn(t,true),true);
   assert.equal(petTurn(t,false),followerTurn(t)==='pet');
  }
