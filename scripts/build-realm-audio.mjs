@@ -1,7 +1,7 @@
 // Sinh public/<slug>-audio.js = bản nhạc scripts/<slug>-score.txt + bộ máy cue dùng chung lấy từ public/tien-de-audio.js.
 // Chạy: node scripts/build-realm-audio.mjs thien-ma   (hoặc diet-the). Ma Thần vẫn dùng scripts/build-ma-than-audio.mjs.
 import fs from 'node:fs';
-const NAMES={'thien-ma':['THIEN_MA','ThienMa','thienMa'],'diet-the':['DIET_THE','DietThe','dietThe'],'thai-so':['THAI_SO','ThaiSo','thaiSo']};
+const NAMES={'thien-ma':['THIEN_MA','ThienMa','thienMa'],'diet-the':['DIET_THE','DietThe','dietThe'],'thai-so':['THAI_SO','ThaiSo','thaiSo'],'vinh-kiep':['VINH_KIEP','VinhKiep','vinhKiep']};
 const slug=process.argv[2],names=NAMES[slug];if(!names)throw new Error('slug: '+Object.keys(NAMES).join(' | '));
 const [UP,Pascal,camel]=names,root=new URL('../',import.meta.url);
 const score=fs.readFileSync(new URL(`scripts/${slug}-score.txt`,root),'utf8').replace(/\r\n/g,'\n').trimEnd();
