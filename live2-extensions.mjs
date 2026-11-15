@@ -1,6 +1,7 @@
 // LIVE 2.0 optional gameplay extensions.
 // Existing guild/hall/bond/tower/currency schemas remain authoritative; this module never replaces them.
 import {stageConflict} from './stage-lock.mjs';
+import {relicDefinition} from './live2-relics.mjs';
 import {live2Level,live2Path,LIVE2_DAILY_INSIGHT,live2Enabled,live2GuildCard} from './live2-systems.mjs';
 
 const fail=message=>({ok:false,message}),ok=(message,more={})=>({ok:true,message,...more});
@@ -125,9 +126,11 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   if(!canFight(w,p,now))return fail('Pháp Ấn chỉ dùng khi đánh Boss hoặc vượt Tháp.');
   s??(p.live2={v:1,path:null,insight:0,daily:{day:'',earned:0}});
   if(now-(p.live2.lastRelicAt||-Infinity)<90000)return fail('Pháp Ấn hồi chiêu 90 giây.');
-  p.live2.lastRelicAt=now;p.live2.relicActive={id:p.equipped,until:now+15000};
-  announce(w,p,'PHÁP BẢO HIỂN UY • '+p.equipped,now,ctx,{live2Kind:'relic',daoRelic:true});
-  return ok('Đã kích hoạt Pháp Ấn.');
+  const profile=relicDefinition(p,ctx.catalog||[]);
+  p.live2.lastRelicAt=now;p.live2.relicActive={id:p.equipped,family:profile.family,until:now+15000};
+  announce(w,p,'PHÁP BẢO HIỂN UY • '+profile.style.name+' • '+profile.itemName,now,ctx,
+    {live2Kind:'relic',daoRelic:true,relicArt:profile.style.art,relicSkill:profile.style.name,relicFamily:profile.family});
+  return ok('Đã kích hoạt '+profile.style.name+'.');
  }
  if(cmd==='hoi'&&rest==='chien')return startGuildWar(w,p,now,ctx,'');
  if(cmd==='hoi'&&rest.startsWith('chien '))return startGuildWar(w,p,now,ctx,rest.slice(6));

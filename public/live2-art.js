@@ -20,7 +20,7 @@ export function prepareLive2Art(path){
 // Visual regression harness injects the exact predecoded asset, runtime continues to lazy-load.
 export function setLive2ArtForPreview(path,image){if(Object.hasOwn(ART,path)&&image)cache.set(path,image);}
 export function drawLive2Fx(c,e,t,k,p,{light=false,motion=true}={}){
- const path=e.live2Kind||(e.daoTribulation?'tribulation':e.daoPath),def=ART[path];if(!def)return;
+ const path=e.relicArt&&Object.hasOwn(ART,e.relicArt)?e.relicArt:e.live2Kind||(e.daoTribulation?'tribulation':e.daoPath),def=ART[path];if(!def)return;
  const img=cache.get(path),dramatic=!!(e.daoChoose||e.daoUltimate||e.guildWarStart||e.guildFounded||e.guildWarEnd||e.mentorJoined);
  const size=dramatic?420:e.daoSkill?218:e.daoBrew?245:170,centerX=p?.x??450,centerY=(p?.y??650)-(dramatic?128:70);
  const alpha=Math.max(0,Math.min(1,k*6,(1-k)*6));
@@ -62,7 +62,7 @@ export function drawLive2Fx(c,e,t,k,p,{light=false,motion=true}={}){
   c.save();c.globalAlpha*=alpha;c.textAlign='center';c.textBaseline='middle';
   c.font=(dramatic?'900 32px':'800 23px')+' "Segoe UI",sans-serif';
   c.lineWidth=dramatic?7:5;c.lineJoin='round';c.strokeStyle='#070d21';
-  c.strokeText(def.title,centerX,y);c.fillStyle=def.color;c.fillText(def.title,centerX,y);
+  c.strokeText(e.relicSkill||def.title,centerX,y);c.fillStyle=def.color;c.fillText(e.relicSkill||def.title,centerX,y);
   c.restore();
  }
 }

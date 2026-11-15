@@ -1,4 +1,5 @@
 // LIVE 2.0: additive, server-authoritative cultivation paths, guilds, mentorship and relic refinement.
+import {relicCombatBonus} from './live2-relics.mjs';
 // The historical fields (realm, qi, equipment, bonds, towerFloor) are never migrated or reset.
 export const LIVE2_PATHS=Object.freeze({
  sword:{name:'Kiếm Đạo',color:'#8ce8ff',mark:'⚔',skill:'Vạn Kiếm Khai Thiên',talent:'Phá trận'},
@@ -65,7 +66,7 @@ export function live2CombatBonus(p,now=Date.now(),kind='boss'){
   const f={sword:0.065,demon:kind==='boss'?0.075:0.035,body:kind==='tower'?0.075:0.03,beast:p.spiritPet?0.075:0.04,alchemy:s.elixirActive?.until>now?0.075:0.045};
   rate+=f[s.path]||0;
  }
- if(s.relicActive?.until>now&&s.relicActive.id===p.equipped)rate+=.04;
+ rate+=relicCombatBonus(p,now,kind);
  const refine=Number(s.refinements?.[p.equipped]||0);rate+=Math.min(3,Math.max(0,refine))*.008;
  if(s.bondSkillUntil>now)rate+=.015;
  return 1+Math.min(.12,rate);

@@ -426,7 +426,7 @@ function actionCore(w,input,now) {
     const live2=live2Command(w,p,words,now,{emit});if(live2){if(live2.ok)live2RecordAction(w,p,words,live2);if(!live2.ok&&!cooldown(p,'live2-error',5000,now))emit(w,p,live2.message,'status',now);return live2;}
   }
   if(type==='chat'&&['dan','che','phap','hoi','chien','su'].includes(cmd)){
-    const extra=live2ExtraCommand(w,p,words,now,{emit});if(extra){if(extra.ok)live2RecordAction(w,p,words,extra);if(!extra.ok&&!cooldown(p,'live2-extra-error',5000,now))emit(w,p,extra.message,'status',now);return extra;}
+    const extra=live2ExtraCommand(w,p,words,now,{emit,catalog:CATALOG});if(extra){if(extra.ok)live2RecordAction(w,p,words,extra);if(!extra.ok&&!cooldown(p,'live2-extra-error',5000,now))emit(w,p,extra.message,'status',now);return extra;}
   }
   if(type==='chat'&&['ho','thien'].includes(cmd)){
     const trial=live2TribulationCommand(w,p,words,now,emit);
