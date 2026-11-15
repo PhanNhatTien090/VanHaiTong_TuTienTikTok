@@ -81,6 +81,17 @@ export function live2Tick(w,now,ctx){
  e.finishedAt=now;
  const a=e.groups[0],b=e.groups[1],winner=a.score===b.score?null:a.score>b.score?a.id:b.id;
  e.result={winner,scores:e.groups.map(g=>({id:g.id,score:g.score}))};
+ // Persistent guild progression, never paid, rewarded exactly once on settlement.
+ // A guild that didn't fight earns no construction points.
+ for(const team of e.groups){
+  const guild=w.live2World?.guilds?.[team.id];
+  if(!guild)continue;
+  guild.wars=(guild.wars||0)+1;
+  if(winner===team.id)guild.wins=(guild.wins||0)+1;
+  const earned=team.score>0?(winner===team.id?10:4):0;
+  if(earned){guild.points=(guild.points||0)+earned;guild.warPoints=(guild.warPoints||0)+earned;}
+  guild.lastWarAt=now;
+ }
  // Reward actual active participants once, with a modest, fixed free-play amount.
  for(const team of e.groups){
   for(const id of Object.keys(team.byUser)){
