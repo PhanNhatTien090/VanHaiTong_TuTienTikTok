@@ -1,5 +1,6 @@
 // LIVE 2.0: additive, server-authoritative cultivation paths, guilds, mentorship and relic refinement.
 import {relicCombatBonus} from './live2-relics.mjs';
+import {activeBonds} from './bond-relations.mjs';
 // The historical fields (realm, qi, equipment, bonds, towerFloor) are never migrated or reset.
 export const LIVE2_PATHS=Object.freeze({
  sword:{name:'Kiếm Đạo',color:'#8ce8ff',mark:'⚔',skill:'Vạn Kiếm Khai Thiên',talent:'Phá trận'},
@@ -95,6 +96,15 @@ export function live2Command(w,p,words,now,ctx){
  if(cmd==='dao'&&['tu','ngo',''].includes(rest)){
   const desc=s.path?live2Path(p).name+' cấp '+live2Level(p)+' • Đạo Ngộ '+s.insight+' • hôm nay '+(s.daily.day===day(now)?s.daily.earned:0)+'/'+LIVE2_DAILY_INSIGHT:'Trúc Cơ mở chọn đạo: chọn đạo kiếm/ma/thể/thú/đan';
   announce(w,p,desc,now,emit,{daoStatus:true,daoPath:s.path,card:{kind:'dao',path:s.path||null,pathName:live2Path(p)?.name||'Chưa chọn Đạo Thống',level:s.path?live2Level(p):0,insight:s.insight||0,progress:s.daily?.day===day(now)?s.daily.earned:0,maxDaily:LIVE2_DAILY_INSIGHT,paths:Object.entries(LIVE2_PATHS).map(([id,v])=>({id,name:v.name}))}});return ok(desc);
+ }
+ if(cmd==='dao'&&rest==='lu'){
+  const partners=activeBonds(w,p.id).slice(0,6).map(b=>{
+   const o=w.players[b.a===p.id?b.b:b.a];
+   return {name:o?.name||'Đạo hữu',level:b.level||0,code:o?.socialCode||null};
+  });
+  const message=partners.length?'Đạo lữ: '+partners.map(x=>x.name).join(' · '):'Chưa có đạo lữ • gõ kết duyên + tên.';
+  announce(w,p,message,now,emit,{daoStatus:true,card:{kind:'bond',partners}});
+  return ok(message);
  }
  if(cmd==='chon'&&rest.startsWith('dao ')){
   if(p.realm<2)return fail('Cần Trúc Cơ để chọn con đường tu luyện.');
@@ -254,7 +264,7 @@ export function live2Command(w,p,words,now,ctx){
   s.masterId=null;announce(w,p,'XUẤT SƯ • Độc lập tu hành',now,emit,{mentorGraduated:true,live2Kind:'mentor'});return ok('Đã xuất sư.');
  }
  if(cmd==='dong'&&(rest==='tam'||rest.startsWith('tam '))){
-  const bonds=Object.values(w.social?.bonds||{}).filter(b=>!b.endedAt&&(b.a===p.id||b.b===p.id));
+  const bonds=activeBonds(w,p.id);
   const eligible=bonds.map(b=>w.players[b.a===p.id?b.b:b.a]).filter(o=>real(o)&&o.lastActive>=now-5*60000);
   const query=rest.slice(3).trim();
   const other=query?eligible.find(o=>personKey(o.name)===personKey(query)||personKey(o.socialCode)===personKey(query)):eligible.length===1?eligible[0]:null;
