@@ -89,7 +89,8 @@ export function live2Tick(w,now,ctx){
   const guild=w.live2World?.guilds?.[team.id];
   if(!guild)continue;
   guild.wars=(guild.wars||0)+1;
-  if(winner===team.id)guild.wins=(guild.wins||0)+1;
+  // Explicit zero on the losing/drawn side keeps saved histories and UI counters stable.
+  guild.wins=(guild.wins||0)+(winner===team.id?1:0);
   const earned=team.score>0?(winner===team.id?10:4):0;
   if(earned){guild.points=(guild.points||0)+earned;guild.warPoints=(guild.warPoints||0)+earned;}
   guild.lastWarAt=now;
