@@ -259,5 +259,8 @@ export function petV2CovePhase(w,now){
  const e=w.petEvent;if(!e||e.closedAt||now<e.startedAt||now>=e.endsAt)return null;
  const length=e.endsAt-e.startedAt,progress=clamp((now-e.startedAt)/Math.max(1,length),0,1);
  const phase=progress<Math.min(.05,15000/length)?'opening':progress<.77?'exploration':progress<.92?'community':'settlement';
- return {phase,progress,secondsLeft:Math.max(0,Math.ceil((e.endsAt-now)/1000))};
+ // 15/11: tiến độ hợp lực "thú duyên" cho màn Cốc (mục tiêu ước tính trước khi có người gõ).
+ const session=storage(w)?.coveSessions?.[e.id];
+ const goal=session?.goal||clamp(Math.ceil(Object.values(w.players).filter(q=>valid(q)&&now-(q.lastActive||0)<300000).length/4),1,8);
+ return {phase,progress,secondsLeft:Math.max(0,Math.ceil((e.endsAt-now)/1000)),joined:Object.keys(session?.participants||{}).length,goal,rewarded:!!session?.rewarded};
 }
