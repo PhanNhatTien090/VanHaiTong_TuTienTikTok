@@ -22,7 +22,7 @@ export function scheduleQiAudio(c,destination,elapsed=0,duration=8.8,strength=1,
   at*=scale;len*=scale;const trim=Math.max(0,elapsed-at);if(trim>=len||(at>=QI_IMPACT_AT*scale-.01&&trim>.08)||(!noise&&len<.5&&trim>.1))return;
   const start=now+Math.max(0,at-elapsed),remaining=len-trim,source=noise?c.createBufferSource():c.createOscillator(),g=c.createGain();
   if(noise){source.buffer=noiseBuffer(c);source.loop=true;}else source.type=kind;
-  const f=noise?c.createBiquadFilter():null,p=f?f.frequency:source.frequency;if(f){f.type=filter;if(f.Q)f.Q.value=q;source.connect(f);f.connect(g);}else source.connect(g);
+  const f=noise?c.createBiquadFilter():null,p=f?f.frequency:source.frequency;if(f){f.type=filter;if(f.Q)f.Q.value=q;source.connect(f);f.connect(g);}else if(kind==='sawtooth'){const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;if(lp.Q)lp.Q.value=.5;source.connect(lp);lp.connect(g);}else source.connect(g);
   p.setValueAtTime(from+(to-from)*trim/len,start);p.exponentialRampToValueAtTime(Math.max(25,to),start+remaining);
   const rise=Math.min(attack,remaining*.15),sustain=Math.max(rise,remaining*Math.min(.85,hold));
   g.gain.setValueAtTime(.0001,start);g.gain.linearRampToValueAtTime(level,start+rise);g.gain.linearRampToValueAtTime(level*.85,start+sustain);g.gain.exponentialRampToValueAtTime(.0001,start+remaining);g.connect(bus);if(reverb&&wet)g.connect(reverb);
@@ -78,7 +78,7 @@ export function scheduleQiAudio(c,destination,elapsed=0,duration=8.8,strength=1,
  drum(I,.34,160,36,1.6);drum(I+.22,.2,130,40,1.0);drum(I+.48,.1,120,42,.8);
  voice(I,.8,.24,4600,200,{noise:true,attack:.003,hold:.06});
  bowl(I+.01,D,[1,1.48,2.05,2.76,3.6,4.9],[.09,.06,.042,.03,.02,.012],[4.2,3.4,2.8,2.2,1.8,1.3]);
- voice(I+.03,2.2,.07,9000,2600,{noise:true,filter:'highpass',attack:.015,hold:.2});
+ voice(I+.03,2.2,.035,5200,2600,{noise:true,filter:'bandpass',q:.7,attack:.015,hold:.2});
  // Tám quẻ văng ra: chuỗi chuông đi xuống nhanh.
  PENTA.slice().reverse().forEach((f,i)=>pluck(I+.08+i*.045,f*2,.02));
  // 6,3–8,8 s HIỆN THÂN: dàn dây Rê trưởng add9 nở ra, đàn cổ rải hợp âm, kèn trầm (triangle) giữ nền — dư âm điện ảnh.

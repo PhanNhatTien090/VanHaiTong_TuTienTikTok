@@ -27,7 +27,7 @@ export function scheduleKimDanAudio(c,destination,elapsed=0,duration=11.8,streng
   at*=scale;len*=scale;const trim=Math.max(0,elapsed-at);if(trim>=len||(options.transient&&trim>.08))return;
   const start=now+Math.max(0,at-elapsed),remaining=len-trim,o=options.noise?c.createBufferSource():c.createOscillator(),g=c.createGain(),local=[o,g];
   if(options.noise){o.buffer=bank.noise;o.loop=true;}else o.type=options.type||'sine';
-  let frequency=o.frequency;if(options.noise){const f=c.createBiquadFilter();f.type=options.filter||'lowpass';f.Q.value=options.q??.7;o.connect(f);f.connect(g);frequency=f.frequency;local.push(f);}else o.connect(g);
+  let frequency=o.frequency;if(options.noise){const f=c.createBiquadFilter();f.type=options.filter||'lowpass';f.Q.value=options.q??.7;o.connect(f);f.connect(g);frequency=f.frequency;local.push(f);}else if(o.type==='sawtooth'){const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;lp.Q.value=.5;o.connect(lp);lp.connect(g);local.push(lp);}else o.connect(g);
   frequency.setValueAtTime(Math.max(25,from+(to-from)*trim/len),start);frequency.exponentialRampToValueAtTime(Math.max(25,to),start+remaining);
   const attack=Math.min(options.attack??.025,remaining*.15),hold=Math.max(attack,remaining*(options.hold??.08));
   g.gain.setValueAtTime(.0001,start);g.gain.linearRampToValueAtTime(level,start+attack);g.gain.linearRampToValueAtTime(level*.85,start+hold);g.gain.exponentialRampToValueAtTime(.0001,start+remaining);

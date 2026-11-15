@@ -37,6 +37,19 @@ import {breakthroughRealm} from './breakthrough-fx.js';
 // Original procedural audio: no external samples, music service, or credentials.
 // 08/11: bo đỉnh mềm cuối chuỗi — dưới 0,8 giữ nguyên, trên đó uốn dần tới 0,98: không bao giờ cắt cứng (tiếng rẹt).
 export function softClipCurve(n=4096){const a=new Float32Array(n);for(let i=0;i<n;i++){const x=i/(n-1)*2-1,m=Math.abs(x);a[i]=Math.sign(x)*(m<=.8?m:.8+.18*Math.tanh((m-.8)/.18));}return a;}
+// 15/11 (chủ game: "rè rất khó chịu"): phổ cho thấy dải 20–200 Hz to hơn giai điệu ~30 dB → loa điện thoại/AAC TikTok vỡ tiếng
+// và nén chung "bơm" theo từng nhịp trầm. Mọi âm đột phá đi qua tầng an toàn: cắt siêu trầm, hạ trầm, nhấc dải rõ, nén mềm.
+export const RITUAL_SAFETY=Object.freeze({hp:90,hpStages:4,shelfHz:220,shelfDb:-8,presenceHz:2600,presenceDb:3,threshold:-16,ratio:3.2,attack:.012,release:.22,makeup:1.25});
+export function createRitualSafety(c,destination,realm=0){
+ const S=RITUAL_SAFETY,input=c.createGain(),nodes=[input];let last=input;
+ const add=n=>{last.connect(n);last=n;nodes.push(n);return n;};
+ if(c.createBiquadFilter){for(let i=0;i<S.hpStages;i++){const h=add(c.createBiquadFilter());h.type='highpass';h.frequency.value=S.hp;if(h.Q)h.Q.value=.707;}
+  const sh=add(c.createBiquadFilter());sh.type='lowshelf';sh.frequency.value=S.shelfHz;sh.gain.value=S.shelfDb;
+  const pr=add(c.createBiquadFilter());pr.type='peaking';pr.frequency.value=S.presenceHz;if(pr.Q)pr.Q.value=.8;pr.gain.value=S.presenceDb;}
+ if(c.createDynamicsCompressor){const k=add(c.createDynamicsCompressor());k.threshold.value=S.threshold;k.knee.value=10;k.ratio.value=S.ratio;k.attack.value=S.attack;k.release.value=S.release;}
+ const out=add(c.createGain());out.gain.value=realm>=1&&realm<=4?S.makeup*.78:S.makeup;out.connect(destination); // realm 1–4 trộn to hơn hẳn
+ return {input,stop(){for(const n of nodes)try{n.disconnect();}catch{}}};
+}
 function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.createWaveShaper();w.curve=softClipCurve();w.oversample='2x';return w;}
 // 08/11 tối: 3 bản nhạc nền tu tiên, chuẩn hóa -19 LUFS (to hơn bản cũ -23 LUFS ~4 dB). Nguồn + giấy phép: public/assets/AUDIO.md.
 // 09/11: 8 bài; mỗi bài lặp tới lúc đổi (tự đổi mỗi 30 phút hoặc theo trang quản lý) — xem music-rotation.js.
@@ -159,8 +172,8 @@ export class CultivationAudio {
   }
   scheduleRitual(event,realm,elapsed=0,{base=true,impact=true,boost=true,variant=true,upgrade=true,cinematicLayers}={}){
     const c=this.ctx,seconds=elapsed/1000,duration=event.duration/1000;
-    const output=c.createGain();
-    output.connect(this.fxBus);
+    const output=c.createGain(),safety=createRitualSafety(c,this.fxBus,realm);
+    output.connect(safety.input);
     const appearance=variant?this.ritualVariant(event,realm,elapsed,output):null;
     const revised=upgrade&&realm===6;
     const enhancement=boost&&!revised&&realm>=6&&realm<25?createRitualBoostBus(c,output,realm):null;
@@ -185,7 +198,7 @@ export class CultivationAudio {
     }
     if(impact&&hit&&!revised)cues.push(scheduleImpactLayers(c,output,{
       elapsed:seconds,at:hit[0],duration:hit[1],scale:duration/hit[1],
-      pitch:qiVariant(event).pitch,root:hit[2],level:realm>=6?.53:.72
+      pitch:qiVariant(event).pitch,root:hit[2],level:realm>=6?.53:.5
     }));
     if(enhancement)cues.push(scheduleRitualBoostLayer(c,enhancement.input,{
       realm,elapsed:seconds,duration,impactBody:!hit
@@ -197,7 +210,7 @@ export class CultivationAudio {
       appearance?.stop();
       for(const cue of cues)cue?.stop();
       enhancement?.stop();
-      output.disconnect();
+      output.disconnect();safety.stop();
     };
     const tail=setTimeout(dispose,Math.max(0,(duration-seconds+3.5)*1000));
     tail.unref?.();
@@ -216,12 +229,12 @@ export class CultivationAudio {
     if(realm>3||!this.ctx)return null;const a=ritualAppearance(event)?.audio;if(!a)return null;
     const c=this.ctx,now=c.currentTime,input=c.createGain(),tone=c.createBiquadFilter?.(),out=c.createGain();
     input.gain.value=1;if(tone){tone.type=a.tone==='bright'?'highshelf':a.tone==='air'?'peaking':'lowshelf';tone.frequency.value=a.tone==='bright'?3200:a.tone==='air'?6500:a.tone==='deep'?140:320;if(tone.Q)tone.Q.value=.8;tone.gain.value=a.tone==='deep'?3:a.tone==='warm'?2:2.5;}
-    out.gain.value=Math.min(1.18,.80+.22*a.gain);
+    out.gain.value=Math.min(1,.72+.18*a.gain); // 15/11: hạ trần biến thể (cú nổ realm 1–4 quá tải gây rè)
     const chain=[input,tone,out].filter(Boolean);chain.forEach((n,i)=>i&&chain[i-1].connect(n));out.connect(destination);
     const at=now+(event.duration/1000)*(EARLY_IMPACT[realm]||.7)-elapsed/1000,f=[98,110,123.5,130.8,146.8][Math.abs(a.detune/100+2)%5]*2**(a.detune/1200),nodes=[];
     let timer=null,stopped=false;
     // Tiếng nhấn chỉ được lên lịch ~0,3 s trước lúc nổ, nên dừng sớm (tắt tiếng / cắt cảnh) thì không còn nguồn âm treo.
-    const accent=at=>{const g=c.createGain();g.gain.value=.56+.16*a.gain;g.connect(destination);nodes.push(g);
+    const accent=at=>{const g=c.createGain();g.gain.value=.4+.12*a.gain;g.connect(destination);nodes.push(g);
       if(a.accent==='gong'){[1,1.48,2.02,2.74].forEach((r,i)=>this.note(f*r,at,3.6-i*.6,.11/(1+i*1.5),g,'sine'));this.note(f/2,at,2.2,.12,g,'triangle');}
       else if(a.accent==='bell')this.bell(f*4,at,.12,g);
       else if(a.accent==='chime'){for(let i=0;i<5;i++)this.note(f*[6,8,9,12,16][i],at+i*.07,1.6,.05,g,'sine');}

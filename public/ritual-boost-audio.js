@@ -26,7 +26,7 @@ export function scheduleRitualBoostLayer(ctx,out,{realm,elapsed=0,duration,impac
  hiss(impact-2.2,2.2,.32,'bandpass',260,4200,1.1,2);for(let i=0;i<7;i++)kick(impact-1.4+i*.20,.14+i*.018,105,58,.16);
  // cú nổ: trầm sâu + xoảng chiêng + vang
  if(impactBody)kick(impact,.28,112,48,.46);
- hiss(impact,1.15,.19,'highpass',4200,1800,.8);
+ hiss(impact,1.15,.1,'bandpass',3600,1800,.7,.01);
  // hợp âm kèn khi hiện thân
  const rev=impact+.4;for(const [m,l] of [[1,.09],[1.25,.07],[1.5,.07],[2,.05]])tone(rev,2.6,l,root*2*m);tone(rev,2.6,.06,root,'triangle',600);
  const endAt=when(Math.min(duration,impact+3.4));

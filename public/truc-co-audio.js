@@ -28,7 +28,7 @@ export function scheduleTrucCoAudio(c,destination,elapsed=0,duration=10.8,streng
   at*=scale;len*=scale;const trim=Math.max(0,elapsed-at);if(trim>=len||(options.transient&&trim>.08))return;
   const start=now+Math.max(0,at-elapsed),remaining=len-trim,o=options.noise?c.createBufferSource():c.createOscillator(),g=c.createGain(),local=[o,g];
   if(options.noise){o.buffer=bank.noise;o.loop=true;}else o.type=options.type||'sine';
-  let frequency=o.frequency;if(options.noise){const f=c.createBiquadFilter();f.type=options.filter||'lowpass';f.Q.value=options.q??.7;o.connect(f);f.connect(g);frequency=f.frequency;local.push(f);}else o.connect(g);
+  let frequency=o.frequency;if(options.noise){const f=c.createBiquadFilter();f.type=options.filter||'lowpass';f.Q.value=options.q??.7;o.connect(f);f.connect(g);frequency=f.frequency;local.push(f);}else if(o.type==='sawtooth'){const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;lp.Q.value=.5;o.connect(lp);lp.connect(g);local.push(lp);}else o.connect(g);
   frequency.setValueAtTime(Math.max(25,from+(to-from)*trim/len),start);frequency.exponentialRampToValueAtTime(Math.max(25,to),start+remaining);
   const attack=Math.min(options.attack??.025,remaining*.15),hold=Math.max(attack,remaining*(options.hold??.08));
   g.gain.setValueAtTime(.0001,start);g.gain.linearRampToValueAtTime(level,start+attack);g.gain.linearRampToValueAtTime(level*.85,start+hold);g.gain.exponentialRampToValueAtTime(.0001,start+remaining);
@@ -80,7 +80,7 @@ export function scheduleTrucCoAudio(c,destination,elapsed=0,duration=10.8,streng
  voice('burst',B,1.8,.34,110,32,{attack:.004,hold:.12,transient:true,fixed:true});
  [1,1.48,2.05,2.76].forEach((r,i)=>voice('burst',B+.012,3.2-i*.4,[.07,.05,.035,.022][i],130.8*r,130.8*r*.997,{attack:.004,hold:.02,transient:true}));
  [1568,2093,2637,3136].forEach((f,i)=>voice('burst',B+.06+i*.03,2.3-i*.25,.016,f,f*1.003,{attack:.06,hold:.25,transient:true}));
- voice('burst',B+.04,1.5,.055,9000,2500,{noise:true,filter:'highpass',attack:.02,hold:.15,transient:true});
+ voice('burst',B+.04,1.5,.03,5200,2500,{noise:true,filter:'bandpass',q:.7,attack:.02,hold:.15,transient:true});
  [146.8,185,220,293.7].forEach((f,i)=>voice('tail',B+.2,2.2,.026-i*.003,f,f*1.001,{attack:.4,hold:.55,transient:true}));
  // v3 (05/11/2026) — lớp điện ảnh cho "Linh Mạch Định Cơ" (nhóm 'cine', chỉ phát ở bản mix).
  const cv=(at,len,level,from,to,o={})=>voice('cine',at,len,level,from,to,{...o,transient:true}); // lỡ mốc thì bỏ, không phát nửa chừng

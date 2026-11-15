@@ -33,7 +33,7 @@ export function scheduleImpactLayers(c,destination,{elapsed=0,at,duration,scale=
  voice(at,.52,.24,112,42,{attack:.004,hold:.12,fixed:true});
  [1,1.48,2.05,2.76].forEach((r,i)=>voice(at+.012,3.2-i*.4,[.06,.042,.03,.02][i],root*r,root*r*.997,{attack:.004,hold:.02}));
  [12,16,20.17,24].forEach((r,i)=>voice(at+.06+i*.03,2.3-i*.25,.014,root*r,root*r*1.003,{attack:.06,hold:.25}));
- voice(at+.04,.62,.043,5400,2100,{isNoise:true,filter:'highpass',attack:.02,hold:.15});
+ voice(at+.04,.62,.025,4200,2100,{isNoise:true,filter:'bandpass',q:.7,attack:.02,hold:.15});
  [1.122,1.414,1.682,2.245].forEach((r,i)=>voice(at+.2,2.2,.022-i*.003,root*r,root*r*1.001,{attack:.4,hold:.55}));
  if(!active){dispose();return none;}
  return {stop(){if(stopped)return;stopped=true;const t=c.currentTime;bus.gain.cancelScheduledValues(t);bus.gain.setTargetAtTime(.0001,t,.012);for(const o of nodes)try{o.stop(t+.05);}catch{}release(80);},endAt:now+Math.max(0,duration*scale-elapsed)+1};
