@@ -56,7 +56,22 @@ function announce(w,p,message,now,emit,extra={}){
 }
 const alias={kiem:'sword',ma:'demon',the:'body',thu:'beast',dan:'alchemy'};
 const personKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().trim();
-function findPlayer(w,query){const q=personKey(query).replace(/^#/,'');const arr=Object.values(w.players).filter(p=>p.id===query||personKey(p.socialCode)===q||personKey(p.name)===q||personKey(p.handle)===q);return arr.length===1?arr[0]:null;}
+function findPlayer(w,query){
+ const raw=String(query||'').trim(),q=personKey(raw).replace(/^#/,'');
+ if(!q)return null;
+ if(Object.hasOwn(w.players,raw))return w.players[raw]; // exact ID avoids costly full-room search
+ let matched=null;
+ for(const id in w.players){
+  if(!Object.hasOwn(w.players,id))continue;
+  const p=w.players[id];
+  if(!p)continue;
+  if(personKey(p.socialCode)===q||personKey(p.name)===q||personKey(p.handle)===q){
+   if(matched&&matched.id!==p.id)return null; // duplicate names never select wrong person
+   matched=p;
+  }
+ }
+ return matched;
+}
 export function live2CombatBonus(p,now=Date.now(),kind='boss'){
  const s=p?.live2;if(!s)return 1;
  const lvl=live2Path(p)?live2Level(p):0;
