@@ -173,6 +173,14 @@ for(let i=0;i<manifest.length;i++){
  gc.drawImage(im,x,y,260,462);
 }
 await fs.writeFile(path.join(OUT,'00-tong-hop-13-linh-thu.png'),await gallery.encode('png'));
+// Small JPEG proof sheet for visual QA without decoding full-size 13 PNGs.
+const proof=createCanvas(4*185+5*10,4*345+5*10),pc=proof.getContext('2d');
+pc.fillStyle='#061320';pc.fillRect(0,0,proof.width,proof.height);
+for(let i=0;i<manifest.length;i++){
+ const img=await loadImage(path.join(OUT,manifest[i].filename));
+ pc.drawImage(img,10+(i%4)*195,10+Math.floor(i/4)*355,185,329);
+}
+await fs.writeFile(path.join(OUT,'00-preview-qa.jpg'),await proof.encode('jpeg',78));
 await fs.writeFile(path.join(OUT,'manifest.json'),JSON.stringify(manifest,null,2)+'\n');
 if(manifest.length!==13||new Set(manifest.map(m=>m.id)).size!==13)throw Error('Missing or duplicated pet');
 console.log('FINISHED: 13 originals + contact sheet');
