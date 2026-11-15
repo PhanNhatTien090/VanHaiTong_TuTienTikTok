@@ -6,6 +6,8 @@ import {ascensionImpactRatio} from './audio.js';
 import {breakthroughRealm} from './breakthrough-fx.js';
 import {impactSeverity} from './skill-impact-v3.js';
 import {GIFT_HITS} from './gift-spectacle.js';
+import {makeSurface} from './performance.js';
+import {cameraShakeStrength} from './cinematic-feedback.js';
 
 const TAU=Math.PI*2,SPAN=420;
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
@@ -107,5 +109,29 @@ export function drawImpactPunctuation(scene,c,t,H,wallNow=Date.now()){
   c.moveTo(x-size*.06,y+size*.21);c.lineTo(x+size*.06,y-size*.21);c.stroke();
  }
  c.restore();
+ return true;
+}
+
+export function drawImpactCamera(scene,c,t,H,wallNow=Date.now()){
+ const strength=cameraShakeStrength(scene),cue=strength&&impactBeat(scene,t,wallNow);
+ scene.screenShake={active:false,x:0,y:0};
+ if(!cue)return false;
+ const envelope=(1-cue.age/SPAN)**2,amount=(cue.power>=3?16:cue.power>=2?11:7)*strength*envelope;
+ if(amount<.15)return false;
+ const dx=Math.sin(cue.age*.052+.9)*amount,dy=Math.cos(cue.age*.069+.4)*amount*.65;
+ const canvas=scene.canvas,w=canvas.width,h=canvas.height;
+ if(!(w>0&&h>0&&H>0))return false;
+ let buffer=scene.impactCameraBuffer;
+ if(!buffer||buffer.width!==w||buffer.height!==h)buffer=scene.impactCameraBuffer=makeSurface(w,h);
+ const copy=buffer?.getContext('2d');
+ if(!copy)return false;
+ copy.setTransform(1,0,0,1,0,0);copy.clearRect(0,0,w,h);copy.drawImage(canvas,0,0);
+ const scale=1+2*Math.max(Math.abs(dx)/900,Math.abs(dy)/H)+.003;
+ c.save();
+ c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
+ c.clearRect(0,0,w,h);
+ c.drawImage(buffer,w*(1-scale)/2+dx*w/900,h*(1-scale)/2+dy*h/H,w*scale,h*scale);
+ c.restore();
+ scene.screenShake={active:true,x:dx,y:dy,kind:cue.kind};
  return true;
 }

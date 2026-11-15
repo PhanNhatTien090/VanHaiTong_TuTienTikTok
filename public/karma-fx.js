@@ -13,7 +13,7 @@ const WHITE='#f7f6f2',INK='#060608';
 const RING_X=.507,RING_Y=.488;
 const HALO_Y=stand=>-56-stand*28;
 const CHEST_Y=stand=>-36-stand*30;
-const haloWidth=stand=>84+stand*16;
+const haloWidth=stand=>(84+stand*16)*1.35;
 const art={};
 
 function surface(size,draw){const canvas=makeSurface(size,size);if(!canvas)return null;draw(canvas.getContext('2d'),size/2);return canvas;}

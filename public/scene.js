@@ -30,7 +30,7 @@ import {loadDoraArt,doraWorn,drawDoraBody,drawDoraRelic,drawDoraVisitor,drawDora
 import {noteEngagementReaction,drawEngagementReactions} from './engagement-reactions.js';
 import {LiveFeedbackDirector,prepareFeedbackArt} from './live-feedback-fx.js';
 import {drawSkillImpact,impactSeverity} from './skill-impact-v3.js';
-import {drawImpactPunctuation} from './impact-punch.js';
+import {drawImpactPunctuation,drawImpactCamera} from './impact-punch.js?v=screen-shake-v1';
 import {drawDuelCinematic,duelChargingPose} from './duel-cinematic.js';
 import {artworkCrop,projectedGround,courtyardTargets,constrainGroundTargets} from './courtyard-layout.js';
 import {godFormFor,drawGodAuras} from './god-forms.js';
@@ -77,7 +77,7 @@ import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,B
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
 import {signatureVisitor} from './court-rewards.js';
-import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=karma-idle-v4';
+import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=karma-halo-v5';
 import {skinFor,layoutPlayers,layoutLabels,wrapName,spriteCell,visualGender} from './cosmetics.js';
 import {residentPlayers} from './residents.js';
 import {arenaOn,arenaBackground,arenaTargets,drawWings,drawArenaShots,drawArenaCasts,ARENA_BOSS_Y} from './boss-arena.js';
@@ -539,7 +539,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.targetFps=targetFps;
     const started=performance.now();
     const beforeRaster=this.characterFrames.stats.repaints;
-    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);}
+    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);drawImpactCamera(this,this.ctx,t,this.height);}
     finally{
       const cost=performance.now()-started;
       this.lastCost=Math.round(cost*10)/10;

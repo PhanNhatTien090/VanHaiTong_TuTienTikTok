@@ -1,7 +1,7 @@
 import {BLACK_GOLD_VISITOR,KARMA_VISITOR,COURT_VISITORS,SIGNATURE_VISITORS,courtRelic} from './court-rewards.js';
 import {drawCourtAuraLayer} from './court-skin-fx.js';
 import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
-import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-idle-v4';
+import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-halo-v5';
 import {feedbackBudget} from './cinematic-feedback.js';
 import {ownsGear} from './skin-gear.js';
 const skinOf=p=>COURT_VISITORS.find(v=>v.skin===p?.skinChoice&&p.rewardSkins?.includes(v.skin));
