@@ -66,7 +66,13 @@ export function live2GuildWarView(w,now){
  if(!live2GuildWarEnabled(w))return null;
  const e=w.live2World?.guildWar;
  if(!e||e.cancelled||!(e.endsAt>now&&!e.finishedAt||e.finishedAt&&now-e.finishedAt<10000))return null;
- return {id:e.id,active:e.endsAt>now&&!e.finishedAt,endsAt:e.endsAt,groups:e.groups.map(g=>({id:g.id,name:g.name,score:g.score})),result:e.result||null};
+ return {id:e.id,active:e.endsAt>now&&!e.finishedAt,endsAt:e.endsAt,groups:e.groups.map(g=>{
+  const eligible=new Set(e.eligible||[]);
+  const members=w.live2World?.guilds?.[g.id]?.members||[];
+  return {id:g.id,name:g.name,score:g.score,
+   // Only fixed-size eligible rosters reach the client; never stream all guild members or scores.
+   roster:members.filter(id=>eligible.has(id)&&active(w.players[id],now)).slice(0,4)};
+ }),result:e.result||null};
 }
 export function live2Tick(w,now,ctx){
  const e=w.live2World?.guildWar;
