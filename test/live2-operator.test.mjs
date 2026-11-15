@@ -38,3 +38,14 @@ test('a repeated identical request is idempotent and never generates redundant b
  const r=applyLive2Settings(w,{...flags,confirm:'XAC NHAN LIVE2'},()=>{called=true;return 'x.json'});
  assert.equal(r.unchanged,true);assert.equal(called,false);
 });
+
+test('new combat rules cannot switch on halfway through an active Boss or Tower round',()=>{
+ const N=1800000000000,w=world();
+ w.boss={hp:100,maxHp:100,endsAt:N+30000};
+ let copied=false;
+ const r=applyLive2Settings(w,{...flags,confirm:'XAC NHAN LIVE2'},()=>{copied=true;return 'snapshot.json';},N);
+ assert.equal(r.ok,false);assert.equal(copied,false);assert.equal(w.settings.live2Enabled,false);
+ w.boss=null;w.tower={cur:{id:'a'},endsAt:N+30000};
+ assert.equal(applyLive2Settings(w,{...flags,confirm:'XAC NHAN LIVE2'},()=>{copied=true;return 'snapshot.json';},N).ok,false);
+ assert.equal(copied,false);
+});

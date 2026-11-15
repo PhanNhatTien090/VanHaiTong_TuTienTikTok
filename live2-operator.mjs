@@ -17,13 +17,18 @@ export function backupLive2State(w,dataDir,now=Date.now()){
  }catch(e){try{fs.rmSync(tmp,{force:true});}catch{}throw e;}
  return path.basename(dest);
 }
-export function applyLive2Settings(w,payload,backup){
+export function applyLive2Settings(w,payload,backup,nowMs=Date.now()){
  if(w?.mode!=='live')return {ok:false,message:'Chỉ chỉnh LIVE 2.0 trong chế độ LIVE.'};
  if(!payload||KEYS.some(key=>typeof payload[key]!=='boolean'))return {ok:false,message:'Thiếu cấu hình bật/tắt hợp lệ.'};
  const now=live2Flags(w),next=Object.fromEntries(KEYS.map(k=>[k,payload[k]]));
  if((next.live2GuildWarEnabled||next.live2BossTrialsEnabled)&&!next.live2Enabled)
   return {ok:false,message:'Phải bật LIVE 2.0 trước khi bật Hội Chiến hoặc Boss thử thách.'};
  const changed=KEYS.some(key=>next[key]!==now[key]);
+ if((!now.live2Enabled&&next.live2Enabled||!now.live2BossTrialsEnabled&&next.live2BossTrialsEnabled)
+   &&w.boss?.hp>0&&w.boss.endsAt>nowMs)
+  return {ok:false,message:'Chờ Boss đang diễn ra kết thúc trước khi bật cơ chế mới.'};
+ if(!now.live2Enabled&&next.live2Enabled&&w.tower?.cur?.id&&w.tower.endsAt>nowMs)
+  return {ok:false,message:'Chờ lượt vượt Tháp đang diễn ra kết thúc trước khi bật LIVE 2.0.'};
  if(!changed)return {ok:true,unchanged:true,flags:now,message:'Cấu hình không đổi.'};
  if(payload.confirm!=='XAC NHAN LIVE2')
   return {ok:false,message:'Cần xác nhận thao tác LIVE 2.0 tại trang điều hành.'};
