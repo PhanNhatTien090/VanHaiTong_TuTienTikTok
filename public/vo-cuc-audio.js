@@ -1,0 +1,85 @@
+// Vô Cực Thiên Tổ v2 — Thiên Cơ Dệt Mệnh: Mi Lydian (huyền ảo, thiên cơ), đàn dây gảy như sợi tơ, kết Mi trưởng.
+// 6 hạt mệnh rơi (chuông cao + bùm khi chạm đất), 4 thanh khung dệt (gỗ + kim loại), 3 lượt căng sợi (gảy dây trầm),
+// go nâng (cạch), 6 lượt thoi (vút + gõ khung), 4 nhát kéo (rít kéo + cắt + nổ), đứt bung (sấm + vỡ),
+// 8 nút thắt (gảy + thắt), 12 lượt thoi đan chéo (gảy nhanh dồn), nút Bàn Trường giật 3 lần, kéo vào đan điền,
+// tối, 2 nhịp tim, NỔ vạn sợi, Mi trưởng + đồng ca.
+// Sinh lại public/vo-cuc-audio.js bằng: node scripts/build-realm-audio.mjs vo-cuc
+import {qiVariant} from './qi-impact.js';import {warmWave} from './warm-wave.js';
+import {VC as T,VC_SEEDS,VC_BEAMS,VC_STRINGS,VC_HEDDLE,VC_SHUTTLE,VC_CUTS,VC_WHIPS,VC_KNOTS,VC_WEAVE,VC_PULLS,VC_BEATS} from './vo-cuc-awakening.js';
+const score=[],add=(at,len,level,from,to=from,kind='sine',pan=0,transient=false,tag='')=>score.push({at,len,level,from,to,kind,pan,transient,tag});
+const rnd=i=>{const v=Math.sin(i*91.7+12.3)*43758.5453;return v-Math.floor(v);};
+function drum(at,f=1,pan=0){add(at,.6,.17*f,90,30,'sine',pan,true,'drum');add(at,.09,.045*f,1400,180,'crack',pan,true,'drum-skin');}
+function strings(at,len,notes,f=.02){notes.forEach((hz,i)=>{for(const d of [.997,1.003])add(at,len,f/(1+i*.35),hz*d,hz*d,'strings',(i%2?1:-1)*.24,false,'strings');});}
+function pluck(at,hz,f=.035,pan=0){add(at,.7,f,hz,hz*.99,'triangle',pan,true,'metal-pluck');add(at,.22,f*.25,hz*2.76,hz*2.7,'sine',pan,true,'metal-harmonic');}
+function choir(at,len,notes,f=.03){notes.forEach((hz,i)=>{for(const d of [.995,1.005])add(at,len,f/(1+i*.3),hz*d,hz*d,'choir',(i%2?1:-1)*.3,false,'choir');});}
+function brass(at,len,hz,f=.05,to=hz){add(at,len,f,hz,to,'brass',0,false,'brass');add(at,len,f*.6,hz*1.5,to*1.5,'brass',0,false,'brass-fifth');}
+function sub(at,f=.2,from=70,to=26,len=1.4){add(at,len,f,from,to,'sine',0,true,'sub-boom');}
+function bell(at,hz,f=.04,pan=0){for(const [r,v,len] of [[1,1,1.6],[2.76,.4,.9],[5.4,.15,.4]])add(at,len,f*v,hz*r,hz*r*.998,'sine',pan,true,'bell');}
+function boom(at,f=1,pan=0,metal=220){sub(at,.2*f,72,24,1.2);drum(at,.9*f,pan);add(at,.12,.1*f,4800,600,'crack',pan,true,'boom-crack');bell(at+.01,metal,.03*f,pan);}
+function gong(at,f=1,pan=0){sub(at,.22*f,55,26,2.2);add(at,2.6,.07*f,98,92,'triangle',pan,true,'gong');add(at,2.1,.04*f,207,200,'sine',pan,true,'gong-hum');add(at,1.4,.03*f,370,358,'sine',pan,true,'gong-shimmer');drum(at,1*f,pan);}
+function heart(at,f=1){add(at,.32,.2*f,62,34,'sine',0,true,'heart-lub');add(at+.2,.28,.15*f,58,32,'sine',0,true,'heart-dub');add(at,.08,.035*f,900,200,'crack',0,true,'heart-skin');}
+function glass(at,hz,pan=0,f=1){for(const [r,v,len] of [[1,1,1.2],[2.32,.5,.8],[4.1,.25,.5]])add(at,len,.025*f*v,hz*r,hz*r*1.002,'sine',pan,true,'glass');add(at,.06,.04*f,7000,3000,'crack',pan,true,'glass-tick');}
+function rubble(at,pan=0,f=1){for(let i=0;i<6;i++)add(at+i*.07+rnd(i+at*7)*.04,.1,.03*f,1800+rnd(i+at)*1600,500,'crack',Math.max(-1,Math.min(1,pan+(rnd(i)-.5)*.4)),true,'rubble');}
+function harp(at,hz,f=.035,pan=0){add(at,1.4,f,hz,hz*.998,'triangle',pan,true,'harp');add(at,.6,f*.35,hz*2,hz*2,'sine',pan,true,'harp-oct');add(at,.03,f*.6,3000,1500,'crack',pan,true,'harp-pick');}
+function wood(at,f=1,pan=0){add(at,.1,.07*f,700,500,'triangle',pan,true,'wood');add(at,.06,.06*f,2400,700,'crack',pan,true,'wood-knock');}
+function scissor(at,f=1,pan=0){add(at-.25,.25,.05*f,2000,7000,'rise',pan,true,'blade-hiss');add(at,.12,.15*f,7500,900,'crack',pan,true,'snip');add(at+.02,.4,.05*f,3200,3000,'sine',pan,true,'blade-ring');}
+const E=[164.81,185,207.65,233.08,246.94,277.18,311.13,329.63,369.99,415.3,466.16,493.88,554.37,622.25,659.25];
+// nền: pedal Mi + gió tơ
+add(.1,T.dark-.1,.03,41.2,41.2,'triangle',0,false,'pedal');add(.3,10,.03,300,800,'wind',-.4,false,'silk-wind');add(12,10,.028,260,700,'wind',.4,false,'silk-wind');
+strings(1,6,[82.41,123.47,164.81],.016);strings(9,6,[82.41,116.54,164.81,246.94],.018);strings(28,7,[82.41,123.47,164.81,233.08],.02);
+// 1. Hạt mệnh
+VC_SEEDS.forEach((at,i)=>{const pan=(i%2?1:-1)*.5;bell(at,E[8+i],.03,pan);add(at,.45,.03,900,3200,'rise',pan,true,'seed-fall');boom(at+.45,.9+i*.08,pan,E[i]);harp(at+.47,E[i]*2,.03,pan);});
+// 2. Khung dệt + căng sợi + go
+VC_BEAMS.forEach((at,i)=>{const pan=[-.6,.6,0,0][i];add(at,.3,.04,200,1400,'wind',pan,true,'beam-fly');boom(at+.3,1.2+i*.12,pan,E[i+1]/2);wood(at+.3,1.4,pan);});
+VC_STRINGS.forEach((at,i)=>{for(let j=0;j<5;j++)harp(at+j*.04,E[(i*3+j)%15]/2,.034,(j-2)*.25);sub(at,.16+i*.03,70,30,1);drum(at,1+i*.2);});
+wood(VC_HEDDLE,1.6);boom(VC_HEDDLE,1.1,0,E[4]);
+// 3. Thoi dệt
+VC_SHUTTLE.forEach((at,i)=>{const pan=i%2?-.6:.6;add(at,.55,.05,500,3000,'wind',-pan,true,'shuttle-fly');wood(at+.55,1.3,pan);boom(at+.55,1+i*.08,pan,E[i+2]);harp(at+.56,E[i+7],.032,pan);});
+for(let i=0;i<16;i++)drum(13+i*.4,.4+i*.02,(i%2?1:-1)*.2);
+// 4. Kéo cắt + đứt bung
+VC_CUTS.forEach((at,i)=>{const pan=(i%2?1:-1)*.5;scissor(at+.3,1.2,pan);boom(at+.3,1.5+i*.12,pan,E[3-i]/2);add(at+.3,1.4,.07,1200,90,'thunder',pan,true,'cut-thunder');rubble(at+.35,pan,.9);});
+add(T.snap-.4,.4,.05,400,4000,'rise',0,true,'snap-strain');boom(T.snap,1.8,0,41.2*2);gong(T.snap+.02,1.1);for(let i=0;i<10;i++)harp(T.snap+i*.05,E[14-i],.03,(rnd(i)-.5)*1.4);
+VC_WHIPS.forEach((at,i)=>{const pan=(i?1:-1)*.6;add(at-.1,.15,.05,800,5000,'rise',pan,true,'whip-air');add(at,.1,.14,6000,700,'crack',pan,true,'whip-crack');boom(at,1.1+i*.15,pan,E[6+i]/2);});
+// 5. Nút thắt
+VC_KNOTS.forEach((at,i)=>{const pan=(i/7-.5)*1.4;add(at,.5,.03,400,2400,'rise',pan,true,'thread-shoot');harp(at+.5,E[i+4],.036,pan);boom(at+.5,.9+i*.07,pan,E[i%5]);add(at+.5,.08,.05,2600,800,'crack',pan,true,'knot-tie');});
+choir(30,4,[164.81,207.65,246.94],.028);
+// 6. Dệt lại thiên võng
+VC_WEAVE.forEach((at,i)=>{const pan=(i%2?1:-1)*.5;harp(at+.3,E[(i*2)%15],.03,pan);add(at,.3,.03,700,2800,'wind',pan,true,'weave-whirl');drum(at+.3,.55+i*.03,pan);});strings(36,7,[82.41,123.47,164.81,246.94,311.13],.022);
+// 7. Nút Bàn Trường
+add(T.knot,1.2,.04,1600,300,'wind',0,true,'web-gather');boom(T.knot+1.2,1.4,0,E[2]);
+VC_PULLS.forEach((at,i)=>{boom(at,1.3+i*.25,0,E[2-i]/2);add(at,.25,.06,300,90,'sawtooth',0,true,'rope-strain');add(at,.08,.06,2400,600,'crack',0,true,'rope-snap');});
+add(T.pull,.6,.06,3600,160,'wind',0,true,'knot-dive');boom(T.pull+.6,1.55,0,41.2*2);gong(T.pull+.62,1.0);
+add(T.dark-.3,.5,.05,2400,120,'wind',0,true,'light-suck');VC_BEATS.forEach((at,i)=>heart(at,.8+i*.2));
+// 8. NỔ vạn sợi
+drum(T.impact,1.8);add(T.impact,.2,.13,7000,500,'crack',0,true,'release-crack');sub(T.impact,.32,90,20,3);gong(T.impact+.02,1.5);brass(T.impact,1.9,41.2*2,.08);
+add(T.impact+.08,1.8,.07,1000,100,'thunder',-.35,true,'release-wave');add(T.impact+.2,1.7,.06,800,90,'thunder',.35,true,'release-wave');for(let i=0;i<14;i++)harp(T.impact+.25+i*.07,E[i]*2,.016,(rnd(i+3)-.5)*1.6);
+// 9. Hiện thân: Mi trưởng
+strings(T.reveal,3.8,[41.2,82.41,123.47,164.81,207.65],.028);choir(T.reveal,3.6,[164.81,207.65,246.94,329.63],.036);brass(T.reveal+.2,2.4,82.41,.06);brass(T.reveal+1,1.8,123.47,.05);
+for(const [i,hz]of [329.63,415.3,493.88,659.25,830.61,987.77].entries())pluck(T.reveal+.3+i*.3,hz,.04-i*.003,(i%2?1:-1)*.3);bell(T.reveal+2.4,329.63,.035);add(T.reveal+2.2,1.6,.024,600,150,'wind',0,false,'release-breath');
+export const VO_CUC_SCORE=Object.freeze(score.sort((a,b)=>a.at-b.at).map(Object.freeze));
+// Mức cue dành khoảng trống cho các lớp cộng trên bus nghi thức.
+const LOUD=1.32;
+const banks=new WeakMap();
+function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=71313,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}
+export function voCucMusicDuck(ms){const t=ms/1000;return t<T.impact?.08:t<T.impact+2.2?.12:Math.min(1,.12+(t-T.impact-2.2)/1.6*.88);}
+export function scheduleVoCucAudio(c,destination,elapsed=0,duration=T.duration,strength=1,event={}){
+ const now=c.currentTime,pitch=qiVariant(event).pitch,scale=duration/T.duration,bus=c.createGain(),nodes=[bus],sources=[];let stopped=false,echo=null;
+ bus.gain.value=strength;bus.connect(destination);
+ // Vang thung lũng: trễ dài, phản hồi vừa.
+ if(c.createDelay){echo=c.createDelay(.6);const wet=c.createGain(),fb=c.createGain();echo.delayTime.value=.34;wet.gain.value=.16;fb.gain.value=.28;echo.connect(wet);wet.connect(bus);echo.connect(fb);fb.connect(echo);nodes.push(echo,wet,fb);}
+ for(const cue of VO_CUC_SCORE){const at=cue.at*scale,len=cue.len*scale,trim=Math.max(0,elapsed-at),remain=Math.min(len-trim,duration+.8-Math.max(at,elapsed));if(remain<=0||cue.transient&&trim>.08)continue;
+  const level=cue.level*LOUD,start=now+Math.max(0,at-elapsed),noisy=['wind','thunder','crack','rise'].includes(cue.kind),source=noisy?c.createBufferSource():c.createOscillator(),g=c.createGain();let param;
+  if(noisy){source.buffer=noise(c);source.loop=true;}else if((cue.kind==='strings'||cue.kind==='choir')&&c.createPeriodicWave)source.setPeriodicWave(warmWave(c));else source.type=['strings','choir','brass'].includes(cue.kind)?'sawtooth':cue.kind;
+  if(noisy||['strings','choir','brass'].includes(cue.kind)){const filter=c.createBiquadFilter();filter.type=noisy||cue.kind==='choir'?'bandpass':'lowpass';if(filter.Q)filter.Q.value=cue.kind==='crack'?.9:cue.kind==='choir'?1.4:.55;source.connect(filter);filter.connect(g);nodes.push(filter);if(noisy)param=filter.frequency;else{filter.frequency.value=cue.kind==='choir'?760:cue.kind==='brass'?950:1300;param=source.frequency;}}else{source.connect(g);param=source.frequency;}
+  const pf=noisy?1:pitch;param.setValueAtTime(Math.max(25,Math.min(12000,(cue.from+(cue.to-cue.from)*trim/len)*pf)),start);param.exponentialRampToValueAtTime(Math.max(25,cue.to*pf),start+remain);
+  const attack=cue.kind==='choir'?.55:cue.kind==='brass'?.07:cue.kind==='strings'?.38:cue.kind==='rise'?remain*.7:cue.kind==='wind'?.1:.004;
+  g.gain.setValueAtTime(.0001,start);g.gain.linearRampToValueAtTime(level,start+Math.min(attack,remain*.75));if(['strings','choir','brass'].includes(cue.kind)&&remain>.8)g.gain.linearRampToValueAtTime(level*.85,start+remain*.74);g.gain.exponentialRampToValueAtTime(.0001,start+remain);
+  if(cue.pan&&c.createStereoPanner){const pan=c.createStereoPanner();pan.pan.value=cue.pan;g.connect(pan);pan.connect(bus);nodes.push(pan);}else g.connect(bus);
+  if(echo&&cue.kind!=='thunder'&&cue.kind!=='crack')g.connect(echo);
+  source.start(start);source.stop(start+remain+.025);sources.push(source);nodes.push(source,g);
+ }
+ // Nền chìm 120 ms ngay trước nổ.
+ if(elapsed<(T.impact-.12)*scale){const at=now+(T.impact-.12)*scale-elapsed,hit=now+T.impact*scale-elapsed;bus.gain.setValueAtTime(strength,at);bus.gain.linearRampToValueAtTime(strength*.22,hit-.012);bus.gain.setValueAtTime(strength,hit);}
+ const cleanup=()=>nodes.forEach(n=>{try{n.disconnect();}catch{}}),timer=setTimeout(cleanup,Math.max(0,(duration-elapsed+2)*1000));timer.unref?.();
+ return {endAt:now+Math.max(0,duration-elapsed)+2,stop(){if(stopped)return;stopped=true;clearTimeout(timer);for(const source of sources)try{source.stop();}catch{}cleanup();}};
+}

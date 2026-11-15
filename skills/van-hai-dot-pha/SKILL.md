@@ -231,3 +231,7 @@ Chủ game chê 4 cảnh cuối (25–28, renderer chung `late-awakening.js`) "c
 ## Vĩnh Kiếp Đạo Quân v2 (realm 26) "Vạn Kiếp Nghịch Lưu" · 15/11/2026
 
 `public/vinh-kiep-awakening.js` (54 s, nổ 47,5, đổi skin 47,85), âm `scripts/vinh-kiep-score.txt` → `node scripts/build-realm-audio.mjs vinh-kiep`. Motif: 3 xoáy thời không, 3 thời hà đổ như thác, mảnh ký ức va nhau, sóng cát hổ phách, 6 bóng tiền kiếp (ghost từ ảnh nhân vật thật), Sa Lậu Thiên Kiếp chặn dòng → đóng băng (phủ 'color' chàm, âm gần im) → lật → tua ngược (đồng hồ hành động `flowClock` chạy lùi) → quá khứ/vị lai hợp thể, cát rót vào đan điền. Tránh trùng Đại La v2 (không đồng hồ/màn xám/búng tay). Luật đã gặp: vật bay quanh người phải vẽ SAU người khi gần giữa (|x−450|<150) để không che mặt. Realm 27–28 còn dùng `late-awakening.js`. Chưa được chủ game duyệt, chưa nghe bằng tai.
+
+## Vô Cực Thiên Tổ v2 (realm 27) "Thiên Cơ Dệt Mệnh" · 15/11/2026
+
+`public/vo-cuc-awakening.js` (56 s, nổ 50, đổi skin 50,35), âm `scripts/vo-cuc-score.txt` → `node scripts/build-realm-audio.mjs vo-cuc`. Motif: hạt mệnh mọc sợi dọc, khung dệt 4 thanh, con thoi dệt 6 dải vải (vẽ source-over trên nền tối — dùng 'lighter' thì thành vạch trắng), kéo Thiên Kiếp Tiễn cắt 4 nhát, sợi đứt bung + quất, 8 mệnh tuyến thắt nút Bàn Trường, thiên võng mạng nhện, nút lớn giật 3 lần vào đan điền. Trong score phải dùng `T.` (import VC as T), không viết `VC.`. Realm 28 còn dùng `late-awakening.js`. Chưa được chủ game duyệt, chưa nghe bằng tai.
