@@ -11,6 +11,13 @@ import {prewarmVariantArt,drawV7Variant,v7SkillSpec} from './ultimate-variants-v
 import {prewarmOverdrive} from './cinematic-overdrive-v7.js';
 import {prewarmV7Premium} from './v7-premium-art.js';
 import {syncArena,drawArena} from './arena-stage.js?v=loi-dai-20261115';
+// 15/11: chiêu thường xoay vòng 3 chiêu đầu của bộ Lôi Đài; tuyệt kỹ giữ chiêu chính (ảnh V6/V7 đã nạp sẵn theo chiêu chính).
+export function duelSkillTech(match,id,cast){
+ const base=match?.techniques?.[id],kit=match?.kits?.[id];
+ if(!kit?.length||cast?.ultimate)return base;
+ const turn=Number(cast?.turn)||0,k=kit[(Math.floor((turn%100)/2)+Math.floor(turn/100))%kit.length];
+ return k?.tech?{...(base||{}),id:k.tech,name:k.name,color:k.color||base?.color}:base;
+}
 export function syncSocialStage(scene,state){
  scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;try{syncArena(scene,state);}catch(e){console.warn('[LoiDai]',e);}
  const match=state.socialStatus?.tournament?.current,active=state.socialScene==='tournament'&&!!match?.id;
@@ -62,7 +69,7 @@ export function drawSocialStage(scene,c,t,layer,solo){
     linhChau(c,orb.x,orb.y,scene.motion?t:0);
     // V4: pha có nhịp. Bên ra chiêu chốt lúc chiêu bắt đầu (linh áp đổi giữa chừng không làm chiêu đổi bên).
     const key=match.id+':'+cast.turn;if(scene.duelLastCast!==key){scene.duelLastCast=key;scene.duelCastSide=cast.side;scene.duelHitKey=null;}
-    const side=scene.duelCastSide??cast.side,a=scene.targets[side],trailer=scene.targets[1-side],technique=match.techniques[a.id],k=cast.k,light=scene.budget?.level==='light';
+    const side=scene.duelCastSide??cast.side,a=scene.targets[side],trailer=scene.targets[1-side],technique=duelSkillTech(match,a.id,cast),k=cast.k,light=scene.budget?.level==='light';
     const shield=cast.guard?{x:trailer.x+(orb.x-trailer.x)*.42,y:orb.y+28}:null,aim=shield||orb;
     if(cast.guard){const up=Math.min(1,cast.phaseK*6);drawSeal(c,side?'jade':'dusk',trailer.x,trailer.y+10,82,scene.motion?t*.0009:0,.55*up);drawAura(c,side?'jade':'dusk',shield.x,shield.y,58+(k>.34&&k<.6?18:0),.6*up);const hit=k>.34&&k<.6?1-(k-.34)/.26:0;c.save();c.globalAlpha=(.55+.4*hit)*up;c.strokeStyle=side?'#9ff5df':'#e2c4ff';c.lineWidth=3+3*hit;c.beginPath();c.ellipse(shield.x,shield.y-6,26+6*hit,78+10*hit,0,0,Math.PI*2);c.stroke();c.globalAlpha*=.5;c.lineWidth=1.5;c.beginPath();c.ellipse(shield.x,shield.y-6,16,62,0,0,Math.PI*2);c.stroke();c.restore();}
     if(cast.ready&&technique){

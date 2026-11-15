@@ -2,6 +2,7 @@ import {activeBonds,syncBondRefs,bondAllowance,alreadyBonded} from './bond-relat
 import {stageConflict} from './stage-lock.mjs';
 import {petV2DuelPoints,petV2DuelTraits} from './pet-v2.mjs';
 import {petV2TacticalScore} from './pet-v2-combat.mjs';
+import {arenaKit} from './public/arena-skills.js';
 // 15/11: thú V2 chỉ tính nửa điểm (tối đa 2,5) để không lấn trợ lực của người không có thú.
 export const PET_DUEL_WEIGHT=.5;
 import {FESTIVAL_ITEM,festivalEnroll,tickBondFestival,festivalView} from './bond-festival.mjs';
@@ -80,9 +81,11 @@ export function duelGiftShieldImpact(w,p,value,now){
  receiver.current=Math.max(0,Math.min(receiver.max,receiver.current+(useHeal?amount:-amount)));
  return {kind:useHeal?'shield-heal':'shield-break',amount,source:p.id,target:useHeal?p.id:foeId,after:receiver.current,max:receiver.max};
 }
+// 15/11: ván trên đài xoay vòng bộ chiêu Lôi Đài (chỉ đổi HÌNH chiêu; luật thắng 3% không đổi).
+const duelKit=(p,c)=>{try{return arenaKit(p,q=>c.technique(q)).slice(0,3).map(k=>({tech:k.tech,name:k.name,color:k.color}));}catch{return null;}};
 function match(w,a,b,now,c){
  const t=w.tournament,pa=w.players[a],pb=w.players[b],sa=t.fighters[a],sb=t.fighters[b];
- return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+DUEL_MS,boosts:{[a]:0,[b]:0},petCasts:{},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},aura:{[a]:0,[b]:0},guardShields:{[a]:{current:duelShieldMax(t,a),max:duelShieldMax(t,a)},[b]:{current:duelShieldMax(t,b),max:duelShieldMax(t,b)}}};
+ return {id:t.id+'-'+t.round+'-'+t.matchIndex,a,b,startedAt:now,endsAt:now+DUEL_MS,boosts:{[a]:0,[b]:0},petCasts:{},lastBoost:{},strengths:{[a]:sa.strength,[b]:sb.strength},techniques:{[a]:c.technique(pa),[b]:c.technique(pb)},kits:{[a]:duelKit(pa,c),[b]:duelKit(pb,c)},aura:{[a]:0,[b]:0},guardShields:{[a]:{current:duelShieldMax(t,a),max:duelShieldMax(t,a)},[b]:{current:duelShieldMax(t,b),max:duelShieldMax(t,b)}}};
 }
 // Re-seed every round by actual cultivation, not equipment power or registration order.
 export function tournamentPairs(ids,fighters){
