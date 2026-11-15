@@ -6,6 +6,7 @@ import {drawV7Variant,v7SkillSpec,prewarmVariantArt} from './ultimate-variants-v
 import {drawDuelV6Ultimate,v6SkillFamily,prewarmDuelV6} from './duel-showcase-v6.js';
 import {drawPetV2SkillSignature} from './pet-v2-skill-fx.js';
 import {duelSoundPreset} from './duel-cinematic.js';
+import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
 
 export const ARENA_DELAY_MS=1100;
 export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708,.792,.878],cols:8,audienceScale:.98});
@@ -103,6 +104,7 @@ function drawCast(scene,c,m,e,k,H,t,targets){
   const ult=v7SkillSpec(tech.id)?drawV7Variant(scene,c,t,A,{x:B.x,y:B.y-120},tech,k):v6SkillFamily(tech.id)?drawDuelV6Ultimate(scene,c,t,A,{x:B.x,y:B.y-120},tech,k):false;
   if(!ult){const rk=clamp((k-.35)/.65);if(rk>0)drawCombatTechnique(c,{technique:tech,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,rk,A,H,{light,signatures:scene.signatureSprites,relics:scene.combatSprites});}
   if(k<.45){drawAura(c,'gold',A.x,A.y-120,90+160*k,.25+.4*k);drawSeal(c,'gold',A.x,A.y+6,90+60*k,scene.motion?t*.001:0,.6);}
+  drawElementImpact(c,arenaElement(tech.id),B.x,B.y-130,k,e.n,{power:3,light});
   return;
  }
  if(e.slot===3&&e.skill.pet){
@@ -114,6 +116,10 @@ function drawCast(scene,c,m,e,k,H,t,targets){
   if(e.heal){drawAura(c,'jade',A.x,A.y-110,80+60*k,.45*Math.sin(Math.PI*clamp(k)));}
   return;
  }
+ // Lớp hệ chiêu: đường bay từ người ra đòn tới điểm trúng + nổ theo hệ.
+ const el=arenaElement(tech.id);
+ drawElementTrail(c,el,{x:A.x,y:A.y-170},aim,k,e.n,{light});
+ drawElementImpact(c,el,aim.x,aim.y,k,e.n,{power:e.crit?2:1,light});
  c.save();c.translate(aim.x,aim.y);c.scale(sc,sc);c.rotate((seed-.5)*.25);c.translate(-aim.x,-aim.y);
  drawCombatTechnique(c,{technique:tech,target:{x:aim.x,yRatio:aim.y/H}},scene.motion?t:0,clamp(k),A,H,{light,signatures:scene.signatureSprites,relics:scene.combatSprites});
  c.restore();
@@ -121,7 +127,7 @@ function drawCast(scene,c,m,e,k,H,t,targets){
 }
 function drawNumbers(scene,c,e,k,targets){
  const B=targets.get(e.to),A=targets.get(e.by);if(!B||!A||k<.55)return;
- const u=clamp((k-.55)/.45),y0=(B.y-300)-u*70,a=Math.min(1,(1-u)*2.2);
+ const u=clamp((k-.55)/.45),y0=(B.y-235)-u*55,a=Math.min(1,(1-u)*2.2);
  c.save();c.globalAlpha=a;
  if(e.stunned){text(c,'BỊ CHOÁNG',A.x,A.y-300-u*40,{size:22,color:'#ffd36b'});c.restore();return;}
  if(e.dmg){const big=e.crit||e.slot===4||e.gift;text(c,'-'+fmt(e.dmg),B.x+((e.n%3)-1)*30,y0,{size:big?50:34,color:big?'#ffd54a':'#ffffff',width:big?7:5});
