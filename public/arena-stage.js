@@ -6,7 +6,7 @@ import {drawV7Variant,v7SkillSpec,prewarmVariantArt} from './ultimate-variants-v
 import {drawDuelV6Ultimate,v6SkillFamily,prewarmDuelV6} from './duel-showcase-v6.js';
 import {drawPetV2SkillSignature} from './pet-v2-skill-fx.js';
 import {duelSoundPreset} from './duel-cinematic.js';
-import {drawSkillBannerTier,bannerTier} from './skill-banner.js?v=loi-dai-v2-20261115';
+import {bannerPlan,bannerLane,drawSkillBannerLane,BANNER_MS} from './skill-banner.js?v=loi-dai-banner-20261115';
 import {portraitCanvas} from './linh-bai.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
 import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
@@ -191,19 +191,25 @@ export function drawArena(scene,c,t,layer){
  if(m){
   drawHud(scene,c,m,H,t);
   // Mỗi lúc chỉ 1 bảng lớn: bậc cao nhất, rồi đòn mới nhất; đòn khác cùng lúc chỉ hiện dải nhỏ.
-  let hero=null;for(const e of m.log){const age=at-e.at,d=DUR[e.slot]||1000;if(age<0||age>d*.78||e.stunned||e.dot)continue;const tr=bannerTier(e);if(tr>=2&&(!hero||tr>hero.tr||tr===hero.tr&&e.at>hero.e.at))hero={e,tr};}
   for(const e of m.log){const age=at-e.at,d=DUR[e.slot]||1000;if(age<0||age>d+900)continue;const k=clamp(age/d);
-   if(age<=d){drawCast(scene,c,m,e,k,H,t,targets);drawSkillBannerTier(scene,c,e,k,targets.get(e.by),H,now,{small:!!hero&&hero.e!==e});}
-   drawNumbers(scene,c,e,clamp(age/(d+900)),targets);
+   if(age<=d)drawCast(scene,c,m,e,k,H,t,targets);
+   // (số sát thương vẽ sau bảng chéo, xem dưới)
    // Âm thanh + rung: chỉ 1 lần mỗi đòn
    scene.arenaFxSeen??=new Set();
    if(!scene.arenaFxSeen.has(e.n+':'+m.id+':c')&&age<d*.3){scene.arenaFxSeen.add(e.n+':'+m.id+':c');if(!e.stunned)scene.onCombatSound?.('cast',e.skill?.tech||'slash');
+    // Nhân vật trên sân làm động tác ra chiêu cùng lúc bảng chéo hiện.
+    if(!e.stunned&&!e.dot&&!(e.gift&&e.target==='self')){const tk=techObj(e.skill?.tech,e.skill?.name,e.skill?.color);scene.animator?.trigger({id:'arena:'+m.id+':'+e.n,user:e.by,effect:'attack',technique:{...tk,pose:e.slot===1?'slash':'cast'}},t);}
     // Tuyệt kỹ/quà: thêm lớp âm điện ảnh (tụ lực → nổ) như màn tỷ thí V7.
     if(e.slot===ULT||e.gift){const tk={id:e.skill?.tech};scene.onCinematicSound?.('arena:'+m.id+':'+e.n,duelSoundPreset(tk),Math.max(0,d*.58-age)/1000,{priority:5,charge:true,gain:.5});}}
    if(!scene.arenaFxSeen.has(e.n+':'+m.id+':h')&&age>=d*.58&&age<d*.85&&(e.dmg||e.heal||e.shield)){scene.arenaFxSeen.add(e.n+':'+m.id+':h');scene.onFeedbackSound?.('hit',e.slot===ULT||e.gift?3:e.crit?2:1);
     if(e.slot===ULT||e.gift||e.crit){const B=targets.get(e.to);scene.duelImpact={at:Date.now(),preset:e.slot===ULT?'legendary':'minor',ultimate:e.slot===ULT,x:B?.x||450,y:(B?.y||H*.35)-120};}}
    if(scene.arenaFxSeen.size>200)scene.arenaFxSeen=new Set([...scene.arenaFxSeen].slice(-80));
   }
+  // Bảng chéo xếp tầng (tối đa 3), mỗi đòn 1 bảng; sau đó mới vẽ số sát thương để luôn đọc được.
+  const live=m.log.filter(e=>{const age=at-e.at;return age>=0&&!e.stunned&&!e.dot&&!(e.gift&&e.target==='self')&&age<=(BANNER_MS[bannerPlan(scene,e,now).tier]||1800);});
+  const keys=live.map(e=>e.n+':'+(e.at||0));
+  for(const e of live){const lane=bannerLane(scene,e,now,keys);if(lane!=null)drawSkillBannerLane(scene,c,e,at-e.at,targets.get(e.by),H,lane,now);}
+  for(const e of m.log){const age=at-e.at,d=DUR[e.slot]||1000;if(age<0||age>d+900)continue;drawNumbers(scene,c,e,clamp(age/(d+900)),targets);}
   // Màn mở trận: VS
   if(now<m.fightAt){const k=clamp((now-m.startedAt)/(m.fightAt-m.startedAt)),a2=Math.min(1,k/.15,(1-k)/.15);c.save();c.globalAlpha=a2;
    text(c,'VS',450,H*.2,{size:90,color:'#ffcf5a',width:10});

@@ -26,7 +26,7 @@ for(const s of shots){
  for(let x=w._simAt||N+1500;x<=t;x+=250)tickArena(w,x,c);w._simAt=t;
  const state=snapshot(w,t);const arena=state.arena;if(!arena){console.log('arena closed at',s);continue;}
  const canvas=createCanvas(W,H),ctx=canvas.getContext('2d');ctx.drawImage(bg,0,0,W,H*(bg.height/bg.width)*W/W>H?H:W*bg.height/bg.width);
- const scene={height:H,motion:true,budget:{level:'high'},arena,arenaClockOffset:0,lastState:state,skillArt,bannerFrames,onCombatSound(){},onFeedbackSound(){}};
+ const scene={height:H,motion:true,budget:{level:'high'},arena,arenaClockOffset:0,lastState:state,skillArt,bannerFrames,portraitFor:p=>p?.id==='b'?fem:body,onCombatSound(){},onFeedbackSound(){}};
  const actors=(state.socialStage||[]).map(id=>state.players.find(p=>p.id===id)).filter(Boolean);
  const audience=state.players.filter(p=>p.id.startsWith('f'));
  scene.targets=arenaTargets(scene,actors,audience,H);
