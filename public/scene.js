@@ -22,7 +22,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareLive2Art,drawLive2Fx} from './live2-art.js';
 import {drawLive2ScreenFx,live2CinematicEligible} from './live2-cinematic.js';
-import {guildWarActorIds,guildWarTargets,drawGuildWarFloor} from './live2-guild-stage.js';
+import {guildWarActorIds,guildWarTargets,drawGuildWarFloor,drawGuildWarClash} from './live2-guild-stage.js';
 import {live2CueForEvent} from './live2-cues.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
@@ -131,7 +131,15 @@ export class Scene {
       backing:{width:this.canvas.width,height:this.canvas.height},logical:{width:900,height:this.height},dpr:globalThis.devicePixelRatio||1,
       fillsViewport:Math.abs(r.x)<1&&Math.abs(r.y)<1&&Math.abs(r.width-innerWidth)<1&&Math.abs(r.height-innerHeight)<1};
   }
-  update(state,selected){const previousPlayerIndex=this.playerIndex;const started=this.metrics?performance.now():0;this.lastState=state;this.lastSelected=selected;this.petEvent=state.petEvent;if(state.visitor?.kind==='hailam'||state.players.some(seaWorn))loadSeaArt(this);if(state.visitor?.kind==='khuyniet'||state.players.some(p=>khuyWorn(p)||p.equipped===KHUY_DRAGON))loadKhuyArt(this);if(state.visitor?.kind==='viemton'||state.players.some(p=>viemWorn(p)||p.equipped===VIEM_BLADES))loadViemArt(this);if(state.visitor?.kind==='tudo'||state.players.some(p=>tudoWorn(p)||p.equipped===TUDO_BLADE))loadTudoArt(this);if(state.visitor?.kind==='doraemon'||state.players.some(p=>doraWorn(p)||String(p.equipped||'').startsWith('dora-')))loadDoraArt(this);this.lanternFestival=state.lanternFestival;this.companionStatus=state.companionStatus;this.guildWarStatus=state.live2GuildWar?.active?state.live2GuildWar:null;loadPetArt(this,state.players);this.realmCount=state.realms?.length||REALM_STYLES.length;if(state.visitor?.kind==='vuonglam'||state.players.some(linWanWorn))loadLinWanArt(this);if(state.visitor?.kind==='shende'||state.players.some(p=>shendeWorn(p)||p.equipped==='shende-dao-seal'))loadShendeArt(this);loadCelestialArt(this); // v61: luôn tải — ảnh Thương Long dùng cho hiệu ứng vinh danh/quà lớn
+  update(state,selected){const previousPlayerIndex=this.playerIndex;const started=this.metrics?performance.now():0;this.lastState=state;this.lastSelected=selected;this.petEvent=state.petEvent;if(state.visitor?.kind==='hailam'||state.players.some(seaWorn))loadSeaArt(this);if(state.visitor?.kind==='khuyniet'||state.players.some(p=>khuyWorn(p)||p.equipped===KHUY_DRAGON))loadKhuyArt(this);if(state.visitor?.kind==='viemton'||state.players.some(p=>viemWorn(p)||p.equipped===VIEM_BLADES))loadViemArt(this);if(state.visitor?.kind==='tudo'||state.players.some(p=>tudoWorn(p)||p.equipped===TUDO_BLADE))loadTudoArt(this);if(state.visitor?.kind==='doraemon'||state.players.some(p=>doraWorn(p)||String(p.equipped||'').startsWith('dora-')))loadDoraArt(this);this.lanternFestival=state.lanternFestival;this.companionStatus=state.companionStatus;{const prior=this.guildWarStatus,next=state.live2GuildWar?.active?state.live2GuildWar:null;
+    const delta=next&&prior?.id===next.id?next.groups.map((g,i)=>Math.max(0,(g.score||0)-(prior.groups?.[i]?.score||0))):[];
+    const changeAt=performance.now();
+    if(delta.some(v=>v>0)&&changeAt-(this.guildWarPulseAt||-Infinity)>700){
+     this.guildWarPulse={at:changeAt,side:delta[0]>=delta[1]?0:1};
+     this.guildWarPulseAt=changeAt;
+    }
+    if(!next)this.guildWarPulse=null;
+    this.guildWarStatus=next;}loadPetArt(this,state.players);this.realmCount=state.realms?.length||REALM_STYLES.length;if(state.visitor?.kind==='vuonglam'||state.players.some(linWanWorn))loadLinWanArt(this);if(state.visitor?.kind==='shende'||state.players.some(p=>shendeWorn(p)||p.equipped==='shende-dao-seal'))loadShendeArt(this);loadCelestialArt(this); // v61: luôn tải — ảnh Thương Long dùng cho hiệu ứng vinh danh/quà lớn
 loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,state);syncAlchemy(this,state);syncMaze(this,state);syncTease(this,state);syncBonk(this,state);syncSocialStage(this,state);syncEventGiftFx(this,state);this.visitor=state.visitor;
     this.sectMaster=state.sectMaster;this.stateServerNow=state.serverNow||Date.now();this.stateReceivedAt=performance.now();
     this.hallMatch=state.halls?.match;
@@ -650,7 +658,11 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     drawCompanionLinks(this,c,t,!solo&&!this.bareCrowd&&!this.socialScene&&!this.raceStatus?.active&&!mazeOn(this));
     drawRace(this,c,t,'back');if(this.raceStatus?.phase==='running')drawEventGiftFx(this,c,t,'back','race');drawWar(this,c,t,'back');drawAlchemy(this,c,t,'back');drawMaze(this,c,t,'back');
     drawSocialStage(this,c,t,'back',solo);
-    if(!solo&&this.guildWarStatus?.active)drawGuildWarFloor(c,this.guildWarStatus,t,H,{light:this.budget?.level==='light'||this.minimalCrowd,motion:this.motion});
+    if(!solo&&this.guildWarStatus?.active){
+      const light=this.budget?.level==='light'||this.minimalCrowd;
+      drawGuildWarFloor(c,this.guildWarStatus,t,H,{light,motion:this.motion});
+      drawGuildWarClash(c,this.guildWarPulse,t,H,{light,motion:this.motion,reducedFlash:this.reduceFlash});
+    }
     // v49: yêu thú vẽ TRƯỚC hiệu ứng và nhân vật → nhân vật + chiêu thức đè lên quái.
     if(!solo&&!mazeOn(this))drawPetCove(this,c,t,H);
     if(!solo&&this.boss){prepareAbyssArt(this);const by=this.boss.species==='abyss-dragon'?H*.32:arena?H*ARENA_BOSS_Y:H*.37,sprite=()=>{if(!drawBossSprite(c,this.boss,this.motion?Date.now():(this.boss.startedAt||0)+2000,450,by,this.bossSprites,this.celestialSprites,this.abyssArt,this.motion))drawThunderTiger(c,this.boss,Date.now(),450,by);};if(this.boss.sealing)drawBossSeal(this,c,this.boss,H,450,by,sprite);else sprite();}
