@@ -14,7 +14,7 @@ try{let port;for(let i=0;i<100;i++){try{port=Number((await fs.readFile(path.join
  await call('Page.navigate',{url:`http://127.0.0.1:4317/ascension-preview.html?realm=${realm}&capture=1`});await pause(4500);
  await call('Runtime.evaluate',{expression:"document.querySelector('#ritual')?.click()"});await pause(2500);
  for(const sec of secs){
-  await call('Runtime.evaluate',{expression:`(()=>{const e=window.__scene.effects.find(x=>x.effect==='breakthrough');if(!e)return 'none';e.start=performance.now()-${sec}*e.duration/(${realm}>=25?{25:52,26:54,27:56,28:58}[${realm}]:1)-0;return e.duration;})()`});
+  await call('Runtime.evaluate',{expression:`(()=>{const e=window.__scene.effects.find(x=>x.effect==='breakthrough');if(!e)return 'none';e.start=performance.now()-${sec}*1000;return e.duration;})()`});
   await pause(350);const r=await call('Page.captureScreenshot',{format:'jpeg',quality:82});await fs.writeFile(path.join(dir,'s'+String(sec).padStart(5,'0')+'.jpg'),Buffer.from(r.data,'base64'));}
  console.log('errors',JSON.stringify(errors.slice(0,8)));
 }finally{socket?.close();chrome.kill();await pause(400);await fs.rm(profile,{recursive:true,force:true}).catch(()=>{});}

@@ -2,7 +2,7 @@
 // Chạy: node scripts/build-realm-audio.mjs thien-ma   (hoặc diet-the). Ma Thần vẫn dùng scripts/build-ma-than-audio.mjs.
 import fs from 'node:fs';
 const NAMES={'thien-ma':['THIEN_MA','ThienMa','thienMa'],'diet-the':['DIET_THE','DietThe','dietThe'],'thai-so':['THAI_SO','ThaiSo','thaiSo'],'vinh-kiep':['VINH_KIEP','VinhKiep','vinhKiep'],'vo-cuc':['VO_CUC','VoCuc','voCuc'],'hon-don':['HON_DON','HonDon','honDon']};
-const slug=process.argv[2],names=NAMES[slug];if(!names)throw new Error('slug: '+Object.keys(NAMES).join(' | '));
+const slug=process.argv[2],names=NAMES[slug]||(slug&&/^[a-z]+(-[a-z]+)+$/.test(slug)?(p=>[slug.replace(/-/g,'_').toUpperCase(),p,p[0].toLowerCase()+p.slice(1)])(slug.split('-').map(w=>w[0].toUpperCase()+w.slice(1)).join('')):null);if(!names)throw new Error('slug: '+Object.keys(NAMES).join(' | '));
 const [UP,Pascal,camel]=names,root=new URL('../',import.meta.url);
 const score=fs.readFileSync(new URL(`scripts/${slug}-score.txt`,root),'utf8').replace(/\r\n/g,'\n').trimEnd();
 const engine=fs.readFileSync(new URL('public/tien-de-audio.js',root),'utf8').replace(/\r\n/g,'\n');

@@ -12,6 +12,10 @@ import {scheduleThaiAtAudio,thaiAtMusicDuck} from './thai-at-audio.js';
 import {scheduleDaiLaAudio,daiLaMusicDuck} from './dai-la-audio.js';
 import {lateMusicDuck,scheduleLateAudio} from './late-ascension-audio.js';
 import {scheduleThaiSoAudio,thaiSoMusicDuck} from './thai-so-audio.js';
+import {DIVINE_TIMING} from './divine-timing.js';
+import {scheduleDaoToAudio,daoToMusicDuck} from './dao-to-audio.js';
+// 15/11: realm 14–21 có âm riêng → bảng cue + hạ nhạc nền theo cảnh (thêm một dòng mỗi cảnh).
+const DIVINE_CUES={14:scheduleDaoToAudio},DIVINE_DUCKS={14:daoToMusicDuck};
 import {scheduleVinhKiepAudio,vinhKiepMusicDuck} from './vinh-kiep-audio.js';
 import {scheduleVoCucAudio,voCucMusicDuck} from './vo-cuc-audio.js';
 import {scheduleHonDonAudio,honDonMusicDuck} from './hon-don-audio.js';
@@ -57,6 +61,7 @@ function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.c
 export const MUSIC_GAIN=1.6;
 export function ascensionImpactRatio(realm){
   if(EARLY_IMPACT[realm])return EARLY_IMPACT[realm];
+  if(DIVINE_TIMING[realm]&&DIVINE_CUES[realm])return DIVINE_TIMING[realm].impact/DIVINE_TIMING[realm].duration;
   if(IMPACT_LAYERS[realm])return IMPACT_LAYERS[realm][0]/IMPACT_LAYERS[realm][1];
   if(realm===9)return 18.1/26;
   if(realm===10)return 20.2/28;
@@ -165,7 +170,7 @@ export class CultivationAudio {
     if(!event||!this.enabled||this.ctx?.state!=='running'){
       if(this.qiSession){this.qiSession.audio.stop();this.qiSession=null;this.sync();}return;
     }
-    const realm=breakthroughRealm(event),duck=realm===25?thaiSoMusicDuck(elapsed):realm===26?vinhKiepMusicDuck(elapsed):realm===27?voCucMusicDuck(elapsed):realm===28?honDonMusicDuck(elapsed):realm>=29?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
+    const realm=breakthroughRealm(event),duck=DIVINE_DUCKS[realm]?DIVINE_DUCKS[realm](elapsed):realm===25?thaiSoMusicDuck(elapsed):realm===26?vinhKiepMusicDuck(elapsed):realm===27?voCucMusicDuck(elapsed):realm===28?honDonMusicDuck(elapsed):realm>=29?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
     this.qiSession?.audio.stop();
     this.qiSession={event,duck,audio:this.scheduleRitual(event,realm,elapsed)};this.sync();
@@ -177,10 +182,10 @@ export class CultivationAudio {
     const appearance=variant?this.ritualVariant(event,realm,elapsed,output):null;
     const revised=upgrade&&realm===6;
     const enhancement=boost&&!revised&&realm>=6&&realm<25?createRitualBoostBus(c,output,realm):null;
-    const schedule=REALM_CUES[realm]||scheduleQiAudio;
+    const schedule=DIVINE_CUES[realm]||REALM_CUES[realm]||scheduleQiAudio;
     const baseOut=appearance?.input||output, cues=[];
     if(base){
-      const cue=realm>=14&&realm<=21?scheduleDivineCue(c,baseOut,seconds,duration,realm)
+      const cue=!DIVINE_CUES[realm]&&realm>=14&&realm<=21?scheduleDivineCue(c,baseOut,seconds,duration,realm)
         :realm>=29?scheduleLateAudio(c,baseOut,seconds,duration,realm)
         :schedule===scheduleQiAudio?schedule(c,baseOut,seconds,duration,1,qiVariant(event).pitch)
         :schedule===scheduleTrucCoAudio?schedule(c,baseOut,seconds,duration,1,'mix',qiVariant(event).pitch)
