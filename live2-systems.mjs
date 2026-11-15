@@ -112,7 +112,7 @@ export function live2Command(w,p,words,now,ctx){
  const cmd=words[0],rest=words.slice(1).join(' '),s=ensure(p),emit=ctx.emit;
  if(cmd==='dao'&&['tu','ngo',''].includes(rest)){
   const desc=s.path?live2Path(p).name+' cấp '+live2Level(p)+' • Đạo Ngộ '+s.insight+' • hôm nay '+(s.daily.day===day(now)?s.daily.earned:0)+'/'+LIVE2_DAILY_INSIGHT:'Trúc Cơ mở chọn đạo: chọn đạo kiếm/ma/thể/thú/đan';
-  if(!live2AllowRead(p,'dao-status',now))return ok(desc,{cooldown:true});
+  if(!live2AllowRead(p,'dao-status:'+(s.path||'none')+':'+(s.path?live2Level(p):0),now))return ok(desc,{cooldown:true});
   announce(w,p,desc,now,emit,{daoStatus:true,daoPath:s.path,card:{kind:'dao',path:s.path||null,pathName:live2Path(p)?.name||'Chưa chọn Đạo Thống',level:s.path?live2Level(p):0,talent:live2Path(p)?.talent||null,insight:s.insight||0,progress:s.daily?.day===day(now)?s.daily.earned:0,maxDaily:LIVE2_DAILY_INSIGHT,paths:Object.entries(LIVE2_PATHS).map(([id,v])=>({id,name:v.name}))}});return ok(desc);
  }
  if(cmd==='dao'&&rest==='lu'){

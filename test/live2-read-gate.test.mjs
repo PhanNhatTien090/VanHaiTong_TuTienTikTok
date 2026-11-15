@@ -24,3 +24,14 @@ test('each read key has its own cooldown and does not block game mutations',()=>
  assert.equal(live2AllowRead(p,'dao',9001),true);
  assert.equal(Object.keys(p.cooldowns).length,2);
 });
+
+test('changing Dao Path immediately refreshes status even during read cooldown',()=>{
+ const N=1800000000000,p={id:'u',name:'Đạo Hữu',realm:4};
+ const w={mode:'live',settings:{live2Enabled:true},players:{u:p}};
+ const events=[],ctx={emit:(_w,_p,msg,effect,at,extra)=>events.push({effect,extra})};
+ assert.equal(live2Command(w,p,['dao','tu'],N,ctx).ok,true);
+ assert.equal(live2Command(w,p,['chon','dao','kiem'],N+1000,ctx).ok,true);
+ assert.equal(live2Command(w,p,['dao','tu'],N+2000,ctx).ok,true);
+ assert.equal(events.length,3);
+ assert.equal(events.at(-1).extra.card.path,'sword');
+});
