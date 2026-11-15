@@ -63,6 +63,8 @@ jobs:
           node --check public/cinematic-vfx.js
       - name: Game and VFX regression tests
         run: npm test
+      - name: Validate optimized illustrated LIVE2 assets
+        run: node scripts/check-live2-assets.mjs
       - name: Verify and render LIVE 2.0 artwork at 1080x1920
         run: node scripts/render-live2-preview.mjs
       - name: Record LIVE 2.0 synthetic server load metrics
