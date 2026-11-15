@@ -49,8 +49,8 @@ export function drawDivineRitual(scene,c,e,t,H,spec,layers){
  const {from,to}=players(scene,e,spec.realm),p=s.revealed?to:from;
  // Thần trang realm 14+ tải lười: tải sẵn trang phục mới từ đầu cảnh, và dựng lại ảnh nhân vật vài lần sau hiện thân
  // (bộ đệm chụp lúc ảnh chưa về sẽ thành hình nộm).
- const warm=e._divineWarm??={};if(!warm.to){warm.to=true;try{ensureRealmSkinV2(scene,to);const pad=surface(8,8,()=>{});if(pad)scene.drawPlayer?.(pad.getContext('2d'),to,4,8,0);}catch{}}
- if(s.revealed){for(const mark of [.4,1.5,3]){if(T>=spec.reveal+mark&&!warm['r'+mark]){warm['r'+mark]=true;scene.maThanActor?.frames?.delete(to);}}}
+ const warm=e._divineWarm??={};if(!warm.to){warm.to=true;for(const q of [from,to])try{ensureRealmSkinV2(scene,q);const pad=surface(8,8,()=>{});if(pad)scene.drawPlayer?.(pad.getContext('2d'),q,4,8,0);}catch{}}
+ for(const mark of [.4,1.5,3]){if(T>=mark&&!warm['f'+mark]&&!s.revealed){warm['f'+mark]=true;scene.maThanActor?.frames?.delete(from);}if(s.revealed&&T>=spec.reveal+mark&&!warm['r'+mark]){warm['r'+mark]=true;scene.maThanActor?.frames?.delete(to);}}
  const image=maThanActorImage(scene,p,e);s.image=image;
  c.save();setFxPalette(spec.palette);
  c.fillStyle=spec.sky[0];c.fillRect(0,0,900,H);if(a.deep)c.drawImage(a.deep,0,0,900,H);

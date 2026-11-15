@@ -1,0 +1,35 @@
+// Thiên Tôn v2 — Ngũ Hành Luân Chuyển: Rê ngũ cung, mỗi hành một âm sắc (Mộc gỗ, Hỏa gió lửa, Thổ trống đất, Kim chuông kim loại, Thủy chuông nước).
+// Sinh lại public/thien-ton-audio.js bằng: node scripts/build-realm-audio.mjs thien-ton
+import {qiVariant} from './qi-impact.js';import {warmWave} from './warm-wave.js';
+import {TT15 as T} from './thien-ton-awakening.js';
+const score=[],add=(at,len,level,from,to=from,kind='sine',pan=0,transient=false,tag='')=>score.push({at,len,level,from,to,kind,pan,transient,tag});
+const rnd=i=>{const v=Math.sin(i*91.7+12.3)*43758.5453;return v-Math.floor(v);};
+function drum(at,f=1,pan=0){add(at,.6,.17*f,90,30,'sine',pan,true,'drum');add(at,.09,.045*f,1400,180,'crack',pan,true,'drum-skin');}
+function strings(at,len,notes,f=.02){notes.forEach((hz,i)=>{for(const d of [.997,1.003])add(at,len,f/(1+i*.35),hz*d,hz*d,'strings',(i%2?1:-1)*.24,false,'strings');});}
+function pluck(at,hz,f=.035,pan=0){add(at,.7,f,hz,hz*.99,'triangle',pan,true,'metal-pluck');add(at,.22,f*.25,hz*2.76,hz*2.7,'sine',pan,true,'metal-harmonic');}
+function choir(at,len,notes,f=.03){notes.forEach((hz,i)=>{for(const d of [.995,1.005])add(at,len,f/(1+i*.3),hz*d,hz*d,'choir',(i%2?1:-1)*.3,false,'choir');});}
+function brass(at,len,hz,f=.05,to=hz){add(at,len,f,hz,to,'brass',0,false,'brass');add(at,len,f*.6,hz*1.5,to*1.5,'brass',0,false,'brass-fifth');}
+function sub(at,f=.2,from=70,to=26,len=1.4){add(at,len,f,from,to,'sine',0,true,'sub-boom');}
+function bell(at,hz,f=.04,pan=0){for(const [r,v,len] of [[1,1,1.6],[2.76,.4,.9],[5.4,.15,.4]])add(at,len,f*v,hz*r,hz*r*.998,'sine',pan,true,'bell');}
+function boom(at,f=1,pan=0,metal=220){sub(at,.2*f,72,24,1.2);drum(at,.9*f,pan);add(at,.12,.1*f,4800,600,'crack',pan,true,'boom-crack');bell(at+.01,metal,.03*f,pan);}
+function gong(at,f=1,pan=0){sub(at,.22*f,55,26,2.2);add(at,2.6,.07*f,98,92,'triangle',pan,true,'gong');add(at,2.1,.04*f,207,200,'sine',pan,true,'gong-hum');add(at,1.4,.03*f,370,358,'sine',pan,true,'gong-shimmer');drum(at,1*f,pan);}
+function heart(at,f=1){add(at,.32,.2*f,62,34,'sine',0,true,'heart-lub');add(at+.2,.28,.15*f,58,32,'sine',0,true,'heart-dub');add(at,.08,.035*f,900,200,'crack',0,true,'heart-skin');}
+function glass(at,hz,pan=0,f=1){for(const [r,v,len] of [[1,1,1.2],[2.32,.5,.8],[4.1,.25,.5]])add(at,len,.025*f*v,hz*r,hz*r*1.002,'sine',pan,true,'glass');add(at,.06,.04*f,7000,3000,'crack',pan,true,'glass-tick');}
+function rubble(at,pan=0,f=1){for(let i=0;i<6;i++)add(at+i*.07+rnd(i+at*7)*.04,.1,.03*f,1800+rnd(i+at)*1600,500,'crack',Math.max(-1,Math.min(1,pan+(rnd(i)-.5)*.4)),true,'rubble');}
+function wood(at,f=1,pan=0){add(at,.1,.07*f,760,560,'triangle',pan,true,'wood');add(at,.05,.05*f,2000,700,'crack',pan,true,'wood-knock');}
+function element(i,at,f=1,pan=0){if(i===0){wood(at,f*1.3,pan);pluck(at+.05,392,.034,pan);}else if(i===1){add(at,1.2,.06*f,200,1600,'wind',pan,true,'fire-roar');sub(at,.14*f,70,30,1);}else if(i===2){drum(at,1.2*f,pan);rubble(at+.05,pan,1.2);}else if(i===3){bell(at,880,.034*f,pan);glass(at+.03,1318.51,pan,.9);}else{add(at,1,.05*f,300,1200,'wind',pan,true,'water-wash');bell(at,587.33,.03*f,pan);}}
+const D=[146.83,164.81,185,220,246.94,293.66,329.63,369.99,440,493.88,587.33];const PANS=[0,.6,.4,-.4,-.6];
+add(.1,T.impact-.7,.03,36.71,36.71,'triangle',0,false,'pedal');add(.3,9,.03,220,600,'wind',-.3,false,'cosmos-wind');strings(1,6,[73.42,110,146.83],.016);strings(11.5,6,[73.42,110,146.83,220],.019);strings(23.5,5,[73.42,123.47,146.83,220],.021);
+T.light.forEach((at,i)=>{boom(at,1+i*.1,PANS[i],D[i]);element(i,at+.02,.7,PANS[i]);});
+T.manifest.forEach((at,i)=>{boom(at,1.3+i*.1,PANS[i],D[i+2]);element(i,at,1.2,PANS[i]);element(i,at+.7,.8,PANS[i]);boom(at+.7,.7,PANS[i],D[i+4]);});
+T.sheng.forEach((at,j)=>{const i=j%5;add(at,.9,.03,400,2200,'rise',PANS[i],true,'sheng-flow');boom(at+.9,.9+j*.08,PANS[(i+1)%5],D[(j*2)%11]);element((i+1)%5,at+.9,.8,PANS[(i+1)%5]);});
+for(let i=0;i<14;i++)drum(11.5+i*.4,.4+i*.02,(i%2?1:-1)*.2);
+T.ke.forEach((at,j)=>{add(at-.15,.15,.05,1500,6000,'rise',PANS[j],true,'ke-zap');boom(at,1.5+j*.12,PANS[(j+2)%5],D[4-j]);add(at,1,.07,1300,120,'thunder',PANS[j],true,'ke-thunder');});
+boom(T.blaze,2,0,73.42);gong(T.blaze+.02,1.2);choir(T.blaze,2.4,[146.83,185,220,293.66],.032);
+T.spin.forEach((at,i)=>{add(at,.6,.04,500,2800,'wind',(i%2?1:-1)*.6,true,'wheel-whoosh');boom(at,.8+i*.1,0,D[i+3]);});add(T.spin[0],4,.03,60,160,'sawtooth',0,false,'wheel-drone');
+T.merge.forEach((at,i)=>{add(at,.4,.05,2400,300,'wind',PANS[i],true,'merge-rush');boom(at+.4,1.2+i*.15,0,D[4-i]);element(i,at+.42,.6,0);});
+add(T.impact-.85,.5,.05,2400,120,'wind',0,true,'light-suck');heart(T.impact-.55,.8);heart(T.impact-.27,1);
+drum(T.impact,1.8);add(T.impact,.2,.13,7000,500,'crack',0,true,'release-crack');sub(T.impact,.32,90,20,3);gong(T.impact+.02,1.5);brass(T.impact,1.9,73.42,.08);
+add(T.impact+.08,1.8,.07,1000,100,'thunder',-.35,true,'release-wave');add(T.impact+.2,1.7,.06,800,90,'thunder',.35,true,'release-wave');
+strings(T.reveal,3.6,[36.71,73.42,110,146.83,185],.028);choir(T.reveal,3.4,[146.83,185,220,293.66],.036);brass(T.reveal+.2,2.2,73.42,.06);
+for(const [i,hz]of [293.66,369.99,440,587.33,739.99].entries())pluck(T.reveal+.3+i*.3,hz,.04-i*.003,(i%2?1:-1)*.3);bell(T.reveal+2.2,293.66,.035);
