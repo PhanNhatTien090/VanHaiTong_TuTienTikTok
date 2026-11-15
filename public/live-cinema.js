@@ -70,7 +70,7 @@ export function crowdTargets(players,H,centerY=H*.62){const n=players.length;if(
 // 09/11: GHẾ CỐ ĐỊNH — sân có sẵn PLAZA_CAPACITY ghế so le (hàng 7 xen hàng 6, 52 ghế, dùng tối đa 50 — giữ luật >30 người 50 ghế), nhân vật nhỏ, rải đều sân.
 // Ai đã ngồi thì giữ nguyên ghế (không xếp lại cả sân khi có người vào/ra, đổi map cũng giữ). Người mới lấy ghế trống
 // gần giữa sân nhất; NPC/tu sĩ giả lấy ghế rìa nhưng vẫn trong vùng sân (rank ≤ 1). seats: Map id → số ghế, sống cùng Scene.
-export const PLAZA_ROWS=8,PLAZA_SCALE=.82,PLAZA_CAPACITY=50;
+export const PLAZA_ROWS=8,PLAZA_SCALE=.96,PLAZA_CAPACITY=50; // 15/11: người to hơn (.82→.96), tên nhỏ lại
 export function plazaSlots(H,centerY){const top=H*.43,bottom=H*.85,pitch=(bottom-top)/(PLAZA_ROWS-1),step=112,cy=Math.max(top+pitch,Math.min(bottom-pitch,centerY??(top+bottom)/2)),out=[];
  for(let r=0;r<PLAZA_ROWS;r++){const len=r%2?6:7;for(let k=0;k<len;k++){const x=450+(k-(len-1)/2)*step,y=top+r*pitch;out.push({i:out.length,x,y,rank:Math.hypot((x-450)/390,(y-cy)/((bottom-top)/2))});}}
  return out;}

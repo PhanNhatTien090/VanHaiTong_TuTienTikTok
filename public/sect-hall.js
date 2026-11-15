@@ -32,7 +32,7 @@ export function sectHallTargets(players,H,withHalls=false){
   // Keep feet and nameplates above the bottom 30% occupied by LIVE comments.
   const rows=Math.max(2,...groups.map(g=>g.length),Math.ceil(players.length/cols));
   const top=H*.54,bottom=H*.675,step=(bottom-top)/(rows-1);
-  const scale=Math.min(Math.max(.55,Math.min(1.1,step/105)),5/cols),targets=[],occupied=new Set();
+  const scale=Math.min(Math.max(.62,Math.min(1.2,step/90)),5.6/cols) /* 15/11: người to hơn ~15% */,targets=[],occupied=new Set();
   for(const [index,members] of groups.entries()){
    members.sort((a,b)=>(a.sectHallDiscipleRank??999)-(b.sectHallDiscipleRank??999)||(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
    members.forEach((player,row)=>{
@@ -91,9 +91,9 @@ export function drawSectMaster(scene,c,t){
  else{c.translate(x,y-42);c.scale(1.35,1.35);const old=scene.compact;scene.compact=true;try{scene.drawCharacterBody(c,p,skinFor(p.giftCoins),0);}finally{scene.compact=old;}}
  c.restore();
  if(throneTier>=0)drawThroneFront(c,x,y,seat.height,throneTier,t,motion,host.player.name||'Đạo hữu');
- c.save();if(throneTier>=0)drawMasterPlate(c,x,seat.top+seat.height+8,'',throneTier);else{c.textAlign='center';c.textBaseline='middle';c.font='700 19px Georgia';const label='TÔNG CHỦ',w=c.measureText(label).width+28;c.fillStyle='#102632ed';c.fillRect(x-w/2,seat.top+seat.height+8,w,28);c.strokeStyle='#c8ab68';c.strokeRect(x-w/2,seat.top+seat.height+8,w,28);c.fillStyle='#ffe0a0';c.fillText(label,x,seat.top+seat.height+22);}
- if(throneTier<0&&host.player){c.font='700 18px Georgia';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}
- if(speaking&&age<12000){const raw=host.text||'Chư vị đạo hữu, cùng tu luyện!',words=raw.split(/\s+/),lines=[''];c.font='600 18px Georgia';for(const word of words){const at=lines.length-1,next=(lines[at]+' '+word).trim();if(c.measureText(next).width>270&&lines[at]){if(lines.length===2){lines[at]+='…';break;}lines.push(word);}else lines[at]=next;}const width=Math.min(310,Math.max(...lines.map(s=>c.measureText(s).width))+28),h=lines.length*25+18,by=y-190-h;c.fillStyle='#0b2332f0';c.fillRect(x-width/2,by,width,h);c.strokeStyle='#d9bd7777';c.strokeRect(x-width/2,by,width,h);c.fillStyle='#f8ecd0';lines.forEach((line,i)=>c.fillText(line,x,by+21+i*25));}
+ c.save();if(throneTier>=0)drawMasterPlate(c,x,seat.top+seat.height+8,'',throneTier);else{c.textAlign='center';c.textBaseline='middle';c.font='800 16px "Segoe UI",Arial,sans-serif';const label='TÔNG CHỦ',w=c.measureText(label).width+28;c.fillStyle='#102632ed';c.fillRect(x-w/2,seat.top+seat.height+8,w,28);c.strokeStyle='#c8ab68';c.strokeRect(x-w/2,seat.top+seat.height+8,w,28);c.fillStyle='#ffe0a0';c.fillText(label,x,seat.top+seat.height+22);}
+ if(throneTier<0&&host.player){c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}
+ if(speaking&&age<12000){const raw=host.text||'Chư vị đạo hữu, cùng tu luyện!',words=raw.split(/\s+/),lines=[''];c.font='700 15px "Segoe UI",Arial,sans-serif';for(const word of words){const at=lines.length-1,next=(lines[at]+' '+word).trim();if(c.measureText(next).width>270&&lines[at]){if(lines.length===2){lines[at]+='…';break;}lines.push(word);}else lines[at]=next;}const width=Math.min(310,Math.max(...lines.map(s=>c.measureText(s).width))+28),h=lines.length*25+18,by=y-190-h;c.fillStyle='#0b2332f0';c.fillRect(x-width/2,by,width,h);c.strokeStyle='#d9bd7777';c.strokeRect(x-width/2,by,width,h);c.fillStyle='#f8ecd0';lines.forEach((line,i)=>c.fillText(line,x,by+21+i*25));}
  c.restore();return true;
 }
 
@@ -119,9 +119,9 @@ export function drawSectCourt(scene,c,t){
    if(!active.has(hall.elder?.id))c.fillText(hall.mark,0,-16);
    c.fillStyle=hall.color;c.beginPath();c.moveTo(-60,-65);c.lineTo(-43,-65);c.lineTo(-48,-39);c.lineTo(-55,-42);c.closePath();c.fill();
    c.fillStyle='#092028';c.beginPath();c.roundRect(-83,16,166,51,8);c.fill();c.stroke();
-   c.fillStyle=hall.color;c.font='700 19px Georgia';c.fillText('TRƯỞNG LÃO',0,36,154);
-   c.fillStyle='#f7e8c6';c.font='700 16px Georgia';c.fillText(hall.name,0,56,156);
-   c.font='700 17px Georgia';c.fillStyle='#e9d7b0';c.fillText(hall.elder?.name||'Ghế trống',0,88,156);
+   c.fillStyle=hall.color;c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillText('TRƯỞNG LÃO',0,36,154);
+   c.fillStyle='#f7e8c6';c.font='700 14px "Segoe UI",Arial,sans-serif';c.fillText(hall.name,0,56,156);
+   c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillStyle='#e9d7b0';c.fillText(hall.elder?.name||'Ghế trống',0,88,156);
    c.restore();
   }
  }

@@ -36,15 +36,15 @@ export function wrapName(name,measure,max){
   return lines.length?lines:[name];
 }
 export function layoutLabels(targets,measure,width=900){
-  const occupied=[],big=targets.length<=4,lineH=big?30:25,pad=14;
+  const occupied=[],big=targets.length<=4,lineH=big?20:18,pad=10; // 15/11: khớp chữ 15px sans (scene.js NAME_FONT)
   // Bề rộng khung = khoảng cách tới người ngồi cạnh cùng hàng (không đè tên nhau), tối đa 220.
   const gap=t=>{let d=Infinity;for(const o of targets)if(o!==t&&Math.abs(o.y-t.y)<10)d=Math.min(d,Math.abs(o.x-t.x));return d;};
   return targets.map(t=>{const name=Array.from(displayActorName(t.player).normalize('NFC').trim()).slice(0,40).join('');
-    const cap=Math.max(70,Math.min(220,gap(t)-6)),full=measure(name);
+    const cap=Math.max(60,Math.min(170,gap(t)-8)),full=measure(name);
     // Đo bằng đúng cỡ chữ khi vẽ. Vừa khung → một dòng. Một hàng ghế (≤4 người, không có hàng dưới) → xuống dòng.
     // Đông người: giữa các hàng chỉ đủ một dòng → chạy chữ (scroll) trong khung, giữ nguyên cỡ chữ, không che mặt hàng dưới.
     const fits=full+pad<=cap,lines=fits?[name]:big?wrapName(name,measure,cap-pad):[name],scroll=!fits&&!big;
-    const w=scroll?cap:Math.min(cap,Math.max(...lines.map(l=>measure(l)))+pad),h=(big?34:25)+(lines.length-1)*lineH;
+    const w=scroll?cap:Math.min(cap,Math.max(...lines.map(l=>measure(l)))+pad),h=(big?24:20)+(lines.length-1)*lineH;
     let x=Math.max(8,Math.min(width-w-8,t.x-w/2)),y=t.y+t.scale*18+2; // khung tên sát chân hơn để các hàng xích lại
     for(let step=0;step<12;step++){if(!occupied.some(a=>x<a.x+a.w+3&&x+w+3>a.x&&y<a.y+a.h+3&&y+h+3>a.y))break;y+=h+3;}
     const box={id:t.id,x,y,w,h,name,lines,lineH,scroll,textW:full,player:t.player};occupied.push(box);return box;
