@@ -8,8 +8,11 @@ const dFmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'nu
 const day=t=>dFmt.format(t);
 const eligible=p=>!!p&&!p.resident&&!p.puppet&&!p.webOnly;
 const guildWorld=w=>{const x=w.live2World??={v:1,nextGuildId:1,guilds:{}};x.guilds??={};if(!Number.isInteger(x.nextGuildId)||x.nextGuildId<1)x.nextGuildId=1;return x;};
-const announce=(w,p,msg,now,ctx,data={})=>ctx.emit(w,p,msg,'daoPath',now,{live2:true,daoPath:p?.live2?.path||'body',...data});
+const announce=(w,p,msg,now,ctx,data={})=>ctx.emit(w,p,msg,
+ (data.live2Info||data.guildRank)?'status':'daoPath',now,
+ {live2:true,daoPath:p?.live2?.path||'body',...data});
 const active=(p,now)=>eligible(p)&&p.lastActive>=now-300000;
+export const live2GuildWarEnabled=w=>live2Enabled(w)&&(w?.mode==='demo'||w?.settings?.live2GuildWarEnabled===true);
 const WORDS=Object.freeze({
   'ho mach':{id:'guard',name:'Hộ Mạch Đan',herbs:4,stones:25,level:1,duration:120000},
   'chien y':{id:'fury',name:'Chiến Ý Đan',herbs:7,stones:50,level:2,duration:120000},
@@ -43,7 +46,7 @@ function startGuildWar(w,p,now,ctx,wanted){
  const world=guildWorld(w),g=world.guilds[p.live2?.guildId];
  if(!g||g.leader!==p.id&&g.deputy!==p.id)return fail('Hội Chủ hoặc Phó Hội mới được phát động Hội Chiến.');
  if(world.guildWar?.endsAt>now)return fail('Hội Chiến đang diễn ra.');
- if(w.settings?.live2GuildWarEnabled!==true&&w.mode!=='demo')return fail('Hội Chiến cần được người điều hành bật trong cấu hình LIVE.');
+ if(!live2GuildWarEnabled(w))return fail('Hội Chiến cần được người điều hành bật trong cấu hình LIVE.');
  if(world.guildWar?.finishedAt&&now-world.guildWar.finishedAt<20*60000)return fail('Hội Chiến nghỉ 20 phút trước trận tiếp theo.');
  const conflict=stageConflict(w,now);
  if(conflict)return fail('Đang có '+conflict+' • Hội Chiến đợi sân trống.');
@@ -59,14 +62,14 @@ function startGuildWar(w,p,now,ctx,wanted){
  return ok('Hội Chiến bắt đầu 90 giây.',{warId:world.guildWar.id});
 }
 export function live2GuildWarView(w,now){
- if(!live2Enabled(w))return null;
+ if(!live2GuildWarEnabled(w))return null;
  const e=w.live2World?.guildWar;
- if(!e||!(e.endsAt>now||e.finishedAt&&now-e.finishedAt<10000))return null;
- return {id:e.id,active:e.endsAt>now,endsAt:e.endsAt,groups:e.groups.map(g=>({id:g.id,name:g.name,score:g.score})),result:e.result||null};
+ if(!e||e.cancelled||!(e.endsAt>now&&!e.finishedAt||e.finishedAt&&now-e.finishedAt<10000))return null;
+ return {id:e.id,active:e.endsAt>now&&!e.finishedAt,endsAt:e.endsAt,groups:e.groups.map(g=>({id:g.id,name:g.name,score:g.score})),result:e.result||null};
 }
 export function live2Tick(w,now,ctx){
  const e=w.live2World?.guildWar;
- if(e&&!live2Enabled(w)){e.finishedAt??=now;e.cancelled=true;return;}
+ if(e&&!live2GuildWarEnabled(w)){e.finishedAt??=now;e.cancelled=true;return;}
  if(!e||e.finishedAt||now<e.endsAt)return;
  e.finishedAt=now;
  const a=e.groups[0],b=e.groups[1],winner=a.score===b.score?null:a.score>b.score?a.id:b.id;
@@ -87,7 +90,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
  if(cmd==='dan'&&rest==='phuong'){
   const names=Object.entries(WORDS).filter(([,v])=>(p.realm||0)>=v.level).map(([key,v])=>key+' ('+v.herbs+' thảo, '+v.stones+' đá)');
   const msg='Đan phương: '+names.join(' • ')+' • gõ chế đan + tên';
-  announce(w,p,msg,now,ctx,{live2Kind:'alchemyFx'});return ok(msg);
+  announce(w,p,msg,now,ctx,{live2Info:true});return ok(msg);
  }
  if(cmd==='che'&&rest.startsWith('dan ')){
   if(!s?.path)return fail('Cần chọn Đạo Thống trước khi chế đan.');
@@ -148,7 +151,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   const q=s?.mentorQuest;const count=q?.day===day(now)?q.count:0,finished=q?.day===day(now)&&q.done;
   const m=w.players[s?.masterId],students=(s?.students||[]).map(id=>w.players[id]?.name).filter(Boolean);
   const msg=(m?'Sư phụ: '+m.name:'Chưa có sư phụ')+(students.length?' • Đệ tử: '+students.join(', '):'')+' • Nhiệm vụ ngày: '+(finished?'hoàn tất':count+'/3 hành động');
-  announce(w,p,msg,now,ctx,{live2Kind:'mentor'});return ok(msg);
+  announce(w,p,msg,now,ctx,{live2Info:true});return ok(msg);
  }
  return null;
 }

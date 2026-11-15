@@ -4,7 +4,7 @@ export const SKY_SETTLEMENT_MS=30000;
 export const skyStageUntil=(w,now)=>w.flowerEvent?Math.max(w.flowerEvent.endsAt,w.flowerEvent.closedAt||now)+SKY_SETTLEMENT_MS:0;
 export function stageConflict(w,now,{allowBond=false,allowHall=false,allowPet=false}={}){
  if(['registration','running'].includes(w.hallWar?.phase)||w.hallWar?.podiumUntil>now)return 'Ngũ Đường Tranh Phong';
- if((w.mode==='demo'||w.settings?.live2Enabled===true)&&w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt)return 'Hội Chiến';
+ if((w.mode==='demo'||w.settings?.live2Enabled===true)&&(w.mode==='demo'||w.settings?.live2GuildWarEnabled===true)&&w.live2World?.guildWar?.endsAt>now&&!w.live2World.guildWar.finishedAt&&!w.live2World.guildWar.cancelled)return 'Hội Chiến';
  if(!allowHall&&w.nguDuong?.match?.endsAt>now)return 'Vân Đài thách đấu';
  if(skyStageUntil(w,now)>now)return now<w.flowerEvent.endsAt?'sao băng / mưa hoa':'trao thưởng sao băng / mưa hoa';
  if(w.boss?.hp>0&&w.boss.endsAt>now)return 'yêu thú';

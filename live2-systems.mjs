@@ -39,7 +39,11 @@ function ensure(p){
  return s;
 }
 function guilds(w){const x=w.live2World??={v:1,nextGuildId:1,guilds:{}};x.guilds??={};if(!Number.isInteger(x.nextGuildId)||x.nextGuildId<1)x.nextGuildId=1;return x.guilds;}
-function announce(w,p,message,now,emit,extra={}){emit(w,p,message,'daoPath',now,{live2:true,...extra});}
+// Read-only panels never produce a cinematic or replace active attack/gift visuals.
+function announce(w,p,message,now,emit,extra={}){
+ const info=!!(extra.daoStatus||extra.guildInfo||extra.guildCard||extra.guildPromotion===false);
+ emit(w,p,message,info?'status':'daoPath',now,{live2:true,...extra});
+}
 const alias={kiem:'sword',ma:'demon',the:'body',thu:'beast',dan:'alchemy'};
 const personKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase().trim();
 function findPlayer(w,query){const q=personKey(query).replace(/^#/,'');const arr=Object.values(w.players).filter(p=>p.id===query||personKey(p.socialCode)===q||personKey(p.name)===q||personKey(p.handle)===q);return arr.length===1?arr[0]:null;}
@@ -176,7 +180,7 @@ export function live2Command(w,p,words,now,ctx){
  }
  if(cmd==='hoi'&&rest===''){
   const g=guilds(w)[s.guildId];const msg=g?'Bang '+g.name+' #'+g.id+' • '+g.members.length+'/'+(24+(g.buildings?.hall||0)*2)+' thành viên • '+(g.points||0)+' cống hiến':'Chưa gia nhập bang • lập hội + tên hoặc vào hội + mã';
-  announce(w,p,msg,now,emit,{guildCard:g?{id:g.id,name:g.name,members:g.members.length,points:g.points}:null});return ok(msg);
+  announce(w,p,msg,now,emit,{guildInfo:true,guildCard:g?{id:g.id,name:g.name,members:g.members.length,points:g.points}:null});return ok(msg);
  }
  if(cmd==='lap'&&rest.startsWith('hoi ')){
   if(p.realm<2||s.guildId)return fail('Cần Trúc Cơ và chưa ở trong bang khác.');
