@@ -114,6 +114,9 @@ export function editHallMember(w,input,now=Date.now(),active=()=>true){
 }
 
 function masterId(w,active,now) {
+  // 15/11: Tông chủ = chủ GHẾ (master-seat.mjs: thắng tranh ghế / đại lễ) nếu đang có mặt; không thì luật cũ.
+  const seatP=w.players?.[w.masterSeat?.userId];
+  if(real(seatP)&&seatP.sectMasterUnlocked&&active(w,seatP,now))return seatP.id;
   const gift = Object.values(w.players).reduce((best,p)=>real(p)&&p.sectMasterUnlocked&&p.sectMasterGiftAt&&active(w,p,now)
     && (!best || p.sectMasterGiftAt>best.sectMasterGiftAt || p.sectMasterGiftAt===best.sectMasterGiftAt&&String(p.id)<String(best.id)) ? p : best,null);
   if(gift)return gift.id;
@@ -341,6 +344,18 @@ export function tickHalls(w,now,ctx,force=false){
     if(h.elder||!hallEnabled(defs[index]))continue;
     const next=ranked.find(p=>autoElder(w,s,p.id,master,ranked)&&(!h.since||now-(w.players[p.id].lastActive||0)<3*DAY));
     if(next)seat(w,s,index,w.players[next.id],now,ctx.emit,h.since?'Thiên Bảng đề cử':null);
+  }
+  // 15/11 (chủ game): ghế Đường chủ không bỏ trống — Chân Truyền mạnh nhất của Đường → Tông chủ cũ đang rảnh → đệ tử mạnh nhất của Đường.
+  for(const [index,h] of s.halls.entries()){
+    if(h.elder||!hallEnabled(defs[index]))continue;
+    // Chân Truyền do quản lý gán có cờ hallAppointmentOptOut — vẫn được kế nhiệm (chủ game muốn Chân Truyền lên thay).
+    const free=(p,anyway=false)=>real(p)&&p.id!==master&&!s.halls.some(x=>x.elder===p.id)&&!p.hallDeparture&&(anyway||!p.hallAppointmentOptOut)&&w.playTransfers?.[p.id]?.phase!=='web'&&now-(p.lastActive||0)<3*DAY;
+    const pick=(list,anyway)=>list.filter(p=>free(p,anyway)).sort(rankOrder)[0]||null;
+    const disciple=pick(h.disciples.map(id=>w.players[id]),true);
+    const former=disciple?null:pick(Object.values(w.players).filter(p=>p.sectMasterUnlocked&&p.sectMasterGiftAt));
+    const member=disciple||former?null:pick(Object.values(w.players).filter(p=>membership(s,p.id)?.index===index));
+    const next=disciple||former||member;
+    if(next)seat(w,s,index,next,now,ctx.emit,disciple?'Chân Truyền kế nhiệm':former?'Tông chủ cũ trấn giữ':'Đệ tử kế nhiệm');
   }
   for(const [index,h] of s.halls.entries()){
     const elder=w.players[h.elder];
