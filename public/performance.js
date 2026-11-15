@@ -31,16 +31,16 @@ export class RenderBudget{
     if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.pressured=false;this.baseCrowdConfig=this.config;this.samples=0;this.mean=0;return true;}
   sample(ms,t,fps=30){if(!Number.isFinite(ms))return false;this.mean=this.samples?this.mean*.94+ms*.06:ms;this.samples++;
     // 08/11: FPS thật tụt (<15) thì hạ một bậc kể cả khi đặt cứng 'high' (LIVE Studio + GPU tích hợp). Vẫn 1080 px.
-    if(!this.crowded&&fps>0&&fps<15&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
+    if(!this.crowded&&fps>0&&fps<20&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
     if(this.crowded){
       if(this.samples<45||t-this.changedAt<10000)return false;
-      const slow=fps>0&&fps<18;
-      if(!this.pressured&&(this.mode==='auto'?(slow||this.mean>28):fps>0&&fps<15)){
+      const slow=fps>0&&fps<24; // 15/11: LIVE lag ở 18 FPS mà không tự giảm → ngưỡng 24
+      if(!this.pressured&&(this.mode==='auto'?(slow||this.mean>28):fps>0&&fps<20)){
         this.baseCrowdConfig=this.config;this.pressured=true;
         this.config={...this.config,poseFps:Math.max(3,this.config.poseFps-2),atmosphereFps:Math.min(2,this.config.atmosphereFps)};
         this.changedAt=t;this.samples=0;return true;
       }
-      if(this.pressured&&this.mean<15&&fps>=22&&t-this.changedAt>=30000){
+      if(this.pressured&&this.mean<15&&fps>=28&&t-this.changedAt>=30000){
         this.config=this.baseCrowdConfig;this.pressured=false;this.changedAt=t;this.samples=0;return true;
       }
       return false;

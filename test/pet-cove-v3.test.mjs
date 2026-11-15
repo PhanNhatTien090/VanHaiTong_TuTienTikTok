@@ -7,7 +7,7 @@ import {petV2Configure,petV2Command,petV2CovePhase} from '../pet-v2.mjs';
 test('thú chạy luôn trong vùng trời Cốc, không xuống hàng người chơi, và có lúc quay đầu',()=>{
  const H=1600;
  for(let i=0;i<7;i++){let turns=0,last=0;
-  for(let t=0;t<120000;t+=250){const p=petCoveRoam(i,t,H);
+  for(let t=0;t<300000;t+=250){const p=petCoveRoam(i,t,H);
    assert.ok(p.x>=PET_COVE_ROAM.x0-1e-6&&p.x<=PET_COVE_ROAM.x1+1e-6);
    assert.ok(p.y>=H*PET_COVE_ROAM.y0-1e-6&&p.y<=H*PET_COVE_ROAM.y1+1e-6&&p.y<H*.6);
    const dir=Math.sign(p.vx);if(dir&&last&&dir!==last)turns++;if(dir)last=dir;}
@@ -31,4 +31,10 @@ test('màn Cốc nhận tiến độ hợp lực thú duyên từ server',()=>{
  const before=petV2CovePhase(w,N+60000);assert.equal(before.joined,0);assert.equal(before.goal,2);
  petV2Command(w,w.players.a,'thu','duyen',N+60000,(w2,p,m,e,at,x={})=>w.events.push({message:m,...x}));
  const after=petV2CovePhase(w,N+61000);assert.equal(after.joined,1);assert.equal(after.goal,2);assert.equal(after.rewarded,false);
+});
+
+test('thú trong Cốc có lúc đứng nghỉ: ≥50% thời gian đứng yên, đứng yên thì không dịch chuyển',()=>{
+ for(let i=0;i<6;i++){let still=0,n=0,prev=null;
+  for(let t=0;t<120000;t+=100){const p=petCoveRoam(i,t,1600);n++;if(!p.moving){still++;if(prev&&!prev.moving)assert.equal(p.x,prev.x);}prev=p;}
+  assert.ok(still/n>=.5,'thú '+i+' đứng '+still/n);assert.ok(still/n<.8);}
 });

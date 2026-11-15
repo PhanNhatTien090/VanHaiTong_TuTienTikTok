@@ -53,9 +53,9 @@ test('low rendered FPS slows secondary animation and recovers with full-HD backi
     const rect={width,height:width*16/9};
     assert.deepEqual(renderDimensions(rect,budget.config,false,1080,1),rect);
   }
-  sample(24000,24);
+  sample(24000,30); // 15/11: phục hồi từ 28 FPS
   assert.equal(budget.pressured,true);
-  sample(44000,24);
+  sample(44000,30);
   assert.equal(budget.pressured,false);
   assert.equal(budget.config,original);
 });

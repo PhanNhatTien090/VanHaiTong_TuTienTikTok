@@ -202,8 +202,9 @@ export function drawPet(scene,c,target,t){
  if(!scene.petV2Settings?.evolutionArt||!scene.petArt?.get(petV2Key(p.spiritPet,p.petView?.stage)))drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;
  if(progress>=0&&progress<1){c.globalAlpha=1-progress;c.strokeStyle=pet.color;c.lineWidth=1.5;c.beginPath();c.ellipse(0,0,size*(.2+progress*.6),size*(.1+progress*.3),0,0,Math.PI*2);c.stroke();c.globalAlpha=1;}
- if(pet.rare&&scene.motion&&scene.budget?.level!=='light')drawRareFx(c,pet,size,t,seed);
+ const petLight=scene.budget?.level==='light'||scene.budget?.crowded||scene.budget?.pressured; // 15/11: sân đông/FPS thấp → chỉ hình thú
+ if(pet.rare&&scene.motion&&!petLight)drawRareFx(c,pet,size,t,seed);
 
- if(grand&&scene.motion){c.fillStyle=pet.color;for(let i=0;i<(scene.budget?.level==='light'?2:4);i++){const a=t*.0015+i*2.4;c.globalAlpha=.45+.3*Math.sin(a);c.fillRect(Math.cos(a)*size*.35,Math.sin(a*1.4)*size*.3-10,1.6,1.6);}}
+ if(grand&&scene.motion&&!petLight){c.fillStyle=pet.color;for(let i=0;i<(scene.budget?.level==='light'?2:4);i++){const a=t*.0015+i*2.4;c.globalAlpha=.45+.3*Math.sin(a);c.fillRect(Math.cos(a)*size*.35,Math.sin(a*1.4)*size*.3-10,1.6,1.6);}}
  c.restore();
 }

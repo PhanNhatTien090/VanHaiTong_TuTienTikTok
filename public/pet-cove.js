@@ -32,10 +32,15 @@ export function petCoveGuideStep(t){const n=PET_COVE_GUIDE.length,i=Math.floor(M
 const roamX=(i,s)=>{const w=(2*Math.PI)/(19+i*2.7),ph=i*1.93;return .5+.5*Math.sin(w*s+ph)*(.72+.28*Math.sin(w*.41*s+i));};
 const roamY=(i,s)=>{const w=(2*Math.PI)/(13+i*1.9),ph=i*2.71;return .5+.5*Math.sin(w*s+ph);};
 /** Vị trí thú lúc t (ms). Hàm thuần: cùng t → cùng chỗ, nên mọi máy xem giống nhau, không cần lưu trạng thái. */
+export const PET_COVE_MOVE_MS=4500;
 export function petCoveRoam(i,t,H,motion=true){
- const r=PET_COVE_ROAM,s=motion===false?i*3.1:t/1000,x=r.x0+(r.x1-r.x0)*roamX(i,s),y=H*(r.y0+(r.y1-r.y0)*roamY(i,s));
+ // 15/11 (chủ game): thú có lúc đứng nghỉ — mỗi con chạy ~4,5 s rồi đứng 6–9 s (lệch nhịp nhau); đồng hồ đường đi chỉ chạy khi đang chạy.
+ const cycle=PET_COVE_MOVE_MS+6000+(i*1300)%3000,off=(i*2711)%cycle,u=motion===false?0:Math.max(0,t+off),phase=u%cycle,moving=motion!==false&&phase<PET_COVE_MOVE_MS;
+ const s=motion===false?i*3.1:(Math.floor(u/cycle)*PET_COVE_MOVE_MS+Math.min(phase,PET_COVE_MOVE_MS))/1000+i*7.3;
+ const r=PET_COVE_ROAM,x=r.x0+(r.x1-r.x0)*roamX(i,s),y=H*(r.y0+(r.y1-r.y0)*roamY(i,s));
+ // Hướng mặt: theo hướng đang chạy (đứng nghỉ thì giữ hướng lần chạy kế tiếp).
  const vx=motion===false?0:r.x0+(r.x1-r.x0)*roamX(i,s+.12)-x;
- return {x,y,vx,depth:(y/H-r.y0)/(r.y1-r.y0)};
+ return {x,y,vx,moving,depth:(y/H-r.y0)/(r.y1-r.y0)};
 }
 const short=p=>p.hearts>0?(Number(p.hearts).toLocaleString('vi-VN')+' tim'+(p.coins>0?' / '+p.coins+' coin':'')):(p.coins+' coin');
 function fitText(c,text,x,y,max){c.fillText(text,x,y,max);}
@@ -71,7 +76,7 @@ function drawRoamer(scene,c,pet,i,t,H){
  const at=petCoveRoam(i,t,H,scene.motion),seed=i*193,pose=premiumPetPose(pet.id,t,seed,scene.motion)||petPose(t,seed,scene.motion),im=petArtFrame(scene.petArt?.get(pet.id),t,seed,scene.motion);
  const base=Math.min(H*.1,pet.rare?156:pet.coins>=100?142:128),size=base*(.86+.2*at.depth);
  const right=at.vx>0,flip=FACES_RIGHT.has(pet.id)?!right:right;
- const flying=pet.flying||pet.id==='sun-phoenix'||pet.id==='astral-dragon',hop=flying?0:Math.abs(Math.sin((scene.motion===false?0:t)*.006+i))*size*.07;
+ const flying=pet.flying||pet.id==='sun-phoenix'||pet.id==='astral-dragon',hop=flying||!at.moving?0:Math.abs(Math.sin((scene.motion===false?0:t)*.006+i))*size*.07;
  c.save();c.translate(at.x+pose.sway*.4,at.y+pose.bob-hop);
  // Bóng dưới chân để thấy thú đang chạy chứ không trôi.
  c.fillStyle='#00000033';c.beginPath();c.ellipse(0,size*.42+hop,size*(.3-hop/size),size*.06,0,0,Math.PI*2);c.fill();
