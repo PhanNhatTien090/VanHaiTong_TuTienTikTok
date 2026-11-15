@@ -1,5 +1,5 @@
 // 15/11/2026: BẢNG THÔNG TIN TO góc dưới phải — cột trái giờ chủ yếu là "Chơi nhanh · gõ số", nên các thông tin
-// chức vị / cảnh giới / rèn / bí pháp / đan dược lâu lâu hiện bản to ở góc dưới phải: mỗi 4 phút hiện 1 phút, mỗi lần 1 chủ đề.
+// chức vị / rèn / bí pháp / đan dược (15/11: bỏ trang cảnh giới theo user) lâu lâu hiện bản to ở góc dưới phải: mỗi 4 phút hiện 1 phút, mỗi lần 1 chủ đề.
 // Lúc hiện thì tạm ẩn bảng Lệnh Ngũ Đường (cùng chỗ). Màn chiếm cả sân (đột phá, đua, Chính Ma, mê cung, tỷ thí, Linh Thú Cốc…) thì không hiện — giống bảng Ngũ Đường.
 import {HONOR_LEGEND} from './honor-icons.js';
 export const INFO_PERIOD_MS=240000,INFO_SHOW_MS=60000;
@@ -11,7 +11,6 @@ export function infoPages(state={}){
  const cat=(state.catalog||[]).filter(i=>!i.exclusive),of=type=>cat.filter(i=>i.type===type).sort((a,b)=>(a.price||0)-(b.price||0));
  const cost=i=>fmt(i.price)+' thạch'+(i.herbs?' · '+fmt(i.herbs)+' thảo':'');
  const pages=[{id:'honor',title:'🏅 HUY HIỆU CHỨC VỊ',note:'Icon nhỏ cạnh tên mỗi người trên sân',rows:HONOR_LEGEND.map(([i,t])=>[i,t])}];
- if(realms.length>1)pages.push({id:'realm',title:'☯ CẢNH GIỚI TU LUYỆN',note:'Đủ tu vi + linh thạch → gõ 8 · đột phá',cols:2,rows:realms.slice(1).map((r,i)=>[String(i+1),r])});
  const arts=spread(of('artifact'),8);
  if(arts.length)pages.push({id:'forge',title:'🔨 RÈN PHÁP BẢO',note:'Gõ 7 · rèn (món tốt nhất đủ tiền) hoặc rèn + tên',rows:arts.map(a=>[a.name,cost(a)+(realm(a.tier)?' · '+realm(a.tier):'')])});
  const manuals=of('manual');
