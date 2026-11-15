@@ -22,6 +22,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareLive2Art,drawLive2Fx} from './live2-art.js';
 import {drawLive2ScreenFx,live2CinematicEligible} from './live2-cinematic.js';
+import {live2CueForEvent} from './live2-cues.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
 import {sectHallTargets,drawSectCourt,sectElders,seatSectElders,sectCourtVisible} from './sect-hall.js?v=hall-management';
@@ -215,10 +216,9 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?transformMs(event):event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.effect==='daoPath'?(event.daoChoose||event.daoUltimate?3800:event.bossPhase==='seal-break'?2900:event.daoSkill?2200:1800):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
     // New Dao visual/audio cues reuse the existing cinematic mixer (3 voices max).
     // Do not play new sounds from the game update loop or on every attack.
-    if(event.effect==='daoPath'&&(event.daoChoose||event.daoSkill||event.daoUltimate||event.daoBrew||event.daoPill||event.daoRelic||event.daoForge||event.guildWarStart||event.guildWarEnd||event.guildFounded||event.guildBuild||event.mentorJoined||event.mentorGraduated||event.bondSkill)){
-      const cue={sword:'jade',demon:'void',body:'gold',beast:'resonance',alchemy:'dawn',alchemyFx:'dawn',boss:'void',guild:'dusk',mentor:'resonance',relic:'void',bond:'gold',tribulation:'void'}[event.live2Kind||event.daoPath]||'jade';
-      this.onCinematicSound?.('live2:'+event.id,cue,.10,{gain:.27,priority:1,charge:false});
-    }
+    const live2Cue=live2CueForEvent(event);
+    if(live2Cue)this.onCinematicSound?.('live2:'+event.id,live2Cue.theme,live2Cue.at,
+      {gain:live2Cue.gain,priority:live2Cue.priority,charge:live2Cue.charge});
     // Only one premium skill title may own the ribbon at any time.
     if(event.effect==='attack'&&Number(event.technique?.intensity)>=2&&event.id&&performance.now()-(this.skillBannerTime??-1e9)>1200){this.skillBannerId=event.id;this.skillBannerTime=performance.now();}
     const limit=this.budget?.config.effects||5;
