@@ -1,6 +1,7 @@
 // 08/11/2026: bảng hướng dẫn PHÁP BẢO & TRANG BỊ ở cột trái (dưới TOP TU VI) để góc này không trống.
 // Khi có sự kiện, giữ trang gõ số cố định; thông tin sự kiện nằm ở cột phải.
 // Xoay 3 trang, mỗi trang 10 giây: lệnh pháp bảo → món rèn được (lấy từ danh mục thật) → bí pháp & đan dược.
+import {warGuidePage,warGuideHTML} from './war-guide.js';
 const PAGE_MS=10000;
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 function rows(list,esc){return list.map(([cmd,txt])=>`<li><code>${esc(cmd)}</code><span>${esc(txt)}</span></li>`).join('');}
@@ -19,6 +20,8 @@ function pages(state,esc){
 }
 export function renderGearGuide(state,esc,now=Date.now()){
   const el=document.getElementById('gearGuide');if(!el||!state)return;
+  const war=warGuidePage(state.sectWar);el.classList.toggle('war-guide',!!war);
+  if(war){const html=warGuideHTML(war,esc,state.sectWar.counts);if(el.dataset.html!==html){el.innerHTML=html;el.dataset.html=html;}el.hidden=false;return;} // 15/11: Chính Ma → chỉ hướng dẫn trận
   const base=pages(state,esc),quick=quickPage(state,esc),list=quick?base.flatMap(p=>[quick,p]):base,html=state.quick?.event&&quick?quick:list[Math.floor(now/PAGE_MS)%list.length];
   if(el.dataset.html!==html){el.innerHTML=html;el.dataset.html=html;}
   el.hidden=false;

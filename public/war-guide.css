@@ -1,0 +1,15 @@
+/* 15/11/2026: Chính Ma Đại Chiến — dọn bảng không cần (Thiên Bảng, TOP QUÀ, Đồng môn/lệnh, Tiên Đế, trò vui, câu đố, hồng bao).
+   Thanh chiến tuyến + top 3 mỗi phe vẽ trên canvas ở dải trên cùng (~4–17% chiều cao, sect-war.js drawHud) → mọi bảng HTML
+   dời xuống dưới dải đó. Cột trái chỉ còn bảng hướng dẫn trận (#gearGuide.war-guide, war-guide.js); cột phải giữ thẻ luật quà. */
+html body.overlay.sect-war .scene-shell :is(#liveRanks,#giftRanks,#basicCommands,.scene-guide-dock,.honor-banner,#miniEventBox,.quiz-box,.envelope-box,#stageQueue):not(#_){display:none!important}
+html body.overlay.sect-war .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide{display:none!important}
+html body.overlay.sect-war .scene-shell>#basicCommands.corner-command-guide:not(#_){display:none!important}
+html body.overlay.sect-war .scene-shell>#phoneHudLeft:not(#_),html body.overlay.sect-war .scene-shell>#phoneHudRight:not(#_){top:17.5%!important}
+body.overlay #gearGuide.war-guide{border-color:#ff6a6a99!important;background:linear-gradient(160deg,#2a0d14e6,#120a1fe6)!important;box-shadow:0 0 14px #ff3a5a40}
+body.overlay #gearGuide.war-guide>b{color:#ffd88a!important}
+body.overlay #gearGuide.war-guide li.wg-chinh code{color:#ffe28a!important}
+body.overlay #gearGuide.war-guide li.wg-ma code{color:#e7a0ff!important}
+body.overlay #gearGuide.war-guide .wg-count i{font-style:normal;font-weight:800}
+body.overlay #gearGuide.war-guide .wg-count .wg-chinh{color:#ffe28a}
+body.overlay #gearGuide.war-guide .wg-count .wg-ma{color:#e7a0ff}
+body.overlay #gearGuide.war-guide small{display:block;margin-top:3px}
