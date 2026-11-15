@@ -154,7 +154,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   const q=s?.mentorQuest;const count=q?.day===day(now)?q.count:0,finished=q?.day===day(now)&&q.done;
   const m=w.players[s?.masterId],students=(s?.students||[]).map(id=>w.players[id]?.name).filter(Boolean);
   const msg=(m?'Sư phụ: '+m.name:'Chưa có sư phụ')+(students.length?' • Đệ tử: '+students.join(', '):'')+' • Nhiệm vụ ngày: '+(finished?'hoàn tất':count+'/3 hành động');
-  announce(w,p,msg,now,ctx,{live2Info:true});return ok(msg);
+  announce(w,p,msg,now,ctx,{live2Info:true,card:{kind:'mentor',master:m?.name||null,students:students.slice(0,2),count,done:!!finished}});return ok(msg);
  }
  return null;
 }
