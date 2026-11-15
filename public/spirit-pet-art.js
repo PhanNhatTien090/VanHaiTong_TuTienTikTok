@@ -172,15 +172,20 @@ export function loadPetArt(scene,players){
 }
 // Ảnh gốc phần lớn nhìn sang TRÁI; các con dưới đây nhìn sang PHẢI.
 export const PET_FACES_RIGHT=new Set(['sun-phoenix','hac-tinh-ho','xich-ha-phuong']);
-/** Vị trí thú so với chân chủ lúc t. Hàm thuần theo id người chơi → mỗi thú lệch nhịp, mọi máy xem giống nhau. */
+/** Vị trí thú so với chân chủ lúc t. Hàm thuần theo id người chơi → mỗi thú lệch nhịp, mọi máy xem giống nhau.
+ * 15/11 (chủ game: "lâu lâu mới đi"): thú đứng yên một bên chân chủ ~15–25 s, rồi đi 3 s sang bên kia (qua phía trước) và đứng lại. */
+export const PET_WALK_MS=3000;
 export function petFollowOffset(playerId='',petId='',t=0,scale=1,flying=false,motion=true){
  let seed=0;for(const ch of String(playerId))seed=(seed*31+ch.charCodeAt(0))>>>0;
- const period=(flying?7800:6400)+seed%2600,phase=(seed%1000)/1000*Math.PI*2,time=motion===false?0:t;
- const angleAt=tt=>flying?tt/period*Math.PI*2+phase:Math.PI*(.5+.5*Math.sin(tt/period*Math.PI*2+phase));
- const a=angleAt(time),a2=angleAt(time+60),rx=(flying?40:36)*scale,ry=(flying?12:11)*scale;
- const x=Math.cos(a)*rx,y=flying?-26*scale+Math.sin(a)*ry:9*scale+Math.sin(a)*ry,dx=Math.cos(a2)*rx-x;
- const right=motion===false?true:dx>0;
- return {x,y,flip:PET_FACES_RIGHT.has(petId)?!right:right,behind:flying&&Math.sin(a)<0};
+ const cycle=15000+seed%10000,offset=seed%cycle,LEFT=Math.PI*.86,RIGHT=Math.PI*.14;
+ let a,walking=false,dir=0;
+ if(motion===false)a=seed%2?LEFT:RIGHT;
+ else{const n=Math.floor((t+offset)/cycle),u=(t+offset)%cycle,from=(n+seed)%2?LEFT:RIGHT,to=from===LEFT?RIGHT:LEFT,start=cycle-PET_WALK_MS;
+  if(u<start)a=from;else{const p=(u-start)/PET_WALK_MS,e=p*p*(3-2*p);a=from+(to-from)*e;walking=true;dir=to<from?1:-1;}}
+ const rx=(flying?40:36)*scale,ry=(flying?12:11)*scale,x=Math.cos(a)*rx,y=(flying?-26*scale:9*scale)+Math.sin(a)*ry;
+ // Đang đi: nhìn theo hướng đi. Đứng yên: quay mặt về phía chủ.
+ const right=walking?dir>0:x<0;
+ return {x,y,walking,flip:PET_FACES_RIGHT.has(petId)?!right:right,behind:false};
 }
 export function drawPet(scene,c,target,t){
  const p=target.player,pet=petById(p.spiritPet),frames=pet&&petV2FramesFor(scene,p);if(!frames)return;
