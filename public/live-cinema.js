@@ -5,7 +5,24 @@ import {beginRitualPalette} from './qi-impact.js';
 import {ritualAppearance,ritualAppearanceFrame,drawRitualAppearance,drawRitualWeather,drawRitualGrade} from './ritual-appearance.js';
 const BALANCED_RITUAL_BUDGET=Object.freeze({level:'balanced',config:QUALITY.balanced});
 const HIGH_RITUAL_BUDGET=Object.freeze({level:'high',config:QUALITY.high});
+// 15/11 (chủ game): lúc đột phá ai cũng mặc trang phục cảnh giới mặc định để thấy rõ màn biến hình
+// (skin sự kiện/nạp tiền/thần chức che mất sự thay đổi). Chỉ sửa bản sao để vẽ, không đụng kho đồ/skinChoice.
+export function defaultRitualLook(p,realm){
+ if(!p)return p;const out={...p,skinChoice:null,skinChoiceSource:null,divineRoleHidden:true};
+ if(Number.isFinite(realm))out.realm=realm;return out;
+}
+// Sự kiện gốc giữ nguyên; bản phái sinh (kế thừa start/duration sống qua prototype) ổn định suốt nghi thức.
+const ritualLooks=new WeakMap();
+export function applyDefaultRitualLook(scene,e){
+ if(!e||typeof e!=='object'||e.effect!=='breakthrough')return e;
+ if(ritualLooks.has(e))return ritualLooks.get(e);
+ const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user)||{id:e.user,name:e.name,giftCoins:0};
+ const to=Number(e.toRealm??live.realm),from=Number(e.fromRealm??to-1),view=Object.create(e);
+ view.visualFrom=defaultRitualLook(e.visualFrom||live,from);view.visualTo=defaultRitualLook(e.visualTo||live,to);
+ ritualLooks.set(e,view);return view;
+}
 export function drawRitual(scene,...args){
+ args[1]=applyDefaultRitualLook(scene,args[1]);
  const [c,e,t,H]=args,a=scene.ritualVariantsEnabled===false?null:ritualAppearance(e),restorePalette=beginRitualPalette(a?.palette||null);
  const reduceDecor=!!(scene.budget?.pressured||scene.budget?.mode==='light'||(scene.fps>0&&scene.fps<18));
  const saved={budget:scene.budget,crowded:scene.crowded,heavyCrowd:scene.heavyCrowd,minimalCrowd:scene.minimalCrowd,reducePresence:scene.reducePresence,compact:scene.compact,ritualAppearance:scene.ritualAppearance,onRitualFrame:scene.onRitualFrame};
