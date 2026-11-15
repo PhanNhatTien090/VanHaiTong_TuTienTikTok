@@ -22,6 +22,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareLive2Art,drawLive2Fx} from './live2-art.js';
 import {drawLive2ScreenFx,live2CinematicEligible} from './live2-cinematic.js';
+import {guildWarActorIds,guildWarTargets,drawGuildWarFloor} from './live2-guild-stage.js';
 import {live2CueForEvent} from './live2-cues.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
@@ -130,7 +131,7 @@ export class Scene {
       backing:{width:this.canvas.width,height:this.canvas.height},logical:{width:900,height:this.height},dpr:globalThis.devicePixelRatio||1,
       fillsViewport:Math.abs(r.x)<1&&Math.abs(r.y)<1&&Math.abs(r.width-innerWidth)<1&&Math.abs(r.height-innerHeight)<1};
   }
-  update(state,selected){const previousPlayerIndex=this.playerIndex;const started=this.metrics?performance.now():0;this.lastState=state;this.lastSelected=selected;this.petEvent=state.petEvent;if(state.visitor?.kind==='hailam'||state.players.some(seaWorn))loadSeaArt(this);if(state.visitor?.kind==='khuyniet'||state.players.some(p=>khuyWorn(p)||p.equipped===KHUY_DRAGON))loadKhuyArt(this);if(state.visitor?.kind==='viemton'||state.players.some(p=>viemWorn(p)||p.equipped===VIEM_BLADES))loadViemArt(this);if(state.visitor?.kind==='tudo'||state.players.some(p=>tudoWorn(p)||p.equipped===TUDO_BLADE))loadTudoArt(this);if(state.visitor?.kind==='doraemon'||state.players.some(p=>doraWorn(p)||String(p.equipped||'').startsWith('dora-')))loadDoraArt(this);this.lanternFestival=state.lanternFestival;this.companionStatus=state.companionStatus;loadPetArt(this,state.players);this.realmCount=state.realms?.length||REALM_STYLES.length;if(state.visitor?.kind==='vuonglam'||state.players.some(linWanWorn))loadLinWanArt(this);if(state.visitor?.kind==='shende'||state.players.some(p=>shendeWorn(p)||p.equipped==='shende-dao-seal'))loadShendeArt(this);loadCelestialArt(this); // v61: luôn tải — ảnh Thương Long dùng cho hiệu ứng vinh danh/quà lớn
+  update(state,selected){const previousPlayerIndex=this.playerIndex;const started=this.metrics?performance.now():0;this.lastState=state;this.lastSelected=selected;this.petEvent=state.petEvent;if(state.visitor?.kind==='hailam'||state.players.some(seaWorn))loadSeaArt(this);if(state.visitor?.kind==='khuyniet'||state.players.some(p=>khuyWorn(p)||p.equipped===KHUY_DRAGON))loadKhuyArt(this);if(state.visitor?.kind==='viemton'||state.players.some(p=>viemWorn(p)||p.equipped===VIEM_BLADES))loadViemArt(this);if(state.visitor?.kind==='tudo'||state.players.some(p=>tudoWorn(p)||p.equipped===TUDO_BLADE))loadTudoArt(this);if(state.visitor?.kind==='doraemon'||state.players.some(p=>doraWorn(p)||String(p.equipped||'').startsWith('dora-')))loadDoraArt(this);this.lanternFestival=state.lanternFestival;this.companionStatus=state.companionStatus;this.guildWarStatus=state.live2GuildWar?.active?state.live2GuildWar:null;loadPetArt(this,state.players);this.realmCount=state.realms?.length||REALM_STYLES.length;if(state.visitor?.kind==='vuonglam'||state.players.some(linWanWorn))loadLinWanArt(this);if(state.visitor?.kind==='shende'||state.players.some(p=>shendeWorn(p)||p.equipped==='shende-dao-seal'))loadShendeArt(this);loadCelestialArt(this); // v61: luôn tải — ảnh Thương Long dùng cho hiệu ứng vinh danh/quà lớn
 loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,state);syncAlchemy(this,state);syncMaze(this,state);syncTease(this,state);syncBonk(this,state);syncSocialStage(this,state);syncEventGiftFx(this,state);this.visitor=state.visitor;
     this.sectMaster=state.sectMaster;this.stateServerNow=state.serverNow||Date.now();this.stateReceivedAt=performance.now();
     this.hallMatch=state.halls?.match;
@@ -624,6 +625,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.compact=compactPlaza(this)&&!solo;const st=this.stage??=new StageDirector(),mv=this.mover??=new Mover();
     // 08/11 LIVE: >20 người tối đa 30 ghế, >30 người tối đa 50 ghế (chỉ ảnh skin) (ghế xoay theo người vừa tương tác/tặng quà). Vẽ cả 80 người làm GPU tích hợp tụt 2-3 FPS và mất tiếng.
     st.seats=this.heavyCrowd?Math.min(this.minimalCrowd?50:30,Math.max(this.budget?.config.seats||16,(this.realPlayers||[]).length)):Math.max(this.budget?.config.seats||16,(this.realPlayers||[]).length);st.seats=Math.min(PLAZA_CAPACITY,st.seats);const required=new Set([...(this.focusUntil>t?[this.focusId]:[]),...(document.body.classList.contains('overlay')?[]:[this.selected]),...this.effects.map(e=>e.user),...[...(this.engagementReactions||new Map()).values()].filter(e=>t-e.start<3400).map(e=>e.user)].filter(Boolean));
+    if(this.guildWarStatus?.active)for(const id of guildWarActorIds(this.guildWarStatus))required.add(id);
     for(const id of teaseIds(this))required.add(id); // 10/11: chọc ghẹo — đưa 2 người lên sân
     for(const id of bonkIds(this,t))required.add(id); // 10/11: Hội Gõ Đầu — người gõ + người bị gõ lên sân
     if(!this.compact&&this.motion&&t-(this.calmAt||0)>12000){if((this.recentEvents||0)<3)st.calmSwap();this.calmAt=t;this.recentEvents=0;}
@@ -637,6 +639,10 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(soloPlayer&&solo.kind==='black-gold')this.targets=[{id:soloPlayer.id,player:soloPlayer,x:450,y:H*.58,scale:Math.min(4.5,H*.003),lift:0}];
     if(this.warStatus?.active)this.targets=warTargets(this,ordered,H,t);
     if(this.alcStatus?.active)this.targets=alchemyTargets(this,ordered,H,t);
+    if(!solo&&this.guildWarStatus?.active){
+      const battlers=guildWarTargets(this.guildWarStatus,this.playerIndex,H,{light:this.budget?.level==='light'||this.minimalCrowd});
+      if(battlers.length)this.targets=battlers;
+    }
     const arena=!solo&&arenaOn(this);tickBattleSound(this,arena&&!this.boss?.sealing?this.boss:null,Date.now());if(arena)this.targets=arenaTargets(ordered,H);else if(!solo&&petCoveOn(this))this.targets=petCoveTargets(ordered,H); // màn đánh boss: tu sĩ xếp hàng phía dưới
     if(mazeOn(this))this.targets=[]; // 10/11: mê cung chiếm cả sân, người chơi là chấm sáng trong mê cung
     else if(!solo)applyBonkWalk(this,t); // 10/11: người gõ đi bộ tới người bị gõ rồi về ghế
@@ -644,6 +650,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     drawCompanionLinks(this,c,t,!solo&&!this.bareCrowd&&!this.socialScene&&!this.raceStatus?.active&&!mazeOn(this));
     drawRace(this,c,t,'back');if(this.raceStatus?.phase==='running')drawEventGiftFx(this,c,t,'back','race');drawWar(this,c,t,'back');drawAlchemy(this,c,t,'back');drawMaze(this,c,t,'back');
     drawSocialStage(this,c,t,'back',solo);
+    if(!solo&&this.guildWarStatus?.active)drawGuildWarFloor(c,this.guildWarStatus,t,H,{light:this.budget?.level==='light'||this.minimalCrowd,motion:this.motion});
     // v49: yêu thú vẽ TRƯỚC hiệu ứng và nhân vật → nhân vật + chiêu thức đè lên quái.
     if(!solo&&!mazeOn(this))drawPetCove(this,c,t,H);
     if(!solo&&this.boss){prepareAbyssArt(this);const by=this.boss.species==='abyss-dragon'?H*.32:arena?H*ARENA_BOSS_Y:H*.37,sprite=()=>{if(!drawBossSprite(c,this.boss,this.motion?Date.now():(this.boss.startedAt||0)+2000,450,by,this.bossSprites,this.celestialSprites,this.abyssArt,this.motion))drawThunderTiger(c,this.boss,Date.now(),450,by);};if(this.boss.sealing)drawBossSeal(this,c,this.boss,H,450,by,sprite);else sprite();}
