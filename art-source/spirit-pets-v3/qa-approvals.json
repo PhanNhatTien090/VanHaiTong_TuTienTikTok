@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "artVersion": "true-form-v1",
+  "status": "production-not-approved",
+  "reviewers": [],
+  "approvedStages": {},
+  "checklist": [
+    "Stage 1/2/3 are genuinely new body shapes, not old sprite plus overlaid costume or aura",
+    "Silhouette comparison shows anatomical change without any magical FX",
+    "Species identity preserved from actual Vân Hải Tông V1 sprites",
+    "All 3 or all 8 frames have consistent facial, body and limb details",
+    "No duplicated frame or faux animation by simple warping",
+    "Fully transparent background and no clipped anatomy",
+    "Passes Canvas LIVE, pet cove, arrival cinema, inventory preview, reduced motion and fallback",
+    "Headless performance within budget and manual LIVE Studio FPS check"
+  ]
+}

@@ -1,0 +1,26 @@
+name: Linh Thu V3 True-Form Art Gate
+on:
+  pull_request:
+    paths:
+      - public/pet-v3-art-spec.js
+      - art-source/spirit-pets-v3/**
+      - scripts/verify-pet-v3-art.mjs
+      - test/pet-v3-*.test.mjs
+      - .github/workflows/pet-v3-true-form-gate.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node --test test/pet-v3-art-spec.test.mjs
+      - name: Audit incomplete assets without enabling V3 at runtime
+        run: node scripts/verify-pet-v3-art.mjs --allow-incomplete
