@@ -27,6 +27,24 @@ Mã gốc tham chiếu: \`43a6e12fa334861ac019c73b2681da8164eefdda\`. Toàn bộ
 - Khi tắt lại bằng \`settings.live2Enabled: false\`, các module mới không nhận lệnh/tính buff; dữ liệu LIVE 2.0 được **giữ lại nhưng không hoạt động**. Hội Chiến đang mở được đánh dấu hủy mà không trả phần thưởng sai.
 - Không merge PR nháp vào main cho tới khi hoàn tất QA.
 
+## Ba cờ triển khai độc lập, không bật nhầm sân khấu
+
+- `settings.live2Enabled: true`: bật hệ Đạo Thống, tinh luyện, đan chiến thuật và thẻ quan hệ trên LIVE. Mặc định bản LIVE **không bật**.
+- `settings.live2GuildWarEnabled: true`: chỉ cho phép Hội Chiến nếu cờ LIVE 2.0 đang bật. Tắt giữa trận tự hủy, không trả thưởng và thả khóa sân khấu; không tự động tạo Hội Chiến.
+- `settings.live2BossTrialsEnabled: true`: bật **riêng** cơ chế Boss ba pha. Nếu để false, Boss dùng luật cũ; có thể mở Đạo Thống mà chưa thay Boss.
+
+Từng cờ cần được bật **chủ động bởi người điều hành sau sao lưu dữ liệu**, không gắn vào việc người chơi tặng quà. Dừng hẳn server trước khi sửa cấu hình lưu. Không reset `data/live.json` hoặc tạo world mới để triển khai tính năng.
+
+## Kiến trúc hình ảnh và hiệu năng
+
+- Scene Canvas/RenderBudget hiện tại là nguồn duy nhất vẽ nhân vật, không mở web game thứ hai.
+- 11 pháp ấn SVG minh họa tải theo sự kiện và được cache; 5 phù hiệu thử thách tháp và 3 huy hiệu Boss ở các DOM HUD chỉ là ảnh tĩnh.
+- Đạo Kỹ Đại Thành, Hội Chiến, phá ấn Boss và hộ kiếp viên mãn dùng hiệu ứng chéo màn / vết nứt Canvas theo cấp độ. Mức `light`, tắt chuyển động và `reduceFlash` giảm các tia/chớp và chi tiết rời.
+- Lệnh hỏi `đạo tu`, `đạo lữ`, `hội`, `hội quản`, `sư môn`, `đan phương` không chen animation vào các màn quà, Boss hoặc độ kiếp.
+- Giữ hệ xem tối đa bốn thẻ cạnh nhau; Bang Hội, Sư Đồ, Đạo Lữ và Đạo Thống dùng cùng hàng đợi, không chạy bộ render riêng.
+- Mọi âm thanh LIVE 2.0 dùng mixer có sẵn, không tạo audio context mới; sự kiện thông tin và đa số nhịp thường không phát SFX.
+- Bài đo `scripts/bench-live2.mjs` chỉ là CPU giả lập, **không được dùng làm kết luận FPS**. Phải xem máy thật và thử 20/50/80 người trong LIVE Studio trước khi bật.
+
 ## Lệnh mới, không giành quyền lệnh 1–9
 
 - \`đạo tu\`, \`chọn đạo kiếm/ma/thể/thú/đan\`, \`đạo ngộ\`, \`đạo kỹ\`, \`đổi đạo ...\`
