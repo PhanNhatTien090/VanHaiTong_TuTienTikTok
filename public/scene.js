@@ -23,6 +23,7 @@ import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareLive2Art,drawLive2Fx} from './live2-art.js';
 import {drawLive2ScreenFx,live2CinematicEligible} from './live2-cinematic.js';
 import {drawLive2BossStage} from './live2-boss-stage.js';
+import {drawLive2HeavenStage} from './live2-heaven-stage.js';
 import {drawDaoNameBadge} from './live2-badges.js';
 import {guildWarActorIds,guildWarTargets,drawGuildWarFloor,drawGuildWarClash} from './live2-guild-stage.js';
 import {live2CueForEvent} from './live2-cues.js';
@@ -158,7 +159,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     }):sectElders(state.players,this.sectMaster?.userId);
     const currentEnv=state.environment?.id==='sect-hall'?{...state.environment,...SCENES.find(s=>s.id==='sect-hall')}:state.environment;const env=petCoveOn({...this,boss:state.boss})?PET_COVE_MAP:currentEnv;this.environment=env;if(env?.ambience==='underwater')loadFish(this);
     if(env?.image&&this.environmentImage!==env.image){this.environmentImage=env.image;const next=new Image();next.onload=()=>{if(this.environmentImage!==env.image)return;const previous=this.background;this.art=next;this.resize();this.previousBackground=previous;this.backgroundChangedAt=performance.now();};next.src=env.image;}
-    const guildRoster=new Set(guildWarActorIds(this.guildWarStatus));this.realPlayers=state.players.filter(p=>!(sectCourtVisible(this)&&p.id===this.sectMaster?.userId)).filter(p=>p.active||guildRoster.has(p.id)||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)||this.warStage?.includes(p.id)||this.alcStage?.includes(p.id)||(this.heavenStrike&&p.id===this.heavenStrike.user)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];this.playerIndex=new Map(this.players.map(p=>[p.id,p]));this.feedbackFX?.snapshot(previousPlayerIndex,state.players,performance.now(),this);if(this.sectMaster?.player)this.playerIndex.set(this.sectMaster.player.id,this.sectMaster.player);this.selected=selected;this.boss=state.boss||sealingBoss(state);
+    const guildRoster=new Set(guildWarActorIds(this.guildWarStatus));this.realPlayers=state.players.filter(p=>!(sectCourtVisible(this)&&p.id===this.sectMaster?.userId)).filter(p=>p.active||guildRoster.has(p.id)||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)||this.warStage?.includes(p.id)||this.alcStage?.includes(p.id)||(this.heavenStrike&&p.id===this.heavenStrike.user)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];this.playerIndex=new Map(this.players.map(p=>[p.id,p]));this.feedbackFX?.snapshot(previousPlayerIndex,state.players,performance.now(),this);if(this.sectMaster?.player)this.playerIndex.set(this.sectMaster.player.id,this.sectMaster.player);this.selected=selected;this.boss=state.boss||sealingBoss(state);this.live2Trials=state.live2Trial||[];
     const eligible=this.realPlayers.length;
     const planned=plannedActorCount(state,eligible,this.residentActors.length);
     this.audienceCount=liveAudienceCount(state);
@@ -672,6 +673,11 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       const light=this.budget?.level==='light'||this.minimalCrowd;
       drawGuildWarFloor(c,this.guildWarStatus,t,H,{light,motion:this.motion});
       drawGuildWarClash(c,this.guildWarPulse,t,H,{light,motion:this.motion,reducedFlash:this.reduceFlash});
+    }
+    if(!solo&&!this.boss&&!this.guildWarStatus?.active&&!this.showcase&&!this.raceStatus?.active&&!this.socialScene&&!mazeOn(this)){
+      const trial=this.live2Trials?.find(x=>!x.completed);
+      const target=trial&&this.targets.find(x=>x.id===trial.targetId);
+      if(target)drawLive2HeavenStage(c,trial,target.x,target.y,t,{light:this.budget?.level==='light'||this.minimalCrowd,motion:this.motion,reducedFlash:this.reduceFlash});
     }
     // v49: yêu thú vẽ TRƯỚC hiệu ứng và nhân vật → nhân vật + chiêu thức đè lên quái.
     if(!solo&&!mazeOn(this))drawPetCove(this,c,t,H);
