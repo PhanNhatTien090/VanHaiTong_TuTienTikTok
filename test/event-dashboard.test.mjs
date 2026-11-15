@@ -3,7 +3,7 @@ const N=1800000000000,state={serverNow:N,players:[],socialStatus:{tournament:nul
 test('Ma Long is a prominent direct action, every activity remains reachable and extended rules collapse',()=>{
  const html=eventDashboardHTML(state);
  assert.match(html,/Mở Ma Long/);assert.match(html,/data-species="abyss-dragon"/);assert.ok(html.indexOf('abyss-dragon')<html.indexOf('data-panel="visitors"'));
- for(const action of ['sea-event','visitor','boss','start-race','start-tournament','start-lantern','start-bond-festival','flower','opportunity','world-scene','pet-start','blessing'])assert.ok(html.includes(`data-social="${action}"`),action);
+ for(const action of ['sea-event','visitor','boss','start-race','arena-start','start-lantern','start-bond-festival','flower','opportunity','world-scene','pet-start','blessing'])assert.ok(html.includes(`data-social="${action}"`),action);
  assert.match(html,/<details class="event-group" data-panel="help">/);assert.match(html,/Yêu lực ×10/);
 });
 test('occupied stage labels current event and disables starts while retaining explicit stop',()=>{

@@ -15,13 +15,13 @@ const chat=(w,id,text,now)=>action(w,{type:'chat',userId:id,name:id.toUpperCase(
 const c={emit:(w,p,m,e,at,x={})=>{w.events.push({message:m,effect:e,at,...x});},active:()=>true,technique:p=>({id:'stars',name:'Tinh Hà Luân Chuyển'})};
 function runMatch(w,now){let t=now;for(let i=0;i<400&&w.arena.current;i++){t+=250;tickArena(w,t,c);}return t;}
 
-test('mỗi người 4 chiêu khác nhau: pháp bảo, chiêu hệ, linh thú, tuyệt kỹ',()=>{
+test('mỗi người 5 chiêu: pháp bảo, 2 bí pháp/chiêu hệ, linh thú, tuyệt kỹ',()=>{
  const kit=arenaKit({realm:9,spiritPet:'loi-oa',spiritPets:['loi-oa'],equipped:'galaxy-dharma-wheel',artifacts:['galaxy-dharma-wheel']});
- assert.equal(kit.length,4);assert.deepEqual(kit.map(k=>k.slot),[1,2,3,4]);
- assert.equal(new Set(kit.map(k=>k.name)).size,4);
- assert.equal(kit[2].name,'Cửu Thiên Lôi Chấn');assert.equal(kit[2].role,'control');
+ assert.equal(kit.length,5);assert.deepEqual(kit.map(k=>k.slot),[1,2,3,4,5]);
+ assert.equal(new Set(kit.slice(0,4).map(k=>k.name)).size,4);
+ assert.equal(kit[3].name,'Cửu Thiên Lôi Chấn');assert.equal(kit[3].role,'control');assert.notEqual(kit[1].tech,kit[2].tech);
  assert.notEqual(kit[0].tech,kit[1].tech);
- const noPet=arenaKit({realm:2});assert.equal(noPet[2].name,'Hộ Thân Cương Khí');
+ const noPet=arenaKit({realm:2});assert.equal(noPet[3].name,'Hộ Thân Cương Khí');
 });
 
 test('lên đài: người đầu thành Đài Chủ, người sau xếp hàng, trận tự bắt đầu và có nhiều chiêu',()=>{
@@ -39,7 +39,7 @@ test('lên đài: người đầu thành Đài Chủ, người sau xếp hàng, 
  const snap=snapshot(w,end);assert.equal(snap.socialScene,'arena');assert.equal(snap.environment.id,'loi-dai');assert.ok(snap.arena);
 });
 
-test('trận có đủ 4 loại chiêu, kéo dài hợp lý, sát nhau thì ai cũng có cơ hội thắng',()=>{
+test('trận có đủ 5 loại chiêu, kéo dài hợp lý, sát nhau thì ai cũng có cơ hội thắng',()=>{
  let winsA=0,durations=[],slots=new Set();
  for(let i=0;i<60;i++){
   const w=world();player(w,'a',1e7);player(w,'b',1e7);const t0=N+i*1e6;
@@ -49,7 +49,7 @@ test('trận có đủ 4 loại chiêu, kéo dài hợp lý, sát nhau thì ai c
   for(let k=0;k<400&&w.arena.current;k++){t+=250;for(const e of w.arena.current?.log||[])if(e.slot)slots.add(e.slot);tickArena(w,t,c);}
   durations.push(t-m.fightAt);if(w.arena.lastResult.winner==='a')winsA++;
  }
- assert.deepEqual([...slots].sort(),[1,2,3,4]);
+ assert.deepEqual([...slots].sort(),[1,2,3,4,5]);
  const avg=durations.reduce((a,b)=>a+b,0)/durations.length;
  assert.ok(avg>12000&&avg<=31000,'độ dài TB '+avg);
  assert.ok(winsA>12&&winsA<48,'ngang tu vi: A thắng '+winsA+'/60');
@@ -76,11 +76,11 @@ test('cổ vũ có trần nộ khí, đấu thủ không tự cổ vũ, chọn c
  for(let i=0;i<20;i++)arenaCommand(w,w.players['fan'+i],'cv1','',N+2100,c);
  assert.ok(m.cheerRage.a<=CHEER_CAP);assert.equal(m.cheers.a,20);
  assert.equal(arenaCommand(w,w.players.a,'cv1','',N+2100,c).ok,false);
- assert.equal(arenaCommand(w,w.players.fan1,'c4','',N+2100,c).ok,false);
+ assert.equal(arenaCommand(w,w.players.fan1,'c5','',N+2100,c).ok,false);
  assert.equal(arenaCommand(w,w.players.a,'chieu','2',N+2100,c).ok,true);assert.equal(m.fighters.a.pref,2);
 });
 
-test('quà của đấu thủ: tăng nộ khí, từ 99 coin tung Pháp Bảo Bạo Phát',()=>{
+test('quà của đấu thủ: bậc thấp tăng nộ khí, bậc 99 trở lên ra đòn',()=>{
  const w=world();player(w,'a',1e7);player(w,'b',1e7);
  startArenaEvent(w,N);arenaCommand(w,w.players.a,'lendai','',N,c);arenaCommand(w,w.players.b,'lendai','',N,c);tickArena(w,N+2000,c);
  const m=w.arena.current,t=m.fightAt+100;
@@ -122,7 +122,25 @@ test('snapshot có chọn lọc (overlay) không lỗi khi Lôi Đài mở, đư
 
 test('gõ "chiêu" xem bộ 4 chiêu mọi lúc (cả khi Lôi Đài chưa mở), có chống spam',()=>{
  const w=world();player(w,'a',1e7);
- const r=chat(w,'a','chiêu',N);assert.equal(r.ok,true);assert.equal(r.kit.length,4);
+ const r=chat(w,'a','chiêu',N);assert.equal(r.ok,true);assert.equal(r.kit.length,5);
  const e=w.events.findLast(x=>x.arenaKit);assert.match(e.text||e.message,/SK1 .* SK4 /);
  const before=w.events.length;chat(w,'a','chiêu',N+1000);assert.equal(w.events.filter(x=>x.arenaKit).length,1);
+});
+
+test('quà trợ chiêu 5 bậc: linh khí, hồi máu, triệu hồi, bạo phát + khiên, Thiên Giáng xen kẽ rìu/vạn kiếm',()=>{
+ const w=world();player(w,'a',1e7);player(w,'b',1e7);
+ startArenaEvent(w,N);arenaCommand(w,w.players.a,'lendai','',N,c);arenaCommand(w,w.players.b,'lendai','',N,c);tickArena(w,N+2000,c);
+ const m=w.arena.current,t0=m.fightAt+50;m.fighters.a.hp=Math.round(m.fighters.a.maxHp*.5);
+ const tr=[1,10,99,500,2000,2000].map((v,i)=>arenaGift(w,w.players.a,v,t0+i));
+ assert.deepEqual(tr.map(x=>x.trick),['qi','heal','summon','burst','heaven','heaven']);
+ assert.ok(tr[1].heal>0);assert.ok(tr[2].dmg>0);assert.ok(tr[3].shield>0&&tr[3].dmg>0);
+ assert.notEqual(tr[4].heaven,tr[5].heaven);assert.equal(tr[4].tier,4);
+});
+test('người xem tặng hộ đấu thủ: trợ chiêu áp cho đấu thủ, ghi tên người tặng',()=>{
+ const w=world();player(w,'a',1e7);player(w,'b',1e7);player(w,'fan',1e5);
+ startArenaEvent(w,N);chat(w,'a','lên đài',N);chat(w,'b','lên đài',N+1);tickArena(w,N+2000,c);
+ const m=w.arena.current;
+ const r=chat(w,'fan','tặng B',m.fightAt+10);
+ action(w,{type:'gift',userId:'fan',name:'FAN',coins:99,count:1,gift:'Paper Crane',eventId:'g1'},m.fightAt+100);
+ const e=m.log.findLast(x=>x.gift);assert.ok(e,'phải có trợ chiêu '+JSON.stringify(r));assert.equal(e.by,'b');assert.equal(e.trick,'summon');assert.equal(e.from,'FAN');
 });

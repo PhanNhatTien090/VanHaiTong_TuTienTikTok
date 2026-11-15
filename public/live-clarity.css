@@ -331,3 +331,8 @@ body.overlay.has-major-event #quizBox p{font-size:1em}body.overlay.has-major-eve
 body.overlay.pet-cove-stage.has-major-event :is(#miniEventBox,#quizBox,#envelopeBox):not([hidden]){top:auto;bottom:2%}
 
 .tower-stage .tw-dmg-static{animation:none}
+
+/* 15/11 (chủ game): đang có Vân Hải Lôi Đài → dẹp các bảng khác, chỉ còn bảng hướng dẫn Lôi Đài vẽ trên sân (arena-stage.js). Thẻ nhận quà vẫn giữ. */
+body.overlay.arena-stage :is(#phoneHudLeft,#phoneHudRight,#giftRanks,#honorBanner,.scene-guide-dock,#spotlight,#likeGoal,#liveRanks,#lowerRightGuide,#eventInfoDock,#infoSpotlight,#crowdPulse){
+ display:none!important;
+}

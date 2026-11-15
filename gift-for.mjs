@@ -15,6 +15,7 @@ export function giftForEventEnd(w,now){
  const ends=[];
  if(open(w.visitor,now)&&VISITOR_GIFT_REWARDS[w.visitor.kind])ends.push(w.visitor.endsAt);
  if(open(w.petEvent,now))ends.push(w.petEvent.endsAt);
+ if(w.arena?.phase==='open'&&now<w.arena.endsAt)ends.push(w.arena.endsAt); // 15/11: Lôi Đài — tặng hộ đấu thủ = quà trợ chiêu
  return ends.length?Math.max(...ends):null;
 }
 
@@ -48,7 +49,7 @@ export function giftForCommand(w,p,cmd,text,now,c){
   c.emit(w,p,t?`Đang tặng hộ ${t.name} #${t.socialCode||''} • gõ tang thoi để thôi`:'Gõ tang kèm tên hoặc mã người đang ở LIVE • quà sự kiện skin, linh thú sẽ về người đó','status',now);
   return {ok:true};
  }
- if(!end)return fail('Tặng hộ chỉ dùng khi sự kiện skin hoặc Linh Thú Cốc đang mở.');
+ if(!end)return fail('Tặng hộ chỉ dùng khi sự kiện skin, Linh Thú Cốc hoặc Lôi Đài đang mở.');
  const matches=findPresent(w,query,now,c.active);
  if(matches.some(x=>x.id===p.id)&&matches.length===1)return fail('Không thể tự tặng hộ chính mình.');
  const others=matches.filter(x=>x.id!==p.id);

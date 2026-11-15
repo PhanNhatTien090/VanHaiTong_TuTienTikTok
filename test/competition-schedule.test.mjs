@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import {createWorld,tickCompetitionSchedule,tick,startNextCompetition} from '../engine.mjs';
 const N=1800000000000,M=15*60000;
 const world=()=>{const w=createWorld('live');w.settings.scheduledCompetitions=true;return w;};
-// 15/11 (chủ game duyệt): lịch mới đua kiếm → Lôi Đài → đua kiếm → Luận Kiếm.
-test('race, arena, race, tournament repeat every fifteen minutes and persist over reload',()=>{
+// 15/11 chiều (chủ game): bỏ Tỷ Thí — lịch đua kiếm → Lôi Đài lặp lại.
+test('race and arena alternate every fifteen minutes and persist over reload',()=>{
  let w=world();tickCompetitionSchedule(w,N);
  assert.equal(w.competitionSchedule.nextAt,N+M);
  tickCompetitionSchedule(w,N+M-1);assert.equal(w.race,undefined);
- for(const [i,kind] of ['race','arena','race','tournament','race','arena','race','tournament'].entries()){
+ for(const [i,kind] of ['race','arena','race','arena','race','arena'].entries()){
   tickCompetitionSchedule(w,N+(i+1)*M);
   assert.equal(w.competitionSchedule.lastKind,kind);
   assert.equal(w[kind].phase,kind==='arena'?'open':'registration');

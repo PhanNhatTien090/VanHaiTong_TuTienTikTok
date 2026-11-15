@@ -21,7 +21,7 @@ export function infoPages(state={}){
  pages.push({id:'pill',title:'⚗ ĐAN DƯỢC · LINH THẢO',note:'',rows:[['2 · hái','hái linh thảo làm nguyên liệu'],['4 · luyện đan','luyện viên tốt nhất đủ nguyên liệu'],['5 · dùng','uống đan, cộng tu vi'],...pills.map(p=>[p.name,cost(p)+(p.qi?' · +'+fmt(p.qi)+' tu vi':'')])]});
  pages.push({id:'gear',title:'⚔ PHÁP BẢO & TRANG BỊ',note:'',rows:[['trang bị','đeo món mạnh nhất đang có'],['trang bị + tên','đeo đúng món mình chọn'],['3 · đánh','pháp bảo tung chiêu, tăng tu vi'],['túi đồ','xem pháp bảo, đan, bí pháp đang có'],['hồi khí','tỷ thí: hồi linh lực, tối đa 3 lần']]});
  // 15/11: Vân Hải Lôi Đài (arena.mjs) — lệnh thật.
- pages.push({id:'arena',title:'⚔ VÂN HẢI LÔI ĐÀI',note:'Mở theo lịch thi đấu · thắng và giữ đài nhận huy chương',rows:[['chiêu','xem bộ 4 chiêu của mình'],['lên đài','làm Đài Chủ hoặc xếp hàng thách đấu'],['thách + tên','hẹn đấu riêng · người kia gõ nhận'],['c1 – c4','đấu thủ chọn chiêu kế tiếp'],['cv1 · cv2','cổ vũ bên trái / phải'],['xuống đài','Đài Chủ rời đài']]});
+ pages.push({id:'arena',title:'⚔ VÂN HẢI LÔI ĐÀI',note:'Mở theo lịch thi đấu · thắng và giữ đài nhận huy chương',rows:[['chiêu','xem bộ 5 chiêu của mình'],['bí pháp','xem 12 bí pháp chiêu thức'],['học + tên','học bí pháp · có chiêu mới'],['chiêu đổi + tên','đưa bí pháp vào SK2'],['lên đài','làm Đài Chủ hoặc xếp hàng'],['thách + tên','hẹn đấu · người kia gõ nhận'],['cv1 · cv2','cổ vũ trái / phải']]});
  return pages;
 }
 // → trang đang hiện hoặc null. Hiện ở 60 s đầu mỗi chu kỳ 4 phút; chu kỳ sau chuyển chủ đề.
