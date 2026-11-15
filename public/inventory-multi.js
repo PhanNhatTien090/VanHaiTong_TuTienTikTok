@@ -24,7 +24,7 @@ export function itemStats(i,category='artifact'){
  if(i.bonus>0)parts.push('+'+(Math.round(i.bonus*share*1000)/10).toLocaleString('vi-VN')+'% tu vi');
  return parts.length>1||i.on||i.secondary?parts.join(' · '):'';
 }
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',dao:'Đạo Thống',guild:'Bang hội'};
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',dao:'Đạo Thống',guild:'Bang hội',mentor:'Sư Đồ',bond:'Đạo Lữ'};
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
@@ -69,6 +69,17 @@ export function inventoryDeckHTML(e,esc){
   body=`<div class="vd-chips"><span>✦ ${pathLabel}</span><span>Cấp ${level||'—'} · ${score} Đạo Ngộ</span></div>`
     +(id?`<div style="display:flex;align-items:center;justify-content:center;gap:14px;min-height:110px"><img src="/assets/live2-paths/${id}.svg" width="104" height="104" alt="" decoding="async"><div style="font-size:18px;font-weight:700;color:#f9dda5">${esc(card.pathName)}<small style="display:block;font-size:13px;color:#cbd3e5;font-weight:500">${level<5?`Mốc tiếp: ${next} Đạo Ngộ`:'Đạo Ngộ Đại Thành'}<br>Hôm nay ${fmt(card.progress)} / ${fmt(card.maxDaily)}</small></div></div>`:`<div style="text-align:center;padding:10px"><b>CHỌN CON ĐƯỜNG TU</b><p style="font-size:14px">Gõ chọn đạo kiếm, ma, thể, thú hoặc đan từ Trúc Cơ.</p></div>`)
     +`<div style="text-align:center;padding:4px 12px 8px;font-size:13px;color:#d8cbad">${lines}</div>`;
+ }else if(kind==='mentor'||kind==='bond'){
+  const isMentor=kind==='mentor',icon=isMentor?'mentor':'bond';
+  const members=isMentor?[...(card.master?[{name:card.master,role:'Sư phụ'}]:[]),...(card.students||[]).slice(0,2).map(name=>({name,role:'Đệ tử'}))]:
+   (card.partners||[]).slice(0,6).map(x=>({...x,role:'Đạo lữ'}));
+  const summary=isMentor?(card.done?'Nhiệm vụ ngày hoàn tất':'Tu luyện / hái / đánh: '+Math.max(0,Math.min(3,Number(card.count)||0))+'/3'):'Gõ đồng tâm + tên khi đánh Boss hoặc leo Tháp';
+  body='<div class="vd-chips"><span>✦ '+(isMentor?'Sư Môn Truyền Thừa':'Song Tinh Đồng Tâm')+'</span></div>'
+   +'<div style="display:flex;gap:12px;min-height:115px;align-items:center">'
+   +'<img src="/assets/live2-paths/'+icon+'.svg" width="104" height="104" alt="" decoding="async">'
+   +'<div style="flex:1;font-size:14px;color:#f6e5bc;line-height:1.6">'
+   +(members.length?members.map(x=>'<div><b>'+esc(x.role)+':</b> '+esc(x.name||'Đạo hữu')+(x.code?' #'+esc(x.code):'')+'</div>').join(''):'Chưa có quan hệ')
+   +'</div></div><div style="font-size:12px;text-align:center;color:#d1dfef">'+esc(summary)+'</div>';
  }else if(kind==='guild'){
   const top=Array.isArray(card.top)?card.top.slice(0,5):null;
   const badge='<img src="/assets/live2-paths/guild.svg" width="90" height="90" alt="" decoding="async">';
