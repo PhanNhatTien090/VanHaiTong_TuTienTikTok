@@ -223,3 +223,7 @@ Nối vào: `ascension-art.js` (realm 13 = TIEN_DE_DURATION, realm 14+ dịch th
 - Bus khuếch đại ×1,45·k, compressor, makeup ×1,5, limiter −2 dB; k tăng 0,07 mỗi cảnh giới.
 - Thêm lớp chung: trống trận dồn tới lúc nổ, gió cuộn và trống lăn 2 s trước nổ, nổ trầm + xoảng, hợp âm kèn khi hiện thân.
 - RMS tăng khoảng 2,2–2,6 lần. Đo bằng `BOOST=<realm> node scripts/render-boost-audio.mjs ...`.
+
+## Thái Sơ Giới Chủ v2 (realm 25) "Vạn Lục Quy Đồ" · 15/11/2026
+
+Chủ game chê 4 cảnh cuối (25–28, renderer chung `late-awakening.js`) "còn xấu hơn cảnh giới đầu" và đã duyệt 4 ý tưởng: 25 lục địa + la bàn + Địa Long; 26 thời hà 3 dòng, ngưng thời gian, đảo ngược; 27 khung dệt thiên cơ, thoi sáng, lưới mệnh; 28 trời tách đôi, gương thế giới, trọng lực đảo, 3 thiên luật. Realm 25 xong: `public/thai-so-awakening.js` (52 s, nổ 45, đổi skin 45,35 — giữ mốc trong `late-ascension-data.js`), âm `scripts/thai-so-score.txt` → `node scripts/build-realm-audio.mjs thai-so`; nối ở `live-cinema.js` (target===25) và `audio.js` (REALM_CUES[25], duck). Realm 26–28 vẫn dùng `late-awakening.js` — làm từng cảnh theo mẫu này (file riêng + score riêng + test mật độ cú nhấn ≤2,6 s). Công cụ: `node scripts/qa-realm-seek.mjs <realm> <dir> 1,5,12` (Chrome ẩn, nhảy tới giây; preview `?capture=1` lộ `window.__scene`), `node scripts/sheet-jpg.mjs <dir> <out.jpg>`; âm: `MSYS_NO_PATHCONV=1 node scripts/render-ritual-audio.mjs out.wav /thai-so-audio.js scheduleThaiSoAudio 52 45 146.83`. Chưa được chủ game duyệt, chưa nghe bằng tai.
