@@ -18,6 +18,7 @@ export function stageConflict(w,now,{allowBond=false,allowHall=false,allowPet=fa
  if(w.tower?.endsAt>now&&!w.tower.closedAt)return 'Vân Hải Tháp';
  if(w.honorStageUntil>now)return 'đại điển vinh danh';
  if(['registration','running'].includes(w.tournament?.phase)||w.tournament?.podiumUntil>now)return 'tỷ thí';
+ if(w.arena?.phase==='open'||w.arena?.podiumUntil>now)return 'Lôi Đài';
  if(w.social?.activeCeremony?.endsAt>now)return 'lễ kết duyên';
  if(!w.lanternFestival?.closedAt&&w.lanternFestival?.endsAt>now)return 'Đêm Đèn Đồng Môn';
  return null;

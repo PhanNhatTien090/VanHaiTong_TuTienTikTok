@@ -62,7 +62,8 @@ import {syncMaze,mazeOn,drawMaze,drawMazeResult} from './maze.js';
 import {syncTease,teaseIds,drawTease} from './tease.js';
 import {syncBonk,bonkIds,applyBonkWalk,drawBonk} from './bonk.js?v=minor-overlay-20261114';
 import {syncAlchemy,alchemyTargets,drawAlchemy,drawAlchemyResult,drawAlchemySoot} from './alchemy.js';
-import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=v7-overdrive-premium-20261115';
+import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=loi-dai-20261115';
+import {arenaTargets as loiDaiTargets} from './arena-stage.js?v=loi-dai-20261115';
 import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';
@@ -578,12 +579,12 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       const jolt=boss?.impactAt?cameraImpulse(this,'major',Date.now()-boss.impactAt,boss.seed,boss.quality==='light'):null;
       const attack=this.effects.find(e=>e.effect==='attack'&&e.technique&&impactSeverity(e)>=2&&t-e.start-e.duration*.55>=0&&t-e.start-e.duration*.55<300);
       const hit=attack?cameraImpulse(this,impactSeverity(attack)>=3?'medium':'minor',t-attack.start-attack.duration*.55,attack.cinematicSeed,feedbackBudget(this)):null;
-      const duelJolt=this.duelImpact&&this.socialScene==='tournament'?scaleImpulse(cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37),DUEL_SHAKE_GAIN):null;
+      const duelJolt=this.duelImpact&&(this.socialScene==='tournament'||this.socialScene==='arena')?scaleImpulse(cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37),DUEL_SHAKE_GAIN):null;
       const chargeJolt=this.socialScene==='tournament'&&this.duelChargeAt?scaleImpulse(cameraImpulse(this,'minor',Date.now()-this.duelChargeAt,.27),DUEL_SHAKE_GAIN):null; /* V4: tỷ thí — minor mỗi đòn công kích, medium lúc tuyệt kỹ */
-      const duelCap=this.socialScene==='tournament'?DUEL_SHAKE_CAP:10;
+      const duelCap=this.socialScene==='tournament'||this.socialScene==='arena'?DUEL_SHAKE_CAP:10;
       const baseJolt0=jolt?mixCameraImpulses(jolt,gift):gift,chargeMixed=chargeJolt?mixCameraImpulses(baseJolt0,chargeJolt,duelCap):baseJolt0,baseJolt=duelJolt?mixCameraImpulses(chargeMixed,duelJolt,duelCap):chargeMixed;
       const mixed=hit?mixCameraImpulses(baseJolt,hit,duelCap):baseJolt;
-      const duelAge=this.duelImpact?.ultimate&&this.socialScene==='tournament'?Date.now()-this.duelImpact.at:-1;
+      const duelAge=this.duelImpact?.ultimate&&(this.socialScene==='tournament'||this.socialScene==='arena')?Date.now()-this.duelImpact.at:-1;
       const zoom=duelAge>=0&&duelAge<285&&this.motion?.045*DUEL_SHAKE_GAIN*strength*Math.sin(Math.PI*duelAge/285):0;
       const centerZoom=zoom?{s:base.s+zoom,x:base.x-450*zoom,y:base.y-H*.5*zoom}:base;
       return boundedCameraJolt(centerZoom,mixed,H,!!(mixed.x||mixed.y||zoom),duelCap);
@@ -635,6 +636,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     const ordered=this.raceStatus?.active?socialActors:soloPlayer?[soloPlayer]:socialActors.length?socialActors:(this.orderedIds||[]).map(id=>this.playerIndex?.get(id)||this.players.find(p=>p.id===id)).filter(Boolean);
     this.floorY=this.courtyardY(H);this.targets=!solo&&!socialActors.length&&sectCourtVisible(this)?sectHallTargets(ordered.filter(p=>!this.sectElders?.some(e=>e.id===p.id)),H,this.sectHalls):this.compact?stableTargets(this.plazaSeats??=new Map(),ordered,H,p=>isFake(p),this.courtyardY(H),p=>courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES)):!solo&&!socialActors.length&&this.environment?.layout==='float'?floatingTargets(this,ordered,H,t):this.raceStatus?.active?raceTargets(this,ordered,H,t):!solo&&socialActors.length?socialTargets(this,ordered,H):this.layoutTargets(ordered,H);if(!solo&&!socialActors.length&&sectCourtVisible(this))this.targets=seatSectElders(this.targets,this.sectElders||[],H,this.sectHalls);if(soloPlayer&&solo.kind==='gift')this.targets=[{id:soloPlayer.id,player:soloPlayer,x:450,y:H*.65,scale:4.2,lift:0}];companionPlaces(this,this.targets,t,this.environment?.layout!=='sect'&&!solo&&!this.socialScene&&!this.raceStatus?.active);if(!this.compact&&!this.raceStatus?.active&&!socialActors.length&&this.environment?.layout!=='float')constrainGroundTargets(this.targets,projectedGround(this.environment,H,this.art));if(!this.compact&&!['sect','float'].includes(this.environment?.layout)&&!this.raceStatus?.active&&!solo&&!socialActors.length)mv.place(this.targets,t,H,this.floorY,this.motion);if(!this.raceStatus?.active&&!solo&&!socialActors.length){if(this.environment?.layout==='float')for(const a of this.targets){mv.pos.set(a.id,{x:a.x,y:a.y});mv.info.set(a.id,{player:a.player,scale:a.scale});}mv.drawLeaving(c,this,st.left,t);}
     if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.phase==='registration')this.targets=tournamentLobbyTargets(ordered,H);
+    if(this.socialScene==='arena'&&!solo)try{this.targets=loiDaiTargets(this,socialActors,(this.orderedIds||[]).map(id=>this.playerIndex?.get(id)).filter(Boolean),H);}catch(e){console.warn('[LoiDai]',e);} // 15/11: Lôi Đài — đấu thủ trên đài, khán giả ngồi thềm
     if(soloPlayer&&solo.kind==='black-gold')this.targets=[{id:soloPlayer.id,player:soloPlayer,x:450,y:H*.58,scale:Math.min(4.5,H*.003),lift:0}];
     if(this.warStatus?.active)this.targets=warTargets(this,ordered,H,t);
     if(this.alcStatus?.active)this.targets=alchemyTargets(this,ordered,H,t);

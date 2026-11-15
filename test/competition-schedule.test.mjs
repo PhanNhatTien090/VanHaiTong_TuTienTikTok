@@ -3,16 +3,17 @@ import assert from 'node:assert/strict';
 import {createWorld,tickCompetitionSchedule,tick,startNextCompetition} from '../engine.mjs';
 const N=1800000000000,M=15*60000;
 const world=()=>{const w=createWorld('live');w.settings.scheduledCompetitions=true;return w;};
-test('two races then one tournament repeat every fifteen minutes and persist over reload',()=>{
+// 15/11 (chủ game duyệt): lịch mới đua kiếm → Lôi Đài → đua kiếm → Luận Kiếm.
+test('race, arena, race, tournament repeat every fifteen minutes and persist over reload',()=>{
  let w=world();tickCompetitionSchedule(w,N);
  assert.equal(w.competitionSchedule.nextAt,N+M);
  tickCompetitionSchedule(w,N+M-1);assert.equal(w.race,undefined);
- for(const [i,kind] of ['race','race','tournament','race','race','tournament'].entries()){
+ for(const [i,kind] of ['race','arena','race','tournament','race','arena','race','tournament'].entries()){
   tickCompetitionSchedule(w,N+(i+1)*M);
   assert.equal(w.competitionSchedule.lastKind,kind);
-  assert.equal(w[kind].phase,'registration');
+  assert.equal(w[kind].phase,kind==='arena'?'open':'registration');
   if(kind==='race')assert.equal(w.race.repeat,false);
-  w[kind].phase='finished';w[kind].podiumUntil=0;
+  if(kind==='arena'){w.arena.phase='closed';w.arena.podiumUntil=0;}else{w[kind].phase='finished';w[kind].podiumUntil=0;}
   w=JSON.parse(JSON.stringify(w));
  }
  tickCompetitionSchedule(w,N+20*M);

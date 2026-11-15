@@ -12,6 +12,7 @@ import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
 import {startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent,currentParticipant} from './engine.mjs';
+import {startArenaEvent,stopArenaEvent} from './engine.mjs';
 import {petV2Configure} from './pet-v2.mjs';
 import {EventAnnouncementHistory,isEventAnnouncement} from './public/event-announcements.js';
 import {SCENES} from './public/world-rotation.js';
@@ -251,6 +252,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const patch={...(b.patch||{})};if(b.base&&typeof b.base==='object')for(const k of Object.keys(patch))if(Object.hasOwn(b.base,k)&&patch[k]===b.base[k])delete patch[k];/* 08/11: bỏ ô không đổi so với lúc mở form */const result=adminEditPlayer(worlds[mode],b.id,patch,Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/lantern-event'&&req.method==='POST'){const b=await body(req);const r=controlLanternEvent(worlds[mode],b.action,Date.now());if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/pet-v2-settings'&&req.method==='POST'){const settings=await body(req);const r=petV2Configure(worlds[mode],settings);if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
+     if(url.pathname==='/api/arena'&&req.method==='POST'){const b=await body(req);const now=Date.now();const r=b.action==='stop'?stopArenaEvent(worlds[mode],now):startArenaEvent(worlds[mode],now,Number(b.minutes)||8);if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
      if(url.pathname==='/api/pet-event'&&req.method==='POST'){const b=await body(req);const r=controlPetEvent(worlds[mode],b.action,Date.now(),b.minutes??5);if(r.ok){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/halls'&&req.method==='POST'){
       const result=editHall(worlds[mode],await body(req));
