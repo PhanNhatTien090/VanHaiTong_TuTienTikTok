@@ -1,4 +1,4 @@
-import {BGM_LIST,musicIndex} from './music-rotation.js?v=context-music-20261114';
+import {BGM_LIST,musicIndex} from './music-rotation.js?v=event-music-20261115';
 import {playBonkSound} from './bonk-audio.js';
 import {playWarSound} from './sect-war-audio.js';
 import {playAlchemySound} from './alchemy-audio.js';

@@ -53,3 +53,14 @@ Tự động: tỷ thí / Đường chiến / chính ma / yêu thú dùng nhóm 
 ## Cinematic VFX/SFX V2
 
 Các cue Hư Không, Long Phượng, Chính Đạo, Ma Đạo, cộng hưởng và ngọc được tổng hợp từ sóng và noise có seed trong `public/cinematic-sfx.js`. Cue mới là mã và âm tổng hợp nguyên bản, không sử dụng sample hay bản ghi bên ngoài. Bộ đệm mono 24 kHz được tạo khi mở AudioContext và dùng lại qua các lần phát. BGM và VieNeu tiếp tục phát qua phần tử media riêng.
+
+## Nhạc theo sự kiện — 15/11/2026
+
+15 bản Kevin MacLeod (incompetech.com), CC BY 4.0, tải từ incompetech.com/music/royalty-free/mp3-royaltyfree/, chuẩn hóa loudnorm -19 LUFS 128 kbps; bản dài hơn 4 phút cắt còn 4 phút có fade. Kho theo sự kiện ở `MOOD_POOLS` trong `public/music-rotation.js`; trong một sự kiện đổi bài mỗi 3 phút; sự kiện luôn dùng nhạc đúng ngữ cảnh kể cả khi trang quản lý đang giữ bài cố định.
+- Tỷ thí: `bgm-duel-heroic-age.mp3` Heroic Age · `bgm-duel-titans.mp3` Strength of the Titans · `bgm-duel-clash-defiant.mp3` Clash Defiant · `bgm-duel-achilles.mp3` Achilles
+- Đánh quái: `bgm-battle-volatile.mp3` Volatile Reaction · `bgm-battle-prelude-action.mp3` Prelude and Action · `bgm-battle-exhilarate.mp3` Exhilarate · `bgm-battle-undaunted.mp3` Undaunted
+- Chính Ma: `bgm-war-unholy-knight.mp3` Unholy Knight · `bgm-war-darkling.mp3` Darkling · `bgm-war-impact-prelude.mp3` Impact Prelude · `bgm-war-rites.mp3` Rites
+- Kết duyên: `bgm-bond-healing.mp3` Healing · `bgm-bond-dreamer.mp3` Dreamer · `bgm-bond-fairytale-waltz.mp3` Fairytale Waltz
+
+Thêm vào mô tả LIVE: **Music: Heroic Age, Strength of the Titans, Clash Defiant, Achilles, Volatile Reaction, Prelude and Action, Exhilarate, Undaunted, Unholy Knight, Darkling, Impact Prelude, Rites, Healing, Dreamer, Fairytale Waltz by Kevin MacLeod (incompetech.com). Licensed under Creative Commons: By Attribution 4.0 License https://creativecommons.org/licenses/by/4.0/ . Volume normalized.**
+Chưa nghe bằng tai trên LIVE; chọn bài theo tên/thể loại trong danh mục incompetech.

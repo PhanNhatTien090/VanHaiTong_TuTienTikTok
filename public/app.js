@@ -61,7 +61,7 @@ import {giftRules,giftRuleHTML} from './gift-rule-card.js?v=hall-war-20261114';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
 const cultivationAudio=new CultivationAudio();
-import {BGM_LIST,musicIndex,musicForState,musicChangesAt} from './music-rotation.js?v=context-music-20261114';
+import {BGM_LIST,musicIndex,musicForState,musicChangesAt} from './music-rotation.js?v=event-music-20261115';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').normalize('NFC').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
 // All scene previews use the same HUD flow as the broadcast.

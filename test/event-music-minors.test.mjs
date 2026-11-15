@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createWorld,ensurePlayer,action,startTournament,startBonk,controlPetEvent,startFlowerEvent,engageNow,snapshot} from '../engine.mjs';
 import {startTower} from '../tower.mjs';
 import {startMiniEvent,miniCommand,miniView} from '../mini-events.mjs';
-import {musicForState,applyMusicCommand} from '../public/music-rotation.js';
+import {musicForState,applyMusicCommand,MOOD_POOLS,EVENT_ROTATE_MS,BGM_LIST} from '../public/music-rotation.js';
 import {stageConflict} from '../stage-lock.mjs';
 const N=1800000000000;
 function setup(){const w=createWorld('live');Object.assign(w.settings,{autoEvents:false,residents:false});w.nextBossAt=N+1e9;ensurePlayer(w,'a','An',N);return w;}
@@ -26,11 +26,18 @@ test('three free minor games validate input, cap stars, hide seed and persist cl
  assert.equal(miniCommand(w,w.players.a,...cmd,N+2,c).duplicate,true);assert.equal(miniView(w,N+3).seed,undefined);
  if(type==='star'){for(let i=0;i<11;i++)assert.ok(miniCommand(w,{id:'p'+i,stones:0},'bat','sao',N+4,c).ok);assert.equal(miniCommand(w,{id:'last',stones:0},'bat','sao',N+5,c).ok,false);}}
 });
-test('music follows event mood, stays stable through small games and honors a manual choice',()=>{
- const base={serverNow:N,settings:{},environment:{id:'jade-garden'}};
+test('each event plays music of its own mood, rotates every 3 minutes, and overrides a fixed pick',()=>{
+ const T0=Math.floor(N/EVENT_ROTATE_MS)*EVENT_ROTATE_MS;
+ const base={serverNow:T0+1000,settings:{},environment:{id:'jade-garden'}};
  const duel={...base,socialScene:'tournament',socialStatus:{tournament:{id:'d1',phase:'running'}}};
- const a=musicForState(duel);assert.equal(a.mood,'duel');assert.ok([8,9,10].includes(a.index));assert.deepEqual(musicForState({...duel,serverNow:N+90000,engagement:{mini:{type:'star'}}}),a);
- const bond=musicForState({...base,socialScene:'bond',socialStatus:{ceremony:{id:'b1'}}});assert.equal(bond.mood,'bond');assert.ok([2,6,12].includes(bond.index));
- assert.equal(musicForState({...duel,settings:{music:applyMusicCommand(null,'12',N)}}).index,12);
- assert.equal(musicForState({...duel,settings:{music:applyMusicCommand(null,'auto',N)}}).mood,'duel');
+ const a=musicForState(duel);assert.equal(a.mood,'duel');assert.ok(MOOD_POOLS.duel.includes(a.index));
+ assert.deepEqual(musicForState({...duel,serverNow:T0+90000,engagement:{mini:{type:'star'}}}),a,'stable within the 3-minute slot');
+ const later=[1,2,3].map(k=>musicForState({...duel,serverNow:T0+1000+k*EVENT_ROTATE_MS}).index);assert.ok(later.some(i=>i!==a.index),'rotates to other songs');
+ assert.ok(later.every(i=>MOOD_POOLS.duel.includes(i)));
+ const bond=musicForState({...base,socialScene:'bond',socialStatus:{ceremony:{id:'b1'}}});assert.equal(bond.mood,'bond');assert.ok(MOOD_POOLS.bond.includes(bond.index));
+ const war=musicForState({...base,sectWar:{active:true,id:'w1'}});assert.equal(war.mood,'war');assert.ok(MOOD_POOLS.war.includes(war.index));
+ const boss=musicForState({...base,boss:{id:'b',hp:10}});assert.equal(boss.mood,'battle');assert.ok(MOOD_POOLS.battle.includes(boss.index));
+ assert.equal(musicForState({...duel,settings:{music:applyMusicCommand(null,'12',N)}}).mood,'duel','event overrides fixed pick');
+ assert.equal(musicForState({...base,settings:{music:applyMusicCommand(null,'12',N)}}).index,12,'fixed pick still holds outside events');
+ for(const p of Object.values(MOOD_POOLS))for(const i of p)assert.ok(BGM_LIST[i]);
 });
