@@ -47,6 +47,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js?v=context-music-20261114';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
+import {renderInfoSpotlight} from './info-spotlight.js?v=20261115';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=honor-legend-20261115';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-management';
@@ -386,6 +387,7 @@ applyResidents();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
 if(overlay)setInterval(()=>renderGearGuide(state,esc),1000);
+if(overlay)setInterval(()=>renderInfoSpotlight(state,esc),1000); // 15/11: bảng thông tin to góc dưới phải, 4 phút hiện 1 phút
 if(overlay){
   const tower=document.getElementById('towerStage');
   setInterval(()=>{if(state?.tower||!tower.hidden)renderTower(tower,state,scene,esc);},250);
