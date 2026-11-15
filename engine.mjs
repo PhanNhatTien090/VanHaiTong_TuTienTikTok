@@ -149,11 +149,16 @@ function withHallQi(amount,p,rate,commit=false){
   if(commit)p.hallQiRemainder=hundredths%100;
   return amount+Math.floor(hundredths/100);
 }
+// 15/11 (chủ game): 4 cảnh giới cuối lên quá nhanh → giảm tăng trưởng tu vi mọi nguồn từ realm 24.
+// Áp sau hạn mức ngày để chắc chắn giảm thật. Realm <24 giữ nguyên.
+export const LATE_GROWTH=Object.freeze({24:.5,25:.4,26:.3,27:.25,28:.25});
+export const lateGrowthMult=p=>LATE_GROWTH[Math.min(28,Math.floor(Number(p?.realm)||0))]??1;
 function creditQi(w,p,amount,now=Date.now(),source='free'){
   const unit=freeQiUnit(p);
   const credit=creditDailyPractice(w,p,amount,source,now,unit);
   // 07/11/2026: hạn mức ngày chạy ngầm — không báo cho người chơi (đọc thấy rất nản).
-  return credit.amount;
+  const mult=lateGrowthMult(p);
+  return mult<1?Math.floor(credit.amount*mult):credit.amount;
 }
 export const buffActive=(p,now=Date.now())=>p.buffUntil>now?p.buffMult:0;
 const practiceTag=()=>''; // 07/11/2026: ẩn giới hạn tu luyện
