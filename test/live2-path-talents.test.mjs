@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {live2TowerAffinity,live2BossAffinity,live2RecipeCost} from '../live2-path-talents.mjs';
+import {live2ExtraCommand} from '../live2-extensions.mjs';
 const p=(path,insight=40,props={})=>({live2:{path,insight},...props});
 test('all Dao Paths have bounded, tier-gated, distinct PvE talents',()=>{
  assert.equal(live2TowerAffinity(p('sword',15),{rule:{id:'sword'}},1000),1);
@@ -25,4 +26,20 @@ test('alchemy herb savings do not affect stones or source recipe',()=>{
  assert.deepEqual(live2RecipeCost(p('sword',140),recipe),{herbs:4,stones:25,herbsSaved:0});
  assert.deepEqual(live2RecipeCost(p('alchemy'),{herbs:1,stones:3}),{herbs:1,stones:3,herbsSaved:0});
  assert.equal(recipe.herbs,4);
+});
+
+test('real command deducts personalized alchemy recipe cost, and leaves legacy pills alone',()=>{
+ const now=1800000000000,p={id:'al',name:'Luyện Đan Sư',realm:5,stones:200,herbs:10,
+  pills:{'legacy-pill':4},live2:{path:'alchemy',insight:40,daily:{day:'',earned:0}}};
+ const w={mode:'live',settings:{live2Enabled:true},players:{al:p}},events=[];
+ const ctx={emit:(_w,_p,msg,effect,at,meta)=>events.push({msg,effect,meta})};
+ const s=live2ExtraCommand(w,p,['che','dan','ho','mach'],now,ctx);
+ assert.equal(s.ok,true);
+ assert.equal(p.stones,175);
+ assert.equal(p.herbs,7);
+ assert.equal(p.live2.elixirs.guard,1);
+ assert.equal(p.pills['legacy-pill'],4);
+ assert.equal(events.length,1);
+ const recipes=live2ExtraCommand(w,p,['dan','phuong'],now+1000,ctx);
+ assert.match(recipes.message,/ho mach \(3 thảo, 25 đá\)/);
 });
