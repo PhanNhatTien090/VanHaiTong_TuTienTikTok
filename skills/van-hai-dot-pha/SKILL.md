@@ -235,3 +235,7 @@ Chủ game chê 4 cảnh cuối (25–28, renderer chung `late-awakening.js`) "c
 ## Vô Cực Thiên Tổ v2 (realm 27) "Thiên Cơ Dệt Mệnh" · 15/11/2026
 
 `public/vo-cuc-awakening.js` (56 s, nổ 50, đổi skin 50,35), âm `scripts/vo-cuc-score.txt` → `node scripts/build-realm-audio.mjs vo-cuc`. Motif: hạt mệnh mọc sợi dọc, khung dệt 4 thanh, con thoi dệt 6 dải vải (vẽ source-over trên nền tối — dùng 'lighter' thì thành vạch trắng), kéo Thiên Kiếp Tiễn cắt 4 nhát, sợi đứt bung + quất, 8 mệnh tuyến thắt nút Bàn Trường, thiên võng mạng nhện, nút lớn giật 3 lần vào đan điền. Trong score phải dùng `T.` (import VC as T), không viết `VC.`. Realm 28 còn dùng `late-awakening.js`. Chưa được chủ game duyệt, chưa nghe bằng tai.
+
+## Hỗn Độn Vĩnh Hằng v2 (realm 28, cảnh giới cuối) "Khai Thiên Định Luật" · 15/11/2026
+
+`public/hon-don-awakening.js` (58 s, nổ 51,5, đổi skin 51,85), âm `scripts/hon-don-score.txt` → `node scripts/build-realm-audio.mjs hon-don`. Motif: chân trời nứt ngang, hỗn độn khí, 14 thiên kính chiếu thế giới (cắt từ ảnh nền các cảnh giới trước, KHÔNG phản chiếu nhân vật — khác Luyện Hư v2), đường hầm kính vô tận (sắp xa→gần, khung gần mờ dần), cả thế giới xoay 180° (nền phóng ×(1+|sin|·1,15) để không hở góc), kính vỡ, ∞ vô cực, tạc 3 chữ Sinh·Diệt·Hằng, NHÁT KHAI THIÊN chẻ đôi màn hình: chụp canvas TRƯỚC khi vẽ nhân vật rồi tách 2 nửa, vẽ nhân vật nguyên vẹn đè lên (nếu chụp sau thì chẻ luôn người). Tắt chẻ khi light/không chuyển động. Cả 4 cảnh 25–28 đã có renderer riêng; `late-awakening.js` không còn realm nào dùng. Chưa được chủ game duyệt, chưa nghe bằng tai.
