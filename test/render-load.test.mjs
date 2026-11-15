@@ -14,7 +14,7 @@ test('actor workload follows render candidates when viewers and players disagree
     budget.setAudience(planned);
     assert.equal(budget.audienceTier,actors===80?21:10);
   }
-  assert.equal(plannedActorCount({hallWar:{active:true,members:new Array(80)}},80),15);
+  assert.equal(plannedActorCount({hallWar:{active:true,members:new Array(200)}},80),80);
   assert.equal(plannedActorCount({maze:{active:true}},80),0);
   assert.equal(plannedActorCount({raceStatus:{active:true,racers:new Array(100)},raceStage:new Array(30)},80),12);
   assert.equal(plannedActorCount({socialStage:['a','b']},80),2);

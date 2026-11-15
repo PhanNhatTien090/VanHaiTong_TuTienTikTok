@@ -17,7 +17,7 @@ export const QUICK_BASE=[
 ];
 const FALLBACK={cmd:'goiy',say:'gợi ý',text:'hỏi việc nên làm'};
 export function eventQuick(w,now){
- if(['registration','running'].includes(w.hallWar?.phase))return {cmd:'duongchien',say:'đường chiến',name:'NGŨ ĐƯỜNG TRANH PHONG',text:'vào trận theo Đường, xuất chiêu trợ lực',endsAt:w.hallWar.phase==='registration'?w.hallWar.registrationEndsAt:w.hallWar.endsAt};
+ if(['registration','running'].includes(w.hallWar?.phase))return {cmd:'duongchien',say:'đường chiến',name:'NGŨ ĐƯỜNG GIAO LƯU',text:w.hallWar.phase==='running'?'lao lên ra chiêu':'vào trận theo Đường',endsAt:w.hallWar.phase==='registration'?w.hallWar.registrationEndsAt:w.hallWar.endsAt};
  if(towerOpen(w,now))return {cmd:'leothap',say:'leo tháp',name:'VÂN HẢI THÁP',text:'xếp lượt vào tháp',endsAt:w.tower.endsAt};
  const m=w.maze;
  if(m?.phase==='registration'&&now<m.registrationEndsAt)return {cmd:'mecung',say:'mê cung',name:'BÍ CẢNH MÊ CUNG',text:'ghi danh vào mê cung',endsAt:m.registrationEndsAt};

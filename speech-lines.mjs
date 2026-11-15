@@ -61,9 +61,10 @@ export function speechPlan(e){
   if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới đến Vân Hải Tông!`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
-  if(e.hallWarGift)return [say('trongtai',Who+' tiếp linh lực cho Đường mình! Chiêu thức giao lưu tỏa sáng, cùng đồng môn tích điểm so tài!')];
+  if(e.hallWarGift)return [say('trongtai',e.hallWarGift.struck?Who+' tung tuyệt chiêu! Đối thủ quanh đó trúng chiêu liền!':Who+' cuồng hóa! Ra chiêu mạnh hơn, chạy nhanh hơn!')];
+  if(e.hallWarStreak)return [say('trongtai',Who+' liên tiếp phá trận '+e.hallWarStreak+' đối thủ!')];
   if(e.hallWarStart)return [say('trongtai','Ngũ Đường Giao Lưu bắt đầu tập hợp! Gõ đường chiến hoặc số sáu để tham gia cùng đồng môn.')];
-  if(e.hallWarBattle)return [say('trongtai','Ngũ Đường khai hội! Cùng biểu diễn chiêu thức và tích điểm so tài. Gõ đường chiến hoặc số sáu để tiếp linh lực.')];
+  if(e.hallWarBattle)return [say('trongtai','Ngũ Đường khai hội! Tu sĩ tự tìm đối thủ gần nhất. Gõ số sáu để lao lên ra chiêu, giữ Chiến Đài để cộng điểm.')];
   if(e.hallWarEnd)return [say('trongtai',e.cancelled?'Buổi giao lưu đã khép lại. Điểm hoạt động đã được lưu.':'Ngũ Đường Giao Lưu đã hoàn tất! Chúc mừng các Đường, kết quả đã lưu vào bảng tuần.')];
   if(e.hallWarReward||e.hallWeeklyAward)return [say('tiennu',Who+' nhận phần thưởng giao lưu Ngũ Đường! Chúc mừng đồng môn!')];
   if(e.hallWarAction)return [say('trongtai',Who+' tham gia so tài cùng Đường mình!')];
