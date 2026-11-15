@@ -2,6 +2,7 @@
 // Existing guild/hall/bond/tower/currency schemas remain authoritative; this module never replaces them.
 import {stageConflict} from './stage-lock.mjs';
 import {relicDefinition} from './live2-relics.mjs';
+import {live2RecipeCost} from './live2-path-talents.mjs';
 import {live2Level,live2Path,LIVE2_DAILY_INSIGHT,live2Enabled,live2GuildCard} from './live2-systems.mjs';
 
 const fail=message=>({ok:false,message}),ok=(message,more={})=>({ok:true,message,...more});
@@ -106,7 +107,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
  const cmd=words[0],rest=words.slice(1).join(' '),s=p?.live2;
  if(!live2Enabled(w)||!eligible(p))return null;
  if(cmd==='dan'&&rest==='phuong'){
-  const names=Object.entries(WORDS).filter(([,v])=>(p.realm||0)>=v.level).map(([key,v])=>key+' ('+v.herbs+' thảo, '+v.stones+' đá)');
+  const names=Object.entries(WORDS).filter(([,v])=>(p.realm||0)>=v.level).map(([key,v])=>{const c=live2RecipeCost(p,v);return key+' ('+c.herbs+' thảo, '+c.stones+' đá)';});
   const msg='Đan phương: '+names.join(' • ')+' • gõ chế đan + tên';
   announce(w,p,msg,now,ctx,{live2Info:true});return ok(msg);
  }
@@ -115,9 +116,10 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   const recipe=getRecipe(rest.slice(4));
   if(!recipe)return fail('Đan phương: hộ mạch, chiến ý, thanh tâm.');
   if(p.realm<recipe.level)return fail('Cần đạt cảnh giới phù hợp để luyện '+recipe.name+'.');
-  if(p.stones<recipe.stones||p.herbs<recipe.herbs)return fail('Cần '+recipe.stones+' linh thạch và '+recipe.herbs+' linh thảo.');
+  const cost=live2RecipeCost(p,recipe);
+  if(p.stones<cost.stones||p.herbs<cost.herbs)return fail('Cần '+cost.stones+' linh thạch và '+cost.herbs+' linh thảo.');
   s.elixirs??={};if((s.elixirs[recipe.id]||0)>=30)return fail('Đã có 30 viên, sử dụng bớt trước khi chế thêm.');
-  p.stones-=recipe.stones;p.herbs-=recipe.herbs;
+  p.stones-=cost.stones;p.herbs-=cost.herbs;
   s.elixirs[recipe.id]=(s.elixirs[recipe.id]||0)+1;
   announce(w,p,'LUYỆN ĐAN THÀNH CÔNG • '+recipe.name,now,ctx,{live2Kind:'alchemyFx',daoBrew:true});
   return ok('Nhận '+recipe.name+' (tổng '+s.elixirs[recipe.id]+').');

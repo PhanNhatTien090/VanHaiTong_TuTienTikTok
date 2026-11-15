@@ -7,6 +7,7 @@ import {rebirthCommand} from './rebirth.mjs';
 import {live2Command,live2Insight,live2CombatBonus,live2PlayerView,live2Enabled,live2RecordAction} from './live2-systems.mjs';
 import {live2ExtraCommand,live2Tick,live2GuildWarView,live2ExtraBonus,live2MentorActivity} from './live2-extensions.mjs';
 import {live2BossOnHit,live2BossTick,live2BossView,live2BossEnabled} from './live2-boss.mjs';
+import {live2BossAffinity} from './live2-path-talents.mjs';
 import {live2TribulationBegin,live2TribulationCommand,live2TribulationView,live2TribulationTick,live2TribulationBonus} from './live2-tribulation.mjs';
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
@@ -608,7 +609,7 @@ function actionCore(w,input,now) {
     if(!w.boss||w.boss.endsAt<=now||w.boss.hp<=0)return fail('Chưa có yêu thú. Bí cảnh sẽ mở theo lịch.');
     const wait=cooldown(p,'attack',4000,now);if(wait)return fail(`Chiêu thức hồi sau ${wait}s.`);
     const encounter=encounterHit(w.boss,p.id,now);const phaseBonus=live2BossOnHit(w,p,now,emit);
-    const dmg=Math.min(w.boss.hp,Math.max(1,Math.round(power(p)*(encounter?.mult||1)*(live2Enabled(w)?Math.min(1.17,live2CombatBonus(p,now,'boss')*live2ExtraBonus(p,now,'boss')*live2TribulationBonus(p,now))*phaseBonus:1))));w.boss.hp-=dmg;p.contribution+=dmg;w.boss.participants[p.id]=true;w.boss.damage??={};w.boss.damage[p.id]=(w.boss.damage[p.id]||0)+dmg;
+    const dmg=Math.min(w.boss.hp,Math.max(1,Math.round(power(p)*(encounter?.mult||1)*(live2Enabled(w)?Math.min(1.17,live2CombatBonus(p,now,'boss')*live2ExtraBonus(p,now,'boss')*live2TribulationBonus(p,now)*live2BossAffinity(p,w.boss,now))*phaseBonus:1))));w.boss.hp-=dmg;p.contribution+=dmg;w.boss.participants[p.id]=true;w.boss.damage??={};w.boss.damage[p.id]=(w.boss.damage[p.id]||0)+dmg;
     const gearList=[p.equipped,...(p.equippedExtra||[])].filter(Boolean),gearNow=gearList.length>1?gearList[(p.attackSeq=(p.attackSeq||0)+1)%gearList.length]:p.equipped;const technique=attackTechnique(gearNow===p.equipped?p:{...p,equipped:gearNow});gain(w,p,3,1,0,now,'attack');emit(w,p,`${technique.name} • ${dmg} công lực${practiceTag(w,p,now)}`,'attack',now,{technique,target:{x:450,yRatio:.37},damage:dmg,encounterPhase:encounter?.id,damageMultiplier:encounter?.mult||1});
     if(w.boss.hp===0) {
       winBoss(w,now);
