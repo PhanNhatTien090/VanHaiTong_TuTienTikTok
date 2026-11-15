@@ -2,14 +2,19 @@
 // Luật thắng (chủ game duyệt "phương án B"): tu vi cao hơn → máu/công cao hơn rõ; chênh ≥30% tổng tu vi thì người mạnh thắng chắc;
 // sát nhau thì chiêu, linh thú, nộ khí (cổ vũ có trần) và quà của đấu thủ có thể lật kèo.
 import {stageConflict} from './stage-lock.mjs';
-import {arenaKit,ARENA_SLOT_RULES} from './public/arena-skills.js';
+import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
+// Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
+import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
+export let arenaBooksOf=p=>bookLoadout(p);
+let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
+export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
 
 export const ARENA_MS=8*60000,MATCH_MS=30000,INTRO_MS=2600,BREAK_MS=4500,RESULT_MS=3500,PODIUM_MS=12000;
 export const QUEUE_MAX=6,DEFEND_MAX=5,CHALLENGE_LIMIT=3,INVITE_MS=20000,CHEER_MS=5000,CHEER_RAGE=3,CHEER_CAP=30,LOCK_RATIO=1.3;
 const STREAK_BONUS=Object.freeze({3:2,5:3,8:5});
 const ok=(extra={})=>({ok:true,...extra}),fail=message=>({ok:false,message});
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const norm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();
 function hash(s){let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 // Số ngẫu nhiên tất định theo trận + lượt → cùng dữ liệu luôn ra cùng trận (dễ test, không phụ thuộc máy).
 function rand(m){let x=(hash(m.id)+Math.imul(++m.rngN,0x9e3779b1))>>>0;x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return (x%100000)/100000;}
@@ -58,10 +63,35 @@ function enqueue(w,p,now,c,vs=null){
 /** Lệnh chat. Trả null nếu không phải lệnh Lôi Đài. */
 export function arenaCommand(w,p,cmd,rest,now,c){
  const words=String(rest||'').split(' ').filter(Boolean);
- const chieu=cmd==='chieu'?Number(words[0]):/^c[1-4]$/.test(cmd)?Number(cmd[1]):0;
+ const chieu=cmd==='chieu'?Number(words[0]):/^c[1-5]$/.test(cmd)?Number(cmd[1]):0;
+ // ---- bí pháp chiêu thức ----
+ if(cmd==='biphap'&&!words.length){
+  if(now-(p.arenaBookListAt||0)<15000)return ok({cooldown:true});p.arenaBookListAt=now;
+  const learned=new Set(p.arenaBooks||[]),groups=[1,2,3,4,5].map(g=>BOOK_TIER_NAME[g]+': '+ARENA_BOOKS.filter(b=>b.grade===g).map(b=>(learned.has(b.id)?'✓':'')+b.name).join(', '));
+  c.emit(w,p,'Bí pháp chiêu thức • '+groups.join(' • ')+' • gõ học + tên','status',now,{arenaBooks:true});return ok({count:ARENA_BOOKS.length});
+ }
+ if(cmd==='hoc'&&words.length){
+  const q=norm(words.join(' '));
+  // Trùng tên bí pháp tu luyện cũ (CATALOG) → để lệnh học cũ xử lý.
+  if(manualNames.some(n=>n===q||n.startsWith(q)))return null;
+  const b=findBook(q);if(!b)return null;
+  p.arenaBooks??=[];if(p.arenaBooks.includes(b.id))return fail('Đã lĩnh ngộ '+b.name+'.');
+  if((Number(p.realm)||0)<b.realm)return fail(b.name+' cần cảnh giới cao hơn.');
+  if((p.tournamentMedals||0)<b.medals)return fail(b.name+' cần '+b.medals+' huy chương Lôi Đài (không bị trừ).');
+  if((p.stones||0)<b.stones||(p.herbs||0)<b.herbs)return fail(b.name+' cần '+b.stones.toLocaleString('vi-VN')+' linh thạch · '+b.herbs+' linh thảo.');
+  p.stones-=b.stones;p.herbs-=b.herbs;p.arenaBooks.push(b.id);
+  const slot=bookLoadout(p).findIndex(x=>x.id===b.id);
+  c.emit(w,p,'Lĩnh ngộ bí pháp '+BOOK_TIER_NAME[b.grade]+' cấp • '+b.name+(slot>=0?' • xếp vào SK'+(slot+2):''),'status',now,{arenaBookLearn:b.id});
+  return ok({learned:b.id});
+ }
+ if(cmd==='chieu'&&words[0]==='doi'){
+  const b=findBook(words.slice(1).join(' '));if(!b||!(p.arenaBooks||[]).includes(b.id))return fail('Chưa lĩnh ngộ bí pháp này.');
+  p.arenaLoadout=[b.id,...(p.arenaLoadout||[]).filter(id=>id!==b.id)].slice(0,2);
+  c.emit(w,p,'Xếp '+b.name+' vào SK2','status',now);return ok({loadout:p.arenaLoadout});
+ }
  if(cmd==='chieu'&&!words.length){
   if(now-(p.arenaKitAt||0)<15000)return ok({cooldown:true});p.arenaKitAt=now;
-  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined);
+  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
   c.emit(w,p,'Chiêu Lôi Đài (Lv'+kit[0].lv+') • '+kit.map(k=>'SK'+k.slot+' '+k.name).join(' · '),'status',now,{arenaKit:true});
   return ok({kit:kit.map(k=>k.name)});
  }
@@ -73,7 +103,7 @@ export function arenaCommand(w,p,cmd,rest,now,c){
  if(p.resident||p.puppet)return fail('NPC không lên Lôi Đài.');
  if(chieu){
   const m=a.current,f=m?.fighters?.[p.id];if(!f||now>=m.endsAt)return fail('Chỉ đấu thủ đang trên đài mới chọn chiêu.');
-  if(chieu<1||chieu>4)return fail('Chọn chiêu 1–4.');
+  if(chieu<1||chieu>5)return fail('Chọn chiêu 1–5.');
   f.pref=chieu;return ok({pref:chieu});
  }
  if(cmd==='cv1'||cmd==='cv2'){
@@ -126,11 +156,6 @@ function stepDown(w,now,c,why){
 }
 
 // ---------- trận đánh ----------
-function fighter(w,p,adv,c){
- const realm=Math.max(0,Number(p.realm)||0),maxHp=Math.round((60000+realm*9000)*(1+.04*adv));
- return {id:p.id,name:p.name,realm,totalQi:Number(p.totalQi)||0,maxHp,hp:maxHp,rage:0,shield:0,stunUntil:0,cd:{1:0,2:0,3:0,4:0},pref:0,ults:0,
-  atk:1+.07*adv,kit:arenaKit(p,c?.technique?(q=>c.technique(q)):undefined)};
-}
 function beginMatch(w,aId,bId,now,c,kind){
  const a=w.arena,pa=w.players[aId],pb=w.players[bId];
  const qa=Math.max(1,Number(pa.totalQi)||0),qb=Math.max(1,Number(pb.totalQi)||0),r=qa/qb;
@@ -144,53 +169,107 @@ function beginMatch(w,aId,bId,now,c,kind){
  c.emit(w,null,(kind==='throne'?'Lôi Đài: '+pb.name+' thách đấu Đài Chủ '+pa.name:'Lôi Đài: '+pa.name+' đấu '+pb.name)+(locked?' • chênh tu vi lớn':''),'tournament',now,{arenaMatch:true,pair:[aId,bId]});
  return m;
 }
+function fighter(w,p,adv,c){
+ const realm=Math.max(0,Number(p.realm)||0),maxHp=Math.round((60000+realm*9000)*(1+.04*adv));
+ const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
+ return {id:p.id,name:p.name,realm,totalQi:Number(p.totalQi)||0,maxHp,hp:maxHp,rage:0,shield:0,stunUntil:0,weakUntil:0,reflectUntil:0,dot:null,lastEl:null,
+  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit};
+}
 function pickSlot(m,f,foe,now){
- const ready=s=>s===4?f.rage>=100&&f.ults<2:now>=f.cd[s];
+ const U=ARENA_ULT_SLOT,P=ARENA_PET_SLOT,ready=s=>s===U?f.rage>=100&&f.ults<2:now>=f.cd[s];
  if(f.pref&&ready(f.pref)){const s=f.pref;f.pref=0;return s;}
- if(ready(4))return 4;
- const k3=f.kit[2];
- if(ready(3)&&(k3.role==='support'||k3.role==='defense')&&f.hp<f.maxHp*.5)return 3;
- if(ready(3)&&k3.role!=='support'&&k3.role!=='defense'&&rand(m)<.6)return 3;
+ if(ready(U))return U;
+ const pet=f.kit[P-1],guard=pet.role==='support'||pet.role==='defense';
+ if(ready(P)&&guard&&f.hp<f.maxHp*.5)return P;
+ if(ready(P)&&!guard&&rand(m)<.5)return P;
+ if(ready(3)&&rand(m)<.6)return 3;
  if(ready(2)&&rand(m)<.7)return 2;
- if(ready(3)&&rand(m)<.35)return 3;
+ if(ready(P)&&rand(m)<.3)return P;
  return 1;
 }
-function hit(m,by,to,pct,crit){
- const lv=by.kit[0].lv||1,raw=Math.round(to.maxHp*pct*by.atk*(1+.02*(lv-1))*(crit?1.5:1));
- let dmg=raw;
- // Chênh ≥30% tu vi: người yếu không hạ được người mạnh (giữ ≥10% máu).
- if(m.locked&&m.locked===to.id)dmg=Math.min(dmg,Math.max(0,to.hp+to.shield-Math.ceil(to.maxHp*.1)));
+// Chênh ≥30% tu vi: người yếu không hạ được người mạnh (giữ ≥10% máu) — áp cho mọi nguồn sát thương.
+const capLocked=(m,to,dmg)=>m.locked&&m.locked===to.id?Math.min(dmg,Math.max(0,to.hp+to.shield-Math.ceil(to.maxHp*.1))):dmg;
+function hit(m,by,to,pct,crit,at=0,mult=1){
+ const lv=by.kit[0].lv||1,weak=by.weakUntil>at?.8:1;
+ const dmg=capLocked(m,to,Math.round(to.maxHp*pct*by.atk*weak*mult*(1+.02*(lv-1))*(crit?1.5:1)));
  const absorbed=Math.min(to.shield,dmg);to.shield-=absorbed;to.hp=Math.max(0,to.hp-(dmg-absorbed));
  by.rage=Math.min(100,by.rage+14);to.rage=Math.min(100,to.rage+9);
- return {dmg,absorbed};
+ let reflect=0;
+ if(to.reflectUntil>at&&dmg>0){reflect=capLocked(m,by,Math.round(dmg*.25));by.hp=Math.max(0,by.hp-reflect);}
+ return {dmg,absorbed,reflect};
 }
+function applyEffect(m,f,foe,effect,at,entry,dmg){
+ if(effect==='burn'){foe.dot={by:f.id,next:at+900,until:at+3700,per:Math.round(foe.maxHp*.018)};entry.burn=true;}
+ else if(effect==='weaken'){foe.weakUntil=at+3000;entry.weaken=true;}
+ else if(effect==='knock'){m.next[foe.id]+=900;entry.knock=true;}
+ else if(effect==='break'){if(foe.shield>0){entry.broke=foe.shield;foe.shield=0;}}
+ else if(effect==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round((dmg||0)*.5));if(heal>0){f.hp+=heal;entry.heal=heal;}}
+ else if(effect==='reflect'){f.reflectUntil=at+3000;entry.reflectOn=true;}
+ else if(effect==='stun'){foe.stunUntil=at+1400;entry.stun=1400;}
+}
+const pushLog=(m,entry)=>{m.log.push(entry);if(m.log.length>16)m.log.splice(0,m.log.length-16);};
 function act(w,m,id,now){
  const f=m.fighters[id],foeId=id===m.a?m.b:m.a,foe=m.fighters[foeId],at=m.next[id];
  m.next[id]=at+1500+Math.round(rand(m)*600);
- if(f.stunUntil>at){m.log.push({n:++m.n,at,by:id,to:foeId,stunned:true});return;}
+ if(f.stunUntil>at){pushLog(m,{n:++m.n,at,by:id,to:foeId,stunned:true});return;}
  const slot=pickSlot(m,f,foe,at),skill=f.kit[slot-1],rule=ARENA_SLOT_RULES[slot];
- const pct=rule.min+(rule.max-rule.min)*rand(m),crit=slot===4||rand(m)<.16;
- const entry={n:++m.n,at,by:id,to:foeId,slot,skill:{name:skill.name,tech:skill.tech,color:skill.color,role:skill.role,pet:skill.pet||null},crit};
- if(slot===4){f.rage=0;f.ults++;}else if(rule.cd)f.cd[slot]=at+rule.cd;
- const role=slot===3?skill.role:'attack';
+ const pct=(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||rand(m)<.16;
+ const entry={n:++m.n,at,by:id,to:foeId,slot,tier:skill.tier||1,skill:{name:skill.name,tech:skill.tech,color:skill.color,role:skill.role,pet:skill.pet||null,hanh:skill.hanh,effect:skill.effect,art:skill.art||null},crit};
+ if(slot===ARENA_ULT_SLOT){f.rage=0;f.ults++;}else if(rule.cd)f.cd[slot]=at+rule.cd;
+ // Ngũ hành khắc chế ±5% + liên chiêu (2 đòn cùng hành liền nhau, không tính chiêu thường, +10%).
+ let mult=1;
+ if(hanhBeats(skill.hanh,foe.hanh)){mult*=1.05;entry.counter=true;}else if(hanhBeats(foe.hanh,skill.hanh)){mult*=.95;entry.resisted=true;}
+ if(f.lastEl&&f.lastEl===skill.hanh&&slot!==1){mult*=1.1;entry.combo=true;}
+ f.lastEl=skill.hanh;
+ const role=slot===ARENA_PET_SLOT?skill.role:'attack';
  if(role==='support'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.1*(1+.02*(skill.lv-1))));f.hp+=heal;entry.heal=heal;entry.target='self';}
- else if(role==='defense'){const sh=Math.round(f.maxHp*.14);f.shield+=sh;entry.shield=sh;entry.target='self';if(skill.pet){const r=hit(m,f,foe,pct*.5,false);entry.dmg=r.dmg;}}
- else{const r=hit(m,f,foe,role==='control'?pct*.6:role==='drain'?pct*.8:pct,crit);entry.dmg=r.dmg;entry.absorbed=r.absorbed||0;
-  if(role==='control'){foe.stunUntil=at+1400;entry.stun=1400;}
-  if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}}
- entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0;
- m.log.push(entry);if(m.log.length>14)m.log.splice(0,m.log.length-14);
+ else if(role==='defense'){const sh=Math.round(f.maxHp*.14);f.shield+=sh;entry.shield=sh;entry.target='self';if(skill.pet){const r=hit(m,f,foe,pct*.5,false,at,mult);entry.dmg=r.dmg;entry.reflect=r.reflect||0;}}
+ else{const r=hit(m,f,foe,role==='control'?pct*.6:role==='drain'?pct*.8:pct,crit,at,mult);entry.dmg=r.dmg;entry.absorbed=r.absorbed||0;entry.reflect=r.reflect||0;
+  if(role==='control')applyEffect(m,f,foe,'stun',at,entry,r.dmg);
+  if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}
+  if(skill.effect&&skill.effect!=='none')applyEffect(m,f,foe,skill.effect,at,entry,r.dmg);}
+ entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0||f.hp<=0;
+ pushLog(m,entry);
 }
-/** Quà của đấu thủ đang đánh: tăng nộ khí; từ 99 coin tung thêm "Pháp Bảo Bạo Phát". */
-export function arenaGift(w,p,value,now){
- const m=w.arena?.current;if(!arenaOpen(w,now)||!m||m.result||now<m.fightAt||now>=m.endsAt)return null;
- const f=m.fighters[p?.id];if(!f||!(value>0))return null;
- const foeId=p.id===m.a?m.b:m.a,foe=m.fighters[foeId];
- f.rage=Math.min(100,f.rage+Math.round(15+Math.log10(value+1)*20));
- if(value<99)return {rage:f.rage};
- const pct=Math.min(.3,.06+Math.log10(value)*.06),r=hit(m,f,foe,pct,true);
- const entry={n:++m.n,at:now,by:p.id,to:foeId,slot:0,gift:true,skill:{name:'Pháp Bảo Bạo Phát',tech:f.kit[3].tech,color:'#ffd27a',role:'gift'},crit:true,dmg:r.dmg,absorbed:r.absorbed,hpBy:f.hp,hpTo:foe.hp,ko:foe.hp<=0};
- m.log.push(entry);if(m.log.length>14)m.log.splice(0,m.log.length-14);
+// Độc/bỏng: trừ máu theo nhịp, là một mốc trong dòng thời gian như một đòn.
+function dotTick(m,id){
+ const f=m.fighters[id],d=f.dot,at=d.next;d.next+=900;if(d.next>d.until)f.dot=null;
+ const dmg=capLocked(m,f,d.per);f.hp=Math.max(0,f.hp-dmg);
+ pushLog(m,{n:++m.n,at,by:d.by,to:id,dot:true,dmg,hpTo:f.hp,hpBy:m.fighters[d.by].hp,ko:f.hp<=0,skill:{name:'Độc khí',tech:'soul',color:'#9dff7a'}});
+}
+function nextEvent(m){
+ let best=null;
+ for(const id of [m.a,m.b]){if(best==null||m.next[id]<best.at)best={at:m.next[id],id,kind:'act'};
+  const d=m.fighters[id].dot;if(d&&d.next<=d.until&&d.next<best.at)best={at:d.next,id,kind:'dot'};}
+ return best;
+}
+/** Quà trợ chiêu (15/11): quà của đấu thủ hoặc người xem tặng hộ đấu thủ. Bậc theo giá 1 món:
+ * 1–9 linh khí (+nộ) · 10–98 hồi máu · 99–498 triệu hồi thần thú · 499–1.999 pháp bảo bạo phát + khiên · ≥2.000 Thiên Giáng. */
+export const ARENA_GIFT_TIERS=Object.freeze([
+ {min:2000,trick:'heaven',label:'Thiên Giáng',tier:4},
+ {min:499,trick:'burst',label:'Pháp Bảo Bạo Phát',tier:3},
+ {min:99,trick:'summon',label:'Triệu Hồi Thần Thú',tier:3},
+ {min:10,trick:'heal',label:'Hồi Xuân Thuật',tier:2},
+ {min:1,trick:'qi',label:'Linh Khí Quán Đỉnh',tier:1}
+]);
+const HEAVEN=Object.freeze([{id:'axe',name:'Thiên Giáng · Khai Thiên Cự Phủ',tech:'thunder',art:'axe'},{id:'swords',name:'Thiên Giáng · Vạn Kiếm Quy Nhất',tech:'sword',art:'sword-rain'}]);
+export function arenaGift(w,p,coins,now,{from=null,count=1}={}){
+ const m=w.arena?.current;if(!arenaOpen(w,now)||!m||now<m.fightAt||now>=m.endsAt)return null;
+ const f=m.fighters[p?.id];const unit=Number(coins)||0;if(!f||!(unit>0))return null;
+ const foeId=p.id===m.a?m.b:m.a,foe=m.fighters[foeId],t=ARENA_GIFT_TIERS.find(x=>unit>=x.min),n=Math.max(1,Math.min(99,Number(count)||1));
+ const entry={n:++m.n,at:now,by:p.id,to:foeId,slot:0,gift:true,trick:t.trick,tier:t.tier,from:from&&from.id!==p.id?from.name:null,skill:{name:t.label,tech:f.kit[ARENA_ULT_SLOT-1].tech,color:'#ffd27a',role:'gift'}};
+ f.rage=Math.min(100,f.rage+Math.min(60,Math.round(10+Math.log10(unit*n+1)*15)));
+ if(t.trick==='qi'){entry.rage=f.rage;entry.target='self';}
+ else if(t.trick==='heal'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*Math.min(.12,.06+Math.log10(unit)*.03)));f.hp+=heal;entry.heal=heal;entry.target='self';}
+ else{
+  let pct=.12,crit=true;
+  if(t.trick==='summon'){pct=.10+Math.min(.04,Math.log10(unit/99+1)*.04);entry.skill.tech='flame';entry.skill.name='Triệu Hồi Hỏa Long';entry.skill.art='fire-dragon';}
+  if(t.trick==='burst'){pct=.17;const sh=Math.round(f.maxHp*.12);f.shield+=sh;entry.shield=sh;}
+  if(t.trick==='heaven'){pct=.28;const a=w.arena,pick=HEAVEN.find(h=>h.id!==a.lastHeaven)||HEAVEN[0];a.lastHeaven=pick.id;entry.heaven=pick.id;entry.skill.name=pick.name;entry.skill.tech=pick.tech;entry.skill.art=pick.art;}
+  const r=hit(m,f,foe,pct,crit,now);entry.dmg=r.dmg;entry.absorbed=r.absorbed;entry.reflect=r.reflect||0;entry.crit=true;
+ }
+ entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0;
+ pushLog(m,entry);
  return entry;
 }
 function finishMatch(w,now,c,{cancelled=false}={}){
@@ -219,9 +298,10 @@ export function tickArena(w,now,c){
  if(m){
   // Đấu thủ rời LIVE giữa trận → người còn lại thắng ngay.
   for(const id of [m.a,m.b])if(!present(w,id,now,c)&&now>=m.fightAt){m.fighters[id].hp=0;finishMatch(w,now,c);return;}
-  for(let guard=0;guard<40&&now>=m.fightAt;guard++){
-   const id=m.next[m.a]<=m.next[m.b]?m.a:m.b;if(m.next[id]>Math.min(now,m.endsAt))break;
-   act(w,m,id,now);if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0)break;
+  for(let guard=0;guard<60&&now>=m.fightAt;guard++){
+   const ev=nextEvent(m);if(!ev||ev.at>Math.min(now,m.endsAt))break;
+   if(ev.kind==='dot')dotTick(m,ev.id);else act(w,m,ev.id,now);
+   if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0)break;
   }
   if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0||now>=m.endsAt)finishMatch(w,now,c);
   return;
@@ -241,8 +321,8 @@ export function tickArena(w,now,c){
 export function arenaView(w,now){
  const a=w.arena;if(!a||!(a.phase==='open'||a.podiumUntil>now))return null;
  const name=id=>w.players[id]?.name||'';
- const m=a.current,fview=f=>({name:f.name,realm:f.realm,hp:f.hp,maxHp:f.maxHp,rage:f.rage,shield:f.shield,stunned:f.stunUntil>now,
-  cd:Object.fromEntries([1,2,3].map(s=>[s,Math.max(0,f.cd[s]-now)])),kit:f.kit.map(k=>({slot:k.slot,name:k.name,tech:k.tech,color:k.color,role:k.role,lv:k.lv,pet:k.pet||null}))});
+ const m=a.current,fview=f=>({name:f.name,realm:f.realm,hp:f.hp,maxHp:f.maxHp,rage:f.rage,shield:f.shield,stunned:f.stunUntil>now,weak:f.weakUntil>now,reflect:f.reflectUntil>now,poison:!!f.dot,hanh:f.hanh,
+  cd:Object.fromEntries([1,2,3,4].map(s=>[s,Math.max(0,f.cd[s]-now)])),kit:f.kit.map(k=>({slot:k.slot,name:k.name,tech:k.tech,color:k.color,role:k.role,lv:k.lv,pet:k.pet||null,tier:k.tier,effect:k.effect,hanh:k.hanh,art:k.art||null}))});
  return {id:a.id,phase:a.phase,endsAt:a.endsAt,podiumUntil:a.podiumUntil||0,champion:a.champion?{id:a.champion,name:name(a.champion)}:null,
   streak:a.streak,defends:a.defends,defendMax:DEFEND_MAX,best:a.best,
   queue:a.queue.map(q=>({id:q.id,name:name(q.id),...(q.vs?{vs:q.vs,vsName:name(q.vs)}:{})})),

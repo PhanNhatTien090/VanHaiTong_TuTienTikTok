@@ -1,0 +1,93 @@
+{
+  "tool": "built-in image_gen",
+  "assets": [
+    {
+      "name": "axe",
+      "filename": "axe.png",
+      "width": 1024,
+      "height": 1536,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-9620fa0b-6c72-494b-9b66-20c55a55b1aa.png",
+      "prompt": "Use case: stylized-concept. Create ONE separate game VFX PNG named axe.png, 1024x1536 portrait. Polished 2.5D Chinese xianxia donghua game art, vivid luminous finish. Subject: a colossal ancient celestial battle axe, vertical, pointing blade-down; broad golden glowing blade edge engraved with ornamental cloud runes (pure abstract motifs, no writing), dark bronze haft wrapped by a carved dragon. Entire weapon fully visible centered with empty transparent margin on all sides, no cropping. Genuine transparent alpha background, isolated asset only, no backdrop, no floor, no checkerboard graphic. No text, letters, words, people or characters. Intricate bronze relief, elegant bevels and controlled golden glow. Output the single axe only."
+    },
+    {
+      "name": "sword-rain",
+      "filename": "sword-rain.png",
+      "width": 1024,
+      "height": 1536,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-a51365c3-4269-4569-8d25-f6dad5389e68.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1024x1536 portrait. A volley of about twelve glowing spirit swords, EVERY sword parallel vertical with its sharp blade tip pointing straight DOWN, staggered heights like falling rain. Long blue-white magical light trails extend UPWARD above the hilts. Crisp elegant silver-blue Chinese jian blades and cyan qi particles. Readable separate sword silhouettes, compact centered formation, trails end inside canvas."
+    },
+    {
+      "name": "tornado",
+      "filename": "tornado.png",
+      "width": 1024,
+      "height": 1536,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-cc05ce53-e142-42df-8b0e-8a0ca9b70e38.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1024x1536 portrait. A towering swirling cyan-white wind tornado, narrow twisting base widening to broad turbulent upper funnel. Beautiful layered spiral ribbons of translucent wind, a few green leaves carried around the vortex and glowing qi sparks. Isolated entire tornado suspended in empty transparency, no landscape, no ground or clouds filling background."
+    },
+    {
+      "name": "wave",
+      "filename": "wave.png",
+      "width": 1536,
+      "height": 1024,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-95e5d6af-fdc0-444c-8784-72eef3f30749.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1536x1024 landscape. A huge cresting ocean tidal wave curling toward the RIGHT, deep blue sculptural water with white foam and luminous turquoise edges. Dynamic isolated single curling wave mass, intricate spray and droplets, powerful volume. Entire wave silhouette and spray fully within transparent margins, no sea horizon, no surrounding ocean or beach."
+    },
+    {
+      "name": "poison",
+      "filename": "poison.png",
+      "width": 1536,
+      "height": 1024,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-87823cde-a5eb-4f3f-b63f-c49c6d2692f8.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1536x1024 landscape. A billowing toxic poison miasma cloud, sickly glowing acid green intertwined with rich purple vapor, faint skull-like wisps suggested by negative spaces within swirling smoke. Dense central voluminous rolling cloud, delicate translucent curling fringes, scattered toxic qi sparks. Entire isolated cloud inside transparent margins, no scenery. Skull hints abstract and subtle, no solid skull objects."
+    },
+    {
+      "name": "staff",
+      "filename": "staff.png",
+      "width": 1536,
+      "height": 1024,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-827b460a-1b06-4ec3-9e2a-78ab0015bd4c.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1536x1024 landscape. ONE long straight magic golden staff lying perfectly HORIZONTALLY across the canvas center, very THIN and LONG, slender cylindrical rod, width about 85% of canvas and shaft diameter about 2% of canvas height. Rich polished gold with delicate carved cloud relief and RED BANDS at BOTH ends, matching gold end caps. Bright controlled golden edge glow, elegant legendary Chinese xianxia weapon. Entire length inside empty transparency, no display base or supports."
+    },
+    {
+      "name": "fire-dragon",
+      "filename": "fire-dragon.png",
+      "width": 1024,
+      "height": 1024,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-e5d804db-5ec5-4a68-a7d4-e44a207a6620.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1024x1024 square. A coiling serpentine Chinese fire dragon MADE ENTIRELY OF FLAMES, twisting in a powerful elegant S-shaped coil, clear horned dragon head, whiskers and flowing mane of fire, long tapering tail. Incandescent gold-white core, vivid orange-red flame edges, ember sparks. Sculptural 2.5D fantasy VFX volume, no solid flesh, no wings. Entire dragon and flames fully within transparent margin. No people."
+    },
+    {
+      "name": "golden-avatar",
+      "filename": "golden-avatar.png",
+      "width": 1024,
+      "height": 1536,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-688a1a9e-9ad9-44a1-a68d-7420e34979fb.png",
+      "prompt": "Use case: stylized-concept. ONE separate isolated game VFX PNG. Polished 2.5D Chinese xianxia donghua art, vivid luminous colors, finely rendered volume and elegant motion. GENUINELY TRANSPARENT alpha background, no backdrop or floor, no checkerboard graphic, no black matte. Center the whole subject with at least 6% empty transparent margin on every edge, no clipping. No text, letters, words, people or human characters. 1024x1536 portrait. A giant TRANSLUCENT GOLDEN Buddha-like dharma guardian AVATAR SILHOUETTE: an abstract faceless luminous spiritual projection made entirely of golden light, a serene upright symmetrical form with simple flowing robe-shaped light contours and a circular halo behind its head. No human anatomy detail, no facial features, no actual person, only abstract divine energy silhouette. Powerful radiant silhouette with layered filaments and drifting gold qi sparks, translucent interior. Entire halo and silhouette inside empty margins, no scenery or pedestal."
+    },
+    {
+      "name": "banner-frame-gold",
+      "filename": "banner-frame-gold.png",
+      "width": 1536,
+      "height": 512,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-0848e9cd-3345-4a77-b100-c7914d06792d.png",
+      "prompt": "Use case: stylized-concept. ONE separate ornate Chinese xianxia donghua game UI banner FRAME BORDER ONLY. Exact PNG canvas 1536x512 pixels, horizontal aspect 3:1. A long thin rectangular border spanning the width with intricate sculpted ornaments concentrated at both ends, slim connecting top and bottom rails. Large whole middle opening FULLY EMPTY AND FULLY TRANSPARENT ALPHA: no panel, no fill, no haze, no glow crossing the center, no backing plate. Actual transparent background outside too. Entire frame contained within an empty transparent outer margin. Polished high-end 2.5D metal and gemstone rendering, subtle glints confined to border. Absolutely no text, letters, words, people or characters. Warm gold metal, carved DRAGON and CLOUD filigree at BOTH ends. Elegant symmetric long rectangular opening. Bright golden rim highlights; opulent yet clean game HUD ornament. No opaque golden banner panel: border ONLY."
+    },
+    {
+      "name": "banner-frame-jade",
+      "filename": "banner-frame-jade.png",
+      "width": 1536,
+      "height": 512,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-a7e2e67b-9df3-4259-a955-64086981885a.png",
+      "prompt": "Use case: stylized-concept. ONE separate ornate Chinese xianxia donghua game UI banner FRAME BORDER ONLY. Exact PNG canvas 1536x512 pixels, horizontal aspect 3:1. A long thin rectangular border spanning the width with intricate sculpted ornaments concentrated at both ends, slim connecting top and bottom rails. Large whole middle opening FULLY EMPTY AND FULLY TRANSPARENT ALPHA: no panel, no fill, no haze, no glow crossing the center, no backing plate. Actual transparent background outside too. Entire frame contained within an empty transparent outer margin. Polished high-end 2.5D metal and gemstone rendering, subtle glints confined to border. Absolutely no text, letters, words, people or characters. JADE GREEN and SILVER ornament. Translucent polished green jade curls and silver carved DRAGON and CLOUD filigree at BOTH ends. Elegant symmetric long rectangular opening. Green luminous accents kept on border only. No opaque green banner panel: border ONLY."
+    },
+    {
+      "name": "banner-frame-violet",
+      "filename": "banner-frame-violet.png",
+      "width": 1536,
+      "height": 512,
+      "source": "C:\\Users\\Admins\\.codex\\generated_images\\01a1de7a-cc64-7d32-9394-3354341465ae\\exec-8b08261c-1b3c-4593-9016-f476939c4571.png",
+      "prompt": "Use case: stylized-concept. ONE separate ornate Chinese xianxia donghua game UI banner FRAME BORDER ONLY. Exact PNG canvas 1536x512 pixels, horizontal aspect 3:1. A long thin rectangular border spanning the width with intricate sculpted ornaments concentrated at both ends, slim connecting top and bottom rails. Large whole middle opening FULLY EMPTY AND FULLY TRANSPARENT ALPHA: no panel, no fill, no haze, no glow crossing the center, no backing plate. Actual transparent background outside too. Entire frame contained within an empty transparent outer margin. Polished high-end 2.5D metal and gemstone rendering, subtle glints confined to border. Absolutely no text, letters, words, people or characters. VIOLET and DARK SILVER ornament with a LIGHTNING motif at BOTH ends. Refined dark silver beveled rails, purple crystal accents and sculptural sharp lightning curls, small violet arcs confined to end ornaments. Elegant long rectangular opening. No opaque violet banner panel: border ONLY."
+    }
+  ]
+}

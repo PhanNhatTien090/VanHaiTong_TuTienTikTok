@@ -20,7 +20,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
-import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen} from './arena.mjs';
+import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
 import {petV2Flags,petV2Configure,petV2Command,petV2View,petV2Cards,petV2Earn,petV2BossDamage,petV2CommitBossDamage,petV2Tick,petV2CovePhase} from './pet-v2.mjs';
 import {giftForCommand,giftForTarget,giftForEventEnd} from './gift-for.mjs';
 import {ALL_PETS} from './public/spirit-pets.js';
@@ -198,7 +198,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau'];
+const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau','biphap'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -634,13 +634,12 @@ function actionCore(w,input,now) {
     if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext,{unitCoins:input.coins});if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
     {const bk=!stageConflict(w,now)?bonkGift(w,p,input.coins*count,now):null;if(bk){giftEvent.bonkHammer=bk;giftEvent.text+=' • '+bk.text;}} // 10/11: Hội Gõ Đầu — quà = búa xịn
     recordEventGiftFx(w,p,giftEvent,now);
-    {const ar=arenaGift(w,p,input.coins*count,now);if(ar?.gift)giftEvent.arenaBurst=ar.dmg;}
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
     p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
     reconcilePatron(w,now);
     // 10/11: tặng hộ — tiến độ skin/linh thú về người nhận đang ở LIVE; coin, VIP, top vẫn của người tặng.
     const giftFor=input.simulated||input.autoRose||p.puppet||p.resident?null:giftForTarget(w,p,now,currentParticipant);
-    giftRecipient=giftFor?.target||null;const recipient=giftRecipient||p;
+    giftRecipient=giftFor?.target||null;const recipient=giftRecipient||p;{const ar=arenaGift(w,recipient,input.coins,now,{from:p,count});if(ar?.trick){giftEvent.arenaTrick=ar.trick;giftEvent.text+=' • '+ar.label;}} // 15/11: Lôi Đài — quà trợ chiêu (cả tặng hộ đấu thủ)
     if(giftRecipient){giftEvent.giftFor={to:recipient.id,toName:recipient.name};giftEvent.text+=' • tặng hộ '+recipient.name;}
     else if(giftFor?.missing&&giftForEventEnd(w,now)){giftEvent.giftForMissing=giftFor.name;giftEvent.text+=' • '+giftFor.name+' đã rời LIVE, quà tính cho '+p.name;}
     const hallGift=hallWarGift(w,p,input.coins*count,now,hallWarContext);if(hallGift)giftEvent.hallWarGift=hallGift;
@@ -901,9 +900,9 @@ export function tickCompetitionSchedule(w,now=Date.now(),{manual=false}={}){
  if(!w.settings?.scheduledCompetitions)return;
  const schedule=w.competitionSchedule??={nextAt:now+COMPETITION_INTERVAL_MS,intervalMs:COMPETITION_INTERVAL_MS};
  if(schedule.intervalMs!==COMPETITION_INTERVAL_MS){schedule.intervalMs=COMPETITION_INTERVAL_MS;schedule.nextAt=Math.max(schedule.nextAt||0,now+COMPETITION_INTERVAL_MS);}
- // 15/11: Vân Hải Lôi Đài vào lịch — đua kiếm, Lôi Đài, đua kiếm, Luận Kiếm (giải đấu thưa hơn).
- if(schedule.cycleVersion!==3){schedule.cycleVersion=3;schedule.cycleIndex=0;}
- const cycle=['race','arena','race','tournament'];
+ // 15/11 (chiều, chủ game): bỏ Tỷ Thí/Luận Kiếm khỏi lịch — chỉ còn đua kiếm và Vân Hải Lôi Đài.
+ if(schedule.cycleVersion!==4){schedule.cycleVersion=4;schedule.cycleIndex=0;}
+ const cycle=['race','arena','race','arena'];
  schedule.nextKind=cycle[schedule.cycleIndex%cycle.length];
  // Existing/manual races finish their current round instead of repeating forever.
  if(w.race)w.race.repeat=false;
@@ -1405,3 +1404,6 @@ export const stopBondFestival=(w,now=Date.now())=>endBondFestival(w,now,socialCo
 export function migrateDivineWardrobe(w){if(w.divineWardrobeVersion===1)return 0;const manual=new Set((w.adminLog||[]).filter(r=>r.changes?.some(s=>s.startsWith('mặc '))).map(r=>r.id));let n=0;for(const p of Object.values(w.players)){if(['azure-patron','crimson-phoenix','ivory-celestial'].includes(p.skinChoice)&&!manual.has(p.id)&&!['manual','admin'].includes(p.skinChoiceSource)){p.skinChoiceSource='gift';n++;}}w.divineWardrobeVersion=1;return n;}
 
 export function migrateSectMasters(w,now=Date.now()){return resetHistoricMasters(w);} // 07/11: không còn mở Tông chủ theo lịch sử
+
+// 15/11: Lôi Đài — "học <tên>" trùng bí pháp tu luyện cũ thì nhường lệnh học cũ.
+setArenaManualNames(CATALOG.filter(i=>i.type==='manual').map(i=>i.name));
