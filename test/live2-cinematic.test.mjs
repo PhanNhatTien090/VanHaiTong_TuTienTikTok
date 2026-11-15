@@ -28,3 +28,10 @@ test('screen FX ignores routine, invalid times and gifts',()=>{
  assert.equal(drawLive2ScreenFx(c,{daoUltimate:true},Number.NaN,0,1600),false);
  assert.equal(calls.save,0);
 });
+
+test('screen-wide cinematics may be suppressed without changing gameplay event flags',()=>{
+ const hit={daoUltimate:true,daoPath:'sword',live2CinematicSuppressed:true};
+ assert.equal(live2CinematicEligible(hit),false);
+ assert.equal(drawLive2ScreenFx({},hit,.5,1000),false);
+ assert.equal(hit.daoUltimate,true);
+});

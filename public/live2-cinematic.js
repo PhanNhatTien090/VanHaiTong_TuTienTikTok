@@ -8,7 +8,7 @@ const SHARDS=Object.freeze(Array.from({length:14},(_,i)=>{
 const RAYS=Object.freeze([-.92,-.63,-.37,-.14,.21,.52,.83]);
 const color=e=>e?.bossPhase?'#a0e2ff':e?.tribulationComplete?'#c5a9ff':e?.guildWarStart?'#f5cd86':
  ({sword:'#98e9ff',demon:'#d599ff',body:'#ffe8a0',beast:'#8cf0da',alchemy:'#ffbd85'})[e?.daoPath]||'#b8d8ff';
-export const live2CinematicEligible=e=>!!(e?.daoUltimate||e?.guildWarStart||e?.bossPhase==='seal-break'||e?.tribulationComplete);
+export const live2CinematicEligible=e=>!!e&&!e.live2CinematicSuppressed&&!!(e.daoUltimate||e.guildWarStart||e.bossPhase==='seal-break'||e.tribulationComplete);
 const clamp=n=>Math.max(0,Math.min(1,n));
 export function drawLive2ScreenFx(c,e,k,t,H=1600,{light=false,reducedFlash=false,motion=true}={}){
  if(!live2CinematicEligible(e)||!c||!Number.isFinite(k)||k<0||k>1)return false;
