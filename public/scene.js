@@ -22,6 +22,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareLive2Art,drawLive2Fx} from './live2-art.js';
 import {drawLive2ScreenFx,live2CinematicEligible} from './live2-cinematic.js';
+import {drawLive2BossStage} from './live2-boss-stage.js';
 import {drawDaoNameBadge} from './live2-badges.js';
 import {guildWarActorIds,guildWarTargets,drawGuildWarFloor,drawGuildWarClash} from './live2-guild-stage.js';
 import {live2CueForEvent} from './live2-cues.js';
@@ -674,7 +675,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     }
     // v49: yêu thú vẽ TRƯỚC hiệu ứng và nhân vật → nhân vật + chiêu thức đè lên quái.
     if(!solo&&!mazeOn(this))drawPetCove(this,c,t,H);
-    if(!solo&&this.boss){prepareAbyssArt(this);const by=this.boss.species==='abyss-dragon'?H*.32:arena?H*ARENA_BOSS_Y:H*.37,sprite=()=>{if(!drawBossSprite(c,this.boss,this.motion?Date.now():(this.boss.startedAt||0)+2000,450,by,this.bossSprites,this.celestialSprites,this.abyssArt,this.motion))drawThunderTiger(c,this.boss,Date.now(),450,by);};if(this.boss.sealing)drawBossSeal(this,c,this.boss,H,450,by,sprite);else sprite();}
+    if(!solo&&this.boss){prepareAbyssArt(this);const by=this.boss.species==='abyss-dragon'?H*.32:arena?H*ARENA_BOSS_Y:H*.37,sprite=()=>{if(!drawBossSprite(c,this.boss,this.motion?Date.now():(this.boss.startedAt||0)+2000,450,by,this.bossSprites,this.celestialSprites,this.abyssArt,this.motion))drawThunderTiger(c,this.boss,Date.now(),450,by);};if(this.boss.sealing)drawBossSeal(this,c,this.boss,H,450,by,sprite);else sprite();
+      if(!this.boss.sealing)drawLive2BossStage(c,this.boss,450,by,t,{light:this.budget?.level==='light'||this.minimalCrowd,motion:this.motion,reducedFlash:this.reduceFlash});}
     if(!solo&&!this.boss?.sealing)drawAbyssRetaliation(this,c,this.boss,this.motion?Date.now():(this.boss?.startedAt||0)+1000,H,'back');
     for(const e of this.effects)this.drawEffect(c,e,t,'back');
     // All wearable auras are behind ALL bodies, never interleaved with another player.
