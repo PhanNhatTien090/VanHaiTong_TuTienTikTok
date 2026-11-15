@@ -239,15 +239,35 @@ export function live2Command(w,p,words,now,ctx){
   if(!master||!real(master)||master.id===p.id||master.realm<p.realm+2||master.realm<4)return fail('Không tìm thấy sư phụ phù hợp (ít nhất Nguyên Anh, cao hơn đệ tử 2 cảnh giới).');
   if((m.students||[]).length>=2)return fail('Sư phụ đã nhận đủ 2 đệ tử.');
   if(master.lastActive<now-5*60000)return fail('Sư phụ cần đang hoạt động trên LIVE.');
-  m.mentorInvite={from:p.id,until:now+120000};announce(w,master,p.name+' xin bái sư • gõ nhận đồ để đồng ý',now,emit,{mentorInvite:true,live2Kind:'mentor'});
-  return ok('Đã gửi lời xin bái sư.');
+  if(now-(s.cooldowns.mentorRequest??-Infinity)<30000)return fail('Xin bái sư lại sau 30 giây.');
+  const waiting=(m.mentorInvites||[]).filter(inv=>inv.until>now&&real(w.players[inv.from])&&!w.players[inv.from].live2?.masterId);
+  if(waiting.some(inv=>inv.from===p.id))return fail('Lời xin bái sư đang chờ duyệt.');
+  if(waiting.length>=4)return fail('Sư phụ đang có 4 lời xin sư. Đợi duyệt bớt.');
+  const invite={from:p.id,until:now+120000};
+  m.mentorInvites=[...waiting,invite];m.mentorInvite=invite; // preserve old saved-invite compatibility
+  s.cooldowns.mentorRequest=now;
+  announce(w,master,p.name+' xin bái sư • gõ nhận đồ '+p.name+' để đồng ý',now,emit,{mentorInvite:true,live2Kind:'mentor'});
+  return ok('Đã gửi lời xin bái sư ('+m.mentorInvites.length+'/4 đang chờ).');
  }
- if(cmd==='nhan'&&rest==='do'){
-  const invite=s.mentorInvite,student=invite&&w.players[invite.from],ss=student&&ensure(student);
-  if(!invite||invite.until<=now||!real(student)||ss.masterId||(s.students||[]).length>=2)return fail('Không có lời xin bái sư hợp lệ.');
-  ss.masterId=p.id;s.students.push(student.id);delete s.mentorInvite;
+ if(cmd==='nhan'&&(rest==='do'||rest.startsWith('do '))){
+  const request=rest.slice(2).trim();
+  if(s.students.length>=2)return fail('Sư phụ đã nhận đủ hai đệ tử.');
+  const pending=(s.mentorInvites?.length?s.mentorInvites:s.mentorInvite?[s.mentorInvite]:[])
+   .filter(inv=>inv.until>now&&real(w.players[inv.from])&&!w.players[inv.from].live2?.masterId);
+  s.mentorInvites=pending;
+  if(!pending.length){delete s.mentorInvite;return fail('Không có lời xin bái sư hợp lệ.');}
+  const target=request?findPlayer(w,request):null;
+  if(request&&!target)return fail('Không tìm thấy duy nhất học trò đã xin bái sư. Hãy ghi đúng tên hoặc mã.');
+  const invite=request?pending.find(inv=>inv.from===target.id):pending[0];
+  const student=invite&&w.players[invite.from];
+  if(!student||student.id===p.id||p.realm<student.realm+2||p.realm<4||student.lastActive<now-5*60000)
+   return fail('Học trò hoặc sư phụ không còn đủ điều kiện bái sư.');
+  const ss=ensure(student);
+  ss.masterId=p.id;s.students.push(student.id);
+  s.mentorInvites=pending.filter(inv=>inv.from!==student.id);
+  s.mentorInvite=s.mentorInvites.at(-1)||null;
   announce(w,student,'BÁI SƯ THÀNH CÔNG • '+p.name,now,emit,{mentorJoined:true,live2Kind:'mentor',mentorId:p.id});
-  return ok('Đã nhận '+student.name+' làm đệ tử.');
+  return ok('Đã nhận '+student.name+' làm đệ tử. Còn '+s.mentorInvites.length+' lời xin.');
  }
  if(cmd==='truyen'&&rest==='dao'){
   const master=w.players[s.masterId],m=master&&ensure(master);
