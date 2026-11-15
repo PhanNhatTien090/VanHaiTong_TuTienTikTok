@@ -14,10 +14,11 @@ import {lateMusicDuck,scheduleLateAudio} from './late-ascension-audio.js';
 import {scheduleThaiSoAudio,thaiSoMusicDuck} from './thai-so-audio.js';
 import {DIVINE_TIMING} from './divine-timing.js';
 import {scheduleDaoToAudio,daoToMusicDuck} from './dao-to-audio.js';
+import {scheduleThanVuongAudio,thanVuongMusicDuck} from './than-vuong-audio.js';
 import {scheduleThanQuanAudio,thanQuanMusicDuck} from './than-quan-audio.js';
 import {scheduleThienTonAudio,thienTonMusicDuck} from './thien-ton-audio.js';
 // 15/11: realm 14–21 có âm riêng → bảng cue + hạ nhạc nền theo cảnh (thêm một dòng mỗi cảnh).
-const DIVINE_CUES={14:scheduleDaoToAudio,15:scheduleThienTonAudio,16:scheduleThanQuanAudio},DIVINE_DUCKS={14:daoToMusicDuck,15:thienTonMusicDuck,16:thanQuanMusicDuck};
+const DIVINE_CUES={14:scheduleDaoToAudio,15:scheduleThienTonAudio,16:scheduleThanQuanAudio,17:scheduleThanVuongAudio},DIVINE_DUCKS={14:daoToMusicDuck,15:thienTonMusicDuck,16:thanQuanMusicDuck,17:thanVuongMusicDuck};
 import {scheduleVinhKiepAudio,vinhKiepMusicDuck} from './vinh-kiep-audio.js';
 import {scheduleVoCucAudio,voCucMusicDuck} from './vo-cuc-audio.js';
 import {scheduleHonDonAudio,honDonMusicDuck} from './hon-don-audio.js';
