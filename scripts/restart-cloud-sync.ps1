@@ -74,6 +74,7 @@ try {
  Write-Host "Server ready, PID $($process.Id), cloud transfer secret loaded."
 } finally {
  if (Test-Path -LiteralPath $pauseFile) { Remove-Item -LiteralPath $pauseFile }
+ # 15/11: luôn bật lại watchdog, kể cả khi script dừng giữa chừng (trước đây lỗi bộ đệm quà để LIVE chạy không có watchdog).
+ # Watchdog inherits WEB_SYNC_SECRET from this process, so any automatic respawn keeps cloud transfers working.
+ powershell.exe -NoProfile -File (Join-Path $PSScriptRoot 'start-watchdog.ps1')
 }
-# Watchdog inherits WEB_SYNC_SECRET from this process, so any automatic respawn keeps cloud transfers working.
-powershell.exe -NoProfile -File (Join-Path $PSScriptRoot 'start-watchdog.ps1')
