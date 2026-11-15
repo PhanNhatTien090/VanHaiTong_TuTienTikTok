@@ -11,6 +11,7 @@ import {scheduleLuyenHuAudio,luyenHuMusicDuck} from './luyen-hu-audio.js';
 import {scheduleThaiAtAudio,thaiAtMusicDuck} from './thai-at-audio.js';
 import {scheduleDaiLaAudio,daiLaMusicDuck} from './dai-la-audio.js';
 import {lateMusicDuck,scheduleLateAudio} from './late-ascension-audio.js';
+import {scheduleThaiSoAudio,thaiSoMusicDuck} from './thai-so-audio.js';
 import {scheduleTienDeAudio,tienDeMusicDuck} from './tien-de-audio.js';import {scheduleMaThanAudio,maThanMusicDuck} from './ma-than-audio.js';import {scheduleThienMaAudio,thienMaMusicDuck} from './thien-ma-audio.js';import {scheduleDietTheAudio,dietTheMusicDuck} from './diet-the-audio.js';
 import {CinematicSfx} from './cinematic-sfx.js';
 import {prepareFeedbackAudio,playFeedbackAudio} from './feedback-audio.js';
@@ -49,7 +50,7 @@ export function ascensionImpactRatio(realm){
 const REALM_CUES={
   2:scheduleTrucCoAudio,3:scheduleKimDanAudio,4:scheduleNguyenAnhAudio,5:scheduleHoaThanAudio,
   6:scheduleLuyenHuAudio,7:scheduleDaiThuaAudio,8:scheduleChanTienAudio,9:scheduleHuyenTienAudio,
-  10:scheduleKimTienAudio,11:scheduleThaiAtAudio,12:scheduleDaiLaAudio,13:scheduleTienDeAudio,
+  10:scheduleKimTienAudio,11:scheduleThaiAtAudio,12:scheduleDaiLaAudio,13:scheduleTienDeAudio,25:scheduleThaiSoAudio,
   22:scheduleMaThanAudio,23:scheduleThienMaAudio,24:scheduleDietTheAudio
 };
 export const BGM_TRACKS=Object.freeze(BGM_LIST.map(t=>t.src));
@@ -148,7 +149,7 @@ export class CultivationAudio {
     if(!event||!this.enabled||this.ctx?.state!=='running'){
       if(this.qiSession){this.qiSession.audio.stop();this.qiSession=null;this.sync();}return;
     }
-    const realm=breakthroughRealm(event),duck=realm>=25?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
+    const realm=breakthroughRealm(event),duck=realm===25?thaiSoMusicDuck(elapsed):realm>=26?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
     this.qiSession?.audio.stop();
     this.qiSession={event,duck,audio:this.scheduleRitual(event,realm,elapsed)};this.sync();
@@ -164,7 +165,7 @@ export class CultivationAudio {
     const baseOut=appearance?.input||output, cues=[];
     if(base){
       const cue=realm>=14&&realm<=21?scheduleDivineCue(c,baseOut,seconds,duration,realm)
-        :realm>=25?scheduleLateAudio(c,baseOut,seconds,duration,realm)
+        :realm>=26?scheduleLateAudio(c,baseOut,seconds,duration,realm)
         :schedule===scheduleQiAudio?schedule(c,baseOut,seconds,duration,1,qiVariant(event).pitch)
         :schedule===scheduleTrucCoAudio?schedule(c,baseOut,seconds,duration,1,'mix',qiVariant(event).pitch)
         :schedule===scheduleKimDanAudio||schedule===scheduleNguyenAnhAudio?schedule(c,baseOut,seconds,duration)

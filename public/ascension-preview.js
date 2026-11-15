@@ -14,5 +14,6 @@ document.querySelector('#idle').onclick=()=>{audio.ritual(null);scene.effects=[]
 document.querySelector('#ritual').onclick=()=>{document.querySelector('#idle').click();const r=Number(select.value),e={id:'preview:'+Date.now(),user:p.id,name:p.name,effect:'breakthrough',fromRealm:r-1,toRealm:r,visualFrom:{...p,realm:r-1},visualTo:{...p,realm:r}};scene.noteEvent(e);scene.addEffect(e);};
 document.querySelector('#sound').onclick=async e=>{try{await audio.enable(!audio.enabled);e.target.textContent=audio.enabled?'Tắt âm thanh':'Bật âm thanh';}catch{e.target.textContent='Bấm để thử âm lại';}};
 if(params.get('capture')==='1')document.querySelector('.preview-tools').hidden=true;
+if(params.get('capture')==='1')window.__scene=scene; // QA: cho script chụp nhảy tới giây bất kỳ
 if(params.get('autoplay')==='1')setTimeout(()=>document.querySelector('#ritual').click(),1000);
 window.addEventListener('beforeunload',()=>audio.destroy());
