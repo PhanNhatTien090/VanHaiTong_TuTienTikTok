@@ -43,6 +43,9 @@ try{
  await pause(450);await shot('4-tuyet-chieu-99');
  await at(30000);await act({type:'gift',userId:users[2].id,name:users[2].name,giftName:'Hoa hồng',coins:1,count:1,eventId:'qa-g3-'+Date.now()});await pause(400);await shot('5-cuong-hoa');
  await all('duongchien');
+ await at(33000);await act({type:'gift',userId:users[6%count].id,name:users[6%count].name,giftName:'Finger Heart',coins:5,count:2,eventId:'qa-g5-'+Date.now()});await pause(800);await shot('5b-phi-kiem-10');
+ await at(37000);await act({type:'gift',userId:users[7%count].id,name:users[7%count].name,giftName:'Doughnut',coins:30,count:1,eventId:'qa-g6-'+Date.now()});await pause(650);await shot('5c-loi-kich-30');
+ await at(41000);await act({type:'gift',userId:users[8%count].id,name:users[8%count].name,giftName:'Finger Heart',coins:5,count:1,eventId:'qa-g7-'+Date.now()});await pause(800);await shot('5d-hoi-xuan-5');
  await at(45000);await act({type:'gift',userId:users[5%count].id,name:users[5%count].name,giftName:'Vương miện',coins:300,count:1,eventId:'qa-g4-'+Date.now()});await pause(900);await shot('6-dai-tuyet-chieu-2');
  await at(60000);await shot('7-phut-1');
  const perf=await send('Runtime.evaluate',{expression:'JSON.stringify({budget:window.scene?.budget?.level})',returnByValue:true}).catch(()=>null);console.log('perf',perf?.result?.value);

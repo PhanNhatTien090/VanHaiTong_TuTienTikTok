@@ -61,7 +61,7 @@ export function speechPlan(e){
   if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới đến Vân Hải Tông!`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
-  if(e.hallWarGift)return [say('trongtai',e.hallWarGift.struck?Who+' tung tuyệt chiêu! Đối thủ quanh đó trúng chiêu liền!':Who+' cuồng hóa! Ra chiêu mạnh hơn, chạy nhanh hơn!')];
+  if(e.hallWarGift)return [say('trongtai',Who+' trợ chiêu '+String(e.hallWarGift.name||'cuồng hóa').toLowerCase()+'!')];
   if(e.hallWarStreak)return [say('trongtai',Who+' liên tiếp phá trận '+e.hallWarStreak+' đối thủ!')];
   if(e.hallWarStart)return [say('trongtai','Ngũ Đường Giao Lưu bắt đầu tập hợp! Gõ đường chiến hoặc số sáu để tham gia cùng đồng môn.')];
   if(e.hallWarBattle)return [say('trongtai','Ngũ Đường khai hội! Tu sĩ tự tìm đối thủ gần nhất. Gõ số sáu để lao lên ra chiêu, giữ Chiến Đài để cộng điểm.')];

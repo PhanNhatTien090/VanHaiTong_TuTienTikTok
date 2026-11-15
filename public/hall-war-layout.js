@@ -23,11 +23,15 @@ export const HALL_SKILLS=[
  {id:'vine',name:'THẦN MỘC LINH TRIỀU',range:205,cd:2000,mult:.9,heal:5}
 ];
 export const skillOf=index=>HALL_SKILLS[((index%5)+5)%5];
-// Mốc quà trong trận (tổng coin một lần tặng).
+// Trợ chiêu theo quà (tổng coin một lần tặng): mỗi mốc một chiêu riêng. Mọi mốc đều kèm cuồng hóa.
 export const GIFT_TIERS=[
- {min:300,spread:10,radius:260,grand:true,label:'Đại tuyệt chiêu toàn cảnh'},
- {min:99,spread:6,radius:200,label:'Tuyệt chiêu lớn · lan 6 người'},
- {min:30,spread:3,radius:170,label:'Tuyệt chiêu · lan 3 người'},
- {min:1,spread:0,radius:0,label:'Cuồng hóa · mạnh và nhanh hơn'}
+ {min:300,id:'grand',name:'ĐẠI TUYỆT CHIÊU',spread:10,radius:260,grand:true,label:'đại tuyệt chiêu toàn cảnh, lan 10 người'},
+ {min:99,id:'ultimate',name:'TUYỆT CHIÊU ĐƯỜNG',spread:6,radius:200,label:'tuyệt chiêu của Đường, lan 6 người'},
+ {min:30,id:'thunder',name:'LÔI KÍCH CỬU THIÊN',spread:3,radius:170,label:'sét giáng trúng 3 người quanh mục tiêu'},
+ {min:10,id:'swords',name:'PHI KIẾM TRUY HỒN',swords:3,label:'3 phi kiếm đánh 3 đối thủ gần nhất'},
+ {min:5,id:'heal',name:'HỒI XUÂN ĐAN',heal:true,label:'hồi đầy máu + khiên 3 giây, đang nghỉ thì hồi sinh ngay'},
+ {min:1,id:'boost',name:'CUỒNG HÓA',label:'đánh mạnh, chạy nhanh hơn'}
 ];
+// Chữ ngắn cho bảng quà trên sân.
+export const GIFT_SHORT={grand:['Đại Tuyệt Chiêu','toàn cảnh · lan 10 người'],ultimate:['Tuyệt Chiêu Đường','chiêu Đường · lan 6 người'],thunder:['Lôi Kích Cửu Thiên','sét giáng · lan 3 người'],swords:['Phi Kiếm Truy Hồn','3 kiếm đánh 3 người'],heal:['Hồi Xuân Đan','hồi đầy máu + khiên'],boost:['Cuồng Hóa','đánh mạnh, chạy nhanh']};
 export const giftTier=value=>GIFT_TIERS.find(t=>value>=t.min)||null;

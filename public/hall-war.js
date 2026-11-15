@@ -2,7 +2,8 @@
 // vẽ avatar tròn (ảnh TikTok) + viền màu Đường + thanh máu, chiêu bay đúng từ người ra chiêu tới mục tiêu.
 // Hiệu năng: nền map + nhãn trại vẽ sẵn 1 lần; avatar/tên cache bitmap 2×; số chiêu/số bay giới hạn theo đông người.
 import {donorPortrait} from './gift-donor.js';
-import {MAP_IMAGE,MAP_Y0,MAP_DRAW_H,ALTAR,HALL_SKILLS,GIFT_TIERS} from './hall-war-layout.js';
+import {giftFor} from './gift-icons.js';
+import {MAP_IMAGE,MAP_Y0,MAP_DRAW_H,ALTAR,HALL_SKILLS,GIFT_TIERS,GIFT_SHORT} from './hall-war-layout.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=k=>1-(1-k)**3;
 const MARKS=['功','寶','丹','山','藥'],SOUNDS=['sword','bell','flame','thunder','lotus'];
 const GRAND_GAP=20000,FLIGHT=480,HIT=520;
@@ -12,7 +13,7 @@ const perf=()=>globalThis.performance?.now?.()??Date.now();
 const short=name=>{const s=String(name||'Đạo hữu').trim();return Array.from(s).length>12?Array.from(s).slice(0,11).join('')+'…':s;};
 const teamShort=name=>String(name||'').replace(/\s*Đường$/,'');
 // ---------- trạng thái cục bộ ----------
-function hw(scene){return scene.hallWarFx??={pos:new Map(),queue:[],seen:new Map(),floaters:[],sprites:new Map(),labels:new Map(),lastGrandAt:-1e9,lastVariant:-1,lastSound:0,bg:null,map:null};}
+function hw(scene){return scene.hallWarFx??={giftImages:new Map(),named:new Map(),pos:new Map(),queue:[],seen:new Map(),floaters:[],sprites:new Map(),labels:new Map(),lastGrandAt:-1e9,lastVariant:-1,lastSound:0,bg:null,map:null};}
 function loadMap(h){
  if(h.map||typeof Image==='undefined')return;const im=new Image();h.map={image:im,ready:false};im.decoding='async';im.onload=()=>{h.map.ready=true;h.bg=null;};im.src=MAP_IMAGE;
 }
@@ -22,7 +23,7 @@ export function syncHallWar(scene,state){
  scene.hallWarStatus=next;
  if(typeof document!=='undefined'){document.body.classList.toggle('hall-war',!!next?.active);document.body.classList.toggle('hall-war-podium',!!next?.active&&next.phase==='finished');}
  if(!next?.active)return;
- loadMap(h);
+ loadMap(h);h.giftArt=state.giftArt||h.giftArt;
  const members=next.members||[],ids=new Set();
  for(const m of members){
   ids.add(m.id);const p=h.pos.get(m.id),x=m.x??450,y=m.y??800;
@@ -39,10 +40,10 @@ export function syncHallWar(scene,state){
  const fresh=(next.fx||[]).filter(f=>!h.seen.has(f.id)&&f.kind!=='altar'&&(state.serverNow??scene.stateServerNow??Date.now())-f.at<2500);
  for(const f of next.fx||[])if(!h.seen.has(f.id))h.seen.set(f.id,t);
  if(h.seen.size>600)for(const [id,at] of h.seen)if(t-at>8000)h.seen.delete(id);
- const rank=f=>(f.grand?100:0)+(f.ultimate?50:0)+(f.manual?30:0)+(f.knockout?20:0)+(f.crit?10:0);
+ const rank=f=>(f.grand?100:0)+(f.assist?60:0)+(f.ultimate?50:0)+(f.manual?30:0)+(f.knockout?20:0)+(f.crit?10:0);
  fresh.sort((a,b)=>rank(b)-rank(a)||hash(a.id)-hash(b.id));
  for(const f of fresh.slice(0,budget)){
-  const instant=f.grand||f.ultimate||f.manual;
+  const instant=f.grand||f.ultimate||f.manual||f.assist;
   h.queue.push({fx:f,start:t+(instant?0:hash(f.id)%700),floated:false,variant:-1});
  }
  if(h.queue.length>48)h.queue.splice(0,h.queue.length-48);
@@ -129,7 +130,7 @@ function palm(c,x,y,s,color,alpha){
 }
 // Một chiêu thường/tuyệt chiêu: k 0→1 trên FLIGHT+HIT ms.
 function drawSpell(c,q,from,to,color,k,light){
- const f=q.fx,kind=((f.index%5)+5)%5,big=!!f.ultimate,split=FLIGHT/(FLIGHT+HIT);
+ const f=q.fx,kind=f.assist==='swords'?0:((f.index%5)+5)%5,big=!!f.ultimate,split=FLIGHT/(FLIGHT+HIT);
  const fly=clamp(k/split),hitK=clamp((k-split)/(1-split)),ang=Math.atan2(to.y-from.y,to.x-from.x);
  c.save();c.lineCap='round';
  if(k<split){
@@ -204,7 +205,7 @@ function drawTop(c,e,now,H){
  if(!registration&&!done){const k=clamp((now-e.battleStartedAt)/((e.endsAt-e.battleStartedAt)||180000));c.fillStyle='#ffffff22';c.fillRect(60,top+76,780,4);c.fillStyle='#8edbd1';c.fillRect(60,top+76,780*(1-k),4);}
 }
 function drawFeed(c,e,now,colorOf){
- let y=204;
+ let y=252;
  for(const f of (e.feed||[]).slice(-3).reverse()){
   const age=now-f.at;if(age>9000)continue;const a=Math.min(1,(9000-age)/800);
   c.save();c.globalAlpha=a;c.font='800 14px "Segoe UI",Arial,sans-serif';
@@ -217,7 +218,7 @@ function drawFeed(c,e,now,colorOf){
 }
 function drawBoard(c,e,colorOf){
  const rows=[...(e.members||[])].filter(m=>m.score>0).sort((a,b)=>b.kills-a.kills||b.score-a.score||a.id.localeCompare(b.id)).slice(0,6);if(!rows.length)return;
- const x=10,y=318,w=236,h=44+rows.length*25;
+ const x=8,y=234,w=236,h=44+rows.length*25;
  box(c,x,y,w,h,'#d8b45f','#0b0f18e6',10,2);text(c,'⚔ BẢNG CHIẾN THẦN',x+w/2,y+18,15,'#ffe3a0',w-12,900);
  c.font='700 13px "Segoe UI",Arial,sans-serif';c.textBaseline='middle';
  for(const [i,m] of rows.entries()){
@@ -225,6 +226,61 @@ function drawBoard(c,e,colorOf){
   c.fillStyle=colorOf(m.index);c.beginPath();c.arc(x+30,ry,5,0,TAU);c.fill();
   c.fillStyle='#fff';c.fillText(short(m.name),x+42,ry,120);c.textAlign='right';c.fillStyle='#ffe6a0';c.fillText('×'+m.kills+' ('+Math.round(m.score)+')',x+w-10,ry);
  }
+}
+// Dải lệnh ngay dưới bảng điểm (vùng trên màn, không bị khung chat TikTok che).
+function drawCommands(c,e){
+ const reg=e.phase==='registration',y=200;
+ box(c,40,y-16,820,34,'#e8cf91','#0b0f18ee',17,1.5);
+ c.save();c.font='800 15px "Segoe UI",Arial,sans-serif';c.textBaseline='middle';
+ const parts=reg?[['GÕ 6','#ffe08a'],[' hoặc ','#cfe3ea'],['đường chiến','#ffe08a'],[' → vào trận theo Đường của mình','#ffffff']]
+  :[['GÕ 6','#ffe08a'],[' lao lên ra chiêu  ·  ','#ffffff'],['đánh @tên','#ffe08a'],[' khóa mục tiêu  ·  ','#ffffff'],['giữ Chiến Đài','#ffe08a'],[' +10/giây','#ffffff']];
+ const total=parts.reduce((n,[s])=>n+c.measureText(s).width,0);let x=450-total/2;c.textAlign='left';c.lineJoin='round';
+ for(const [s,col] of parts){c.lineWidth=3;c.strokeStyle='#050a12';c.strokeText(s,x,y+1);c.fillStyle=col;c.fillText(s,x,y+1);x+=c.measureText(s).width;}
+ c.restore();
+}
+// Bảng QUÀ TRỢ CHIÊU bên phải: ảnh quà thật → tên chiêu (không ghi số coin).
+function giftImage(h,url){if(!url||typeof Image==='undefined')return null;let g=h.giftImages.get(url);if(!g){g={image:new Image(),ready:false};g.image.referrerPolicy='no-referrer';g.image.decoding='async';g.image.onload=()=>g.ready=true;g.image.src=url;h.giftImages.set(url,g);}return g.ready?g.image:null;}
+function drawGiftPanel(c,h){
+ const rows=[...GIFT_TIERS].reverse(),x=650,y=234,w=242,rh=42,hgt=38+rows.length*rh;
+ box(c,x,y,w,hgt,'#d8b45f','#0b0f18e6',10,2);text(c,'🎁 QUÀ TRỢ CHIÊU',x+w/2,y+19,15,'#ffe3a0',w-12,900);
+ for(const [i,tier] of rows.entries()){
+  const ry=y+38+i*rh+rh/2,g=giftFor(h.giftArt,tier.min),im=giftImage(h,g.url);
+  if(im)c.drawImage(im,x+8,ry-17,34,34);else{c.fillStyle='#ffd86b';c.beginPath();c.arc(x+25,ry,11,0,TAU);c.fill();}
+  if(g.count>1)text(c,'×'+g.count,x+50,ry+8,11,'#fff',30,800);
+  c.save();c.font='800 14px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=3;c.strokeStyle='#050a12';
+  const [label,note]=GIFT_SHORT[tier.id]||[tier.name,''];c.strokeText(label,x+64,ry-8,w-70);c.fillStyle=tier.grand?'#ffd56a':'#ffffff';c.fillText(label,x+64,ry-8,w-70);
+  c.font='700 11.5px "Segoe UI",Arial,sans-serif';c.lineWidth=2.5;c.strokeText(note,x+64,ry+9,w-70);c.fillStyle='#bfe3d6';c.fillText(note,x+64,ry+9,w-70);c.restore();
+ }
+}
+// Trợ chiêu lên chính mình: Hồi Xuân (vòng xanh bốc lên) / Cuồng Hóa (vòng lửa bung ra).
+function drawSelfAssist(c,kind,p,k,r,t){
+ c.save();c.globalAlpha=1-k;
+ if(kind==='heal'){
+  for(let i=0;i<3;i++){const s=clamp(k*1.4-i*.2);c.strokeStyle='#8dff9e';c.lineWidth=3;c.beginPath();c.ellipse(p.x,p.y+r-s*60,r+8+s*18,(r+8+s*18)*.35,0,0,TAU);c.stroke();}
+  for(let i=0;i<8;i++){const a=i*TAU/8+k*2;shard(c,4,p.x+Math.cos(a)*(r+10),p.y-k*70+Math.sin(a)*8,6,a,'#8dff9e');}
+  text(c,'+100',p.x,p.y-r-12-k*20,18,'#8dff9e',120);
+ }else{
+  const s=ease(k);c.strokeStyle='#ff9a3c';c.lineWidth=5;c.beginPath();c.arc(p.x,p.y,r+6+s*40,0,TAU);c.stroke();
+  for(let i=0;i<10;i++){const a=i*TAU/10;shard(c,2,p.x+Math.cos(a)*(r+s*46),p.y+Math.sin(a)*(r+s*46),7*(1-k)+2,a,'#ff9a3c');}
+ }
+ c.restore();
+}
+// Lôi Kích Cửu Thiên: sét giáng từ trời xuống mục tiêu, nhánh sét sang những người bị lan.
+function bolt(c,x1,y1,x2,y2,seed,width){
+ c.beginPath();c.moveTo(x1,y1);const n=9;
+ for(let i=1;i<n;i++){const s=i/n,j=((hash(seed+':'+i)%100)/100-.5)*46;c.lineTo(x1+(x2-x1)*s+j,y1+(y2-y1)*s);}
+ c.lineTo(x2,y2);c.strokeStyle='#d9c4ff';c.lineWidth=width;c.stroke();c.strokeStyle='#ffffff';c.lineWidth=width/3;c.stroke();
+}
+function drawThunder(c,q,from,to,places,k,light){
+ const f=q.fx,flick=k<.55&&(Math.floor(k*30)%3!==0);c.save();c.lineCap='round';c.lineJoin='round';
+ if(k<.12){c.globalAlpha=k/.12;sigil(c,to.x,to.y,40,'#c9a8ff','',0,.5);}
+ else{
+  c.globalAlpha=k<.6?1:1-(k-.6)/.4;
+  if(flick||light)bolt(c,to.x+20,to.y-420,to.x,to.y,f.id,8);
+  for(const hit of f.hits||[]){const p=places.get(hit.id);if(p&&(flick||light))bolt(c,to.x,to.y,p.x,p.y,f.id+hit.id,4);}
+  const s=ease(clamp((k-.12)/.5));c.strokeStyle='#c9a8ff';c.lineWidth=4;c.beginPath();c.ellipse(to.x,to.y+4,20+90*s,(20+90*s)*.45,0,0,TAU);c.stroke();
+ }
+ c.restore();
 }
 function drawGuide(c,e,H){
  const y=1528,done=e.phase==='finished',reg=e.phase==='registration';
@@ -285,16 +341,19 @@ export function drawHallWar(scene,c,t,H){
   }
   // Chiêu.
   const grandFull=[];
-  h.queue=h.queue.filter(q=>t-q.start<(q.fx.grand?2600:FLIGHT+HIT+200));
+  h.queue=h.queue.filter(q=>t-q.start<(q.fx.grand?2600:q.fx.kind==='assist'?1300:FLIGHT+HIT+200));
   for(const q of h.queue){
-   const dur=q.fx.grand?2400:FLIGHT+HIT,k=(t-q.start)/dur;if(k<0)continue;
+   const dur=q.fx.grand?2400:q.fx.kind==='assist'?1200:FLIGHT+HIT,k=(t-q.start)/dur;if(k<0)continue;
    const from=places.get(q.fx.from)||{x:q.fx.x1,y:q.fx.y1},to=places.get(q.fx.to)||{x:q.fx.x2,y:q.fx.y2},color=colorOf(q.fx.index);
-   if(q.fx.grand){
+   if(q.fx.assist&&!h.named.has(q.fx.from+':'+q.fx.at)&&k>=0){h.named.set(q.fx.from+':'+q.fx.at,t);if(h.named.size>60)h.named.delete(h.named.keys().next().value);const tier=GIFT_TIERS.find(x=>x.id===q.fx.assist);if(tier){const by=places.get(q.fx.from);if(by)h.floaters.push({x:by.x,y:by.y-r-30,t0:t,dur:1600,text:tier.name,size:18,color:'#ffe08a',drift:0});}}
+   if(q.fx.kind==='assist'){const by=places.get(q.fx.from);if(by&&k<=1)drawSelfAssist(c,q.fx.assist,by,k,r,t);continue;}
+   if(q.fx.assist==='thunder'){drawThunder(c,q,from,to,places,clamp(k),light);if(!q.sounded){q.sounded=true;if(t-h.lastSound>220){scene.onCombatSound?.('impact','thunder');h.lastSound=t;}}}
+   else if(q.fx.grand){
     if(q.variant<0){q.full=t-h.lastGrandAt>=GRAND_GAP;if(q.full)h.lastGrandAt=t;let v=hash(q.fx.id)%3;if(v===h.lastVariant)v=(v+1)%3;q.variant=v;h.lastVariant=v;q.tx=to.x;q.ty=to.y;
      if(t-h.lastSound>220){scene.onCombatSound?.('impact',SOUNDS[q.fx.index%5]);h.lastSound=t;}}
     grandFull.push(q);
    }else{
-    drawSpell(c,q,from,to,color,moving?k:.75,light);
+    drawSpell(c,q,from,to,q.fx.assist==='swords'?'#ffd86b':color,moving?k:.75,light);
     if(!q.sounded&&k>=0){q.sounded=true;if(t-h.lastSound>220){scene.onCombatSound?.(q.fx.ultimate||q.fx.crit?'impact':'cast',SOUNDS[q.fx.index%5]);h.lastSound=t;}}
    }
    const impactK=q.fx.grand?.4:FLIGHT/(FLIGHT+HIT);
@@ -312,9 +371,8 @@ export function drawHallWar(scene,c,t,H){
   for(const f of h.floaters){const k=(t-f.t0)/f.dur;if(k<0)continue;c.save();c.globalAlpha=k<.7?1:1-(k-.7)/.3;const pop=k<.12?.7+k/.12*.45:1.15-Math.min(.15,(k-.12));text(c,f.text,f.x+f.drift*k,f.y-46*ease(k),f.size*pop,f.color,260,900);c.restore();}
  }
  drawTop(c,e,now,H);
- if(!done){drawFeed(c,e,now,colorOf);drawBoard(c,e,colorOf);}
+ if(!done){drawCommands(c,e);drawFeed(c,e,now,colorOf);drawBoard(c,e,colorOf);drawGiftPanel(c,h);}
  if(registration){box(c,250,760,400,112,'#e8cf91','#071725ed',14,2);text(c,'ĐỒNG MÔN ĐANG TẬP HỢP',450,786,21,'#ffe6a0',370);text(c,'Gõ 6 / đường chiến',450,818,26,'#fff');text(c,'Tự vào đúng Đường đã gia nhập',450,850,15,'#d3eced',370);}
  if(done)podium(c,e,H);
- drawGuide(c,e,H);
  return done?0:Math.min(n,60);
 }

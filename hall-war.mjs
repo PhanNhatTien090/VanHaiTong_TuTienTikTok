@@ -94,7 +94,7 @@ function cast(w,e,g,member,target,now,ctx,{manual=false,value=0}={}){
  target.lastHitIndex=member.index;target.lastHitBy=member.id;target.lastHitAt=now;
  if(combo&&(e.combo?.index!==member.index||now-e.combo.at>3000))e.combo={index:member.index,at:now};else if(combo)e.combo.at=now;
  const base=power(p)*DAMAGE_SCALE*skill.mult*(manual?1.5:1)*(member.boostUntil>now?1.5:1)*(crit?CRIT_MULT:1)*(combo?COMBO_MULT:1);
- const spread=tier?.spread||0,ultimate=spread>0;
+ const spread=tier?.spread||0,ultimate=spread>0||tier?.id==='swords';
  const victims=spread?[target,...around(g,target.x,target.y,tier.radius,member.index).filter(o=>o!==target&&open(o,now)).sort((a,b)=>Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y)).slice(0,spread)]:[target];
  const hits=[];
  for(const v of victims){
@@ -103,7 +103,7 @@ function cast(w,e,g,member,target,now,ctx,{manual=false,value=0}={}){
  }
  if(skill.heal){const allies=around(g,member.x,member.y,180,-1).filter(o=>o.index===member.index&&o.hp>0).sort((a,b)=>a.hp-b.hp);const ally=allies[0]||member;ally.hp=Math.min(100,ally.hp+skill.heal);}
  pushFx(e,{id:e.id+':'+seq,from:member.id,to:target.id,index:member.index,skill:skill.id,at:now,x1:member.x,y1:member.y,x2:target.x,y2:target.y,
-  damage:hits[0].damage,total:hits.reduce((n,h)=>n+h.damage,0),knockout:hits[0].knockout,crit:crit||undefined,combo:combo||undefined,ultimate:ultimate||undefined,grand:tier?.grand||undefined,value:value||undefined,manual:manual||undefined,
+  damage:hits[0].damage,total:hits.reduce((n,h)=>n+h.damage,0),knockout:hits[0].knockout,crit:crit||undefined,combo:combo||undefined,ultimate:tier?.id==='ultimate'||tier?.id==='grand'||undefined,grand:tier?.grand||undefined,assist:tier?.id,value:value||undefined,manual:manual||undefined,
   hits:hits.length>1?hits.slice(1):undefined});
  member.nextCastAt=now+skill.cd*(member.boostUntil>now?.7:1);
  ctx.contribute(w,p,now,'event');
@@ -153,18 +153,29 @@ export function hallWarCommand(w,p,words,now,ctx){
  }
  ctx.emit(w,p,(e.phase==='registration'?'Đã tập hợp cùng ':'Xuất chiêu vì ')+teamName,'hall-war',now,{hallWarAction:true});return {ok:true};
 }
+// Quà = trợ chiêu (xem GIFT_TIERS): cuồng hóa / hồi xuân / phi kiếm / lôi kích / tuyệt chiêu / đại tuyệt chiêu.
 export function hallWarGift(w,p,value,now,ctx){
  const e=w.hallWar;if(!['registration','running'].includes(e?.phase)||!enroll(w,p,now)||value<1)return null;
  const member=e.members[p.id],tier=giftTier(value);member.boostUntil=Math.max(member.boostUntil||0,now+Math.min(16000,4000+Math.sqrt(value)*500));
  let struck=false;
- if(e.phase==='running'&&member.hp>0&&tier.spread>0){
-  const g=aliveGrid(w,e,now,ctx),found=findTarget(e,g,member,now,40);
-  if(found){
+ if(e.phase==='running'){
+  if(tier.heal){
+   if(member.hp<=0){spawnAt(e,member,now);member.respawnAt=0;}
+   member.hp=100;member.shieldUntil=now+3000;struck=true;
+   pushFx(e,{id:e.id+':'+(e.seq++),kind:'assist',assist:'heal',from:member.id,to:member.id,index:member.index,at:now,x1:member.x,y1:member.y,x2:member.x,y2:member.y});
+  }else if(member.hp>0&&tier.swords){
+   const g=aliveGrid(w,e,now,ctx);
+   const targets=around(g,member.x,member.y,900,member.index).filter(o=>open(o,now)).sort((a,b)=>Math.hypot(a.x-member.x,a.y-member.y)-Math.hypot(b.x-member.x,b.y-member.y)||(a.id<b.id?-1:1)).slice(0,tier.swords);
+   for(const target of targets)struck=cast(w,e,g,member,target,now,ctx,{value})||struck;
+   if(targets[0])member.target=targets[0].id;
+  }else if(member.hp>0&&tier.spread>0){
+   const g=aliveGrid(w,e,now,ctx),found=findTarget(e,g,member,now,40);
    // Tuyệt chiêu từ quà bay thẳng tới mục tiêu, không phải chạy lại gần.
-   member.target=found.target.id;struck=cast(w,e,g,member,found.target,now,ctx,{value});
+   if(found){member.target=found.target.id;struck=cast(w,e,g,member,found.target,now,ctx,{value});}
   }
  }
- return {index:member.index,boostUntil:member.boostUntil,tier:tier.label,struck};
+ if(e.phase==='running'&&!struck&&member.hp>0)pushFx(e,{id:e.id+':'+(e.seq++),kind:'assist',assist:'boost',from:member.id,to:member.id,index:member.index,at:now,x1:member.x,y1:member.y,x2:member.x,y2:member.y});
+ return {index:member.index,boostUntil:member.boostUntil,tier:tier.label,assist:tier.id,name:tier.name,struck};
 }
 function finish(w,now,ctx){
  const e=w.hallWar;e.phase='finished';e.podiumUntil=now+PODIUM_MS;e.endsAt=now;

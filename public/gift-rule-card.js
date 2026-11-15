@@ -10,7 +10,7 @@ export const RACE_TRUONG_PER_COIN=30,WAR_TRUONG_PER_COIN=Math.round(3*.85*20);
 
 // → {kind,title,tone,rows:[[coins,text]],note} hoặc null (không hiện khi sự kiện đã có bảng quà riêng, vd. tiên nhân truyền đạo).
 export function giftRules(s,now=s?.serverNow||Date.now()){
- if(s?.hallWar?.active)return {kind:'hall-war',title:'NGŨ ĐƯỜNG GIAO LƯU',tone:'jade',rows:[[1,'cuồng hóa'],[30,'tuyệt chiêu lan 3'],[99,'tuyệt chiêu lan 6'],[300,'đại tuyệt chiêu']],note:'Gia nhập Đường trước · điểm trận cộng bảng tuần'};
+ if(s?.hallWar?.active)return {kind:'hall-war',title:'NGŨ ĐƯỜNG GIAO LƯU',tone:'jade',rows:[[1,'cuồng hóa'],[5,'hồi xuân đan'],[10,'phi kiếm truy hồn'],[30,'lôi kích cửu thiên'],[99,'tuyệt chiêu Đường'],[300,'đại tuyệt chiêu']],note:'Gia nhập Đường trước · điểm trận cộng bảng tuần'};
  if(!s)return null;
  const race=s.raceStatus,war=s.sectWar,alc=s.alchemy;
  if(race&&['registration','running'].includes(race.phase))return race.phase==='running'

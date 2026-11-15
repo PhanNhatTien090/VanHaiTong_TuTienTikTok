@@ -56,15 +56,21 @@ test('đánh @tên locks a named enemy even when someone else is nearer, and 6 d
  assert.ok(e.fx.some(f=>f.from==='a'&&f.to==='b'&&f.manual));
  assert.equal(hallWarCommand(w,w.players.a,['duongchien'],N+32000,ctx).ok,false);
 });
-test('gift tiers: small gifts only boost, 30+ spreads to 3, 300+ is a grand ultimate up to 10 targets',()=>{
- assert.equal(giftTier(10).spread,0);assert.equal(giftTier(30).spread,3);assert.equal(giftTier(99).spread,6);assert.equal(giftTier(300).grand,true);
+test('each gift tier grants its own assist skill: boost, heal, swords, thunder, hall ultimate, grand ultimate',()=>{
+ assert.deepEqual([1,4,5,9,10,29,30,98,99,299,300,5000].map(v=>giftTier(v).id),['boost','boost','heal','heal','swords','swords','thunder','thunder','ultimate','ultimate','grand','grand']);
  const list=[['a',0]];for(let i=0;i<14;i++)list.push(['e'+i,1+i%4]);
  const {w,ctx}=running(list),e=w.hallWar;
  Object.assign(e.members.a,{x:450,y:800});for(let i=0;i<14;i++)Object.assign(e.members['e'+i],{x:450+((i%5)-2)*30,y:900+Math.floor(i/5)*30,shieldUntil:0});
- const small=hallWarGift(w,w.players.a,10,N+30500,ctx);assert.equal(small.struck,false);assert.ok(e.members.a.boostUntil>N+30500);assert.equal(e.fx.length,0);
+ const small=hallWarGift(w,w.players.a,1,N+30400,ctx);assert.equal(small.assist,'boost');assert.ok(e.members.a.boostUntil>N+30400);assert.equal(e.fx.at(-1).assist,'boost');assert.equal(e.fx.at(-1).kind,'assist');
+ const swords=hallWarGift(w,w.players.a,10,N+30500,ctx);assert.equal(swords.struck,true);
+ const flying=e.fx.filter(f=>f.assist==='swords');assert.equal(flying.length,3);assert.equal(new Set(flying.map(f=>f.to)).size,3);
  const big=hallWarGift(w,w.players.a,300,N+30600,ctx);assert.equal(big.struck,true);
  const fx=e.fx.at(-1);assert.equal(fx.grand,true);assert.equal(1+(fx.hits?.length||0),11);
- const mid=hallWarGift(w,w.players.a,30,N+30700,ctx);assert.equal(mid.struck,true);assert.ok(1+(e.fx.at(-1).hits?.length||0)<=4);
+ const mid=hallWarGift(w,w.players.a,30,N+30700,ctx);assert.equal(mid.struck,true);assert.equal(e.fx.at(-1).assist,'thunder');assert.ok(1+(e.fx.at(-1).hits?.length||0)<=4);
+ // Hồi Xuân Đan: người đang nghỉ được hồi sinh ngay tại trại, đầy máu + khiên.
+ const down=e.members.e0;down.hp=0;down.respawnAt=N+40000;
+ const heal=hallWarGift(w,w.players.e0,5,N+30800,ctx);assert.equal(heal.assist,'heal');assert.equal(down.hp,100);assert.ok(down.shieldUntil>N+30800);
+ assert.equal(e.fx.at(-1).assist,'heal');
 });
 test('combo strikes from two hall-mates on the same target are flagged and crits appear',()=>{
  const {w,ctx}=running([['a',0],['a2',0],['b',1]]),e=w.hallWar;
