@@ -23,6 +23,18 @@ export const HALL_SKILLS=[
  {id:'vine',name:'THẦN MỘC LINH TRIỀU',range:205,cd:2000,mult:.9,heal:5}
 ];
 export const skillOf=index=>HALL_SKILLS[((index%5)+5)%5];
+// Chiêu đặc biệt mỗi Đường: tự tung ở mỗi lượt ra chiêu thứ 4 (SPECIAL_EVERY).
+export const SPECIAL_EVERY=4;
+export const HALL_SPECIALS=[
+ {id:'swordrain',name:'KIẾM VŨ LIÊN HOÀN',around:'target',radius:150,max:3,mult:.8},
+ {id:'goldbell',name:'KIM CHUNG TRÁO',around:'target',radius:0,max:1,mult:1,shield:2500},
+ {id:'blaze',name:'LIỆT DIỄM PHẦN THIÊN',around:'target',radius:130,max:3,mult:.75},
+ {id:'quake',name:'ĐỊA CHẤN SƠN HÀ',around:'self',radius:160,max:4,mult:.8},
+ {id:'bloom',name:'VẠN MỘC HỒI XUÂN',around:'target',radius:0,max:1,mult:.9,healAllies:15}
+];
+export const specialOf=index=>HALL_SPECIALS[((index%5)+5)%5];
+// Hào quang sau khi tặng quà (ms): mốc càng cao càng lâu; từ Phi Kiếm trở lên có cánh.
+export const AURA_MS={boost:6000,heal:6000,swords:10000,thunder:12000,ultimate:16000,grand:20000};
 // Trợ chiêu theo quà (tổng coin một lần tặng): mỗi mốc một chiêu riêng. Mọi mốc đều kèm cuồng hóa.
 export const GIFT_TIERS=[
  {min:300,id:'grand',name:'ĐẠI TUYỆT CHIÊU',spread:10,radius:260,grand:true,label:'đại tuyệt chiêu toàn cảnh, lan 10 người'},

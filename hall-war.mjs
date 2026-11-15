@@ -6,7 +6,7 @@
 // Vài trăm người: tìm mục tiêu bằng lưới ô 160 px (không O(n²)), fx giữ tối đa 96 mục.
 import {activeHalls} from './ngu-duong.mjs';
 import {stageConflict} from './stage-lock.mjs';
-import {campSpots,inAltar,skillOf,giftTier,ALTAR,BOUNDS} from './public/hall-war-layout.js';
+import {campSpots,inAltar,skillOf,specialOf,giftTier,ALTAR,BOUNDS,SPECIAL_EVERY,AURA_MS,GIFT_TIERS} from './public/hall-war-layout.js';
 export {campSpots,skillOf};
 export const REGISTER_MS=30000,BATTLE_MS=180000,PODIUM_MS=14000;
 export const RESPAWN_MS=5000,LOCK_MS=10000,MANUAL_CD=3500,CRIT_RATE=15,CRIT_MULT=1.8,COMBO_MS=1500,COMBO_MULT=1.25;
@@ -109,6 +109,22 @@ function cast(w,e,g,member,target,now,ctx,{manual=false,value=0}={}){
  ctx.contribute(w,p,now,'event');
  return true;
 }
+// Chiêu đặc biệt của Đường (mỗi lượt ra chiêu thứ 4): đánh lan / khiên / hồi máu đồng môn.
+function castSpecial(w,e,g,member,target,now,ctx){
+ const p=w.players[member.id],sp=specialOf(member.index),seq=e.seq++;
+ const base=power(p)*DAMAGE_SCALE*sp.mult*(member.boostUntil>now?1.5:1);
+ const cx=sp.around==='self'?member.x:target.x,cy=sp.around==='self'?member.y:target.y;
+ const pool=sp.radius?around(g,cx,cy,sp.radius,member.index).filter(o=>open(o,now)).sort((a,b)=>Math.hypot(a.x-cx,a.y-cy)-Math.hypot(b.x-cx,b.y-cy)||(a.id<b.id?-1:1)):[];
+ const victims=sp.around==='self'?pool.slice(0,sp.max):[target,...pool.filter(o=>o!==target)].slice(0,sp.max);
+ if(!victims.length)return false;
+ const hits=victims.map(v=>{const actual=hit(w,e,member,v,Math.min(95,base*(v===target?1:.85)),now,ctx);return {id:v.id,damage:actual,knockout:v.hp<=0};});
+ if(sp.shield)member.shieldUntil=Math.max(member.shieldUntil||0,now+sp.shield);
+ let healed;
+ if(sp.healAllies){healed=around(g,member.x,member.y,180,-1).filter(o=>o.index===member.index&&o.hp>0).slice(0,4);for(const a of healed)a.hp=Math.min(100,a.hp+sp.healAllies);healed=healed.map(a=>a.id);}
+ pushFx(e,{id:e.id+':'+seq,from:member.id,to:victims[0].id,index:member.index,skill:skillOf(member.index).id,special:sp.id,at:now,x1:member.x,y1:member.y,x2:victims[0].x,y2:victims[0].y,
+  damage:hits[0].damage,total:hits.reduce((n,h)=>n+h.damage,0),knockout:hits[0].knockout,hits:hits.length>1?hits.slice(1):undefined,healed});
+ member.nextCastAt=now+skillOf(member.index).cd*(member.boostUntil>now?.7:1);ctx.contribute(w,p,now,'event');return true;
+}
 function step(m,tx,ty,dist,stopAt,speed=SPEED){
  if(dist<=stopAt)return;const move=Math.min(speed,dist-stopAt);m.x=Math.round(clampX(m.x+(tx-m.x)/dist*move));m.y=Math.round(clampY(m.y+(ty-m.y)/dist*move));
 }
@@ -157,6 +173,9 @@ export function hallWarCommand(w,p,words,now,ctx){
 export function hallWarGift(w,p,value,now,ctx){
  const e=w.hallWar;if(!['registration','running'].includes(e?.phase)||!enroll(w,p,now)||value<1)return null;
  const member=e.members[p.id],tier=giftTier(value);member.boostUntil=Math.max(member.boostUntil||0,now+Math.min(16000,4000+Math.sqrt(value)*500));
+ // Hào quang: giữ mốc cao nhất còn hiệu lực (tặng nhỏ không làm tụt cánh vàng của quà lớn).
+ const rank=id=>GIFT_TIERS.length-GIFT_TIERS.findIndex(x=>x.id===id),cur=member.aura&&member.aura.until>now?member.aura:null;
+ if(!cur||rank(tier.id)>=rank(cur.tier))member.aura={tier:tier.id,since:cur?.tier===tier.id?cur.since:now,until:now+AURA_MS[tier.id]};else cur.until=Math.max(cur.until,now+AURA_MS[tier.id]);
  let struck=false;
  if(e.phase==='running'){
   if(tier.heal){
@@ -211,7 +230,7 @@ export function battleTick(w,e,now,ctx){
    const a=(hash(m.id)%360)*Math.PI/180,ax=ALTAR.x+Math.cos(a)*ALTAR.rx*.5,ay=ALTAR.y+Math.sin(a)*ALTAR.ry*.5;step(m,ax,ay,Math.hypot(ax-m.x,ay-m.y),20,speed);m.target=null;continue;
   }
   m.target=found.target.id;
-  if(found.dist<=skill.range){if(now>=(m.nextCastAt||0))cast(w,e,g,m,found.target,now,ctx);}
+  if(found.dist<=skill.range){if(now>=(m.nextCastAt||0)){m.castCount=(m.castCount||0)+1;if(m.castCount%SPECIAL_EVERY===0)castSpecial(w,e,g,m,found.target,now,ctx);else cast(w,e,g,m,found.target,now,ctx);}}
   else approach(m,found.target,found.dist,skill.range,speed);
  }
  // Giãn cách: đẩy nhẹ những người đứng chồng lên nhau (chỉ xét trong ô lưới + ô kề) → đám đông thành vòng vây dễ nhìn.
@@ -251,6 +270,6 @@ export function hallWarView(w,now){
   teams:e.teams,camps:e.camps||campSpots(e.teams.length),altar:e.altar,combo:e.combo&&now-e.combo.at<3000?e.combo:null,results:e.results,rewardCount:(e.rewards||[]).length,
   mvp:(w.hallWarHistory||[]).find(h=>h.id===e.id)?.mvp?.slice(0,3)||[],
   feed:(e.feed||[]).filter(f=>now-f.at<10000).slice(-4).map(f=>({...f,fromName:w.players[f.from]?.name||'Đạo hữu',toName:w.players[f.to]?.name||'Đạo hữu'})),
-  members:Object.values(e.members).map(m=>({id:m.id,index:m.index,x:m.x,y:m.y,hp:m.hp,score:m.score,kills:m.kills,streak:m.streak||undefined,joinedAt:m.joinedAt,respawnAt:m.hp<=0?m.respawnAt:undefined,shieldUntil:m.shieldUntil>now?m.shieldUntil:undefined,boostUntil:m.boostUntil>now?m.boostUntil:undefined,target:m.target||undefined,locked:m.lockId&&now<=(m.lockUntil||0)?m.lockId:undefined,dashAt:m.dashAt>now-1500?m.dashAt:undefined,name:w.players[m.id]?.name||'Đạo hữu',avatar:w.players[m.id]?.avatar,realm:w.players[m.id]?.realm})),
+  members:Object.values(e.members).map(m=>({id:m.id,index:m.index,x:m.x,y:m.y,hp:m.hp,score:m.score,kills:m.kills,streak:m.streak||undefined,joinedAt:m.joinedAt,respawnAt:m.hp<=0?m.respawnAt:undefined,shieldUntil:m.shieldUntil>now?m.shieldUntil:undefined,boostUntil:m.boostUntil>now?m.boostUntil:undefined,target:m.target||undefined,locked:m.lockId&&now<=(m.lockUntil||0)?m.lockId:undefined,dashAt:m.dashAt>now-1500?m.dashAt:undefined,aura:m.aura&&m.aura.until>now?m.aura:undefined,name:w.players[m.id]?.name||'Đạo hữu',avatar:w.players[m.id]?.avatar,realm:w.players[m.id]?.realm})),
   fx:e.fx.filter(f=>now-f.at<4000),history:(w.hallWarHistory||[]).slice(-4).reverse()};
 }

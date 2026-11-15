@@ -95,3 +95,14 @@ test('a full battle lasts three minutes then finishes once',()=>{
  for(let i=1;i<=181;i++)tickHallWar(w,N+30000+i*1000,ctx);
  assert.equal(w.hallWar.phase,'finished');assert.equal(w.hallWarHistory.length,1);
 });
+test('every fourth cast is the hall special skill and gifts leave an aura that keeps the highest tier',()=>{
+ const {w,ctx}=running([['a',3],['b',1],['c',1],['d',1]]),e=w.hallWar;
+ Object.assign(e.members.a,{x:450,y:800});for(const [i,id] of ['b','c','d'].entries())Object.assign(e.members[id],{x:470+i*25,y:820,nextCastAt:N*2});
+ for(let i=0;i<4;i++){e.members.a.nextCastAt=0;for(const id of ['b','c','d'])e.members[id].hp=100;battleTick(w,e,N+31000+i*1000,ctx);}
+ const mine=e.fx.filter(f=>f.from==='a');assert.equal(mine.length,4);assert.equal(mine[3].special,'quake');assert.ok(!mine[0].special);
+ assert.ok(1+(mine[3].hits?.length||0)>=3);
+ hallWarGift(w,w.players.a,300,N+40000,ctx);assert.equal(e.members.a.aura.tier,'grand');
+ hallWarGift(w,w.players.a,1,N+41000,ctx);assert.equal(e.members.a.aura.tier,'grand');
+ assert.equal(hallWarView(w,N+41000).members.find(m=>m.id==='a').aura.tier,'grand');
+ assert.equal(hallWarView(w,N+70000).members.find(m=>m.id==='a').aura,undefined);
+});
