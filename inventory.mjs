@@ -43,6 +43,7 @@ export function skinCard(p){
 // Trả về {kind, text} nếu là lệnh xem; null nếu không phải.
 export function inventoryRequest(w,p,cmd,rest,now){
  if(BAG_CMDS.includes(cmd))return {kind:'bag'};
+ if(PET_CMDS.includes(cmd)&&rest==='ky')return {kind:'pets'}; // 15/11: "thú kỹ" mở bảng thú (cấp, XP, thân thiết, tuyệt kỹ) mọi lúc, kể cả khi Cốc đang mở
  if(PET_CMDS.includes(cmd)&&!rest&&!petOpen(w,now)&&!(w.petEvent&&p.petProgress?.eventId===w.petEvent.id))return {kind:'pets'}; // còn tiến độ đợt vừa rồi → để bảng Linh Thú Cốc báo
  if(cmd==='skin'&&!rest)return {kind:'skins'};
  return null;
