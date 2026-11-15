@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {guildWarActorIds,guildWarTargets,drawGuildWarFloor} from '../public/live2-guild-stage.js';
+import {guildWarActorIds,guildWarTargets,drawGuildWarFloor,drawGuildWarClash} from '../public/live2-guild-stage.js';
 const mock=()=>{
  const groups=[{id:'A',roster:['a0','a1','a2','a3','a4']},{id:'B',roster:['b0','b1','b2','b3','b4']}];
  const index=new Map([...groups.flatMap(g=>g.roster)].map(id=>[id,{id,name:id}]));
@@ -28,4 +28,18 @@ test('guild floor always restores global drawing state',()=>{
  const c={save:()=>save++,restore:()=>restore++,beginPath:()=>{},translate:()=>{},ellipse:()=>{},stroke:()=>{},moveTo:()=>{},lineTo:()=>{}};
  for(let i=0;i<150;i++)drawGuildWarFloor(c,war,i*16,1600,{light:i%3===0});
  assert.equal(save,restore);
+});
+
+test('one guild clash stays under 1 second, restores canvas state and reduces flash under light mode',()=>{
+ let saves=0,restores=0,strokes=0,fill=0;
+ const c={save:()=>saves++,restore:()=>restores++,stroke:()=>strokes++,fill:()=>fill++,
+  beginPath:()=>{},moveTo:()=>{},lineTo:()=>{},quadraticCurveTo:()=>{},ellipse:()=>{}};
+ const p={at:1000,side:0};
+ assert.equal(drawGuildWarClash(c,p,500,1600),false);
+ assert.equal(drawGuildWarClash(c,p,1500,1600,{light:true,reducedFlash:true,motion:false}),true);
+ assert.equal(drawGuildWarClash(c,p,1900,1600,{light:false}),true);
+ assert.equal(drawGuildWarClash(c,p,2001,1600),false);
+ assert.equal(saves,restores);
+ assert.ok(strokes>=2);
+ assert.equal(fill,0);
 });
