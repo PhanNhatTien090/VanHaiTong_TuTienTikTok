@@ -33,11 +33,13 @@ export function sectHallTargets(players,H,withHalls=false){
   const rows=Math.max(2,...groups.map(g=>g.length),Math.ceil(players.length/cols));
   const top=H*.54,bottom=H*.675,step=(bottom-top)/(rows-1);
   const scale=Math.min(Math.max(.62,Math.min(1.2,step/90)),5.6/cols) /* 15/11: người to hơn ~15% */,targets=[],occupied=new Set();
+  // 15/11: hàng so le trái/phải trong mỗi cột → tên hàng trên không đè lên đầu người hàng dưới.
+  const sway=row=>(row%2?1:-1)*(885/Math.max(5,cols))*.2;
   for(const [index,members] of groups.entries()){
    members.sort((a,b)=>(a.sectHallDiscipleRank??999)-(b.sectHallDiscipleRank??999)||(a.joinedAt||0)-(b.joinedAt||0)||String(a.id).localeCompare(String(b.id)));
    members.forEach((player,row)=>{
     occupied.add(row*cols+index);
-    targets.push({id:player.id,player,x:hallX(index,cols),y:top+row*step,scale,lift:0});
+    targets.push({id:player.id,player,x:hallX(index,cols)+sway(row),y:top+row*step,scale,lift:0});
    });
   }
   // Scatter visitors into free places around the columns, never into the comment area.
@@ -47,7 +49,7 @@ export function sectHallTargets(players,H,withHalls=false){
   visitors.sort((a,b)=>seed(a.id)-seed(b.id));
   visitors.forEach((player,i)=>{
    const slot=free[i],row=Math.floor(slot/cols),col=slot%cols;
-   const x=hallX(col,cols)+(seed(player.id+':x')-.5)*Math.min(58,290/cols);
+   const x=hallX(col,cols)+sway(row)+(seed(player.id+':x')-.5)*Math.min(14,70/cols);
    const y=Math.max(top,Math.min(bottom,top+row*step+(seed(player.id+':y')-.5)*Math.min(H*.015,step*.2)));
    targets.push({id:player.id,player,x,y,scale:scale*.92,lift:0});
   });

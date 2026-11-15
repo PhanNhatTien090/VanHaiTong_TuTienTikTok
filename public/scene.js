@@ -94,6 +94,8 @@ import {drawTransform,transformMs,REVEAL_AT} from './transform-fx.js';
 import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 // 15/11/2026: chữ trên sân — sans đậm nét, nhỏ gọn kiểu kênh mẫu (user: tên to che hết người, khó nhìn).
+// 15/11: icon danh hiệu theo vai trò / chữ trong tên danh hiệu.
+const honorIcon=h=>{const t=String(h?.title||''),r=h?.role;return r==='sect-master'||/TÔNG CHỦ/.test(t)?'👑':/TRƯỞNG LÃO/.test(t)?'🏯':r==='champion'||/CHIẾN THẦN/.test(t)?'⚔️':/HỘ PHÁP|CUNG PHỤNG/.test(t)||r==='patron'?'🛡️':/NGUYÊN LÃO/.test(t)?'📿':/ĐẾ|TÔN|QUÂN|TIÊN/.test(t)||r==='immortal'?'✨':'🌿';};
 const NAME_FONT='800 15px \"Segoe UI\",Arial,sans-serif',TALK_FONT='700 14px "Segoe UI",Arial,sans-serif';
 const TAU=Math.PI*2;
 const palette=['#9dcbbc','#b4bfd0','#d6c29b','#d5aeb3','#b4c69f','#c3b2d5'];
@@ -415,18 +417,15 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
         const text=cache.get('txt:'+l.name+':'+l.h+':'+skin.level,(tw+2)*2,(l.h+2)*2,paintText),inner=l.w-10,travel=Math.max(0,tw-inner),move=travel/35*1000,cycle=2*(move)+2700,u=this.motion===false?0:(t+(String(l.id).length*397))%cycle;
         const off=u<1500?0:u<1500+move?travel*(u-1500)/move:u<2700+move?travel:travel*(1-(u-2700-move)/move);
         c.save();c.beginPath();c.rect(l.x+5,l.y,inner,l.h);c.clip();if(text)c.drawImage(text,l.x+5-off-1,l.y-1,text.width/2,text.height/2);c.restore();}
-      if(l.player.sectHallDiscipleRank!=null){
-        c.save();c.font='800 10px "Segoe UI",Arial,sans-serif';
-        const title='CHÂN TRUYỀN',w=c.measureText(title).width+10,cx=l.x+l.w/2,cy=l.y-8;
-        c.fillStyle='#10291ff5';c.strokeStyle='#ffe39b';c.lineWidth=1.3;
-        c.beginPath();c.roundRect(cx-w/2,cy-7,w,14,4);c.fill();c.stroke();
-        c.textAlign='center';c.textBaseline='middle';c.fillStyle='#fff0b8';c.fillText(title,cx,cy);c.restore();
-      }
+      // 15/11: danh hiệu + Chân Truyền thành icon tròn nhỏ hai bên khung tên (không còn dòng chữ đè lên người).
+      if(l.player.honor)this.drawBadge(c,l.x-10,l.y+l.h/2,honorIcon(l.player.honor),['#7fe0c8','#ffd27a','#c9a8ff'][l.player.honor.frame]||'#ffd27a',cache);
+      if(l.player.sectHallDiscipleRank!=null)this.drawBadge(c,l.x+l.w+10,l.y+l.h/2,'📜','#ffe39b',cache);
       this.drawQiBar(c,l,t);
-      if(l.player.honor){c.save();c.textAlign='center';c.font='700 10px "Segoe UI",Arial,sans-serif';c.lineJoin='round';c.lineWidth=2.4;c.strokeStyle='#000000c0';const hy=l.y-(l.player.sectHallDiscipleRank!=null?18:4);c.strokeText(l.player.honor.title,l.x+l.w/2,hy);c.fillStyle=['#a9f1e0','#ffe3a0','#d9c2ff'][l.player.honor.frame]||'#ffe3a0';c.fillText(l.player.honor.title,l.x+l.w/2,hy);c.restore();}
     }
     this.drawTalkBubbles(c,t,cache);
   }
+  drawBadge(c,x,y,icon,ring,cache){const r=10.5,bm=cache.get('badge:'+icon+':'+ring,(r*2+4)*2,(r*2+4)*2,b=>{b.setTransform(2,0,0,2,0,0);b.beginPath();b.arc(r+2,r+2,r,0,TAU);b.fillStyle='#071722f0';b.fill();b.lineWidth=1.6;b.strokeStyle=ring;b.stroke();b.font='13px "Segoe UI Emoji","Segoe UI",sans-serif';b.textAlign='center';b.textBaseline='middle';b.fillText(icon,r+2,r+2.5);});
+    if(bm)c.drawImage(bm,x-r-2,y-r-2,bm.width/2,bm.height/2);}
   // 4/11/2026: bong bóng thoại — câu trò chuyện thường (đã lọc ở server, talk.mjs) hiện trên đầu nhân vật ~6 s.
   // Thời gian tính ở máy khách (lần đầu thấy câu đó), vì có thể vài giây không có snapshot mới. Chữ 20px, không thu nhỏ.
   drawTalkBubbles(c,t,cache){
