@@ -40,12 +40,17 @@ export function live2TribulationCommand(w,p,words,now,emit){
  if(cmd!=='ho'||!rest.startsWith('kiep '))return null;
  const query=normalized(rest.slice(5));
  if(!query)return fail('Gõ hộ kiếp + tên người vừa đột phá.');
- const targetMatches=Object.values(w.players).filter(x=>human(x)&&
-  [x.id,x.name,x.socialCode,x.handle].some(v=>normalized(v)===query));
- if(targetMatches.length!==1)return fail('Không tìm được duy nhất người nhận hộ kiếp. Hãy dùng tên hoặc mã chính xác.');
- const owner=targetMatches[0];
+ // Search only bounded active Heaven Trials (≤16), never scan thousands of unrelated viewers.
+ let owner=null,stage=null;
+ for(let i=(w.live2Tribulations?.length||0)-1;i>=0;i--){
+  const trial=w.live2Tribulations[i],candidate=w.players[trial.targetId];
+  if(trial.endsAt<=now||!human(candidate))continue;
+  if(![candidate.id,candidate.name,candidate.socialCode,candidate.handle].some(v=>normalized(v)===query))continue;
+  if(owner&&owner.id!==candidate.id)return fail('Trùng tên đạo hữu hộ kiếp • hãy dùng mã chính xác.');
+  if(!owner){owner=candidate;stage=trial;}
+ }
+ if(!owner)return fail('Không tìm thấy Thiên Kiếp đang mở cho tên hoặc mã này.');
  if(p.id===owner.id)return fail('Không thể tự hộ kiếp cho bản thân.');
- const stage=(w.live2Tribulations||[]).findLast(e=>e.targetId===owner.id&&e.endsAt>now);
  if(!stage||stage.completed)return fail('Thiên Kiếp của đạo hữu này đã kết thúc hoặc viên mãn.');
  if(stage.helpers.includes(p.id))return fail('Bạn đã hộ kiếp lượt này.');
  if((owner.lastActive||0)<now-300000)return fail('Người được hộ kiếp phải đang hoạt động trên LIVE.');
