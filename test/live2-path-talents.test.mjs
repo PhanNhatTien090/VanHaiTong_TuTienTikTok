@@ -1,3 +1,4 @@
+import {live2BossEnabled} from '../live2-boss.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {live2TowerAffinity,live2BossAffinity,live2RecipeCost} from '../live2-path-talents.mjs';
@@ -43,3 +44,12 @@ test('real command deducts personalized alchemy recipe cost, and leaves legacy p
  const recipes=live2ExtraCommand(w,p,['dan','phuong'],now+1000,ctx);
  assert.match(recipes.message,/ho mach \(3 thảo, 25 đá\)/);
 });
+
+test('a lingering phase object is not enough to enable Boss Trial talent by itself',()=>{
+ const p={live2:{path:'demon',insight:40}};
+ const w={mode:'live',settings:{live2Enabled:true,live2BossTrialsEnabled:false}};
+ const boss={live2Boss:{phase:'frenzy'}};
+
+ assert.equal(live2BossEnabled(w)?live2BossAffinity(p,boss,1000):1,1);
+});
+// CI injects the actual isolated module flag through ordinary ESM import below.
