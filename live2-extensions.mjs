@@ -1,7 +1,7 @@
 // LIVE 2.0 optional gameplay extensions.
 // Existing guild/hall/bond/tower/currency schemas remain authoritative; this module never replaces them.
 import {stageConflict} from './stage-lock.mjs';
-import {live2Level,live2Path,LIVE2_DAILY_INSIGHT,live2Enabled} from './live2-systems.mjs';
+import {live2Level,live2Path,LIVE2_DAILY_INSIGHT,live2Enabled,live2GuildCard} from './live2-systems.mjs';
 
 const fail=message=>({ok:false,message}),ok=(message,more={})=>({ok:true,message,...more});
 const dFmt=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'});
@@ -134,7 +134,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
  if(cmd==='hoi'&&rest==='top'){
   const ranks=Object.values(w.live2World?.guilds||{}).sort((a,b)=>b.points-a.points||a.id.localeCompare(b.id)).slice(0,5);
   const msg='Thiên Bảng Bang Hội: '+ranks.map((g,i)=>(i+1)+'. '+g.name+' '+g.points).join(' • ');
-  announce(w,p,msg,now,ctx,{guildRank:true,live2Kind:'guild'});return ok(msg);
+  announce(w,p,msg,now,ctx,{guildRank:true,live2Info:true,card:{kind:'guild',name:'Thiên Bảng Bang Hội',top:ranks.map(g=>live2GuildCard(w,g))}});return ok(msg);
  }
  if(cmd==='chien'&&rest==='hoi'){
   const e=w.live2World?.guildWar;if(!e||e.finishedAt||now>=e.endsAt)return fail('Chưa có Hội Chiến đang diễn ra.');

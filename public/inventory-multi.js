@@ -24,7 +24,7 @@ export function itemStats(i,category='artifact'){
  if(i.bonus>0)parts.push('+'+(Math.round(i.bonus*share*1000)/10).toLocaleString('vi-VN')+'% tu vi');
  return parts.length>1||i.on||i.secondary?parts.join(' · '):'';
 }
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',dao:'Đạo Thống'};
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',dao:'Đạo Thống',guild:'Bang hội'};
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
@@ -69,6 +69,24 @@ export function inventoryDeckHTML(e,esc){
   body=`<div class="vd-chips"><span>✦ ${pathLabel}</span><span>Cấp ${level||'—'} · ${score} Đạo Ngộ</span></div>`
     +(id?`<div style="display:flex;align-items:center;justify-content:center;gap:14px;min-height:110px"><img src="/assets/live2-paths/${id}.svg" width="104" height="104" alt="" decoding="async"><div style="font-size:18px;font-weight:700;color:#f9dda5">${esc(card.pathName)}<small style="display:block;font-size:13px;color:#cbd3e5;font-weight:500">${level<5?`Mốc tiếp: ${next} Đạo Ngộ`:'Đạo Ngộ Đại Thành'}<br>Hôm nay ${fmt(card.progress)} / ${fmt(card.maxDaily)}</small></div></div>`:`<div style="text-align:center;padding:10px"><b>CHỌN CON ĐƯỜNG TU</b><p style="font-size:14px">Gõ chọn đạo kiếm, ma, thể, thú hoặc đan từ Trúc Cơ.</p></div>`)
     +`<div style="text-align:center;padding:4px 12px 8px;font-size:13px;color:#d8cbad">${lines}</div>`;
+ }else if(kind==='guild'){
+  const top=Array.isArray(card.top)?card.top.slice(0,5):null;
+  const badge='<img src="/assets/live2-paths/guild.svg" width="90" height="90" alt="" decoding="async">';
+  if(top){
+   body='<div class="vd-chips"><span>⚔ THIÊN BẢNG BANG HỘI</span></div>'+badge
+    +'<ol style="margin:0 12px 8px;padding-left:20px;font-size:14px;line-height:1.65">'
+    +top.map(g=>`<li><b>${esc(g.name||'Bang hội')}</b> · ${fmt(g.points)} điểm · ${fmt(g.members)} thành viên</li>`).join('')+'</ol>';
+  }else{
+   const claimed=Math.max(0,Number(card.points||0)-Number(card.spentPoints||0));
+   const leaders=[card.leader?'Hội Chủ: '+card.leader:'',card.deputy?'Phó Hội: '+card.deputy:''].filter(Boolean);
+   const elders=(card.elders||[]).slice(0,2);
+   const roster=(card.roster||[]).slice(0,6);
+   body=`<div class="vd-chips"><span>#${esc(card.id||'---')} · ${fmt(card.members)}/${fmt(card.capacity)} thành viên</span><span>Đại Điện +${fmt(card.hallLevel||0)}</span></div>`
+    +`<div style="display:flex;align-items:center;gap:8px;min-height:90px"><div>${badge}</div><div style="min-width:0;color:#f6dfab;font-weight:800;font-size:17px;overflow-wrap:anywhere">${esc(card.name||'Bang hội')}<small style="display:block;color:#d1d9eb;font-weight:500;font-size:12px">${leaders.map(esc).join(' · ')}</small></div></div>`
+    +`<div class="vd-chips"><span>✦ ${fmt(card.points)} cống hiến</span><span>${fmt(claimed)} khả dụng</span></div>`
+    +(elders.length?`<div style="font-size:13px;text-align:center;color:#e8d6aa">Trưởng Lão: ${elders.map(esc).join(' · ')}</div>`:'')
+    +(roster.length?`<div style="font-size:12px;text-align:center;line-height:1.45;color:#d2dfed">Đồng môn: ${roster.map(esc).join(' · ')}</div>`:'');
+  }
  }else if(kind==='bag'){
   body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span>${card.daoPath?`<span>✦ ${esc(card.daoPath.name)} · Đạo Ngộ ${fmt(card.daoPath.insight)}</span>`:''}</div>`
    +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.live2Pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');

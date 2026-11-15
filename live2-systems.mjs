@@ -39,6 +39,14 @@ function ensure(p){
  return s;
 }
 function guilds(w){const x=w.live2World??={v:1,nextGuildId:1,guilds:{}};x.guilds??={};if(!Number.isInteger(x.nextGuildId)||x.nextGuildId<1)x.nextGuildId=1;return x.guilds;}
+export function live2GuildCard(w,g){
+ if(!g)return {kind:'guild',name:'Chưa gia nhập',id:null,members:0,capacity:24,points:0,spentPoints:0,hallLevel:0,leader:'Chưa có'};
+ return {kind:'guild',name:g.name,id:g.id,leader:w.players[g.leader]?.name||'Không rõ',
+  deputy:w.players[g.deputy]?.name||null,elders:(g.elders||[]).map(id=>w.players[id]?.name).filter(Boolean).slice(0,2),
+  members:g.members?.length||0,capacity:24+(g.buildings?.hall||0)*2,
+  points:g.points||0,spentPoints:g.spentPoints||0,hallLevel:g.buildings?.hall||0,
+  roster:(g.members||[]).slice(0,6).map(id=>w.players[id]?.name||'Đạo hữu')};
+}
 // Read-only panels never produce a cinematic or replace active attack/gift visuals.
 function announce(w,p,message,now,emit,extra={}){
  const info=!!(extra.daoStatus||extra.guildInfo||extra.guildCard||extra.guildPromotion===false);
@@ -129,7 +137,7 @@ export function live2Command(w,p,words,now,ctx){
   const g=guilds(w)[s.guildId];if(!g)return fail('Bạn chưa ở trong bang.');
   const master=w.players[g.leader]?.name||'Không xác định',deputy=w.players[g.deputy]?.name||'Chưa bổ nhiệm',elders=(g.elders||[]).map(id=>w.players[id]?.name).filter(Boolean);
   const msg=g.name+' • Hội Chủ '+master+' • Phó Hội '+deputy+' • Trưởng Lão '+(elders.join(', ')||'Chưa có')+' • Đại Điện cấp '+(g.buildings?.hall||0);
-  announce(w,p,msg,now,emit,{live2Kind:'guild',guildInfo:true});return ok(msg);
+  announce(w,p,msg,now,emit,{live2Kind:'guild',guildInfo:true,card:live2GuildCard(w,g)});return ok(msg);
  }
  if(cmd==='hoi'&&rest.startsWith('pho ')){
   const g=guilds(w)[s.guildId];if(!g||g.leader!==p.id)return fail('Chỉ Hội Chủ mới bổ nhiệm Phó Hội.');
@@ -180,7 +188,7 @@ export function live2Command(w,p,words,now,ctx){
  }
  if(cmd==='hoi'&&rest===''){
   const g=guilds(w)[s.guildId];const msg=g?'Bang '+g.name+' #'+g.id+' • '+g.members.length+'/'+(24+(g.buildings?.hall||0)*2)+' thành viên • '+(g.points||0)+' cống hiến':'Chưa gia nhập bang • lập hội + tên hoặc vào hội + mã';
-  announce(w,p,msg,now,emit,{guildInfo:true,guildCard:g?{id:g.id,name:g.name,members:g.members.length,points:g.points}:null});return ok(msg);
+  announce(w,p,msg,now,emit,{guildInfo:true,card:live2GuildCard(w,g)});return ok(msg);
  }
  if(cmd==='lap'&&rest.startsWith('hoi ')){
   if(p.realm<2||s.guildId)return fail('Cần Trúc Cơ và chưa ở trong bang khác.');
