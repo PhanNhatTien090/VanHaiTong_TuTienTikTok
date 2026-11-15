@@ -28,8 +28,9 @@ const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin'};
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
- const item=typeof i==='string'?{name:i}:i;
- const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"`:'';
+ const raw=typeof i==='string'?{name:i}:i;
+ const item=category==='pets'&&raw.level?{...raw,name:raw.name+' · Lv'+raw.level}:raw;
+ const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"${category==='pets'?` data-pet-stage="${esc(String(item.stage||0))}"`:''}`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
  const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
  return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
@@ -65,7 +66,9 @@ export function inventoryDeckHTML(e,esc){
    +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');
  }else if(kind==='pets'){
   const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
-  body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
+  const growth=card.currentGrowth;
+   const summary=growth?`<div class="vd-pet-progress"><strong>${esc(growth.stageName||'Ấu Linh')} · Lv${fmt(growth.level)}</strong><span>Thân thiết ${fmt(growth.bond)}/100</span><span>${esc(growth.skill||'')}</span>${growth.xpNext?`<div class="vd-pet-exp"><i style="width:${pct(growth.xp,growth.xpNext).toFixed(1)}%"></i></div><small>XP ${fmt(growth.xp)}/${fmt(growth.xpNext)}</small>`:'<small>Đã đạt cấp tối đa</small>'}${growth.resonance?'<small>✦ Pháp bảo cộng hưởng</small>':''}</div>`:'';
+   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+summary+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
  }else{
   const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}</span><span>Mặc: ${esc(card.current||'Áo cảnh giới')}</span></div>`+grid([[card.owned,'skins']],esc,'Chưa có skin riêng');
@@ -134,7 +137,7 @@ export class InventoryDeck{
   if(art){const v=this.doc.createElement('canvas');v.width=art.width;v.height=art.height;v.getContext('2d')?.drawImage(art,0,0);v.className='vd-portrait';slot.replaceWith(v);}
   for(const canvas of node.querySelectorAll?.('canvas[data-thumb]')||[]){
    const [kind,...id]=canvas.dataset.thumb.split(':');
-   if(!paintThumb(canvas,{kind,id:id.join(':')},this.scene,x.player||{}))canvas.remove();
+   if(!paintThumb(canvas,{kind,id:id.join(':'),stage:kind==='pet'?Number(canvas.dataset.petStage)||0:0},this.scene,x.player||{}))canvas.remove();
   }
   return node;
  }

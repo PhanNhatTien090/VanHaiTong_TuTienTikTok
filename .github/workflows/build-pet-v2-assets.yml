@@ -1,0 +1,37 @@
+name: Build 39 Linh Thu Evolution Atlases
+on:
+  push:
+    branches:
+      - feat/linh-thu-2-live-20261115
+    paths:
+      - scripts/build-pet-v2-evolutions.mjs
+      - .github/workflows/build-pet-v2-assets.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Build 192 animation-preserving evolved pose frames
+        run: node scripts/build-pet-v2-evolutions.mjs
+      - name: Validate 39 atlases and transparency
+        run: node scripts/verify-pet-v2-art.mjs
+      - name: Commit approved-size generated artwork ONLY to the feature branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/spirit-pets-v2/evolutions/
+          if git diff --cached --quiet; then echo 'No new art changes'; exit 0; fi
+          git commit -m "art(pets): add 39 frame-preserving evolution atlases for all 13 pets"
+          git push origin HEAD:feat/linh-thu-2-live-20261115
