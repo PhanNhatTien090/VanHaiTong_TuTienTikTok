@@ -10,8 +10,9 @@ import {prewarmDuelV6,drawDuelV6Ultimate,v6SkillFamily,v6CounterProgress} from '
 import {prewarmVariantArt,drawV7Variant,v7SkillSpec} from './ultimate-variants-v7.js';
 import {prewarmOverdrive} from './cinematic-overdrive-v7.js';
 import {prewarmV7Premium} from './v7-premium-art.js';
+import {syncArena,drawArena} from './arena-stage.js?v=loi-dai-20261115';
 export function syncSocialStage(scene,state){
- scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;
+ scene.socialStage=state.socialStage||[];scene.socialStatus=state.socialStatus;scene.socialScene=state.socialScene;try{syncArena(scene,state);}catch(e){console.warn('[LoiDai]',e);}
  const match=state.socialStatus?.tournament?.current,active=state.socialScene==='tournament'&&!!match?.id;
  // Release potentially multi-megabyte decoded sprites when the LIVE scene changes.
  if(!active&&scene.premiumMatchId){scene.premiumMatchId=null;scene.v7PremiumArt=null;scene.v7PremiumErrors=null;}
@@ -28,6 +29,7 @@ export function syncSocialStage(scene,state){
    for(const p of fighters)try{portraitCanvas(scene,p);}catch{}},0);
  }
  const kind=state.socialScene;document.body.classList.toggle('social-stage',!!kind);document.body.classList.toggle('social-podium',kind==='tournament'&&scene.socialStage.length===1);
+ if(kind==='arena'){scene.socialArtKind=kind;scene.socialArt=null;return;} // Lôi Đài vẽ riêng (arena-stage.js)
  if(kind===scene.socialArtKind)return;scene.socialArtKind=kind;scene.socialArt=null;if(!kind)return;
  const image=new Image();image.onload=()=>{if(scene.socialArtKind!==kind)return;const size=scene.budget?.level==='light'?256:384,frames=[];for(let i=0;i<6;i++){const frame=makeSurface(size,size);if(!frame)continue;frame.getContext('2d').drawImage(image,i%3*image.naturalWidth/3,Math.floor(i/3)*image.naturalHeight/2,image.naturalWidth/3,image.naturalHeight/2,0,0,size,size);frames.push(frame);}scene.socialArt=frames;};image.src='/assets/events-v1/'+kind+'-effects.png';
 }
@@ -43,7 +45,7 @@ export function socialTargets(scene,ordered,H){
  return ordered.map((p,i)=>({id:p.id,player:p,x:pair?(kind==='bond'?315+i*270:225+i*450):450,y:H*(kind==='bond'?.57:TOURNAMENT_FLOOR),scale:pair?2.25:2.6,lift:0,baseY:H*(kind==='bond'?.57:TOURNAMENT_FLOOR)}));
 }
 export function drawSocialStage(scene,c,t,layer,solo){
- if(solo||!scene.socialScene)return;const art=scene.socialArt,H=scene.height,s=scene.socialStatus,now=Date.now(),match=s?.tournament?.current,ceremony=s?.ceremony;
+ if(solo||!scene.socialScene)return;if(scene.socialScene==='arena'){try{drawArena(scene,c,t,layer);}catch(e){if(!scene.arenaErr){scene.arenaErr=1;console.warn('[LoiDai]',e);}}return;}const art=scene.socialArt,H=scene.height,s=scene.socialStatus,now=Date.now(),match=s?.tournament?.current,ceremony=s?.ceremony;
  const image=(n,x,y,w,h,a=1)=>{if(!art?.[n])return;c.save();c.globalAlpha=a;c.drawImage(art[n],x,y,w,h);c.restore();};
  if(scene.socialScene==='tournament'){
   // 05/11/2026: luận kiếm là so pháp lực, không đánh vào người. Mỗi bên phóng chiêu vào Linh Châu giữa đài;

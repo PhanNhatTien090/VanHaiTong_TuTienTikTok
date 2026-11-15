@@ -20,6 +20,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
+import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen} from './arena.mjs';
 import {petV2Flags,petV2Configure,petV2Command,petV2View,petV2Cards,petV2Earn,petV2BossDamage,petV2CommitBossDamage,petV2Tick,petV2CovePhase} from './pet-v2.mjs';
 import {giftForCommand,giftForTarget,giftForEventEnd} from './gift-for.mjs';
 import {ALL_PETS} from './public/spirit-pets.js';
@@ -197,7 +198,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh'];
+const COMMANDS=['chuyensinh','phikiem','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -417,6 +418,7 @@ function actionCore(w,input,now) {
   if(type==='chat'){const bk=bonkCommand(w,p,cmd,input.text,now,bonkContext);if(bk){if(bk.ok)hallContribution(w,p,now,'event');if(!bk.ok&&!cooldown(p,'bonk-error',6000,now))emit(w,p,bk.message,'status',now);return bk;}} // 10/11: Hội Gõ Đầu
   if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
   if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now);return result;}}
+  if(type==='chat'){const ar=arenaCommand(w,p,cmd,rest,now,socialContext);if(ar){if(!ar.ok&&!cooldown(p,'arena-error',6000,now))emit(w,p,ar.message,'status',now);return ar;}} // 15/11: Vân Hải Lôi Đài
   if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
   if(type==='chat'){const inv=inventoryRequest(w,p,cmd,rest,now);if(inv){const wait=cooldown(p,'inventory',15000,now);if(wait)return fail(`Xem lại sau ${wait}s.`);const card=inventoryCard(inv.kind,p,CATALOG,inv.kind==='pets'?petV2Cards(w,p):null);emit(w,p,inventoryText(card),'status',now,{card});return {ok:true};}} // 11/11
   if(type==='chat'){const petV2=petV2Command(w,p,cmd,rest,now,emit);if(petV2){if(!petV2.ok&&!cooldown(p,'pet-v2-error',8000,now))emit(w,p,petV2.message,'status',now);return petV2;}}
@@ -632,6 +634,7 @@ function actionCore(w,input,now) {
     if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext,{unitCoins:input.coins});if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
     {const bk=!stageConflict(w,now)?bonkGift(w,p,input.coins*count,now):null;if(bk){giftEvent.bonkHammer=bk;giftEvent.text+=' • '+bk.text;}} // 10/11: Hội Gõ Đầu — quà = búa xịn
     recordEventGiftFx(w,p,giftEvent,now);
+    {const ar=arenaGift(w,p,input.coins*count,now);if(ar?.gift)giftEvent.arenaBurst=ar.dmg;}
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
     p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
     reconcilePatron(w,now);
@@ -661,6 +664,10 @@ function actionCore(w,input,now) {
    p.interactions++;w.totalInteractions++;return giftRecipient?{ok:true,playerId:p.id,giftRecipientId:giftRecipient.id}:{ok:true,playerId:p.id};
 }
 // Sự kiện đang mở có LUẬT QUÀ RIÊNG (tên hiển thị) → quà không cộng phần mặc định. Yêu thú/tỷ thí/kết duyên không có luật quà → vẫn quà mặc định.
+// Lôi Đài: nền đêm 19h–5h giờ VN, còn lại bình minh/ngày.
+const ARENA_MAP_IMAGE=(w,now)=>{const h=new Date(now+7*3600000).getUTCHours();return '/assets/arena-v1/loi-dai-'+(h>=18||h<6?'night':'dawn')+'.webp';};
+export function startArenaEvent(w,now=Date.now(),minutes=8){return startArena(w,now,socialContext,{minutes});}
+export function stopArenaEvent(w,now=Date.now()){return stopArena(w,now,socialContext);}
 export function giftEventRule(w,now){
  if(['registration','running'].includes(w.hallWar?.phase))return 'Ngũ Đường Giao Lưu • quà trợ lực cho Đường đã gia nhập';
  if(['registration','running'].includes(w.race?.phase))return 'đua phi kiếm';
@@ -894,9 +901,10 @@ export function tickCompetitionSchedule(w,now=Date.now(),{manual=false}={}){
  if(!w.settings?.scheduledCompetitions)return;
  const schedule=w.competitionSchedule??={nextAt:now+COMPETITION_INTERVAL_MS,intervalMs:COMPETITION_INTERVAL_MS};
  if(schedule.intervalMs!==COMPETITION_INTERVAL_MS){schedule.intervalMs=COMPETITION_INTERVAL_MS;schedule.nextAt=Math.max(schedule.nextAt||0,now+COMPETITION_INTERVAL_MS);}
- if(schedule.cycleVersion!==2){schedule.cycleVersion=2;schedule.cycleIndex=0;}
- const cycle=['race','race','tournament'];
- schedule.nextKind=cycle[schedule.cycleIndex%3];
+ // 15/11: Vân Hải Lôi Đài vào lịch — đua kiếm, Lôi Đài, đua kiếm, Luận Kiếm (giải đấu thưa hơn).
+ if(schedule.cycleVersion!==3){schedule.cycleVersion=3;schedule.cycleIndex=0;}
+ const cycle=['race','arena','race','tournament'];
+ schedule.nextKind=cycle[schedule.cycleIndex%cycle.length];
  // Existing/manual races finish their current round instead of repeating forever.
  if(w.race)w.race.repeat=false;
  if(w.settings.huntBeforeCompetition&&!manual&&schedule.huntForAt!==schedule.nextAt){
@@ -919,13 +927,13 @@ export function tickCompetitionSchedule(w,now=Date.now(),{manual=false}={}){
    return;
  }
  if(now<schedule.nextAt||!manual&&automaticEventsPaused(w,now))return;
- if(eventBusyUntil(w,now)>now||w.boss?.hp>0&&w.boss.endsAt>now||socialBusy(w,now)||w.social?.ceremonies?.length||w.bondFestival?.endsAt>now)return;
- const kind=schedule.nextKind==='race'?'race':'tournament';
- const result=kind==='race'?startRace(w,now):startTournament(w,now);
+ if(eventBusyUntil(w,now)>now||w.boss?.hp>0&&w.boss.endsAt>now||socialBusy(w,now)||arenaOpen(w,now)||w.social?.ceremonies?.length||w.bondFestival?.endsAt>now)return;
+ const kind=['race','arena'].includes(schedule.nextKind)?schedule.nextKind:'tournament';
+ const result=kind==='race'?startRace(w,now):kind==='arena'?startArena(w,now,socialContext):startTournament(w,now);
  if(!result.ok)return;
  if(kind==='race')w.race.repeat=false;
  if(w.settings.huntBeforeCompetition){const variety=w.scheduledVariety??={majorSinceVisitor:0,nextVisitor:'vuonglam'};variety.majorSinceVisitor++;}
- schedule.lastAt=now;schedule.lastKind=kind;schedule.cycleIndex=(schedule.cycleIndex+1)%3;schedule.nextKind=cycle[schedule.cycleIndex];schedule.nextAt=now+COMPETITION_INTERVAL_MS;
+ schedule.lastAt=now;schedule.lastKind=kind;schedule.cycleIndex=(schedule.cycleIndex+1)%cycle.length;schedule.nextKind=cycle[schedule.cycleIndex];schedule.nextAt=now+COMPETITION_INTERVAL_MS;
 }
 export function tick(w,now=Date.now()) {
   // A transferred player must not receive automatic/group rewards on LIVE.
@@ -966,7 +974,7 @@ function tickCore(w,now) {
   tickCompetitionSchedule(w,now);
   tickRace(w,now,socialContext);awardRaceGifts(w,now);tickWar(w,now,socialContext);tickAlchemy(w,now,alchemyContext);tickMaze(w,now,mazeContext);tickBonk(w,now,bonkContext);tickTower(w,now,towerContext);
   tickHallWar(w,now,hallWarContext);
-  tickSocial(w,now,socialContext);
+  tickSocial(w,now,socialContext);tickArena(w,now,socialContext);
   if(w.settings?.nguDuong===true||w.nguDuong)tickHalls(w,now,hallContext);
   reconcilePatron(w,now);
 
@@ -1005,18 +1013,19 @@ export function snapshot(w,now=Date.now(),opts={}) {
   const ranked=select?all.map(p=>({id:p.id,name:p.name,avatar:p.avatar,realm:p.realm,realmName:REALMS[p.realm],totalQi:p.totalQi,giftCoins:p.giftCoins,joinedAt:p.joinedAt,bossWins:p.bossWins,contribution:p.contribution,activeMs:p.activeMs,resident:p.resident,puppet:p.puppet,webOnly:p.webOnly,active:currentParticipant(w,p,now)})):null;
   const earlyHonors=select?honorRoll(w,ranked):null,earlyRoles=select?rankDivineRoles(ranked,w.adminLog||[]):null;
   let pick=all;
-  if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,stage=rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[];const ids=select({players:ranked,honors:earlyHonors,halls,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
+  if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,arenaIds=arenaVisible(w,now)?arenaStageIds(w,now):null,stage=arenaIds||(rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[]);const ids=select({players:ranked,honors:earlyHonors,halls,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
   const players=pick.map(p=>({...p,...(petV2View(w,p)?{petView:petV2View(w,p)}:{}),signatureArtifactOwned:COURT_VISITORS.some(v=>v.artifact===p.equipped)&&(p.artifacts||[]).includes(p.equipped),sectHallIndex:w.nguDuong&&Object.hasOwn(w.nguDuong.members,p.id)?w.nguDuong.members[p.id].index:null,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],realmStage:stageOf(p),progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
   const socialStatus=socialView(w,now),t=socialStatus.tournament,ceremony=socialStatus.ceremony;
   const socialStage=t?.current?[t.current.a,t.current.b]:t?.lastBow?.until>now&&t.lastBow.pair?t.lastBow.pair:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
-  const socialScene=tournamentActive(w)||t?.podiumUntil>now?'tournament':ceremony?'bond':null;
+  let socialScene=tournamentActive(w)||t?.podiumUntil>now?'tournament':ceremony?'bond':null;
+  if(arenaVisible(w,now)){socialStage.splice(0,socialStage.length,...arenaStageIds(w,now));socialScene='arena';} // 15/11: Lôi Đài
   const bondIndex=new Map();for(const b of socialStatus.bonds){for(const id of [b.a,b.b]){if(!bondIndex.has(id))bondIndex.set(id,[]);bondIndex.get(id).push(b);}}for(const p of players){p.socialCode=w.players[p.id].socialCode;p.bondInfos=bondIndex.get(p.id)||[];p.bondInfo=p.bondInfos.find(b=>b.id===w.players[p.id].bondId)||p.bondInfos[0]||null;p.bondIds=p.bondInfos.map(b=>b.id);const vip=bondVipInfo(w.players[p.id]);p.bondVip={...vip,used:p.bondInfos.length,remaining:Math.max(0,vip.limit-p.bondInfos.length)};}
   const raceStatus=raceView(w,now),raceStage=raceStageIds(w,now);
   const divineRoles=earlyRoles||rankDivineRoles(players,w.adminLog||[]);for(const p of players)p.divineRoles=divineRoles.get(p.id)||[];
   const honors=earlyHonors||honorRoll(w,players);for(const p of players)p.honor=honorTitle(p,honors);
   // v53: chi phí lên từng cảnh giới (tu vi + linh thạch cần ở cảnh giới trước) cho bảng cảnh giới trên LIVE.
   const realmCosts=REALMS.map((name,r)=>r?{qi:requiredQi({realm:r-1}),stones:requiredStones({realm:r-1})}:null);
-  return {...w,petGrowthV2:undefined,petV2Settings:petV2Flags(w),petCovePhase:petV2CovePhase(w,now),mainStage:stageConflict(w,now),nguDuong:undefined,hallDefinitions:undefined,halls,hallWar:hallWarView(w,now),hallWarHistory:undefined,tower:towerView(w,now),bonkFest:bonkView(w,now),maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,miniEvent:undefined,quizUsed:undefined,engagement:engagementView(w,now),quick:quickView(w,now),serverNow:now,environment:hallWarVisible(w,now)?{id:'hall-war',name:'Ngũ Đường Giao Lưu',image:'/assets/maps-v3/tournament-arena.png',layout:'ground',floorY:.72}:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
+  return {...w,petGrowthV2:undefined,petV2Settings:petV2Flags(w),petCovePhase:petV2CovePhase(w,now),mainStage:stageConflict(w,now),nguDuong:undefined,hallDefinitions:undefined,halls,hallWar:hallWarView(w,now),hallWarHistory:undefined,tower:towerView(w,now),bonkFest:bonkView(w,now),maze:mazeView(w,now),alchemy:alchemyView(w,now),alchemyStage:alchemyStageIds(w,now),sectWar:warView(w,now),warStage:warStageIds(w,now),progressionPacingVersion:ASCENSION_PACING_VERSION,rebirthUnlockRealm:REBIRTH_UNLOCK_REALM,bondRulesVersion:1,bossCatalog:BOSSES.map(b=>({species:b.species,name:b.name,worldBoss:!!b.worldBoss,hpMultiplier:b.hpMultiplier||1})),liveIntegrityVersion:1,ascensionShowcaseVersion:w.settings?.ascensionShowcase===true?1:0,visitor:w.visitor?{...w.visitor,observed:undefined}:null,auditOutbox:undefined,periodStats:undefined,visitorArchive:undefined,lanternFestival:lanternView(w,now),companions:undefined,companionStatus:companionView(w,now),petEvent:petEventView(w,now),boss:w.boss?{...w.boss,encounter:encounterPhase(w.boss,now)}:null,seen:undefined,giftCounts:undefined,players,honors,realmCosts,social:undefined,tournament:undefined,bondFestival:undefined,socialStatus,socialStage,socialScene,race:undefined,raceStatus,raceStage,skyEvents:SKY_EVENTS,quiz:undefined,envelope:undefined,miniEvent:undefined,quizUsed:undefined,engagement:engagementView(w,now),quick:quickView(w,now),serverNow:now,arena:arenaView(w,now),environment:arenaVisible(w,now)?{id:'loi-dai',name:'Vân Hải Lôi Đài',image:ARENA_MAP_IMAGE(w,now),layout:'ground',floorY:.36}:hallWarVisible(w,now)?{id:'hall-war',name:'Ngũ Đường Giao Lưu',image:'/assets/maps-v3/tournament-arena.png',layout:'ground',floorY:.72}:raceStatus?.active?{id:'race',name:'Vân Hải Thiên Lộ',image:'/assets/events-v1/race-background.png'}:socialScene?{id:socialScene,name:socialScene==='tournament'?'Luận Kiếm Đài':'Tam Sinh Tiên Cảnh',image:'/assets/maps-v3/'+(socialScene==='tournament'?'tournament-arena.png':'bond-garden.png')}:petEventView(w,now)?.active&&!w.boss?PET_COVE_MAP:environmentAt(w.createdAt,now,w.settings.sceneMode||'auto'),catalog:CATALOG.map(i=>({...i,name:gameText(i.name),description:gameText(i.description)})),realms:REALMS};
 }
 export function ingest(w,event,now=Date.now()) {
   if(w.mode==='live'&&(event.simulated||event.autoRose||event.data?.simulated||event.data?.autoRose))return fail('Sự kiện mô phỏng không được ghi vào LIVE.');
