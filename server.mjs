@@ -1,4 +1,5 @@
 import {visualPreferences} from './public/visual-preferences.js';
+import {applyLive2Settings,backupLive2State} from './live2-operator.mjs';
 import {giftMasterView} from './master-rewards.mjs';
 import {editHall,editHallMember,hallRoster} from './ngu-duong.mjs';
 import {createLiveTransfers} from './web/cloud/live-transfers.mjs';
@@ -272,6 +273,13 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/world-scene'&&req.method==='POST'){const b=await body(req);if(b.scene!=='auto'&&!SCENES.some(s=>s.id===b.scene)){json(res,{ok:false,message:'Cảnh không hợp lệ.'},400);return;}worlds[mode].settings.sceneMode=b.scene;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,scene:b.scene});return;}
     // 09/11: nhạc nền LIVE — 'auto' (tự đổi mỗi 30 phút), số thứ tự (giữ cố định), 'next' (bài kế).
     if(url.pathname==='/api/music'&&req.method==='POST'){const b=await body(req),w=worlds[mode],next=applyMusicCommand(w.settings?.music,b.cmd,Date.now());if(!next){json(res,{ok:false,message:'Bài nhạc không hợp lệ.'},400);return;}w.settings??={};w.settings.music=next;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,music:next});return;}
+    if(url.pathname==='/api/live2-settings'&&req.method==='POST'){
+      // Local operator request; snapshot old LIVE state BEFORE applying any feature flags.
+      const b=await body(req),w=worlds[mode];
+      const result=applyLive2Settings(w,b,x=>backupLive2State(x,dataDir,Date.now()));
+      if(result.ok&&!result.unchanged){persist(true);payloadCache.clear();broadcast();}
+      json(res,result,result.ok?200:400);return;
+    }
     if(url.pathname==='/api/event-settings'&&req.method==='POST'){const b=await body(req);const result=setEventSettings(worlds[mode],b);if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/blessing'&&req.method==='POST'){const b=await body(req);const result=blessing(worlds[mode],Date.now(),Number(b.count)||3);broadcast();json(res,result);return;}
     if(url.pathname==='/api/opportunity'&&req.method==='POST'){const result=startOpportunity(worlds[mode]);persist(true);broadcast();json(res,result);return;}
