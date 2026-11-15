@@ -73,7 +73,7 @@ test('feeding, training, evolving and independent per-beast state respect gates'
  assert.equal(o.inventory.spiritFood,0);
  assert.equal(o.pets['jade-rabbit'].bond,3);
  assert.equal(petStageUnlocked({level:9,trains:100,expeditions:100},1),false);
- const g=o.pets['jade-rabbit'];g.level=30;g.trains=3;g.expeditions=2;
+ const g=o.pets['jade-rabbit'];g.level=30;g.trains=3;g.expeditions=2;o.inventory.evolutionShards=3; // 15/11: giai đoạn 2/3 tốn 1+2 Linh Ấn
  for(let stage=1;stage<=3;stage++){
   assert.equal(command(w,p,'hoa',N+4000+stage).ok,true);
   assert.equal(g.stage,stage);

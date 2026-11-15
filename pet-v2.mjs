@@ -8,6 +8,7 @@ import {petV2Traits} from './pet-v2-combat.mjs';
 import {petV2GearResonance,petV2Route,petV2ExpeditionAffinity,petV2Combination} from './pet-v2-systems.mjs';
 const V2_DEFAULTS=Object.freeze({enabled:false,progression:false,combat:false,evolutionArt:false,coveV2:false,expedition:false,synergy:false,quality:'auto'});
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+export const PET_V2_EVOLVE_SHARDS=Object.freeze([0,0,1,2]); // Linh Ấn cần cho giai đoạn 1/2/3
 const dayOf=t=>new Date(t+7*3600000).toISOString().slice(0,10);
 const valid=p=>!!p&&!p.puppet&&!p.resident&&!p.webOnly&&p.actorKind!=='npc';
 export const petV2Flags=w=>({...V2_DEFAULTS,...(w.settings?.petV2||{})});
@@ -108,6 +109,9 @@ export function petV2Command(w,p,cmd,rest,now,emit){
  const o=owner(w,p,true),g=growth(w,p,p.spiritPet,true),id=p.spiritPet;
  const skill=petV2Skill(id),d=daily(o,now);
  if(op==='ky'){
+  // 15/11: chống gõ liên tục làm tràn chữ lên LIVE — 30 s/người mới hiện lại.
+  if(now-(o.kyAt||0)<30000)return result(skill.name);
+  o.kyAt=now;
   emit(w,p,skill.name+' • '+petStageName(g.stage)+' Lv'+g.level+' • thân thiết '+g.bond+'/100','status',now);
   return result(skill.name);
  }
@@ -132,6 +136,10 @@ export function petV2Command(w,p,cmd,rest,now,emit){
   const next=g.stage+1;
   if(next>=4)return result('Linh thú đã đạt Bản Mệnh.');
   if(!petStageUnlocked(g,next))return {ok:false,message:'Cần Lv'+[1,10,20,30][next]+' và hoàn thành luyện thú/viễn chinh để tiến hóa.'};
+  // 15/11: Linh Ấn (viễn chinh / hợp lực Linh Thú Cốc) là vật liệu tiến hóa.
+  const cost=PET_V2_EVOLVE_SHARDS[next]||0,have=o.inventory.evolutionShards||0;
+  if(have<cost)return {ok:false,message:'Cần '+cost+' Linh Ấn để tiến hóa (đang có '+have+') • nhận từ viễn chinh.'};
+  o.inventory.evolutionShards=have-cost;
   g.stage=next;
   const event={playerId:p.id,id,stage:next,at:now};
   const busy=stageConflict(w,now);
@@ -198,13 +206,14 @@ export function petV2BossDamage(w,p,base,now){
  return Math.max(0,Math.floor(Math.min(hit,maxHp*.01,maxHp*.03-per,maxHp*.15-global,boss.hp-Math.min(boss.hp,base))));
 }
 export function petV2CommitBossDamage(w,p,damage,now,emit){
- if(damage<=0||!w.boss)return null;
+ if(!w.boss)return null;
+ const id=p.spiritPet,skill=petV2Skill(id);
+ // 15/11: thần thông đã tụ luôn được thi triển ở nhát đánh kế tiếp, kể cả khi thú đã chạm trần sát thương (damage=0).
+ const g=skill?growth(w,p,id,true):null;
+ if(g&&g.armedUntil>now){g.armedUntil=0;g.nextSkillAt=now+20000;emit(w,p,skill.name,'pet',now,{petV2Cast:true,petId:id,petSkill:skill.name,petFx:skill.fx,damage:Math.max(0,damage)});}
+ if(damage<=0||!skill)return null;
  const b=w.boss,s=b.petV2Damage??={total:0,players:{},recent:[],lastSynergyAt:0};
  s.total+=damage;s.players[p.id]=(s.players[p.id]||0)+damage;
- const id=p.spiritPet,skill=petV2Skill(id);
- if(!skill)return null;
- const g=growth(w,p,id,true);
- if(g.armedUntil>now){g.armedUntil=0;g.nextSkillAt=now+20000;emit(w,p,skill.name,'pet',now,{petV2Cast:true,petId:id,petSkill:skill.name,petFx:skill.fx,damage});}
  if(!petV2On(w,'synergy'))return null;
  s.recent=s.recent.filter(x=>now-x.at<=8000&&x.id!==p.id).slice(-8);
  const other=s.recent.find(x=>petV2Combination(x.element,skill.element));

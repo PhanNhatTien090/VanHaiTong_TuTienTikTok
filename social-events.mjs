@@ -2,6 +2,8 @@ import {activeBonds,syncBondRefs,bondAllowance,alreadyBonded} from './bond-relat
 import {stageConflict} from './stage-lock.mjs';
 import {petV2DuelPoints,petV2DuelTraits} from './pet-v2.mjs';
 import {petV2TacticalScore} from './pet-v2-combat.mjs';
+// 15/11: thú V2 chỉ tính nửa điểm (tối đa 2,5) để không lấn trợ lực của người không có thú.
+export const PET_DUEL_WEIGHT=.5;
 import {FESTIVAL_ITEM,festivalEnroll,tickBondFestival,festivalView} from './bond-festival.mjs';
 export const SOCIAL_ITEMS=[FESTIVAL_ITEM,
  {id:'tournament-laurel',type:'artifact',name:'Kiếm Khôi Ngọc Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:0,bonus:0,exclusive:true,eventReward:'Vô địch Luận Kiếm',description:'Kỷ vật vinh danh quán quân; không cộng sức mạnh.'},
@@ -28,7 +30,7 @@ function giveItem(p,id){if(!p.artifacts.includes(id))p.artifacts.push(id);}
 function reward(w,p,eventId,medals,now,c,quiet=false){const e=w.tournament;if(e.awarded[eventId])return;e.awarded[eventId]=true;p.tournamentMedals=(p.tournamentMedals||0)+medals;if(!quiet)notify(w,p,'Luận Kiếm • +'+medals+' huy chương • tổng '+p.tournamentMedals,now,c);}
 // Quy tắc thắng thua (không đổi): tổng tu vi cao hơn từ 3% trở lên thì thắng chắc; sát nhau mới so điểm + trợ lực; hòa điểm ưu tiên đăng ký trước.
 function decide(t,a,b,strengths,boosts={}){
- const score=id=>{const foe=id===a?b:a,me=t.fighters[id],enemy=t.fighters[foe];return strengths[id]+Math.min(3,boosts[id]||0)*2+petV2TacticalScore(me?.petTraits||(me?.petPoints?{points:me.petPoints}:null),enemy?.petTraits,{cast:!!t.current?.petCasts?.[id],enemyCast:!!t.current?.petCasts?.[foe]});},qa=t.fighters[a]?.totalQi||0,qb=t.fighters[b]?.totalQi||0,decided=qa>=qb*1.03?a:qb>=qa*1.03?b:null;
+ const score=id=>{const foe=id===a?b:a,me=t.fighters[id],enemy=t.fighters[foe];return strengths[id]+Math.min(3,boosts[id]||0)*2+PET_DUEL_WEIGHT*petV2TacticalScore(me?.petTraits||(me?.petPoints?{points:me.petPoints}:null),enemy?.petTraits,{cast:!!t.current?.petCasts?.[id],enemyCast:!!t.current?.petCasts?.[foe]});},qa=t.fighters[a]?.totalQi||0,qb=t.fighters[b]?.totalQi||0,decided=qa>=qb*1.03?a:qb>=qa*1.03?b:null;
  const tie=!decided&&score(a)===score(b),aEarlier=(t.entries.find(e=>e.id===a)?.at||0)<=(t.entries.find(e=>e.id===b)?.at||0),winner=decided||(score(a)>score(b)||tie&&aEarlier?a:b);
  return {winner,loser:winner===a?b:a,scoreA:score(a),scoreB:score(b),tie};
 }
