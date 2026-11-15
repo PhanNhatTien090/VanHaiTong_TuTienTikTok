@@ -3,5 +3,8 @@
 
 
 .pet-thumb{width:110px;height:110px;overflow:hidden;justify-self:center}.pet-catalog .pet-thumb img{display:block;width:300%;height:100%;max-width:none;object-fit:fill}
-.spirit-pet-hud>.pet-gift-guide,.spirit-pet-hud>.pet-gift-award{grid-column:1/-1}
+.spirit-pet-hud>.pet-gift-award{grid-column:1/-1}
 .spirit-pet-hud>.pet-gift-award{border-color:#ffe2a4b3;color:#fff1c5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 15/11: HUD Cốc chỉ còn 1 thẻ (bỏ hướng dẫn tặng hộ) → trải hết chiều ngang. */
+.spirit-pet-hud>div:first-child{grid-column:1/-1}

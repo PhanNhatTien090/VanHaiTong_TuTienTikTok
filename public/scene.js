@@ -11,7 +11,7 @@ import {prepareThaiAtArt} from './thai-at-awakening.js';
 import {prepareDaiLaArt} from './dai-la-awakening.js';
 import {prepareTienDeArt} from './tien-de-awakening.js';
 import {prepareKimTienArt} from './kim-tien-awakening.js';
-import {petCoveOn,petCoveTargets,drawPetCove,PET_COVE_MAP} from './pet-cove.js?v=drawn-pets-20261114';
+import {petCoveOn,petCoveTargets,drawPetCove,PET_COVE_MAP} from './pet-cove.js?v=cove-v3-20261115';
 import {tickBattleSound} from './battle-audio.js';
 import {seaWorn,loadSeaArt,drawSeaBody,drawSeaAdornment,drawSeaVisitor} from './sea-dragon-heir.js';
 import {tudoWorn,loadTudoArt,drawTudoBody,drawTudoAdornment,drawTudoVisitor,TUDO_BLADE} from './tudo-ma-ton.js';

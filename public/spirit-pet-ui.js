@@ -11,9 +11,7 @@ export function mountPetUI(post){
   const b=e.target.closest('[data-pet-event]');if(!b)return;b.disabled=true;try{const r=await post('/api/pet-event',{action:b.dataset.petEvent,minutes:5});if(!r.ok)alert(r.message||'Chưa mở được sự kiện.');}finally{b.disabled=false;}
  });
  const shell=document.querySelector('.scene-shell'),hud=document.createElement('div');hud.id='spiritPetHud';hud.className='spirit-pet-hud';hud.hidden=true;shell?.appendChild(hud);
- hud.innerHTML=`<div><b>BẮT LINH THÚ</b><span>Linh thú tự theo người đủ duyên · mốc ghi trên bảng</span></div>
- <div><b>LỆNH LINH THÚ</b><span><code>thú</code> tiến độ · <code>thú + số</code> đổi · <code>thú duyên</code> nhận Linh Lương</span></div>
-  <div class="pet-gift-guide"><span>${giftGuide}</span></div>
+ hud.innerHTML=`<div><b>BẮT LINH THÚ</b><span>Đủ mốc ghi trên bảng là thú tự theo</span></div>
  <div class="pet-gift-award" role="status" hidden></div>`;
 }
 export function showPetGiftAward(e){

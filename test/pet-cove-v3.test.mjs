@@ -15,11 +15,11 @@ test('thú chạy luôn trong vùng trời Cốc, không xuống hàng người 
  const still=petCoveRoam(2,99999,H,false);assert.equal(still.vx,0);assert.deepEqual(petCoveRoam(2,0,H,false),still);
 });
 
-test('hướng dẫn xoay vòng đủ lệnh Linh Thú 2.0, không mồi thả tim',()=>{
+test('bảng lệnh sáng lần lượt đủ lệnh Linh Thú 2.0, không mồi thả tim',()=>{
  const cmds=PET_COVE_GUIDE.map(g=>g[0].split(' ')[1]);
  for(const c of ['duyên','nuôi','luyện','hành','hóa','xuất','kỹ'])assert.ok(cmds.includes(c),c);
  for(const g of PET_COVE_GUIDE)assert.doesNotMatch(g.join(' '),/tim|follow|chia sẻ|share/i);
- const seen=new Set();for(let t=0;t<6000*PET_COVE_GUIDE.length;t+=6000)seen.add(petCoveGuideStep(t).index);
+ const seen=new Set();for(let t=0;t<2500*PET_COVE_GUIDE.length;t+=2500)seen.add(petCoveGuideStep(t).index);
  assert.equal(seen.size,PET_COVE_GUIDE.length);
 });
 

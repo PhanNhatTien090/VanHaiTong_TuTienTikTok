@@ -491,3 +491,6 @@ body.maze-on .scene-shell>#basicCommands.corner-command-guide{display:none!impor
 body.overlay.pet-cove-stage .arrival-welcome{top:57.5%;left:24%;right:24%;padding:4px 8px}
 body.overlay.pet-cove-stage .arrival-welcome span{display:none}
 body.overlay.pet-cove-stage .arrival-welcome strong{font-size:clamp(14px,3cqw,30px);margin:1px 0}
+
+/* 15/11 (user): bỏ chữ "TRÒ CHƠI TU TIÊN" khỏi mọi màn hình. */
+.live-disclosure{display:none!important}
