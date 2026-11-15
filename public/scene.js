@@ -421,7 +421,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       const bitmap=cache.get(key,Math.ceil((l.w+2)*2),(l.h+2)*2,paint);
       if(bitmap)c.drawImage(bitmap,l.x-1,l.y-1,bitmap.width/2,bitmap.height/2);
       else{c.save();c.translate(l.x,l.y);paint(c,false);c.restore();}
-      drawDaoNameBadge(c,l.player,l.x+l.w+8,l.y+l.h/2,{light:this.budget?.level==='light'||this.minimalCrowd});
+      drawDaoNameBadge(c,l.player,l.x+l.w+8,l.y+l.h/2,{light:this.budget?.level==='light'||this.minimalCrowd,cache:this.daoBadgeCache??=new BitmapCache(50)});
       // 4/11/2026: đông người → tên dài chạy chữ trong khung (giữ cỡ chữ 24, không che mặt hàng dưới).
       // Dừng 1,5 s ở đầu → trượt 35 đv/s → dừng 1,2 s ở cuối → trượt về. Ảnh chữ vẽ một lần, mỗi khung chỉ dịch + cắt.
       if(l.scroll){const tw=Math.ceil(l.textW)+12,paintText=x=>{x.setTransform(2,0,0,2,2,2);x.textAlign='left';x.textBaseline='middle';x.font='700 24px Georgia';x.lineJoin='round';x.lineWidth=3;x.strokeStyle='#000000d0';x.strokeText(l.name,6,l.h/2);x.fillStyle=skin.level?'#fff6dc':'#ffffff';x.fillText(l.name,6,l.h/2);};
