@@ -1,5 +1,6 @@
 // LIVE 2.0: additive, server-authoritative cultivation paths, guilds, mentorship and relic refinement.
 import {relicCombatBonus} from './live2-relics.mjs';
+import {live2AllowRead} from './live2-read-gate.mjs';
 import {activeBonds} from './bond-relations.mjs';
 // The historical fields (realm, qi, equipment, bonds, towerFloor) are never migrated or reset.
 export const LIVE2_PATHS=Object.freeze({
@@ -111,6 +112,7 @@ export function live2Command(w,p,words,now,ctx){
  const cmd=words[0],rest=words.slice(1).join(' '),s=ensure(p),emit=ctx.emit;
  if(cmd==='dao'&&['tu','ngo',''].includes(rest)){
   const desc=s.path?live2Path(p).name+' cấp '+live2Level(p)+' • Đạo Ngộ '+s.insight+' • hôm nay '+(s.daily.day===day(now)?s.daily.earned:0)+'/'+LIVE2_DAILY_INSIGHT:'Trúc Cơ mở chọn đạo: chọn đạo kiếm/ma/thể/thú/đan';
+  if(!live2AllowRead(p,'dao-status',now))return ok(desc,{cooldown:true});
   announce(w,p,desc,now,emit,{daoStatus:true,daoPath:s.path,card:{kind:'dao',path:s.path||null,pathName:live2Path(p)?.name||'Chưa chọn Đạo Thống',level:s.path?live2Level(p):0,talent:live2Path(p)?.talent||null,insight:s.insight||0,progress:s.daily?.day===day(now)?s.daily.earned:0,maxDaily:LIVE2_DAILY_INSIGHT,paths:Object.entries(LIVE2_PATHS).map(([id,v])=>({id,name:v.name}))}});return ok(desc);
  }
  if(cmd==='dao'&&rest==='lu'){
@@ -119,6 +121,7 @@ export function live2Command(w,p,words,now,ctx){
    return {name:o?.name||'Đạo hữu',level:b.level||0,code:o?.socialCode||null};
   });
   const message=partners.length?'Đạo lữ: '+partners.map(x=>x.name).join(' · '):'Chưa có đạo lữ • gõ kết duyên + tên.';
+  if(!live2AllowRead(p,'dao-companions',now))return ok(message,{cooldown:true});
   announce(w,p,message,now,emit,{daoStatus:true,card:{kind:'bond',partners}});
   return ok(message);
  }
@@ -164,6 +167,7 @@ export function live2Command(w,p,words,now,ctx){
   const g=guilds(w)[s.guildId];if(!g)return fail('Bạn chưa ở trong bang.');
   const master=w.players[g.leader]?.name||'Không xác định',deputy=w.players[g.deputy]?.name||'Chưa bổ nhiệm',elders=(g.elders||[]).map(id=>w.players[id]?.name).filter(Boolean);
   const msg=g.name+' • Hội Chủ '+master+' • Phó Hội '+deputy+' • Trưởng Lão '+(elders.join(', ')||'Chưa có')+' • Đại Điện cấp '+(g.buildings?.hall||0);
+  if(!live2AllowRead(p,'guild-management',now))return ok(msg,{cooldown:true});
   announce(w,p,msg,now,emit,{live2Kind:'guild',guildInfo:true,card:live2GuildCard(w,g)});return ok(msg);
  }
  if(cmd==='hoi'&&rest.startsWith('pho ')){
@@ -215,6 +219,7 @@ export function live2Command(w,p,words,now,ctx){
  }
  if(cmd==='hoi'&&rest===''){
   const g=guilds(w)[s.guildId];const msg=g?'Bang '+g.name+' #'+g.id+' • '+g.members.length+'/'+(24+(g.buildings?.hall||0)*2)+' thành viên • '+(g.points||0)+' cống hiến':'Chưa gia nhập bang • lập hội + tên hoặc vào hội + mã';
+  if(!live2AllowRead(p,'guild-status',now))return ok(msg,{cooldown:true});
   announce(w,p,msg,now,emit,{guildInfo:true,card:live2GuildCard(w,g)});return ok(msg);
  }
  if(cmd==='lap'&&rest.startsWith('hoi ')){

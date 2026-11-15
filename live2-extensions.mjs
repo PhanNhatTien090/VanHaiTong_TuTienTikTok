@@ -3,6 +3,7 @@
 import {stageConflict} from './stage-lock.mjs';
 import {relicDefinition} from './live2-relics.mjs';
 import {live2RecipeCost} from './live2-path-talents.mjs';
+import {live2AllowRead} from './live2-read-gate.mjs';
 import {live2Level,live2Path,LIVE2_DAILY_INSIGHT,live2Enabled,live2GuildCard} from './live2-systems.mjs';
 
 const fail=message=>({ok:false,message}),ok=(message,more={})=>({ok:true,message,...more});
@@ -109,6 +110,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
  if(cmd==='dan'&&rest==='phuong'){
   const names=Object.entries(WORDS).filter(([,v])=>(p.realm||0)>=v.level).map(([key,v])=>{const c=live2RecipeCost(p,v);return key+' ('+c.herbs+' thảo, '+c.stones+' đá)';});
   const msg='Đan phương: '+names.join(' • ')+' • gõ chế đan + tên';
+  if(!live2AllowRead(p,'alchemy-recipes',now))return ok(msg,{cooldown:true});
   announce(w,p,msg,now,ctx,{live2Info:true});return ok(msg);
  }
  if(cmd==='che'&&rest.startsWith('dan ')){
@@ -156,6 +158,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
  if(cmd==='hoi'&&rest==='top'){
   const ranks=Object.values(w.live2World?.guilds||{}).sort((a,b)=>b.points-a.points||a.id.localeCompare(b.id)).slice(0,5);
   const msg='Thiên Bảng Bang Hội: '+ranks.map((g,i)=>(i+1)+'. '+g.name+' '+g.points).join(' • ');
+  if(!live2AllowRead(p,'guild-rank',now))return ok(msg,{cooldown:true});
   announce(w,p,msg,now,ctx,{guildRank:true,live2Info:true,card:{kind:'guild',name:'Thiên Bảng Bang Hội',top:ranks.map(g=>live2GuildCard(w,g))}});return ok(msg);
  }
  if(cmd==='chien'&&rest==='hoi'){
@@ -173,6 +176,7 @@ export function live2ExtraCommand(w,p,words,now,ctx){
   const q=s?.mentorQuest;const count=q?.day===day(now)?q.count:0,finished=q?.day===day(now)&&q.done;
   const m=w.players[s?.masterId],students=(s?.students||[]).map(id=>w.players[id]?.name).filter(Boolean);
   const msg=(m?'Sư phụ: '+m.name:'Chưa có sư phụ')+(students.length?' • Đệ tử: '+students.join(', '):'')+' • Nhiệm vụ ngày: '+(finished?'hoàn tất':count+'/3 hành động');
+  if(!live2AllowRead(p,'mentor-status',now))return ok(msg,{cooldown:true});
   announce(w,p,msg,now,ctx,{live2Info:true,card:{kind:'mentor',master:m?.name||null,students:students.slice(0,2),count,done:!!finished}});return ok(msg);
  }
  return null;
