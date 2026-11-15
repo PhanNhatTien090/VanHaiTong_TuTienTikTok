@@ -32,6 +32,7 @@ import {LiveFeedbackDirector,prepareFeedbackArt} from './live-feedback-fx.js';
 import {drawSkillImpact,impactSeverity} from './skill-impact-v3.js';
 import {drawImpactPunctuation,drawImpactCamera} from './impact-punch.js?v=screen-shake-v1';
 import {drawDuelCinematic,duelChargingPose} from './duel-cinematic.js';
+import {drawOverdriveV7} from './cinematic-overdrive-v7.js';
 import {artworkCrop,projectedGround,courtyardTargets,constrainGroundTargets} from './courtyard-layout.js';
 import {godFormFor,drawGodAuras} from './god-forms.js';
 import {raceFlightPose} from './race-motion.js';
@@ -46,7 +47,7 @@ import {linWanWorn,loadLinWanArt,drawLinWanBody,drawLinWanQi,drawLinWanVisitor} 
 import {loadSpiritBeasts} from './gift-spirit-beasts.js';
 import {cinematicQuality,cinematicSeed,drawLightning,drawShockwave,drawAura,drawEnergyOrb,drawSeal,drawDissolve,drawTrail,prepareCinematicArt} from './cinematic-vfx.js';
 import {boundedCameraJolt,cameraImpulse,cameraShakeStrength,feedbackBudget,mixCameraImpulses,takeFeedbackCue} from './cinematic-feedback.js';
-import {syncEventGiftFx,eventGiftImpulse,drawEventGiftFx} from './event-gift-fx.js?v=event-donors-20261114';
+import {syncEventGiftFx,eventGiftImpulse,drawEventGiftFx} from './event-gift-fx.js?v=v7-overdrive-premium-20261115';
 import {eventDonationContext,addEventDonation,drawEventDonations} from './event-donations.js';
 import {giftSpectacleTier,loadGiftSpectacle,drawGiftSpectacle,spectacleShake,spectacleV2,GIFT_HITS} from './gift-spectacle.js';
 import {loadFish,floatingTargets,drawWorldAmbience} from './world-ambience.js';
@@ -61,7 +62,7 @@ import {syncMaze,mazeOn,drawMaze,drawMazeResult} from './maze.js';
 import {syncTease,teaseIds,drawTease} from './tease.js';
 import {syncBonk,bonkIds,applyBonkWalk,drawBonk} from './bonk.js?v=minor-overlay-20261114';
 import {syncAlchemy,alchemyTargets,drawAlchemy,drawAlchemyResult,drawAlchemySoot} from './alchemy.js';
-import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=event-donors-20261114';
+import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=v7-overdrive-premium-20261115';
 import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';
@@ -100,6 +101,10 @@ export function portrait(color='#8bc5b1') {
 }
 export class Scene {
   constructor(canvas,onSelect,{autoFrame=true}={}){prepareCinematicArt();prepareFeedbackArt();this.feedbackFX=new LiveFeedbackDirector();this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.onSelect=onSelect;this.players=[];this.selected=null;this.effects=[];this.targets=[];this.width=900;this.height=850;this.boss=null;this.visible=true;this.crowdMode=true;this.showNames=true;this.focusId=null;this.focusUntil=0;this.worldLife={npcs:true,environment:true};this.cameraEnabled=true;this.zoom=1.25;this.camera={s:1,x:0,y:0};this.sprites=new Map();this.labels=[];this.budget=new RenderBudget();this.characterFrames=new CharacterFrames();this.environmentLayers=new Map();this.animator=new CharacterAnimator();this.standingArt=new Image();this.standingArt.src='/assets/cultivators-standing-v14.png';this.characterArt=new Image();this.characterArt.src='/assets/cultivators-v3.png';this.empressArt=new Image();this.empressArt.onload=()=>this.characterFrames.clear();this.empressArt.src=new URLSearchParams(location.search).get('spriteStyle')==='mobile'?'/assets/celestial-empress-mobile-v1.png':'/assets/celestial-empress-seated-v2.png';this.specialAtlas=new Image();this.specialAtlas.onload=()=>{this.specialArt=[];for(const [y,h]of [[0,590],[600,424]]){const sheet=makeSurface(this.specialAtlas.naturalWidth,h);if(!sheet)continue;sheet.getContext('2d').drawImage(this.specialAtlas,0,y,this.specialAtlas.naturalWidth,h,0,0,sheet.width,h);sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;sheet.complete=true;this.specialArt.push(sheet);}this.characterFrames.clear();};this.specialAtlas.src='/assets/patron-sets-v18.png';this.bossAtlas=new Image();this.bossAtlas.onload=()=>{this.bossSprites=[];const sw=this.bossAtlas.naturalWidth/3;for(let i=0;i<3;i++){const frame=makeSurface(320,320);if(!frame)continue;frame.getContext('2d').drawImage(this.bossAtlas,i*sw,0,sw,this.bossAtlas.naturalHeight,0,0,320,320);this.bossSprites.push(frame);}this.bossAtlas=null;};this.bossAtlas.src='/assets/boss-atlas.png';this.formationImage=new Image();this.formationImage.onload=()=>{const sprite=makeSurface(384,384);if(sprite){sprite.getContext('2d').drawImage(this.formationImage,0,0,384,384);this.formationArt=sprite;}this.formationImage=null;};this.formationImage.src='/assets/sword-formation.png';this.art=new Image();this.art.onload=()=>this.resize();this.art.src='/assets/sect-morning-v20.png';loadImmortalArt(this);this.motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+     // Emergency viewer-side rollback: ?v7=off or ?v7Premium=off on LIVE Studio browser source.
+     const v7Params=new URLSearchParams(globalThis.location?.search||'');
+     this.v7Overdrive=v7Params.get('v7')!=='off';
+     this.v7PremiumDisabled=v7Params.get('v7Premium')==='off';
     this.requestResize=()=>{if(this.resizeFrame)return;this.resizeFrame=requestAnimationFrame(()=>{this.resizeFrame=null;this.resize();});};
     this.observer=new ResizeObserver(this.requestResize);this.observer.observe(canvas);
     addEventListener('resize',this.requestResize);globalThis.visualViewport?.addEventListener('resize',this.requestResize);
@@ -541,7 +546,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     this.targetFps=targetFps;
     const started=performance.now();
     const beforeRaster=this.characterFrames.stats.repaints;
-    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);drawImpactCamera(this,this.ctx,t,this.height);}
+    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);drawOverdriveV7(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);drawImpactCamera(this,this.ctx,t,this.height);}
     finally{
       const cost=performance.now()-started;
       this.lastCost=Math.round(cost*10)/10;
@@ -654,7 +659,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn
      for(const target of this.minimalCrowd?[]:this.targets){if(!inView(target,this.camera,H))continue;drawWings(this,c,target,t);if(!this.heavyCrowd&&!this.raceStatus?.active&&!this.compact)drawLinWanQi(this,c,target,t);if(!this.raceStatus?.active)drawDivineHalo(this,c,target,t);}c.globalAlpha=ga;}
     this.onStageActors=this.targets.length;
-    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now())||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());if(!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
+    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now(),this.v6Showcase!==false)||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());if(!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
     for(const target of this.premiumTargets||[]){drawSeaAdornment(this,c,target,t,'front');drawTudoAdornment(this,c,target,t,'front');drawKhuyAdornment(this,c,target,t,'front');drawViemAdornment(this,c,target,t,'front');drawCourtAdornment(this,c,target,t,'front');}
     if(arena){const strikeAge=Date.now()-(this.battleSound?.impactAt??-Infinity);
       if(strikeAge>=0&&strikeAge<500){
