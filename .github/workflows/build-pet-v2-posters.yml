@@ -1,0 +1,39 @@
+name: Create 13 Vân Hải Tông Pet Posters
+on:
+  push:
+    branches:
+      - art/13-linh-thu-posters-20261115
+    paths:
+      - scripts/build-pet-v2-posters.mjs
+      - .github/workflows/build-pet-v2-posters.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Render from authentic in-game 13 species sprites
+        run: node scripts/build-pet-v2-posters.mjs
+      - name: Verify 13 species and contact sheet
+        run: |
+          node -e "const m=require('./public/assets/marketing/linh-thu-v2/manifest.json');if(m.length!==13||new Set(m.map(x=>x.id)).size!==13)process.exit(1)"
+          test -f public/assets/marketing/linh-thu-v2/00-tong-hop-13-linh-thu.png
+      - name: Commit images only to review branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/assets/marketing/linh-thu-v2/
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "art(pets): 13 authentic LIVE introduction posters"
+          git push origin HEAD:art/13-linh-thu-posters-20261115
