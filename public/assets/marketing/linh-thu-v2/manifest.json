@@ -1,0 +1,106 @@
+[
+  {
+    "id": "jade-rabbit",
+    "name": "Ngọc Thố",
+    "rank": "Thường",
+    "skill": "Nguyệt Linh Hồi Nguyên",
+    "filename": "01-jade-rabbit.png",
+    "size": 1319302
+  },
+  {
+    "id": "ember-fox",
+    "name": "Xích Diễm Hồ",
+    "rank": "Hiếm",
+    "skill": "Cửu Hỏa Hồ Ảnh",
+    "filename": "02-ember-fox.png",
+    "size": 1423952
+  },
+  {
+    "id": "frost-tiger",
+    "name": "Băng Phách Hổ",
+    "rank": "Sử thi",
+    "skill": "Băng Phách Trấn Thiên",
+    "filename": "03-frost-tiger.png",
+    "size": 1448536
+  },
+  {
+    "id": "sun-phoenix",
+    "name": "Kim Vũ Phượng",
+    "rank": "VIP",
+    "skill": "Phượng Vũ Niết Hỏa",
+    "filename": "04-sun-phoenix.png",
+    "size": 1297195
+  },
+  {
+    "id": "astral-dragon",
+    "name": "Tinh Hà Thần Long",
+    "rank": "Siêu VIP",
+    "skill": "Tinh Hà Long Tức",
+    "filename": "05-astral-dragon.png",
+    "size": 1449871
+  },
+  {
+    "id": "loi-oa",
+    "name": "Lôi Oa",
+    "rank": "Thần thú",
+    "skill": "Cửu Thiên Lôi Chấn",
+    "filename": "06-loi-oa.png",
+    "size": 1530612
+  },
+  {
+    "id": "van-thu",
+    "name": "Văn Thú",
+    "rank": "Thần thú",
+    "skill": "Huyền Văn Thực Linh",
+    "filename": "07-van-thu.png",
+    "size": 1328099
+  },
+  {
+    "id": "ky-lan",
+    "name": "Kỳ Lân",
+    "rank": "Thần thú",
+    "skill": "Kỳ Lân Thánh Thuẫn",
+    "filename": "08-ky-lan.png",
+    "size": 1413842
+  },
+  {
+    "id": "bach-nguyet-ho",
+    "name": "Bạch Nguyệt Cửu Vĩ",
+    "rank": "Thiên linh thú",
+    "skill": "Cửu Vĩ Mê Thiên",
+    "filename": "09-bach-nguyet-ho.png",
+    "size": 1397827
+  },
+  {
+    "id": "ngoc-chau-long",
+    "name": "Ngọc Châu Thiên Long",
+    "rank": "Thiên linh thú",
+    "skill": "Thiên Hải Long Triều",
+    "filename": "10-ngoc-chau-long.png",
+    "size": 1446527
+  },
+  {
+    "id": "xich-ha-phuong",
+    "name": "Xích Hà Thiên Phượng",
+    "rank": "Thiên linh thú",
+    "skill": "Xích Hà Phần Thiên",
+    "filename": "11-xich-ha-phuong.png",
+    "size": 1402553
+  },
+  {
+    "id": "tu-nguyet-lan",
+    "name": "Tử Nguyệt Ngọc Lân",
+    "rank": "Thiên linh thú",
+    "skill": "Tử Nguyệt Linh Trận",
+    "filename": "12-tu-nguyet-lan.png",
+    "size": 1402384
+  },
+  {
+    "id": "hac-tinh-ho",
+    "name": "Hắc Tinh Linh Hổ",
+    "rank": "Thiên linh thú",
+    "skill": "Hắc Tinh Phá Không",
+    "filename": "13-hac-tinh-ho.png",
+    "size": 1423679
+  }
+]
