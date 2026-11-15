@@ -11,6 +11,8 @@ export function infoPages(state={}){
  const cat=(state.catalog||[]).filter(i=>!i.exclusive),of=type=>cat.filter(i=>i.type===type).sort((a,b)=>(a.price||0)-(b.price||0));
  const cost=i=>fmt(i.price)+' thạch'+(i.herbs?' · '+fmt(i.herbs)+' thảo':'');
  const pages=[{id:'honor',title:'🏅 HUY HIỆU CHỨC VỊ',note:'Icon nhỏ cạnh tên mỗi người trên sân',rows:HONOR_LEGEND.map(([i,t])=>[i,t])}];
+ // 15/11: thay trang cảnh giới — lệnh xem thông tin của chính mình (đều là lệnh thật: engine.mjs tuvi/canh, inventory.mjs túi/thú/thú kỹ/skin, engagement nhiệm vụ).
+ pages.push({id:'me',title:'👤 XEM THÔNG TIN CỦA MÌNH',note:'Gõ trong bình luận · thẻ hiện giữa màn vài giây',rows:[['9 · tu vi','thẻ tu vi, cảnh giới, còn thiếu gì để đột phá'],['túi đồ','pháp bảo, đan dược, bí pháp đang có'],['thú','linh thú đã có'],['thú kỹ','cấp, kinh nghiệm, thân thiết, tuyệt kỹ của thú'],['skin','tủ skin đang có · skin + tên để mặc'],['cánh','cánh đã mở · cánh + số để đổi'],['nhiệm vụ','nhiệm vụ hôm nay']]});
  const arts=spread(of('artifact'),8);
  if(arts.length)pages.push({id:'forge',title:'🔨 RÈN PHÁP BẢO',note:'Gõ 7 · rèn (món tốt nhất đủ tiền) hoặc rèn + tên',rows:arts.map(a=>[a.name,cost(a)+(realm(a.tier)?' · '+realm(a.tier):'')])});
  const manuals=of('manual');
