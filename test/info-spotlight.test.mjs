@@ -7,7 +7,7 @@ const state={realms:['Phàm nhân','Luyện Khí','Trúc Cơ'],catalog:[
 
 test('các trang thông tin: chức vị, xem của mình, rèn, bí pháp, đan dược, trang bị, Lôi Đài', () => {
   const ids = infoPages(state).map(p => p.id);
-  assert.deepEqual(ids, ['honor','me','forge','manual','pill','gear','arena']);
+  assert.deepEqual(ids, ['honor','me','forge','manual','pill','gear','master','arena']);
   const forge = infoPages(state).find(p => p.id === 'forge');
   assert.ok(!forge.rows.some(r => r[0] === 'Kiếm Riêng'), 'món độc quyền không hiện');
 });
@@ -16,7 +16,7 @@ test('mỗi 4 phút hiện 1 phút, chu kỳ sau đổi chủ đề', () => {
   assert.equal(spotlightPage(state, 1000).id, 'honor');
   assert.equal(spotlightPage(state, INFO_SHOW_MS + 1000), null);
   assert.equal(spotlightPage(state, INFO_PERIOD_MS + 5000).id, 'me');
-  assert.equal(spotlightPage(state, INFO_PERIOD_MS * 7 + 5000).id, 'honor');
+  assert.equal(spotlightPage(state, INFO_PERIOD_MS * 8 + 5000).id, 'honor');
 });
 
 test('HTML thoát ký tự và có tiêu đề', () => {

@@ -184,7 +184,7 @@ export function drawArena(scene,c,t,layer){
   return;
  }
  // ---- lớp trước ----
- text(c,'VÂN HẢI LÔI ĐÀI',450,H*.025,{size:28,color:'#ffe9b0',width:6});
+ text(c,a.master?'👑 TRANH GHẾ TÔNG CHỦ':'VÂN HẢI LÔI ĐÀI',450,H*.025,{size:28,color:a.master?'#ffd54a':'#ffe9b0',width:6});
  const left=Math.max(0,Math.ceil((a.endsAt-now)/1000));
  const head=a.phase==='open'?(a.champion?'ĐÀI CHỦ '+a.champion.name+(a.streak?' · giữ '+a.streak+'/'+a.defendMax:''):'ĐÀI TRỐNG · gõ lên đài')+' · còn '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'):'';
  if(head)text(c,head,450,H*.052,{size:17,color:'#cfe9ff',weight:'800',width:4,max:860});
@@ -214,7 +214,7 @@ export function drawArena(scene,c,t,layer){
   if(now<m.fightAt){const k=clamp((now-m.startedAt)/(m.fightAt-m.startedAt)),a2=Math.min(1,k/.15,(1-k)/.15);c.save();c.globalAlpha=a2;
    text(c,'VS',450,H*.2,{size:90,color:'#ffcf5a',width:10});
    for(const [id,x] of [[m.a,250],[m.b,650]])text(c,m.fighters[id].name,x,H*.12,{size:30,color:'#fff',width:6,max:380});
-   text(c,m.kind==='throne'?'THÁCH ĐẤU ĐÀI CHỦ':'HẸN ĐẤU',450,H*.27,{size:22,color:'#ffe2a4',width:5});
+   text(c,a.master?'TRANH GHẾ TÔNG CHỦ · AI THẮNG NGỒI GHẾ':m.kind==='throne'?'THÁCH ĐẤU ĐÀI CHỦ':'HẸN ĐẤU',450,H*.27,{size:22,color:'#ffe2a4',width:5});
    c.restore();
    for(const x of targets.values())text(c,'Mời chỉ giáo',x.x,x.y-310,{size:24,color:'#fff4d8',width:5});}
   // Cổ vũ gần đây
@@ -235,7 +235,7 @@ export function drawArena(scene,c,t,layer){
   if(ch){drawAura(c,'gold',ch.x,ch.y-130,120+10*Math.sin(t*.003),.28);text(c,'ĐÀI CHỦ',ch.x,ch.y-320,{size:26,color:'#ffd54a',width:6});}
   else text(c,'ĐÀI TRỐNG · gõ lên đài để làm Đài Chủ',450,H*.2,{size:28,color:'#ffe9b0',width:6,max:860});
  }
- if(a.phase==='closed'&&a.podiumUntil>now&&a.champion){const ch=targets.get(a.champion.id);text(c,'LÔI ĐÀI BÁ CHỦ',450,H*.17,{size:56,color:'#ffd54a',width:9});text(c,a.champion.name,450,H*.23,{size:32,color:'#fff',width:6});if(ch)drawAura(c,'gold',ch.x,ch.y-130,170,.4);}
+ if(a.phase==='closed'&&a.podiumUntil>now&&a.champion){const ch=targets.get(a.champion.id);text(c,a.master?'👑 TÔNG CHỦ':'LÔI ĐÀI BÁ CHỦ',450,H*.17,{size:56,color:'#ffd54a',width:9});text(c,a.champion.name,450,H*.23,{size:32,color:'#fff',width:6});if(ch)drawAura(c,'gold',ch.x,ch.y-130,170,.4);}
  // Hàng chờ (1 dòng) + bảng hướng dẫn (thay các bảng khác khi đang có Lôi Đài).
  const gy=H*(ARENA_LAYOUT.hud)+118;
  if(a.phase==='open'){
@@ -249,10 +249,12 @@ export function drawArena(scene,c,t,layer){
 export const ARENA_GUIDES=Object.freeze([
  {title:'QUÀ TRỢ CHIÊU · gõ tặng + tên đấu thủ rồi tặng',rows:[['@rose','Linh Khí Quán Đỉnh · +nộ khí'],['@doughnut','Hồi Xuân Thuật · hồi máu'],['@paper-crane','Triệu Hồi Thần Thú · đánh 1 đòn'],['@money-gun','Pháp Bảo Bạo Phát + khiên'],['@crown','Thiên Giáng · tuyệt kỹ trời giáng']]},
  {title:'CƠ CHẾ ĐẤU',rows:[['Ngũ hành','Kim→Mộc→Thổ→Thủy→Hỏa→Kim · khắc +5%'],['Liên chiêu','2 bí pháp cùng hành liền nhau +10%'],['Hiệu ứng','độc · giảm công · đẩy lùi · phá khiên · phản đòn'],['Nộ khí','đầy → SK5 tuyệt kỹ (bảng toàn màn)'],['Tu vi','hơn ≥30% tổng tu vi thì thắng chắc']]},
+ {title:'👑 GHẾ TÔNG CHỦ',rows:[['@crown','mở danh hiệu Tông chủ'],['Gặp nhau','2 Tông chủ cùng có mặt → đấu Lôi Đài ngay'],['Thắng','ngồi ghế Tông chủ'],['Đại lễ 5k','lên ghế ngay, không cần đấu'],['Vắng mặt','người có danh hiệu khác ngồi tạm']]},
  {title:'BÍ PHÁP CHIÊU THỨC · học để có chiêu mới',rows:[['bí pháp','xem 12 bí pháp + bí pháp đã có'],['học + tên','vd: học độc long vụ · trả linh thạch, linh thảo'],['chiêu đổi + tên','đưa bí pháp vào SK2'],['Phàm → Thiên','càng cao chiêu càng mạnh, bảng càng đẹp'],['Địa · Thiên','cần cảnh giới + đủ huy chương (không bị trừ)']]},
  {title:'5 Ô CHIÊU · gõ chiêu để xem',rows:[['SK1','pháp bảo đang đeo'],['SK2 · SK3','bí pháp chiêu thức (học bí pháp)'],['SK4','tuyệt kỹ linh thú đang theo'],['SK5','tuyệt kỹ · cần nộ khí đầy'],['Lv1–10','tăng theo số trận Lôi Đài']]}
 ]);
 export const ARENA_COMMANDS=Object.freeze([['lên đài','làm Đài Chủ / xếp hàng'],['thách + tên','hẹn đấu · người kia gõ nhận'],['c1 – c5','đấu thủ chọn chiêu kế'],['cv1 · cv2','cổ vũ trái / phải'],['chiêu','xem bộ chiêu của mình'],['xuống đài','Đài Chủ rời đài']]);
+export const MASTER_COMMANDS=Object.freeze([['cv1 · cv2','cổ vũ trái / phải'],['c1 – c5','đấu thủ chọn chiêu kế'],['tặng + tên','tặng hộ đấu thủ = quà trợ chiêu'],['Đại lễ 5k','đấu thủ tặng → thắng ngay, lên ghế'],['chiêu','xem bộ chiêu của mình'],['Thua','vẫn giữ danh hiệu và đồ Tông chủ']]);
 export function arenaGuidePage(t){return ARENA_GUIDES[Math.floor(Math.max(0,t)/8000)%ARENA_GUIDES.length];}
 // Ảnh quà thật (public/assets/gifts) — bảng quà không ghi số xu (luật 08/11).
 const GIFT_NAME=Object.freeze({rose:'Hoa hồng',doughnut:'Bánh vòng','paper-crane':'Hạc giấy','money-gun':'Súng tiền',crown:'Vương miện'});
@@ -270,6 +272,6 @@ function drawGuideBoards(scene,c,t,H){
     text(c,'→ '+v,x+86,y,{size:14,color:'#e9f3ee',weight:'700',align:'left',width:3,max:w-96});return;}
    c.font='800 15px "Segoe UI",Arial,sans-serif';const kw=Math.min(150,c.measureText(k).width+14);c.fillStyle='#0f3a3a';c.fillRect(x+8,y-12,kw,24);
    text(c,k,x+8+kw/2,y,{size:15,color:'#baffea',weight:'800',width:0,stroke:null,max:kw-4});text(c,v,x+16+kw,y,{size:14,color:'#e9f3ee',weight:'700',align:'left',width:3,max:w-kw-26});});};
- board(14,'LỆNH LÔI ĐÀI · gõ vào bình luận',ARENA_COMMANDS,'#7fe3c4');
+ if(scene.arena?.master)board(14,'TRANH GHẾ TÔNG CHỦ · gõ vào bình luận',MASTER_COMMANDS,'#ffd27a');else board(14,'LỆNH LÔI ĐÀI · gõ vào bình luận',ARENA_COMMANDS,'#7fe3c4');
  const g=arenaGuidePage(scene.motion===false?0:t);board(453,g.title,g.rows,'#ffd27a');
 }

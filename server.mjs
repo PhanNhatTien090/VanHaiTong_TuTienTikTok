@@ -122,7 +122,7 @@ function payload(mode,view='full'){
     // Top tặng quà cho bảng TOP QUÀ trên cảnh: chỉ người đang có mặt trên LIVE (tương tác trong 5 phút gần nhất), xếp theo tổng coin quà.
     const giftEdited=new Set((s.adminLog||[]).filter(r=>r.changes?.some(c=>c.startsWith('coin quà '))).map(r=>r.id));
     const topGifters=s.players.filter(p=>!p.resident&&!p.puppet&&p.active&&p.giftCoins>0&&!giftEdited.has(p.id)).sort((a,b)=>(a.puppet?1:0)-(b.puppet?1:0)||b.giftCoins-a.giftCoins||a.joinedAt-b.joinedAt).slice(0,5).map(p=>({id:p.id,name:p.name,giftCoins:p.giftCoins,realmName:p.realmName,avatar:p.avatar||null}));
-    value={...s,heartRulesVersion:1,playerCount:playerTotal,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view()):{enabled:false,active:false}};
+    value={...s,heartRulesVersion:1,playerCount:playerTotal,players:s.players.filter(p=>p.active||top.has(p.id)),topGifters,connection,sectMaster:mode==='live'?giftMasterView(s.players,sectMaster.view(),s.masterSeat?.userId):{enabled:false,active:false}};
   }
   value={...streamState(value,mode),sourceVisual:visualSettings[mode]||null};
   payloadCache.set(key,{at:now,value});return value;

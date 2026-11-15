@@ -20,6 +20,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
+import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
 import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
 import {petV2Flags,petV2Configure,petV2Command,petV2View,petV2Cards,petV2Earn,petV2BossDamage,petV2CommitBossDamage,petV2Tick,petV2CovePhase} from './pet-v2.mjs';
 import {giftForCommand,giftForTarget,giftForEventEnd} from './gift-for.mjs';
@@ -623,7 +624,7 @@ function actionCore(w,input,now) {
     // Phúc duyên: sau khi tặng quà, chơi tay (tu luyện, hái, bình luận, đánh) được nhân thưởng trong 10 phút.
     let buff=null;if(defaults){const mult=Math.max(giftBuff(input.coins*count),firstGift?5:1,p.buffUntil>now?p.buffMult||1:1);p.buffMult=mult;p.buffUntil=now+(firstGift?2:1)*GIFT_BUFF_MS;buff={mult,minutes:(firstGift?2:1)*GIFT_BUFF_MS/60000};}
     const giftEvent=emit(w,p,defaults?`${gift||tier.name}${count>1?` ×${count}`:''} • +${q} tu vi • phúc duyên ×${String(buff.mult).replace('.',',')} 10 phút`:`${gift||tier.name}${count>1?` ×${count}`:''} • ${eventRule}`,tier.effect,now,{kind,gift,count,tier:tier.name,coins:input.coins,comboKey:input.comboKey,comboFinal:input.comboFinal,buff,firstGift,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});
-    if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now,input.coins)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;}
+    if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now,input.coins)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;const seat=seatGift(w,p,input.coins,now,socialContext);if(seat)giftEvent.masterSeat=seat;} // 15/11: tranh ghế Tông chủ
     if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t,achieve:{kind:'vip',item:VIP_TIERS[t].name}});} // v86
     if(['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
     if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;if(racing)giftEvent.text=`${gift||tier.name}${count>1?` ×${count}`:''} • BỨT TỐC +${giftEvent.raceBoost} trượng`;
@@ -973,7 +974,7 @@ function tickCore(w,now) {
   tickCompetitionSchedule(w,now);
   tickRace(w,now,socialContext);awardRaceGifts(w,now);tickWar(w,now,socialContext);tickAlchemy(w,now,alchemyContext);tickMaze(w,now,mazeContext);tickBonk(w,now,bonkContext);tickTower(w,now,towerContext);
   tickHallWar(w,now,hallWarContext);
-  tickSocial(w,now,socialContext);tickArena(w,now,socialContext);
+  tickSocial(w,now,socialContext);tickArena(w,now,socialContext);tickSeat(w,now,socialContext);
   if(w.settings?.nguDuong===true||w.nguDuong)tickHalls(w,now,hallContext);
   reconcilePatron(w,now);
 

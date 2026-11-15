@@ -21,6 +21,8 @@ export function infoPages(state={}){
  pages.push({id:'pill',title:'⚗ ĐAN DƯỢC · LINH THẢO',note:'',rows:[['2 · hái','hái linh thảo làm nguyên liệu'],['4 · luyện đan','luyện viên tốt nhất đủ nguyên liệu'],['5 · dùng','uống đan, cộng tu vi'],...pills.map(p=>[p.name,cost(p)+(p.qi?' · +'+fmt(p.qi)+' tu vi':'')])]});
  pages.push({id:'gear',title:'⚔ PHÁP BẢO & TRANG BỊ',note:'',rows:[['trang bị','đeo món mạnh nhất đang có'],['trang bị + tên','đeo đúng món mình chọn'],['3 · đánh','pháp bảo tung chiêu, tăng tu vi'],['túi đồ','xem pháp bảo, đan, bí pháp đang có'],['hồi khí','tỷ thí: hồi linh lực, tối đa 3 lần']]});
  // 15/11: Vân Hải Lôi Đài (arena.mjs) — lệnh thật.
+ // 15/11: luật ghế Tông chủ (master-seat.mjs).
+ pages.push({id:'master',title:'👑 GHẾ TÔNG CHỦ',note:'Đấu tại Lôi Đài · thua vẫn giữ danh hiệu và đồ',rows:[['Vương miện','một món · mở danh hiệu Tông chủ'],['Gặp nhau','2 Tông chủ cùng có mặt → đấu ngay'],['Thắng','ngồi ghế Tông chủ'],['Đại lễ 5k','lên ghế ngay, không cần đấu']]});
  pages.push({id:'arena',title:'⚔ VÂN HẢI LÔI ĐÀI',note:'Mở theo lịch thi đấu · thắng và giữ đài nhận huy chương',rows:[['chiêu','xem bộ 5 chiêu của mình'],['bí pháp','xem 12 bí pháp chiêu thức'],['học + tên','học bí pháp · có chiêu mới'],['chiêu đổi + tên','đưa bí pháp vào SK2'],['lên đài','làm Đài Chủ hoặc xếp hàng'],['thách + tên','hẹn đấu · người kia gõ nhận'],['cv1 · cv2','cổ vũ trái / phải']]});
  return pages;
 }

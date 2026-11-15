@@ -2,6 +2,7 @@
 // Luật thắng (chủ game duyệt "phương án B"): tu vi cao hơn → máu/công cao hơn rõ; chênh ≥30% tổng tu vi thì người mạnh thắng chắc;
 // sát nhau thì chiêu, linh thú, nộ khí (cổ vũ có trần) và quà của đấu thủ có thể lật kèo.
 import {stageConflict} from './stage-lock.mjs';
+import {seatDuelResult} from './master-seat.mjs';
 import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
 import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
@@ -22,11 +23,13 @@ function rand(m){let x=(hash(m.id)+Math.imul(++m.rngN,0x9e3779b1))>>>0;x^=x<<13;
 export const arenaOpen=(w,now=Date.now())=>w.arena?.phase==='open';
 export const arenaVisible=(w,now=Date.now())=>arenaOpen(w,now)||w.arena?.podiumUntil>now;
 
-export function startArena(w,now,c,{minutes=ARENA_MS/60000}={}){
+export function startArena(w,now,c,{minutes=ARENA_MS/60000,master=false,champion=null,challenger=null}={}){
  if(arenaOpen(w,now))return fail('Lôi Đài đang mở.');
  const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+'. Chờ hoạt động đó kết thúc.');
  if(['registration','running'].includes(w.race?.phase)||w.social?.activeCeremony?.endsAt>now)return fail('Sân đang bận.');
  w.arena={id:'arena-'+now,phase:'open',startedAt:now,endsAt:now+clamp(Math.round(minutes*60000),60000,30*60000),champion:null,defends:0,streak:0,queue:[],invites:{},current:null,nextAt:now+1500,results:[],counts:{},cheerAt:{},awarded:{},best:null,lastResult:null};
+ // 15/11: trận TRANH GHẾ TÔNG CHỦ dùng chung sân Lôi Đài (1 trận, không hàng chờ, không Bá Chủ).
+ if(master){Object.assign(w.arena,{master:true,champion,queue:[{id:challenger,at:now}],nextAt:now+2500});return ok();}
  c.emit(w,null,'VÂN HẢI LÔI ĐÀI KHAI MỞ • gõ lên đài để làm Đài Chủ hoặc thách đấu','tournament',now,{arenaStart:true});
  return ok();
 }
@@ -37,6 +40,7 @@ export function stopArena(w,now,c){
 }
 function closeArena(w,now,c){
  const a=w.arena;a.phase='closed';a.closedAt=now;a.current=null;a.queue=[];a.invites={};a.podiumUntil=now+PODIUM_MS;
+ if(a.master)return; // trận tranh ghế: không trao Bá Chủ
  const p=w.players[a.champion];
  if(p){medal(w,p,'final:'+a.id,5,now);p.arenaTitle='Lôi Đài Bá Chủ';p.arenaThrones=(p.arenaThrones||0)+1;
   c.emit(w,p,'LÔI ĐÀI BÁ CHỦ • '+p.name+' trụ đài tới cuối • +5 huy chương','tournament',now,{arenaChampion:true});}
@@ -101,6 +105,7 @@ export function arenaCommand(w,p,cmd,rest,now,c){
  if(!arenaOpen(w,now))return cmd==='nhan'||chieu?null:fail('Lôi Đài chưa mở.');
  const a=w.arena;
  if(p.resident||p.puppet)return fail('NPC không lên Lôi Đài.');
+ if(a.master&&['lendai','loidai','xuongdai','thach','thachdau','nhan'].includes(cmd))return fail('Đang tranh ghế Tông chủ • chờ trận xong.');
  if(chieu){
   const m=a.current,f=m?.fighters?.[p.id];if(!f||now>=m.endsAt)return fail('Chỉ đấu thủ đang trên đài mới chọn chiêu.');
   if(chieu<1||chieu>5)return fail('Chọn chiêu 1–5.');
@@ -275,12 +280,17 @@ export function arenaGift(w,p,coins,now,{from=null,count=1}={}){
 function finishMatch(w,now,c,{cancelled=false}={}){
  const a=w.arena,m=a.current;if(!m)return;
  const fa=m.fighters[m.a],fb=m.fighters[m.b],ra=fa.hp/fa.maxHp,rb=fb.hp/fb.maxHp;
- let winner=m.locked||(fa.hp<=0?m.b:fb.hp<=0?m.a:ra>rb?m.a:rb>ra?m.b:m.a);
+ let winner=m.forcedBy||m.locked||(fa.hp<=0?m.b:fb.hp<=0?m.a:ra>rb?m.a:rb>ra?m.b:m.a);
  const loser=winner===m.a?m.b:m.a,ko=m.fighters[loser].hp<=0;
  a.current=null;a.nextAt=now+BREAK_MS;
  const result={id:m.id,kind:m.kind,a:m.a,b:m.b,winner,loser,ko,at:now,until:now+RESULT_MS,hp:{[m.a]:ra,[m.b]:rb},cancelled};
  a.lastResult=result;a.results.push({id:m.id,winner,loser,ko,kind:m.kind});if(a.results.length>40)a.results.shift();
  if(cancelled)return;
+ if(a.master){ // trận tranh ghế: trao ghế, đóng sân sau màn kết quả
+  const pw=w.players[winner];if(pw)pw.arenaWins=(pw.arenaWins||0)+1;
+  a.champion=winner;a.phase='closed';a.closedAt=now;a.podiumUntil=now+RESULT_MS+2500;a.queue=[];
+  seatDuelResult(w,winner,loser,now,c);return;
+ }
  const pw=w.players[winner];medal(w,pw,'win:'+m.id,2,now);if(pw)pw.arenaWins=(pw.arenaWins||0)+1;
  if(m.kind==='throne'){
   if(winner===a.champion){a.defends++;a.streak++;}else{a.champion=winner;a.defends=0;a.streak=1;}
@@ -295,6 +305,7 @@ export function tickArena(w,now,c){
  const a=w.arena;if(!a||a.phase!=='open')return;
  for(const [id,inv] of Object.entries(a.invites))if(now>inv.at+INVITE_MS)delete a.invites[id];
  const m=a.current;
+ if(a.master&&!m&&now>=a.nextAt&&(!a.queue.length||now>=a.endsAt)){a.phase='closed';a.closedAt=now;a.podiumUntil=now;return;}
  if(m){
   // Đấu thủ rời LIVE giữa trận → người còn lại thắng ngay.
   for(const id of [m.a,m.b])if(!present(w,id,now,c)&&now>=m.fightAt){m.fighters[id].hp=0;finishMatch(w,now,c);return;}
@@ -323,7 +334,7 @@ export function arenaView(w,now){
  const name=id=>w.players[id]?.name||'';
  const m=a.current,fview=f=>({name:f.name,realm:f.realm,hp:f.hp,maxHp:f.maxHp,rage:f.rage,shield:f.shield,stunned:f.stunUntil>now,weak:f.weakUntil>now,reflect:f.reflectUntil>now,poison:!!f.dot,hanh:f.hanh,
   cd:Object.fromEntries([1,2,3,4].map(s=>[s,Math.max(0,f.cd[s]-now)])),kit:f.kit.map(k=>({slot:k.slot,name:k.name,tech:k.tech,color:k.color,role:k.role,lv:k.lv,pet:k.pet||null,tier:k.tier,effect:k.effect,hanh:k.hanh,art:k.art||null}))});
- return {id:a.id,phase:a.phase,endsAt:a.endsAt,podiumUntil:a.podiumUntil||0,champion:a.champion?{id:a.champion,name:name(a.champion)}:null,
+ return {id:a.id,master:!!a.master,phase:a.phase,endsAt:a.endsAt,podiumUntil:a.podiumUntil||0,champion:a.champion?{id:a.champion,name:name(a.champion)}:null,
   streak:a.streak,defends:a.defends,defendMax:DEFEND_MAX,best:a.best,
   queue:a.queue.map(q=>({id:q.id,name:name(q.id),...(q.vs?{vs:q.vs,vsName:name(q.vs)}:{})})),
   current:m?{id:m.id,kind:m.kind,a:m.a,b:m.b,startedAt:m.startedAt,fightAt:m.fightAt,endsAt:m.endsAt,locked:m.locked,odds:m.odds,
