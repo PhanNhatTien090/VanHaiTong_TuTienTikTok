@@ -6,7 +6,7 @@ import {maxHitGap} from '../public/divine-kit.js';
 import {ASCENSIONS} from '../public/ascension-art.js';
 
 // Mỗi realm 14–21 đã nâng cấp: module riêng xuất *_SPEC + bản nhạc *_SCORE.
-const DONE=[[14,'dao-to','DT14_SPEC','DAO_TO_SCORE'],[15,'thien-ton','TT15_SPEC','THIEN_TON_SCORE'],[16,'than-quan','TQ16_SPEC','THAN_QUAN_SCORE'],[17,'than-vuong','TV17_SPEC','THAN_VUONG_SCORE'],[18,'than-de','TD18_SPEC','THAN_DE_SCORE']];
+const DONE=[[14,'dao-to','DT14_SPEC','DAO_TO_SCORE'],[15,'thien-ton','TT15_SPEC','THIEN_TON_SCORE'],[16,'than-quan','TQ16_SPEC','THAN_QUAN_SCORE'],[17,'than-vuong','TV17_SPEC','THAN_VUONG_SCORE'],[18,'than-de','TD18_SPEC','THAN_DE_SCORE'],[19,'than-ton','TT19_SPEC','THAN_TON_SCORE']];
 test('realm 14–21 durations step up 1–1.5 s between Tiên Đế and Ma Thần',()=>{
   let prev=ASCENSIONS[13].duration;
   for(let r=14;r<=21;r++){const d=ASCENSIONS[r].duration;assert.equal(d,DIVINE_TIMING[r].duration*1000);assert.ok(d-prev>=900&&d-prev<=1600,`realm ${r}: +${d-prev}`);prev=d;}
