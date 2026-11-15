@@ -3,11 +3,12 @@
 import fs from 'node:fs/promises';
 import {createCanvas,loadImage} from '@napi-rs/canvas';
 import {slicePetFrames,slicePremiumPetFrames} from '../public/spirit-pet-art.js';
-const picks=[
- {id:'jade-rabbit',path:'public/assets/spirit-pets-v1/jade-rabbit.png'},
- {id:'loi-oa',path:'public/assets/spirit-pets-v1/loi-oa.png'},
- {id:'bach-nguyet-ho',path:'public/assets/spirit-pets-v1/animated/bach-nguyet-ho-drawn-v2.webp',premium:true}
-];
+import {ALL_PETS} from '../public/spirit-pets.js';
+import {PREMIUM_PET_PERIODS} from '../public/premium-pet-motion.js';
+const picks=ALL_PETS.map(p=>{
+ const premium=Object.hasOwn(PREMIUM_PET_PERIODS,p.id);
+ return {id:p.id, premium, path:'public/assets/spirit-pets-v1/'+(premium?'animated/'+p.id+'-drawn-v2.webp':p.id+'.png')};
+});
 await fs.mkdir('art-source/spirit-pets-v3/references', {recursive:true});
 for(const p of picks){
  const image=await loadImage(p.path);
