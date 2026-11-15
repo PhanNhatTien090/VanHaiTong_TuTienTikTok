@@ -27,9 +27,15 @@ export function cameraImpulse(scene,preset,age,seed=0,light=feedbackBudget(scene
   return {x:Math.sin(age*.048+seed*6.28)*gain,y:Math.cos(age*.053+seed*6.28)*gain*.64};
 }
 
-export function mixCameraImpulses(main,secondary){
+/* Tỷ thí: user yêu cầu rung + giật ×5 (15/11). Trần riêng để không bị kẹp về 10 px. */
+export const DUEL_SHAKE_GAIN=5;
+export const DUEL_SHAKE_CAP=10*DUEL_SHAKE_GAIN;
+export function scaleImpulse(j,gain){
+  return j&&(j.x||j.y)?{x:j.x*gain,y:j.y*gain}:ZERO;
+}
+export function mixCameraImpulses(main,secondary,cap=10){
   const weight=(main.x||main.y)?.15:1;
-  return {x:clamp(main.x+secondary.x*weight,-10,10),y:clamp(main.y+secondary.y*weight,-10,10)};
+  return {x:clamp(main.x+secondary.x*weight,-cap,cap),y:clamp(main.y+secondary.y*weight,-cap,cap)};
 }
 
 export function giftCameraImpulse(scene,event,t){
@@ -42,8 +48,7 @@ export function giftCameraImpulse(scene,event,t){
   return {x:amplitude*Math.sin(phase*15+1.57)*(event.mode==='duel'?-1:1),y:-amplitude*.55*Math.cos(phase*19)};
 }
 
-export function boundedCameraJolt(base,jolt,H,allowPadding=false){
-  const cap=10;
+export function boundedCameraJolt(base,jolt,H,allowPadding=false,cap=10){
   const dx=clamp(jolt.x||0,-cap,cap),dy=clamp(jolt.y||0,-cap,cap);
   if(!dx&&!dy)return base;
   const padding=allowPadding?Math.max(Math.abs(dx)/420,Math.abs(dy)/(H*.46)):0;

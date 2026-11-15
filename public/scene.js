@@ -30,7 +30,7 @@ import {loadDoraArt,doraWorn,drawDoraBody,drawDoraRelic,drawDoraVisitor,drawDora
 import {noteEngagementReaction,drawEngagementReactions} from './engagement-reactions.js';
 import {LiveFeedbackDirector,prepareFeedbackArt} from './live-feedback-fx.js';
 import {drawSkillImpact,impactSeverity} from './skill-impact-v3.js';
-import {drawImpactPunctuation,drawImpactCamera} from './impact-punch.js?v=screen-shake-v1';
+import {drawImpactPunctuation,drawImpactCamera} from './impact-punch.js?v=duel-shake-x5';
 import {drawDuelCinematic,duelChargingPose} from './duel-cinematic.js';
 import {drawOverdriveV7} from './cinematic-overdrive-v7.js';
 import {artworkCrop,projectedGround,courtyardTargets,constrainGroundTargets} from './courtyard-layout.js';
@@ -46,7 +46,7 @@ import {relicTurn,petTurn,relicBob} from './follower-turn.js';
 import {linWanWorn,loadLinWanArt,drawLinWanBody,drawLinWanQi,drawLinWanVisitor} from './lin-wan-art.js';
 import {loadSpiritBeasts} from './gift-spirit-beasts.js';
 import {cinematicQuality,cinematicSeed,drawLightning,drawShockwave,drawAura,drawEnergyOrb,drawSeal,drawDissolve,drawTrail,prepareCinematicArt} from './cinematic-vfx.js';
-import {boundedCameraJolt,cameraImpulse,cameraShakeStrength,feedbackBudget,mixCameraImpulses,takeFeedbackCue} from './cinematic-feedback.js';
+import {boundedCameraJolt,cameraImpulse,cameraShakeStrength,feedbackBudget,mixCameraImpulses,takeFeedbackCue,scaleImpulse,DUEL_SHAKE_GAIN,DUEL_SHAKE_CAP} from './cinematic-feedback.js?v=duel-shake-x5';
 import {syncEventGiftFx,eventGiftImpulse,drawEventGiftFx} from './event-gift-fx.js?v=v7-overdrive-premium-20261115';
 import {eventDonationContext,addEventDonation,drawEventDonations} from './event-donations.js';
 import {giftSpectacleTier,loadGiftSpectacle,drawGiftSpectacle,spectacleShake,spectacleV2,GIFT_HITS} from './gift-spectacle.js';
@@ -578,14 +578,15 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
       const jolt=boss?.impactAt?cameraImpulse(this,'major',Date.now()-boss.impactAt,boss.seed,boss.quality==='light'):null;
       const attack=this.effects.find(e=>e.effect==='attack'&&e.technique&&impactSeverity(e)>=2&&t-e.start-e.duration*.55>=0&&t-e.start-e.duration*.55<300);
       const hit=attack?cameraImpulse(this,impactSeverity(attack)>=3?'medium':'minor',t-attack.start-attack.duration*.55,attack.cinematicSeed,feedbackBudget(this)):null;
-      const duelJolt=this.duelImpact&&this.socialScene==='tournament'?cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37):null;
-      const chargeJolt=this.socialScene==='tournament'&&this.duelChargeAt?cameraImpulse(this,'minor',Date.now()-this.duelChargeAt,.27):null; /* V4: tỷ thí — minor mỗi đòn công kích, medium lúc tuyệt kỹ */
-      const baseJolt0=jolt?mixCameraImpulses(jolt,gift):gift,chargeMixed=chargeJolt?mixCameraImpulses(baseJolt0,chargeJolt):baseJolt0,baseJolt=duelJolt?mixCameraImpulses(chargeMixed,duelJolt):chargeMixed;
-      const mixed=hit?mixCameraImpulses(baseJolt,hit):baseJolt;
+      const duelJolt=this.duelImpact&&this.socialScene==='tournament'?scaleImpulse(cameraImpulse(this,this.duelImpact.preset,Date.now()-this.duelImpact.at,.37),DUEL_SHAKE_GAIN):null;
+      const chargeJolt=this.socialScene==='tournament'&&this.duelChargeAt?scaleImpulse(cameraImpulse(this,'minor',Date.now()-this.duelChargeAt,.27),DUEL_SHAKE_GAIN):null; /* V4: tỷ thí — minor mỗi đòn công kích, medium lúc tuyệt kỹ */
+      const duelCap=this.socialScene==='tournament'?DUEL_SHAKE_CAP:10;
+      const baseJolt0=jolt?mixCameraImpulses(jolt,gift):gift,chargeMixed=chargeJolt?mixCameraImpulses(baseJolt0,chargeJolt,duelCap):baseJolt0,baseJolt=duelJolt?mixCameraImpulses(chargeMixed,duelJolt,duelCap):chargeMixed;
+      const mixed=hit?mixCameraImpulses(baseJolt,hit,duelCap):baseJolt;
       const duelAge=this.duelImpact?.ultimate&&this.socialScene==='tournament'?Date.now()-this.duelImpact.at:-1;
-      const zoom=duelAge>=0&&duelAge<285&&this.motion?.045*strength*Math.sin(Math.PI*duelAge/285):0;
+      const zoom=duelAge>=0&&duelAge<285&&this.motion?.045*DUEL_SHAKE_GAIN*strength*Math.sin(Math.PI*duelAge/285):0;
       const centerZoom=zoom?{s:base.s+zoom,x:base.x-450*zoom,y:base.y-H*.5*zoom}:base;
-      return boundedCameraJolt(centerZoom,mixed,H,!!(mixed.x||mixed.y||zoom));
+      return boundedCameraJolt(centerZoom,mixed,H,!!(mixed.x||mixed.y||zoom),duelCap);
     }
     const gain=strength*(feedbackBudget(this)?.55:1);
     const mixed={x:gift.x+secondary.x*gain,y:gift.y+secondary.y*gain};

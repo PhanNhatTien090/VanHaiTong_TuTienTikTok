@@ -7,7 +7,7 @@ import {breakthroughRealm} from './breakthrough-fx.js';
 import {impactSeverity} from './skill-impact-v3.js';
 import {GIFT_HITS} from './gift-spectacle.js';
 import {makeSurface} from './performance.js';
-import {cameraShakeStrength} from './cinematic-feedback.js';
+import {cameraShakeStrength,DUEL_SHAKE_GAIN} from './cinematic-feedback.js?v=duel-shake-x5';
 
 const TAU=Math.PI*2,SPAN=420;
 const clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n));
@@ -116,7 +116,7 @@ export function drawImpactCamera(scene,c,t,H,wallNow=Date.now()){
  const strength=cameraShakeStrength(scene),cue=strength&&impactBeat(scene,t,wallNow);
  scene.screenShake={active:false,x:0,y:0};
  if(!cue)return false;
- const envelope=(1-cue.age/SPAN)**2,amount=(cue.power>=3?16:cue.power>=2?11:7)*strength*envelope;
+ const envelope=(1-cue.age/SPAN)**2,amount=(cue.power>=3?16:cue.power>=2?11:7)*strength*envelope*(cue.kind==='duel'?DUEL_SHAKE_GAIN:1);
  if(amount<.15)return false;
  const dx=Math.sin(cue.age*.052+.9)*amount,dy=Math.cos(cue.age*.069+.4)*amount*.65;
  const canvas=scene.canvas,w=canvas.width,h=canvas.height;
