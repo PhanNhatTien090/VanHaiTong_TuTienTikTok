@@ -47,6 +47,7 @@ export function live2GuildCard(w,g){
   deputy:w.players[g.deputy]?.name||null,elders:(g.elders||[]).map(id=>w.players[id]?.name).filter(Boolean).slice(0,2),
   members:g.members?.length||0,capacity:24+(g.buildings?.hall||0)*2,
   points:g.points||0,spentPoints:g.spentPoints||0,hallLevel:g.buildings?.hall||0,
+  wars:g.wars||0,wins:g.wins||0,warPoints:g.warPoints||0,
   roster:(g.members||[]).slice(0,6).map(id=>w.players[id]?.name||'Đạo hữu')};
 }
 // Read-only panels never produce a cinematic or replace active attack/gift visuals.

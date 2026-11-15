@@ -96,7 +96,8 @@ export function inventoryDeckHTML(e,esc){
     +`<div style="display:flex;align-items:center;gap:8px;min-height:90px"><div>${badge}</div><div style="min-width:0;color:#f6dfab;font-weight:800;font-size:17px;overflow-wrap:anywhere">${esc(card.name||'Bang hội')}<small style="display:block;color:#d1d9eb;font-weight:500;font-size:12px">${leaders.map(esc).join(' · ')}</small></div></div>`
     +`<div class="vd-chips"><span>✦ ${fmt(card.points)} cống hiến</span><span>${fmt(claimed)} khả dụng</span></div>`
     +(elders.length?`<div style="font-size:13px;text-align:center;color:#e8d6aa">Trưởng Lão: ${elders.map(esc).join(' · ')}</div>`:'')
-    +(roster.length?`<div style="font-size:12px;text-align:center;line-height:1.45;color:#d2dfed">Đồng môn: ${roster.map(esc).join(' · ')}</div>`:'');
+    +(roster.length?`<div style="font-size:12px;text-align:center;line-height:1.45;color:#d2dfed">Đồng môn: ${roster.map(esc).join(' · ')}</div>`:'')
+    +`<div style="font-size:12px;text-align:center;color:#f4da9b;margin-top:5px">⚔ Hội Chiến: ${fmt(card.wins||0)} thắng / ${fmt(card.wars||0)} trận · +${fmt(card.warPoints||0)} cống hiến</div>`;
   }
  }else if(kind==='bag'){
   body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span>${card.daoPath?`<span>✦ ${esc(card.daoPath.name)} · Đạo Ngộ ${fmt(card.daoPath.insight)}</span>`:''}</div>`
