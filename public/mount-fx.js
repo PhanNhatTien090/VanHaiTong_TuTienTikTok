@@ -133,13 +133,13 @@ export function drawOrb(c,kind,x,y,{scale=1,t=performance.now(),progress=0,lod='
  const stage=progress>=.7?1:0,im=image(orbImage(kind,stage));if(!im)return false;
  const size=44*scale,bob=Math.sin(t*.0024+hash(seed)*TAU)*2*scale,cy=y-size*.62+bob,tier=kind==='common'?'common':kind;
  c.save();
- const pulse=.5+.5*Math.sin(t*(.003+progress*.006));
- if(lod!=='off')blit(c,glowArt(tier),x,cy-size*.12,size*(1.7+progress*.8),size*(1.7+progress*.8),.35+pulse*.35*(.5+progress),true);
+ // 16/11 (chủ game): châu nhấp nháy liên tục trông lag → quầng sáng ĐỨNG YÊN, mờ hơn; hạt hút chỉ khi sắp nở (≥90%), 3 hạt.
+ if(lod!=='off')blit(c,glowArt(tier),x,cy-size*.12,size*(1.6+progress*.5),size*(1.6+progress*.5),.28+progress*.2,true);
  c.globalAlpha=1;c.globalCompositeOperation='source-over';c.drawImage(im,x-size/2,cy-size/2,size,size*im.naturalHeight/im.naturalWidth);
- if(lod==='full'){
+ if(lod==='full'&&progress>=.9){
   // hạt hút vào lõi
   const mi=moteArt(tier);c.globalCompositeOperation='lighter';
-  for(let i=0;i<6;i++){const r=hash(seed+kind,i),p=((t*.0006+r)%1),a=r*TAU+t*.0008,d=(1-p)*size*.95;c.globalAlpha=Math.sin(p*Math.PI)*.8;const s=6*scale;c.drawImage(mi,x+Math.cos(a)*d-s/2,cy-size*.15+Math.sin(a)*d*.6-s/2,s,s);}
+  for(let i=0;i<3;i++){const r=hash(seed+kind,i),p=((t*.0006+r)%1),a=r*TAU+t*.0008,d=(1-p)*size*.95;c.globalAlpha=Math.sin(p*Math.PI)*.8;const s=6*scale;c.drawImage(mi,x+Math.cos(a)*d-s/2,cy-size*.15+Math.sin(a)*d*.6-s/2,s,s);}
  }
  // vòng tiến độ
  c.globalAlpha=.9;c.globalCompositeOperation='source-over';c.lineWidth=2.4*scale;c.lineCap='round';
