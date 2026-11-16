@@ -342,7 +342,7 @@ export function tickHalls(w,now,ctx,force=false){
   }
   for(const [index,h] of s.halls.entries()){
     if(h.elder||!hallEnabled(defs[index]))continue;
-    const next=ranked.find(p=>autoElder(w,s,p.id,master,ranked)&&(!h.since||now-(w.players[p.id].lastActive||0)<3*DAY));
+    const next=ranked.find(p=>autoElder(w,s,p.id,master,ranked,index)&&(!h.since||now-(w.players[p.id].lastActive||0)<3*DAY));
     if(next)seat(w,s,index,w.players[next.id],now,ctx.emit,h.since?'Thiên Bảng đề cử':null);
   }
   // 15/11 (chủ game): ghế Đường chủ không bỏ trống — Chân Truyền mạnh nhất của Đường → Tông chủ cũ đang rảnh → đệ tử mạnh nhất của Đường.
@@ -360,7 +360,7 @@ export function tickHalls(w,now,ctx,force=false){
   for(const [index,h] of s.halls.entries()){
     const elder=w.players[h.elder];
     if(!elder||h.guardUntil>now)continue;
-    const next=ranked.find(p=>p.totalQi>=score(elder)*1.2&&p.totalQi>score(elder)&&now-(w.players[p.id].lastActive||0)<3*DAY&&autoElder(w,s,p.id,master,ranked));
+    const next=ranked.find(p=>p.totalQi>=score(elder)*1.2&&p.totalQi>score(elder)&&now-(w.players[p.id].lastActive||0)<3*DAY&&autoElder(w,s,p.id,master,ranked,index));
     if(next)seat(w,s,index,w.players[next.id],now,ctx.emit,'Tu vi vượt mốc kế nhiệm');
   }
   if(ctx.busy(w,now)||s.nextMatchAt>now)return;
@@ -373,9 +373,11 @@ export function tickHalls(w,now,ctx,force=false){
   }
 }
 
-function autoElder(w,s,id,master,ranked){
+function autoElder(w,s,id,master,ranked,index){
   const p=w.players[id];
-  return !p.hallDeparture&&!p.hallAppointmentOptOut&&eligible(w,s,id,master,ranked);
+  // 16/11: tự lên ghế chỉ trong Đường của mình (hoặc người chưa vào Đường) — không bao giờ tự chuyển người sang Đường khác.
+  const own=membership(s,id)?.index;
+  return (own==null||own===index)&&!p.hallDeparture&&!p.hallAppointmentOptOut&&eligible(w,s,id,master,ranked);
 }
 
 export function hallView(w,now,active) {

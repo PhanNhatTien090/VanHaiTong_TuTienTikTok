@@ -32,3 +32,15 @@ test('không có Chân Truyền → Tông chủ cũ đang rảnh trấn giữ; k
  mk2('m1',0,8e8);mk2('m2',0,9e8);
  tickHalls(w2,NOW,ctx,true);assert.equal(w2.nguDuong.halls[0].elder,'m2');
 });
+test('tự lên ghế không bao giờ kéo người từ Đường khác sang (vụ Công Tài 16/11)',()=>{
+ const {w,mk}=setup();
+ // Đường 3 (index 2): Đường chủ ct 21,7 tỷ. Đường 4 (index 3): Đường chủ yếu 1,6 tỷ; vt 38,8 tỷ là đệ tử Đường 4.
+ mk('ct',2,2.17e10);w.nguDuong.halls[2].elder='ct';
+ mk('yue',3,1.6e9);w.nguDuong.halls[3].elder='yue';
+ mk('vt',3,3.88e10);
+ mk('e0',0,9e9);w.nguDuong.halls[0].elder='e0';
+ tickHalls(w,NOW,ctx,true);
+ assert.equal(w.nguDuong.members.ct.index,2);assert.equal(w.nguDuong.members.vt.index,3);
+ assert.equal(w.nguDuong.halls[2].elder,'ct');
+ assert.equal(w.nguDuong.halls[3].elder,'vt');
+});
