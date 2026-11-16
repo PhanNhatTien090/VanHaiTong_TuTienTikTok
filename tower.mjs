@@ -152,7 +152,7 @@ export function towerView(w,now){
    helpers:Object.keys(t.helpers).length,helpHits:t.helpHits,hits:t.hits,realm:p?.realm??0,guardian:g,next:Math.ceil(t.floor/TOWER.milestone)*TOWER.milestone,
    buff:t.buffUntil>now?{name:t.buffName,tier:t.buffTier,mult:t.buffMult,until:t.buffUntil}:null};});
  return {id:e.id,active:open,endsAt:e.endsAt,clears:e.clears,lanes,
-  queue:e.queue.slice(0,5).map(id=>w.players[id]?.name||'Đạo hữu'),queued:e.queue.length,
+  queue:e.queue.slice(0,5).map(id=>w.players[id]?.name||'Đạo hữu'),queued:e.queue.length,queueAvatars:e.queue.slice(0,10).map(id=>({id,avatar:w.players[id]?.avatar||null})), // 16/11: bảng chờ chỉ avatar
   fx:(e.fx||[]).filter(f=>now-f.at<6000),
   results:(e.results||[]).filter(r=>now-r.at<4500),
   last:e.last&&now-e.last.at<4000?e.last:null,result:open?null:e.result||null};

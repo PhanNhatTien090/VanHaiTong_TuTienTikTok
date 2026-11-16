@@ -4,6 +4,7 @@
 // rung màn (≥10), chói lóa toàn màn (≥100), mưa kiếm (500). Không lag: HTML + CSS + WAAPI, ảnh tĩnh có sẵn.
 import {portraitCanvas} from './linh-bai.js';
 import {giftTokenHTML} from './gift-icons.js';
+import {queueAvatarsHTML} from './queue-avatars.js';
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 const mounted=new WeakMap();
 const secs=ms=>Math.max(0,Math.ceil(ms/1000));
@@ -28,7 +29,7 @@ export function towerHTML(t,now,esc,state={}){
  if(!t.active&&t.result){const top=t.result.top||[];
   return `<div class="tw-ribbon"><span>✦ VÂN HẢI THÁP KHÉP CỬA ✦</span></div><div class="tw2-podium">${top.length?top.map((r,i)=>`<div class="tw2-pod tw2-pod${i+1}"><i>${i+1}</i><strong>${esc(r.name)}</strong><span>tầng ${fmt(r.floor)}</span></div>`).join(''):'<div class="tw2-none">Chưa ai vượt tầng · lượt sau gõ 6 lên đài</div>'}</div>`;}
  const lanes=t.lanes||[];
- const q=t.queue?.length?`Chờ: ${t.queue.map(esc).join(' · ')}${t.queued>t.queue.length?` +${t.queued-t.queue.length}`:''}`:'Gõ 6 lên đài';
+ const qa=t.queueAvatars||(t.queue||[]).map(()=>({})),q=qa.length?`<span class="tw2-q"><em>CHỜ</em>${queueAvatarsHTML(qa,(t.queued||0)-qa.length,esc)}</span>`:'Gõ 6 lên đài'; // 16/11: hàng chờ = avatar, không tên
  const guide=TOWER_GIFT_GUIDE.map(([c,name])=>`<span>${giftTokenHTML(state.giftArt,c)}<b>${esc(name)}</b></span>`).join('');
  return `<div class="tw-ribbon"><span>✦ VÂN HẢI THÁP · 4 ĐÀI ✦</span></div>
 <div class="tw2-grid">${[0,1,2,3].map(i=>laneHTML(lanes[i],i,esc)).join('')}</div>
@@ -37,7 +38,7 @@ export function towerHTML(t,now,esc,state={}){
 }
 function setText(node,text){if(node&&node.textContent!==text)node.textContent=text;}
 function setWidth(node,value){if(node&&node.style.width!==value)node.style.width=value;}
-function structureKey(t){return t.active?JSON.stringify([(t.lanes||[]).map(l=>l&&[l.id,l.floor,l.buff?.tier,l.helpers>0]),t.queue,t.queued]):'end:'+t.id;}
+function structureKey(t){return t.active?JSON.stringify([(t.lanes||[]).map(l=>l&&[l.id,l.floor,l.buff?.tier,l.helpers>0]),(t.queueAvatars||[]).map(q=>q.id).join(','),t.queued]):'end:'+t.id;}
 
 // ---------- hiệu ứng quà ----------
 function shake(nodes,amp,ms){for(const n of nodes){if(!n?.animate)continue;const k=[];for(let i=0;i<=8;i++){const a=amp*(1-i/8);k.push({translate:`${(i%2?-1:1)*a}px ${((i>>1)%2?-1:1)*a*.6}px`});}n.animate(k,{duration:ms,easing:'linear',composite:'add'});}} // 'translate' riêng → không đè transform căn giữa

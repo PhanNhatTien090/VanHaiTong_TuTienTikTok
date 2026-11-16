@@ -8,6 +8,7 @@ import {drawPetV2SkillSignature} from './pet-v2-skill-fx.js';
 import {duelSoundPreset} from './duel-cinematic.js';
 import {bannerPlan,bannerLane,drawSkillBannerLane,BANNER_MS} from './skill-banner.js?v=loi-dai-banner-20261115';
 import {portraitCanvas} from './linh-bai.js';
+import {drawQueueAvatars} from './queue-avatars.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
 import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
 
@@ -239,9 +240,10 @@ export function drawArena(scene,c,t,layer){
  // Hàng chờ (1 dòng) + bảng hướng dẫn (thay các bảng khác khi đang có Lôi Đài).
  const gy=H*(ARENA_LAYOUT.hud)+118;
  if(a.phase==='open'){
-  panel(c,14,gy,872,28,'#06121fd9','#ffd98a55');
-  const q=a.queue.map((x,i)=>(i+1)+'.'+x.name+(x.vs?' vs '+x.vsName:'')).join('  ');
-  text(c,'HÀNG CHỜ: '+(q||'trống · gõ lên đài'),24,gy+14,{size:15,color:'#ffe2a4',weight:'800',align:'left',width:3,max:852});
+  // 16/11 (chủ game): hàng chờ = avatar tròn nhỏ, không tên; đánh xong người đầu hàng tự vào.
+  panel(c,14,gy,a.queue.length?Math.min(872,124+a.queue.length*38):872,40,'#06121fd9','#ffd98a55');
+  text(c,'HÀNG CHỜ',24,gy+20,{size:15,color:'#ffe2a4',weight:'800',align:'left',width:3});
+  if(a.queue.length)drawQueueAvatars(c,a.queue,112,gy+20,15,8);else text(c,'trống · gõ lên đài',112,gy+20,{size:15,color:'#ffe2a4',weight:'800',align:'left',width:3});
   drawGuideBoards(scene,c,t,H);
  }
 }

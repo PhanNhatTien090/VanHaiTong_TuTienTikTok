@@ -338,7 +338,7 @@ export function arenaView(w,now){
   cd:Object.fromEntries([1,2,3,4].map(s=>[s,Math.max(0,f.cd[s]-now)])),kit:f.kit.map(k=>({slot:k.slot,name:k.name,tech:k.tech,color:k.color,role:k.role,lv:k.lv,pet:k.pet||null,tier:k.tier,effect:k.effect,hanh:k.hanh,art:k.art||null}))});
  return {id:a.id,master:!!a.master,phase:a.phase,endsAt:a.endsAt,podiumUntil:a.podiumUntil||0,champion:a.champion?{id:a.champion,name:name(a.champion)}:null,
   streak:a.streak,defends:a.defends,defendMax:DEFEND_MAX,best:a.best,
-  queue:a.queue.map(q=>({id:q.id,name:name(q.id),...(q.vs?{vs:q.vs,vsName:name(q.vs)}:{})})),
+  queue:a.queue.map(q=>({id:q.id,name:name(q.id),avatar:w.players[q.id]?.avatar||null,...(q.vs?{vs:q.vs,vsName:name(q.vs)}:{})})),
   current:m?{id:m.id,kind:m.kind,a:m.a,b:m.b,startedAt:m.startedAt,fightAt:m.fightAt,endsAt:m.endsAt,locked:m.locked,odds:m.odds,
    fighters:{[m.a]:fview(m.fighters[m.a]),[m.b]:fview(m.fighters[m.b])},log:m.log.slice(-10),cheers:m.cheers,cheerNames:m.cheerNames.slice(-5)}:null,
   lastResult:a.lastResult&&a.lastResult.until>now?{...a.lastResult,winnerName:name(a.lastResult.winner),loserName:name(a.lastResult.loser)}:null};
