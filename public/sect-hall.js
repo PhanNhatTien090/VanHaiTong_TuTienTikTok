@@ -67,6 +67,15 @@ export function masterSeatGeometry(H,art){const iw=art?.naturalWidth||art?.width
 export function sectCourtVisible(scene){
  return scene.environment?.layout==='sect'&&!scene.hallWarStatus?.active&&!scene.raceStatus?.active&&!scene.warStatus?.active&&!scene.alcStatus?.active&&!scene.mazeStatus&&!scene.socialScene&&!scene.socialStage?.length&&!scene.bonkFest?.active;
 }
+// 16/11 (chủ game): đạo lữ Tông chủ ngồi ngay cạnh, thấp hơn ngai một chút; nhãn nhỏ ĐẠO LỮ + tên.
+function drawConsort(scene,c,p,x,y,scale,t){
+ const target={id:p.id,player:p,x,y,scale};drawWings(scene,c,target,t);
+ const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
+ try{c.save();c.translate(x,y);c.scale(scale,scale);scene.drawCharacterBody(c,p,skinFor(p.giftCoins),t);c.restore();}finally{scene.compact=compact;scene.cinematicPose=pose;}
+ c.save();c.textAlign='center';c.textBaseline='middle';c.font='800 13px "Segoe UI",Arial,sans-serif';const label='ĐẠO LỮ TÔNG CHỦ',w=c.measureText(label).width+20;
+ c.fillStyle='#3a0f2aee';c.beginPath();c.roundRect?c.roundRect(x-w/2,y+14,w,22,11):c.rect(x-w/2,y+14,w,22);c.fill();c.strokeStyle='#ffb3dc';c.lineWidth=1.5;c.stroke();c.fillStyle='#ffd6ee';c.fillText(label,x,y+25);
+ c.font='800 15px "Segoe UI",Arial,sans-serif';c.lineWidth=3;c.strokeStyle='#05070d';c.strokeText(p.name||'Đạo hữu',x,y+48,200);c.fillStyle='#fff1f8';c.fillText(p.name||'Đạo hữu',x,y+48,200);c.restore();
+}
 export function drawSectMaster(scene,c,t){
  if(!sectCourtVisible(scene)||scene.sectMaster?.enabled===false||scene.presentation?.until>t)return false;
  const host=scene.sectMaster||{},now=(scene.stateServerNow||Date.now())+(t-(scene.stateReceivedAt??t)),speaking=host.active===true&&(!host.until||now<host.until);
@@ -93,6 +102,7 @@ export function drawSectMaster(scene,c,t){
  else{c.translate(x,y-42);c.scale(1.35,1.35);const old=scene.compact;scene.compact=true;try{scene.drawCharacterBody(c,p,skinFor(p.giftCoins),0);}finally{scene.compact=old;}}
  c.restore();
  if(throneTier>=0)drawThroneFront(c,x,y,seat.height,throneTier,t,motion,host.player.name||'Đạo hữu');
+ if(host.player&&host.consort)drawConsort(scene,c,host.consort,x+seat.height*1.12,y+seat.height*.3,seat.height/120*.82,t);
  c.save();if(throneTier>=0)drawMasterPlate(c,x,seat.top+seat.height+8,'',throneTier);else{c.textAlign='center';c.textBaseline='middle';c.font='800 16px "Segoe UI",Arial,sans-serif';const label='TÔNG CHỦ',w=c.measureText(label).width+28;c.fillStyle='#102632ed';c.fillRect(x-w/2,seat.top+seat.height+8,w,28);c.strokeStyle='#c8ab68';c.strokeRect(x-w/2,seat.top+seat.height+8,w,28);c.fillStyle='#ffe0a0';c.fillText(label,x,seat.top+seat.height+22);}
  if(throneTier<0&&host.player){c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}
  if(speaking&&age<12000){const raw=host.text||'Chư vị đạo hữu, cùng tu luyện!',words=raw.split(/\s+/),lines=[''];c.font='700 15px "Segoe UI",Arial,sans-serif';for(const word of words){const at=lines.length-1,next=(lines[at]+' '+word).trim();if(c.measureText(next).width>270&&lines[at]){if(lines.length===2){lines[at]+='…';break;}lines.push(word);}else lines[at]=next;}const width=Math.min(310,Math.max(...lines.map(s=>c.measureText(s).width))+28),h=lines.length*25+18,by=y-190-h;c.fillStyle='#0b2332f0';c.fillRect(x-width/2,by,width,h);c.strokeStyle='#d9bd7777';c.strokeRect(x-width/2,by,width,h);c.fillStyle='#f8ecd0';lines.forEach((line,i)=>c.fillText(line,x,by+21+i*25));}

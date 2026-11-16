@@ -28,3 +28,6 @@ html body .qi-leaders.hall-ranks>span>small{grid-column:2 / -1;color:#c4d7d6}
 body.ritual-active .hall-panel{visibility:hidden}
 body.hall-dueling :is(#spotlight,#linhBai,#baoHy,.hall-card){visibility:hidden}
 body.hall-dueling #stageQueue{visibility:hidden}
+
+/* 16/11 (chủ game): đang Ngũ Đường tranh đấu → Ngọc Giản thu nhỏ xuống mép dưới, không che trận */
+body.hall-war .hall-card{top:auto;bottom:.6%;width:min(60%,23rem);font-size:.74em;transform:translate(-50%,0)}

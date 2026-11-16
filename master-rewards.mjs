@@ -22,11 +22,13 @@ export function unlockMasterLoadout(w,p,catalog,now=Date.now(),itemCoins=0){
 }
 // Gỡ danh hiệu Tông chủ đã mở theo luật cũ (tổng cộng dồn / lịch sử). Giữ nguyên đồ đã nhận. Chạy 1 lần.
 export function resetHistoricMasters(w){if((w.masterRuleVersion||0)>=2)return 0;let n=0;for(const p of Object.values(w.players||{}))if(p.sectMasterUnlocked&&!p.sectMasterGiftAt){delete p.sectMasterUnlocked;delete p.sectMasterUnlockedAt;n++;}w.masterRuleVersion=2;return n;}
+// 16/11 (chủ game): đạo lữ (bond chính) của Tông chủ ngồi ghế riêng cạnh ngai, không ngồi ghế Trưởng Lão.
+export function masterConsort(players,p){return p?.bondId?players.find(x=>x.id!==p.id&&x.bondId===p.bondId&&real(x)&&x.active)||null:null;}
 export function giftMasterView(players,host={},seatId=null){
  // 15/11: chủ GHẾ (thắng tranh ghế / đại lễ) ngồi khi có mặt; vắng thì người có danh hiệu tặng gần nhất ngồi tạm.
  const here=players.filter(p=>real(p)&&p.active&&p.sectMasterUnlocked&&p.sectMasterGiftAt);
  const p=here.find(x=>x.id===seatId)||here.sort((a,b)=>(b.sectMasterGiftAt||0)-(a.sectMasterGiftAt||0)||String(a.id).localeCompare(String(b.id)))[0];
- if(p)return {enabled:true,source:'gift',userId:p.id,name:p.name,player:p,active:false};
+ if(p)return {enabled:true,source:'gift',userId:p.id,name:p.name,player:p,active:false,consort:masterConsort(players,p)};
  /* 10/11: ghế Tông chủ của chủ kênh vẽ đúng nhân vật + tên của tài khoản đã đặt, không dùng ảnh Tông chủ chung */
- const own=host?.userId&&players.find(x=>x.id===host.userId);return own?{...host,name:own.name,player:own}:host;
+ const own=host?.userId&&players.find(x=>x.id===host.userId);return own?{...host,name:own.name,player:own,consort:masterConsort(players,own)}:host;
 }

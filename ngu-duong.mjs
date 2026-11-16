@@ -319,7 +319,7 @@ export function tickHalls(w,now,ctx,force=false){
   if(!force && !s.match && now-(s.scanAt??-Infinity)<5000)return;
   if(s.match && now<s.match.endsAt)return;
   s.scanAt=now;
-  const master=masterId(w,ctx.active,now), ranked=thienBang(w,ctx.active,now,master);
+  const master=masterId(w,ctx.active,now), ranked=thienBang(w,ctx.active,now,master), consort=consortId(w,master);
   const bout=s.match;
   if(bout){
     const h=s.halls[bout.index], a=w.players[bout.a], b=w.players[bout.b];
@@ -345,7 +345,7 @@ export function tickHalls(w,now,ctx,force=false){
       candidates.sort((a,b)=>membership(s,b.id).points-membership(s,a.id).points||rankOrder(a,b));
       for(const p of candidates.slice(0,3-h.disciples.length))promote(w,h,p,index,now,ctx.emit);
     }
-    if(!real(elder)||elder.id===master||absent){h.elder=null;h.offers=[];h.guardUntil=0;}
+    if(!real(elder)||elder.id===master||elder.id===consort||absent){h.elder=null;h.offers=[];h.guardUntil=0;}
   }
   for(const [index,h] of s.halls.entries()){
     if(h.elder||!hallEnabled(defs[index]))continue;
@@ -356,7 +356,7 @@ export function tickHalls(w,now,ctx,force=false){
   for(const [index,h] of s.halls.entries()){
     if(h.elder||!hallEnabled(defs[index]))continue;
     // Chân Truyền do quản lý gán có cờ hallAppointmentOptOut — vẫn được kế nhiệm (chủ game muốn Chân Truyền lên thay).
-    const free=(p,anyway=false)=>real(p)&&p.id!==master&&!s.halls.some(x=>x.elder===p.id)&&!p.hallDeparture&&(anyway||!p.hallAppointmentOptOut)&&w.playTransfers?.[p.id]?.phase!=='web'&&now-(p.lastActive||0)<3*DAY;
+    const free=(p,anyway=false)=>real(p)&&p.id!==master&&p.id!==consort&&!s.halls.some(x=>x.elder===p.id)&&!p.hallDeparture&&(anyway||!p.hallAppointmentOptOut)&&w.playTransfers?.[p.id]?.phase!=='web'&&now-(p.lastActive||0)<3*DAY;
     const pick=(list,anyway)=>list.filter(p=>free(p,anyway)).sort(rankOrder)[0]||null;
     const disciple=pick(h.disciples.map(id=>w.players[id]),true);
     const former=disciple?null:pick(Object.values(w.players).filter(p=>p.sectMasterUnlocked&&p.sectMasterGiftAt));
@@ -380,7 +380,12 @@ export function tickHalls(w,now,ctx,force=false){
   }
 }
 
+// 16/11 (chủ game): đạo lữ của Tông chủ ngồi cạnh ngai → không giữ/không lên ghế Trưởng Lão (Chân Truyền lên thay).
+export function consortId(w,master){const m=w.players[master];if(!m?.bondId)return null;const b=w.social?.bonds?.[m.bondId];
+  if(b&&!b.endedAt){const o=b.a===master?b.b:b.a;return w.players[o]?o:null;}
+  return Object.values(w.players).find(p=>p.id!==master&&p.bondId===m.bondId)?.id||null;}
 function autoElder(w,s,id,master,ranked,index){
+  if(id===consortId(w,master))return false;
   const p=w.players[id];
   // 16/11: tự lên ghế chỉ trong Đường của mình (hoặc người chưa vào Đường) — không bao giờ tự chuyển người sang Đường khác.
   const own=membership(s,id)?.index;

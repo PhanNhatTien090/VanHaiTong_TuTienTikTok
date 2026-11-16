@@ -41,7 +41,7 @@ export function drawEventDonations(scene,c,t,H=scene.height){
  for(const [slot,e] of queue.active.entries()){
   const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion===false?.45:raw,fade=clamp(Math.min(raw/.09,(1-raw)/.17));
   if(takeFeedbackCue(e,'impactPlayed',raw,.3,.43)&&e.value>=500)scene.onSpectacleImpact?.();
-  const [color,title,glyph]=e.context.theme,x=['hallwar','arena'].includes(context.kind)?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='arena'?.07:context.kind==='pet'?.73:context.kind==='hallwar'?.425:slot?.34:.245),impactY=H*(context.kind==='arena'?.26:context.kind==='pet'?.86:context.kind==='hallwar'?.53:.49) /* 16/11: Lôi Đài — thẻ trợ chiêu trên đỉnh, không che 2 đấu thủ */,large=e.value>=100;
+  const [color,title,glyph]=e.context.theme,x=['hallwar','arena'].includes(context.kind)?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='arena'?.07:context.kind==='pet'?.73:context.kind==='hallwar'?.13:slot?.34:.245),impactY=H*(context.kind==='arena'?.26:context.kind==='pet'?.86:context.kind==='hallwar'?.24:.49) /* 16/11 (chủ game): thẻ trợ chiêu Ngũ Đường lên mép trên, không che trận */ /* 16/11: Lôi Đài — thẻ trợ chiêu trên đỉnh, không che 2 đấu thủ */,large=e.value>=100;
   c.save();c.globalAlpha=fade;c.lineCap='round';c.lineJoin='round';
   // Avatar is the casting origin; energy travels into the event, without moving its camera or actors.
   if(scene.motion!==false&&!podium){
