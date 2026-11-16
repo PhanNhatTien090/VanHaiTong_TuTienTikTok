@@ -173,7 +173,7 @@ function drawSkillBanner(scene,c,e,k,targets,H){
 
 // Tấm che HTML trên cùng cho lúc chém vào / mở lại (canvas vẽ nhãn tên + bảng SAU lớp Lôi Đài nên lớp đen trên canvas bị đè).
 function cutVeil(cut,full){
- if(typeof document==='undefined')return;let v=document.getElementById('cutVeil');
+ if(typeof document?.getElementById!=='function')return;let v=document.getElementById('cutVeil');
  if(!v){if(!cut)return;const shell=document.querySelector('.scene-shell');if(!shell)return;v=document.createElement('div');v.id='cutVeil';v.className='cut-veil';shell.appendChild(v);}
  if(!cut||full||cut.age>=cut.ms){if(v.style.opacity!=='0'){v.style.opacity='0';v.style.clipPath='none';}return;}
  if(cut.k<CUT_PHASE.wipeIn){const u=cut.k/CUT_PHASE.wipeIn,x=Math.round(u*u*(3-2*u)*150);v.style.clipPath=`polygon(0 0,${x}% 0,${x-45}% 100%,0 100%)`;v.style.opacity='1';}
@@ -183,8 +183,8 @@ function cutVeil(cut,full){
 export function arenaCutFrame(scene,c,t,H){
  const a=scene.socialScene==='arena'?scene.arena:null,m=a?.current;
  const cut=m?findCut(m.log,serverNow(scene)-ARENA_DELAY_MS):null,full=cutFull(cut),on=!!cut&&cut.age<cut.ms; // HTML ẩn suốt lúc chém vào → mở lại
- if(scene.cutsceneOn!==on){scene.cutsceneOn=on;document.body.classList.toggle('cutscene-on',on);}
- cutVeil(cut,full);
+ if(!!scene.cutsceneOn!==on){scene.cutsceneOn=on;document.body?.classList?.toggle('cutscene-on',on);}
+ if(cut||scene.cutVeilUsed){scene.cutVeilUsed=!!cut;cutVeil(cut,full);} // không có màn chiếu → không đụng DOM mỗi khung
  if(!full)return false;
  try{return drawCutFull(scene,c,t,H,cut,scene.playerIndex||new Map());}catch(err){console.warn('[cut]',err);return false;}
 }
