@@ -274,13 +274,16 @@ function bolt(c,x1,y1,x2,y2,seed,width){
  c.lineTo(x2,y2);c.strokeStyle='#d9c4ff';c.lineWidth=width;c.stroke();c.strokeStyle='#ffffff';c.lineWidth=width/3;c.stroke();
 }
 function drawThunder(c,q,from,to,places,k,light){
- const f=q.fx,flick=k<.55&&(Math.floor(k*30)%3!==0);c.save();c.lineCap='round';c.lineJoin='round';
- if(k<.12){c.globalAlpha=k/.12;sigil(c,to.x,to.y,40,'#c9a8ff','',0,.5);}
+ // 16/11 (chủ game): quà 30 'ít hiệu ứng' → trận pháp tụ lôi to, 3 cột sét trời + sét riêng xuống từng người trúng, quầng chớp, 2 vòng sóng.
+ const f=q.fx,flick=k<.6&&(Math.floor(k*30)%3!==0);c.save();c.lineCap='round';c.lineJoin='round';
+ if(k<.12){c.globalAlpha=k/.12;sigil(c,to.x,to.y,70,'#c9a8ff','雷',0,.7);}
  else{
-  c.globalAlpha=k<.6?1:1-(k-.6)/.4;
-  if(flick||light)bolt(c,to.x+20,to.y-420,to.x,to.y,f.id,8);
-  for(const hit of f.hits||[]){const p=places.get(hit.id);if(p&&(flick||light))bolt(c,to.x,to.y,p.x,p.y,f.id+hit.id,4);}
-  const s=ease(clamp((k-.12)/.5));c.strokeStyle='#c9a8ff';c.lineWidth=4;c.beginPath();c.ellipse(to.x,to.y+4,20+90*s,(20+90*s)*.45,0,0,TAU);c.stroke();
+  const fade=k<.6?1:1-(k-.6)/.4,s=ease(clamp((k-.12)/.5));c.globalAlpha=fade;
+  if(!light){c.save();c.globalCompositeOperation='lighter';const g=c.createRadialGradient(to.x,to.y,4,to.x,to.y,170);g.addColorStop(0,'#ffffffcc');g.addColorStop(.35,'#c9a8ff88');g.addColorStop(1,'#c9a8ff00');c.globalAlpha=fade*(flick?1:.6);c.fillStyle=g;c.fillRect(to.x-170,to.y-170,340,340);c.restore();}
+  if(flick||light){for(const [dx,w] of [[0,11],[-70,6],[70,6]])bolt(c,to.x+dx+20,to.y-460,to.x+dx*.25,to.y,f.id+dx,w);bolt(c,to.x+20,to.y-460,to.x,to.y,f.id,3);}
+  for(const hit of f.hits||[]){const p=places.get(hit.id);if(p&&(flick||light)){bolt(c,to.x,to.y,p.x,p.y,f.id+hit.id,5);bolt(c,p.x+12,p.y-380,p.x,p.y,f.id+hit.id+'s',6);}}
+  c.strokeStyle='#c9a8ff';c.lineWidth=5;c.beginPath();c.ellipse(to.x,to.y+4,20+130*s,(20+130*s)*.45,0,0,TAU);c.stroke();
+  c.strokeStyle='#ffffff';c.lineWidth=2;c.globalAlpha=fade*(1-s);c.beginPath();c.ellipse(to.x,to.y+4,10+200*s,(10+200*s)*.45,0,0,TAU);c.stroke();
  }
  c.restore();
 }
@@ -295,7 +298,7 @@ function startCue(scene,h,q,from,color,t,n,r,places){
  const f=q.fx,crowd=n>40;
  if(f.grand){q.full=t-h.lastGrandAt>=GRAND_GAP;if(q.full)h.lastGrandAt=t;kick(h,q.full?15:7,750,t,'#fff6d5',q.full?.38:.18);sound(scene,h,'boss-strike','abyss-dragon',t);}
  else if(f.ultimate){kick(h,8,480,t,color,.2);sound(scene,h,'boss-strike',undefined,t);}
- else if(f.assist==='thunder'){kick(h,6,420,t,'#c9a8ff',.24);sound(scene,h,'cast','thunder',t);}
+ else if(f.assist==='thunder'){kick(h,11,560,t,'#c9a8ff',.34);sound(scene,h,'cast','thunder',t);}
  else if(f.assist==='heal'){sound(scene,h,'boss-shield',undefined,t);}
  else if(f.assist==='boost'){sound(scene,h,'boss-charge',undefined,t);}
  else if(f.assist==='swords'){sound(scene,h,'cast','sword',t);}

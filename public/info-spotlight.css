@@ -1,5 +1,5 @@
 /* 15/11/2026: BẢNG THÔNG TIN TO góc dưới phải (info-spotlight.js) — cùng chỗ bảng Lệnh Ngũ Đường, to hơn; hiện thì Ngũ Đường tạm ẩn. */
-html body.overlay .scene-shell>#infoSpotlight{position:absolute;right:1.5%;bottom:2.5%;width:46%;z-index:10;box-sizing:border-box;padding:9px 11px;border-radius:10px;pointer-events:none;
+html body.overlay .scene-shell>#infoSpotlight{position:absolute;right:1.5%;bottom:15%;width:46%;z-index:10;box-sizing:border-box;padding:9px 11px;border-radius:10px;pointer-events:none;
  background:#071b2bf7;border:1.5px solid #e8c77acc;box-shadow:0 2px 12px #000a,0 0 18px #e8c77a33;color:#fff;text-shadow:0 1px 1px #000;
  font:clamp(10px,2cqw,22px)/1.28 "Segoe UI",Arial,sans-serif;animation:info-in .5s ease-out}
 html body.overlay .scene-shell>#infoSpotlight[hidden]{display:none!important}

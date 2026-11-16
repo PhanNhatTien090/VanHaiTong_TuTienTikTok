@@ -4,7 +4,7 @@
 // đông hơn thì Đường đó được cộng điểm giữ đài. Gõ 6/đánh: lao lên + chiêu mạnh; "đánh @tên": khóa mục tiêu 10 s.
 // Quà (tổng coin một lần): 1–29 cuồng hóa, 30+ tuyệt chiêu lan 3, 99+ lan 6, 300+ đại tuyệt chiêu lan 10.
 // Vài trăm người: tìm mục tiêu bằng lưới ô 160 px (không O(n²)), fx giữ tối đa 96 mục.
-import {activeHalls} from './ngu-duong.mjs';
+import {activeHalls,autoJoinIdle} from './ngu-duong.mjs';
 import {stageConflict} from './stage-lock.mjs';
 import {campSpots,inAltar,skillOf,specialOf,giftTier,ALTAR,BOUNDS,SPECIAL_EVERY,AURA_MS,GIFT_TIERS} from './public/hall-war-layout.js';
 export {campSpots,skillOf};
@@ -35,6 +35,7 @@ function enroll(w,p,now){
 }
 export function startHallWar(w,now,ctx){
  const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc trước khi mở Ngũ Đường Giao Lưu.');
+ autoJoinIdle(w,now,ctx.active); // 16/11: chơi ≥1 giờ chưa vào Đường → vào Đường ít người nhất
  const active=Object.values(w.players).filter(p=>real(p)&&ctx.active(w,p,now)&&hallOf(w,p.id)!=null);
  if(new Set(active.map(p=>hallOf(w,p.id))).size<2)return fail('Cần ít nhất 2 Đường có người đang hoạt động.');
  const teams=activeHalls(w).map(({index,name,color,mark})=>({index,name,color,mark,score:0,kills:0,altar:0}));
@@ -98,7 +99,9 @@ function cast(w,e,g,member,target,now,ctx,{manual=false,value=0}={}){
  const victims=spread?[target,...around(g,target.x,target.y,tier.radius,member.index).filter(o=>o!==target&&open(o,now)).sort((a,b)=>Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y)).slice(0,spread)]:[target];
  const hits=[];
  for(const v of victims){
-  const dmg=Math.min(95,base*(ultimate?1+Math.log10(value+1)*.6:1)*(v===target?1:.7));
+  // 16/11 (chủ game): quà 30 coin 'yếu xìu' vì sát thương theo tu vi người tặng → mỗi mốc quà có sát thương TỐI THIỂU (máu 100).
+  const floor=tier?({grand:85,ultimate:65,thunder:48,swords:34}[tier.id]||0):0;
+  const dmg=Math.min(95,Math.max(floor,base*(ultimate?1+Math.log10(value+1)*.6:1))*(v===target?1:.7));
   const actual=hit(w,e,member,v,dmg,now,ctx);hits.push({id:v.id,damage:actual,knockout:v.hp<=0});
  }
  if(skill.heal){const allies=around(g,member.x,member.y,180,-1).filter(o=>o.index===member.index&&o.hp>0).sort((a,b)=>a.hp-b.hp);const ally=allies[0]||member;ally.hp=Math.min(100,ally.hp+skill.heal);}

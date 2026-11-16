@@ -414,3 +414,17 @@ export function hallView(w,now,active) {
     queued:s?.queue.length||0
   };
 }
+
+// 16/11 (chủ game): lúc mở Ngũ Đường Giao Lưu, ai đang có mặt, đã chơi ≥1 giờ (p.activeMs) mà chưa vào Đường
+// (và không tự rời Đường) → tự xếp vào Đường đang mở ÍT người nhất (lần lượt, cân đều). Trả về danh sách đã xếp.
+export const AUTO_JOIN_MS=60*60000;
+export function autoJoinIdle(w,now,isActive=()=>true,minMs=AUTO_JOIN_MS){
+  if(w.nguDuong&&!Array.isArray(w.nguDuong.halls))return []; // dữ liệu Ngũ Đường dựng tay (test/demo cũ) → bỏ qua
+  const s=getState(w,now),open=activeHalls(w).map(h=>h.index);if(!open.length)return [];
+  const count=new Map(open.map(i=>[i,0]));for(const m of Object.values(s.members))if(count.has(m.index))count.set(m.index,count.get(m.index)+1);
+  const picks=Object.values(w.players).filter(p=>real(p)&&!membership(s,p.id)&&!p.hallDeparture&&(p.activeMs||0)>=minMs&&isActive(w,p,now)&&w.playTransfers?.[p.id]?.phase!=='web')
+    .sort((a,b)=>(b.activeMs||0)-(a.activeMs||0)||String(a.id).localeCompare(String(b.id)));
+  const out=[];
+  for(const p of picks){const index=[...count.entries()].sort((a,b)=>a[1]-b[1]||a[0]-b[0])[0][0];assign(s,p,index,now);count.set(index,count.get(index)+1);out.push({id:p.id,index});}
+  return out;
+}

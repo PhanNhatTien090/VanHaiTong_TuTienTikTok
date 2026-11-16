@@ -9,7 +9,7 @@ import {stageConflict} from './stage-lock.mjs';
 
 // 10/11 tối (chủ game: "hơi dễ"): 11×15 ô, gần như không có đường vòng (3%), đường ngắn nhất ~85 bước, chạy 5 phút.
 export const MAZE=Object.freeze({cols:11,rows:15,registerMs:40000,runMs:300000,afterTop3Ms:30000,podiumMs:15000,moveGapMs:300,maxRunners:400,
- breaks:[[1,1]],walk:[[500,30],[99,12],[30,6],[10,3]],braid:.03,targetDist:85,
+ breaks:[[1,1]],walk:[[500,40],[99,20],[30,9],[10,3]] /* 16/11 (chủ game): 30 coin = 9 ô (trước 6), hạc 99 = 20 ô (trước 12) */,braid:.03,targetDist:85,
  // 16/11 (chủ game: "họ biết chơi hết rồi"): YÊU THÚ chui ra từ hang (ngõ cụt), lang thang; đụng người → đánh văng lùi 1 ô (choáng 1,2 s) rồi tan.
  mob:{dens:4,everyMs:12000,firstMs:8000,lifeMs:45000,stepMs:2000,chase:3,stunMs:1200,base:3,perRunners:15,max:10},
  reward:{pct:[.04,.03,.02],finisherPct:.01,triedPct:.003,triedSteps:10,stones:[30,20,15],finisherStones:10,triedStones:3},titleMs:3600000});

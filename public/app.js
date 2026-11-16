@@ -580,8 +580,8 @@ function renderHallGuide(){
  if(!guide)return;
  guide.hidden=!halls?.length;
  if(guide.hidden)return;
- const names=halls.map(h=>`${h.index+1} ${esc(h.name.replace(/ Đường$/i,''))}`).join(' · ');
- setHUD(guide,`<b>LỆNH NGŨ ĐƯỜNG</b><p class="hall-guide-names">${names}</p><ul>`
+ // 16/11 (chủ game): tiêu đề 'Chọn đường phái tu luyện', bỏ dòng '1 Truyền Công · 2 …' (gõ lệnh là tự xem).
+ setHUD(guide,`<b>CHỌN ĐƯỜNG PHÁI TU LUYỆN</b><ul>`
   +hallGuideRows(halls).map(({cmd,text})=>`<li><span>${text}:</span> <code>${cmd}</code></li>`).join('')+'</ul>');
 }
 mountPetUI(post);

@@ -37,7 +37,7 @@ test('quà: phá tường (đâm tường là phá và bước qua), không soi 
  assert.ok(canMove(e.maze,x0,y0,dir),'tường mất cho cả sân');
  // 16/11: quà 10/30/99 = tự đi theo đường đúng (không còn phá tường)
  const d0=e.maze.dist[r.y*e.maze.cols+r.x];gift(w,'p1',20,t+2000);assert.equal(r.breaks,0);assert.equal(e.maze.dist[r.y*e.maze.cols+r.x],d0-3,'tự đi 3 ô về phía cửa');
- gift(w,'p3',99,t+3000);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.steps===12,'người chưa vào tặng quà là vào luôn + tự đi 12 ô');
+ gift(w,'p3',99,t+3000);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.steps===20,'người chưa vào tặng quà là vào luôn + tự đi 20 ô');
 });
 test('không ai vào thì khép lại; dừng tay được; snapshot gửi mê cung gọn',()=>{
  const w=setup();assert.ok(startMaze(w,N).ok);tick(w,N+MAZE.registerMs);assert.equal(w.maze.phase,'finished');
@@ -78,7 +78,7 @@ test('16/11: yêu thú chui ra từ hang, đụng người thì đánh văng lù
  assert.equal(res.knocked,true);assert.ok(e.maze.dist[r.y*e.maze.cols+r.x]>=d0,'văng lùi, không tiến');assert.equal(e.mobs.length,0,'yêu thú tan sau khi đánh');
  assert.equal(chat(w,'p1','len',t+MAZE.mob.firstMs+900).stunned,true,'đang choáng');
  const v=snapshot(w,t+MAZE.mob.firstMs+1000).maze;assert.equal(v.hits.length,1);
- // quà 30: tự đi 6 ô, chém yêu thú nằm trên đường
- const path=pathAhead(e.maze,r.x,r.y,6);e.mobs=[{id:'m100',x:path[2][0],y:path[2][1],born:t,nextAt:t+1e9,px:0,py:0}];
+ // quà 30: tự đi 9 ô (16/11), chém yêu thú nằm trên đường
+ const path=pathAhead(e.maze,r.x,r.y,9);e.mobs=[{id:'m100',x:path[2][0],y:path[2][1],born:t,nextAt:t+1e9,px:0,py:0}];
  gift(w,'p1',30,t+MAZE.mob.firstMs+3000);assert.equal(e.mobs.length,0);assert.deepEqual([r.x,r.y],path.at(-1));
 });
