@@ -22,3 +22,13 @@ test('pháp bảo chỉ nhích lên xuống tối đa 3 px, tắt chuyển độ
   for (let t = 0; t < 20000; t += 37) assert.ok(Math.abs(relicBob(t, 'abc')) <= 3);
   assert.equal(relicBob(1234, 'abc', false), 0);
 });
+
+import {petVisit,relicVisit,PET_VISIT_MS} from '../public/follower-turn.js';
+test('16/11: linh thú ghé theo lượt riêng từng người (vào → đi lại → nghỉ → chạy đi), pháp bảo lâu lâu mới hiện, không trùng nhau', () => {
+  const ids=Array.from({length:200},(_,i)=>'u'+i);let pets=0,relics=0,n=0;
+  for(let now=0;now<PET_VISIT_MS*2;now+=7000)for(const id of ids){n++;const v=petVisit(id,now);if(v.on)pets++;const r=relicVisit(id,now);if(r)relics++;assert.ok(!(v.on&&r));}
+  assert.ok(pets/n>.2&&pets/n<.35,'thú hiện '+(pets/n));
+  assert.ok(relics/n<.08,'pháp bảo hiện '+(relics/n));
+  const phases=new Set();for(let now=0;now<PET_VISIT_MS;now+=1000){const v=petVisit('abc',now);if(v.on)phases.add(v.phase);}
+  assert.deepEqual([...phases].sort(),['enter','leave','rest','stay']);
+});

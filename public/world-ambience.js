@@ -16,7 +16,7 @@ export function floatingTargets(scene,players,H,t){
  for(const a of targets)a.x=450+(a.x-450)*fit;return targets;
 }
 function fish(c,im,x,y,w,phase,flip,alpha){c.save();c.globalAlpha=alpha;c.translate(x,y);c.scale(flip?-1:1,1);c.rotate(Math.sin(phase)*.025);if(im){c.scale(1+Math.sin(phase*2)*.025,1);c.drawImage(im,-w/2,-w/2,w,w);}else{c.fillStyle='#7bdcda';c.beginPath();c.ellipse(0,0,w*.25,w*.1,0,0,Math.PI*2);c.fill();c.beginPath();c.moveTo(-w*.2,0);c.lineTo(-w*.4,-w*.14);c.lineTo(-w*.4,w*.14);c.fill();}c.restore();}
-export function drawWorldAmbience(scene,c,t,layer){const kind=scene.environment?.ambience;if(!kind||scene.worldLife?.environment===false)return;const H=scene.height,time=scene.motion?t:0,light=scene.budget?.level==='light';c.save();
+export function drawWorldAmbience(scene,c,t,layer){const kind=scene.environment?.ambience;if(!kind||scene.worldLife?.environment===false)return;const H=scene.height,time=scene.motion?t:0,light=true; /* 16/11 (chủ game): giảm bớt hiệu ứng map — luôn dùng bản ít hạt */c.save();
  if(layer==='back'){
   if(kind==='sect'){
    for(const x of [42,858]){const y=H*.35,a=.055+(scene.motion?Math.sin(time*.003+x)*.012:0),g=c.createRadialGradient(x,y,0,x,y,65);g.addColorStop(0,'rgba(255,197,105,'+a+')');g.addColorStop(1,'#ffbc6000');c.fillStyle=g;c.fillRect(x-65,y-65,130,130);}

@@ -187,8 +187,10 @@ export function petFollowOffset(playerId='',petId='',t=0,scale=1,flying=false,mo
  const right=walking?dir>0:x<0;
  return {x,y,walking,flip:PET_FACES_RIGHT.has(petId)?!right:right,behind:false};
 }
-export function drawPet(scene,c,target,t){
+// 16/11: visit = lượt ghé của linh thú (follower-turn.petVisit): chạy vào/ra từ một bên + mờ dần; 'rest' = nằm nghỉ (đứng yên).
+export function drawPet(scene,c,target,t,visit=null){
  const p=target.player,pet=petById(p.spiritPet),frames=pet&&petV2FramesFor(scene,p);if(!frames)return;
+ const resting=visit?.phase==='rest',slideK=visit?.phase==='enter'?1-visit.k:visit?.phase==='leave'?visit.k:0,slide=slideK*slideK*(visit?.dir||1)*240,fade=visit?Math.min(1,1-slideK*.85):1;if(resting)t=Math.floor(t/60000)*60000;
  let seed=0;for(const ch of p.id)seed=(seed*31+ch.charCodeAt(0))>>>0;
  const pose=premiumPetPose(pet.id,t,seed%1000,scene.motion)||petPose(t,seed%1000,scene.motion),scale=target.scale||1.4;
  // Small follower beside the feet: no full-screen halo, no additional stage actors.
@@ -196,7 +198,7 @@ export function drawPet(scene,c,target,t){
  // 15/11 (chủ game: linh thú là chủ chốt): thú đi quanh chủ — thú chạy đi chạy lại nửa vòng trước chân, thú bay lượn vòng quanh vai.
  const at=petFollowOffset(p.id,pet.id,t,scale,flying,scene.motion),x=target.x+at.x+pose.sway*.3*scale,y=target.y+at.y+pose.bob;
  const size=pet.size*scale*1.2,image=petArtFrame(frames,t,seed%1000,scene.motion);if(!image)return;
- c.save();c.translate(x,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
+ c.save();c.globalAlpha*=fade;c.translate(x+slide*(target.scale||1.4)/1.4,y);c.rotate(pose.tilt);c.scale(1+Math.sin((scene.motion?t:0)*.003)*(pet.coins===300?.012:.025),1);
  if(grand){c.strokeStyle=pet.color+'80';c.lineWidth=1.2;c.beginPath();c.ellipse(0,size*.29,size*.34,size*.08,0,0,Math.PI*2);c.stroke();}
  if(at.behind)c.globalAlpha=.78;c.save();if(at.flip)c.scale(-1,1);c.drawImage(image,-size/2,-size*.65,size,size);c.restore();c.globalAlpha=1;
  if(!scene.petV2Settings?.evolutionArt||!scene.petArt?.get(petV2Key(p.spiritPet,p.petView?.stage)))drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});

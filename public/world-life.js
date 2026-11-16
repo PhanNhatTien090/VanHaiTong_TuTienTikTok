@@ -1,3 +1,4 @@
+// 16/11/2026 (chủ game, giảm lag): bớt khoảng một nửa hạt/đom đóm/mây nhỏ của map.
 // Scenery actors only. They never enter player state, rankings, gift totals or chat.
 export const NPCS=Object.freeze([
   {id:'sword-master',name:'Kiếm sư',role:'sword',color:'#a5d7ec'},
@@ -16,16 +17,16 @@ export function drawWorldLife(scene,c,t,{crowd=0,environment=true,npcs=true}={})
       const alpha=.11+(scene.motion?Math.sin(time*.0018+x)*.035:0),g=c.createRadialGradient(x,y,1,x,y,r);g.addColorStop(0,`rgba(255,202,106,${alpha})`);g.addColorStop(1,'#ffcb6900');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);
     }
     // Individual streaks stay near the waterfall banks rather than covering the plaza.
-    for(let side=0;side<2;side++)for(let i=0;i<18;i++){
+    for(let side=0;side<2;side++)for(let i=0;i<9;i++){
       const x=(side?730:165)+Math.sin(i*3.2)*38,y=H*(.35+((i*.037+time*.000055)% .42));
       c.strokeStyle=`rgba(184,229,244,${.06+(i%3)*.025})`;c.lineWidth=.8+(i%2);c.beginPath();c.moveTo(x,y);c.lineTo(x-2,y+15+(i%4)*8);c.stroke();
     }
     // Moving mist has a soft gradient falloff; no opaque scrolling image.
     for(let i=0;i<6;i++){const x=((i*181+time*.009)%1120)-110,y=H*(.26+(i%3)*.19),g=c.createRadialGradient(x,y,0,x,y,110);g.addColorStop(0,'#d7edfa0c');g.addColorStop(1,'#d7edfa00');c.save();c.translate(x,y);c.scale(1,.3);c.translate(-x,-y);c.fillStyle=g;c.fillRect(x-110,y-110,220,220);c.restore();}
     // Ambient spirit motes trace the courtyard in changing currents.
-    for(let i=0;i<26;i++){const a=i*2.399+time*.00018,r=80+(i%7)*32;el(c,450+Math.cos(a)*r,floor+Math.sin(a)*r*.27,1.2+(i%3)*.35,1.2,'#ccefc080');}
+    for(let i=0;i<12;i++){const a=i*2.399+time*.00018,r=80+(i%7)*32;el(c,450+Math.cos(a)*r,floor+Math.sin(a)*r*.27,1.2+(i%3)*.35,1.2,'#ccefc080');}
     c.restore();
-    for(let i=0;i<16;i++){const x=(i*127+time*.015)%950-25,y=(i*103+time*.021)%H;c.save();c.translate(x,y);c.rotate(i+time*.0007);el(c,0,0,3.6,1.4,'#ecc5d4aa');c.restore();}
+    for(let i=0;i<8;i++){const x=(i*127+time*.015)%950-25,y=(i*103+time*.021)%H;c.save();c.translate(x,y);c.rotate(i+time*.0007);el(c,0,0,3.6,1.4,'#ecc5d4aa');c.restore();}
   }
   if(!npcs)return;
   // Dense rooms keep peripheral NPCs compact, leaving the viewer rows readable.
@@ -77,7 +78,7 @@ export function drawAtmosphere(scene,c,t,layer){
     // Hào quang tông môn thở theo nhịp (đại điện ở giữa).
     const pulse=.06+.035*Math.sin(time*.0012),gl=c.createRadialGradient(451,H*.28,4,451,H*.28,220);gl.addColorStop(0,`rgba(255,214,140,${pulse})`);gl.addColorStop(1,'rgba(255,214,140,0)');c.fillStyle=gl;c.fillRect(231,H*.28-220,440,440);
     // Đom đóm linh quang bay lên từ sân, lập lòe.
-    for(let i=0;i<34;i++){
+    for(let i=0;i<8;i++){
       const k=((time*.00004*(1+(i%5)*.25))+i*.137)%1,x=(i*263)%900+Math.sin(time*.0011+i)*22,y=floor+90-k*H*.65;
       const a=Math.max(0,Math.sin(k*Math.PI))*(.35+.45*Math.abs(Math.sin(time*.003+i*1.3)))*(.6+night*.6),r=6+(i%4)*3;
       const g=c.createRadialGradient(x,y,0,x,y,r);const col=i%3===0?'255,220,150':i%3===1?'170,255,215':'200,210,255';g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(.25,`rgba(${col},${a*.5})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);
