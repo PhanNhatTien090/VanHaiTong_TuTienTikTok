@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWorld,ensurePlayer,action,tick} from '../engine.mjs';
-import {MOUNTS,ORBS,ODDS,PITY,rollMount,awardMount,grantOrbs,mountBonus,revealMount,tickMounts,mountCommand} from '../mounts.mjs';
+import {MOUNTS,ORBS,ODDS,PITY,rollMount,awardMount,grantOrbs,mountBonus,revealMount,tickMounts,mountCommand,mountGiftBoost} from '../mounts.mjs';
 import {mountStat,STAT_CAP,MAX_STARS} from '../public/mounts.js';
 
 const NOW=Date.parse('2026-11-16T20:00:00+07:00');
@@ -102,4 +102,22 @@ test('engine: lệnh chat linhchau/toaky chạy qua action; chữ trên LIVE kh�
  const texts=w.feed.filter(e=>e.user==='u9').map(e=>e.text).join(' | ');
  assert.match(texts,/hiện thân|lên \d sao/);
  assert.doesNotMatch(texts,/ngẫu nhiên|tỷ lệ|tỉ lệ|%|thả tim/i);
+});
+
+test('tặng quà lúc truyền công: mỗi coin rút 20 giây, không âm; không truyền công thì không làm gì',()=>{
+ const w=createWorld('live'),p=ensurePlayer(w,'u5','U5',NOW),c=ctx();p.stones=1000;grantOrbs(w,p,'common',1,NOW,c.emit);
+ mountCommand(w,p,'truyencong','',NOW,c);const end=p.mountChannel.endsAt;
+ assert.equal(mountGiftBoost(w,p,10,NOW+1000,c.emit),200000);assert.equal(p.mountChannel.endsAt,end-200000);
+ mountGiftBoost(w,p,5000,NOW+2000,c.emit);assert.equal(p.mountChannel.endsAt,NOW+2000);
+ const q=ensurePlayer(w,'u6','U6',NOW);assert.equal(mountGiftBoost(w,q,99,NOW,c.emit),0);
+});
+
+test('engine: quà thật lúc không có sự kiện rút ngắn truyền công',()=>{
+ const w=createWorld('live');Object.assign(w.settings,{autoEvents:false,residents:false});
+ action(w,{type:'chat',userId:'g1',name:'G1',text:'linhchau'},NOW);
+ const p=w.players.g1;grantOrbs(w,p,'common',1,NOW,()=>{});p.stones=500;
+ action(w,{type:'chat',userId:'g1',name:'G1',text:'truyencong'},NOW+10000);
+ const end=p.mountChannel.endsAt;
+ action(w,{type:'gift',userId:'g1',name:'G1',coins:1,count:5,giftName:'Rose',eventId:'gx1'},NOW+20000);
+ assert.equal(p.mountChannel.endsAt,end-5*20000);
 });

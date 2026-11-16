@@ -20,7 +20,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
-import {mountCommand,tickMounts,mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỵ
+import {mountCommand,tickMounts,mountBonus,mountGiftBoost} from './mounts.mjs'; // 16/11: Tọa Kỵ
 import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
 import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
 import {petV2Flags,petV2Configure,petV2Command,petV2View,petV2Cards,petV2Earn,petV2BossDamage,petV2CommitBossDamage,petV2Tick,petV2CovePhase} from './pet-v2.mjs';
@@ -617,6 +617,7 @@ function actionCore(w,input,now) {
     // 08/11 tối (chủ game): đang có sự kiện có luật quà riêng → CHỈ áp dụng luật sự kiện (đua: bứt tốc, Chính Ma: đẩy, …), không cộng quà mặc định.
     const eventRule=giftEventRule(w,now),defaults=!eventRule,award0={qi:defaults?award.qi*count:0,stones:defaults?award.stones*count:0,herbs:defaults?award.herbs*count:0};
     const q=defaults?gain(w,p,award0.qi,award0.stones,award0.herbs,now,false,'gift'):0;
+    if(defaults&&!input.simulated&&!input.autoRose)mountGiftBoost(w,p,input.coins*count,now,emit); // 16/11: quà lúc truyền công → Linh Châu vỡ sớm (chỉ khi không có sự kiện)
     const items=[];if(defaults&&tier.artifact&&!p.artifacts.includes(tier.artifact)){p.artifacts.push(tier.artifact);items.push(tier.artifact);const value=id=>{const a=CATALOG.find(x=>x.id===id);return (a?.damage||0)+(a?.bonus||0)*100;};if(value(tier.artifact)>value(p.equipped))p.equipped=tier.artifact;}
     if(defaults&&tier.skin){p.rewardSkins??=[];if(!p.rewardSkins.includes(tier.skin)){p.rewardSkins.push(tier.skin);if(autoSkinChoiceAllowed(p)){p.skinChoice=tier.skin;p.skinChoiceSource='gift';}}}
     const itemNames=items.map(id=>CATALOG.find(x=>x.id===id).name);

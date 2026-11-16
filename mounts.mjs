@@ -9,6 +9,8 @@ export const ODDS=Object.freeze({common:{vip:.11,divine:.0005},vip:{vip:.42,divi
 // Bảo hiểm: 20 châu chưa ra VIP → châu kế ra ít nhất VIP; 200 lượt chưa ra Thần → ra Thần (châu tím tính 3 lượt).
 export const PITY=Object.freeze({vip:20,divine:200,vipOrbWeight:3});
 export const REVEAL_SCAN_MS=2000,COMMAND_CD=5000;
+// 16/11 (chủ game): tặng quà lúc đang truyền công → châu vỡ sớm hơn. Mỗi coin rút 20 giây (châu xanh 30 phút ≈ 90 coin).
+export const GIFT_MS_PER_COIN=20000;
 const TIER_RANK={common:0,vip:1,divine:2};
 const real=p=>p&&!p.resident&&!p.puppet&&p.actorKind!=='npc';
 const fail=message=>({ok:false,message});
@@ -97,6 +99,15 @@ export function tickMounts(w,now,ctx){
   if(now<p.mountChannel.endsAt||w.playTransfers?.[id]?.phase==='web'||!ctx.active(w,p,now))continue;
   revealMount(w,p,now,ctx);
  }
+}
+
+// Quà khi đang truyền công: rút ngắn thời gian còn lại. Trả số ms đã rút (0 nếu không truyền công).
+export function mountGiftBoost(w,p,coins,now,emit){
+ const ch=p?.mountChannel,c=Math.max(0,Math.trunc(Number(coins)||0));if(!ch||!c||now>=ch.endsAt)return 0;
+ const cut=Math.min(ch.endsAt-now,c*GIFT_MS_PER_COIN);ch.endsAt-=cut;ch.boostedMs=(ch.boostedMs||0)+cut;
+ const left=ch.endsAt-now;
+ emit(w,p,left>0?'Truyền công gia tốc · '+ORBS[ch.kind].name+' còn '+minutes(left)+' phút':'Truyền công viên mãn · '+ORBS[ch.kind].name+' sắp vỡ','mount',now,{mountChannel:ch.kind,endsAt:ch.endsAt,mountBoost:cut});
+ return cut;
 }
 
 function statusLine(p,now){

@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Tọa Kỵ preview</title>
+<style>html,body{margin:0;background:#0b0d18;color:#fff;font:14px Segoe UI}canvas{display:block}#perf{position:fixed;left:8px;top:8px;background:#000a;padding:4px 8px}</style></head>
+<body><canvas id="c" width="1080" height="1500"></canvas><div id="perf"></div>
+<script type="module">
+// Xem thử Tọa Kỵ: ?t=ms (khung cố định), ?crowd=N, ?bench=N (vẽ N Thần đủ lớp để đo ms/khung).
+import {MOUNTS} from './mounts.js';
+import {drawMount,drawOrb,beginMountFrame,mountLod,preloadMountArt} from './mount-fx.js';
+const q=new URLSearchParams(location.search),c=document.getElementById('c').getContext('2d');
+const crowd=+(q.get('crowd')||0),bench=+(q.get('bench')||0),fixed=q.has('t')?+q.get('t'):null;
+preloadMountArt();const bg=new Image();bg.src='/assets/toa-ky-v1/realm-map.webp';
+const times=[];
+function frame(now){
+ const t=fixed??now;c.globalAlpha=1;c.globalCompositeOperation='source-over';
+ if(bg.complete&&bg.naturalWidth)c.drawImage(bg,0,0,1080,1500);else{c.fillStyle='#223';c.fillRect(0,0,1080,1500);}
+ c.fillStyle='#0008';c.fillRect(0,0,1080,1500);
+ const t0=performance.now();beginMountFrame(t,crowd);
+ if(bench){for(let i=0;i<bench;i++){const id=MOUNTS[8+(i%2)].id,x=120+(i%6)*170,y=260+Math.floor(i/6)*230;drawMount(c,id,x,y,{t,seed:'b'+i,lod:mountLod('divine',crowd),scale:.7});drawMount(c,id,x,y,{t,seed:'b'+i,lod:'full',layer:'front',scale:.7});}}
+ else{
+  MOUNTS.forEach((m,i)=>{const x=190+(i%3)*350,y=230+Math.floor(i/3)*290,lod=mountLod(m.tier,crowd);
+   drawMount(c,m.id,x,y,{t,seed:m.id,lod});drawMount(c,m.id,x,y,{t,seed:m.id,lod,layer:'front'});
+   c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#fff';c.font='bold 18px Segoe UI';c.textAlign='center';c.fillText(m.name+' · '+m.tier+' · '+lod,x,y+28);});
+  ['common','vip','divine'].forEach((k,i)=>drawOrb(c,k,720+i*120,1400,{t,progress:[.2,.75,.95][i],seed:k,scale:1.4}));
+ }
+ times.push(performance.now()-t0);if(times.length>120)times.shift();
+ document.getElementById('perf').textContent='vẽ '+(times.reduce((a,b)=>a+b,0)/times.length).toFixed(2)+' ms/khung';
+ if(fixed==null)requestAnimationFrame(frame);
+}
+if(fixed!=null)setTimeout(()=>{frame(0);setTimeout(()=>frame(0),400);},1500);else requestAnimationFrame(frame);
+</script></body></html>
