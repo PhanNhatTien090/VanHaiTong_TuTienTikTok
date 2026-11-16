@@ -116,9 +116,10 @@ function mountBack(scene,c,target,t){
  if(!drawMount(c,m.id,target.x,target.y,{scale:s,t:scene.motion?t:0,lod,seed:p.id,flip:target.x>450}))return 0;
  target.mountOn=true;target.mountLod=lod;return mountSeat(m.id,s);
 }
+function mountFrontLayer(scene,c,target,t){const s=(target.scale||1.4)*MOUNT_SCALE;drawMount(c,target.player.mount,target.x,target.y,{scale:s,t:scene.motion?t:0,lod:target.mountLod,seed:target.player.id,layer:'front',flip:target.x>450});}
 function mountFront(scene,c,target,t){
  const p=target.player;if(!p)return;
- if(target.mountOn){const s=(target.scale||1.4)*MOUNT_SCALE;drawMount(c,p.mount,target.x,target.y,{scale:s,t:scene.motion?t:0,lod:target.mountLod,seed:p.id,layer:'front',flip:target.x>450});return;}
+ if(target.mountOn)return;
  const ch=p.mountChannel;if(!ch||scene.bareCrowd||!mountStageOk(scene))return;
  const now=Date.now(),span=Math.max(1,ch.endsAt-ch.startedAt),progress=Math.min(1,Math.max(0,(now-ch.startedAt)/span)),s=target.scale||1.4;
  drawOrb(c,ch.kind,target.x+(target.x>450?-1:1)*30*s,target.y,{scale:s*.95,t:scene.motion?t:0,progress,seed:p.id,lod:scene.targets.length>30?'light':'full'});
@@ -676,6 +677,9 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     for(const e of this.effects)this.drawEffect(c,e,t,'back');
     // All wearable auras are behind ALL bodies, never interleaved with another player.
     // 07/11: skin nạp tiền (Hải Lam / Tư Đồ / Khuy Niết + pháp bảo) LUÔN có hiệu ứng kể cả sân đông (>20 người): bản nhẹ, tối đa 8 người.
+    // 16/11 (chủ game): tọa kỵ là lớp riêng dưới cùng của người chơi (sau hào quang, cánh, mọi thân người) → không đè lên ai.
+    beginMountFrame(t,this.targets.length);
+    for(const target of this.targets){if(!inView(target,this.camera,H)){target.mountLift=0;target.mountOn=false;continue;}target.mountLift=mountBack(this,c,target,t);if(target.mountOn)mountFrontLayer(this,c,target,t);target.y-=target.mountLift; /* nhấc người + hào quang/cánh lên chỗ ngồi; trả lại cuối khung */}
     const premium=p=>showsBlackGoldGear(p)||courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES);
     this.premiumTargets=this.raceStatus?.active?[]:this.heavyCrowd?this.targets.filter(a=>premium(a.player)).slice(0,8):this.targets;
     for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.drawCompactGear(c,target,t,'back');}
@@ -683,9 +687,10 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(!this.reducePresence&&!this.minimalCrowd&&!this.raceStatus?.active)drawGodAuras(this,c,t,'back');
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn
      for(const target of this.minimalCrowd?[]:this.targets){if(!inView(target,this.camera,H))continue;drawWings(this,c,target,t);if(!this.heavyCrowd&&!this.raceStatus?.active&&!this.compact)drawLinWanQi(this,c,target,t);if(!this.raceStatus?.active)drawDivineHalo(this,c,target,t);}c.globalAlpha=ga;}
-    this.onStageActors=this.targets.length;beginMountFrame(t,this.targets.length);
-    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now(),this.v6Showcase!==false)||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{const lift=mountBack(this,c,target,t);this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y-lift,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());mountFront(this,c,target,t);if(!target.player?.mountChannel&&!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
+    this.onStageActors=this.targets.length;
+    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now(),this.v6Showcase!==false)||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());mountFront(this,c,target,t);if(!target.player?.mountChannel&&!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
     for(const target of this.premiumTargets||[]){drawSeaAdornment(this,c,target,t,'front');drawTudoAdornment(this,c,target,t,'front');drawKhuyAdornment(this,c,target,t,'front');drawViemAdornment(this,c,target,t,'front');drawCourtAdornment(this,c,target,t,'front');}
+    for(const target of this.targets)if(target.mountLift){target.y+=target.mountLift;target.mountLift=0;} // 16/11: trả toạ độ ghế sau khi vẽ người
     if(arena){const strikeAge=Date.now()-(this.battleSound?.impactAt??-Infinity);
       if(strikeAge>=0&&strikeAge<500){
         const quality=this.battleSound.quality,theme=this.boss?.species==='storm-tiger'?'void':'dusk';
