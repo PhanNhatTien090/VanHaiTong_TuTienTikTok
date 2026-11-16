@@ -5,6 +5,7 @@ import {ascensionProfile,drawAscension} from './ascension-art.js';
 const TAU=Math.PI*2;
 export {REALM_NAMES} from './progression.js';
 import {REALM_NAMES} from './progression.js';
+import {ascendRealmOf,lateAscension} from './late-ascension-data.js';
 // Cảnh giới vừa đạt: ưu tiên toRealm (cơ duyên), không thì đọc tên cảnh giới cao nhất trong câu sự kiện.
 export function breakthroughRealm(e){
   if(Number.isInteger(e?.toRealm))return Math.max(1,Math.min(REALM_NAMES.length-1,e.toRealm));
@@ -14,17 +15,23 @@ export function breakthroughRealm(e){
 }
 export const breakthroughDuration=e=>ascensionProfile(breakthroughRealm(e)).duration;
 export function breakthroughTitleLayout(e,k,p,H,viewScale=1,motion=true){
-  const realm=breakthroughRealm(e),duration=breakthroughDuration(e),span=Math.min(4200,duration*.48),u=(k*duration-duration*.45)/span;
+  const realm=breakthroughRealm(e),duration=breakthroughDuration(e),late=lateAscension(realm);
+  // 16/11: cảnh giới phi thăng — tiêu đề PHI THĂNG hiện đúng lúc hiện thân (sau cú nổ), giữ 5 s.
+  const start=late?.ascend?late.impact*1000+350:duration*.45,span=late?.ascend?Math.min(5000,duration-start):Math.min(4200,duration*.48),u=(k*duration-start)/span;
   if(u<=0||u>=1)return null;
   const enter=Math.min(1,u/.22),v=enter-1,pop=1+2.70158*v*v*v+1.70158*v*v;
-  return {text:REALM_NAMES[realm].normalize('NFC').toLocaleUpperCase('vi'),realm,color:ascensionProfile(realm).color,
+  return {text:REALM_NAMES[realm].normalize('NFC').toLocaleUpperCase('vi'),ascend:ascendRealmOf(realm),realm,color:ascensionProfile(realm).color,
     x:p.x,y:Math.max(H*.20,Math.min(H*.44,p.y-300))-(motion?u*18:0),fontSize:70+realm*3,
     scale:motion ? .72+.28*pop : 1,alpha:Math.max(0,Math.min(1,u/.10,(1-u)/.24)),maxWidth:Math.min(720,760/Math.max(1,viewScale))};
 }
 export function drawBreakthroughTitle(c,e,k,p,H,viewScale=1,motion=true){
   const a=breakthroughTitleLayout(e,k,p,H,viewScale,motion);if(!a)return;
   c.save();c.globalAlpha*=a.alpha;c.translate(a.x,a.y);c.scale(a.scale,a.scale);c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
-  c.font='600 18px Segoe UI';c.fillStyle='#e7d7ad';c.strokeStyle='#0b1422';c.lineWidth=2;c.strokeText('ĐỘT PHÁ',0,-a.fontSize*.73);c.fillText('ĐỘT PHÁ',0,-a.fontSize*.73);
+  if(a.ascend){ // 16/11: cảnh giới phi thăng — tiêu đề PHI THĂNG lớn + cõi phi thăng tới
+   const ty=-a.fontSize*.95,tg=c.createLinearGradient(0,ty-22,0,ty+22);tg.addColorStop(0,'#ffffff');tg.addColorStop(.5,'#ffe08a');tg.addColorStop(1,'#ff9b2e');
+   c.font='900 44px "Times New Roman",Segoe UI,serif';c.strokeStyle='#0b1422';c.lineWidth=7;c.strokeText('✦ PHI THĂNG ✦',0,ty);c.fillStyle=tg;c.fillText('✦ PHI THĂNG ✦',0,ty);
+   const sub='CÕI '+a.ascend.normalize('NFC').toLocaleUpperCase('vi');c.font='800 24px Segoe UI';c.lineWidth=5;c.strokeText(sub,0,a.fontSize*1.02,a.maxWidth/a.scale);c.fillStyle=a.color||'#ffe08a';c.fillText(sub,0,a.fontSize*1.02,a.maxWidth/a.scale);
+  }else{c.font='600 18px Segoe UI';c.fillStyle='#e7d7ad';c.strokeStyle='#0b1422';c.lineWidth=2;c.strokeText('ĐỘT PHÁ',0,-a.fontSize*.73);c.fillText('ĐỘT PHÁ',0,-a.fontSize*.73);}
   c.font='600 '+a.fontSize+'px Arial';c.strokeStyle='#17202c';c.lineWidth=2.5;c.strokeText(a.text,0,0,a.maxWidth/a.scale);
   const g=c.createLinearGradient(0,-a.fontSize*.5,0,a.fontSize*.5);g.addColorStop(0,'#fff7df');g.addColorStop(.45,'#efdaa0');g.addColorStop(1,'#b89150');c.fillStyle=g;c.fillText(a.text,0,0,a.maxWidth/a.scale);
   c.strokeStyle='#d9bc7f';c.lineWidth=1;const w=Math.min(a.maxWidth*.25,160),yy=a.fontSize*.64;c.beginPath();c.moveTo(-w,yy);c.lineTo(-12,yy);c.moveTo(12,yy);c.lineTo(w,yy);c.stroke();c.fillStyle='#e6cb91';c.beginPath();c.moveTo(0,yy-4);c.lineTo(4,yy);c.lineTo(0,yy+4);c.lineTo(-4,yy);c.closePath();c.fill();c.restore();

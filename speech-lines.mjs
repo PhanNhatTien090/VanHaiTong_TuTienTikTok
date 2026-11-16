@@ -5,6 +5,7 @@
 // speechPlan(e) → [{voice,text}] (tối đa 2 đoạn, mỗi đoạn ≤ 200 ký tự để TTS không cắt mất đuôi).
 import {REALMS} from './engine.mjs';
 import {gameText} from './public/game-language.js';
+import {ascendByName} from './public/late-ascension-data.js';
 
 const titleOf=g=>g==='nam'?'sư huynh':g==='nu'?'sư tỷ':'đạo hữu';
 const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
@@ -162,7 +163,9 @@ export function speechPlan(e){
   if(e.loyaltyAward)return [say('tongsu',`Tri ân ${who} bền bỉ cùng tông môn! Ban ${list2((e.itemNames||[]).slice(0,2))||'phần thưởng'}.`)];
   if(e.patronAward)return [say('tiennu',`Vinh danh Đại Hộ Pháp ${raw||''}!`),say('tongsu',`Ban bộ Thương Long Hộ Pháp, Hộ Pháp Thiên Kiếm và Trấn Tông Long Ấn!`)];
   if(e.effect==='skin')return [say('tongsu',`${Who} khoác lên ${cutWords(text,40)}.`)];
-  if(e.effect==='breakthrough'){const to=titleCase(head.replace(/^đột phá\s*/i,''));return [say('tongsu',pickBy(seed,[`Chúc mừng ${who} đột phá ${to}! Đạo hạnh thăng tiến!`,`Thiên môn khai mở! ${Who} bước vào ${to}!`,`${Who} đột phá ${to}, linh khí chấn động!`]))];}
+  if(e.effect==='breakthrough'){const to=titleCase(head.replace(/^đột phá\s*/i,'')),up=ascendByName(to);
+   if(up)return [say('tongsu',pickBy(seed,[`Phi thăng! ${Who} thành ${to}, bay lên ${up}!`,`Thiên môn rộng mở! ${Who} phi thăng ${up}, chứng ${to}!`,`${Who} phá giới phi thăng, đặt chân lên ${up}!`]))]; // 16/11: 4 cảnh giới cuối = phi thăng
+   return [say('tongsu',pickBy(seed,[`Chúc mừng ${who} đột phá ${to}! Đạo hạnh thăng tiến!`,`Thiên môn khai mở! ${Who} bước vào ${to}!`,`${Who} đột phá ${to}, linh khí chấn động!`]))];}
   if(e.transform)return [say('tiennu',`${Who} nhận truyền thừa ${e.skinName||'tiên nhân'}${e.giftFrom?', do '+(sayName(e.giftFrom)||'đồng môn')+' tặng':''}!`),say('tongsu',`${e.transform==='hanlap'?'Trúc kiếm cuồng phong':e.transform==='shende'?'Đế khí bùng nổ':e.skinName==='Lý Mộ Uyển'?'Thanh quang tỏa sáng':'Tử khí cuộn trào'}, biến hình thành ${e.skinName||'tiên nhân'}!`)];
   // ----- sự kiện trời -----
   if(e.flowerStart&&e.eventKind==='meteor')return [say('tiennu',`Tinh Hà Lưu Tinh giáng thế ${viNumber(e.minutes)} phút! Sao băng rơi khắp tông môn, bình luận để bắt sao!`)];
