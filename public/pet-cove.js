@@ -1,4 +1,6 @@
 import {eventPets,petRequirement,petPose} from './spirit-pets.js';
+import {giftFor} from './gift-icons.js';
+import {giftImg} from './skill-cutscene.js?v=20261117';
 import {drawPetV2CoveScene} from './pet-v2-cove-fx.js';
 import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose,PET_FACES_RIGHT as FACES_RIGHT} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {loadPetArt} from './spirit-pet-art.js?v=drawn-pets-20261114';
@@ -54,7 +56,10 @@ function drawLegend(scene,c,pets,t,H){
   if(im)c.drawImage(im,cx-th/2,top+2,th,th);
   if(pet.rare){c.fillStyle='#ffe28a';c.font='bold 11px Arial';c.textAlign='right';c.fillText(pet.coins===300?'THIÊN LINH':'THẦN THÚ',x+w-4,top+13,w*.5);c.textAlign='center';}
   c.fillStyle=pet.color;c.font='bold 15px Arial';fitText(c,pet.name,cx,top+h*.74,w-8);
-  c.fillStyle='#fff1d0';c.font='bold 14px Arial';fitText(c,short(pet),cx,top+h*.94,w-8);
+  // 17/11: luật bảng quà — ảnh quà thật thay "N coin".
+  c.fillStyle='#fff1d0';c.font='bold 14px Arial';{const hearts=pet.hearts>0?Number(pet.hearts).toLocaleString('vi-VN')+' tim':'',g=pet.coins>0?giftFor(scene.lastState?.giftArt,pet.coins):null,gi=g&&giftImg(g.url),y=top+h*.92,isz=20;
+   const txt=hearts+(g?(hearts?' / ':''):''),tw=c.measureText(txt).width,iw=g?(gi?isz:c.measureText(g.name+(g.count>1?' ×'+g.count:'')).width):0,x0=cx-(tw+iw)/2;
+   c.textAlign='left';if(txt)c.fillText(txt,x0,y,w-8);if(g){if(gi){c.save();c.fillStyle='#fff3d0';c.globalAlpha=.85;c.beginPath();c.arc(x0+tw+isz/2,y-isz*.3,isz*.62,0,Math.PI*2);c.fill();c.restore();c.drawImage(gi,x0+tw,y-isz*.8,isz,isz);}else c.fillText(g.name,x0+tw,y,w-8-tw);if(gi&&g.count>1)c.fillText('×'+g.count,x0+tw+isz,y);}c.textAlign='center';}
  }
 }
 function drawGuide(scene,c,t,H){

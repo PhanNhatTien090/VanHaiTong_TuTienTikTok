@@ -45,9 +45,12 @@ export function layoutLabels(targets,measure,width=900){
     // Đông người: giữa các hàng chỉ đủ một dòng → chạy chữ (scroll) trong khung, giữ nguyên cỡ chữ, không che mặt hàng dưới.
     const fits=full+pad<=cap,lines=fits?[name]:big?wrapName(name,measure,cap-pad):[name],scroll=!fits&&!big;
     const w=scroll?cap:Math.min(cap,Math.max(...lines.map(l=>measure(l)))+pad),h=(big?24:20)+(lines.length-1)*lineH;
-    let x=Math.max(8,Math.min(width-w-8,t.x-w/2)),y=t.y+t.scale*18+2; // khung tên sát chân hơn để các hàng xích lại
-    for(let step=0;step<12;step++){if(!occupied.some(a=>x<a.x+a.w+3&&x+w+3>a.x&&y<a.y+a.h+3&&y+h+3>a.y))break;y+=h+3;}
-    const box={id:t.id,x,y,w,h,name,lines,lineH,scroll,textW:full,player:t.player};occupied.push(box);return box;
+    const x0=Math.max(8,Math.min(width-w-8,t.x-w/2)),y0=t.y+t.scale*18+2; // khung tên sát chân hơn để các hàng xích lại
+    // 17/11: sân đông trước đẩy tên xuống tới 12 nấc (~270px) → tên trôi xa, thân như biến mất. Giờ: lệch ngang trước, xuống tối đa 3 nấc;
+    // vẫn kẹt thì ẨN tên người đó (thân vẫn vẽ) thay vì đặt tên lạc chỗ.
+    const free=(x,y)=>!occupied.some(a=>x<a.x+a.w+3&&x+w+3>a.x&&y<a.y+a.h+3&&y+h+3>a.y),sh=Math.round(w*.55);let at=null;
+    for(let step=0;step<=3&&!at;step++){const y=y0+step*(h+3);for(const dx of [0,-sh,sh]){const x=Math.max(8,Math.min(width-w-8,x0+dx));if(free(x,y)){at={x,y};break;}}}
+    const box={id:t.id,x:at?.x??x0,y:at?.y??y0,w,h,name,lines,lineH,scroll,textW:full,player:t.player,hidden:!at};if(at)occupied.push(box);return box;
   });
 }
 

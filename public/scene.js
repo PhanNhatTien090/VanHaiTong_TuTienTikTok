@@ -424,6 +424,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncRac
     }
     const cache=this.nameBitmaps??=new BitmapCache(160);
     for(const l of this.labels){
+      if(l.hidden&&l.id!==this.selected&&!(this.focusId===l.id&&this.focusUntil>t))continue; // 17/11: kẹt chỗ → ẩn tên, không đặt lạc xa thân
       const skin=skinFor(l.player.giftCoins),selected=l.id===this.selected,focus=this.focusId===l.id&&this.focusUntil>t&&this.focusId===l.id;
       const paint=(x,offscreen=true)=>{
         // 3/11: tên rõ hơn — nền đậm hơn, chữ trắng đậm có viền tối, chữ tối thiểu 11px (thà rút gọn còn hơn chữ li ti).

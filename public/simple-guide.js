@@ -56,7 +56,7 @@ export const GUIDE_PAGES=[
 ];
 const ORDER=[0,1,0,2,0,5,0,3,0,6]; // 16/11: thêm trang LINH CHÂU · TỌA KỸ // 11/11: thêm trang XEM NHÂN VẬT
 export function simpleSteps(s={},page=0){
- const order=s.halls?[...ORDER,0,4]:ORDER;
+ const order=ORDER; /* 17/11: bỏ trang NGŨ ĐƯỜNG — trùng bảng to "Chọn đường phái tu luyện" luôn hiện góc dưới khi có Ngũ Đường */
  const pick=order[((page%order.length)+order.length)%order.length];
  const rows=[
   // 4/11/2026 heartPlay: tim là cách vận công, trò chuyện để luận đạo — không cần spam tu luyện.
