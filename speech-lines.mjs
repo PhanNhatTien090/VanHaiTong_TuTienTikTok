@@ -17,6 +17,8 @@ export function viNumber(n){n=Math.max(0,Math.floor(Number(n)||0));if(n<10)retur
   const k=Math.floor(n/1e9),r=n%1e9;return viNumber(k)+' tỷ'+(r===0?'':' '+viNumber(r));}
 // số lớn đọc gọn cho câu ngắn: 13.013 → "mười ba nghìn"; 1.920 → "một nghìn chín trăm"
 const roundSay=n=>{n=Math.floor(Number(n)||0);if(n>=1e6)return viNumber(Math.round(n/1e5)*1e5);if(n>=10000)return viNumber(Math.round(n/1000)*1000);if(n>=1000)return viNumber(Math.round(n/100)*100);return viNumber(n);};
+// Tên chiêu viết HOA trong code → đọc/hiện dạng 'Vạn Kiếm Quy Tông' (giọng AI đọc chữ hoa dễ thành đánh vần).
+const castName=s=>String(s||'').trim().toLocaleLowerCase('vi').replace(/(^|[\s·-])(\p{L})/gu,(m,a,b)=>a+b.toLocaleUpperCase('vi'));
 const pickBy=(seed,list)=>{let h=0;for(const ch of String(seed))h=(Math.imul(h,31)+ch.charCodeAt(0))|0;return list[Math.abs(h)%list.length];};
 const multWord=m=>m===1.5?'một rưỡi':viNumber(m);
 // chữ "giả Latin" hay gặp trong tên TikTok (Hy Lạp, Cyrillic, IPA, small caps) → chữ Latin thường để TTS đọc được
@@ -40,11 +42,14 @@ function giftLines(e,who,Who,t,seed){
  const buff=e.buff?.mult?' Phúc duyên gấp '+multWord(e.buff.mult)+(e.firstGift?' suốt hai mươi phút.':' trong mười phút.'):'';
  const race=e.raceBoost?' Phi kiếm lao vọt '+viNumber(e.raceBoost)+' trượng!':'';
  // 08/11 tối (chủ game): KHÔNG cảm ơn / 'đa tạ tâm ý' — chỉ nói điều vừa xảy ra (tu vi, skin, luật sự kiện).
- const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':e.giftFor?.toName?`${Who} tặng hộ ${sayName(e.giftFor.toName)||'đồng môn'}, tích lũy skin sự kiện!`:`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`,'hội gõ đầu':e.bonkHammer?.upgraded?`${Who} nhận ${e.bonkHammer.name}! Gõ đau hơn rồi!`:`${Who} vung ${e.bonkHammer?.name||'búa'} mạnh hơn!`,'bí cảnh mê cung':e.mazeGift?.moved?`${Who} dịch chuyển ${viNumber(e.mazeGift.moved)} bước!`:e.mazeGift?.hint?`${Who} được soi đường!`:`${Who} vào mê cung!`}[rule];
- const master=(skins?'Chúc mừng '+who+' nhận '+rewards+'!':rewards?Who+' nhận '+rewards+'!':ruleLine||Who+' tặng quà!')+buff+race;
+ const skins=(r.skinNames||[]).length,rule=e.eventRule,ruleLine={'lò luyện đan':`${Who} thêm linh dược vào lò!`,'cơ duyên':`${Who} tích lũy cơ duyên!`,'mưa hoa':`${Who} được cộng điểm mưa hoa!`,'sao băng':`${Who} được cộng điểm sao băng!`,'tiên nhân truyền đạo':e.giftFor?.toName?`${Who} truyền công cho ${sayName(e.giftFor.toName)||'đồng môn'}, tích lũy skin sự kiện!`:`${Who} tích lũy cho skin sự kiện!`,'đua phi kiếm':`${Who} cộng điểm quà đua!`,'hội gõ đầu':e.bonkHammer?.upgraded?`${Who} nhận ${e.bonkHammer.name}! Gõ đau hơn rồi!`:`${Who} vung ${e.bonkHammer?.name||'búa'} mạnh hơn!`,'bí cảnh mê cung':e.mazeGift?.moved?`${Who} dịch chuyển ${viNumber(e.mazeGift.moved)} bước!`:e.mazeGift?.hint?`${Who} được soi đường!`:`${Who} vào mê cung!`}[rule];
+ // 16/11 (chủ game): quà trong sự kiện = THI TRIỂN chiêu của sự kiện đó, không bao giờ đọc "X tặng quà".
+ const skill=castName(e.towerGift?.name||e.realmGift?.name||e.hallWarGift?.name||e.arenaLabel),pending=e.towerGift?.pending;
+ const cast=skill?(pending?`${Who} thi triển ${skill}, chờ lượt lên tháp!`:pickBy(seed,[`${Who} thi triển ${skill}!`,`${Who} tung ${skill}!`,`${skill}! ${Who} ra tay!`])):'';
+ const master=(skins?'Chúc mừng '+who+' nhận '+rewards+'!':cast||(rewards?Who+' nhận '+rewards+'!':ruleLine||(rule?`${Who} thi triển tuyệt kỹ trợ trận!`:Who+' tặng quà!')))+buff+race;
  // 08/11: quà giữa Chính Ma Đại Chiến — hô to quà lật kèo / đại chiêu, rồi mới cảm ơn.
  if(e.warGift){const S=e.warGift==='chinh'?'Chính Đạo':'Ma Đạo',value=(Number(e.coins)||0)*(Number(e.count)||1);
-  const hype=e.warFlip?pickBy(seed,[`${Who} tặng quà lớn, lật kèo rồi! ${S} vượt lên!`,`Lật kèo! ${Who} một quà đảo chiều chiến trận!`,`${Who} ra tay, ${S} lật ngược thế cờ!`])
+  const hype=e.warFlip?pickBy(seed,[`${Who} tung đại chiêu, lật kèo rồi! ${S} vượt lên!`,`Lật kèo! ${Who} một quà đảo chiều chiến trận!`,`${Who} ra tay, ${S} lật ngược thế cờ!`])
    :value>=99?pickBy(seed,[`${Who} tung tuyệt kỹ! ${S} đẩy phăng chiến tuyến!`,`Đại chiêu của ${who}! ${S} càn quét!`,`${Who} ra đòn chí mạng cho ${S}!`])
    :Number(e.warTruong)>0?pickBy(seed,[`${Who} phản công! ${S} đẩy lùi ${viNumber(e.warTruong)} trượng!`,`${Who} tung chiêu! ${S} ép tới ${viNumber(e.warTruong)} trượng!`,`${S} đẩy mạnh ${viNumber(e.warTruong)} trượng nhờ ${who}!`])
    :value>=10?pickBy(seed,[`${Who} phản công! ${S} đẩy mạnh!`,`${Who} tung chiêu! ${S} ép tới!`,`${Who} ra đòn, ${S} đẩy mạnh chiến tuyến!`])

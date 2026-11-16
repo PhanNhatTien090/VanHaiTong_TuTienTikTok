@@ -654,7 +654,7 @@ function actionCore(w,input,now) {
     reconcilePatron(w,now);
     // 10/11: tặng hộ — tiến độ skin/linh thú về người nhận đang ở LIVE; coin, VIP, top vẫn của người tặng.
     const giftFor=input.simulated||input.autoRose||p.puppet||p.resident?null:giftForTarget(w,p,now,currentParticipant);
-    giftRecipient=giftFor?.target||null;const recipient=giftRecipient||p;{const ar=arenaGift(w,recipient,input.coins,now,{from:p,count});if(ar?.trick){giftEvent.arenaTrick=ar.trick;giftEvent.text+=' • '+ar.label;}} // 15/11: Lôi Đài — quà trợ chiêu (cả tặng hộ đấu thủ)
+    giftRecipient=giftFor?.target||null;const recipient=giftRecipient||p;{const ar=arenaGift(w,recipient,input.coins,now,{from:p,count});if(ar?.trick){giftEvent.arenaTrick=ar.trick;giftEvent.arenaLabel=ar.label;giftEvent.text+=' • '+ar.label;}} // 15/11: Lôi Đài — quà trợ chiêu (cả tặng hộ đấu thủ)
     if(giftRecipient){giftEvent.giftFor={to:recipient.id,toName:recipient.name};giftEvent.text+=' • tặng hộ '+recipient.name;}
     else if(giftFor?.missing&&giftForEventEnd(w,now)){giftEvent.giftForMissing=giftFor.name;giftEvent.text+=' • '+giftFor.name+' đã rời LIVE, quà tính cho '+p.name;}
     const hallGift=hallWarGift(w,p,input.coins*count,now,hallWarContext);if(hallGift)giftEvent.hallWarGift=hallGift;

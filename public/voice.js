@@ -82,7 +82,7 @@ export class VoiceQueue {
   }
   // Mảnh ghép làm sẵn cho lời cảm ơn quà; thiếu tên thì null (dùng đường cũ).
   giftParts(e){const base=`/api/voice-part?world=${this.world}`,get=q=>fetch(base+q,{signal:AbortSignal.timeout(1200)}).then(r=>r.ok?r.blob():null).catch(()=>null);
-    if(!e.user||e.eventRule&&!e.warGift||e.raceGift)return Promise.resolve(null);
+    if(!e.user||e.eventRule&&!e.warGift||e.raceGift||e.arenaTrick)return Promise.resolve(null); // 16/11: Lôi Đài đọc 'thi triển <chiêu>', không ghép câu 'tặng quà'
     if(e.adminGift)return Promise.all([get('&kind=name&user='+encodeURIComponent(e.user)),get('&kind=admin&combo='+encodeURIComponent(e.adminGift))]).then(([n,g])=>n&&g?[n,g]:null); // 08/11 tối: tông chủ ban lễ // 08/11 tối: quà trong sự kiện đọc đúng luật sự kiện, không ghép câu quà chung
     // 08/11 tối: quà trong Chính Ma → "<tên> phản công! <phe> đẩy mạnh!" (không cảm ơn).
     const second=e.warGift?get('&kind=war&side='+encodeURIComponent(e.warGift)):get('&kind=gift&gift='+encodeURIComponent(e.gift||'')).then(b=>b||get('&kind=thanks'));
