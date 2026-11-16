@@ -2,6 +2,7 @@
 // Luật thắng (chủ game duyệt "phương án B"): tu vi cao hơn → máu/công cao hơn rõ; chênh ≥30% tổng tu vi thì người mạnh thắng chắc;
 // sát nhau thì chiêu, linh thú, nộ khí (cổ vũ có trần) và quà của đấu thủ có thể lật kèo.
 import {stageConflict} from './stage-lock.mjs';
+import {mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỵ tăng sức mạnh tỷ thí
 import {seatDuelResult} from './master-seat.mjs';
 import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
@@ -225,6 +226,7 @@ function act(w,m,id,now){
  let mult=1;
  if(hanhBeats(skill.hanh,foe.hanh)){mult*=1.05;entry.counter=true;}else if(hanhBeats(foe.hanh,skill.hanh)){mult*=.95;entry.resisted=true;}
  if(f.lastEl&&f.lastEl===skill.hanh&&slot!==1){mult*=1.1;entry.combo=true;}
+ mult*=1+mountBonus(w.players[id],'arena');
  f.lastEl=skill.hanh;
  const role=slot===ARENA_PET_SLOT?skill.role:'attack';
  if(role==='support'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.1*(1+.02*(skill.lv-1))));f.hp+=heal;entry.heal=heal;entry.target='self';}

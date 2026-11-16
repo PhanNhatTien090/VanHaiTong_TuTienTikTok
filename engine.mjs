@@ -20,6 +20,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
+import {mountCommand,tickMounts,mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỵ
 import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
 import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
 import {petV2Flags,petV2Configure,petV2Command,petV2View,petV2Cards,petV2Earn,petV2BossDamage,petV2CommitBossDamage,petV2Tick,petV2CovePhase} from './pet-v2.mjs';
@@ -132,7 +133,9 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   const bonus=qiBonus(p)*(source==='reward'||source==='sect-event'?EVENT_GEAR_SHARE:1);
   // v33: Phúc duyên (buff sau khi tặng quà) nhân tu vi + linh thạch của hành động chơi tay trong thời gian hiệu lực.
   const buff=hand&&now!==null&&p.buffUntil>now?(p.buffMult||1):1;
-  let amount=Math.round(qi*(1+bonus)*buff);stones=Math.round(stones*buff);
+  // 16/11: Tọa Kỵ — linh thạch mọi nguồn; tu luyện chỉ khi chơi tay (không áp vào thưởng sự kiện 'reward'/'sect-event').
+  const mountQi=hand&&source!=='reward'&&source!=='sect-event'?mountBonus(p,'qi'):0;
+  let amount=Math.round(qi*(1+bonus+mountQi)*buff);stones=Math.round(stones*buff*(1+mountBonus(p,'stones')));
   if(w.settings?.ascensionShowcase===true&&!p.resident&&!p.puppet&&typeof hand==='string'){
     const floor=ascensionPracticeReward(p.realm,hand,rewardQiBasis(p),requiredStones(p));
     amount=Math.max(amount,Math.round(floor.qi*(talking(p,now)?1.2:1)));stones=Math.max(stones,floor.stones);
@@ -423,6 +426,7 @@ function actionCore(w,input,now) {
   if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
   if(type==='chat'){const inv=inventoryRequest(w,p,cmd,rest,now);if(inv){const wait=cooldown(p,'inventory',15000,now);if(wait)return fail(`Xem lại sau ${wait}s.`);const card=inventoryCard(inv.kind,p,CATALOG,inv.kind==='pets'?petV2Cards(w,p):null);emit(w,p,inventoryText(card),'status',now,{card});return {ok:true};}} // 11/11
   if(type==='chat'){const petV2=petV2Command(w,p,cmd,rest,now,emit);if(petV2){if(!petV2.ok&&!cooldown(p,'pet-v2-error',8000,now))emit(w,p,petV2.message,'status',now);return petV2;}}
+  if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now);return mt;}} // 16/11: Tọa Kỵ
    if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
@@ -976,6 +980,7 @@ function tickCore(w,now) {
   tickHallWar(w,now,hallWarContext);
   tickSocial(w,now,socialContext);tickArena(w,now,socialContext);tickSeat(w,now,socialContext);
   if(w.settings?.nguDuong===true||w.nguDuong)tickHalls(w,now,hallContext);
+  tickMounts(w,now,mountContext); // 16/11: Linh Châu đủ giờ → tọa kỵ hiện thân
   reconcilePatron(w,now);
 
   if(w.visitor&&now>=w.visitor.endsAt&&!w.visitor.closedAt){w.visitor.closedAt=now;archiveVisitor(w);auditRecord(w,'visitor-end',now,{eventId:w.visitor.id,kind:w.visitor.kind});emit(w,null,VISITORS[w.visitor.kind].name+' đã rời tiên môn • giữ nguyên quà đã nhận','visitor',now,{visitorEnd:true});}
@@ -1366,6 +1371,7 @@ function advanceVisitor(w,p,input,now){
 
 const companionContext={emit,active:currentParticipant,ready:readyToBreak,creditQi,createPair:(w,a,b,now)=>createCompanionPair(w,a,b,now,companionContext)};
 export const controlLanternEvent=(w,op,now=Date.now())=>controlLantern(w,op,now,companionContext);
+const mountContext={emit,active:currentParticipant,audit:auditRecord};
 const hallContext={emit,gain:(w,p,qi,stones,herbs,now)=>gain(w,p,qi,stones,herbs,now,false,'event'),active:currentParticipant,busy:(w,now)=>w.liveSession?.active===false||!!stageConflict(w,now)||w.tower?.endsAt>now||w.quiz?.endsAt>now||w.events.some(e=>e.effect==='breakthrough'&&now-e.at<65000)};
 const socialContext={emit,gain,power,technique:attackTechnique,active:currentParticipant};
 const hallWarContext={...socialContext,contribute:hallContribution,hallPoints:creditHallBattle};

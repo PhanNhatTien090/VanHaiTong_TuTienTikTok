@@ -5,6 +5,9 @@
 // quà không nhân bù quân số/Chính khí (chỉ thiên tượng + phản kích). Trần chống "1 quà to kết thúc trận": mỗi phe 36 đơn vị quà / 30 s.
 // 1 coin = 3 đơn vị (= 30 tim). Bù quân số giảm còn tối đa ×1,2, Chính khí ×1,05.
 import {stageConflict} from './stage-lock.mjs';
+import {mountBonus} from './mounts.mjs';
+// 16/11: Tọa Kỵ — đẩy thêm trượng khi xuất chiêu/tim (không áp vào quà). Phần lẻ cộng dồn theo người.
+const mountUnits=(m,p,units)=>{const b=mountBonus(p,'war');if(!b)return 0;m.mountCarry=(m.mountCarry||0)+units*b;const n=Math.floor(m.mountCarry);m.mountCarry-=n;return n;};
 // 08/11: đẩy mạnh hơn (unit .5 → .85) + lò xo kéo chiến tuyến về giữa 3,5%/giây → giằng co qua lại rõ, trận vẫn đủ 2 phút.
 export const WAR=Object.freeze({registerMs:30000,battleMs:120000,podiumMs:20000,pullBack:.035,
  unit:.85,heartsPerUnit:10,heartCapUnits:4,heartWindowMs:5000,strikeUnits:1.5,strikeCooldownMs:8000,giftUnitsPerCoin:3,giftWindowMs:30000,giftCapUnits:36,
@@ -101,7 +104,7 @@ export function warCommand(w,p,cmd,now,c){
  const side=CHINH.includes(cmd)?'chinh':MA.includes(cmd)?'ma':null;
  if(side){if(!real(p))return {ok:false,message:'NPC không ra trận.'};const m=e.members[p.id];if(m)return m.side===side?{ok:true,duplicate:true}:{ok:false,message:'Đã ở '+SIDES[m.side].name+' • không đổi phe giữa trận.'};join(w,e,p,side,now,c);return {ok:true};}
  if(cmd==='chien'||cmd==='danh'&&e.phase==='running'){const m=e.members[p.id];if(!m)return {ok:false,message:'Gõ chinh hoặc ma để chọn phe trước.'};if(e.phase!=='running')return {ok:false,message:'Chưa khai chiến.'};
-  if(now-m.lastStrike<WAR.strikeCooldownMs)return {ok:false,message:'Xuất chiêu hồi sau 8 giây.'};m.lastStrike=now;warNoteFree(e,m.side,WAR.strikeUnits,now);const moved=push(w,e,m.side,WAR.strikeUnits,now,c);m.score+=WAR.strikeUnits;m.lastActAt=now;
+  if(now-m.lastStrike<WAR.strikeCooldownMs)return {ok:false,message:'Xuất chiêu hồi sau 8 giây.'};m.lastStrike=now;warNoteFree(e,m.side,WAR.strikeUnits,now);const moved=push(w,e,m.side,WAR.strikeUnits+mountUnits(m,p,WAR.strikeUnits),now,c);m.score+=WAR.strikeUnits;m.lastActAt=now;
   fx(e,now,{kind:'strike',side:m.side,user:p.id});checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return {ok:true,moved};}
 }
 // Tim: người chưa chọn phe tự vào phe ít người (hòa → Chính Đạo). Giới hạn mỗi người theo cửa sổ 5 s.
@@ -110,7 +113,7 @@ export function warHearts(w,p,count,now,c){
  let m=e.members[p.id];if(!m){const side=warCount(e,'ma')>warCount(e,'chinh')?'chinh':warCount(e,'chinh')>warCount(e,'ma')?'ma':'chinh';m=join(w,e,p,side,now,c,true);if(!m)return 0;}
  if(now-m.heartWindow>=WAR.heartWindowMs){m.heartWindow=now;m.heartUnits=0;}
  m.hearts+=count;const units=Math.min(WAR.heartCapUnits-m.heartUnits,Math.floor(m.hearts/WAR.heartsPerUnit));if(units<=0)return 0;
- m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units,now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return moved;
+ m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units+mountUnits(m,p,units),now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return moved;
 }
 // Quà: luôn tung đại chiêu + tính điểm; đẩy đủ theo coin, trần 36 đơn vị (~12 coin) / phe / 30 s.
 export function warGift(w,p,coins,now,c,event={}){
