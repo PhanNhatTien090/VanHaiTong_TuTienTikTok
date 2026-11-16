@@ -43,10 +43,17 @@ export function skinCard(p){
 // Trả về {kind, text} nếu là lệnh xem; null nếu không phải.
 export function inventoryRequest(w,p,cmd,rest,now){
  if(BAG_CMDS.includes(cmd))return {kind:'bag'};
- if(PET_CMDS.includes(cmd)&&rest==='ky')return {kind:'pets'}; // 15/11: "thú kỹ" mở bảng thú (cấp, XP, thân thiết, tuyệt kỹ) mọi lúc, kể cả khi Cốc đang mở
- if(PET_CMDS.includes(cmd)&&!rest&&!petOpen(w,now)&&!(w.petEvent&&p.petProgress?.eventId===w.petEvent.id))return {kind:'pets'}; // còn tiến độ đợt vừa rồi → để bảng Linh Thú Cốc báo
+ // 16/11 (chủ game): "thú" / "thu" / "thú đồ" / "thú kỹ" LUÔN mở bảng linh thú, kể cả lúc Linh Thú Cốc mở (tiến độ Cốc ghi trong bảng).
+ if(PET_CMDS.includes(cmd)&&['ky','ki','do','kydo','ds','xem'].includes(rest||''))return {kind:'pets'};
+ if(PET_CMDS.includes(cmd)&&!rest&&!petOpen(w,now)&&!(w.petEvent&&p.petProgress?.eventId===w.petEvent.id))return {kind:'pets'}; // Cốc mở/vừa khép: 'thu' đi qua petCommand (tiến độ) và engine gắn thêm bảng thú
  if(cmd==='skin'&&!rest)return {kind:'skins'};
  return null;
+}
+// 16/11: dòng tiến độ Linh Thú Cốc cho bảng thú (lúc Cốc mở / vừa khép).
+export function petEventTip(w,p,now){
+ const e=w.petEvent;if(!e)return null;const open=petOpen(w,now),mine=p.petProgress?.eventId===e.id;if(!open&&!mine)return null;
+ const v=mine?p.petProgress:{hearts:0,coins:0},f=e.featured&&open?petById(e.featured):null;
+ return (open?'Linh Thú Cốc':'Linh Thú Cốc vừa khép')+' · đã nhận '+(v.hearts||0)+' tim'+(f?' · thần thú lượt này: '+f.name:''); // không ghi coin (luật bảng LIVE)
 }
 export function inventoryCard(kind,p,catalog,growth=null){return kind==='bag'?bagCard(p,catalog):kind==='pets'?petCard(p,growth||{}):skinCard(p);}
 export function inventoryText(c){

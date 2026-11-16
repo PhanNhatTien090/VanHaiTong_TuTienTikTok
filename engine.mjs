@@ -66,7 +66,7 @@ import {hallBenefits,hallContribution,creditHallBattle,hallCommand,hallView,tick
 import {REALM_NAMES,REBIRTH_UNLOCK_REALM} from './public/progression.js';
 import {resolveQuick,quickView} from './quick-commands.mjs';
 import {realmStage,STAGES} from './public/realm-stage.js'; // 12/11: Sơ/Trung/Hậu kỳ/Viên Mãn (chỉ hiển thị)
-import {inventoryRequest,inventoryCard,inventoryText} from './inventory.mjs'; // 11/11: túi đồ · linh thú · tủ skin
+import {inventoryRequest,inventoryCard,petEventTip,inventoryText} from './inventory.mjs'; // 11/11: túi đồ · linh thú · tủ skin
 export const REALMS = REALM_NAMES;
 export const CATALOG = [
   ...COURT_RELICS,...DORA_RELICS,...LOYALTY_ARTIFACTS,...GIFT_ARTIFACTS,...EVENT_ARTIFACTS,...VISITOR_RELICS,...SIGNATURE_ARTIFACTS,...COMBAT_RELICS,...SOCIAL_ITEMS,...BOSS_RELICS,...CELESTIAL_RELICS,
@@ -432,10 +432,10 @@ function actionCore(w,input,now) {
   if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now);return result;}}
   if(type==='chat'){const ar=arenaCommand(w,p,cmd,rest,now,socialContext);if(ar){if(!ar.ok&&!cooldown(p,'arena-error',6000,now))emit(w,p,ar.message,'status',now);return ar;}} // 15/11: Vân Hải Lôi Đài
   if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
-  if(type==='chat'){const inv=inventoryRequest(w,p,cmd,rest,now);if(inv){const wait=cooldown(p,'inventory',15000,now);if(wait)return fail(`Xem lại sau ${wait}s.`);const card=inventoryCard(inv.kind,p,CATALOG,inv.kind==='pets'?petV2Cards(w,p):null);emit(w,p,inventoryText(card),'status',now,{card});return {ok:true};}} // 11/11
+  if(type==='chat'){const inv=inventoryRequest(w,p,cmd,rest,now);if(inv){const wait=cooldown(p,'inventory',15000,now);if(wait)return fail(`Xem lại sau ${wait}s.`);const card=inventoryCard(inv.kind,p,CATALOG,inv.kind==='pets'?petV2Cards(w,p):null);if(card.kind==='pets'){const tip=petEventTip(w,p,now);if(tip)card.tip=tip;}emit(w,p,inventoryText(card),'status',now,{card});return {ok:true};}} // 11/11
   if(type==='chat'){const petV2=petV2Command(w,p,cmd,rest,now,emit);if(petV2){if(!petV2.ok&&!cooldown(p,'pet-v2-error',8000,now))emit(w,p,petV2.message,'status',now);return petV2;}}
   if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now);return mt;}} // 16/11: Tọa Kỹ
-   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
+   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(pet.ok&&!rest){const ev=w.events.at(-1);if(ev?.petStatus&&ev.user===p.id&&!ev.card){ev.card=inventoryCard('pets',p,CATALOG,petV2Cards(w,p));const tip=petEventTip(w,p,now);if(tip)ev.card.tip=tip;}} /* 16/11: gõ thú lúc Linh Thú Cốc mở cũng hiện bảng thú */if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
   if(type==='chat'){const war=warCommand(w,p,cmd,now,socialContext);if(war){if(war.ok)hallContribution(w,p,now,'event');if(!war.ok&&!cooldown(p,'war-error',8000,now))emit(w,p,war.message,'war',now);return war;}}
