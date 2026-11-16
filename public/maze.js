@@ -44,6 +44,9 @@ export function drawMaze(scene,c,t,layer){
    scene.mazeBackground={context:c,height:H,width:c.canvas.width,gradient};
   }
   c.fillStyle=scene.mazeBackground.gradient;c.fillRect(-20,-20,940,H+40);
+  // 16/11: nền tàn tích (Codex vẽ, giữa gần như trơn để lưới mê cung dễ đọc)
+  if(typeof Image!=='undefined'&&!scene.mazeArt){const im=new Image();im.decoding='async';im.src='/assets/event-maps-v1/maze-ruins.webp';scene.mazeArt=im;}
+  const art=scene.mazeArt;if(art?.complete&&art.naturalWidth){const k=Math.max(900/art.naturalWidth,H/art.naturalHeight),w=art.naturalWidth*k,h=art.naturalHeight*k;c.drawImage(art,(900-w)/2,(H-h)/2,w,h);}
   // sương bí cảnh trôi chậm
   if(scene.motion!==false&&!feedbackBudget(scene))for(let i=0;i<5;i++){const x=(i*233+t*.012*(i%2?1:-1))%1100-100,y=H*(.2+i*.15);glow(c,x,y,260,mistColor,.07);}
   const wl=wallLayer(scene,e,H);if(wl)c.drawImage(wl.surface,L.ox-wl.pad,L.oy-wl.pad);
