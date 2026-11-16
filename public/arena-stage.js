@@ -11,6 +11,7 @@ import {portraitCanvas} from './linh-bai.js';
 import {drawQueueAvatars} from './queue-avatars.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
 import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
+import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt} from './skill-cutscene.js?v=20261117';
 
 export const ARENA_DELAY_MS=1100;
 export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708],cols:8,guide:.752,audienceScale:.98});
@@ -34,6 +35,7 @@ export function syncArena(scene,state){
   // Ảnh bí pháp + ảnh quà trợ chiêu nạp trước khi cần.
   for(const id of [m.a,m.b])for(const k of m.fighters[id].kit)if(k.art)loadSkillArt(scene,k.art);
   for(const k of ['axe','sword-rain','fire-dragon'])loadSkillArt(scene,k);
+  for(const id of [m.a,m.b])prewarmCutArt(state.players?.find?.(p=>p.id===id)?.skinChoice);
  }
 }
 /** Đấu thủ trên đài + khán giả ngồi các bậc thềm. */
@@ -104,7 +106,7 @@ function drawHud(scene,c,m,H,t){
 }
 
 function drawCast(scene,c,m,e,k,H,t,targets){
- if(!e?.skill||e.stunned||e.dot)return; // đòn bị choáng / nhịp độc: không có hình chiêu
+ if(!e?.skill||e.stunned||e.dot||e.cut)return; // 17/11: đòn chiếu riêng vẽ ở skill-cutscene.js // đòn bị choáng / nhịp độc: không có hình chiêu
  const A=targets.get(e.by),B=targets.get(e.to);if(!A||!B)return;
  const light=scene.budget?.level==='light'||scene.heavyCrowd;
  // Biến thể mỗi đòn (chống "reproduced content"): lệch điểm trúng, cỡ, nghiêng.
@@ -139,6 +141,7 @@ function drawCast(scene,c,m,e,k,H,t,targets){
  if(k>.55&&!light)drawShockwave(c,e.crit?'gold':'jade',B.x,B.y-90,(k-.55)*DUR[e.slot],{quality:'balanced',radius:e.crit?190:120,seed:e.n*.13,motion:scene.motion,flash:false,aspect:.6});
 }
 function drawNumbers(scene,c,e,k,targets){
+ if(e.cut)return;
  const B=targets.get(e.to),A=targets.get(e.by);if(!B||!A||k<.55)return;
  const u=clamp((k-.55)/.45),y0=(B.y-235)-u*55,a=Math.min(1,(1-u)*2.2);
  c.save();c.globalAlpha=a;
@@ -168,6 +171,14 @@ function drawSkillBanner(scene,c,e,k,targets,H){
  c.save();c.globalAlpha=a;text(c,'SK'+e.slot+' · '+e.skill.name,A.x,A.y-330,{size:22,color:e.skill.color||'#e9f6ff',width:5,max:380});c.restore();
 }
 
+/** 17/11: gọi đầu scene.drawFrame — đang chiếu riêng thì vẽ màn riêng THAY cả sân (trả true). */
+export function arenaCutFrame(scene,c,t,H){
+ const a=scene.socialScene==='arena'?scene.arena:null,m=a?.current;
+ const cut=m?findCut(m.log,serverNow(scene)-ARENA_DELAY_MS):null,full=cutFull(cut),on=!!cut&&cut.age<cut.ms; // HTML ẩn suốt lúc chém vào → mở lại
+ if(scene.cutsceneOn!==on){scene.cutsceneOn=on;document.body.classList.toggle('cutscene-on',on);}
+ if(!full)return false;
+ try{return drawCutFull(scene,c,t,H,cut,scene.playerIndex||new Map());}catch(err){console.warn('[cut]',err);return false;}
+}
 export function drawArena(scene,c,t,layer){
  const a=scene.arena,H=scene.height;if(!a)return;
  const now=serverNow(scene),at=now-ARENA_DELAY_MS,m=a.current;
@@ -207,7 +218,7 @@ export function drawArena(scene,c,t,layer){
    if(scene.arenaFxSeen.size>200)scene.arenaFxSeen=new Set([...scene.arenaFxSeen].slice(-80));
   }
   // Bảng chéo xếp tầng (tối đa 3), mỗi đòn 1 bảng; sau đó mới vẽ số sát thương để luôn đọc được.
-  const live=m.log.filter(e=>{const age=at-e.at;return age>=0&&!e.stunned&&!e.dot&&!(e.gift&&e.target==='self')&&bannerPlan(scene,e,now).show&&age<=bannerLife(e);});
+  const live=m.log.filter(e=>{const age=at-e.at;return age>=0&&!e.cut&&!e.stunned&&!e.dot&&!(e.gift&&e.target==='self')&&bannerPlan(scene,e,now).show&&age<=bannerLife(e);});
   const keys=live.map(e=>e.n+':'+(e.at||0));
   // 16/11 (chủ game): bảng chéo hiện thì màn tối sầm lại (vào nhanh, ra nhanh trước cú trúng).
   if(live.length){let dim=0;for(const e of live){const k=(at-e.at)/bannerLife(e);dim=Math.max(dim,clamp(Math.min(k/.12,(1-k)/.15)));}c.save();c.globalAlpha=.62*dim;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.restore();}
@@ -231,7 +242,7 @@ export function drawArena(scene,c,t,layer){
   if(r.kind==='throne'&&a.streak>1)text(c,'GIỮ ĐÀI '+a.streak+' TRẬN',450,H*.198,{size:22,color:'#ffe2a4',width:5});
   c.restore();
   const W=targets.get(r.winner),Lo=targets.get(r.loser);
-  if(W)drawAura(c,'gold',W.x,W.y-130,130,.35);if(Lo)text(c,'Đa tạ chỉ giáo',Lo.x,Lo.y-310,{size:22,color:'#e8f1ff',width:5});
+  if(W)drawAura(c,'gold',W.x,W.y-130,130,.35);if(Lo)text(c,'Đa tạ chỉ giáo',Lo.x+(Lo.x>450?50:-50),Lo.y-235,{size:22,color:'#e8f1ff',width:5}); /* 17/11: trước đè tên người thắng */
  }
  if(!m&&!(r&&now<r.until+ARENA_DELAY_MS)&&a.phase==='open'){
   const ch=a.champion&&targets.get(a.champion.id);
@@ -241,6 +252,7 @@ export function drawArena(scene,c,t,layer){
  if(a.phase==='closed'&&a.podiumUntil>now&&a.champion){const ch=targets.get(a.champion.id);text(c,a.master?'👑 TÔNG CHỦ':'LÔI ĐÀI BÁ CHỦ',450,H*.17,{size:56,color:'#ffd54a',width:9});text(c,a.champion.name,450,H*.23,{size:32,color:'#fff',width:6});if(ch)drawAura(c,'gold',ch.x,ch.y-130,170,.4);}
  // Hàng chờ (1 dòng) + bảng hướng dẫn (thay các bảng khác khi đang có Lôi Đài).
  const gy=H*(ARENA_LAYOUT.hud)+118;
+ try{const cut=m&&findCut(m.log,at);if(cut&&!cutFull(cut))drawCutEdges(scene,c,t,H,cut,targets);}catch(err){console.warn('[cut]',err);}
  if(a.phase==='open'){
   // 16/11 (chủ game): hàng chờ = avatar tròn nhỏ, không tên; đánh xong người đầu hàng tự vào.
   panel(c,14,gy,a.queue.length?Math.min(872,124+a.queue.length*38):872,40,'#06121fd9','#ffd98a55');

@@ -7,6 +7,7 @@ import {seatDuelResult} from './master-seat.mjs';
 import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
 import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
+import {SKIN_CUT_MS,PET_CUT_MS,signatureSkinOf,petUltOf} from './public/signature-ults.js'; // 17/11: màn chiếu riêng
 export let arenaBooksOf=p=>bookLoadout(p);
 let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
 export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
@@ -181,7 +182,7 @@ function fighter(w,p,adv,c){
  const realm=Math.max(0,Number(p.realm)||0),maxHp=Math.round((60000+realm*9000)*(1+.04*adv));
  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
  return {id:p.id,name:p.name,realm,totalQi:Number(p.totalQi)||0,maxHp,hp:maxHp,rage:0,shield:0,stunUntil:0,weakUntil:0,reflectUntil:0,dot:null,lastEl:null,
-  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit};
+  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0};
 }
 function pickSlot(m,f,foe,now){
  const U=ARENA_ULT_SLOT,P=ARENA_PET_SLOT,ready=s=>s===U?f.rage>=100&&f.ults<2:now>=f.cd[s];
@@ -238,7 +239,17 @@ function act(w,m,id,now){
   if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}
   if(skill.effect&&skill.effect!=='none')applyEffect(m,f,foe,skill.effect,at,entry,r.dmg);}
  entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0||f.hp<=0;
+ // 17/11: CHIẾU RIÊNG — tuyệt kỹ đầu tiên của skin ≥300 coin / chiêu đầu tiên của linh thú ≥200 coin mỗi trận.
+ // Hoãn mọi đòn + độc của cả hai bên và nới giờ kết thúc trận đúng bằng thời gian chiếu → không mất đòn nào, trận không ngắn đi.
+ let cut=null;
+ if(slot===ARENA_ULT_SLOT&&f.sig&&!f.cutDone){f.cutDone=1;cut={kind:'skin',skin:f.sig,ms:SKIN_CUT_MS};}
+ else if(slot===ARENA_PET_SLOT&&f.petUlt&&skill.pet===f.petUlt&&!f.petCutDone){f.petCutDone=1;cut={kind:'pet',pet:f.petUlt,ms:PET_CUT_MS};}
+ if(cut){entry.cut=cut;holdMatch(m,at,cut.ms);if(entry.ko)m.finishAt=at+cut.ms;} // hạ gục bằng chiêu chiếu riêng → chờ chiếu xong mới báo thắng
  pushLog(m,entry);
+}
+export function holdMatch(m,at,ms){
+ for(const id of [m.a,m.b]){m.next[id]=Math.max(m.next[id],at+ms+500);const d=m.fighters[id].dot;if(d){d.next+=ms;d.until+=ms;}}
+ m.endsAt+=ms;
 }
 // Độc/bỏng: trừ máu theo nhịp, là một mốc trong dòng thời gian như một đòn.
 function dotTick(m,id){
@@ -314,11 +325,12 @@ export function tickArena(w,now,c){
   // Đấu thủ rời LIVE giữa trận → người còn lại thắng ngay.
   for(const id of [m.a,m.b])if(!present(w,id,now,c)&&now>=m.fightAt){m.fighters[id].hp=0;finishMatch(w,now,c);return;}
   for(let guard=0;guard<60&&now>=m.fightAt;guard++){
+   if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0)break; // đã hạ gục (đang chờ chiếu xong) → không đánh thêm
    const ev=nextEvent(m);if(!ev||ev.at>Math.min(now,m.endsAt))break;
    if(ev.kind==='dot')dotTick(m,ev.id);else act(w,m,ev.id,now);
    if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0)break;
   }
-  if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0||now>=m.endsAt)finishMatch(w,now,c);
+  if(m.fighters[m.a].hp<=0||m.fighters[m.b].hp<=0||now>=m.endsAt){if(m.finishAt&&now<m.finishAt)return;finishMatch(w,now,c);}
   return;
  }
  if(a.stepDownAt&&now>=a.stepDownAt){a.stepDownAt=0;const p=w.players[a.champion];if(p){medal(w,p,'guard:'+a.id+':'+p.id+':'+a.results.length,3,now);}stepDown(w,now,c,'giữ đài '+DEFEND_MAX+' trận • xuống nghỉ, nhường lượt (+3 huy chương)');}

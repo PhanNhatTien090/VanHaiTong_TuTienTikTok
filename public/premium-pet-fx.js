@@ -90,6 +90,6 @@ const FX={
  }
 };
 /** Vẽ một lớp hiệu ứng thú 300 coin. Gốc tọa độ = chỗ đứng thú (như drawPet). */
-export function drawPremiumPetFx(c,pet,size,t,seed=0,power=1,layer='front'){
- const fn=FX[pet?.fx];if(!fn)return;c.save();fn(c,size,t,seed,premiumBurst(t,seed),power,layer);c.restore();
+export function drawPremiumPetFx(c,pet,size,t,seed=0,power=1,layer='front',burst=null){ // burst: ép tiến độ bùng 0..1 (màn chiếu riêng)
+ const fn=FX[pet?.fx];if(!fn)return;c.save();fn(c,size,t,seed,burst??premiumBurst(t,seed),power,layer);c.restore();
 }

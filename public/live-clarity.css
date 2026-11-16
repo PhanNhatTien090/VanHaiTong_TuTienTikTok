@@ -358,3 +358,5 @@ html body.overlay.bond-stage .spotlight{top:61%!important}
 /* 17/11: Vân Hải Tháp — bảng 4 đài (canvas) phủ ngang màn, trước đè lên Thiên Bảng/bảng gõ số/thẻ quà (chữ xuyên lẫn lộn).
    Bảng tháp đã có hàng quà trợ lực → ẩn 2 cột HUD bên trong lúc tháp mở. */
 body.overlay.tower-on :is(#phoneHudLeft,#phoneHudRight,#lowerRightGuide){display:none!important}
+/* 17/11: màn chiếu riêng (Lôi Đài) — chỉ còn canvas: ẩn mọi bảng/thẻ HTML, vào ra mượt. */
+body.overlay.cutscene-on .scene-shell>:not(#sceneCanvas){opacity:0!important;transition:opacity .18s!important;pointer-events:none}
