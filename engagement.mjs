@@ -167,7 +167,7 @@ export function engagementCommand(w,p,cmd,rest,now,c){
 export function tickEngagement(w,now,c){
   closeEnvelope(w,now,c);closeQuiz(w,now,c);tickMiniEvent(w,now,c);
   const live=Object.values(w.players).filter(p=>!p.resident&&c.active(w,p,now)).length;
-  const calm=!smallEventConflict(w,now)&&w.liveSession?.active!==false&&!['queued','registration','running'].includes(w.sectWar?.phase)&&!['registration','running'].includes(w.hallWar?.phase); // 15/11: Chính Ma / Ngũ Đường đang mở thì không chen trò nhỏ
+  const calm=!smallEventConflict(w,now)&&w.liveSession?.active!==false&&!['queued','registration','running'].includes(w.sectWar?.phase)&&!['registration','running'].includes(w.hallWar?.phase)&&!['registration','running','boss'].includes(w.mountRealm?.phase); /* 16/11: Tọa Kỵ Bí Cảnh cũng không chen trò nhỏ (hộp trò nhỏ che tiêu đề + bảng) */ // 15/11: Chính Ma / Ngũ Đường đang mở thì không chen trò nhỏ
   // 4/11/2026: sự kiện nhỏ (lì xì / câu đố) rải dày — một nhịp chung ngẫu nhiên 1–2 phút, bốc ngẫu nhiên loại (không lặp liền một loại).
   // Đang có trò nhỏ khác hoặc chưa đủ 2 người hoạt động thì thử lại sau 20 giây. (envelopeMinutes/quizMinutes cũ không còn dùng.)
   {const kinds=[w.settings?.envelope!==false&&'envelope',w.settings?.quiz!==false&&'quiz',...(w.settings?.miniGames===false?[]:MINI_TYPES)].filter(Boolean);if(kinds.length){w.nextSmallAt??=now+60000;if(now>=w.nextSmallAt){if(calm&&live>=2){const pool=kinds.length>1?kinds.filter(k=>k!==w.lastSmallKind):kinds,kind=pool[Math.floor(Math.random()*pool.length)];if(kind==='envelope')startEnvelope(w,now,c);else if(kind==='quiz')startQuiz(w,now,c);else startMiniEvent(w,kind,now,c);w.lastSmallKind=kind;w.nextSmallAt=now+Math.round((60+Math.random()*60)*1000);}else w.nextSmallAt=now+20000;}}}

@@ -44,9 +44,17 @@ export const GUIDE_PAGES=[
   {cmd:'6 · cơ duyên',text:'nhận quà khách quý'},
   {cmd:'❤ thả tim',text:'đánh yêu thú, nuôi thú'},
   {cmd:'4 · luyện đan',text:'góp lửa lò đan'},
-  {cmd:'gợi ý',text:'hỏi việc nên làm'}]}
+  {cmd:'gợi ý',text:'hỏi việc nên làm'}]},
+ // 16/11: TỌA KỴ — Linh Châu nhặt ở Tọa Kỵ Bí Cảnh; truyền công đủ giờ (người phải đang ở LIVE) thì châu vỡ ra tọa kỵ.
+ {title:'LINH CHÂU · TỌA KỴ',rows:[
+  {cmd:'truyencong',text:'châu xanh'},
+  {cmd:'truyencong vip',text:'châu tím'},
+  {cmd:'truyencong than',text:'châu vàng'},
+  {cmd:'ở lại LIVE',text:'đủ giờ ra tọa kỵ'},
+  {cmd:'🎁 quà',text:'truyền nhanh hơn'},
+  {cmd:'toaky số',text:'cưỡi tọa kỵ'}]}
 ];
-const ORDER=[0,1,0,2,0,5,0,3]; // 11/11: thêm trang XEM NHÂN VẬT
+const ORDER=[0,1,0,2,0,5,0,3,0,6]; // 16/11: thêm trang LINH CHÂU · TỌA KỴ // 11/11: thêm trang XEM NHÂN VẬT
 export function simpleSteps(s={},page=0){
  const order=s.halls?[...ORDER,0,4]:ORDER;
  const pick=order[((page%order.length)+order.length)%order.length];

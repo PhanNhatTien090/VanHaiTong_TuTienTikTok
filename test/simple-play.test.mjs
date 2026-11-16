@@ -44,6 +44,7 @@ test('live keeps five stable rows (hearts + chat first), no admission command, w
  assert.deepEqual([0,1,2,3,4,5,6].map(i=>simpleSteps(s,i).title),['CÁCH CHƠI','LỆNH HẰNG NGÀY','CÁCH CHƠI','ĐỒNG MÔN','CÁCH CHƠI','SỰ KIỆN','CÁCH CHƠI']);
  assert.ok([0,1,3,5].every(i=>simpleSteps(s,i).rows.length<=6));
  assert.ok(simpleSteps(s,1).rows.some(r=>r.cmd==='điểm danh')&&simpleSteps(s,3).rows.some(r=>r.cmd==='kết duyên + tên'));
+ assert.equal(simpleSteps(s,9).title,'LINH CHÂU · TỌA KỴ');assert.ok(simpleSteps(s,9).rows.some(r=>r.cmd==='truyencong')); // 16/11
 });
 
 test('a first intentional arrival gets a brief visible seat without displacing a protected presentation',()=>{
