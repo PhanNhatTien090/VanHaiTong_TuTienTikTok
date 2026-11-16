@@ -40,8 +40,9 @@ function drawRaceGiftBoard(c,e,H){const top=e.giftTop||[],w=380,x=900-w-12,y=H*.
     c.font='700 14px Segoe UI';c.fillStyle='#f3e2b8';c.textAlign='right';c.fillText(PRIZE_TXT[i],x+w-10,ry);c.textAlign='left';}
   c.restore();}
 // dải luật một dòng ở đáy (thay bảng 96px cũ che mất đoàn đua)
-function drawBoostLegend(c,H,reg){const h=46,y=H-h-14,x=24,w=852;c.save();c.fillStyle='#071a2bcc';c.strokeStyle='#ffd76a80';c.lineWidth=1.5;c.beginPath();c.roundRect(x,y,w,h,10);c.fill();c.stroke();
-  c.textAlign='center';c.font='900 20px Segoe UI';c.fillStyle='#fff1ae';c.fillText(fit(c,reg?'⚡ GÕ bay ĐỂ GHI DANH · thả tim để bứt tốc khi đua':'❤ 50 tim +18 · danh +18 (hồi 10s) · quà mỗi coin +30 trượng',w-20),450,y+30);c.restore();}
+// 17/11: cách đáy ≥11% (quà TikTok che đáy); bỏ "thả tim để…" (mồi tương tác) và số coin.
+function drawBoostLegend(c,H,reg){const h=46,y=H*.89-h,x=24,w=852;c.save();c.fillStyle='#071a2bcc';c.strokeStyle='#ffd76a80';c.lineWidth=1.5;c.beginPath();c.roundRect(x,y,w,h,10);c.fill();c.stroke();
+  c.textAlign='center';c.font='900 20px Segoe UI';c.fillStyle='#fff1ae';c.fillText(fit(c,reg?'⚡ GÕ bay ĐỂ GHI DANH · đến lượt tự xuất phát':'⚡ GÕ danh +18 trượng (hồi 10 s) · ❤ → bứt tốc',w-20),450,y+30);c.restore();}
 const serverNow=(scene,t)=>scene.raceServerNow+Math.min(2000,t-scene.raceReceivedAt);
 const dist=(r,now)=>Math.min(1000,Math.max(0,(Math.min(now,r.finishAt||now)-r.startedAt)/1000*r.speed+r.bonus));
 const rankSort=now=>(a,b)=>(a.finishAt||Infinity)-(b.finishAt||Infinity)||dist(b,now)-dist(a,now)||a.at-b.at;

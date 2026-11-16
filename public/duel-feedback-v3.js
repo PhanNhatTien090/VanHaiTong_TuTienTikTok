@@ -17,7 +17,7 @@ export function drawDuelFeedback(scene,c,match,targets,now){
  if(!match||!targets||targets.length!==2)return;
  const light=scene.budget?.pressured||scene.budget?.level==='light',motion=scene.motion!==false,flash=scene.reduceFlash;
  for(let i=0;i<2;i++){
-  const p=targets[i],state=duelVisualState(match,p.id,now),x=p.x,y=p.y-292,width=190;
+  const p=targets[i],state=duelVisualState(match,p.id,now),x=p.x,y=p.y-(p.scale||2.25)*100-112,width=190; // 17/11: theo cỡ nhân vật → luôn trên đầu, không đè ngực
   c.save();
   c.fillStyle='#091526d8';c.strokeStyle=i===0?'#74e8e1':'#d3b5ff';c.lineWidth=1;
   c.beginPath();c.roundRect(x-width/2,y,width,state.shield===null?74:99,8);c.fill();c.stroke();

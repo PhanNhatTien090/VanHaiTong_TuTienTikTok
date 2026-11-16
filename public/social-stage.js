@@ -49,7 +49,7 @@ export function tournamentLobbyTargets(players,H){
 }
 export function socialTargets(scene,ordered,H){
  const pair=ordered.length===2,kind=scene.socialScene;
- return ordered.map((p,i)=>({id:p.id,player:p,x:pair?(kind==='bond'?315+i*270:225+i*450):450,y:H*(kind==='bond'?.57:TOURNAMENT_FLOOR),scale:pair?2.25:2.6,lift:0,baseY:H*(kind==='bond'?.57:TOURNAMENT_FLOOR)}));
+ return ordered.map((p,i)=>({id:p.id,player:p,x:pair?(kind==='bond'?315+i*270:225+i*450):450,y:H*(kind==='bond'?.57:TOURNAMENT_FLOOR),scale:pair?(kind==='bond'?2.25:2.7):2.6,lift:0,baseY:H*(kind==='bond'?.57:TOURNAMENT_FLOOR)}));
 }
 export function drawSocialStage(scene,c,t,layer,solo){
  if(solo||!scene.socialScene)return;if(scene.socialScene==='arena'){try{drawArena(scene,c,t,layer);}catch(e){if(!scene.arenaErr){scene.arenaErr=1;console.warn('[LoiDai]',e);}}return;}const art=scene.socialArt,H=scene.height,s=scene.socialStatus,now=Date.now(),match=s?.tournament?.current,ceremony=s?.ceremony;

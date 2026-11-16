@@ -10,9 +10,16 @@ export const LINH_BAI_MS=5200;
 function portraitKey(p){return [p.id,p.realm,p.gender,p.giftCoins,p.skinChoice,p.skinChoiceSource,p.divineRoleChoice,p.divineRoleHidden,(p.divineRoles||[]).join(),(p.rewardSkins||[]).join(),p.equipped].join('|');}
 export function portraitCanvas(scene,p){
  const key=portraitKey(p);if(cache.has(key))return cache.get(key);
+ // 17/11: skin cao (hào quang/ngai lớn) vượt khung 260px → trước bị cắt mất đầu, chỉ thấy áo dưới.
+ // Vẽ vào khung cao gấp 2,4, dò đỉnh hình, rồi cắt từ đầu xuống (giữ tỉ lệ khung chân dung).
+ const TALL=Math.round(PORTRAIT_H*2.4),full=document.createElement('canvas');full.width=PORTRAIT_W;full.height=TALL;const fx=full.getContext('2d',{willReadFrequently:true});
+ fx.translate(PORTRAIT_W/2,TALL-22);fx.scale(3.1,3.1);
+ try{scene.drawCharacterBody(fx,p,skinFor(p.giftCoins),0);}catch{return null;}
+ let top=TALL-PORTRAIT_H;try{const a=fx.getImageData(0,0,PORTRAIT_W,TALL).data;scan:for(let y=0;y<TALL;y++)for(let i=y*PORTRAIT_W*4+3,e=i+PORTRAIT_W*4;i<e;i+=4)if(a[i]>40){top=y;break scan;}}catch{}
  const body=document.createElement('canvas');body.width=PORTRAIT_W;body.height=PORTRAIT_H;const x=body.getContext('2d');
- x.translate(PORTRAIT_W/2,PORTRAIT_H-22);x.scale(3.1,3.1);
- try{scene.drawCharacterBody(x,p,skinFor(p.giftCoins),0);}catch{return null;}
+ const contentH=TALL-top;
+ if(contentH<=PORTRAIT_H)x.drawImage(full,0,TALL-PORTRAIT_H,PORTRAIT_W,PORTRAIT_H,0,0,PORTRAIT_W,PORTRAIT_H);
+ else{const ch=Math.max(PORTRAIT_H,contentH*.62),cw=ch*PORTRAIT_W/PORTRAIT_H,y0=Math.max(0,top-6);x.drawImage(full,(PORTRAIT_W-cw)/2,y0,cw,ch,0,0,PORTRAIT_W,PORTRAIT_H);}
  // Viền sáng sát hình + quầng vàng: tách nhân vật khỏi nền tối (học từ phòng mẫu), làm một lần rồi giữ lại.
  const out=document.createElement('canvas');out.width=PORTRAIT_W;out.height=PORTRAIT_H;const o=out.getContext('2d');
  o.filter='drop-shadow(0 0 1.2px #fffbe8) drop-shadow(0 0 1.2px #ffe6a0) drop-shadow(0 0 9px rgba(255,205,110,.75))';o.drawImage(body,0,0);o.filter='none';

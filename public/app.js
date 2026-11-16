@@ -114,6 +114,7 @@ let state=null,selected=null,online=false,initialized=false,seen=new Set(),auto=
 const honorUI=new HonorUI($('#honorBanner'));
 setInterval(()=>honorUI.tick(busy),1000);
 const scene=overlay?new Scene($('#sceneCanvas'),id=>selectPlayer(id)):new ManagementState($('#sceneCanvas'));if(overlay)prepareAscensionStage(scene);
+if(new URLSearchParams(location.search).has('qa'))window.__vhScene=scene; // 17/11: móc cho script QA chụp màn (chỉ khi link có ?qa)
 const inventoryDeck=overlay?new InventoryDeck($('#inventoryDeck'),scene,esc):null; // 4/11: nạp sẵn ảnh thiên đài
 const ascensionStage=overlay&&params.get('stage')==='ascension';scene.showcase=ascensionStage;document.body.classList.toggle('ascension-stage',ascensionStage);const ascensionLobby=ascensionStage?mountAscensionStage($('.scene-shell'),scene):null;
 const qualitySelect=$('#qualityMode');
@@ -601,7 +602,8 @@ function render(){if(!state)return;const renderStart=renderMetrics?performance.n
     duel.hidden=!duelHTML;document.body.classList.toggle('hall-dueling',!!duelHTML);
     if(duelHTML)setHUD(duel,duelHTML);}else syncAutoEvents();
   const oh=$('#opportunityHud'),o=state.opportunity,seconds=o?Math.max(0,Math.ceil((o.endsAt-state.serverNow)/1000)):0;oh.hidden=!seconds;
-  if(seconds){const offset=Math.floor(state.serverNow/7000)%Math.ceil(o.costs.length/4)*4;setHUD(oh,`<b>CƠ DUYÊN · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}</b><span>${o.costs.slice(offset,offset+4).map((cost,i)=>`${esc(state.realms[offset+i])} ${cost} coin`).join(' · ')}</span><small>Từ Hóa Thần: tối đa 1 đại cảnh/ngày · tiến độ dư được giữ · gõ cơ duyên</small>`);}
+  // 17/11: bỏ dãy số coin từng cảnh giới (tới 255999999, trái luật không ghi coin) → chỉ cách chơi.
+  if(seconds){const cmd=state.quick?.paused?'cơ duyên':'6 hoặc cơ duyên';setHUD(oh,`<b>CƠ DUYÊN · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}</b><span>Quà tích điểm cơ duyên · đủ điểm tự đột phá</span><span>Gõ <code>${esc(cmd)}</code> xem điểm của mình</span><small>Từ Hóa Thần: tối đa 1 đại cảnh/ngày · điểm dư được giữ</small>`);}
   if(overlay)return;
   const sig=JSON.stringify(p);if(sig!==lastProfile){lastProfile=sig;renderProfile(p);}
   renderEditor();
@@ -694,7 +696,9 @@ function renderVisitorHud(){
  let html='<b>SỰ KIỆN · '+esc(cfg?.name||'Khách quý')+'</b><span class="event-time">Còn '+clock+'</span><p><code>Gõ '+esc(command)+'</code><span>'+esc(free)+'</span></p>';
  if(reward){
   const single=reward.skinCoins&&reward.skinCoins===reward.artifactCoins; // 14/11: Nhân Quả — 1 mốc nhận cả skin + pháp bảo
-  html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong>'+(single?'<p><b>'+fmt(reward.skinCoins)+' coin</b><span>Nhận skin '+esc(reward.skinName)+' + '+esc(reward.artifactName)+'</span></p>':'<p><b>'+fmt(reward.skinCoins||100)+' coin</b><span>Nhận skin '+esc(reward.skinName)+'</span></p><p><b>'+fmt(reward.artifactCoins||500)+' coin</b><span>Nhận thêm '+esc(reward.artifactName)+'</span></p>')+'<small>Tính quà cộng dồn trong lượt khách quý này.</small></div>';
+  // 17/11: luật bảng quà — ảnh quà thật thay số coin, không ghi chú dài.
+  const tok=c=>'<b class="ev-gift">'+giftTokenHTML(state.giftArt,c)+'</b>';
+  html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong>'+(single?'<p>'+tok(reward.skinCoins)+'<span>→ skin '+esc(reward.skinName)+' + '+esc(reward.artifactName)+'</span></p>':'<p>'+tok(reward.skinCoins||100)+'<span>→ skin '+esc(reward.skinName)+'</span></p><p>'+tok(reward.artifactCoins||500)+'<span>→ thêm '+esc(reward.artifactName)+'</span></p>')+'</div>';
  }else if(e.goal)html+='<span>Truyền đạo: '+fmt(e.points||0)+' / '+fmt(e.goal)+'</span>';
  setHUD(el,html);
 }

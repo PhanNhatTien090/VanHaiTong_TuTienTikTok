@@ -295,7 +295,10 @@ html body.overlay .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock .honor
 
 /* Bỏ hai bảng nhỏ cũ, dành cột phải cho thông tin sự kiện đầy đủ. */
 html body.overlay .scene-shell :is(#visitorHud,#likeGoal){display:none!important}
-html body.overlay #eventInfoDock{display:grid;gap:6px;width:100%;min-width:0;flex:none;pointer-events:none}
+html body.overlay #eventInfoDock{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;width:100%;min-width:0;flex:none;pointer-events:none}
+/* 17/11: tên dài (ký tự trang trí) làm bảng sự kiện tràn mép phải → cắt trong khung. */
+html body.overlay #eventInfoDock>*{min-width:0!important;overflow:hidden;overflow-wrap:anywhere}
+html body.overlay #eventInfoDock .boss-rank{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html body.overlay #eventInfoDock:not(:has(>:not([hidden]))){display:none}
 html body.overlay .scene-shell #phoneHudRight #eventInfoDock>:not([hidden]){
  position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:none!important;
@@ -306,9 +309,12 @@ html body.overlay .scene-shell #phoneHudRight #eventInfoDock>:not([hidden]){
 }
 #visitorEventInfo>b{display:block;color:#ffe6a0}
 #visitorEventInfo .event-time{display:block;margin:3px 0 5px;color:#d0e6ed;font-size:.9em}
-#visitorEventInfo p{margin:5px 0;display:grid;gap:2px}
+#visitorEventInfo p{margin:5px 0;display:grid;gap:2px;font-size:1em} /* 17/11: style.css ép p=12px → dòng chính nhỏ hơn ghi chú */
+#visitorEventInfo .event-rewards p{display:flex;align-items:center;gap:6px}
+#visitorEventInfo .ev-gift .gift-ico{height:2.1em;margin:0;filter:drop-shadow(0 0 3px #ffd76a) drop-shadow(0 1px 2px #000)}
+#visitorEventInfo .event-rewards strong{font-size:.95em}
 #visitorEventInfo code{font:800 1.08em/1.3 "Segoe UI",Arial,sans-serif;color:#bdffe5}
-#visitorEventInfo p>span{font-size:.9em;color:#fff}
+#visitorEventInfo p>span{font-size:.92em;color:#fff}
 #visitorEventInfo .event-rewards{margin-top:7px;padding-top:5px;border-top:1px solid #a6c1ce88}
 #visitorEventInfo .event-rewards strong,#visitorEventInfo .event-rewards b{color:#ffe6a0}
 #visitorEventInfo small{display:block;font-size:.85em;color:#d0e6ed}

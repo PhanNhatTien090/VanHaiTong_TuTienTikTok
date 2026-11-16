@@ -965,7 +965,8 @@ function thienTaiTick(w,now){
  if(!w.nextThienTaiAt){w.nextThienTaiAt=now+THIEN_TAI.firstMs;return;}
  if(now<w.nextThienTaiAt)return;
  // Chỉ nhường khi sân giữa bị khóa thật; khách quý / mưa hoa / cơ duyên chỉ là bảng bên cạnh, thẻ vẫn xếp hàng Vân Đài.
- const locked=alchemyActive(w)||warActive(w)||skyStageUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase);
+ // 17/11: yêu thú chiếm giữa màn → thẻ to che mất yêu thú, nhường tới khi đánh xong.
+ const locked=!!w.boss||alchemyActive(w)||warActive(w)||skyStageUntil(w,now)>now||socialBusy(w,now)||['registration','running'].includes(w.race?.phase);
  if(locked){w.nextThienTaiAt=now+THIEN_TAI.retryMs;return;}
  w.nextThienTaiAt=now+THIEN_TAI.everyMs;
  const top=computeTops(w,ensurePeriods(w,now).day,3).qi||[],first=top[0],p=first&&w.players[first.id];
