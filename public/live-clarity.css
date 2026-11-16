@@ -359,4 +359,7 @@ html body.overlay.bond-stage .spotlight{top:61%!important}
    Bảng tháp đã có hàng quà trợ lực → ẩn 2 cột HUD bên trong lúc tháp mở. */
 body.overlay.tower-on :is(#phoneHudLeft,#phoneHudRight,#lowerRightGuide){display:none!important}
 /* 17/11: màn chiếu riêng (Lôi Đài) — chỉ còn canvas: ẩn mọi bảng/thẻ HTML, vào ra mượt. */
-body.overlay.cutscene-on .scene-shell>:not(#sceneCanvas){opacity:0!important;transition:opacity .18s!important;pointer-events:none}
+body.overlay.cutscene-on .scene-shell>:not(#sceneCanvas):not(#cutVeil){opacity:0!important;transition:opacity .18s!important;pointer-events:none}
+
+/* 17/11: tấm che chuyển cảnh màn chiếu riêng — trên mọi lớp, không bị ẩn theo cutscene-on. */
+.scene-shell>#cutVeil{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60}

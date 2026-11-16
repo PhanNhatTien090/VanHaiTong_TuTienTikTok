@@ -87,7 +87,7 @@ export class Mover{
   /** Bong bóng chữ trên đầu người vừa tương tác. */
   drawBubbles(c,targets,t){
     const at=new Map(targets.map(a=>[a.id,a]));
-    for(const [id,b]of this.bubbles){const a=at.get(id),age=t-b.t0;if(age>BUBBLE_MS){this.bubbles.delete(id);continue;}if(!a)continue;
+    for(const [id,b]of this.bubbles){const a=at.get(id),age=t-b.t0;if(age>BUBBLE_MS){this.bubbles.delete(id);continue;}if(!a||a.arenaFighter)continue; /* 17/11: đấu thủ Lôi Đài không hiện bong bóng (che ngực + chiêu) */
       const alpha=Math.min(1,age/200,(BUBBLE_MS-age)/400),y=a.y-(a.scale||1.4)*62-48-Math.min(1,age/300)*8;
       c.save();c.globalAlpha=alpha;c.font='700 16px Segoe UI';const w=c.measureText(b.text).width+22;
       c.fillStyle='#fffaf0f0';c.strokeStyle='#d9b870';c.lineWidth=1.5;c.beginPath();c.roundRect(a.x-w/2,y-15,w,30,15);c.fill();c.stroke();

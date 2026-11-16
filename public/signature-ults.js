@@ -1,6 +1,6 @@
 // 17/11/2026: CHIÊU RIÊNG cho skin đặc biệt ≥300 coin + linh thú ≥200 coin — dùng chung server (arena.mjs) và client (skill-cutscene.js).
 // Server đánh dấu đòn bằng entry.cut và HOÃN mọi đòn kế tiếp trong lúc chiếu → màn chiếu riêng không làm mất đòn nào.
-export const SKIN_CUT_MS=5200,PET_CUT_MS=3600,CUT_AFTERGLOW_MS=1800;
+export const SKIN_CUT_MS=5200,PET_CUT_MS=3600,GIFT_CUT_MS=4400,GIFT_CUT_MIN=499,CUT_AFTERGLOW_MS=1800; // quà trợ chiêu ≥499 coin (Bạo Phát, Thiên Giáng) cũng chiếu riêng
 export const SIGNATURE_ULTS=Object.freeze({
  'nhan-qua-vuong-lam':{name:'Nhân Quả Luân Hồi Trảm',shout:'NHÂN QUẢ — LUÂN HỒI!',hero:'Nhân Quả Vương Lâm',color:'#ff4a3a',glow:'#ffd27a',deep:'#2a0306',motif:'karma',art:'ult-nhan-qua'},
  'khuy-niet-loi-ton':{name:'Âm Dương Tử Lôi Kiếp',shout:'THIÊN LÔI — DIỆT THẾ!',hero:'Khuy Niết Lôi Tôn',color:'#b06bff',glow:'#ffe27a',deep:'#12052a',motif:'thunder',art:'ult-khuy-niet'},

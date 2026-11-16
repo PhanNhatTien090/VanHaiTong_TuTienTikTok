@@ -7,7 +7,7 @@ import {seatDuelResult} from './master-seat.mjs';
 import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
 import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
-import {SKIN_CUT_MS,PET_CUT_MS,signatureSkinOf,petUltOf} from './public/signature-ults.js'; // 17/11: màn chiếu riêng
+import {SKIN_CUT_MS,PET_CUT_MS,GIFT_CUT_MS,GIFT_CUT_MIN,signatureSkinOf,petUltOf} from './public/signature-ults.js'; // 17/11: màn chiếu riêng
 export let arenaBooksOf=p=>bookLoadout(p);
 let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
 export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
@@ -244,12 +244,13 @@ function act(w,m,id,now){
  let cut=null;
  if(slot===ARENA_ULT_SLOT&&f.sig&&!f.cutDone){f.cutDone=1;cut={kind:'skin',skin:f.sig,ms:SKIN_CUT_MS};}
  else if(slot===ARENA_PET_SLOT&&f.petUlt&&skill.pet===f.petUlt&&!f.petCutDone){f.petCutDone=1;cut={kind:'pet',pet:f.petUlt,ms:PET_CUT_MS};}
+ if(cut&&at<(m.cutUntil||0)){if(cut.kind==='skin')f.cutDone=0;else f.petCutDone=0;cut=null;} // đang chiếu quà → chiêu này đánh thường, lượt sau mới chiếu
  if(cut){entry.cut=cut;holdMatch(m,at,cut.ms);if(entry.ko)m.finishAt=at+cut.ms;} // hạ gục bằng chiêu chiếu riêng → chờ chiếu xong mới báo thắng
  pushLog(m,entry);
 }
 export function holdMatch(m,at,ms){
  for(const id of [m.a,m.b]){m.next[id]=Math.max(m.next[id],at+ms+500);const d=m.fighters[id].dot;if(d){d.next+=ms;d.until+=ms;}}
- m.endsAt+=ms;
+ m.endsAt+=ms;m.cutUntil=Math.max(m.cutUntil||0,at+ms);
 }
 // Độc/bỏng: trừ máu theo nhịp, là một mốc trong dòng thời gian như một đòn.
 function dotTick(m,id){
@@ -289,6 +290,8 @@ export function arenaGift(w,p,coins,now,{from=null,count=1}={}){
   const r=hit(m,f,foe,pct,crit,now);entry.dmg=r.dmg;entry.absorbed=r.absorbed;entry.reflect=r.reflect||0;entry.crit=true;
  }
  entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0;
+ // 17/11: quà trợ chiêu lớn → chiếu riêng vinh danh người tặng. Đang chiếu cái khác thì xếp ngay sau (không chồng màn).
+ if(unit>=GIFT_CUT_MIN&&entry.dmg){const start=Math.max(now,m.cutUntil||0);entry.at=start;entry.cut={kind:'gift',trick:t.trick,coins:unit,from:entry.from||p.name,ms:GIFT_CUT_MS};holdMatch(m,start,GIFT_CUT_MS);if(entry.ko)m.finishAt=start+GIFT_CUT_MS;}
  pushLog(m,entry);
  return entry;
 }
