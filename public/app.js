@@ -1,7 +1,7 @@
 import {sourceVisualPreferences} from './visual-preferences.js';
 import {cinematicQuality,VFX_LIMITS} from './cinematic-vfx.js';
 import {renderMiniEvent} from './mini-event-ui.js?v=polish-20261114';
-import {eventDonationContext,majorEventActive} from './event-donations.js';
+import {eventDonationContext,majorEventActive,ascensionHeld} from './event-donations.js';
 import {ManagementState} from './management-state.js';
 import {startLiveDiag,liveDiagSnapshot,RenderMetrics} from './live-diag.js';
 import {mountAscensionStage,isAscensionEvent,prepareAscensionStage} from './ascension-stage.js';
@@ -516,7 +516,7 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
 const ownVisitorReveal=(event,state)=>isBlackGoldAward(event)&&state?.visitor?.kind===event.transform
   &&!state.visitor.closedAt&&state.visitor.endsAt>state.serverNow;
 function playNext(){
- if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>ownVisitorReveal(e,state)||!(majorEventActive(state)&&(e.effect==='breakthrough'||e.effect==='transform'||e.petAward)));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;if(!presentations.start(e))continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
+ if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>ownVisitorReveal(e,state)||!(e.effect==='breakthrough'?ascensionHeld(state):majorEventActive(state)&&(e.effect==='transform'||e.petAward)));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;if(!presentations.start(e))continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
  if(e.gift&&eventDonationContext(scene)){scene.noteEvent(e);scene.addEffect(e);showGiftReceipt(e);queueMicrotask(playNext);return;}
  busy=true;current={e,at:Date.now()};
  if(e.heavenStrike){scene.startHeavenStrike(e);const au=cultivationAudio;if(au.enabled&&au.ctx?.state==='running'){au.duck(true);scheduleHeavenStrikeAudio(au.ctx,au.fxBus,strikeProfile(e.heavenStrike.seed));}currentTimer=setTimeout(()=>{au.duck(false);busy=false;current=null;playNext();},HEAVEN_STRIKE_MS+200);return;} // 07/11: Thiên Đạo giáng lôi

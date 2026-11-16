@@ -72,6 +72,13 @@ export function drawEventDonations(scene,c,t,H=scene.height){
  }
 }
 
+// 16/11/2026: sự kiện CHILL (kết duyên, Linh Thú Cốc, Đêm Đèn, mưa hoa/sao băng, cơ duyên, tiên nhân skin) vẫn cho
+// diễn màn ĐỘT PHÁ. Chỉ sự kiện đánh nhau / đua / bí cảnh / lễ đôi / Lôi Đài mới giữ màn đột phá lại tới khi xong.
+export const CHILL_STAGES=Object.freeze(['sao băng / mưa hoa','trao thưởng sao băng / mưa hoa','tiên nhân','cơ duyên','lễ hội kết duyên','Linh Thú Cốc','Đêm Đèn Đồng Môn']);
+export function ascensionHeld(s){
+ const now=s?.serverNow||Date.now(),open=e=>e&&!e.closedAt&&e.endsAt>now;
+ return !!(s?.mainStage&&!CHILL_STAGES.includes(s.mainStage)||s?.hallWar?.active||s?.mountRealm?.active||s?.sectWar?.active||s?.alchemy?.active||s?.maze?.active||s?.raceStatus?.active||s?.socialScene||s?.halls?.match?.endsAt>now||s?.tower?.active||s?.boss?.hp>0&&open(s.boss)||s?.honorStageUntil>now);
+}
 export function majorEventActive(s){
  const now=s?.serverNow||Date.now(),open=e=>e&&!e.closedAt&&e.endsAt>now;
  return !!(s?.mainStage||s?.hallWar?.active||s?.sectWar?.active||s?.alchemy?.active||s?.maze?.active||s?.raceStatus?.active||s?.socialScene||s?.halls?.match?.endsAt>now||s?.tower?.active||open(s?.petEvent)||open(s?.visitor)||open(s?.flowerEvent)||open(s?.opportunity)||s?.boss?.hp>0&&open(s.boss)||s?.honorStageUntil>now||s?.socialStatus?.festival?.active||s?.lanternFestival?.active);

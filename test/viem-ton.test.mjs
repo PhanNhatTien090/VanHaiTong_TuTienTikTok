@@ -28,7 +28,7 @@ import {startVisitor,tick} from '../engine.mjs';import {VISITORS} from '../publi
 import {drawTransform} from '../public/transform-fx.js';import {VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
 test('sự kiện Tần Mục Hỏa Thần: 5 phút, cơ duyên miễn phí, 300 coin skin, 500 coin Song Đao, quà mặc định không áp dụng',()=>{
  const w=createWorld('live');w.settings.autoEvents=false;w.settings.residents=false;w.nextBossAt=N+1e9;
- const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(w,'viemton',N).ok,true);assert.equal(w.visitor.endsAt-N,300000);
+ const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(w,'viemton',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
  assert.equal(VISITORS.viemton.name,'Tần Mục Hỏa Thần');assert.equal(VISITOR_GIFT_REWARDS.viemton.skin,VIEM_SKIN);assert.equal(VISITOR_GIFT_REWARDS.viemton.artifact,VIEM_BLADES);
  assert.equal(action(w,{type:'chat',userId:'a',text:'cơ duyên'},N+1000).ok,true);assert.ok(w.visitor.players.a.awarded);
  const gift=(coins,eventId,now)=>action(w,{type:'gift',userId:'a',name:'An',gift:'Rose',coins,count:1,eventId},now);

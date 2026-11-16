@@ -2,14 +2,14 @@ import {drawShendeVisitor} from './shende-art.js';
 import {COURT_VISITORS} from './court-rewards.js';
 import {drawCourtVisitor} from './court-art.js';
 export const VISITORS=Object.freeze({
- hailam:{name:'Long Duệ Hải Lam',title:'LONG DUỆ HẢI LAM GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#69dcff'},
+ hailam:{name:'Long Duệ Hải Lam',title:'LONG DUỆ HẢI LAM GIÁNG THẾ',cell:0,duration:180000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#69dcff'},
  doraemon:{name:'Doraemon',title:'DORAEMON GHÉ THĂM TÔNG MÔN',cell:3,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#7de7ff'},
  shende:{name:'Thần Đế',title:'THẦN ĐẾ GIÁNG LÂM',cell:2,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ffd49a'},
  hanlap:{name:'Hàn Lập',title:'HÀN LẬP BAN CƠ DUYÊN',cell:1,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#a5f0cf'},
- tudo:{name:'Tư Đồ Ma Tôn',title:'TƯ ĐỒ MA TÔN GIÁNG THẾ',cell:2,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff6a5a'},
- khuyniet:{name:'Khuy Niết Lôi Tôn',title:'KHUY NIẾT LÔI TÔN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#c69bff'},
- viemton:{name:'Tần Mục Hỏa Thần',title:'TẦN MỤC HỎA THẦN GIÁNG THẾ',cell:0,duration:300000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff7a2a'},
- ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{name:v.name,title:v.name.toLocaleUpperCase('vi')+' GIÁNG LÂM',duration:300000,how:'Gõ cơ duyên nhận truyền thừa',color:v.color}])),
+ tudo:{name:'Tư Đồ Ma Tôn',title:'TƯ ĐỒ MA TÔN GIÁNG THẾ',cell:2,duration:180000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff6a5a'},
+ khuyniet:{name:'Khuy Niết Lôi Tôn',title:'KHUY NIẾT LÔI TÔN GIÁNG THẾ',cell:0,duration:180000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#c69bff'},
+ viemton:{name:'Tần Mục Hỏa Thần',title:'TẦN MỤC HỎA THẦN GIÁNG THẾ',cell:0,duration:180000,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#ff7a2a'},
+ ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{name:v.name,title:v.name.toLocaleUpperCase('vi')+' GIÁNG LÂM',duration:180000,how:'Gõ cơ duyên nhận truyền thừa',color:v.color}])),
  vuonglam:{name:'Vương Lâm',title:'VƯƠNG LÂM TRUYỀN ĐẠO',cell:0,how:'Gõ cơ duyên để nhận quà, có thể sở hữu skin',color:'#d4c2ff'}
 });
 export const VISITOR_RELICS=Object.freeze([

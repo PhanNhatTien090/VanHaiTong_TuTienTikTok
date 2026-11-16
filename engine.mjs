@@ -1130,7 +1130,7 @@ function autoSkyEvent(w,now){
   if(now<w.nextAutoEventAt)return;
   const busy=eventBusyUntil(w,now)||w.boss,active=Object.values(w.players).filter(p=>!p.resident&&now-p.lastActive<5*60000).length;
   if(busy||active<2){w.nextAutoEventAt=now+60000;return;}
-  if(w.settings?.autoRandom){randomEvent(w,now);w.nextAutoEventAt=now+every;return;}
+  if(w.settings?.autoRandom){if(!bigEvent(w,now))randomEvent(w,now);w.nextAutoEventAt=now+every;return;}
   const kinds=Object.keys(SKY_EVENTS),kind=kinds[(w.autoEventSeq||0)%kinds.length];w.autoEventSeq=(w.autoEventSeq||0)+1;
   startFlowerEvent(w,now,w.settings?.autoEventLength??2,kind);w.nextAutoEventAt=now+every;
 }
@@ -1165,12 +1165,30 @@ export const RANDOM_EVENTS=Object.freeze([
   ['tower','Vân Hải Tháp',(w,now)=>beginTower(w,now,towerContext)],
   ['boss','Yêu thú',(w,now)=>openBoss(w,now)]
 ]);
+// 16/11/2026: BÍ CẢNH NHIỀU TU VI (Vân Hải Tháp, Mê Cung, Khai Lò, Tọa Kỵ Bí Cảnh) — user: "lâu lâu mới hiện một lần".
+// Tách khỏi túi thường: mỗi bigEventMinutes (mặc định 45) mới mở MỘT cái, luân phiên lần lượt. Tắt bằng settings.bigEvents=false.
+export const BIG_EVENT_MINUTES=45;
+export const BIG_EVENTS=Object.freeze([
+  ['tower','Vân Hải Tháp',(w,now)=>beginTower(w,now,towerContext)],
+  ['maze','Mê Cung',(w,now)=>startMaze(w,now)],
+  ['alchemy','Khai Lò Cửu Chuyển',(w,now)=>startAlchemy(w,now)],
+  ['mount-realm','Tọa Kỵ Bí Cảnh',(w,now)=>startMountRealmEvent(w,now)]
+]);
+const BIG_IDS=BIG_EVENTS.map(([id])=>id);
+function bigEvent(w,now){if(w.settings?.bigEvents===false)return null;
+  if(!w.nextBigEventAt){w.nextBigEventAt=now+20*60000;return null;}
+  if(now<w.nextBigEventAt||['registration','running'].includes(w.race?.phase))return null;
+  const skip=w.settings?.randomExclude||[],seq=w.bigEventSeq||0;
+  for(let i=0;i<BIG_EVENTS.length;i++){const [id,,start]=BIG_EVENTS[(seq+i)%BIG_EVENTS.length];if(skip.includes(id))continue;let r;try{r=start(w,now);}catch{r=null;}
+    if(r?.ok){w.bigEventSeq=seq+i+1;w.lastRandomEvent=id;w.nextBigEventAt=now+Math.max(15,w.settings?.bigEventMinutes??BIG_EVENT_MINUTES)*60000;return id;}}
+  w.nextBigEventAt=now+5*60000;return null;}
 // v77: "xào bài" — trộn đủ 10 sự kiện, rút lần lượt; hết túi mới trộn lại → 10 lượt liên tiếp chắc chắn có đủ kết duyên, phi kiếm, tỷ thí…
 function randomEvent(w,now){if(['registration','running'].includes(w.race?.phase))return null;
   // Chính Ma Đại Chiến chỉ vào túi ngẫu nhiên khi bật settings.sectWarAuto (mặc định tắt tới khi xong phần hình).
-  const allowed=RANDOM_EVENTS.map(([id])=>id).filter(id=>!(id==='war'&&w.settings?.sectWarAuto!==true)&&!(id==='alchemy'&&w.settings?.alchemyAuto!==true)&&!(id==='tower'&&w.settings?.towerAuto===false)).filter(id=>!(rotationOn(w)&&id.startsWith('visitor-'))&&!(w.settings?.visitorEveryFive&&['visitor-vuonglam','visitor-shende'].includes(id))&&!(w.settings?.randomExclude||[]).includes(id)&&!(w.settings?.eventSpacing&&id==='boss')&&!(w.settings?.scheduledCompetitions&&['race','tournament'].includes(id)));
+  const allowed=RANDOM_EVENTS.map(([id])=>id).filter(id=>!(id==='war'&&w.settings?.sectWarAuto!==true)&&!(id==='alchemy'&&w.settings?.alchemyAuto!==true)&&!(id==='tower'&&w.settings?.towerAuto===false)).filter(id=>!(rotationOn(w)&&id.startsWith('visitor-'))&&!(w.settings?.visitorEveryFive&&['visitor-vuonglam','visitor-shende'].includes(id))&&!(w.settings?.randomExclude||[]).includes(id)&&!(w.settings?.eventSpacing&&!w.settings?.huntBeforeCompetition&&id==='boss')&&!BIG_IDS.includes(id)&&!(w.settings?.scheduledCompetitions&&['race','tournament'].includes(id)));
   w.randomBag=(w.randomBag||[]).filter(id=>allowed.includes(id));
-  if(!w.randomBag.length){const bag=[...allowed];for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}
+  if(!w.randomBag.length){const bag=[...allowed,...(allowed.includes('boss')?['boss']:[])];// 16/11: yêu thú 2 lá/túi → đánh quái nhiều hơn
+    for(let i=bag.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bag[i],bag[j]]=[bag[j],bag[i]];}
     if(bag.length>1&&bag[0]===w.lastRandomEvent)bag.push(bag.shift());w.randomBag=bag;}
   // thử theo thứ tự trong túi; cái nào chưa mở được thì giữ lại cho lượt sau
   for(const id of [...w.randomBag]){const start=RANDOM_EVENTS.find(e=>e[0]===id)[2];let r;try{r=start(w,now);}catch{r=null;}

@@ -6,7 +6,7 @@ import {VISITORS} from '../public/visitor-event.js';import {SPECIAL_SKINS} from 
 const N=1800000000000;
 test('Khuy Niết Lôi Tôn: 5 phút, cơ duyên miễn phí, 300 coin skin, 500 coin Tử Lôi Long, không trùng quà',()=>{
  const w=createWorld('live');w.settings.autoEvents=false;w.settings.residents=false;w.nextBossAt=N+1e9;
- const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(w,'khuyniet',N).ok,true);assert.equal(w.visitor.endsAt-N,300000);
+ const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(w,'khuyniet',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
  assert.equal(VISITORS.khuyniet.how,'Gõ cơ duyên để nhận quà, có thể sở hữu skin');
  assert.equal(action(w,{type:'chat',userId:'a',text:'cơ duyên'},N+1000).ok,true);assert.ok(w.visitor.players.a.awarded);
  const gift=(coins,eventId,now)=>action(w,{type:'gift',userId:'a',name:'An',gift:'Rose',coins,count:1,eventId},now);
