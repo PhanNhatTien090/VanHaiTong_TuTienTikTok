@@ -147,3 +147,23 @@ export function cutVeil(cut,full){
  if(cut.k<CUT_PHASE.wipeIn){const u=cut.k/CUT_PHASE.wipeIn,x=Math.round(u*u*(3-2*u)*150);v.style.clipPath=`polygon(0 0,${x}% 0,${x-45}% 100%,0 100%)`;v.style.opacity='1';}
  else{const u=(cut.k-CUT_PHASE.wipeOut)/(1-CUT_PHASE.wipeOut);v.style.clipPath='none';v.style.opacity=String(Math.max(0,1-u*u*(3-2*u)));}
 }
+// 17/11: Phong Vân Luận Kiếm — pha TUYỆT KỸ (dàn cảnh 3,5 s, bên dẫn linh áp ra chiêu): bên đó mặc skin ≥300 coin → chiếu riêng thần kỹ.
+// Chỉ phía overlay (trận luận kiếm là dàn cảnh theo đồng hồ, thắng thua server quyết riêng) → không cần hoãn trận.
+import {DUEL_PHASES} from './duel-combat.js';
+import {signatureSkinOf} from './signature-ults.js';
+const ULT_PHASE=DUEL_PHASES.find(p=>p.id==='ultimate');
+const strHash=s=>{let h=0;for(const ch of String(s))h=(Math.imul(h,31)+ch.charCodeAt(0))|0;return Math.abs(h);};
+export function tournamentCut(scene,now=Date.now()){
+ const m=scene.socialScene==='tournament'?scene.socialStatus?.tournament?.current:null;if(!m||!Number.isFinite(m.startedAt)||!ULT_PHASE)return null;
+ const age=now-m.startedAt;if(age<ULT_PHASE.from||age>=ULT_PHASE.to)return null;
+ const lead=(Number(m.aura?.[m.a])||0)-(Number(m.aura?.[m.b])||0),by=lead>=0?m.a:m.b,to=by===m.a?m.b:m.a,skin=signatureSkinOf(scene.playerIndex?.get(by));if(!skin)return null;
+ const ms=ULT_PHASE.to-ULT_PHASE.from,a=age-ULT_PHASE.from;
+ return {e:{n:strHash((m.id||'')+':'+m.startedAt),by,to,cut:{kind:'skin',skin,ms}},age:a,ms,k:a/ms};
+}
+export function tournamentCutFrame(scene,c,t,H){
+ const cut=tournamentCut(scene),full=cutFull(cut),on=!!cut;
+ if(!!scene.duelCutOn!==on){scene.duelCutOn=on;document.body?.classList?.toggle('cutscene-on',on);}
+ if(cut||scene.duelVeilUsed){scene.duelVeilUsed=on;cutVeil(cut,full);}
+ if(!full)return false;
+ try{return drawCutFull(scene,c,t,H,cut,scene.playerIndex||new Map());}catch(err){console.warn('[cut]',err);return false;}
+}
