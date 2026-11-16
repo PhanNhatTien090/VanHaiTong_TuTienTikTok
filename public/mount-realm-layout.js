@@ -11,7 +11,7 @@ export const WAVES=Object.freeze([
  {name:'Băng Hổ',cell:0,hp:60,color:'#9fd8ff'},
  {name:'Ngọc Quy',cell:1,hp:90,color:'#8ff0b0'},
  {name:'Hỏa Phượng',cell:2,hp:75,color:'#ffb070'}]);
-export const BOSS_POOL=Object.freeze(['cuu-thien-thanh-long','con-bang','huyen-minh-cu-mang','luu-ly-hoa-thuyen','that-thai-tuong-van']);
+export const BOSS_POOL=Object.freeze(['cuu-thien-thanh-long','con-bang','huyen-minh-cu-mang','luu-ly-hoa-thuyen','that-thai-tuong-van','hoa-ky-lan','cuu-vi-thien-ho','tuu-tien-ho-lo']); // 16/11: thêm Hỏa Kỳ Lân, Cửu Vĩ Thiên Hồ, Tửu Tiên Hồ Lô
 // Quà (tổng coin MỘT lần tặng) → chiêu trong bí cảnh.
 export const GIFT_TIERS=Object.freeze([
  {min:300,id:'grand',name:'NGỰ THÚ ĐẠI CHIÊU',spread:12,radius:420},

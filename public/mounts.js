@@ -17,7 +17,16 @@ export const MOUNTS=Object.freeze([
  {id:'luu-ly-hoa-thuyen',name:'Lưu Ly Họa Thuyền',tier:'vip',deck:.5,width:240,stats:{war:7,stones:10,qi:2}},
  {id:'huyen-minh-cu-mang',name:'Huyền Minh Cự Mãng',tier:'vip',deck:.42,width:250,stats:{arena:6,war:5,qi:2}},
  {id:'cuu-thien-thanh-long',name:'Cửu Thiên Thanh Long',tier:'divine',deck:.4,width:260,stats:{arena:8,war:8,race:8,stones:8,qi:4}},
- {id:'con-bang',name:'Côn Bằng',tier:'divine',deck:.45,width:260,stats:{arena:8,war:8,race:8,stones:15,qi:4}}]);
+ {id:'con-bang',name:'Côn Bằng',tier:'divine',deck:.45,width:260,stats:{arena:8,war:8,race:8,stones:15,qi:4}},
+ // 16/11 tối (chủ game: "sáng tạo lên, cây bút cây đàn, con heo…"): thêm 8 tọa kỹ
+ {id:'phan-quan-but',name:'Phán Quan Bút',tier:'common',deck:.44,width:220,stats:{arena:2,stones:4}},
+ {id:'that-huyen-cam',name:'Thất Huyền Cầm',tier:'common',deck:.42,width:220,stats:{war:3,race:2}},
+ {id:'kim-tru',name:'Kim Trư',tier:'common',deck:.36,width:190,stats:{stones:9}},
+ {id:'tuu-tien-ho-lo',name:'Tửu Tiên Hồ Lô',tier:'vip',deck:.4,width:230,stats:{stones:12,arena:4,qi:2}},
+ {id:'nguyet-cung-ngoc-tho',name:'Nguyệt Cung Ngọc Thố',tier:'vip',deck:.38,width:220,stats:{race:7,war:4,qi:2}},
+ {id:'thanh-lien-dai',name:'Thanh Liên Đài',tier:'vip',deck:.42,width:230,stats:{qi:3,stones:8,arena:3}},
+ {id:'hoa-ky-lan',name:'Hỏa Kỳ Lân',tier:'divine',deck:.4,width:250,stats:{arena:10,war:9,race:7,stones:8,qi:4}},
+ {id:'cuu-vi-thien-ho',name:'Cửu Vĩ Thiên Hồ',tier:'divine',deck:.4,width:250,stats:{arena:8,war:7,race:9,stones:12,qi:4}}]);
 export const mountImage=id=>'/assets/toa-ky-v1/'+id+'.webp';
 export const orbImage=(kind,stage)=>'/assets/toa-ky-v1/orb-'+kind+'-'+stage+'.webp';
 // Linh Châu: giá linh thạch và thời gian truyền công (user chốt 16/11: châu càng xịn càng tốn).
