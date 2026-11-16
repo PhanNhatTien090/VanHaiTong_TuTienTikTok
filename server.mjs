@@ -144,7 +144,7 @@ function connect(){
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
       connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.queuedGift)persistPlayTransfer();if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;
-      broadcast(event.event==='gift');
+      broadcast(event.event==='gift'||result.maze===true||result.knocked===true); // 16/11: bước đi Mê Cung gửi ngay (~120 ms), không chờ nhịp gộp 400 ms
     }catch(e){connection.lastError=`Không đọc được sự kiện: ${e.message}`;}
   });
   bridge.on('error',()=>{connection.lastError='Chưa kết nối được TikFinity Desktop tại cổng 21213. Kiểm tra app và Event API.';});

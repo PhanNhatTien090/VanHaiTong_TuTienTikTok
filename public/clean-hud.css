@@ -485,7 +485,7 @@ body.overlay .gift-rule-card small{font-size:.68em;color:#d8cfb6;white-space:nor
 .tease-box small{flex-basis:100%;opacity:.7}
 /* 10/11/2026: Bí Cảnh Mê Cung — mê cung chiếm cả sân; dọn bảng khác để không che tường/tên/bảng xếp hạng (giữ thẻ luật quà góc phải) */
 body.maze-on .like-goal,body.maze-on .live-disclosure,body.maze-on #liveRanks,body.maze-on #giftRanks,body.maze-on #gearGuide,body.maze-on #commandRail,body.maze-on .command-rail,body.maze-on .basic-commands,body.maze-on .scene-guide-dock,body.maze-on #basicCommands,body.maze-on .quiz-box,body.maze-on .envelope-box,body.maze-on #bossHud,body.maze-on .visitor-hud,body.maze-on .honor-banner,body.maze-on .gift-board,body.maze-on #spotlight{display:none!important}
-body.maze-on .scene-shell>#basicCommands.corner-command-guide{display:none!important}
+body.maze-on .scene-shell>#basicCommands.corner-command-guide,html body.overlay.maze-on .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide{display:none!important} /* 16/11: bảng Cách chơi che chữ CỬA RA (mê cung có hướng dẫn riêng) */
 
 /* 15/11: Linh Thú Cốc — thẻ chào gọn, nằm ở khe giữa vùng thú chạy và hàng người chơi, không che bảng mốc/hướng dẫn. */
 body.overlay.pet-cove-stage .arrival-welcome{top:57.5%;left:24%;right:24%;padding:4px 8px}

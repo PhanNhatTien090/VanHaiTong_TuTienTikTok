@@ -31,10 +31,40 @@ function wallLayer(scene,e,H){const key=e.id+':'+Math.round(H)+':'+e.cells;/* t�
  scene.mazeWalls={key,surface:s,pad,L};return scene.mazeWalls;}
 function glow(c,x,y,r,col,a){if(a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col.replace('A',String(a)));g.addColorStop(1,col.replace('A','0'));c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
 // Vị trí hiển thị mượt: mỗi lần server đổi ô → trượt 180 ms (dịch chuyển do quà: 650 ms + vệt sáng).
-function displayPos(scene,r,L,tt){const st=scene.mazeRunPos??=new Map(),[tx,ty]=cellXY(L,r.x,r.y);let p=st.get(r.id);
+function displayPos(scene,r,L,tt,walk){const st=scene.mazeRunPos??=new Map(),[tx,ty]=cellXY(L,r.x,r.y);let p=st.get(r.id);
  if(!p){p={x:tx,y:ty,fx:tx,fy:ty,tx,ty,t0:tt,dur:1};st.set(r.id,p);}
- if(p.tx!==tx||p.ty!==ty){p.fx=p.x;p.fy=p.y;p.tx=tx;p.ty=ty;p.t0=tt;p.dur=Math.hypot(tx-p.x,ty-p.y)>L.cell*1.5?650:180;}
- const k=clamp((tt-p.t0)/p.dur),ease=1-(1-k)**3;p.x=p.fx+(p.tx-p.fx)*ease;p.y=p.fy+(p.ty-p.fy)*ease;p.moving=k<1;p.seen=tt;return p;}
+ // 16/11: quà tự đi → lướt theo từng ô của đường (110 ms/ô), không xuyên tường
+ if(walk&&p.walkId!==walk.id){p.walkId=walk.id;p.path=[[p.x,p.y],...walk.path.map(([x,y])=>cellXY(L,x,y))];p.t0=tt;p.dur=Math.max(300,walk.path.length*110);p.tx=tx;p.ty=ty;}
+ else if(p.tx!==tx||p.ty!==ty){p.path=null;p.fx=p.x;p.fy=p.y;p.tx=tx;p.ty=ty;p.t0=tt;p.dur=Math.hypot(tx-p.x,ty-p.y)>L.cell*1.5?650:160;}
+ const k=clamp((tt-p.t0)/p.dur);
+ if(p.path){const n=p.path.length-1,u=k*n,i=Math.min(n-1,Math.floor(u)),f=u-i,[ax,ay]=p.path[i],[bx,by]=p.path[i+1];p.x=ax+(bx-ax)*f;p.y=ay+(by-ay)*f;if(k>=1){p.x=tx;p.y=ty;p.path=null;}}
+ else{const ease=1-(1-k)**3;p.x=p.fx+(p.tx-p.fx)*ease;p.y=p.fy+(p.ty-p.fy)*ease;}
+ p.moving=k<1;p.seen=tt;return p;}
+// 16/11: yêu thú mê cung — cắt từ boss-atlas.png có sẵn (3 ô: hổ băng, rùa ngọc, phượng lửa)
+function mobArt(scene){if(scene.mazeMobArt!==undefined||typeof Image==='undefined')return scene.mazeMobArt||null;scene.mazeMobArt=null;const im=new Image();im.decoding='async';im.onload=()=>{scene.mazeMobArt=im;};im.src='/assets/boss-atlas.png';return null;}
+function mobPos(scene,id,x,y,tt){const st=scene.mazeMobPos??=new Map();let p=st.get(id);if(!p){p={x,y,fx:x,fy:y,tx:x,ty:y,t0:tt};st.set(id,p);}
+ if(p.tx!==x||p.ty!==y){p.fx=p.x;p.fy=p.y;p.tx=x;p.ty=y;p.t0=tt;}const k=clamp((tt-p.t0)/600),e=k<.5?2*k*k:1-(-2*k+2)**2/2;p.x=p.fx+(p.tx-p.fx)*e;p.y=p.fy+(p.ty-p.fy)*e;p.seen=tt;return p;}
+function drawMobs(scene,c,e,L,t,now){
+ const im=mobArt(scene),motion=scene.motion!==false,S=L.cell*.72;
+ for(const d of e.dens||[]){const [x,y]=cellXY(L,d.x,d.y);glow(c,x,y,L.cell*.75,'rgba(150,70,255,A)',.35+.12*Math.sin(t*.003+d.x));
+  c.save();c.translate(x,y);if(motion)c.rotate(t*.0015);c.strokeStyle='rgba(200,150,255,.75)';c.lineWidth=2.5;for(let i=0;i<3;i++){c.beginPath();c.arc(0,0,L.cell*(.14+i*.09),i*2.1,i*2.1+3.6);c.stroke();}c.restore();}
+ for(const [mx,my,id] of e.mobs||[]){const [cx,cy]=cellXY(L,mx,my),p=motion?mobPos(scene,id,cx,cy,t):{x:cx,y:cy},bob=motion?Math.sin(t*.008+mx*3)*2.5:0,cell=(Number(String(id).slice(1))||0)%3;
+  glow(c,p.x,p.y+S*.2,S*.7,'rgba(255,60,60,A)',.32);
+  if(im?.naturalWidth){const cw=im.naturalWidth/3,h=S*im.naturalHeight/cw*.62,w=S*.62*1.0;c.drawImage(im,cell*cw,0,cw,im.naturalHeight,p.x-w,p.y-h*1.25+bob,w*2,h*2);}
+  else{c.fillStyle='#ff5a5a';c.beginPath();c.arc(p.x,p.y,L.cell*.25,0,TAU);c.fill();}
+  txt(c,'yêu',p.x,p.y+L.cell*.42,'900 11px Segoe UI','#ffb3b3',3);}
+ // khói tan (yêu thú hết giờ / đánh xong / bị chém)
+ for(const o of e.poofs||[]){const k=clamp((now-o.at)/1200);if(k>=1)continue;const [x,y]=cellXY(L,o.x,o.y);glow(c,x,y,L.cell*(.5+k),o.why==='slash'?'rgba(255,220,120,A)':'rgba(190,160,255,A)',.7*(1-k));
+  if(o.why==='slash'){c.save();c.globalAlpha=1-k;c.strokeStyle='#fff6c8';c.lineWidth=4;c.lineCap='round';c.beginPath();c.moveTo(x-L.cell*.5,y+L.cell*.4);c.lineTo(x+L.cell*.5,y-L.cell*.4);c.stroke();c.restore();}}
+ // bị đánh văng: chớp đỏ + chữ VĂNG + vệt lùi
+ for(const h of e.hits||[]){const k=clamp((now-h.at)/1600);if(k>=1)continue;const [ax,ay]=cellXY(L,h.from.x,h.from.y),[bx,by]=cellXY(L,h.to.x,h.to.y);
+  glow(c,ax,ay,L.cell*(.6+k*.7),'rgba(255,70,60,A)',.8*(1-k));c.save();c.globalAlpha=1-k;c.strokeStyle='#ff8a7a';c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.stroke();c.restore();
+  c.save();c.globalAlpha=k<.15?k/.15:1-k;txt(c,'VĂNG!',bx,by-L.cell*.55-k*18,'900 20px Segoe UI','#ff7a6a',5);c.restore();}
+ // quà tự đi: vệt vàng dọc đường
+ for(const f of e.walks||[]){const k=clamp((now-f.at)/3500);if(k>=1)continue;const pts=[f.from,...f.path.map(([x,y])=>({x,y}))].map(q=>cellXY(L,q.x,q.y)),reach=Math.min(pts.length,1+Math.floor(clamp((now-f.at)/Math.max(300,f.path.length*110))*(pts.length-1)));
+  c.save();c.globalAlpha=(1-k)*.9;c.strokeStyle='#ffe58a';c.lineWidth=L.cell*.16;c.lineCap='round';c.lineJoin='round';c.shadowColor='#ffd36b';c.shadowBlur=14;c.beginPath();pts.slice(0,reach).forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();c.restore();
+  if(k<.6){const [x,y]=pts[reach-1];c.save();c.globalAlpha=1-k/.6;txt(c,String(f.name).slice(0,11)+' · TỰ ĐI '+f.path.length+' Ô',Math.max(150,Math.min(750,x)),y-L.cell*.8,'900 18px Segoe UI','#ffe7a3',5);c.restore();}}
+}
 export function drawMaze(scene,c,t,layer){
  const e=scene.mazeStatus;if(!e?.cells)return;const H=scene.height,now=serverNow(scene,t),L=mazeLayout(H,e.cols,e.rows);
  if(layer==='back'){
@@ -63,10 +93,12 @@ export function drawMaze(scene,c,t,layer){
   return;}
  // ---------- front: người chạy + HUD ----------
  const tt=t,runners=e.runners||[],seen=new Map(),pos=[];
- for(const r of runners){if(r.f)continue;const p=displayPos(scene,r,L,tt),k=r.x+','+r.y,n=seen.get(k)||0;seen.set(k,n+1);
+ const walks=new Map();for(const f of e.walks||[])if(now-f.at<Math.max(300,f.path.length*110)+200)walks.set(f.rid,f);
+ for(const r of runners){if(r.f)continue;const p=displayPos(scene,r,L,tt,walks.get(r.id)),k=r.x+','+r.y,n=seen.get(k)||0;seen.set(k,n+1);
   // nhiều người cùng ô: xếp xoắn ốc nhỏ quanh tâm ô
   const ang=n*2.4,rad=n?Math.min(L.cell*.3,5+Math.sqrt(n)*6):0;let x=(scene.motion===false?p.tx:p.x)+Math.cos(ang)*rad,y=(scene.motion===false?p.ty:p.y)+Math.sin(ang)*rad;
-  if(scene.motion!==false&&now-r.b<320)x+=Math.sin(tt*.09)*3;pos.push({r,x,y,p});}
+  if(scene.motion!==false&&now-r.b<320)x+=Math.sin(tt*.09)*3;if(scene.motion!==false&&now-(r.h||0)<500)x+=Math.sin(tt*.12)*5;pos.push({r,x,y,p});}
+ drawMobs(scene,c,e,L,t,now);
  const dot=Math.max(7,L.cell*.12);
  // chỉ skin: bỏ pháp bảo, linh thú, hiệu ứng skin (minimalCrowd tắt VFX khi vẽ thân)
  const projections=scene.mazeActorProjections??=new WeakMap();
@@ -139,16 +171,18 @@ function drawMazePortals(scene,c,e,L,now,H){
 }
 function fmtTime(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
 function drawHud(scene,c,e,t,H,now,L){
- txt(c,'BÍ CẢNH MÊ CUNG',450,H*.065,'900 46px Segoe UI','#bff7ea',9);
+ txt(c,'BÍ CẢNH MÊ CUNG',400,H*.065,'900 38px Segoe UI','#bff7ea',8);
  if(e.phase==='registration'){const left=e.registrationEndsAt-now;
   txt(c,'gõ  mecung  để vào • mở cửa sau '+Math.max(0,Math.ceil(left/1000))+' giây',450,H*.108,'800 26px Segoe UI','#ffe7a3',6);
   c.save();c.globalAlpha=.92;pill(c,130,H*.42,640,170,26);c.fillStyle='#061219e6';c.fill();c.strokeStyle='#5fe3c8';c.lineWidth=3;c.stroke();c.restore();
   txt(c,(e.count||0)+' đạo hữu đã vào',450,H*.42+52,'900 40px Segoe UI','#ffffff',7);
   txt(c,'tất cả xuất phát ở mốc • mỗi người tự tìm đường',450,H*.42+100,'700 24px Segoe UI','#bdf3ff',5);
-  txt(c,'đi: len · xuong · trai · phai  (mỗi tin 1 bước)',450,H*.42+138,'800 24px Segoe UI','#ffe7a3',5);return;}
+  txt(c,'đi: len · xuong · trai · phai  (mỗi tin 1 bước)',450,H*.42+138,'800 24px Segoe UI','#ffe7a3',5);
+  txt(c,'⚠ yêu thú chui ra từ hang tím • đụng là văng lùi 1 ô',450,H*.42+200,'800 22px Segoe UI','#ffb3b3',5);return;}
  if(e.phase==='running'){
   txt(c,'⏳ '+fmtTime(e.endsAt-now)+'   •   '+(e.finished||0)+'/'+(e.count||0)+' đã thoát',450,H*.108,'800 26px Segoe UI','#ffe7a3',6);
   txt(c,'gõ  len · xuong · trai · phai  — mỗi tin 1 bước • gõ mecung để vào',450,H*.885,'800 23px Segoe UI','#ffffff',5);
+  txt(c,'⚠ né yêu thú — đụng là văng lùi 1 ô',450,H*.135,'800 20px Segoe UI','#ffb3b3',5);
   (e.runners||[]).slice(0,3).forEach((r,i)=>txt(c,(r.r?['🥇','🥈','🥉'][r.r-1]||'🏁':'#'+(i+1))+' '+String(r.n).slice(0,14)+(r.r?' • đã thoát':' • còn '+r.d+' bước'),450,H*.918+i*29,'800 22px Segoe UI',r.r?'#ffe066':'#d8fff6',5));}
 }
 // Bảng kết quả (vẽ trên cùng).

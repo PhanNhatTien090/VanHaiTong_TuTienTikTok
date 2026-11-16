@@ -35,8 +35,9 @@ test('quà: phá tường (đâm tường là phá và bước qua), không soi 
  const dir=['up','left','right'].find(d=>!canMove(e.maze,r.x,r.y,d)&&!(d==='left'&&r.x===0)&&!(d==='right'&&r.x===e.maze.cols-1));assert.ok(dir,'mốc có tường cạnh');
  const x0=r.x,y0=r.y;chat(w,'p1',{up:'len',left:'trai',right:'phai'}[dir],t+1000);assert.notDeepEqual([r.x,r.y],[x0,y0],'phá tường đi qua');assert.equal(r.breaks,0);assert.equal(e.broken.length,1);
  assert.ok(canMove(e.maze,x0,y0,dir),'tường mất cho cả sân');
- gift(w,'p1',20,t+2000);assert.equal(r.breaks,4);
- gift(w,'p3',99,t+3000);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.breaks===10&&r3.steps===0,'người chưa vào tặng quà là vào luôn');
+ // 16/11: quà 10/30/99 = tự đi theo đường đúng (không còn phá tường)
+ const d0=e.maze.dist[r.y*e.maze.cols+r.x];gift(w,'p1',20,t+2000);assert.equal(r.breaks,0);assert.equal(e.maze.dist[r.y*e.maze.cols+r.x],d0-3,'tự đi 3 ô về phía cửa');
+ gift(w,'p3',99,t+3000);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.steps===12,'người chưa vào tặng quà là vào luôn + tự đi 12 ô');
 });
 test('không ai vào thì khép lại; dừng tay được; snapshot gửi mê cung gọn',()=>{
  const w=setup();assert.ok(startMaze(w,N).ok);tick(w,N+MAZE.registerMs);assert.equal(w.maze.phase,'finished');
@@ -64,4 +65,20 @@ test('an exact 100-coin gift teleports to the exit once, including queued gifts'
  assert.equal(action(w,event,at+201).duplicate,true);
  assert.equal(w.maze.finished,2);
  assert.equal(snapshot(w,at+300).maze.teleports.length,2);
+});
+
+test('16/11: yêu thú chui ra từ hang, đụng người thì đánh văng lùi 1 ô + choáng; quà tự đi chém bay yêu thú trên đường',()=>{
+ const w=setup(),t=running(w),e=w.maze,r=e.runners.find(x=>x.id==='p1');
+ assert.ok(e.dens.length>=2,'có hang');
+ tick(w,t+MAZE.mob.firstMs+10);assert.ok(e.mobs.length>=1,'yêu thú đã chui ra');
+ // đặt yêu thú ngay ô kế người chạy theo đường về cửa → bước vào là bị văng
+ const next=pathAhead(e.maze,r.x,r.y,1)[0],d0=e.maze.dist[r.y*e.maze.cols+r.x];e.mobs=[{id:'m99',x:next[0],y:next[1],born:t+MAZE.mob.firstMs,nextAt:t+1e9,px:next[0],py:next[1]}];
+ const dir=['up','down','left','right'].find(d=>{const v={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[d];return r.x+v[0]===next[0]&&r.y+v[1]===next[1];});
+ const res=chat(w,'p1',{up:'len',down:'xuong',left:'trai',right:'phai'}[dir],t+MAZE.mob.firstMs+500);
+ assert.equal(res.knocked,true);assert.ok(e.maze.dist[r.y*e.maze.cols+r.x]>=d0,'văng lùi, không tiến');assert.equal(e.mobs.length,0,'yêu thú tan sau khi đánh');
+ assert.equal(chat(w,'p1','len',t+MAZE.mob.firstMs+900).stunned,true,'đang choáng');
+ const v=snapshot(w,t+MAZE.mob.firstMs+1000).maze;assert.equal(v.hits.length,1);
+ // quà 30: tự đi 6 ô, chém yêu thú nằm trên đường
+ const path=pathAhead(e.maze,r.x,r.y,6);e.mobs=[{id:'m100',x:path[2][0],y:path[2][1],born:t,nextAt:t+1e9,px:0,py:0}];
+ gift(w,'p1',30,t+MAZE.mob.firstMs+3000);assert.equal(e.mobs.length,0);assert.deepEqual([r.x,r.y],path.at(-1));
 });
