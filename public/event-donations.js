@@ -3,10 +3,11 @@ import {giftTier} from './hall-war-layout.js';
 import {drawGiftDonor,donorPortrait} from './gift-donor.js';
 import {eventGiftTier} from './event-gift-fx.js?v=event-donors-20261114';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x));
-const THEMES={bond:['#ffc4e7','TAM SINH DUYÊN','緣'],honor:['#ffe39b','ĐẠI ĐIỂN VINH DANH','尊'],hallwar:['#bbebff','NGŨ ĐƯỜNG GIAO LƯU','戰'],war:['#ffbc87','CHÍNH MA','⚔'],alchemy:['#ffce76','TIẾP LỬA KHAI LÒ','丹'],maze:['#c7b1ff','BÍ CẢNH MÊ CUNG','陣'],race:['#a7ecff','BỨT TỐC PHI KIẾM','剑'],duel:['#a4ffe0','TRỢ LỰC LUẬN KIẾM','剑'],hall:['#ffe7a0','TRỢ LỰC VÂN ĐÀI','功'],bonk:['#ffe49b','HỘI GÕ ĐẦU','⚒'],pet:['#a6ffd2','LINH THÚ CỐC','靈'],visitor:['#ffcfb4','CƠ DUYÊN KHÁCH QUÝ','緣'],flower:['#ffc4ee','THIÊN HOA VŨ','花'],boss:['#9cdfff','HỢP LỰC TRỪ YÊU','⚔'],opportunity:['#d4c0ff','THIÊN ĐẠO CƠ DUYÊN','道'],tower:['#ffe29c','VÂN HẢI THÁP','塔']};
+const THEMES={arena:['#ffd98a','TRỢ CHIÊU LÔI ĐÀI','擂'],bond:['#ffc4e7','TAM SINH DUYÊN','緣'],honor:['#ffe39b','ĐẠI ĐIỂN VINH DANH','尊'],hallwar:['#bbebff','NGŨ ĐƯỜNG GIAO LƯU','戰'],war:['#ffbc87','CHÍNH MA','⚔'],alchemy:['#ffce76','TIẾP LỬA KHAI LÒ','丹'],maze:['#c7b1ff','BÍ CẢNH MÊ CUNG','陣'],race:['#a7ecff','BỨT TỐC PHI KIẾM','剑'],duel:['#a4ffe0','TRỢ LỰC LUẬN KIẾM','剑'],hall:['#ffe7a0','TRỢ LỰC VÂN ĐÀI','功'],bonk:['#ffe49b','HỘI GÕ ĐẦU','⚒'],pet:['#a6ffd2','LINH THÚ CỐC','靈'],visitor:['#ffcfb4','CƠ DUYÊN KHÁCH QUÝ','緣'],flower:['#ffc4ee','THIÊN HOA VŨ','花'],boss:['#9cdfff','HỢP LỰC TRỪ YÊU','⚔'],opportunity:['#d4c0ff','THIÊN ĐẠO CƠ DUYÊN','道'],tower:['#ffe29c','VÂN HẢI THÁP','塔']};
 export function eventDonationContext(scene){
  const s=scene.lastState||{},now=s.serverNow||Date.now();
- const candidates=[['hallwar',scene.hallWarStatus,scene.hallWarStatus?.active],['war',scene.warStatus,scene.warStatus?.active],['alchemy',scene.alcStatus,scene.alcStatus?.active],['maze',scene.mazeStatus,!!scene.mazeStatus],['race',scene.raceStatus,scene.raceStatus?.active],['duel',scene.socialStatus?.tournament,scene.socialScene==='tournament'],['hall',scene.hallMatch,scene.hallMatch?.endsAt>now],['pet',scene.petEvent,scene.petEvent?.active&&scene.petEvent.endsAt>now],['visitor',scene.visitor,scene.visitor&&!scene.visitor.closedAt&&scene.visitor.endsAt>now],['flower',s.flowerEvent,s.flowerEvent&&!s.flowerEvent.closedAt&&s.flowerEvent.endsAt>now],['tower',s.tower,s.tower?.active],['boss',s.boss,s.boss?.hp>0&&s.boss.endsAt>now],['opportunity',s.opportunity,s.opportunity?.endsAt>now],['bond',s.socialStatus?.ceremony||s.socialStatus?.festival||s.lanternFestival,!!s.socialStatus?.ceremony||s.socialStatus?.festival?.active||s.lanternFestival?.active],['honor',s,s.honorStageUntil>now],['bonk',scene.bonkFest,scene.bonkFest?.active]];
+ // 16/11 (chủ game): Lôi Đài — quà dưới đài là TRỢ CHIÊU, không zoom vào người tặng.
+ const candidates=[['arena',scene.arena,scene.arena?.phase==='open'],['hallwar',scene.hallWarStatus,scene.hallWarStatus?.active],['war',scene.warStatus,scene.warStatus?.active],['alchemy',scene.alcStatus,scene.alcStatus?.active],['maze',scene.mazeStatus,!!scene.mazeStatus],['race',scene.raceStatus,scene.raceStatus?.active],['duel',scene.socialStatus?.tournament,scene.socialScene==='tournament'],['hall',scene.hallMatch,scene.hallMatch?.endsAt>now],['pet',scene.petEvent,scene.petEvent?.active&&scene.petEvent.endsAt>now],['visitor',scene.visitor,scene.visitor&&!scene.visitor.closedAt&&scene.visitor.endsAt>now],['flower',s.flowerEvent,s.flowerEvent&&!s.flowerEvent.closedAt&&s.flowerEvent.endsAt>now],['tower',s.tower,s.tower?.active],['boss',s.boss,s.boss?.hp>0&&s.boss.endsAt>now],['opportunity',s.opportunity,s.opportunity?.endsAt>now],['bond',s.socialStatus?.ceremony||s.socialStatus?.festival||s.lanternFestival,!!s.socialStatus?.ceremony||s.socialStatus?.festival?.active||s.lanternFestival?.active],['honor',s,s.honorStageUntil>now],['bonk',scene.bonkFest,scene.bonkFest?.active]];
  const row=candidates.find(([,e,active])=>e&&active);if(!row)return null;
  return {kind:row[0],key:row[0]+':'+(row[1].id||row[1].startedAt||''),theme:THEMES[row[0]]};
 }
@@ -36,11 +37,11 @@ export function drawEventDonations(scene,c,t,H=scene.height){
  if(!context||queue.key!==context.key){queue.pending=[];queue.active=[];return;}
  const light=feedbackBudget(scene),podium=context.kind==='hallwar'&&scene.hallWarStatus?.phase==='finished';queue.active=queue.active.filter(e=>t-e.start<e.profile.duration);
  queue.pending=queue.pending.filter(e=>t-e.receivedAt<12000);
- while(queue.active.length<(light||['hallwar','pet'].includes(context.kind)?1:2)&&queue.pending.length){const e=queue.pending.shift();e.start=t;queue.active.push(e);scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',context.kind);}
+ while(queue.active.length<(light||['hallwar','pet','arena'].includes(context.kind)?1:2)&&queue.pending.length){const e=queue.pending.shift();e.start=t;queue.active.push(e);scene.onEventGiftSound?.(e.value>=500?'dragon':'sword',context.kind);}
  for(const [slot,e] of queue.active.entries()){
   const q=e.profile,raw=clamp((t-e.start)/q.duration),k=scene.motion===false?.45:raw,fade=clamp(Math.min(raw/.09,(1-raw)/.17));
   if(takeFeedbackCue(e,'impactPlayed',raw,.3,.43)&&e.value>=500)scene.onSpectacleImpact?.();
-  const [color,title,glyph]=e.context.theme,x=context.kind==='hallwar'?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='pet'?.73:context.kind==='hallwar'?.425:slot?.34:.245),impactY=H*(context.kind==='pet'?.86:context.kind==='hallwar'?.53:.49),large=e.value>=100;
+  const [color,title,glyph]=e.context.theme,x=['hallwar','arena'].includes(context.kind)?450:450+(slot?115:-40),y=H*(podium?.22:context.kind==='arena'?.07:context.kind==='pet'?.73:context.kind==='hallwar'?.425:slot?.34:.245),impactY=H*(context.kind==='arena'?.26:context.kind==='pet'?.86:context.kind==='hallwar'?.53:.49) /* 16/11: Lôi Đài — thẻ trợ chiêu trên đỉnh, không che 2 đấu thủ */,large=e.value>=100;
   c.save();c.globalAlpha=fade;c.lineCap='round';c.lineJoin='round';
   // Avatar is the casting origin; energy travels into the event, without moving its camera or actors.
   if(scene.motion!==false&&!podium){
@@ -67,7 +68,7 @@ export function drawEventDonations(scene,c,t,H=scene.height){
     c.fill();c.restore();}
   }
   c.globalAlpha=fade;sigil(c,x,y,45+(scene.motion===false?0:Math.sin(k*TAU*3)*3),-k*TAU*.4,color,'');
-  drawGiftDonor(c,e,x,y,{radius:34,color,width:slot?250:290,caption:e.context.kind==='hallwar'?'trợ chiêu · '+(giftTier(e.value)?.name||title):e.value.toLocaleString('vi-VN')+' coin · '+title});
+  drawGiftDonor(c,e,x,y,{radius:34,color,width:slot?250:290,caption:e.context.kind==='arena'?title:e.context.kind==='hallwar'?'trợ chiêu · '+(giftTier(e.value)?.name||title):e.value.toLocaleString('vi-VN')+' coin · '+title});
   c.restore();
  }
 }
