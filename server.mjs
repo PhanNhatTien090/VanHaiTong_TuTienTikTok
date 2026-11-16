@@ -10,7 +10,7 @@ import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
-import {startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
+import {startMountRealmEvent,stopMountRealmEvent,startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent,currentParticipant} from './engine.mjs';
 import {startArenaEvent,stopArenaEvent} from './engine.mjs';
 import {petV2Configure} from './pet-v2.mjs';
@@ -222,6 +222,8 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='stop-bond-festival')result=stopBondFestival(w,now);
       else if(b.action==='start-race')result=startRace(w,now);
       else if(b.action==='stop-race')result=stopRace(w,now);
+      else if(b.action==='start-mount-realm')result=startMountRealmEvent(w,now);
+      else if(b.action==='stop-mount-realm')result=stopMountRealmEvent(w,now);
       else if(b.action==='start-hall-war')result=startHallWar(w,now);
       else if(b.action==='stop-hall-war')result=stopHallWar(w,now);
       else if(b.action==='start-war')result=startWar(w,now);
