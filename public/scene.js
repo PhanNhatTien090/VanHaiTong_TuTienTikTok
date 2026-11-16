@@ -1,6 +1,6 @@
 import {displayActorName} from './live-integrity.js';
 import {syncHallWar,drawHallWar} from './hall-war.js';
-import {syncMountRealm,drawMountRealm} from './mount-realm.js'; // 16/11: Tọa Kỵ Bí Cảnh
+import {syncMountRealm,drawMountRealm} from './mount-realm.js'; // 16/11: Tọa Kỹ Bí Cảnh
 import {drawRealmSkinV2,ensureRealmSkinV2} from './realm-skins-v2.js';
 import {drawHeavenStrike,drawStunMark,heavenStrikeShake,strikeProfile,HEAVEN_STRIKE_MS} from './heaven-strike.js';
 import {liveAudienceCount,plannedActorCount,keepCrowdFlag} from './crowd-policy.js';
@@ -44,7 +44,7 @@ import {petArrivalProfile,drawPetArrival,drawPetArrivalTitle} from './pet-arriva
 import {loadPetArt,drawPet} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {petV2EffectDuration,drawPetV2Event,petV2EffectType} from './pet-v2-fx.js';
 import {relicBob,petVisit,relicVisit} from './follower-turn.js';
-import {drawMount,drawOrb,beginMountFrame,mountLod,mountSeat,preloadMountArt} from './mount-fx.js'; // 16/11: Tọa Kỵ + Linh Châu
+import {drawMount,drawOrb,beginMountFrame,mountLod,mountSeat,preloadMountArt} from './mount-fx.js'; // 16/11: Tọa Kỹ + Linh Châu
 import {mountById} from './mounts.js';
 import {linWanWorn,loadLinWanArt,drawLinWanBody,drawLinWanQi,drawLinWanVisitor} from './lin-wan-art.js';
 import {loadSpiritBeasts} from './gift-spirit-beasts.js';
@@ -106,8 +106,8 @@ export const symbols={scroll:'▤',swords:'⚔',sword:'†',lotus:'❋',bell:'�
 export function portrait(color='#8bc5b1') {
   return `<svg viewBox="0 0 80 90" aria-hidden="true"><ellipse cx="40" cy="79" rx="29" ry="6" fill="#102e28"/><path d="M36 36Q19 39 17 66L29 63 20 77Q40 87 60 77L51 63 63 66Q61 39 44 36" fill="${color}"/><path d="m40 38-7 20 7 17 7-17Z" fill="#e1dfc5"/><path d="M25 49Q20 63 37 63M55 49Q60 63 43 63" fill="none" stroke="${color}" stroke-width="10"/><ellipse cx="40" cy="26" rx="10" ry="13" fill="#ddc5a2"/><path d="M30 28Q25 12 40 11Q55 12 50 28L46 21Q37 24 34 18Z" fill="#182a2a"/><circle cx="40" cy="10" r="5" fill="#172d2a"/><path d="M34 10h12" stroke="#d7bd7c" stroke-width="2"/><path d="M40 43v29" stroke="#c6b57b" stroke-width="1"/></svg>`;
 }
-// 16/11 (chủ game): TỌA KỴ — người cưỡi ngồi trên tọa kỵ khi ở sân/Lôi Đài; đang truyền công Linh Châu thì CHỈ hiện viên châu
-// (ẩn tọa kỵ, linh thú, pháp bảo). Không vẽ khi đua (đã có vật cưỡi đua), Chính Ma, lò đan, Linh Thú Cốc, mê cung, sân >50 người.
+// 16/11 (chủ game): TỌA KỸ — người cưỡi ngồi trên tọa kỹ khi ở sân/Lôi Đài; đang truyền công Linh Châu thì CHỈ hiện viên châu
+// (ẩn tọa kỹ, linh thú, pháp bảo). Không vẽ khi đua (đã có vật cưỡi đua), Chính Ma, lò đan, Linh Thú Cốc, mê cung, sân >50 người.
 const MOUNT_SCALE=.48;
 const mountStageOk=s=>!s.bareCrowd&&!s.raceStatus?.active&&!s.warStatus?.active&&!s.alcStatus?.active&&!s.mazeStatus&&!petCoveOn(s);
 function mountBack(scene,c,target,t){
@@ -679,7 +679,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncRac
     for(const e of this.effects)this.drawEffect(c,e,t,'back');
     // All wearable auras are behind ALL bodies, never interleaved with another player.
     // 07/11: skin nạp tiền (Hải Lam / Tư Đồ / Khuy Niết + pháp bảo) LUÔN có hiệu ứng kể cả sân đông (>20 người): bản nhẹ, tối đa 8 người.
-    // 16/11 (chủ game): tọa kỵ là lớp riêng dưới cùng của người chơi (sau hào quang, cánh, mọi thân người) → không đè lên ai.
+    // 16/11 (chủ game): tọa kỹ là lớp riêng dưới cùng của người chơi (sau hào quang, cánh, mọi thân người) → không đè lên ai.
     beginMountFrame(t,this.targets.length);
     for(const target of this.targets){if(!inView(target,this.camera,H)){target.mountLift=0;target.mountOn=false;continue;}target.mountLift=mountBack(this,c,target,t);if(target.mountOn)mountFrontLayer(this,c,target,t);target.y-=target.mountLift; /* nhấc người + hào quang/cánh lên chỗ ngồi; trả lại cuối khung */}
     const premium=p=>showsBlackGoldGear(p)||courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES);

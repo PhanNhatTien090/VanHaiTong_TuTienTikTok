@@ -6,7 +6,7 @@
 // 1 coin = 3 đơn vị (= 30 tim). Bù quân số giảm còn tối đa ×1,2, Chính khí ×1,05.
 import {stageConflict} from './stage-lock.mjs';
 import {mountBonus} from './mounts.mjs';
-// 16/11: Tọa Kỵ — đẩy thêm trượng khi xuất chiêu/tim (không áp vào quà). Phần lẻ cộng dồn theo người.
+// 16/11: Tọa Kỹ — đẩy thêm trượng khi xuất chiêu/tim (không áp vào quà). Phần lẻ cộng dồn theo người.
 const mountUnits=(m,p,units)=>{const b=mountBonus(p,'war');if(!b)return 0;m.mountCarry=(m.mountCarry||0)+units*b;const n=Math.floor(m.mountCarry);m.mountCarry-=n;return n;};
 // 08/11: đẩy mạnh hơn (unit .5 → .85) + lò xo kéo chiến tuyến về giữa 3,5%/giây → giằng co qua lại rõ, trận vẫn đủ 2 phút.
 export const WAR=Object.freeze({registerMs:30000,battleMs:120000,podiumMs:20000,pullBack:.035,

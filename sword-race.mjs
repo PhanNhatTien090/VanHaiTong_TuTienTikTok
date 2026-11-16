@@ -1,6 +1,6 @@
 import {RACE_SWORD_SKINS} from './public/race-sword-skins.js';
 import {stageConflict} from './stage-lock.mjs';
-import {mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỵ tăng tốc đua
+import {mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỹ tăng tốc đua
 // Server-authoritative distance; boosts remain valid until the racer crosses the finish.
 export const raceActive=w=>['queued','registration','running'].includes(w.race?.phase);
 export const raceVisible=(w,now)=>['registration','running'].includes(w.race?.phase)||w.race?.podiumUntil>now;

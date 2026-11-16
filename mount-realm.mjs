@@ -1,4 +1,4 @@
-// 16/11/2026 (chủ game): TỌA KỴ BÍ CẢNH — sự kiện phát Linh Châu. Màn nhẹ kiểu Ngũ Đường Giao Lưu (avatar tròn trên map).
+// 16/11/2026 (chủ game): TỌA KỸ BÍ CẢNH — sự kiện phát Linh Châu. Màn nhẹ kiểu Ngũ Đường Giao Lưu (avatar tròn trên map).
 // Tuyển 30 s (gõ "bicanh") → 3 làn yêu thú (70 s/làn) chui ra từ 6 cửa hang → Thú vương (90 s) → vinh danh 15 s.
 // Avatar tự đánh yêu thú gần nhất; "danh"/"6" lao lên đánh mạnh (hồi 3,5 s). Quà = chiêu (GIFT_TIERS) + cộng dồn coin để nhận châu.
 // Thưởng: ai góp đủ sát thương nhận 1 Linh Châu xanh; top 3 sát thương Thú vương thêm 1 châu xanh;
@@ -27,16 +27,16 @@ function enroll(w,p,now){
  return e.members[p.id];
 }
 export function startMountRealm(w,now,ctx){
- if(mountRealmActive(w))return fail('Tọa Kỵ Bí Cảnh đang mở.');
+ if(mountRealmActive(w))return fail('Tọa Kỹ Bí Cảnh đang mở.');
  const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc.');
  const boss=BOSS_POOL.filter(id=>id!==w.lastRealmBoss);const pick=boss[hash(now)%boss.length];w.lastRealmBoss=pick;
  w.mountRealm={id:'realm-'+now,phase:'registration',startedAt:now,registrationEndsAt:now+REGISTER_MS,members:{},mobs:[],boss:null,bossMount:pick,wave:-1,spawned:0,quota:0,fx:[],seq:0};
- ctx.emit(w,null,'TỌA KỴ BÍ CẢNH MỞ CỬA • gõ bicanh để vào · đánh yêu thú nhặt Linh Châu','mount-realm',now,{realmStart:true});
+ ctx.emit(w,null,'TỌA KỸ BÍ CẢNH MỞ CỬA • gõ bicanh để vào · đánh yêu thú nhặt Linh Châu','mount-realm',now,{realmStart:true});
  return {ok:true};
 }
 export function stopMountRealm(w,now,ctx){
- if(!mountRealmVisible(w,now))return fail('Chưa mở Tọa Kỵ Bí Cảnh.');
- w.mountRealm.phase='cancelled';w.mountRealm.podiumUntil=0;ctx.emit(w,null,'Tọa Kỵ Bí Cảnh đã đóng','mount-realm',now,{realmEnd:true,cancelled:true});return {ok:true};
+ if(!mountRealmVisible(w,now))return fail('Chưa mở Tọa Kỹ Bí Cảnh.');
+ w.mountRealm.phase='cancelled';w.mountRealm.podiumUntil=0;ctx.emit(w,null,'Tọa Kỹ Bí Cảnh đã đóng','mount-realm',now,{realmEnd:true,cancelled:true});return {ok:true};
 }
 function grid(list){const g=new Map();for(const m of list){const k=Math.floor(m.x/GRID)+':'+Math.floor(m.y/GRID);let c=g.get(k);if(!c)g.set(k,c=[]);c.push(m);}return g;}
 function nearest(g,m,maxRing=8){
@@ -106,7 +106,7 @@ function spread(list){
 export function tickMountRealm(w,now,ctx){
  const e=w.mountRealm;if(!e||!mountRealmActive(w))return;
  if(e.phase==='registration'){if(now<e.registrationEndsAt)return;
-  if(!Object.keys(e.members).length){e.phase='cancelled';ctx.emit(w,null,'Tọa Kỵ Bí Cảnh khép lại • chưa có đạo hữu vào','mount-realm',now,{realmEnd:true});return;}
+  if(!Object.keys(e.members).length){e.phase='cancelled';ctx.emit(w,null,'Tọa Kỹ Bí Cảnh khép lại • chưa có đạo hữu vào','mount-realm',now,{realmEnd:true});return;}
   e.phase='running';e.battleStartedAt=now;nextWave(w,e,now,ctx);return;}
  if(now-(e.tickAt||0)<1000)return;e.tickAt=now;
  battleTick(w,e,now,ctx);
@@ -128,13 +128,13 @@ function finish(w,now,ctx){
  }
  e.results={rows:rows.slice(0,150).map(r=>({id:r.id,common:r.common,vip:r.vip,divine:r.divine})),tamed,top:top.map(m=>({id:m.id,name:w.players[m.id]?.name,bossDmg:m.bossDmg})),mvp:members.sort((a,b)=>b.dmg-a.dmg).slice(0,5).map(m=>({id:m.id,name:w.players[m.id]?.name,dmg:m.dmg})),rewarded:rows.length,commonOrbs:common};
  for(const [i,t] of top.entries()){const p=w.players[t.id];if(p)ctx.emit(w,p,'Bí Cảnh hạng '+(i+1)+' sát thương Thú vương • nhận thêm Linh Châu xanh','mount-realm',now,{realmTop:i+1});}
- ctx.emit(w,null,'TỌA KỴ BÍ CẢNH KHÉP LẠI • '+(tamed?'Thú vương bị thu phục · ':'')+rows.length+' đạo hữu nhận Linh Châu · gõ truyencong','mount-realm',now,{realmEnd:true,realmTamed:tamed});
+ ctx.emit(w,null,'TỌA KỸ BÍ CẢNH KHÉP LẠI • '+(tamed?'Thú vương bị thu phục · ':'')+rows.length+' đạo hữu nhận Linh Châu · gõ truyencong','mount-realm',now,{realmEnd:true,realmTamed:tamed});
  ctx.audit?.(w,'mount-realm',now,{id:e.id,members:members.length,rewarded:rows.length,rows:rows.slice(0,300)});
 }
 export function mountRealmCommand(w,p,cmd,now,ctx){
  const e=w.mountRealm,join=cmd==='bicanh',attack=(cmd==='danh'||cmd==='6')&&['running','boss'].includes(e?.phase);
  if(!join&&!attack)return null;
- if(!mountRealmActive(w))return join?fail('Tọa Kỵ Bí Cảnh chưa mở.'):null;
+ if(!mountRealmActive(w))return join?fail('Tọa Kỹ Bí Cảnh chưa mở.'):null;
  const m=enroll(w,p,now);if(!m)return fail('Chỉ đệ tử đang ở LIVE mới vào được Bí Cảnh.');
  if(join&&!attack)return {ok:true,message:'Đã vào Bí Cảnh.'};
  if(now-m.lastManual<MANUAL_CD)return fail('Chiêu đang hồi.');

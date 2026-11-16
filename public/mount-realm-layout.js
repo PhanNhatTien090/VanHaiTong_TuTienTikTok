@@ -1,4 +1,4 @@
-// 16/11/2026: bố cục chung server + overlay cho TỌA KỴ BÍ CẢNH. Toạ độ logic = khung 900×1600 (như Ngũ Đường Giao Lưu).
+// 16/11/2026: bố cục chung server + overlay cho TỌA KỸ BÍ CẢNH. Toạ độ logic = khung 900×1600 (như Ngũ Đường Giao Lưu).
 // Ảnh map 1024×1536 vẽ vừa chiều ngang (900×1350), lùi xuống MAP_Y0.
 export const VIEW_W=900,VIEW_H=1600,MAP_IMAGE='/assets/toa-ky-v1/realm-map.webp',MAP_Y0=125,MAP_DRAW_H=1350;
 const at=(fx,fy)=>({x:Math.round(fx*VIEW_W),y:Math.round(MAP_Y0+fy*MAP_DRAW_H)});
@@ -6,7 +6,7 @@ const at=(fx,fy)=>({x:Math.round(fx*VIEW_W),y:Math.round(MAP_Y0+fy*MAP_DRAW_H)})
 export const ARENA={...at(.5,.41),rx:360,ry:205};
 export const PORTALS=[[.5,.17],[.14,.25],[.87,.25],[.11,.62],[.89,.62],[.5,.76]].map(([x,y])=>at(x,y));
 export const BOUNDS={x0:60,x1:840,y0:330,y1:1140};
-// 3 làn yêu thú (ảnh boss-atlas.png có sẵn: 0 hổ băng, 1 rùa ngọc, 2 phượng lửa) + Thú vương (một tọa kỵ lớn).
+// 3 làn yêu thú (ảnh boss-atlas.png có sẵn: 0 hổ băng, 1 rùa ngọc, 2 phượng lửa) + Thú vương (một tọa kỹ lớn).
 export const WAVES=Object.freeze([
  {name:'Băng Hổ',cell:0,hp:60,color:'#9fd8ff'},
  {name:'Ngọc Quy',cell:1,hp:90,color:'#8ff0b0'},

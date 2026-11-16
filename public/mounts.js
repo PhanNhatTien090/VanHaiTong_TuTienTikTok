@@ -1,5 +1,5 @@
-// 16/11/2026 (chủ game): TỌA KỴ — hệ riêng (không phải phi kiếm / vật cưỡi đua). Ngồi trên tọa kỵ khi tu luyện, lên Lôi Đài.
-// Nhận Linh Châu (xanh/tím/vàng) từ Tọa Kỵ Bí Cảnh → gõ "truyencong" trả linh thạch, truyền công đủ giờ thì châu vỡ, tọa kỵ hiện thân.
+// 16/11/2026 (chủ game): TỌA KỸ — hệ riêng (không phải phi kiếm / vật cưỡi đua). Ngồi trên tọa kỹ khi tu luyện, lên Lôi Đài.
+// Nhận Linh Châu (xanh/tím/vàng) từ Tọa Kỹ Bí Cảnh → gõ "truyencong" trả linh thạch, truyền công đủ giờ thì châu vỡ, tọa kỹ hiện thân.
 // Dữ liệu dùng chung server + overlay. Ảnh: /assets/toa-ky-v1/<id>.webp (Codex image_gen 16/11, đã lọc viền); hiệu ứng fx-*.webp nền đen dùng 'lighter'.
 // Chỉ số (sao 1, phần trăm): arena = sức mạnh tỷ thí, war = trượng Chính Ma, race = tốc độ đua, stones = linh thạch, qi = tu luyện tay.
 // KHÔNG hiện tỉ lệ ra LIVE (user chốt 16/11) — bảng ODDS chỉ nằm trong mounts.mjs phía server.
@@ -30,7 +30,7 @@ export const MAX_STARS=5,STAR_STEP=.2;
 export const STAT_CAP=Object.freeze({qi:6,arena:15,war:15,race:15,stones:15});
 export const mountById=id=>MOUNTS.find(m=>m.id===id)||null;
 export const orbKind=s=>({'':'common',thuong:'common',xanh:'common',vip:'vip',tim:'vip',than:'divine',vang:'divine'})[String(s||'').trim()]??null;
-// Phần trăm (0–15) của một chỉ số theo tọa kỵ + số sao.
+// Phần trăm (0–15) của một chỉ số theo tọa kỹ + số sao.
 export function mountStat(mountId,stars,key){
  const m=mountById(mountId),base=m?.stats?.[key]||0;if(!base)return 0;
  const s=Math.max(1,Math.min(MAX_STARS,Number(stars)||1));

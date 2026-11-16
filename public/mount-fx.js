@@ -1,5 +1,5 @@
-// 16/11/2026 (chủ game): vẽ TỌA KỴ + LINH CHÂU trên sân, nhiều lớp theo bậc (VFX-SKIN-CAO-CAP.md).
-// Thường: 3 lớp (bóng, quầng màu, tọa kỵ nhún) · VIP: 8 lớp (khói mực, pháp trận tím xoay, sương tím, viền sáng,
+// 16/11/2026 (chủ game): vẽ TỌA KỸ + LINH CHÂU trên sân, nhiều lớp theo bậc (VFX-SKIN-CAO-CAP.md).
+// Thường: 3 lớp (bóng, quầng màu, tọa kỹ nhún) · VIP: 8 lớp (khói mực, pháp trận tím xoay, sương tím, viền sáng,
 // lôi tím chớp, hạt bay, sao) · Thần: 11 lớp (+ thần quang sau lưng, vân vĩ kim sắc, cột sáng, lông vũ, chớp sao ở đầu).
 // HIỆU NĂNG: mọi texture tải/dựng 1 lần; mỗi khung chỉ drawImage + 'lighter'. Không filter/shadowBlur.
 // Hạt tính thẳng từ thời gian (không mảng, không cấp phát). Ngân sách mỗi khung: tối đa FULL_BUDGET con vẽ đủ lớp,
@@ -28,7 +28,7 @@ const inkArt=()=>radial('ink',[[0,'#05030cb8'],[.55,'#0a061460'],[1,'#00000000']
 const glowArt=tier=>radial('glow-'+tier,{common:[[0,'#9feaffa0'],[.5,'#5fd0ff30'],[1,'#00000000']],vip:[[0,'#e2c4ffc8'],[.45,'#a46bff58'],[1,'#00000000']],divine:[[0,'#fff3c8e0'],[.4,'#ffc85a70'],[1,'#00000000']]}[tier]);
 const moteArt=tier=>radial('mote-'+tier,{common:[[0,'#ffffff'],[.3,'#b8f2ffa0'],[1,'#00000000']],vip:[[0,'#ffffff'],[.3,'#d6b0ffc0'],[1,'#00000000']],divine:[[0,'#ffffff'],[.3,'#ffe08ad0'],[1,'#00000000']]}[tier]);
 const starArt=()=>art.star??=surface(64,64,c=>{c.translate(32,32);for(const [w,h] of [[30,2.2],[2.2,30]]){const g=c.createRadialGradient(0,0,0,0,0,30);g.addColorStop(0,'#ffffff');g.addColorStop(.4,'#fff4d0a0');g.addColorStop(1,'#ffe0a000');c.fillStyle=g;c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.fill();}});
-// Viền sáng: bóng trắng-màu của chính tọa kỵ, dựng 1 lần/tọa kỵ, cộng sáng nhịp thở.
+// Viền sáng: bóng trắng-màu của chính tọa kỹ, dựng 1 lần/tọa kỹ, cộng sáng nhịp thở.
 function silhouette(id,im,color){
  const key=id+color;let s=silhouettes.get(key);if(s!==undefined)return s;
  s=surface(im.naturalWidth,im.naturalHeight,c=>{c.drawImage(im,0,0);c.globalCompositeOperation='source-in';c.fillStyle=color;c.fillRect(0,0,im.naturalWidth,im.naturalHeight);});
@@ -74,7 +74,7 @@ export function mountSeat(id,scale=1){
 }
 const HOVER=14;
 
-// Vẽ tọa kỵ. (x,y) = điểm mặt đất dưới tâm tọa kỵ. layer: 'back' (sau nhân vật) | 'front' (hạt, sao phía trước).
+// Vẽ tọa kỹ. (x,y) = điểm mặt đất dưới tâm tọa kỹ. layer: 'back' (sau nhân vật) | 'front' (hạt, sao phía trước).
 export function drawMount(c,id,x,y,{scale=1,t=performance.now(),flip=false,lod='full',layer='back',seed=''}={}){
  const m=mountById(id);if(!m||lod==='off'&&layer==='front')return false;
  const im=image(mountImage(id));if(!im)return false;
@@ -106,7 +106,7 @@ export function drawMount(c,id,x,y,{scale=1,t=performance.now(),flip=false,lod='
  }
  // quầng màu bậc (rẻ, mọi bậc)
  if(lod!=='off')blit(c,glowArt(tier),x,cy+h*.15,w*1.05,h*1.1,tier==='common'?.35:tier==='vip'?.55:.32,true);
- // 6. tọa kỵ
+ // 6. tọa kỹ
  c.globalAlpha=1;c.globalCompositeOperation='source-over';
  if(flip){c.save();c.translate(x,0);c.scale(-1,1);c.drawImage(im,-w/2,cy-h/2,w,h);c.restore();}else c.drawImage(im,x-w/2,cy-h/2,w,h);
  if(lod!=='off'&&tier!=='common'){

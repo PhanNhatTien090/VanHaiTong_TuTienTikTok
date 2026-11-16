@@ -8,7 +8,7 @@ const NOW=Date.parse('2026-11-16T20:00:00+07:00');
 const seeded=seed=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};
 const ctx=()=>{const out=[];return {out,emit:(w,p,text,effect,now,extra)=>out.push({text,effect,...extra}),active:()=>true,audit:()=>{}};};
 
-test('10 tọa kỵ: 5 Thường, 3 VIP, 2 Thần; id không trùng',()=>{
+test('10 tọa kỹ: 5 Thường, 3 VIP, 2 Thần; id không trùng',()=>{
  assert.equal(MOUNTS.length,10);
  assert.deepEqual(['common','vip','divine'].map(t=>MOUNTS.filter(m=>m.tier===t).length),[5,3,2]);
  assert.equal(new Set(MOUNTS.map(m=>m.id)).size,10);

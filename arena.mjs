@@ -2,7 +2,7 @@
 // Luật thắng (chủ game duyệt "phương án B"): tu vi cao hơn → máu/công cao hơn rõ; chênh ≥30% tổng tu vi thì người mạnh thắng chắc;
 // sát nhau thì chiêu, linh thú, nộ khí (cổ vũ có trần) và quà của đấu thủ có thể lật kèo.
 import {stageConflict} from './stage-lock.mjs';
-import {mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỵ tăng sức mạnh tỷ thí
+import {mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỹ tăng sức mạnh tỷ thí
 import {seatDuelResult} from './master-seat.mjs';
 import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).

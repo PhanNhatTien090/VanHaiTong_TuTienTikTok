@@ -21,7 +21,7 @@ import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
 import {mountCommand,tickMounts,mountBonus,mountGiftBoost} from './mounts.mjs';
-import {startMountRealm,stopMountRealm,tickMountRealm,mountRealmCommand,mountRealmGift,mountRealmHearts,mountRealmView,mountRealmActive} from './mount-realm.mjs'; // 16/11: Tọa Kỵ Bí Cảnh // 16/11: Tọa Kỵ
+import {startMountRealm,stopMountRealm,tickMountRealm,mountRealmCommand,mountRealmGift,mountRealmHearts,mountRealmView,mountRealmActive} from './mount-realm.mjs'; // 16/11: Tọa Kỹ Bí Cảnh // 16/11: Tọa Kỹ
 import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
 import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
 import {petV2Flags,petV2Configure,petV2Command,petV2View,petV2Cards,petV2Earn,petV2BossDamage,petV2CommitBossDamage,petV2Tick,petV2CovePhase} from './pet-v2.mjs';
@@ -134,7 +134,7 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   const bonus=qiBonus(p)*(source==='reward'||source==='sect-event'?EVENT_GEAR_SHARE:1);
   // v33: Phúc duyên (buff sau khi tặng quà) nhân tu vi + linh thạch của hành động chơi tay trong thời gian hiệu lực.
   const buff=hand&&now!==null&&p.buffUntil>now?(p.buffMult||1):1;
-  // 16/11: Tọa Kỵ — linh thạch mọi nguồn; tu luyện chỉ khi chơi tay (không áp vào thưởng sự kiện 'reward'/'sect-event').
+  // 16/11: Tọa Kỹ — linh thạch mọi nguồn; tu luyện chỉ khi chơi tay (không áp vào thưởng sự kiện 'reward'/'sect-event').
   const mountQi=hand&&source!=='reward'&&source!=='sect-event'?mountBonus(p,'qi'):0;
   let amount=Math.round(qi*(1+bonus+mountQi)*buff);stones=Math.round(stones*buff*(1+mountBonus(p,'stones')));
   if(w.settings?.ascensionShowcase===true&&!p.resident&&!p.puppet&&typeof hand==='string'){
@@ -401,7 +401,7 @@ function actionCore(w,input,now) {
   const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
   if(type==='chat'&&!w.webShadow){const r=hallWarCommand(w,p,words,now,hallWarContext);if(r){if(!r.ok&&!cooldown(p,'hall-war-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
-  if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 16/11: Tọa Kỵ Bí Cảnh
+  if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 16/11: Tọa Kỹ Bí Cảnh
   if(type==='chat'&&!w.webShadow){
     const result=hallCommand(w,p,words,now,hallContext);
     if(result){if(!result.ok&&!cooldown(p,'hall-error',6000,now))emit(w,p,result.message,'status',now);return result;}
@@ -429,7 +429,7 @@ function actionCore(w,input,now) {
   if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
   if(type==='chat'){const inv=inventoryRequest(w,p,cmd,rest,now);if(inv){const wait=cooldown(p,'inventory',15000,now);if(wait)return fail(`Xem lại sau ${wait}s.`);const card=inventoryCard(inv.kind,p,CATALOG,inv.kind==='pets'?petV2Cards(w,p):null);emit(w,p,inventoryText(card),'status',now,{card});return {ok:true};}} // 11/11
   if(type==='chat'){const petV2=petV2Command(w,p,cmd,rest,now,emit);if(petV2){if(!petV2.ok&&!cooldown(p,'pet-v2-error',8000,now))emit(w,p,petV2.message,'status',now);return petV2;}}
-  if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now);return mt;}} // 16/11: Tọa Kỵ
+  if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now);return mt;}} // 16/11: Tọa Kỹ
    if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
@@ -652,7 +652,7 @@ function actionCore(w,input,now) {
     if(giftRecipient){giftEvent.giftFor={to:recipient.id,toName:recipient.name};giftEvent.text+=' • tặng hộ '+recipient.name;}
     else if(giftFor?.missing&&giftForEventEnd(w,now)){giftEvent.giftForMissing=giftFor.name;giftEvent.text+=' • '+giftFor.name+' đã rời LIVE, quà tính cho '+p.name;}
     const hallGift=hallWarGift(w,p,input.coins*count,now,hallWarContext);if(hallGift)giftEvent.hallWarGift=hallGift;
-    if(!input.simulated&&!input.autoRose){const rg=mountRealmGift(w,p,input.coins*count,now,mountContext);if(rg)giftEvent.realmGift=rg;} // 16/11: quà trong Tọa Kỵ Bí Cảnh
+    if(!input.simulated&&!input.autoRose){const rg=mountRealmGift(w,p,input.coins*count,now,mountContext);if(rg)giftEvent.realmGift=rg;} // 16/11: quà trong Tọa Kỹ Bí Cảnh
     const visitorReward=creditVisitorGift(w,recipient,input.coins*count,now);
     if(!giftRecipient){items.push(...visitorReward.items);itemNames.push(...visitorReward.itemNames);}
     if(visitorReward.kind){giftEvent.visitorProgress={kind:visitorReward.kind,coins:visitorReward.coins,...(giftRecipient?{to:recipient.id,toName:recipient.name}:{})};if(!giftRecipient){giftEvent.reward.skinNames=visitorReward.skinNames;p.giftHistory.at(-1).reward.skinNames=visitorReward.skinNames;}}
@@ -679,7 +679,7 @@ export function startArenaEvent(w,now=Date.now(),minutes=8){return startArena(w,
 export function stopArenaEvent(w,now=Date.now()){return stopArena(w,now,socialContext);}
 export function giftEventRule(w,now){
  if(['registration','running'].includes(w.hallWar?.phase))return 'Ngũ Đường Giao Lưu • quà trợ lực cho Đường đã gia nhập';
- if(mountRealmActive(w))return 'tọa kỵ bí cảnh';
+ if(mountRealmActive(w))return 'tọa kỹ bí cảnh';
  if(['registration','running'].includes(w.race?.phase))return 'đua phi kiếm';
  if(w.sectWar?.phase==='running')return 'chính ma đại chiến';
  if(['opening','brewing','tribulation'].includes(w.alchemy?.phase))return 'lò luyện đan';
@@ -986,7 +986,7 @@ function tickCore(w,now) {
   tickHallWar(w,now,hallWarContext);
   tickSocial(w,now,socialContext);tickArena(w,now,socialContext);tickSeat(w,now,socialContext);
   if(w.settings?.nguDuong===true||w.nguDuong)tickHalls(w,now,hallContext);
-  tickMounts(w,now,mountContext); // 16/11: Linh Châu đủ giờ → tọa kỵ hiện thân
+  tickMounts(w,now,mountContext); // 16/11: Linh Châu đủ giờ → tọa kỹ hiện thân
   tickMountRealm(w,now,mountContext);
   reconcilePatron(w,now);
 
@@ -1165,16 +1165,18 @@ export const RANDOM_EVENTS=Object.freeze([
   ['tower','Vân Hải Tháp',(w,now)=>beginTower(w,now,towerContext)],
   ['boss','Yêu thú',(w,now)=>openBoss(w,now)]
 ]);
-// 16/11/2026: BÍ CẢNH NHIỀU TU VI (Vân Hải Tháp, Mê Cung, Khai Lò, Tọa Kỵ Bí Cảnh) — user: "lâu lâu mới hiện một lần".
+// 16/11/2026: BÍ CẢNH NHIỀU TU VI (Vân Hải Tháp, Mê Cung, Khai Lò, Tọa Kỹ Bí Cảnh) — user: "lâu lâu mới hiện một lần".
 // Tách khỏi túi thường: mỗi bigEventMinutes (mặc định 45) mới mở MỘT cái, luân phiên lần lượt. Tắt bằng settings.bigEvents=false.
 export const BIG_EVENT_MINUTES=45;
 export const BIG_EVENTS=Object.freeze([
   ['tower','Vân Hải Tháp',(w,now)=>beginTower(w,now,towerContext)],
   ['maze','Mê Cung',(w,now)=>startMaze(w,now)],
   ['alchemy','Khai Lò Cửu Chuyển',(w,now)=>startAlchemy(w,now)],
-  ['mount-realm','Tọa Kỵ Bí Cảnh',(w,now)=>startMountRealmEvent(w,now)]
+  ['mount-realm','Tọa Kỹ Bí Cảnh',(w,now)=>startMountRealmEvent(w,now)]
 ]);
 const BIG_IDS=BIG_EVENTS.map(([id])=>id);
+// 16/11: mở tay một bí cảnh lớn (nút Sự kiện) cũng tính lượt — cái tự động kế tiếp lùi đủ khoảng cách, không nối đuôi ngay.
+function bigSpaced(w,now,r){if(r?.ok)w.nextBigEventAt=Math.max(w.nextBigEventAt||0,now+Math.max(15,w.settings?.bigEventMinutes??BIG_EVENT_MINUTES)*60000);return r;}
 function bigEvent(w,now){if(w.settings?.bigEvents===false)return null;
   if(!w.nextBigEventAt){w.nextBigEventAt=now+20*60000;return null;}
   if(now<w.nextBigEventAt||['registration','running'].includes(w.race?.phase))return null;
@@ -1402,7 +1404,7 @@ const socialContext={emit,gain,power,technique:attackTechnique,active:currentPar
 const hallWarContext={...socialContext,contribute:hallContribution,hallPoints:creditHallBattle};
 export const startHallWar=(w,now=Date.now())=>beginHallWar(w,now,hallWarContext);
 export const stopHallWar=(w,now=Date.now())=>endHallWar(w,now,hallWarContext);
-export const startMountRealmEvent=(w,now=Date.now())=>startMountRealm(w,now,mountContext);
+export const startMountRealmEvent=(w,now=Date.now())=>bigSpaced(w,now,startMountRealm(w,now,mountContext));
 export const stopMountRealmEvent=(w,now=Date.now())=>stopMountRealm(w,now,mountContext);
 // 07/11/2026: thưởng sự kiện (điểm danh chuỗi, lì xì, câu đố, nhiệm vụ ngày, kiến tạo tông) tính theo % tu vi cần,
 // không trừ hạn mức tu luyện ngày — nếu không một lần điểm danh 7 ngày đã tiêu sạch hạn mức.
@@ -1418,13 +1420,13 @@ export const startWar=(w,now=Date.now())=>beginWar(w,now,socialContext);
 export const stopWar=(w,now=Date.now())=>endWar(w,now,socialContext);
 // 08/11/2026: Khai Lò Cửu Chuyển — thưởng theo % tu vi cần (nguồn 'reward', không trừ hạn mức ngày).
 const alchemyContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
-export const startAlchemy=(w,now=Date.now())=>beginAlchemy(w,now,alchemyContext);
+export const startAlchemy=(w,now=Date.now())=>bigSpaced(w,now,beginAlchemy(w,now,alchemyContext));
 export const stopAlchemy=(w,now=Date.now())=>endAlchemy(w,now);
 const mazeContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
-export const startMaze=(w,now=Date.now())=>beginMaze(w,now,mazeContext);
+export const startMaze=(w,now=Date.now())=>bigSpaced(w,now,beginMaze(w,now,mazeContext));
 const bonkContext={emit,active:currentParticipant};
 const towerContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,now=null)=>gain(w,p,qi,stones,0,now,false,'sect-event'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
-export const startTower=(w,now=Date.now())=>beginTower(w,now,towerContext);
+export const startTower=(w,now=Date.now())=>bigSpaced(w,now,beginTower(w,now,towerContext));
 export const stopTower=(w,now=Date.now())=>endTower(w,now,towerContext);
 export const startBonk=(w,now=Date.now())=>beginBonk(w,now,bonkContext);
 export const stopBonk=(w,now=Date.now())=>endBonk(w,now,bonkContext);

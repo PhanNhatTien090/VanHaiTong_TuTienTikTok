@@ -1,5 +1,5 @@
-// 16/11/2026 (chủ game): TỌA KỴ — Linh Châu, truyền công, sao, chỉ số. Kế hoạch: TOA-KY-PLAN-2026-11-16.md.
-// Luật LIVE: KHÔNG nói/ghi "ngẫu nhiên", "tỷ lệ", "%" — chỉ báo nhận châu và tọa kỵ hiện thân.
+// 16/11/2026 (chủ game): TỌA KỸ — Linh Châu, truyền công, sao, chỉ số. Kế hoạch: TOA-KY-PLAN-2026-11-16.md.
+// Luật LIVE: KHÔNG nói/ghi "ngẫu nhiên", "tỷ lệ", "%" — chỉ báo nhận châu và tọa kỹ hiện thân.
 import {randomInt} from 'node:crypto';
 import {MOUNTS,ORBS,MAX_STARS,mountById,orbKind,mountStat} from './public/mounts.js';
 export {MOUNTS,ORBS,mountById};
@@ -40,7 +40,7 @@ export function rollMount(kind,pity={vip:0,divine:0},rng=cryptoRng){
  return {tier,id:pick.id,pity:next};
 }
 
-// Trao tọa kỵ: mới → sao 1; trùng → lên sao; đủ 5 sao → hoàn một nửa linh thạch của châu.
+// Trao tọa kỹ: mới → sao 1; trùng → lên sao; đủ 5 sao → hoàn một nửa linh thạch của châu.
 export function awardMount(p,id,kind,now){
  ensureMountState(p);const owned=p.mounts[id];let result;
  if(!owned){p.mounts[id]={stars:1,at:now};result={id,stars:1,fresh:true};}
@@ -58,7 +58,7 @@ export function grantOrbs(w,p,kind,count,now,emit,{silent=false}={}){
  return count;
 }
 
-// Phần trăm thưởng của tọa kỵ đang cưỡi (0 nếu không cưỡi). key: arena | war | race | stones | qi.
+// Phần trăm thưởng của tọa kỹ đang cưỡi (0 nếu không cưỡi). key: arena | war | race | stones | qi.
 export function mountBonus(p,key){
  const id=p?.mount,own=id&&p.mounts?.[id];if(!own)return 0;
  return mountStat(id,own.stars,key)/100;
@@ -76,7 +76,7 @@ function startChannel(w,p,kind,now,emit){
  return {ok:true,message:'Bắt đầu truyền công.'};
 }
 
-// Châu đủ giờ + người đang có mặt → vỡ châu, tọa kỵ hiện thân.
+// Châu đủ giờ + người đang có mặt → vỡ châu, tọa kỹ hiện thân.
 export function revealMount(w,p,now,ctx,rng=cryptoRng){
  const ch=p.mountChannel;if(!ch||now<ch.endsAt)return null;
  ensureMountState(p);
@@ -125,18 +125,18 @@ export function mountCommand(w,p,cmd,rest,now,ctx){
  else if(cmd==='truyen'&&/^cong(\s|$)/.test(words))kindArg=words.replace(/^cong\s*/,'');
  const isChannel=kindArg!=null,isStatus=cmd==='linhchau',isRide=cmd==='toaky';
  if(!isChannel&&!isStatus&&!isRide)return null;
- if(!real(p))return fail('Tọa kỵ dành cho đệ tử Vân Hải Tông.');
+ if(!real(p))return fail('Tọa kỹ dành cho đệ tử Vân Hải Tông.');
  if(now-(p.mountCmdAt||0)<COMMAND_CD)return fail('Đợi vài giây.');
  p.mountCmdAt=now;ensureMountState(p);
  if(isChannel){const kind=orbKind(kindArg);if(!kind)return fail('Gõ truyencong, truyencong vip hoặc truyencong than.');return startChannel(w,p,kind,now,ctx.emit);}
  if(isStatus){ctx.emit(w,p,statusLine(p,now),'status',now,{mountStatus:true});return {ok:true};}
  const owned=MOUNTS.filter(m=>p.mounts[m.id]);
- if(words==='tat'||words==='xuong'){p.mount=null;ctx.emit(w,p,'Xuống tọa kỵ','status',now);return {ok:true};}
+ if(words==='tat'||words==='xuong'){p.mount=null;ctx.emit(w,p,'Xuống tọa kỹ','status',now);return {ok:true};}
  if(words){
   const n=Number(words),m=Number.isInteger(n)?MOUNTS[n-1]:MOUNTS.find(x=>x.id===words);
-  if(!m||!p.mounts[m.id])return fail('Chưa sở hữu tọa kỵ này.');
+  if(!m||!p.mounts[m.id])return fail('Chưa sở hữu tọa kỹ này.');
   p.mount=m.id;ctx.emit(w,p,'Cưỡi '+m.name+' '+p.mounts[m.id].stars+'★','mount',now,{mountRide:m.id});return {ok:true};
  }
- ctx.emit(w,p,owned.length?'Tọa kỵ: '+owned.map(m=>(MOUNTS.indexOf(m)+1)+'.'+m.name+' '+p.mounts[m.id].stars+'★').join(' · ')+' · gõ toaky số để cưỡi':'Chưa có tọa kỵ · Linh Châu có ở Tọa Kỵ Bí Cảnh','status',now,{mountStatus:true});
+ ctx.emit(w,p,owned.length?'Tọa kỹ: '+owned.map(m=>(MOUNTS.indexOf(m)+1)+'.'+m.name+' '+p.mounts[m.id].stars+'★').join(' · ')+' · gõ toaky số để cưỡi':'Chưa có tọa kỹ · Linh Châu có ở Tọa Kỹ Bí Cảnh','status',now,{mountStatus:true});
  return {ok:true};
 }
