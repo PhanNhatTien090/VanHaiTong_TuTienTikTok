@@ -6,7 +6,9 @@ import {arenaElement,ARENA_ELEMENT_COLORS} from './arena-fx.js';
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>1-(1-clamp(k))**3;
 export const BANNER_GLYPH=Object.freeze({lightning:'雷',fire:'火',ice:'冰',water:'水',flower:'花',star:'星',sword:'劍',soul:'魂',gold:'金'});
 export const TIER_LABEL=Object.freeze({1:'PHÀM CẤP',2:'LINH CẤP',3:'HUYỀN CẤP',4:'THIÊN CẤP'});
-export const TIER4_GAP_MS=20000;
+export const TIER4_GAP_MS=20000,BANNER_GAP_MS=6000;
+// Thời gian bảng = đoạn rặn chiêu (tuyệt kỹ 2,6 s trúng ở ~1,5 s; quà 1,7 s trúng ở ~1 s).
+export const bannerLife=e=>e?.gift?900:1400;
 const FRAME_FILE=Object.freeze({2:'banner-frame-jade',3:'banner-frame-violet',4:'banner-frame-gold'});
 
 /** Bậc bảng của một đòn trong nhật ký trận. */
@@ -26,7 +28,12 @@ export function bannerPlan(scene,e,now){
  const layouts=tier===4?4:tier===3?3:2,last=scene.lastBannerLayout?.[tier];
  let layout=(e.n*7+(e.at||0))%layouts;if(layout===last)layout=(layout+1)%layouts;
  (scene.lastBannerLayout??={})[tier]=layout;
- const plan={tier,layout};scene.bannerPlans.set(key,plan);
+ // 16/11 (chủ game): bảng chéo che mất chiêu đẹp → CHỈ hiện cho đòn đỉnh: tuyệt kỹ bậc vàng (≤1 lần/20 s) và quà ≥99 coin;
+ // hai bảng cách nhau ≥6 s (trừ quà Thiên Giáng). Bảng hiện lúc rặn chiêu, tắt TRƯỚC cú trúng (bannerLife) để thấy chiêu.
+ let show=(e.slot===5&&tier===4)||(!!e.gift&&tier>=3);
+ if(show&&!(e.gift&&tier===4)&&now-(scene.lastBannerAt??-1e12)<BANNER_GAP_MS)show=false;
+ if(show)scene.lastBannerAt=now;
+ const plan={tier,layout,show};scene.bannerPlans.set(key,plan);
  if(scene.bannerPlans.size>80)scene.bannerPlans.delete(scene.bannerPlans.keys().next().value);
  return plan;
 }
@@ -146,7 +153,7 @@ function bolt2(c,x0,y0,x1,y1,seed,color,width){let s=seed>>>0||1;const r=()=>((s
 /** Vẽ 1 bảng chéo. age: ms từ lúc ra chiêu. A: người ra đòn (target có player). */
 export function drawSkillBannerLane(scene,c,e,age,A,H,lane,now=Date.now()){
  if(!A||e.stunned||e.dot)return;
- const {tier}=bannerPlan(scene,e,now),life=BANNER_MS[tier]||1800,k=age/life;if(k<0||k>1)return;
+ const {tier,show}=bannerPlan(scene,e,now),life=bannerLife(e),k=age/life;if(!show||k<0||k>1)return;
  const el=arenaElement(e.skill?.tech),[main,core,deep]=ARENA_ELEMENT_COLORS[el]||ARENA_ELEMENT_COLORS.sword;
  const gold=tier===4,edge=gold?'#ffe7a0':core,mid=gold?'#e8a92a':main,dark=gold?'#2a1300':deep;
  const left=A.x<450,dir=left?1:-1,h=TIER_H[tier]||128,cy=H*LANE_Y[lane],slope=(lane%2?1:-1)*.07;

@@ -6,7 +6,7 @@ import {drawV7Variant,v7SkillSpec,prewarmVariantArt} from './ultimate-variants-v
 import {drawDuelV6Ultimate,v6SkillFamily,prewarmDuelV6} from './duel-showcase-v6.js';
 import {drawPetV2SkillSignature} from './pet-v2-skill-fx.js';
 import {duelSoundPreset} from './duel-cinematic.js';
-import {bannerPlan,bannerLane,drawSkillBannerLane,BANNER_MS} from './skill-banner.js?v=loi-dai-banner-20261115';
+import {bannerPlan,bannerLane,drawSkillBannerLane,bannerLife} from './skill-banner.js?v=loi-dai-banner-20261116';
 import {portraitCanvas} from './linh-bai.js';
 import {drawQueueAvatars} from './queue-avatars.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
@@ -207,8 +207,10 @@ export function drawArena(scene,c,t,layer){
    if(scene.arenaFxSeen.size>200)scene.arenaFxSeen=new Set([...scene.arenaFxSeen].slice(-80));
   }
   // Bảng chéo xếp tầng (tối đa 3), mỗi đòn 1 bảng; sau đó mới vẽ số sát thương để luôn đọc được.
-  const live=m.log.filter(e=>{const age=at-e.at;return age>=0&&!e.stunned&&!e.dot&&!(e.gift&&e.target==='self')&&age<=(BANNER_MS[bannerPlan(scene,e,now).tier]||1800);});
+  const live=m.log.filter(e=>{const age=at-e.at;return age>=0&&!e.stunned&&!e.dot&&!(e.gift&&e.target==='self')&&bannerPlan(scene,e,now).show&&age<=bannerLife(e);});
   const keys=live.map(e=>e.n+':'+(e.at||0));
+  // 16/11 (chủ game): bảng chéo hiện thì màn tối sầm lại (vào nhanh, ra nhanh trước cú trúng).
+  if(live.length){let dim=0;for(const e of live){const k=(at-e.at)/bannerLife(e);dim=Math.max(dim,clamp(Math.min(k/.12,(1-k)/.15)));}c.save();c.globalAlpha=.62*dim;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.restore();}
   for(const e of live){const lane=bannerLane(scene,e,now,keys);if(lane!=null)drawSkillBannerLane(scene,c,e,at-e.at,targets.get(e.by),H,lane,now);}
   for(const e of m.log){const age=at-e.at,d=DUR[e.slot]||1000;if(age<0||age>d+900)continue;drawNumbers(scene,c,e,clamp(age/(d+900)),targets);}
   // Màn mở trận: VS
