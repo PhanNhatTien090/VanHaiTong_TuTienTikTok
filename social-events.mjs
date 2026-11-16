@@ -6,6 +6,7 @@ import {arenaKit} from './public/arena-skills.js';
 // 15/11: thú V2 chỉ tính nửa điểm (tối đa 2,5) để không lấn trợ lực của người không có thú.
 export const PET_DUEL_WEIGHT=.5;
 import {FESTIVAL_ITEM,festivalEnroll,tickBondFestival,festivalView} from './bond-festival.mjs';
+import {autoFestivalTease} from './tease.mjs';
 export const SOCIAL_ITEMS=[FESTIVAL_ITEM,
  {id:'tournament-laurel',type:'artifact',name:'Kiếm Khôi Ngọc Ấn',icon:'orb',tier:0,price:0,herbs:0,damage:0,bonus:0,exclusive:true,eventReward:'Vô địch Luận Kiếm',description:'Kỷ vật vinh danh quán quân; không cộng sức mạnh.'},
  {id:'bond-jade',type:'artifact',name:'Tam Sinh Ngọc Bội',icon:'orb',tier:0,price:0,herbs:0,damage:0,bonus:0,exclusive:true,eventReward:'Hai người đồng ý kết duyên',description:'Kỷ vật đôi, giữ lại sau khi kết thúc quan hệ.'}
@@ -205,6 +206,7 @@ export function bondActivity(w,p,input,now,c){
 
 export function tickSocial(w,now,c){
  tickBondFestival(w,now,c);
+ try{autoFestivalTease(w,now,c);}catch{} // 16/11: lễ hội kết duyên tự chọc ghẹo 2–3 cặp
  const s=socialState(w);for(const [key,at]of Object.entries(s.rejections||{}))if(now-at>=600000)delete s.rejections[key];for(const [id,i]of Object.entries(s.invites))if(now>=i.expiresAt){delete s.invites[id];notify(w,w.players[id],'Lời mời kết duyên đã hết hạn',now,c);}
  if(s.activeCeremony&&now>=s.activeCeremony.endsAt){s.history.unshift({...s.activeCeremony});s.history=s.history.slice(0,30);s.activeCeremony=null;c.emit(w,null,'Lễ Tam Sinh hoàn tất','bond',now);}
  tickTournament(w,now,c);

@@ -19,3 +19,21 @@ export function teasePair(w,aq,bq,now,c){
  c.emit(w,null,`💘 ${a.name} ❤ ${b.name}`,'bond',now,{teasePair:[a.id,b.id],teaseNames:[a.name,b.name],teaseStyle:style});
  return {ok:true};
 }
+
+// 16/11 (chủ game): LỄ HỘI KẾT DUYÊN tự chạy chọc ghẹo cho 2–3 cặp nam–nữ đang có mặt, ưu tiên người CHƯA có đạo lữ,
+// rồi người còn slot đạo lữ. Mỗi người tối đa 1 lần / lễ hội; không ghép 2 người đã là đạo lữ của nhau. Chỉ là trò vui trên màn.
+import {activeBonds,bondAllowance,alreadyBonded} from './bond-relations.mjs';
+export const AUTO_TEASE_MAX=3,AUTO_TEASE_FIRST=20000,AUTO_TEASE_GAP=30000,AUTO_TEASE_ACTIVE=5*60000;
+export function autoFestivalTease(w,now,c){
+ const f=w.bondFestival;if(!f||f.closedAt||now<f.startedAt||now>=f.endsAt)return null;
+ if(w.tease&&now<w.tease.until)return null;
+ f.autoTease??={count:0,nextAt:f.startedAt+AUTO_TEASE_FIRST,used:[]};const a=f.autoTease;
+ if(a.count>=AUTO_TEASE_MAX||now<a.nextAt||f.endsAt-now<TEASE_MS)return null;
+ const rank=p=>{const used=activeBonds(w,p.id).length;if(!used)return 0;let room=0;try{room=bondAllowance(w,p).remaining;}catch{}return room>0?1:2;};
+ const pool=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&!p.webOnly&&!String(p.id).startsWith('puppet-')&&now-(p.lastActive||0)<=AUTO_TEASE_ACTIVE&&!a.used.includes(p.id)&&rank(p)<2&&w.playTransfers?.[p.id]?.phase!=='web')
+  .sort((x,y)=>rank(x)-rank(y)||(y.lastActive||0)-(x.lastActive||0));
+ const men=pool.filter(p=>p.gender==='nam'),women=pool.filter(p=>p.gender==='nu');
+ for(const m of men)for(const g of women){if(alreadyBonded(w,m.id,g.id))continue;
+  const r=teasePair(w,m.id,g.id,now,c);if(r.ok){a.count++;a.used.push(m.id,g.id);a.nextAt=now+TEASE_MS+AUTO_TEASE_GAP;return r;}}
+ a.nextAt=now+15000;return null; // chưa đủ cặp nam–nữ → thử lại sau
+}
