@@ -478,3 +478,6 @@ export function drawHallWar(scene,c,t,H){
  if(done)podium(c,e,H);
  return done?0:Math.min(n,60);
 }
+// 16/11: cho Tọa Kỵ Bí Cảnh dùng lại chiêu Ngũ Đường. f = {index 0–4 (hệ chiêu), manual, ultimate, assist}; k = 0..1 trên FLIGHT+HIT ms.
+export const SPELL_MS=FLIGHT+HIT;
+export function drawSpellFx(c,f,from,to,color,k,light){drawSpell(c,{fx:f},from,to,color,k,light);}

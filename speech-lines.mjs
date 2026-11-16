@@ -62,6 +62,17 @@ export function speechPlan(e){
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
   const text=gameText(e.text||''),head=text.split('•')[0].trim(),what=head.toLowerCase(),seed=e.id||text+raw;
   if(e.hallWarGift)return [say('trongtai',Who+' trợ chiêu '+String(e.hallWarGift.name||'cuồng hóa').toLowerCase()+'!')];
+  // 16/11: Tọa Kỵ + Tọa Kỵ Bí Cảnh — chỉ báo hiệu ứng, không nói ngẫu nhiên/tỷ lệ, không mồi tim.
+  if(e.realmGift)return [say('trongtai',Who+' tung chiêu '+String(e.realmGift.name||'cuồng hóa').toLowerCase()+'!')];
+  if(e.realmStart)return [say('trongtai','Tọa Kỵ Bí Cảnh mở cửa! Gõ bí cảnh để vào, cùng hạ yêu thú, nhặt Linh Châu.')];
+  if(e.realmWave!=null)return [say('trongtai','Làn yêu thú thứ '+viNumber(e.realmWave+1)+' kéo đến! Các đạo hữu xuất chiêu!')];
+  if(e.realmBoss)return [say('trongtai','Thú vương xuất hiện! Các đạo hữu hợp lực thu phục!')];
+  if(e.realmEnd)return [say('trongtai',e.cancelled?'Tọa Kỵ Bí Cảnh đã đóng.':(e.realmTamed?'Thú vương đã bị thu phục! ':'Bí cảnh khép lại! ')+'Linh Châu đã về tay các đạo hữu. Gõ truyền công để mở châu.')];
+  if(e.realmTop)return [say('tiennu',Who+' đứng hạng '+viNumber(e.realmTop)+' sát thương Thú vương, nhận thêm Linh Châu!')];
+  if(e.mountOrb)return [say('tiennu',Who+' nhận '+(e.orbCount>1?viNumber(e.orbCount)+' ':'')+(e.mountOrb==='divine'?'Linh Châu vàng!':e.mountOrb==='vip'?'Linh Châu tím!':'Linh Châu xanh!'))];
+  if(e.mountReveal)return [say(e.mountReveal.tier==='divine'?'tongsu':'tiennu',Who+'! Linh Châu vỡ, '+(e.text.split('·')[1]||'tọa kỵ hiện thân').trim()+(e.mountReveal.tier==='divine'?'! Thần thú giáng thế!':'!'))];
+  if(e.mountBoost)return [say('tiennu',Who+' truyền công gia tốc!')];
+  if(e.mountChannel)return [say('tiennu',Who+' bắt đầu truyền công Linh Châu.')];
   if(e.hallWarStreak)return [say('trongtai',Who+' liên tiếp phá trận '+e.hallWarStreak+' đối thủ!')];
   if(e.hallWarStart)return [say('trongtai','Ngũ Đường Giao Lưu bắt đầu tập hợp! Gõ đường chiến hoặc số sáu để tham gia cùng đồng môn.')];
   if(e.hallWarBattle)return [say('trongtai','Ngũ Đường khai hội! Tu sĩ tự tìm đối thủ gần nhất. Gõ số sáu để lao lên ra chiêu, giữ Chiến Đài để cộng điểm.')];

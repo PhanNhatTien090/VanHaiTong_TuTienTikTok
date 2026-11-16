@@ -126,7 +126,7 @@ function finish(w,now,ctx){
   if(got.divine)grantOrbs(w,p,'divine',got.divine,now,ctx.emit);
   if(got.common||got.vip||got.divine)rows.push({id:p.id,name:p.name,dmg:m.dmg,bossDmg:m.bossDmg,...got});
  }
- e.results={tamed,top:top.map(m=>({id:m.id,name:w.players[m.id]?.name,bossDmg:m.bossDmg})),mvp:members.sort((a,b)=>b.dmg-a.dmg).slice(0,5).map(m=>({id:m.id,name:w.players[m.id]?.name,dmg:m.dmg})),rewarded:rows.length,commonOrbs:common};
+ e.results={rows:rows.slice(0,150).map(r=>({id:r.id,common:r.common,vip:r.vip,divine:r.divine})),tamed,top:top.map(m=>({id:m.id,name:w.players[m.id]?.name,bossDmg:m.bossDmg})),mvp:members.sort((a,b)=>b.dmg-a.dmg).slice(0,5).map(m=>({id:m.id,name:w.players[m.id]?.name,dmg:m.dmg})),rewarded:rows.length,commonOrbs:common};
  for(const [i,t] of top.entries()){const p=w.players[t.id];if(p)ctx.emit(w,p,'Bí Cảnh hạng '+(i+1)+' sát thương Thú vương • nhận thêm Linh Châu xanh','mount-realm',now,{realmTop:i+1});}
  ctx.emit(w,null,'TỌA KỴ BÍ CẢNH KHÉP LẠI • '+(tamed?'Thú vương bị thu phục · ':'')+rows.length+' đạo hữu nhận Linh Châu · gõ truyencong','mount-realm',now,{realmEnd:true,realmTamed:tamed});
  ctx.audit?.(w,'mount-realm',now,{id:e.id,members:members.length,rewarded:rows.length,rows:rows.slice(0,300)});
@@ -147,7 +147,7 @@ export function mountRealmGift(w,p,value,now,ctx){
  const e=w.mountRealm;if(!mountRealmActive(w)||value<1)return null;
  const m=enroll(w,p,now);if(!m)return null;
  m.coins+=value;m.boostUntil=Math.max(m.boostUntil,now+Math.min(16000,4000+Math.sqrt(value)*500));
- const tier=giftTier(value);
+ const tier=giftTier(value);(e.gifts??=[]).push({id:e.id+':g'+(e.seq++),user:p.id,at:now,value,tier:tier.id,name:tier.name});if(e.gifts.length>24)e.gifts.splice(0,e.gifts.length-24);
  if(['running','boss'].includes(e.phase)){const targets=e.boss&&e.boss.hp>0?[e.boss]:e.mobs,found=nearest(grid(targets),m,40);if(found)cast(w,e,m,found.target,now,{value});}
  return {tier:tier.id,name:tier.name,coins:m.coins};
 }
@@ -169,5 +169,5 @@ export function mountRealmView(w,now){
   mobs:e.mobs.map(m=>[m.x,m.y,m.wave,Math.round(m.hp/m.maxHp*100)]),
   members:members.map(m=>({id:m.id,name:w.players[m.id]?.name,avatar:w.players[m.id]?.avatar,x:m.x,y:m.y,boost:m.boostUntil>now||undefined,dash:now-(m.dashAt||0)<800||undefined})),
   top:members.filter(m=>m.dmg>0).sort((a,b)=>b.dmg-a.dmg).slice(0,5).map(m=>({id:m.id,name:w.players[m.id]?.name,dmg:m.dmg})),
-  fx:e.fx.filter(f=>now-f.at<1600),results:e.results||null,count:members.length};
+  fx:e.fx.filter(f=>now-f.at<1600),gifts:(e.gifts||[]).filter(g=>now-g.at<5000).map(g=>({...g,userName:w.players[g.user]?.name})),results:e.results||null,count:members.length};
 }
