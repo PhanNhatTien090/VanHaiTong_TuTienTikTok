@@ -2,16 +2,16 @@ import {speechPlan} from '../speech-lines.mjs';
 import {REBIRTH_UNLOCK_REALM} from '../public/progression.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createWorld,ensurePlayer,action,requiredQi,requiredStones,startOpportunity,tick,snapshot,blessing} from '../engine.mjs';
+import {createWorld,ensurePlayer,action,requiredQi,requiredStones,startOpportunity,tick,snapshot,blessing,hardRealmMult} from '../engine.mjs';
 import {ascensionPracticeReward} from '../public/ascension-pacing.js';
 import {dailyPracticeView,dailyAscensionView} from '../daily-practice.mjs';
 import {createCanvas} from '@napi-rs/canvas';
 import {Scene} from '../public/scene.js';
 import {addOpportunityCredit,preserveOpportunityCredit} from '../opportunity-progress.mjs';
 const N=Date.parse('2026-11-05T01:00:00+07:00'),DAY=86400000;
-function setup(realm=14){const w=createWorld('live');Object.assign(w.settings,{ascensionShowcase:true,autoEvents:false,autoRandom:false,scheduledCompetitions:false,residents:false,ceremony:false,blessingMinutes:0});w.nextBossAt=N+1e12;const p=ensurePlayer(w,'a','An',N);p.realm=realm;return {w,p};}
+function setup(realm=14){const w=createWorld('live');Object.assign(w.settings,{dailyRealmLimit:1 /* 16/11: giới hạn ngày giờ là tùy chọn */,ascensionShowcase:true,autoEvents:false,autoRandom:false,scheduledCompetitions:false,residents:false,ceremony:false,blessingMinutes:0});w.nextBossAt=N+1e12;const p=ensurePlayer(w,'a','An',N);p.realm=realm;return {w,p};}
 const act=(w,type,extra={},now=N)=>action(w,{userId:'a',type,...extra},now);
-const unit=p=>Math.ceil(requiredQi(p)/ascensionPracticeReward(p.realm,'cultivate',requiredQi(p),requiredStones(p)).steps);
+const unit=p=>{const base=Math.round(requiredQi(p)/hardRealmMult(p.realm));return Math.ceil(base/ascensionPracticeReward(p.realm,'cultivate',base,requiredStones(p)).steps);}; /* 16/11: thưởng tính theo mốc gốc */
 
 test('eight hours retain reduced progress after the shared full-rate budget without reaching unrestricted speed',()=>{
  const {w,p}=setup(18),ceiling=unit(p)*dailyPracticeView(w,p,N).limit;p.qi=0;p.totalQi=0;

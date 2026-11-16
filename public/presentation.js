@@ -22,7 +22,9 @@ export class PresentationQueue{
   if(i>=0&&event.effect==='breakthrough'){const old=this.items[i];this.items[i]={...old,...event,fromRealm:old.fromRealm,visualFrom:old.visualFrom,_queuedAt:old._queuedAt};this.coalesced++;return true;}
   const entry={...event,_queuedAt:now};if(i>=0){this.items[i]=entry;this.coalesced++;}else this.items.push(entry);
   this.items.sort((a,b)=>presentationPriority(b)-presentationPriority(a)||a._queuedAt-b._queuedAt);
-  if(this.items.length>this.limit){const dropped=this.items.pop();this.coalesced++;return dropped!==entry;}
+  // 16/11: hàng đầy → bỏ mục ưu tiên thấp nhất KHÔNG phải đột phá (trước đây quà dồn trong sự kiện đẩy rơi màn đột phá đang chờ → người xem tưởng "đột phá không được").
+  // Đột phá không tính vào giới hạn 12; cùng người đã gộp sẵn nên hàng không phình quá số người đột phá.
+  if(this.items.filter(e=>e.effect!=='breakthrough').length>this.limit){let v=-1;for(let k=this.items.length-1;k>=0;k--)if(this.items[k].effect!=='breakthrough'){v=k;break;}const dropped=this.items.splice(v,1)[0];this.coalesced++;return dropped!==entry;}
   return true;
  }
  start(event,now=Date.now()){
@@ -37,6 +39,6 @@ export class PresentationQueue{
    if(now-at<600000)break;
    this.startedRituals.delete(id);
   }
-  for(let i=this.items.length-1;i>=0;i--){const e=this.items[i];if(e.skyPresentationUntil&&now+presentationDuration(e)>e.skyPresentationUntil||now-e._queuedAt>(e.effect==='breakthrough'?600000:presentationPriority(e)>=3?180000:20000)){this.items.splice(i,1);this.coalesced++;}}}
+  for(let i=this.items.length-1;i>=0;i--){const e=this.items[i];if(e.skyPresentationUntil&&now+presentationDuration(e)>e.skyPresentationUntil||now-e._queuedAt>(e.effect==='breakthrough'?1200000:presentationPriority(e)>=3?180000:20000)){this.items.splice(i,1);this.coalesced++;}}}
  take(now=Date.now(),allowed=()=>true){this.prune(now);const eligible=this.items.map((e,i)=>({e,i})).filter(x=>allowed(x.e));if(!eligible.length)return;const overdue=eligible.filter(x=>now-x.e._queuedAt>=12000).sort((a,b)=>a.e._queuedAt-b.e._queuedAt);return this.items.splice((overdue[0]||eligible[0]).i,1)[0];}
 }

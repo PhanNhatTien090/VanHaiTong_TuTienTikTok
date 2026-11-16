@@ -100,8 +100,13 @@ export const normalize = s=>String(s??'').normalize('NFD').replace(/[\u0300-\u03
 export const progressionMult = p=>p.realm<2?1:p.realm<5?1.5:p.realm<8?2:p.realm<13?3:4;
 const qiCurve = p => (p.realm<=8?150 * 2.4 ** p.realm:150 * 2.4 ** 8 * 1.8 ** (p.realm-8))*progressionMult(p);
 const rewardQiBasis = p => Math.round(qiCurve(p));
-export const requiredQi = p => p.realm<24?rewardQiBasis(p):Math.round(qiCurve({realm:23})*4**(p.realm-23));
-export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p)));
+// 16/11 (chủ game): bỏ giới hạn đột phá mỗi ngày, bù lại TĂNG ĐỘ KHÓ từ cảnh giới 15: tu vi cần ×1,2 mỗi cảnh giới (15: ×1,2 · 18: ×2,1 · 20: ×3 · 23+: ×5,2),
+// linh thạch +25% mỗi cảnh giới. Thưởng VẪN theo % và vẫn tăng theo cảnh giới (tính từ rewardQiBasis), chỉ tăng chậm hơn tu vi cần
+// → cảnh giới càng cao lên càng chậm dần (15 chậm ~1/6, 20 chậm ~3 lần, 23+ chậm ~5 lần so với trước).
+export const HARD_REALM=15;
+export const hardRealmMult = r=>r<HARD_REALM?1:1.2**(Math.min(r,23)-(HARD_REALM-1));
+export const requiredQi = p => Math.round((p.realm<24?rewardQiBasis(p):qiCurve({realm:23})*4**(p.realm-23))*hardRealmMult(p.realm));
+export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p))*(p.realm<HARD_REALM?1:1+.25*(p.realm-HARD_REALM+1)));
 export function power(p) {
   return 8 + p.realm*7 + p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.damage||0),0) + (CATALOG.find(x=>x.id===p.equipped)?.damage||0) + Math.round(extraStat(p,'damage'));
 }

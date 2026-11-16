@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {REALMS,createWorld,ensurePlayer,requiredQi,requiredStones,action,blessing,snapshot} from '../engine.mjs';
+import {REALMS,createWorld,ensurePlayer,requiredQi,requiredStones,action,blessing,snapshot,hardRealmMult} from '../engine.mjs';
 import {OPPORTUNITY_COSTS} from '../public/opportunity.js';
 import {ascensionProfile} from '../public/ascension-art.js';
 import {realmDivineLook,divineHaloProfile} from '../public/divine-wardrobe.js';
@@ -25,7 +25,7 @@ test('slower costs preserve onboarding, and blessings cannot recycle stored qi i
  assert.equal(requiredQi({realm:0}),150);assert.equal(requiredQi({realm:1}),360);
  for(const [r,mult] of [[2,1.5],[5,2],[8,3],[13,4],[17,4]]){
   const base=r<=8?150*2.4**r:150*2.4**8*1.8**(r-8);
-  assert.equal(requiredQi({realm:r}),Math.round(base*mult));
+  assert.equal(requiredQi({realm:r}),Math.round(Math.round(base*mult)*hardRealmMult(r))); /* 16/11: từ 15 khó hơn */
  }
  const w=createWorld(),p=ensurePlayer(w,'a','A',NOW);p.realm=8;p.giftCoins=100;
  p.qi=requiredQi(p);p.stones=requiredStones(p);
