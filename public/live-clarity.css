@@ -236,7 +236,9 @@ html body.overlay .scene-shell>#lowerRightGuide{
  font-size:clamp(10px,1.8cqw,20px)!important;
 }
 /* 16/11 (chủ game): góc dưới bị quà TikTok che → bảng Ngũ Đường dời lên + chữ to hơn. */
-html body.overlay .scene-shell>#lowerRightGuide{bottom:11%!important;font-size:clamp(12px,2.25cqw,25px)!important;background:#071b2b80!important;border-color:#b7d7c566!important;box-shadow:none!important;text-shadow:0 1px 2px #000,0 0 3px #000!important} /* 16/11: nền trong suốt hơn, hạ xuống chút để không che đệ tử */
+html body.overlay .scene-shell>#lowerRightGuide{bottom:11%!important;font-size:clamp(12px,2.25cqw,25px)!important;background:#071b2b80!important;border-color:#b7d7c566!important;box-shadow:none!important;text-shadow:none!important} /* 16/11: nền trong suốt hơn, hạ xuống chút để không che đệ tử */
+/* 16/11 (chủ game): nền trong suốt → chữ có viền đen dày cho dễ đọc. */
+html body.overlay .scene-shell>#lowerRightGuide :is(b,span,code,li){-webkit-text-stroke:3px #02070d;paint-order:stroke fill;text-shadow:0 2px 3px #000c!important}
 html body.overlay .scene-shell :is(#gearGuide,#basicCommands,#lowerRightGuide)>b{color:#ffe6a0!important;font-weight:800!important}
 html body.overlay .scene-shell :is(#gearGuide,#basicCommands,#lowerRightGuide) code{color:#bdffe5!important;font-weight:800!important}
 html body.overlay .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide span,
