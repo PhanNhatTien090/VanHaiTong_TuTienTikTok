@@ -1009,7 +1009,8 @@ function tickCore(w,now) {
   // Cộng dồn thời gian hoạt động thật (có tương tác trong 5 phút gần nhất) cho mốc Tri ân.
   const dt=Math.min(5000,Math.max(0,now-(w.activeTickAt||now)));w.activeTickAt=now;
   if(dt)for(const p of Object.values(w.players))if(currentParticipant(w,p,now))p.activeMs=(p.activeMs||0)+dt;
-  for(const p of Object.values(w.players)){if(p.resident)continue;autoEquipBest(p);if(p.puppet&&p.puppetKeep!==false)p.lastActive=now;} // tu sĩ giả 'ở lại' luôn có mặt
+  // 16/11 (lag): chỉ xét tự đeo đồ cho người hoạt động 10 phút gần đây + tu sĩ giả (trước quét ~7.600 hồ sơ mỗi giây); người khác quay lại là được xét.
+  for(const p of Object.values(w.players)){if(p.resident)continue;if(p.puppet){autoEquipBest(p);if(p.puppetKeep!==false)p.lastActive=now;continue;}if(now-(p.lastActive||0)<600000)autoEquipBest(p);} // tu sĩ giả 'ở lại' luôn có mặt
   awardLoyalty(w,now);starterBoost(w,now);
   // v33: ban phúc tự động 30 phút/lần, mỗi lần 1 người (nút bấm tay vẫn mặc định 3).
   const every=(w.settings.blessingMinutes??30)*60000;

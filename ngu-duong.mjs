@@ -113,7 +113,13 @@ export function editHallMember(w,input,now=Date.now(),active=()=>true){
   return success('Đã cập nhật chức danh của '+p.name+'.');
 }
 
-function masterId(w,active,now) {
+// 16/11 (lag): Tông chủ + Thiên Bảng quét toàn bộ ~7.600 hồ sơ và bị gọi ~3 lần mỗi chu kỳ → nhớ 2 s (đủ tươi cho bảng hiển thị/tự xếp ghế).
+// Khóa gồm các bộ đếm thay đổi (tương tác, quà, số người, ghế tông chủ) để thay đổi thật vẫn thấy ngay.
+const MEMO_MS=2000,memo=new WeakMap();
+const memoKey=w=>(w.totalInteractions||0)+'|'+(w.totalGifts||0)+'|'+(w.masterSeat?.userId||'')+'|'+(w.settings?.sectMasterUsername||'')+'|'+(w.nguDuong?.version||0);
+function remember(w,name,now,fn){let m=memo.get(w);if(!m)memo.set(w,m=new Map());const k=memoKey(w),c=m.get(name);if(c&&c.k===k&&now>=c.at&&now-c.at<MEMO_MS)return c.v;const v=fn();m.set(name,{k,at:now,v});return v;}
+function masterId(w,active,now){return remember(w,'master',now,()=>masterIdScan(w,active,now));}
+function masterIdScan(w,active,now) {
   // 15/11: Tông chủ = chủ GHẾ (master-seat.mjs: thắng tranh ghế / đại lễ) nếu đang có mặt; không thì luật cũ.
   const seatP=w.players?.[w.masterSeat?.userId];
   if(real(seatP)&&seatP.sectMasterUnlocked&&active(w,seatP,now))return seatP.id;
@@ -124,7 +130,8 @@ function masterId(w,active,now) {
   return host ? Object.values(w.players).find(p=>real(p)&&String(p.handle||'').toLowerCase()===host)?.id : null;
 }
 
-export function thienBang(w,active,now,master=masterId(w,active,now)) {
+export function thienBang(w,active,now,master=masterId(w,active,now)){return remember(w,'tb:'+master,now,()=>thienBangScan(w,active,now,master));}
+function thienBangScan(w,active,now,master) {
   const top=[];
   for(const p of Object.values(w.players)){
     if(!real(p) || top.length===10 && rankOrder(p,top[9])>=0)continue;
