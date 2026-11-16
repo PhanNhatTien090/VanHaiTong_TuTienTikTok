@@ -43,6 +43,8 @@ import {petArrivalProfile,drawPetArrival,drawPetArrivalTitle} from './pet-arriva
 import {loadPetArt,drawPet} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {petV2EffectDuration,drawPetV2Event,petV2EffectType} from './pet-v2-fx.js';
 import {relicTurn,petTurn,relicBob} from './follower-turn.js';
+import {drawMount,drawOrb,beginMountFrame,mountLod,mountSeat,preloadMountArt} from './mount-fx.js'; // 16/11: Tọa Kỵ + Linh Châu
+import {mountById} from './mounts.js';
 import {linWanWorn,loadLinWanArt,drawLinWanBody,drawLinWanQi,drawLinWanVisitor} from './lin-wan-art.js';
 import {loadSpiritBeasts} from './gift-spirit-beasts.js';
 import {cinematicQuality,cinematicSeed,drawLightning,drawShockwave,drawAura,drawEnergyOrb,drawSeal,drawDissolve,drawTrail,prepareCinematicArt} from './cinematic-vfx.js';
@@ -103,6 +105,26 @@ export const symbols={scroll:'▤',swords:'⚔',sword:'†',lotus:'❋',bell:'�
 export function portrait(color='#8bc5b1') {
   return `<svg viewBox="0 0 80 90" aria-hidden="true"><ellipse cx="40" cy="79" rx="29" ry="6" fill="#102e28"/><path d="M36 36Q19 39 17 66L29 63 20 77Q40 87 60 77L51 63 63 66Q61 39 44 36" fill="${color}"/><path d="m40 38-7 20 7 17 7-17Z" fill="#e1dfc5"/><path d="M25 49Q20 63 37 63M55 49Q60 63 43 63" fill="none" stroke="${color}" stroke-width="10"/><ellipse cx="40" cy="26" rx="10" ry="13" fill="#ddc5a2"/><path d="M30 28Q25 12 40 11Q55 12 50 28L46 21Q37 24 34 18Z" fill="#182a2a"/><circle cx="40" cy="10" r="5" fill="#172d2a"/><path d="M34 10h12" stroke="#d7bd7c" stroke-width="2"/><path d="M40 43v29" stroke="#c6b57b" stroke-width="1"/></svg>`;
 }
+// 16/11 (chủ game): TỌA KỴ — người cưỡi ngồi trên tọa kỵ khi ở sân/Lôi Đài; đang truyền công Linh Châu thì CHỈ hiện viên châu
+// (ẩn tọa kỵ, linh thú, pháp bảo). Không vẽ khi đua (đã có vật cưỡi đua), Chính Ma, lò đan, Linh Thú Cốc, mê cung, sân >50 người.
+const MOUNT_SCALE=.6;
+const mountStageOk=s=>!s.bareCrowd&&!s.raceStatus?.active&&!s.warStatus?.active&&!s.alcStatus?.active&&!s.mazeStatus&&!petCoveOn(s);
+function mountBack(scene,c,target,t){
+ target.mountOn=false;const p=target.player,m=p&&!p.mountChannel&&p.mount&&p.mounts?.[p.mount]&&mountById(p.mount);
+ if(!m||!mountStageOk(scene))return 0;
+ const s=(target.scale||1.4)*MOUNT_SCALE,lod=mountLod(m.tier,scene.targets.length);
+ if(!drawMount(c,m.id,target.x,target.y,{scale:s,t:scene.motion?t:0,lod,seed:p.id,flip:target.x>450}))return 0;
+ target.mountOn=true;target.mountLod=lod;return mountSeat(m.id,s);
+}
+function mountFront(scene,c,target,t){
+ const p=target.player;if(!p)return;
+ if(target.mountOn){const s=(target.scale||1.4)*MOUNT_SCALE;drawMount(c,p.mount,target.x,target.y,{scale:s,t:scene.motion?t:0,lod:target.mountLod,seed:p.id,layer:'front',flip:target.x>450});return;}
+ const ch=p.mountChannel;if(!ch||scene.bareCrowd||!mountStageOk(scene))return;
+ const now=Date.now(),span=Math.max(1,ch.endsAt-ch.startedAt),progress=Math.min(1,Math.max(0,(now-ch.startedAt)/span)),s=target.scale||1.4;
+ drawOrb(c,ch.kind,target.x+(target.x>450?-1:1)*30*s,target.y,{scale:s*.95,t:scene.motion?t:0,progress,seed:p.id,lod:scene.targets.length>30?'light':'full'});
+}
+preloadMountArt?.();
+
 export class Scene {
   constructor(canvas,onSelect,{autoFrame=true}={}){prepareCinematicArt();prepareFeedbackArt();this.feedbackFX=new LiveFeedbackDirector();this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.onSelect=onSelect;this.players=[];this.selected=null;this.effects=[];this.targets=[];this.width=900;this.height=850;this.boss=null;this.visible=true;this.crowdMode=true;this.showNames=true;this.focusId=null;this.focusUntil=0;this.worldLife={npcs:true,environment:true};this.cameraEnabled=true;this.zoom=1.25;this.camera={s:1,x:0,y:0};this.sprites=new Map();this.labels=[];this.budget=new RenderBudget();this.characterFrames=new CharacterFrames();this.environmentLayers=new Map();this.animator=new CharacterAnimator();this.standingArt=new Image();this.standingArt.src='/assets/cultivators-standing-v14.png';this.characterArt=new Image();this.characterArt.src='/assets/cultivators-v3.png';this.empressArt=new Image();this.empressArt.onload=()=>this.characterFrames.clear();this.empressArt.src=new URLSearchParams(location.search).get('spriteStyle')==='mobile'?'/assets/celestial-empress-mobile-v1.png':'/assets/celestial-empress-seated-v2.png';this.specialAtlas=new Image();this.specialAtlas.onload=()=>{this.specialArt=[];for(const [y,h]of [[0,590],[600,424]]){const sheet=makeSurface(this.specialAtlas.naturalWidth,h);if(!sheet)continue;sheet.getContext('2d').drawImage(this.specialAtlas,0,y,this.specialAtlas.naturalWidth,h,0,0,sheet.width,h);sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;sheet.complete=true;this.specialArt.push(sheet);}this.characterFrames.clear();};this.specialAtlas.src='/assets/patron-sets-v18.png';this.bossAtlas=new Image();this.bossAtlas.onload=()=>{this.bossSprites=[];const sw=this.bossAtlas.naturalWidth/3;for(let i=0;i<3;i++){const frame=makeSurface(320,320);if(!frame)continue;frame.getContext('2d').drawImage(this.bossAtlas,i*sw,0,sw,this.bossAtlas.naturalHeight,0,0,320,320);this.bossSprites.push(frame);}this.bossAtlas=null;};this.bossAtlas.src='/assets/boss-atlas.png';this.formationImage=new Image();this.formationImage.onload=()=>{const sprite=makeSurface(384,384);if(sprite){sprite.getContext('2d').drawImage(this.formationImage,0,0,384,384);this.formationArt=sprite;}this.formationImage=null;};this.formationImage.src='/assets/sword-formation.png';this.art=new Image();this.art.onload=()=>this.resize();this.art.src='/assets/sect-morning-v20.png';loadImmortalArt(this);this.motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;
      // Emergency viewer-side rollback: ?v7=off or ?v7Premium=off on LIVE Studio browser source.
@@ -347,7 +369,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(this.heavyCrowd||this.compact||this.raceStatus?.active)return;
     if(!divine&&!this.minimalCrowd)drawRealmQiFront(c,p,pose,t,this.motion);
     // 09/11 (chủ game): pháp bảo đứng yên cạnh vai (t=0, motion tắt), chỉ nhích lên xuống; thay phiên với linh thú.
-    if(breaking||!relicTurn()||!p.equipped||courtShowsSignature(this,p))return;
+    if(breaking||!relicTurn()||!p.equipped||courtShowsSignature(this,p)||p.mountChannel)return;
     c.save();c.translate(0,relicBob(t,p.id,this.motion));
     if(drawDoraRelic(this,c,p,0)){}
     else if(drawShendeRelic(c,p,0,this.shendeArt,false)){}
@@ -359,7 +381,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
   }
   drawCompactGear(c,target,t,layer){
     if(this.heavyCrowd)return;
-    const p=target.player;if(this.raceStatus?.active||!p.equipped||courtShowsSignature(this,p)||!relicTurn()||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id))return;
+    const p=target.player;if(this.raceStatus?.active||!p.equipped||courtShowsSignature(this,p)||!relicTurn()||p.mountChannel||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id))return;
     c.save();c.translate(target.x,target.y+relicBob(t,p.id,this.motion));c.scale(target.scale||1.4,target.scale||1.4);
     if(layer==='back')drawBackRelic(c,p,0,this.signatureSprites,false);
     else if(drawDoraRelic(this,c,p,0)){}
@@ -661,8 +683,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncRace(this,state);syncWar(this,
     if(!this.reducePresence&&!this.minimalCrowd&&!this.raceStatus?.active)drawGodAuras(this,c,t,'back');
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn
      for(const target of this.minimalCrowd?[]:this.targets){if(!inView(target,this.camera,H))continue;drawWings(this,c,target,t);if(!this.heavyCrowd&&!this.raceStatus?.active&&!this.compact)drawLinWanQi(this,c,target,t);if(!this.raceStatus?.active)drawDivineHalo(this,c,target,t);}c.globalAlpha=ga;}
-    this.onStageActors=this.targets.length;
-    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now(),this.v6Showcase!==false)||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());if(!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
+    this.onStageActors=this.targets.length;beginMountFrame(t,this.targets.length);
+    for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now(),this.v6Showcase!==false)||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{const lift=mountBack(this,c,target,t);this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y-lift,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());mountFront(this,c,target,t);if(!target.player?.mountChannel&&!this.heavyCrowd&&!this.raceStatus?.active&&petTurn(Date.now(),petCoveOn(this)))drawPet(this,c,target,t);if(this.compact&&!this.minimalCrowd)this.drawCompactGear(c,target,t,'front');}
     for(const target of this.premiumTargets||[]){drawSeaAdornment(this,c,target,t,'front');drawTudoAdornment(this,c,target,t,'front');drawKhuyAdornment(this,c,target,t,'front');drawViemAdornment(this,c,target,t,'front');drawCourtAdornment(this,c,target,t,'front');}
     if(arena){const strikeAge=Date.now()-(this.battleSound?.impactAt??-Infinity);
       if(strikeAge>=0&&strikeAge<500){
