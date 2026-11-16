@@ -51,6 +51,7 @@ import {renderInfoSpotlight} from './info-spotlight.js?v=20261115';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=honor-legend-20261115';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-management';
+import {addMountReveal} from './mount-reveal-fx.js'; // 16/11
 import {showLinhBai} from './linh-bai.js';
 import {InventoryDeck,cardKind} from './inventory-multi.js?v=bang-xem-20261115';
 import {realmWithStage} from './realm-stage.js';
@@ -479,6 +480,7 @@ function enqueueReady(e){
   // 4/11/2026: đưa vào hàng giọng NGAY khi nhận (trước khi hiệu ứng/chữ đến lượt hiện) — giọng đến sớm hơn chữ.
   if(!e.resident&&!isArrivalWelcome(e))narrator.add(e);
   if(ascensionStage&&!isAscensionEvent(scene,e)){if(!e.resident)narrator.add(e);return;}
+  if(e.mountReveal&&!e.resident)addMountReveal(scene,e,performance.now()); // 16/11: màn nở tọa kỹ theo bậc
   if(e.achieve?.kind==='disciple'){showDiscipleNotice(e);scene.noteEvent(e);tone('lotus');return;}
   if(e.hallJoin){showDiscipleNotice(e,'✦ BÁI NHẬP '+String(e.hallJoin.name||'NGŨ ĐƯỜNG').toLocaleUpperCase('vi')+' ✦','Đệ tử mới · nhận lệnh bài Đường');scene.mover?.onEvent({user:e.user,effect:'ready'},performance.now(),scene.motion);scene.noteEvent(e);tone('petal');return;} // 16/11: vào Đường có thẻ + nhân vật nhấp sáng
   if(e.petAward&&e.giftFrom)showPetGiftAward(e);

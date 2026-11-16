@@ -44,7 +44,7 @@ import {petArrivalProfile,drawPetArrival,drawPetArrivalTitle} from './pet-arriva
 import {loadPetArt,drawPet} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {petV2EffectDuration,drawPetV2Event,petV2EffectType} from './pet-v2-fx.js';
 import {relicBob,petVisit,relicVisit} from './follower-turn.js';
-import {drawMount,drawOrb,beginMountFrame,mountLod,mountSeat,preloadMountArt} from './mount-fx.js'; // 16/11: Tọa Kỹ + Linh Châu
+import {drawMount,drawOrb,beginMountFrame,mountLod,mountSeat,preloadMountArt} from './mount-fx.js';import {drawMountReveals} from './mount-reveal-fx.js'; // 16/11: Tọa Kỹ + Linh Châu
 import {mountById} from './mounts.js';
 import {linWanWorn,loadLinWanArt,drawLinWanBody,drawLinWanQi,drawLinWanVisitor} from './lin-wan-art.js';
 import {loadSpiritBeasts} from './gift-spirit-beasts.js';
@@ -576,7 +576,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncRac
     this.targetFps=targetFps;
     const started=performance.now();
     const beforeRaster=this.characterFrames.stats.repaints;
-    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);drawOverdriveV7(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);drawImpactCamera(this,this.ctx,t,this.height);}
+    try{this.drawFrame(t,this.ctx,this.height);drawImpactPunctuation(this,this.ctx,t,this.height);drawDuelCinematic(this,this.ctx,t,this.height);drawOverdriveV7(this,this.ctx,t,this.height);this.feedbackFX?.draw(this,this.ctx,t,this.height);drawMountReveals(this,this.ctx,t,this.height);drawImpactCamera(this,this.ctx,t,this.height); /* 16/11: màn nở tọa kỹ */}
     finally{
       const cost=performance.now()-started;
       this.lastCost=Math.round(cost*10)/10;
