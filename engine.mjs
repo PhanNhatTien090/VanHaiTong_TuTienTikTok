@@ -1173,8 +1173,8 @@ export const RANDOM_EVENTS=Object.freeze([
   ['boss','Yêu thú',(w,now)=>openBoss(w,now)]
 ]);
 // 16/11/2026: BÍ CẢNH NHIỀU TU VI (Vân Hải Tháp, Mê Cung, Khai Lò, Tọa Kỹ Bí Cảnh) — user: "lâu lâu mới hiện một lần".
-// Tách khỏi túi thường: mỗi bigEventMinutes (mặc định 45) mới mở MỘT cái, luân phiên lần lượt. Tắt bằng settings.bigEvents=false.
-export const BIG_EVENT_MINUTES=45;
+// Tách khỏi túi thường: mỗi bigEventMinutes (mặc định 25) mới mở MỘT cái, luân phiên lần lượt. Tắt bằng settings.bigEvents=false.
+export const BIG_EVENT_MINUTES=25 /* 16/11 (chủ game): sự kiện lớn ~25 phút một cái (trước 45) */;
 export const BIG_EVENTS=Object.freeze([
   ['tower','Vân Hải Tháp',(w,now)=>beginTower(w,now,towerContext)],
   ['maze','Mê Cung',(w,now)=>startMaze(w,now)],
