@@ -35,7 +35,7 @@ export function syncSocialStage(scene,state){
   setTimeout(()=>{if(scene.duelPortraitMatchId!==match.id||!scene.standingArt?.naturalWidth)return;
    for(const p of fighters)try{portraitCanvas(scene,p);}catch{}},0);
  }
- const kind=state.socialScene;document.body.classList.toggle('social-stage',!!kind);document.body.classList.toggle('arena-stage',kind==='arena');document.body.classList.toggle('social-podium',kind==='tournament'&&scene.socialStage.length===1);
+ const kind=state.socialScene;document.body.classList.toggle('social-stage',!!kind);document.body.classList.toggle('arena-stage',kind==='arena');document.body.classList.toggle('bond-stage',kind==='bond'); /* 17/11: đôi đạo lữ — dời thông báo xuống sàn trống */document.body.classList.toggle('social-podium',kind==='tournament'&&scene.socialStage.length===1);
  if(kind==='arena'){scene.socialArtKind=kind;scene.socialArt=null;return;} // Lôi Đài vẽ riêng (arena-stage.js)
  if(kind===scene.socialArtKind)return;scene.socialArtKind=kind;scene.socialArt=null;if(!kind)return;
  const image=new Image();image.onload=()=>{if(scene.socialArtKind!==kind)return;const size=scene.budget?.level==='light'?256:384,frames=[];for(let i=0;i<6;i++){const frame=makeSurface(size,size);if(!frame)continue;frame.getContext('2d').drawImage(image,i%3*image.naturalWidth/3,Math.floor(i/3)*image.naturalHeight/2,image.naturalWidth/3,image.naturalHeight/2,0,0,size,size);frames.push(frame);}scene.socialArt=frames;};image.src='/assets/events-v1/'+kind+'-effects.png';

@@ -101,8 +101,8 @@ export function drawBonk(scene,c,t){
  }
  c.save();
  // băng rôn trên cùng: tên sự kiện + đồng hồ / kết quả
- {const y=H*.165;if(b.active){const left=Math.max(0,Math.ceil((b.endsAt-nowMs)/1000));c.fillStyle='rgba(40,18,6,.78)';c.beginPath();c.roundRect?.(250,y-30,400,60,18);c.fill();c.strokeStyle='#ffcf6b';c.lineWidth=2.5;c.stroke();
-   txt(c,'🔨 HỘI GÕ ĐẦU · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'),450,y-6,'900 26px Segoe UI','#ffe2a0',6);txt(c,'chat  go tên  → đi gõ đầu • bị gõ rơi vài linh thạch',450,y+19,'700 15px Segoe UI','#fff',4);}
+ {const y=H*.165;if(b.active){const left=Math.max(0,Math.ceil((b.endsAt-nowMs)/1000));c.fillStyle='rgba(40,18,6,.78)';c.beginPath();c.roundRect?.(205,y-34,490,78,18);c.fill();c.strokeStyle='#ffcf6b';c.lineWidth=2.5;c.stroke(); // 17/11: dòng lệnh to hơn (trước 15px khó đọc)
+   txt(c,'🔨 HỘI GÕ ĐẦU · '+Math.floor(left/60)+':'+String(left%60).padStart(2,'0'),450,y-8,'900 28px Segoe UI','#ffe2a0',6);txt(c,'gõ  go tên  → đi gõ đầu người đó',450,y+24,'800 21px Segoe UI','#fff',5);}
   else if(b.result){const r=b.result;c.fillStyle='rgba(40,18,6,.85)';c.beginPath();c.roundRect?.(220,y-34,460,92,20);c.fill();c.strokeStyle='#ffcf6b';c.lineWidth=2.5;c.stroke();
    txt(c,'HỘI GÕ ĐẦU KHÉP LẠI',450,y-12,'900 24px Segoe UI','#ffe2a0',6);
    txt(c,r.hitter?'🔨 Thiết Thủ Vương: '+String(r.hitter.name).slice(0,16)+' ('+r.hitter.n+')':'Chưa ai gõ ai',450,y+16,'800 18px Segoe UI','#fff',4);

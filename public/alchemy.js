@@ -42,6 +42,9 @@ function sounds(scene,e,now,t,heat,zone){const play=scene.onAlchemySound;if(!pla
  if(e.phase==='brewing'){const gap=heat>zone.hi?260:heat>=zone.lo?520:900;if(t-(scene.alcBubbleAt||0)>gap){scene.alcBubbleAt=t;play('bubble',.6+heat/100);}
   if(heat>=(e.danger||88)&&t-(scene.alcAlarmAt||0)>700){scene.alcAlarmAt=t;play('alarm');}}
  const q=e.quiz;if(q&&now>=q.startsAt&&scene.alcQuizKey!==q.startsAt){scene.alcQuizKey=q.startsAt;play('quiz');}}
+// 17/11: lò đan bằng ảnh (Codex vẽ, đồng xanh 2 quai rồng). Chưa tải xong → vẽ bằng code như cũ.
+let CAULDRON_ART=null;if(typeof Image!=='undefined'){const im=new Image();im.decoding='async';im.onload=()=>{CAULDRON_ART=im;};im.src='/assets/event-maps-v1/alchemy-cauldron.webp';}
+const ART_W=470,ART_TOP=-99; // miệng lò ảnh khớp vành lò cũ (y=-62)
 // ---------- lò đan (vẽ bằng code, 4 bộ màu) ----------
 function drawCauldron(scene,c,e,t,H,heat,zone,now){
  const y=cy(H),S=SKINS[(e.variant||0)%SKINS.length],motion=scene.motion!==false,danger=heat>=(e.danger||88)&&e.phase==='brewing',exploded=e.result?.exploded;
@@ -49,9 +52,14 @@ function drawCauldron(scene,c,e,t,H,heat,zone,now){
  c.save();c.translate(CX+sx,y+sy);if(exploded)c.rotate(-.12);
  // lửa dưới lò: cao theo nhiệt, màu theo vùng
  const fire=e.phase==='finished'?0:clamp(heat/100),fc=heatColor(heat,zone),locked=e.lockUntil>now;
- if(fire>0){c.save();c.globalCompositeOperation='screen';glow(c,0,150,170+fire*120,locked?'#ffe9a0':fc,.55+fire*.3);
-  const n=feedbackBudget(scene)?12:22;for(let i=0;i<n;i++){const u=(t*.0016*(1+fire)+i/n)%1,x=(rnd(i)-.5)*220*(1-u*.5),h=(40+fire*190)*(1-u);c.globalAlpha=(1-u)*.9;c.fillStyle=i%3?fc:'#ffffff';c.beginPath();c.ellipse(x,170-u*(60+fire*170),9*(1-u)+4,h*.18+6,0,0,TAU);c.fill();}
+ const fb=CAULDRON_ART?205:150;
+ if(fire>0){c.save();c.globalCompositeOperation='screen';glow(c,0,fb,170+fire*120,locked?'#ffe9a0':fc,.55+fire*.3);
+  const n=feedbackBudget(scene)?12:22;for(let i=0;i<n;i++){const u=(t*.0016*(1+fire)+i/n)%1,x=(rnd(i)-.5)*220*(1-u*.5),h=(40+fire*190)*(1-u);c.globalAlpha=(1-u)*.9;c.fillStyle=i%3?fc:'#ffffff';c.beginPath();c.ellipse(x,fb+20-u*(60+fire*170),9*(1-u)+4,h*.18+6,0,0,TAU);c.fill();}
   c.restore();}
+ if(CAULDRON_ART){const h=ART_W*CAULDRON_ART.height/CAULDRON_ART.width;c.drawImage(CAULDRON_ART,-ART_W/2,ART_TOP,ART_W,h);
+  // nhiệt: lòng lò sáng màu vùng nhiệt, thân ửng đỏ khi sắp nổ
+  c.save();c.globalCompositeOperation='screen';glow(c,0,-62,150,locked?'#fff3b0':fc,.35+fire*.5);glow(c,0,-62,90,GRADE_COL[e.grade||1],.3+fire*.3);if(danger)glow(c,0,60,230,'#ff3b3b',.25+.15*Math.sin(t*.02));c.restore();}
+ else{
  // chân + thân + vành + quai
  c.fillStyle=S.body;[-1,0,1].forEach(k=>{c.beginPath();c.moveTo(k*110-14,90);c.lineTo(k*120-20,175);c.lineTo(k*120+8,175);c.lineTo(k*110+14,90);c.closePath();c.fill();});
  const g=c.createRadialGradient(-50,-10,20,0,30,190);g.addColorStop(0,S.rim);g.addColorStop(.55,S.body);g.addColorStop(1,'#140a05');c.fillStyle=g;c.beginPath();c.ellipse(0,40,170,118,0,0,TAU);c.fill();
@@ -62,6 +70,7 @@ function drawCauldron(scene,c,e,t,H,heat,zone,now){
  c.save();c.globalCompositeOperation='screen';c.globalAlpha=.35+fire*.6;c.strokeStyle=locked?'#fff3b0':S.rune;c.lineWidth=3;c.beginPath();c.ellipse(0,44,140,30,0,0,Math.PI);c.stroke();
  for(let i=0;i<7;i++){const a=Math.PI*(.15+i*.1),x=Math.cos(a)*140,yy=44+Math.sin(a)*30;c.beginPath();c.arc(x,yy,7,0,TAU);c.stroke();}
  glow(c,0,-62,140,GRADE_COL[e.grade||1],.25+fire*.35);c.restore();
+ }
  if(exploded){c.strokeStyle='#05060c';c.lineWidth=5;c.beginPath();c.moveTo(-30,-40);c.lineTo(-5,10);c.lineTo(-40,60);c.lineTo(-10,110);c.stroke();}
  c.restore();
  // khói từ miệng lò — màu theo phẩm hiện tại
@@ -108,7 +117,7 @@ function drawHud(scene,c,e,t,H,heat,zone,now){
  txt(c,'❄ NGUỘI',x0+8,by+bh+22,'800 17px Segoe UI','#8fc8ff',4,'left');txt(c,'NỔ 💥',x0+w-8,by+bh+22,'800 17px Segoe UI','#ff8a8a',4,'right');
  // BẢNG LỆNH LỚN — đổi theo tình hình (đây là thứ thay cho giọng nói)
  let msg,col,bg;
- if(e.phase==='opening'){msg='❤ THẢ TIM ĐỂ NHÓM LỬA';col='#120a04';bg='#ffd36b';}
+ if(e.phase==='opening'){msg='🔥 KHAI LÒ · ❤ = QUẠT LỬA';col='#120a04';bg='#ffd36b';}
  else if(e.phase==='tribulation'){msg='⚡ THẢ TIM GIỮ KẾT GIỚI · 🌹 GIA CỐ';col='#ffffff';bg='#3b5bd6';}
  else if(e.lockUntil>now){msg='🔒 TIÊN HỎA ĐANG GIỮ LỬA';col='#120a04';bg='#ffe066';}
  else if(heat>=(e.danger||88)){msg='🌹 SẮP NỔ! TẶNG HOA HỒNG DẬP LỬA';col='#ffffff';bg=scene.reduceFlash?'#aa211f':Math.floor(t/500)%2?'#c12822':'#861916';}
@@ -130,7 +139,8 @@ function drawHud(scene,c,e,t,H,heat,zone,now){
   txt(c,inc.icon+' '+inc.name+' · '+(inc.kind==='rat'?'gõ bat: '+inc.have+'/'+inc.need:inc.hint)+' · '+s+'s',CX,iy,'900 24px Segoe UI','#ffd0b0',5);c.restore();
   if(inc.kind==='rat'&&!inc.result){const k=(now%4000)/4000,x=120+k*660,yy=H*.6+Math.sin(k*40)*6;c.save();c.fillStyle='#6a5a5a';c.beginPath();c.ellipse(x,yy,30,16,0,0,TAU);c.fill();c.beginPath();c.arc(x+28,yy-8,12,0,TAU);c.fill();c.strokeStyle='#6a5a5a';c.lineWidth=4;c.beginPath();c.moveTo(x-28,yy);c.quadraticCurveTo(x-60,yy-20,x-70,yy+6);c.stroke();c.fillStyle='#ff4040';c.beginPath();c.arc(x+33,yy-11,3,0,TAU);c.fill();txt(c,'🌿',x-6,yy-26,'24px Segoe UI','#fff',0);c.restore();}}
  // chú thích quà — cố định cuối màn hình
- if(e.phase!=='finished'){const ly=H*.955,items=e.phase==='tribulation'?[['🌹','Hoa hồng','gia cố kết giới','#7fd4ff']]:[['🌹','Hoa hồng','dập lửa cứu lò','#7fd4ff'],['🌿','Quà 5 xu+','linh dược +phẩm','#9bff8a'],['🐉','Quà 99 xu+','khóa lửa 10s','#ffe066']];
+ // 17/11: bỏ hàng quà sát đáy (quà TikTok che, ghi "xu") — thẻ quà góc phải đã có ảnh quà thật.
+ if(false){const ly=H*.955,items=e.phase==='tribulation'?[['🌹','Hoa hồng','gia cố kết giới','#7fd4ff']]:[['🌹','Hoa hồng','dập lửa cứu lò','#7fd4ff'],['🌿','Quà 5 xu+','linh dược +phẩm','#9bff8a'],['🐉','Quà 99 xu+','khóa lửa 10s','#ffe066']];
   const cw=items.length===1?380:272;items.forEach(([ic,a,b,col],i)=>{const x=CX-(items.length*cw+(items.length-1)*10)/2+i*(cw+10);c.fillStyle='#05060cd8';pill(c,x,ly-34,cw,68,16);c.fill();c.lineWidth=2;c.strokeStyle=col;pill(c,x,ly-34,cw,68,16);c.stroke();txt(c,ic,x+34,ly,'30px Segoe UI','#fff',0);txt(c,a,x+64,ly-13,'900 20px Segoe UI',col,4,'left');txt(c,b,x+64,ly+14,'700 18px Segoe UI','#ffffff',4,'left');});}
  // đan kiếp: thanh kết giới
  if(e.phase==='tribulation'){const s=clamp((e.shield||0)/100),sy=H*.3;c.save();c.fillStyle='#05060cd8';pill(c,x0,sy-22,w,44,22);c.fill();c.fillStyle=s<.3?'#ff5a5a':'#7fb8ff';pill(c,x0+4,sy-18,(w-8)*s,36,18);c.fill();txt(c,'🛡 KẾT GIỚI '+Math.round(s*100)+'%',CX,sy,'900 22px Segoe UI','#ffffff',5);c.restore();

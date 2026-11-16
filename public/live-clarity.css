@@ -349,3 +349,12 @@ body.overlay.arena-stage :is(#phoneHudLeft,#phoneHudRight,#giftRanks,#honorBanne
 
 /* 16/11 (chủ game): bảng Chọn đường phái tu luyện ẩn trong các sự kiện lớn (Khai Lò, Chính Ma, Tháp, Mê Cung, yêu thú…) để không che; sân thường vẫn hiện. */
 body.overlay.has-major-event .scene-shell>#lowerRightGuide{display:none!important}
+/* 17/11 (duyệt hình từng sự kiện): trong mọi sự kiện, ẩn bảng hướng dẫn chung bên phải + bảng thông tin to góc dưới —
+   trước đè lên đầu bảng sự kiện (Khai Lò, Luận Kiếm) và che người chơi. Bảng gõ số bên trái vẫn giữ. */
+body.overlay.has-major-event :is(#infoSpotlight,.info-spotlight){display:none!important}
+html body.overlay.has-major-event .scene-shell #phoneHudRight:not(#_):not(#__)>#basicCommands.rail-guide.corner-command-guide{display:none!important}
+/* 17/11: lễ kết đôi — đôi đạo lữ đứng trên cầu (~40–57% màn); hộp thông báo trước đè lên đầu hai người → dời xuống sàn trống. */
+html body.overlay.bond-stage .spotlight{top:61%!important}
+/* 17/11: Vân Hải Tháp — bảng 4 đài (canvas) phủ ngang màn, trước đè lên Thiên Bảng/bảng gõ số/thẻ quà (chữ xuyên lẫn lộn).
+   Bảng tháp đã có hàng quà trợ lực → ẩn 2 cột HUD bên trong lúc tháp mở. */
+body.overlay.tower-on :is(#phoneHudLeft,#phoneHudRight,#lowerRightGuide){display:none!important}

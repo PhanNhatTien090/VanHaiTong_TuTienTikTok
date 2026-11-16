@@ -68,7 +68,7 @@ export function drawEventDonations(scene,c,t,H=scene.height){
     c.fill();c.restore();}
   }
   c.globalAlpha=fade;sigil(c,x,y,45+(scene.motion===false?0:Math.sin(k*TAU*3)*3),-k*TAU*.4,color,'');
-  drawGiftDonor(c,e,x,y,{radius:34,color,width:slot?250:290,caption:e.context.kind==='arena'?title:e.context.kind==='hallwar'?'trợ chiêu · '+(giftTier(e.value)?.name||title):e.value.toLocaleString('vi-VN')+' coin · '+title});
+  drawGiftDonor(c,e,x,y,{radius:34,color,width:slot?250:290,caption:e.context.kind==='arena'?title:e.context.kind==='hallwar'?'trợ chiêu · '+(giftTier(e.value)?.name||title):title} /* 17/11: bỏ số coin trên thẻ người tặng (luật) */);
   c.restore();
  }
 }

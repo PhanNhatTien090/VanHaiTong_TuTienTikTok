@@ -12,7 +12,7 @@ export function syncMaze(scene,state){const e=state.maze||null;if(e?.id!==scene.
  if(typeof document!=='undefined')document.body?.classList?.toggle('maze-on',!!scene.mazeStatus);}
 export const mazeOn=scene=>!!scene.mazeStatus;
 const hue=id=>{let n=0;for(const ch of String(id))n=(Math.imul(n,31)+ch.charCodeAt(0))|0;return Math.abs(n)%360;};
-export function mazeLayout(H,cols,rows){const top=H*.155,bottom=H*.845,cell=Math.min(840/cols,(bottom-top)/rows),w=cols*cell,h=rows*cell;return {cell,ox:450-w/2,oy:top+(bottom-top-h)/2,w,h};}
+export function mazeLayout(H,cols,rows){const top=H*.155,bottom=H*.8,/* 17/11: chừa đáy cho chữ, cách đáy ≥11% */cell=Math.min(840/cols,(bottom-top)/rows),w=cols*cell,h=rows*cell;return {cell,ox:450-w/2,oy:top+(bottom-top-h)/2,w,h};}
 const cellXY=(L,x,y)=>[L.ox+(x+.5)*L.cell,L.oy+(y+.5)*L.cell];
 function txt(c,s,x,y,font,fill,stroke=5,align='center'){c.font=font;c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';c.lineWidth=stroke;c.strokeStyle='#04060d';c.strokeText(s,x,y);c.fillStyle=fill;c.fillText(s,x,y);}
 function pill(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
@@ -181,9 +181,8 @@ function drawHud(scene,c,e,t,H,now,L){
   txt(c,'⚠ yêu thú chui ra từ hang tím • đụng là văng lùi 1 ô',450,H*.42+200,'800 22px Segoe UI','#ffb3b3',5);return;}
  if(e.phase==='running'){
   txt(c,'⏳ '+fmtTime(e.endsAt-now)+'   •   '+(e.finished||0)+'/'+(e.count||0)+' đã thoát',450,H*.108,'800 26px Segoe UI','#ffe7a3',6);
-  txt(c,'gõ  len · xuong · trai · phai  — mỗi tin 1 bước • gõ mecung để vào',450,H*.885,'800 23px Segoe UI','#ffffff',5);
-  txt(c,'⚠ né yêu thú — đụng là văng lùi 1 ô',450,H*.135,'800 20px Segoe UI','#ffb3b3',5);
-  (e.runners||[]).slice(0,3).forEach((r,i)=>txt(c,(r.r?['🥇','🥈','🥉'][r.r-1]||'🏁':'#'+(i+1))+' '+String(r.n).slice(0,14)+(r.r?' • đã thoát':' • còn '+r.d+' bước'),450,H*.918+i*29,'800 22px Segoe UI',r.r?'#ffe066':'#d8fff6',5));}
+  txt(c,'gõ  len · xuong · trai · phai  (1 tin 1 bước) • ⚠ né yêu thú',450,H*.836,'800 23px Segoe UI','#ffffff',5);
+  {const top3=(e.runners||[]).slice(0,3).map((r,i)=>(r.r?['🥇','🥈','🥉'][r.r-1]||'🏁':'#'+(i+1))+' '+String(r.n).slice(0,10)+' '+(r.r?'✔':r.d));if(top3.length)txt(c,top3.join('   '),450,H*.866,'800 21px Segoe UI','#ffe7a3',5);}}
 }
 // Bảng kết quả (vẽ trên cùng).
 export function drawMazeResult(scene,c,t){
