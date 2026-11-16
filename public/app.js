@@ -457,11 +457,11 @@ const GIFT_STALE_MS=10000;let current=null,currentTimer=null;
 const giftValue=e=>(Number(e.coins)||0)*Math.max(1,Number(e.count)||1);
 function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony||isBlackGoldAward(cur))return false;if(cur.effect==='breakthrough')return (giftValue(g)>=99||!!luxuryTier(g))&&breakthroughRealm(cur)<=5;return true;}
 function interruptShow(){clearTimeout(spotTimer);clearTimeout(currentTimer);$('#spotlight').classList.remove('visible');scene.interruptPresentation?.();cultivationAudio.ritual(null);busy=false;current=null;}
-function showDiscipleNotice(e){
+function showDiscipleNotice(e,title=null,sub=null){
  let box=document.getElementById('discipleNotices');
  if(!box){box=document.createElement('aside');box.id='discipleNotices';box.setAttribute('role','status');box.setAttribute('aria-live','polite');document.querySelector('.scene-shell').appendChild(box);}
  const card=document.createElement('div');card.className='disciple-notice';
- card.innerHTML=`<b>✦ KẾT NẠP CHÂN TRUYỀN THÀNH CÔNG ✦</b><strong>${esc(e.name||'Đạo hữu')}</strong><span>Đệ tử Chân Truyền · ${esc(e.achieve.item||'Ngũ Đường')}</span>`;
+ card.innerHTML=`<b>${esc(title||'✦ KẾT NẠP CHÂN TRUYỀN THÀNH CÔNG ✦')}</b><strong>${esc(e.name||'Đạo hữu')}</strong><span>${esc(sub||'Đệ tử Chân Truyền · '+(e.achieve?.item||'Ngũ Đường'))}</span>`;
  box.appendChild(card);while(box.children.length>3)box.firstElementChild.remove();
  setTimeout(()=>card.remove(),6000);
 }
@@ -480,6 +480,7 @@ function enqueueReady(e){
   if(!e.resident&&!isArrivalWelcome(e))narrator.add(e);
   if(ascensionStage&&!isAscensionEvent(scene,e)){if(!e.resident)narrator.add(e);return;}
   if(e.achieve?.kind==='disciple'){showDiscipleNotice(e);scene.noteEvent(e);tone('lotus');return;}
+  if(e.hallJoin){showDiscipleNotice(e,'✦ BÁI NHẬP '+String(e.hallJoin.name||'NGŨ ĐƯỜNG').toLocaleUpperCase('vi')+' ✦','Đệ tử mới · nhận lệnh bài Đường');scene.mover?.onEvent({user:e.user,effect:'ready'},performance.now(),scene.motion);scene.noteEvent(e);tone('petal');return;} // 16/11: vào Đường có thẻ + nhân vật nhấp sáng
   if(e.petAward&&e.giftFrom)showPetGiftAward(e);
   if(isArrivalWelcome(e)){arrivalWelcomes.add(e);return;}
   if(e.engagementAction){scene.noteEvent(e);narrator.add(e);const now=performance.now();if(now-engagementSoundAt>800){tone(e.engagementAction==='follow'?'petal':'lotus');engagementSoundAt=now;}return;}

@@ -249,7 +249,7 @@ export function hallCommand(w,p,words,now,ctx) {
     if(previous && previous.index!==index && now-previous.joinedAt<WEEK)return failure('Đổi Đường sau '+Math.ceil((previous.joinedAt+WEEK-now)/3600000)+' giờ.');
     assign(s,p,index,now);
     const message='Gia nhập '+defs[index].name;
-    ctx.emit(w,p,message,'status',now);
+    ctx.emit(w,p,message,'status',now,{hallJoin:{index,name:defs[index].name}}); // 16/11: giọng + thẻ BÁI NHẬP
     return success(message);
   }
   if(command==='roi duong'){

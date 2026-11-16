@@ -145,6 +145,7 @@ export function speechPlan(e){
   if(e.effect==='blessing'){const n=Number(e.count);return [say('tiennu',`Thiên đạo ban phúc! ${n>0?cap(viNumber(n))+' vị đồng môn':'Đồng môn'} được đột phá cảnh giới!`)];}
   if(e.readyReminder){const n=Number(e.count)||1;return [say('tongsu',n===1?`${gameText(String(e.text||'').replace(/^Đủ đột phá: /,'').split(' • ')[0])} đã đủ đột phá, gõ đột phá ngay!`:`${cap(viNumber(n))} đạo hữu đã đủ đột phá, gõ đột phá ngay!`)];}
   if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ đột phá ngay.`)];
+  if(e.hallJoin){const h=titleCase(e.hallJoin.name||'Ngũ Đường');return [say('tongsu',pickBy(seed,[`${Who} bái nhập ${h}! Đồng môn hoan nghênh!`,`${h} có thêm ${who}! Từ nay cùng tu một đạo!`,`${Who} đầu nhập ${h}, nhận lệnh bài đệ tử!`]))];} // 16/11
   if(e.effect==='status'){
     const mm=text.match(/Tu vi (\d+)\/(\d+) • Linh thạch (\d+)\/(\d+) • ([^•]+)/);
     if(!mm)return [say('tongsu',`${Who}, ${head.toLowerCase()}.`)];
@@ -159,6 +160,10 @@ export function speechPlan(e){
   if(text.startsWith('Kích hoạt '))return [say('tongsu',`${Who} kích hoạt ${cutWords(head.replace('Kích hoạt ',''),30)} trong trò chơi, tu vi tăng vọt!`)];
   if(text.startsWith('Chế tạo thành'))return [say('tongsu',`${Who} vừa chế tạo ${cutWords(head.replace('Chế tạo thành ',''),30)} trong trò chơi.`)];
   if(text.startsWith('Rèn thành'))return [say('tongsu',`${Who} rèn thành ${cutWords(head.replace('Rèn thành ',''),30)}! Pháp bảo tự trang bị.`)];
+  // 16/11 (chủ game): vào Đường / Chân Truyền / Trưởng Lão có lời riêng (trước đây đọc chung 'Lão phu ghi nhận').
+  if(e.hallJoin){const h=titleCase(e.hallJoin.name||'Ngũ Đường');return [say('tongsu',pickBy(seed,[`${Who} bái nhập ${h}! Đồng môn hoan nghênh!`,`${h} có thêm ${who}! Từ nay cùng tu một đạo!`,`${Who} đầu nhập ${h}, nhận lệnh bài đệ tử!`]))];}
+  if(e.achieve?.kind==='disciple'){const h=titleCase(e.achieve.item||'Ngũ Đường');return [say('tongsu',pickBy(seed,[`Chúc mừng ${who} được thu làm Chân Truyền ${h}! Y bát truyền thừa!`,`${Who} bái sư thành công, trở thành đệ tử Chân Truyền ${h}!`,`${h} có thêm một Chân Truyền! Chúc mừng ${who}!`]))];}
+  if(e.achieve?.kind==='elder'){const h=titleCase(e.achieve.item||'Ngũ Đường'),why=e.achieve.reason;return [say('tongsu',why==='Thủ đài thành công'?`${Who} giữ vững ghế Trưởng Lão ${h}!`:pickBy(seed,[`${Who} ngồi ghế Trưởng Lão ${h}! Đồng môn bái kiến!`,`Chúc mừng ${who} lên ghế Trưởng Lão ${h}!`,`${h} có Trưởng Lão mới, ${who}!`]))];}
   if(e.effect==='title')return [say('tongsu',`Lão phu ghi nhận. Từ nay đồng môn gọi là ${who}.`)];
   if(e.loyaltyAward)return [say('tongsu',`Tri ân ${who} bền bỉ cùng tông môn! Ban ${list2((e.itemNames||[]).slice(0,2))||'phần thưởng'}.`)];
   if(e.patronAward)return [say('tiennu',`Vinh danh Đại Hộ Pháp ${raw||''}!`),say('tongsu',`Ban bộ Thương Long Hộ Pháp, Hộ Pháp Thiên Kiếm và Trấn Tông Long Ấn!`)];
