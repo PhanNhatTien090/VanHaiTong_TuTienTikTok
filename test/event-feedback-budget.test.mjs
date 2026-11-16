@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {renderTower} from '../public/tower.js';
+import {towerHTML} from '../public/tower.js';
 import {drawScreenPulse} from '../public/cinematic-feedback.js';
 import {plannedActorCount} from '../public/crowd-policy.js';
 
@@ -23,28 +23,10 @@ test('reduced flash skips the full-screen pass and leaves Canvas state alone',()
  assert.equal(c.globalCompositeOperation,'screen');
 });
 
-test('tower damage and countdown patch existing nodes, and milestone audio is one-shot',()=>{
- const old=globalThis.document,noop=()=>{};
- const nodes=new Map(['.tw-hp span','.tw-hp i','.tw-time span','.tw-time i','.tw-clock','.tw-guard'].map(key=>[key,{style:{},appendChild:noop}]));
- const classList={add:noop,remove:noop};
- let replaces=0;
- const el={hidden:true,classList,set innerHTML(value){replaces++;},querySelector:key=>nodes.get(key),replaceChildren:noop};
- const previous=globalThis.setTimeout;
- globalThis.document={body:{classList},createElement:()=>({remove:noop})};
- globalThis.setTimeout=()=>0;
- try{
-  const tones=[],scene={motion:false,reduceFlash:true,onTowerSound:kind=>tones.push(kind)};
-  const tower={id:'t1',active:true,endsAt:40000,cur:{id:'p',name:'P',floor:5,next:5,hp:100,endsAt:26000,guardian:{name:'Hộ vệ',art:0,hue:0}}};
-  renderTower(el,{tower},scene,String,1000);
-  renderTower(el,{tower:{...tower,cur:{...tower.cur,hp:83}}},scene,String,2200);
-  assert.equal(replaces,1);
-  assert.equal(nodes.get('.tw-hp span').textContent,'Thủ vệ 83%');
-  assert.equal(nodes.get('.tw-time span').textContent,'24s');
-  const clear={...tower,last:{seq:1,name:'P',floor:5,qi:100,won:true,mile:true,at:2300}};
-  renderTower(el,{tower:clear},scene,String,2400);
-  renderTower(el,{tower:clear},scene,String,2500);
-  assert.deepEqual(tones,['milestone']);
-  renderTower(el,{tower:{...clear,id:'t2',last:{...clear.last,at:2700}}},scene,String,2750);
-  assert.deepEqual(tones,['milestone','milestone']);
- }finally{globalThis.document=old;globalThis.setTimeout=previous;}
+test('16/11: Vân Hải Tháp 4 đài — khung HTML có đủ 4 đài, máu thủ vệ, bảng quà trợ lực; đài trống mời gõ 6',()=>{
+ const lane={lane:0,id:'p',name:'P',floor:5,next:5,hp:80,me:90,maxHp:2030,endsAt:26000,helpers:0,guardian:{name:'Hộ vệ',art:0,hue:0},buff:{name:'KIẾM VŨ TRỢ TRẬN',tier:'g10',mult:1.4,until:9000}};
+ const html=towerHTML({id:'t1',active:true,endsAt:40000,lanes:[lane,null,null,null],queue:[],queued:0},1000,String,{giftArt:{}});
+ assert.equal((html.match(/class="tw2-lane/g)||[]).length,4);
+ assert.match(html,/ĐÀI 1 · TẦNG 5/);assert.match(html,/KIẾM VŨ TRỢ TRẬN ×1,4/);assert.match(html,/QUÀ TRỢ LỰC/);assert.match(html,/Đài trống/);
+ assert.doesNotMatch(html,/coin/i);
 });

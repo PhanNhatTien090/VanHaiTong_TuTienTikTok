@@ -1,0 +1,69 @@
+/* 16/11/2026: Vân Hải Tháp 4 đài (public/tower.js). Khung tower-stage cũ ở live-clarity.css; đây là phần ruột mới. */
+body.overlay .tower-stage.tw2:not([hidden]){width:94%;max-width:none;top:13.5%;padding:1.4em .6em .5em;font-size:clamp(9px,1.75cqw,19px);
+  background:linear-gradient(180deg,rgba(6,12,24,.86),rgba(6,12,24,.95));}
+.tw2-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45em}
+.tw2-lane{position:relative;border-radius:12px;padding:.35em .45em .4em;background:linear-gradient(180deg,rgba(20,40,70,.85),rgba(8,14,30,.92));
+  border:1.5px solid rgba(143,211,255,.55);box-shadow:inset 0 0 0 3px rgba(143,211,255,.06);overflow:visible;min-height:12.6em;--fx:#ffd36b}
+.tw2-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4em;color:#cfe3ef;border-style:dashed;opacity:.8}
+.tw2-empty b{font:800 1.05em Georgia,serif;color:#9fd8ff}
+.tw2-head{display:flex;justify-content:space-between;gap:.4em;align-items:baseline;white-space:nowrap}
+.tw2-head b{font:800 .98em Georgia,serif;color:#ffe08a}.tw2-head em{font-style:normal;font-size:.78em;color:#ffb3b3;overflow:hidden;text-overflow:ellipsis}
+.tw2-fight{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:6.4em}
+.tw2-me{display:flex;flex-direction:column;align-items:center;min-width:0}
+.tw2-me canvas{height:5.2em;width:auto}
+.tw2-me small{font-size:.74em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-shadow:0 1px 2px #000}
+.tw2-vs{font:900 1.2em Georgia,serif;color:#ffd76a;text-shadow:0 0 8px rgba(255,200,90,.8)}
+.tw2-guard{position:relative;display:flex;justify-content:center}
+.tw2-beast{height:6.2em;aspect-ratio:512/1024;background:url(/assets/events-v1/celestial-bosses-v1.png) calc(var(--art)*50%) 0/300% 100% no-repeat;
+  filter:hue-rotate(var(--hue)) drop-shadow(0 0 8px rgba(255,120,120,.5));-webkit-mask-image:radial-gradient(ellipse 48% 50% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 48% 50% at 50% 50%,#000 70%,transparent 100%)}
+.tw2-bar{position:relative;height:1.05em;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:.22em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.tw2-bar i{display:block;height:100%;transition:width .25s linear}
+.tw2-ghp i{background:linear-gradient(90deg,#b0182a,#ff6b5a)}.tw2-mhp i{background:linear-gradient(90deg,#1aa37a,#7ff0c0)}
+.tw2-bar span{position:absolute;inset:0;display:grid;place-items:center;font-size:.72em;font-weight:800;color:#fff;text-shadow:0 1px 2px #000;white-space:nowrap}
+.tw2-foot{display:flex;justify-content:space-between;align-items:center;gap:.4em;margin-top:.25em;font-size:.78em;white-space:nowrap}
+.tw2-time{font-weight:800;color:#9ff0d0}
+.tw2-hint{color:#cfe3ef;overflow:hidden;text-overflow:ellipsis}
+.tw2-buff{color:#1a0d00;font-weight:900;padding:.05em .55em;border-radius:99px;background:var(--c);box-shadow:0 0 10px var(--c);animation:tw2Pulse .6s ease-in-out infinite alternate;overflow:hidden;text-overflow:ellipsis}
+@keyframes tw2Pulse{to{filter:brightness(1.35);box-shadow:0 0 18px var(--c)}}
+.tower-stage u{display:inline-grid;place-items:center;min-width:1.3em;height:1.3em;border-radius:50%;text-decoration:none;font-weight:800;background:radial-gradient(circle at 35% 30%,#fff3c4,#e2b24f 60%,#9a6a1c);color:#2a1604;margin:0 .1em}
+.tw2-gifts{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.15em .7em;margin-top:.4em;font-size:.76em}
+.tw2-gifts em{font-style:normal;font-weight:900;color:#ffe08a;letter-spacing:.04em}
+.tw2-gifts span{display:inline-flex;align-items:center;gap:.25em;white-space:nowrap}.tw2-gifts b{color:#fff;font-weight:800}
+.tw2-gifts .gift-ico{height:1.7em;width:auto;vertical-align:middle}
+.tw2-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:.15em .9em;margin-top:.3em;font-size:.74em;color:#cfe3ef}
+/* số sát thương */
+.tw2-dmg{position:absolute;top:10%;left:50%;font:900 1.25em/1 Georgia,serif;color:#ffd76a;text-shadow:0 0 2px #000,0 2px 4px #000;animation:tw2Dmg .8s ease-out forwards;pointer-events:none;white-space:nowrap}
+.tw2-dmg-crit{color:#fff;font-size:1.6em;text-shadow:0 0 6px var(--fx),0 0 2px #000,0 2px 4px #000}
+@keyframes tw2Dmg{0%{transform:translate(-50%,0) scale(1.4);opacity:1}100%{transform:translate(-50%,-2.2em) scale(1);opacity:0}}
+/* quà trợ lực: bùng sáng thẻ đài */
+.tw2-lane.tw2-hit{animation:tw2Hit 1.1s ease-out}
+@keyframes tw2Hit{0%{box-shadow:0 0 0 2px var(--fx),0 0 60px var(--fx),inset 0 0 40px var(--fx);transform:scale(1.06);border-color:#fff}40%{box-shadow:0 0 0 2px var(--fx),0 0 30px var(--fx),inset 0 0 18px var(--fx);transform:scale(1.02)}100%{box-shadow:none;transform:none}}
+.tw2-lane.tw2-g100,.tw2-lane.tw2-g500{z-index:3}
+.tw2-lane.tw2-g500{animation-duration:1.6s}
+.tw2-lane::after{content:'';position:absolute;inset:-6px;border-radius:14px;pointer-events:none;opacity:0}
+.tw2-lane.tw2-hit::after{background:radial-gradient(circle at 70% 45%,var(--fx),transparent 65%);mix-blend-mode:screen;animation:tw2Glow 1s ease-out}
+@keyframes tw2Glow{0%{opacity:.95}100%{opacity:0}}
+.tw2-pop{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);z-index:5;display:flex;flex-direction:column;align-items:center;pointer-events:none;
+  animation:tw2Pop 1.7s cubic-bezier(.2,1.4,.4,1) forwards;text-align:center;white-space:nowrap}
+.tw2-pop strong{font:900 1.35em/1.05 Georgia,serif;color:var(--c);text-shadow:0 0 10px var(--c),0 0 2px #000,0 3px 6px #000;letter-spacing:.03em}
+.tw2-pop small{font-size:.78em;font-weight:800;color:#fff;text-shadow:0 1px 3px #000}
+.tw2-pop-gift .gift-ico{height:2.4em;width:auto;filter:drop-shadow(0 0 8px var(--c))}
+.tw2-pop-g100 strong,.tw2-pop-g500 strong{font-size:1.75em}
+.tw2-pop-g500{animation-duration:2.4s}.tw2-pop-g500 strong{font-size:2.05em;background:linear-gradient(180deg,#fff7d0,#ffd36b 50%,#ff9d2e);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes tw2Pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.18)}30%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+/* chói lóa toàn màn (≥100) */
+.tw2-screenflash{position:fixed;inset:0;z-index:60;pointer-events:none;background:radial-gradient(circle at 50% 35%,#fff 0%,var(--c) 30%,transparent 75%);mix-blend-mode:screen;animation:tw2Flash .9s ease-out forwards}
+.tw2-screenflash.tw2-strong{animation:tw2FlashStrong 1.4s ease-out forwards}
+@keyframes tw2Flash{0%{opacity:.85}100%{opacity:0}}
+@keyframes tw2FlashStrong{0%{opacity:1}15%{opacity:.4}25%{opacity:.95}100%{opacity:0}}
+/* mưa kiếm (500) */
+.tw2-rain{position:absolute;inset:-40% -6% 0;overflow:hidden;pointer-events:none;z-index:4}
+.tw2-rain i{position:absolute;top:-30%;width:3px;height:3.2em;border-radius:2px;background:linear-gradient(180deg,transparent,#fff7d0 60%,#ffd36b);box-shadow:0 0 8px #ffd36b;animation:tw2Sword .75s cubic-bezier(.5,0,1,1) forwards}
+@keyframes tw2Sword{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(16em);opacity:0}}
+/* kết quả lượt */
+.tw2-result{position:absolute;left:50%;top:46%;transform:translateX(-50%);z-index:6;padding:.25em .9em;border-radius:99px;font:800 1.05em Georgia,serif;white-space:nowrap;background:rgba(6,12,24,.85);animation:tw2Pop 2.6s ease-out forwards}
+.tw2-win{color:#ffe08a;box-shadow:0 0 18px rgba(255,214,106,.6)}.tw2-lose{color:#ffb3b3}
+.tw2-podium{display:flex;justify-content:center;align-items:flex-end;gap:.6em;padding:.6em 0 .2em}
+.tw2-pod{display:flex;flex-direction:column;align-items:center;padding:.4em .7em;border-radius:10px;background:rgba(255,215,106,.12);border:1px solid rgba(255,215,106,.5)}
+.tw2-pod i{font:900 1.4em/1 Georgia,serif;font-style:normal;color:#ffd76a}.tw2-pod1{transform:scale(1.15)}.tw2-none{color:#cfe3ef}
+@media (prefers-reduced-motion:reduce){.tw2-lane.tw2-hit,.tw2-pop,.tw2-dmg,.tw2-buff{animation:none}}

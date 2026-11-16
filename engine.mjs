@@ -36,7 +36,7 @@ import {raceHearts} from './sword-race.mjs';
 import {warActive,startWar as beginWar,stopWar as endWar,tickWar,warCommand,warHearts,warGift,warView,warStageIds} from './sect-war.mjs';
 import {teasePair as beginTease} from './tease.mjs';
 import {startBonk as beginBonk,stopBonk as endBonk,tickBonk,bonkCommand,bonkView,bonkGift,bonkOpen} from './bonk.mjs';
-import {startTower as beginTower,stopTower as endTower,tickTower,towerCommand,towerView,towerOpen} from './tower.mjs'; // 11/11: Vân Hải Tháp
+import {startTower as beginTower,stopTower as endTower,tickTower,towerCommand,towerView,towerOpen,towerGift} from './tower.mjs'; // 11/11: Vân Hải Tháp
 import {startMaze as beginMaze,stopMaze as endMaze,tickMaze,mazeCommand,mazeGift,mazeView,mazeActive} from './maze.mjs';
 import {startAlchemy as beginAlchemy,stopAlchemy as endAlchemy,tickAlchemy,alchemyCommand,alchemyHearts,alchemyGift,alchemyView,alchemyStageIds,alchemyActive} from './alchemy.mjs';
 import {DIVINE_ROLES,rankDivineRoles} from './public/divine-wardrobe.js';
@@ -640,6 +640,7 @@ function actionCore(w,input,now) {
       const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';}}
     if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;giftEvent.warTruong=war.truong;giftEvent.text+=' • đẩy '+war.truong+' trượng';if(war.flip)giftEvent.warFlip=true;}}
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
+    if(!input.simulated&&!input.autoRose&&towerOpen(w,now)){const tg=towerGift(w,p,input.coins*count,now,towerContext);if(tg){giftEvent.towerGift=tg;giftEvent.text+=' • '+(tg.pending?'hộ thể '+tg.name+' chờ lượt leo':tg.name+(tg.to&&tg.to!==p.name?' trợ lực '+tg.to:''));}} // 16/11: quà = trợ lực Vân Hải Tháp
     if(mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext,{unitCoins:input.coins});if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
     {const bk=!stageConflict(w,now)?bonkGift(w,p,input.coins*count,now):null;if(bk){giftEvent.bonkHammer=bk;giftEvent.text+=' • '+bk.text;}} // 10/11: Hội Gõ Đầu — quà = búa xịn
     recordEventGiftFx(w,p,giftEvent,now);
