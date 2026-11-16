@@ -1,4 +1,4 @@
-import {makeSurface} from './performance.js';
+import {makeSurface,skinFxOn} from './performance.js';
 import {ownsGear} from './skin-gear.js';
 // Tư Đồ Ma Tôn (07/11/2026): thiết kế tự sáng tác — ma tu áo đỏ-đen, đại đao Huyết Sát lơ lửng sau vai.
 // Thân nhân vật là ảnh tĩnh (4 ô như Hải Lam); mọi hiệu ứng là lớp vẽ thời gian thực, có biến thể theo từng người.
@@ -48,7 +48,7 @@ function drawBlade(scene,c,pose,pal,size=1){const im=scene.tudoBladeArt;c.save()
  if(pose.flash>0){c.globalCompositeOperation='screen';const y=-L*.55+(1-pose.flash)*L*.6,s=c.createLinearGradient(0,y-20,0,y+20);s.addColorStop(0,'#ffffff00');s.addColorStop(.5,pal.hot+'ee');s.addColorStop(1,'#ffffff00');c.fillStyle=s;c.fillRect(-W*.45,y-20,W*.9,40);}
  c.restore();}
 export function drawTudoAdornment(scene,c,target,t,layer='front'){
- const p=target.player,worn=tudoWorn(p);if(!worn&&!bladeOnly(p))return;loadTudoArt(scene);
+ const p=target.player,worn=tudoWorn(p)&&skinFxOn(scene,p,t);if(!worn&&!bladeOnly(p))return;loadTudoArt(scene);
  const sc=target.scale||1.4,motion=scene.motion!==false,clock=motion?t:0,seed=seedOf(p.id),pal=PALETTES[seed%PALETTES.length],light=scene.budget?.level==='light'||scene.crowded,
   pose=target.pose||scene.animator?.pose?.(p,clock,motion)||{},stand=pose.stand??1,up=-stand*13,blade=tudoBladePose(t,seed,motion);
  c.save();c.translate(target.x,target.y);c.scale(sc,sc);c.translate(0,(pose.lift||0)+up);

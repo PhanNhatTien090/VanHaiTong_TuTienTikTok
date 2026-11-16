@@ -1,4 +1,4 @@
-import {makeSurface} from './performance.js';
+import {makeSurface,skinFxOn} from './performance.js';
 import {loadSpiritBeasts,drawFlyingDragon} from './gift-spirit-beasts.js';
 export const SEA_SKIN='sea-dragon-heir';
 export const seaWorn=p=>p?.skinChoice===SEA_SKIN&&p.rewardSkins?.includes(SEA_SKIN);
@@ -29,7 +29,7 @@ export function drawSeaBody(scene,c,p,pose,t){
 }
 export function seaDragonPosition(t,seed=0,motion=true){const a=(motion?t*.00115:0)+seed;return {a,x:Math.cos(a)*49,y:-49+Math.sin(a)*20,z:Math.sin(a),size:.13};}
 export function drawSeaAdornment(scene,c,target,t,layer='front'){
- const p=target.player;if(!seaWorn(p))return;loadSeaArt(scene);const sc=target.scale||1.4,clock=scene.motion===false?0:t,seed=[...String(p.id)].reduce((n,ch)=>(n*31+ch.charCodeAt(0))>>>0,0)%1000,
+ const p=target.player;if(!seaWorn(p)||!skinFxOn(scene,p,t))return;loadSeaArt(scene);const sc=target.scale||1.4,clock=scene.motion===false?0:t,seed=[...String(p.id)].reduce((n,ch)=>(n*31+ch.charCodeAt(0))>>>0,0)%1000,
  pose=scene.animator?.pose?.(p,clock,scene.motion)||{},stand=pose.stand||0,up=-stand*13,orbit=seaDragonPosition(t,seed*.01,scene.motion!==false);
  c.save();c.translate(target.x,target.y);c.scale(sc,sc);c.translate(0,(pose.lift||0)+up);
  // Draw one miniature articulated dragon, only in its correct depth layer.

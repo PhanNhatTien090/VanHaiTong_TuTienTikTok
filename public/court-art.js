@@ -4,6 +4,7 @@ import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-g
 import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-halo-v5';
 import {feedbackBudget} from './cinematic-feedback.js';
 import {ownsGear} from './skin-gear.js';
+import {skinFxOn} from './performance.js';
 const skinOf=p=>COURT_VISITORS.find(v=>v.skin===p?.skinChoice&&p.rewardSkins?.includes(v.skin));
 export const courtWorn=p=>!!skinOf(p);
 const images=new Map(), pending=new Map();
@@ -66,7 +67,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
   // Màn biến hình Nhân Quả tự vẽ hào quang + thương suốt màn → tránh vẽ chồng.
   const karmaShow=scene.effects?.some(e=>e.user===p.id&&e.transform===KARMA_VISITOR.kind&&t<e.start+e.duration);
   let seed=0;for(const ch of String(p.id))seed=(seed*31+ch.codePointAt(0))%997;
-  if(FX[spec?.kind]&&!revealing&&!karmaShow)FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light,seed});
+  if(FX[spec?.kind]&&!revealing&&!karmaShow&&skinFxOn(scene,p,t))FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light,seed});
   const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
   if(gear&&!unlocking&&!revealing&&!karmaShow)FX[gear.kind].gear(c,signatureArt(gear),t,pose,layer,{motion,light});
   c.restore();return;
@@ -78,7 +79,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
  const pose=scene.cinematicPose||scene.animator?.pose(p,t,motion&&!scene.compact)||{};
  let seed=0;for(const ch of String(p.id))seed=(seed*31+ch.codePointAt(0))%997;
  c.save();c.translate(target.x,target.y+(pose.lift||0));c.scale(target.scale||1.4,target.scale||1.4);
- drawCourtAuraLayer(c,spec.kind,t,pose.stand||0,layer,{motion,light,seed:seed*37});
+ if(skinFxOn(scene,p,t))drawCourtAuraLayer(c,spec.kind,t,pose.stand||0,layer,{motion,light,seed:seed*37});
  if(layer==='front'&&p.equipped===spec.artifact&&p.signatureArtifactOwned!==false&&!light){
   const image=load('/assets/thien-khuyet/relic-'+spec.artifact+'.webp');
   if(image){

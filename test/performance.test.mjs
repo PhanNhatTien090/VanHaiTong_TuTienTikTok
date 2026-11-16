@@ -19,10 +19,10 @@ test('automatic budget lowers resolution on sustained slow rendering and waits b
   assert.equal(b.level,'light');assert.equal(b.config.width,QUALITY.light.width);
   for(let i=0;i<100;i++)b.sample(4,16000+i*34,24);
   assert.equal(b.level,'light');
-  for(let i=0;i<60;i++)b.sample(4,50000+i*34,24);
+  for(let i=0;i<60;i++)b.sample(4,140000+i*34,24);
   assert.equal(b.level,'balanced');
   // 08/11: đặt cứng 'high' mà FPS thật <15 (LIVE Studio + GPU tích hợp) thì vẫn hạ một bậc, giữ 1080 px.
-  b.set('high');for(let i=0;i<100;i++)b.sample(99,100000+i*100,4);assert.equal(b.level,'balanced');assert.equal(b.config.width,1080);
+  b.set('high');for(let i=0;i<100;i++)b.sample(99,300000+i*100,4);assert.equal(b.level,'balanced');assert.equal(b.config.width,1080);
   const keep=new RenderBudget('high');for(let i=0;i<100;i++)keep.sample(3,200000+i*100,30);assert.equal(keep.level,'high');
   assert.ok(QUALITY.light.width===QUALITY.balanced.width&&QUALITY.light.mesh<QUALITY.balanced.mesh&&QUALITY.balanced.width<QUALITY.high.width);
 });

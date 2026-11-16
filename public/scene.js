@@ -79,7 +79,7 @@ import {drawThunderTiger} from './thunder-tiger.js';
 import {specialSkinFor,PATRON_SWORD} from './patrons.js';
 import {drawRelic} from './artifact-visuals.js';
 import {appearanceFor,drawRealmClothes,drawRealmAscension,drawRealmQiFront,REALM_STYLES,drawImmortalAura} from './realm-outfits.js';
-import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,BitmapCache,renderDimensions} from './performance.js';
+import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,BitmapCache,renderDimensions,skinFxOn} from './performance.js';
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
 import {signatureVisitor} from './court-rewards.js';
@@ -116,7 +116,7 @@ function mountPlan(scene,target){
  target.mountOn=false;const p=target.player,m=p&&!p.mountChannel&&p.mount&&p.mounts?.[p.mount]&&mountById(p.mount);
  if(!m||!mountStageOk(scene))return 0;
  const s=(target.scale||1.4)*MOUNT_SCALE;
- target.mountOn=true;target.mountLod=mountLod(m.tier,scene.targets.length);return mountSeat(m.id,s);
+ target.mountOn=true;target.mountLod=mountLod(m.tier,scene.targets.length);if(target.mountLod==='full'&&!skinFxOn(scene,target.player,performance.now()))target.mountLod='light'; /* 16/11: tọa kỹ bản đủ lớp cũng theo nhịp bùng 8 s / nghỉ 32 s */return mountSeat(m.id,s);
 }
 function mountDraw(scene,c,target,t){
  const p=target.player,s=(target.scale||1.4)*MOUNT_SCALE,y=target.y+(target.mountLift||0),o={scale:s,t:scene.motion?t:0,lod:target.mountLod,seed:p.id,flip:target.x>450};

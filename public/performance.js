@@ -8,6 +8,11 @@ export const QUALITY={
   balanced:{seats:48,width:1080,fps:30,poseFps:10,mesh:3,spriteScale:2.5,atmosphereFps:6,effects:4},
   high:{seats:60,width:1440,fps:30,poseFps:18,mesh:6,spriteScale:3,atmosphereFps:12,effects:8}
 };
+// 16/11 (user): skin đặc biệt KHÔNG chạy hiệu ứng liên tục — mỗi người bùng 8 s rồi nghỉ 32 s, lệch pha theo id
+// (không bao giờ cả sân cùng bùng). Thân skin + pháp bảo vẫn hiện suốt; chỉ lửa/sét/hào quang/rồng nhỏ là theo nhịp.
+export const SKIN_FX_CYCLE=40000,SKIN_FX_ON=8000;
+export function skinFxOn(scene,p,t){if(!scene||scene.showcase||scene.renderPreview||scene.alwaysSkinFx||scene.motion===false)return true;
+ let h=0;for(const ch of String(p?.id??''))h=(h*31+ch.charCodeAt(0))>>>0;return ((Number(t)||0)+h%SKIN_FX_CYCLE)%SKIN_FX_CYCLE<SKIN_FX_ON;}
 export class RenderBudget{
   constructor(mode='auto'){this.set(mode);this.mean=0;this.samples=0;this.changedAt=0;}
   set(mode){
@@ -31,7 +36,7 @@ export class RenderBudget{
     if(tier===this.audienceTier)return false;this.audienceTier=tier;this.setCrowded(tier>=10,tier===21);if(tier>0){this.level=tier===10?'balanced':'light';this.config=tier===21?QUALITY.crowded:QUALITY['audience'+tier];}this.pressured=false;this.baseCrowdConfig=this.config;this.samples=0;this.mean=0;return true;}
   sample(ms,t,fps=30){if(!Number.isFinite(ms))return false;this.mean=this.samples?this.mean*.94+ms*.06:ms;this.samples++;
     // 08/11: FPS thật tụt (<15) thì hạ một bậc kể cả khi đặt cứng 'high' (LIVE Studio + GPU tích hợp). Vẫn 1080 px.
-    if(!this.crowded&&fps>0&&fps<20&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
+    if(!this.crowded&&fps>0&&fps<24&&this.samples>=45&&t-this.changedAt>=10000&&(this.level==='high'||this.level==='balanced')){this.level=this.level==='high'?'balanced':'light';this.config=QUALITY[this.level];this.changedAt=t;this.samples=0;this.mean=0;return true;}
     if(this.crowded){
       if(this.samples<45||t-this.changedAt<10000)return false;
       const slow=fps>0&&fps<24; // 15/11: LIVE lag ở 18 FPS mà không tự giảm → ngưỡng 24
@@ -46,8 +51,8 @@ export class RenderBudget{
       return false;
     }
     if(this.mode!=='auto'||this.samples<45||t-this.changedAt<10000)return false;
-    if(this.level==='balanced'&&(this.mean>25||fps>0&&fps<18)){this.level='light';this.config=QUALITY.light;this.changedAt=t;return true;}
-    if(this.level==='light'&&this.mean<11&&fps>=22&&t-this.changedAt>30000){this.level='balanced';this.config=QUALITY.balanced;this.changedAt=t;return true;}return false;
+    if(this.level==='balanced'&&(this.mean>25||fps>0&&fps<24)) /* 16/11: 14–22 FPS trên LIVE vẫn không hạ → ngưỡng 24 */{this.level='light';this.config=QUALITY.light;this.changedAt=t;return true;}
+    if(this.level==='light'&&this.mean<11&&fps>=23&&t-this.changedAt>120000){this.level='balanced';this.config=QUALITY.balanced;this.changedAt=t;return true;}return false;
   }
 }
 // 08/11: đổi màu (hue-rotate) MỘT lần rồi giữ lại. Đặt c.filter mỗi khung bắt card đồ họa tích hợp
