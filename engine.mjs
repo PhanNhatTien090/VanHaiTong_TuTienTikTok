@@ -59,6 +59,7 @@ import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
 import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
+import {RACE_CUT_MS,RACE_CUT_MIN} from './public/signature-ults.js';
 import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop,awardRaceSword} from './sword-race.mjs';
 import {SOCIAL_ITEMS,socialProfile,socialCommand,bondActivity,tickSocial,socialView,socialBusy,tournamentActive,startTournament as beginTournament,stopTournament as endTournament} from './social-events.mjs';
 // Shared realm names keep server, overlay and breakthrough titles aligned.
@@ -642,7 +643,9 @@ function actionCore(w,input,now) {
     if(['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
     if(w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;if(racing)giftEvent.text=`${gift||tier.name}${count>1?` ×${count}`:''} • BỨT TỐC +${giftEvent.raceBoost} trượng`;
       // v65: ghi lại để cảnh vẽ hiệu ứng quà theo nấc
-      const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';}}
+      const rr=w.race.racers.find(r=>r.id===p.id);if(rr){rr.giftAt=now;rr.giftTier=tier;rr.giftUnits=giftEvent.raceBoost;rr.giftCoins=input.coins*count;rr.giftName=input.giftName||'';
+        // 17/11: quà lớn trong đua → màn chiếu riêng người đó bay tốc hành (client). Đang chiếu người khác thì xếp ngay sau.
+        if(rr.giftCoins>=RACE_CUT_MIN&&giftEvent.raceBoost>0){const at=Math.max(now,w.race.cutUntil||0);rr.cut={at,ms:RACE_CUT_MS,coins:rr.giftCoins,gift:rr.giftName,dist:giftEvent.raceBoost};w.race.cutUntil=at+RACE_CUT_MS;}}}
     if(w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;giftEvent.warTruong=war.truong;giftEvent.text+=' • đẩy '+war.truong+' trượng';if(war.flip)giftEvent.warFlip=true;}}
     if(alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
     if(!input.simulated&&!input.autoRose&&towerOpen(w,now)){const tg=towerGift(w,p,input.coins*count,now,towerContext);if(tg){giftEvent.towerGift=tg;giftEvent.text+=' • '+(tg.pending?'hộ thể '+tg.name+' chờ lượt leo':tg.name+(tg.to&&tg.to!==p.name?' trợ lực '+tg.to:''));}} // 16/11: quà = trợ lực Vân Hải Tháp

@@ -9,7 +9,7 @@ import {petById} from './spirit-pets.js';
 import {skinFor} from './cosmetics.js';
 import {giftFor} from './gift-icons.js';
 const GIFT_IMG=new Map();
-function giftImg(url){if(!url||typeof Image==='undefined')return null;let a=GIFT_IMG.get(url);if(!a){const im=new Image();im.decoding='async';im.referrerPolicy='no-referrer';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src=url;GIFT_IMG.set(url,a);if(GIFT_IMG.size>12)GIFT_IMG.delete(GIFT_IMG.keys().next().value);}return a.ok?a.im:null;}
+export function giftImg(url){if(!url||typeof Image==='undefined')return null;let a=GIFT_IMG.get(url);if(!a){const im=new Image();im.decoding='async';im.referrerPolicy='no-referrer';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src=url;GIFT_IMG.set(url,a);if(GIFT_IMG.size>12)GIFT_IMG.delete(GIFT_IMG.keys().next().value);}return a.ok?a.im:null;}
 import {duelSoundPreset} from './duel-cinematic.js';
 const MOTIF_TECH={karma:'soul',thunder:'lightning',fire:'fire','lotus-fire':'fire',moon:'ice',phoenix:'fire',ice:'ice',pearl:'water',stars:'star',blood:'soul'};
 
@@ -20,8 +20,8 @@ export const CUT_PHASE=Object.freeze({wipeIn:.08,shout:.36,cast:.72,hit:.86,wipe
 const ART=new Map();
 function art(name){if(!name||typeof Image==='undefined')return null;let a=ART.get(name);if(!a){const im=new Image();im.decoding='async';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src='/assets/signature-ults-v1/'+name+'.webp';ART.set(name,a);}return a.ok?a.im:null;}
 export function prewarmCutArt(skin){const s=SIGNATURE_ULTS[skin];if(s)art(s.art);}
-function txt(c,s,x,y,size,fill,{stroke='#05060c',width=8,weight='900',align='center',max}={}){c.font=weight+' '+size+'px "Segoe UI",Arial,sans-serif';c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';if(width){c.lineWidth=width;c.strokeStyle=stroke;c.strokeText(s,x,y,max);}c.fillStyle=fill;c.fillText(s,x,y,max);}
-function glow(c,x,y,r,col,a){if(a<=.01||r<=1)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col);g.addColorStop(1,col+'00');c.globalAlpha=Math.min(1,a);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.globalAlpha=1;}
+export function txt(c,s,x,y,size,fill,{stroke='#05060c',width=8,weight='900',align='center',max}={}){c.font=weight+' '+size+'px "Segoe UI",Arial,sans-serif';c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';if(width){c.lineWidth=width;c.strokeStyle=stroke;c.strokeText(s,x,y,max);}c.fillStyle=fill;c.fillText(s,x,y,max);}
+export function glow(c,x,y,r,col,a){if(a<=.01||r<=1)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col);g.addColorStop(1,col+'00');c.globalAlpha=Math.min(1,a);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.globalAlpha=1;}
 function bolt(c,x0,y0,x1,y1,seed,col,w){let s=seed>>>0;const r=()=>((s=(s*1664525+1013904223)>>>0)/4294967296)-.5;c.beginPath();c.moveTo(x0,y0);for(let i=1;i<10;i++){const u=i/10;c.lineTo(x0+(x1-x0)*u+r()*60,y0+(y1-y0)*u+r()*60);}c.lineTo(x1,y1);c.strokeStyle=col;c.lineWidth=w;c.stroke();c.strokeStyle='#ffffff';c.lineWidth=Math.max(1,w*.35);c.stroke();}
 const rnd=i=>{const x=Math.sin(i*127.1)*43758.5453;return x-Math.floor(x);};
 
@@ -60,7 +60,7 @@ function motifFx(c,S,x,y,size,k,t,seed,light){
 }
 // Vẽ THÂN trực tiếp (như chân dung linh-bai) — drawPlayer dùng ô cache nên hiệu ứng skin lớn bị cắt thành khung chữ nhật.
 // compact: bỏ vòng khí cảnh giới (phóng ×5 thành vòng xoắn khổng lồ); cinematicPose stand: luôn đứng (không chuyển sang ngồi thiền giữa chiêu).
-function drawCaster(scene,c,player,x,y,scale,t,flip){if(!player)return;const oc=scene.compact,op=scene.cinematicPose;scene.compact=true;scene.cinematicPose={...(op||{}),stand:1};c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.scale(scale,scale);try{scene.drawCharacterBody(c,player,skinFor(player.giftCoins),t);}catch{}finally{c.restore();scene.compact=oc;scene.cinematicPose=op;}}
+export function drawCaster(scene,c,player,x,y,scale,t,flip){if(!player)return;const oc=scene.compact,op=scene.cinematicPose;scene.compact=true;scene.cinematicPose={...(op||{}),stand:1};c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.scale(scale,scale);try{scene.drawCharacterBody(c,player,skinFor(player.giftCoins),t);}catch{}finally{c.restore();scene.compact=oc;scene.cinematicPose=op;}}
 function drawPetBig(scene,c,player,pet,x,y,size,t,burst,light){
  const frames=petV2FramesFor(scene,player),img=frames&&petArtFrame(frames,t,7,true);
  if(pet.coins===300)drawPremiumPetFx(c,pet,size,t,7,2.2,'back',burst);
@@ -137,4 +137,13 @@ export function drawCutEdges(scene,c,t,H,cut,targets){
  const im=S.kind==='skin'?art(S.art):null;if(im){const w=300,h=w*im.height/im.width;c.globalAlpha=.35*fade;c.drawImage(im,x-w/2,y-h/2,w,h);}
  c.restore();
  if(after<.6)txt(c,S.name,x,y-170,26,S.glow||'#ffe9a8',{width:5,max:420});
+}
+
+// Tấm che HTML trên cùng cho lúc chém vào / mở lại (canvas vẽ nhãn tên + bảng SAU lớp Lôi Đài nên lớp đen trên canvas bị đè).
+export function cutVeil(cut,full){
+ if(typeof document?.getElementById!=='function')return;let v=document.getElementById('cutVeil');
+ if(!v){if(!cut)return;const shell=document.querySelector('.scene-shell');if(!shell)return;v=document.createElement('div');v.id='cutVeil';v.className='cut-veil';shell.appendChild(v);}
+ if(!cut||full||cut.age>=cut.ms){if(v.style.opacity!=='0'){v.style.opacity='0';v.style.clipPath='none';}return;}
+ if(cut.k<CUT_PHASE.wipeIn){const u=cut.k/CUT_PHASE.wipeIn,x=Math.round(u*u*(3-2*u)*150);v.style.clipPath=`polygon(0 0,${x}% 0,${x-45}% 100%,0 100%)`;v.style.opacity='1';}
+ else{const u=(cut.k-CUT_PHASE.wipeOut)/(1-CUT_PHASE.wipeOut);v.style.clipPath='none';v.style.opacity=String(Math.max(0,1-u*u*(3-2*u)));}
 }

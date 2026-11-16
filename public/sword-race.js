@@ -3,6 +3,8 @@ import {drawRaceSword,raceSwordFor,RACE_SWORD_SKINS,drawSwordSparkle,racePrizeIm
 import {raceMountFor,drawRaceMount,RACE_MOUNTS} from './race-mounts.js';
 import {drawPrestigeSword,swordPrestige} from './sword-prestige.js';
 import {makeSurface} from './performance.js';
+import {cutVeil,drawCaster,giftImg,txt as ctxt,glow as cglow,CUT_PHASE} from './skill-cutscene.js?v=20261117';
+import {giftFor} from './gift-icons.js';
 // v88: đua phi kiếm "máy quay bám ĐOÀN CHÍNH".
 // - Vị trí dọc theo khoảng cách tới trung vị của đoàn (nén log), không theo người dẫn đầu: một người bứt xa
 //   không kéo cả đoàn xuống đáy; người bỏ xa bị kẹp ở mép trên kèm nhãn "bỏ xa +X".
@@ -159,15 +161,46 @@ function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-P
 const SCROLL_SKY='/assets/race-v2/race-scroll-sky.webp',SCROLL_CLOUD='/assets/race-v2/race-scroll-clouds.webp';
 function raceImg(scene,src){const m=scene.raceImgs??=new Map();let im=m.get(src);if(!im&&typeof Image!=='undefined'){im=new Image();im.decoding='async';im.src=src;m.set(src,im);}return im?.complete&&im.naturalWidth?im:null;}
 export const RACE_SCROLL_SPEED=Object.freeze({idle:.06,run:.62,boost:1.5}); // px/ms
-function drawRaceScroll(scene,c,t,H,running,boost,light){
+function drawRaceScroll(scene,c,t,H,running,boost,light,turbo=1){
  const st=scene.raceScrollState??={off:0,off2:0,last:t,v:0},dt=Math.min(100,Math.max(0,t-st.last));st.last=t;
- const want=scene.motion===false?0:running?(boost?RACE_SCROLL_SPEED.boost:RACE_SCROLL_SPEED.run):RACE_SCROLL_SPEED.idle;
+ const want=(scene.motion===false?0:running?(boost?RACE_SCROLL_SPEED.boost:RACE_SCROLL_SPEED.run):RACE_SCROLL_SPEED.idle)*turbo;
  st.v+=(want-st.v)*Math.min(1,dt/450);st.off+=st.v*dt;st.off2+=st.v*dt*1.9;
  const sky=raceImg(scene,SCROLL_SKY);if(!sky)return false;
  const tile=(im,off,alpha,op)=>{const h=900*im.naturalHeight/im.naturalWidth,o=off%h;c.globalAlpha=alpha;c.globalCompositeOperation=op;for(let y=o-h;y<H;y+=h)c.drawImage(im,0,Math.round(y),900,Math.ceil(h)+1);};
  tile(sky,st.off,1,'source-over');
  const cl=!light&&raceImg(scene,SCROLL_CLOUD);if(cl)tile(cl,st.off2,.75,'screen');
  c.globalAlpha=1;c.globalCompositeOperation='source-over';return true;
+}
+// 17/11 (chủ game): quà lớn trong đua → CHIẾU RIÊNG người đó bay tốc hành (bỏ cả sân, hiệu ứng bùng hết cỡ), rồi về lại đoàn đua.
+const ease3=k=>1-(1-clamp(k))**3,segk=(k,a,b)=>clamp((k-a)/(b-a));
+export function raceCutFrame(scene,c,t,H){
+ const e=scene.raceStatus;let best=null;
+ if(e?.active&&e.phase==='running'){const now=serverNow(scene,t);for(const r of e.racers||[]){const x=r.cut;if(!x)continue;const age=now-x.at;if(age>=0&&age<x.ms&&(!best||x.at>best.x.at))best={r,x,age};}}
+ const cut=best?{k:best.age/best.x.ms,age:best.age,ms:best.x.ms}:null,full=!!cut&&cut.k>=CUT_PHASE.wipeIn&&cut.k<CUT_PHASE.wipeOut;
+ if(!!scene.raceCutOn!==!!cut){scene.raceCutOn=!!cut;document.body?.classList?.toggle('cutscene-on',!!cut);}
+ if(cut||scene.raceVeilUsed){scene.raceVeilUsed=!!cut;cutVeil(cut,full);}
+ if(!full)return false;
+ const p=scene.playerIndex?.get(best.r.id);if(!p)return false;
+ const k=cut.k,light=scene.budget?.level==='light';
+ if(!drawRaceScroll(scene,c,t,H,true,true,light,3.2)){const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#6fb8ff');g.addColorStop(1,'#eaf6ff');c.fillStyle=g;c.fillRect(0,0,900,H);}
+ // tối viền + vệt gió dọc lao xuống
+ const v=c.createRadialGradient(450,H*.55,H*.2,450,H*.55,H*.75);v.addColorStop(0,'#00000000');v.addColorStop(1,'#000000aa');c.fillStyle=v;c.fillRect(0,0,900,H);
+ c.save();c.globalCompositeOperation='lighter';for(let i=0;i<(light?16:34);i++){const x=rnd(i)*900,sp=(t*.0026*(1+rnd(i+5))+rnd(i+9))%1,y=sp*H*1.3-H*.2,L=120+rnd(i+2)*260;c.globalAlpha=.5*(1-Math.abs(x-450)/650);c.strokeStyle=i%4?'#ffffff':'#ffe08a';c.lineWidth=1.5+rnd(i+3)*3;c.beginPath();c.moveTo(x,y);c.lineTo(x,y+L);c.stroke();}c.restore();
+ const bob=Math.sin(t*.006)*10,y=H*.6+bob,sc=4.1;
+ // dư ảnh phía sau (bay lên nên ảnh cũ ở dưới)
+ // luồng kiếm khí vàng kéo dài xuống dưới phi kiếm
+ {const top=y+120,tg=c.createLinearGradient(0,top,0,H);tg.addColorStop(0,'#fff6c8ee');tg.addColorStop(.35,'#ffc94a99');tg.addColorStop(1,'#ffc94a00');c.save();c.fillStyle=tg;c.beginPath();c.moveTo(450-90,top);c.lineTo(450+90,top);c.lineTo(450+26,H);c.lineTo(450-26,H);c.closePath();c.fill();c.fillStyle='#ffffffcc';c.beginPath();c.moveTo(450-22,top);c.lineTo(450+22,top);c.lineTo(450+4,H*.95);c.lineTo(450-4,H*.95);c.closePath();c.fill();c.restore();}
+ c.save();for(let i=3;i>=1;i--){c.globalAlpha=.3*(4-i)/3;const a={x:450,y:y+i*85,scale:sc,player:p,boost:true,kick:1};drawRaceSword(scene,c,a,t);drawCaster(scene,c,p,450,a.y,sc,t,false);}c.restore();
+ cglow(c,450,y-150,330,'#ffd36b',.35+.15*Math.sin(t*.02));
+ const a={x:450,y,scale:sc,player:p,boost:true,kick:1};drawRaceSword(scene,c,a,t);drawCaster(scene,c,p,450,y,sc,t,false);
+ // chữ: TÊN TỐC BIẾN! → ảnh quà + trượng đếm lên
+ const sk=segk(k,CUT_PHASE.wipeIn,.4),pop=1+.3*(1-ease3(segk(sk,0,.25)));
+ c.save();c.translate(450,H*.15);c.scale(pop,pop);ctxt(c,Array.from(p.name||'').slice(0,14).join('')+' TỐC BIẾN!',0,0,60,'#fff6dc',{width:12,max:860});c.restore();
+ const g=giftFor(scene.lastState?.giftArt,best.x.coins),gi=giftImg(g?.url);if(gi){const s2=120*ease3(segk(k,.15,.35));c.drawImage(gi,450-s2/2,H*.215,s2,s2);}
+ const shown=Math.round(best.x.dist*ease3(segk(k,.3,.75)));if(k>.3)ctxt(c,'+'+VIFMT.format(shown)+' trượng',450,H*.33,74,'#ffd54a',{width:12});
+ const out=segk(k,CUT_PHASE.hit,CUT_PHASE.wipeOut);if(out>0){c.globalAlpha=out;c.fillStyle='#000';c.fillRect(0,0,900,H);c.globalAlpha=1;}
+ if(!scene.raceCutSeen?.has(best.x.at+best.r.id)){(scene.raceCutSeen??=new Set()).add(best.x.at+best.r.id);scene.onFeedbackSound?.('hit',3);if(scene.raceCutSeen.size>40)scene.raceCutSeen=new Set([...scene.raceCutSeen].slice(-10));}
+ return true;
 }
 export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active)return;const H=scene.height,now=serverNow(scene,t),running=e.phase==='running',moving=running&&scene.motion,light=scene.budget?.level==='light';
  const lead=scene.raceLead||0,ref=scene.raceRefNow||0,anyBoost=scene.targets.some(a=>a.boost),speed=moving?(anyBoost?1.7:1):0;

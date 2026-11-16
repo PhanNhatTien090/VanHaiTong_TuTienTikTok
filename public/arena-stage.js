@@ -11,7 +11,7 @@ import {portraitCanvas} from './linh-bai.js';
 import {drawQueueAvatars} from './queue-avatars.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
 import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
-import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt,CUT_PHASE} from './skill-cutscene.js?v=20261117';
+import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt,cutVeil} from './skill-cutscene.js?v=20261117';
 
 export const ARENA_DELAY_MS=1100;
 export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708],cols:8,guide:.745,audienceScale:.98});
@@ -171,14 +171,6 @@ function drawSkillBanner(scene,c,e,k,targets,H){
  c.save();c.globalAlpha=a;text(c,'SK'+e.slot+' · '+e.skill.name,A.x,A.y-330,{size:22,color:e.skill.color||'#e9f6ff',width:5,max:380});c.restore();
 }
 
-// Tấm che HTML trên cùng cho lúc chém vào / mở lại (canvas vẽ nhãn tên + bảng SAU lớp Lôi Đài nên lớp đen trên canvas bị đè).
-function cutVeil(cut,full){
- if(typeof document?.getElementById!=='function')return;let v=document.getElementById('cutVeil');
- if(!v){if(!cut)return;const shell=document.querySelector('.scene-shell');if(!shell)return;v=document.createElement('div');v.id='cutVeil';v.className='cut-veil';shell.appendChild(v);}
- if(!cut||full||cut.age>=cut.ms){if(v.style.opacity!=='0'){v.style.opacity='0';v.style.clipPath='none';}return;}
- if(cut.k<CUT_PHASE.wipeIn){const u=cut.k/CUT_PHASE.wipeIn,x=Math.round(u*u*(3-2*u)*150);v.style.clipPath=`polygon(0 0,${x}% 0,${x-45}% 100%,0 100%)`;v.style.opacity='1';}
- else{const u=(cut.k-CUT_PHASE.wipeOut)/(1-CUT_PHASE.wipeOut);v.style.clipPath='none';v.style.opacity=String(Math.max(0,1-u*u*(3-2*u)));}
-}
 /** 17/11: gọi đầu scene.drawFrame — đang chiếu riêng thì vẽ màn riêng THAY cả sân (trả true). */
 export function arenaCutFrame(scene,c,t,H){
  const a=scene.socialScene==='arena'?scene.arena:null,m=a?.current;
