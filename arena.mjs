@@ -11,7 +11,9 @@ export let arenaBooksOf=p=>bookLoadout(p);
 let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
 export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
 
-export const ARENA_MS=8*60000,MATCH_MS=30000,INTRO_MS=2600,BREAK_MS=4500,RESULT_MS=3500,PODIUM_MS=12000;
+// 16/11 (chủ game): trận quá nhanh, chưa kịp tuyệt kỹ/linh thú/hồi máu/giáp → trận 60 s, sát thương chiêu ×0,5 (máu hồi/giáp giữ nguyên nên thấy rõ hơn).
+export const ARENA_DMG_SCALE=.5,ARENA_SUSTAIN_SCALE=.5; // giáp/hồi theo % máu giảm theo để không bên nào thắng chắc
+export const ARENA_MS=8*60000,MATCH_MS=60000,INTRO_MS=2600,BREAK_MS=4500,RESULT_MS=3500,PODIUM_MS=12000;
 export const QUEUE_MAX=6,DEFEND_MAX=5,CHALLENGE_LIMIT=3,INVITE_MS=20000,CHEER_MS=5000,CHEER_RAGE=3,CHEER_CAP=30,LOCK_RATIO=1.3;
 const STREAK_BONUS=Object.freeze({3:2,5:3,8:5});
 const ok=(extra={})=>({ok:true,...extra}),fail=message=>({ok:false,message});
@@ -186,7 +188,7 @@ function pickSlot(m,f,foe,now){
  if(f.pref&&ready(f.pref)){const s=f.pref;f.pref=0;return s;}
  if(ready(U))return U;
  const pet=f.kit[P-1],guard=pet.role==='support'||pet.role==='defense';
- if(ready(P)&&guard&&f.hp<f.maxHp*.5)return P;
+ if(ready(P)&&guard&&f.hp<f.maxHp*.75)return P; // 16/11: linh thú hồi máu/giáp ra sớm hơn
  if(ready(P)&&!guard&&rand(m)<.5)return P;
  if(ready(3)&&rand(m)<.6)return 3;
  if(ready(2)&&rand(m)<.7)return 2;
@@ -197,7 +199,7 @@ function pickSlot(m,f,foe,now){
 const capLocked=(m,to,dmg)=>m.locked&&m.locked===to.id?Math.min(dmg,Math.max(0,to.hp+to.shield-Math.ceil(to.maxHp*.1))):dmg;
 function hit(m,by,to,pct,crit,at=0,mult=1){
  const lv=by.kit[0].lv||1,weak=by.weakUntil>at?.8:1;
- const dmg=capLocked(m,to,Math.round(to.maxHp*pct*by.atk*weak*mult*(1+.02*(lv-1))*(crit?1.5:1)));
+ const dmg=capLocked(m,to,Math.round(to.maxHp*pct*ARENA_DMG_SCALE*by.atk*weak*mult*(1+.02*(lv-1))*(crit?1.5:1)));
  const absorbed=Math.min(to.shield,dmg);to.shield-=absorbed;to.hp=Math.max(0,to.hp-(dmg-absorbed));
  by.rage=Math.min(100,by.rage+14);to.rage=Math.min(100,to.rage+9);
  let reflect=0;
@@ -229,8 +231,8 @@ function act(w,m,id,now){
  mult*=1+mountBonus(w.players[id],'arena');
  f.lastEl=skill.hanh;
  const role=slot===ARENA_PET_SLOT?skill.role:'attack';
- if(role==='support'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.1*(1+.02*(skill.lv-1))));f.hp+=heal;entry.heal=heal;entry.target='self';}
- else if(role==='defense'){const sh=Math.round(f.maxHp*.14);f.shield+=sh;entry.shield=sh;entry.target='self';if(skill.pet){const r=hit(m,f,foe,pct*.5,false,at,mult);entry.dmg=r.dmg;entry.reflect=r.reflect||0;}}
+ if(role==='support'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.1*ARENA_SUSTAIN_SCALE*(1+.02*(skill.lv-1))));f.hp+=heal;entry.heal=heal;entry.target='self';}
+ else if(role==='defense'){const sh=Math.round(f.maxHp*.14*ARENA_SUSTAIN_SCALE);f.shield+=sh;entry.shield=sh;entry.target='self';if(skill.pet){const r=hit(m,f,foe,pct*.5,false,at,mult);entry.dmg=r.dmg;entry.reflect=r.reflect||0;}}
  else{const r=hit(m,f,foe,role==='control'?pct*.6:role==='drain'?pct*.8:pct,crit,at,mult);entry.dmg=r.dmg;entry.absorbed=r.absorbed||0;entry.reflect=r.reflect||0;
   if(role==='control')applyEffect(m,f,foe,'stun',at,entry,r.dmg);
   if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}

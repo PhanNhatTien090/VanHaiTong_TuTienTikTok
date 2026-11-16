@@ -51,7 +51,7 @@ test('trận có đủ 5 loại chiêu, kéo dài hợp lý, sát nhau thì ai c
  }
  assert.deepEqual([...slots].sort(),[1,2,3,4,5]);
  const avg=durations.reduce((a,b)=>a+b,0)/durations.length;
- assert.ok(avg>12000&&avg<=31000,'độ dài TB '+avg);
+ assert.ok(avg>24000&&avg<=61000,'độ dài TB '+avg); // 16/11: trận dài gấp đôi
  assert.ok(winsA>12&&winsA<48,'ngang tu vi: A thắng '+winsA+'/60');
 });
 
