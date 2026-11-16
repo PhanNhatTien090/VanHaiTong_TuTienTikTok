@@ -16,7 +16,16 @@ export const RACE_SWORD_SKINS=Object.freeze([
  ['u-anh','U Ảnh Kiếm','#d5c2ff','moon'],
  ['thanh-truc','Thanh Trúc Kiếm','#acffc9','lotus'],
  ['ho-phach','Hổ Phách Kiếm','#ffca82','phoenix']
- ].map(([slug,name,color,motif],i)=>({id:'race-'+slug,name,color,motif,edge:'#fff2d4',dark:'#20253b',prize:i<4?'elite':'standard',file:'/assets/thien-khuyet/sword-'+slug+'.webp'}))
+ ].map(([slug,name,color,motif],i)=>({id:'race-'+slug,name,color,motif,edge:'#fff2d4',dark:'#20253b',prize:i<4?'elite':'standard',file:'/assets/thien-khuyet/sword-'+slug+'.webp'})),
+ // 16/11 (chủ game: "skin phi kiếm đẹp đẹp bự bự có vfx"): 6 kiếm THƯỢNG PHẨM to, có vệt sáng theo hệ (Codex image_gen, race-v2).
+ ...[
+ ['loi-than','Lôi Thần Phá Quân','#9fb6ff','#e8f0ff','lightning'],
+ ['hoa-phuong','Hỏa Phượng Liệt Diễm','#ff8a4a','#ffe27a','fire'],
+ ['bang-phach','Băng Phách Hàn Nguyệt','#8fe8ff','#f0ffff','ice'],
+ ['kim-long','Cửu Long Tử Kim','#ffd36b','#fff3c8','gold'],
+ ['thanh-ngoc','Thanh Ngọc Tiên Kiếm','#8fffc4','#eafff2','jade'],
+ ['tinh-ha','Hư Không Tinh Hà','#c79bff','#ffe8ff','cosmic']
+ ].map(([slug,name,color,edge,element])=>({id:'race-'+slug,name,color,edge,dark:'#1a1530',motif:'dragon',element,legend:true,prize:'elite',file:'/assets/race-v2/sword-'+slug+'.webp'}))
 ]);
 // Ngôi sao 4 cánh nháy theo nhịp riêng dọc lưỡi kiếm + vầng cầu vồng thở + thỉnh thoảng một chớp sáng lớn.
 // Khung toạ độ: kiếm dựng đứng, mũi ở y=-len/2, chuôi ở y=+len/2, tâm (0,0).
@@ -38,6 +47,27 @@ export function drawSwordSparkle(c,t,len,motion=true,light=false){
  const sweep=(clock*.55)%1;c.globalAlpha=.3*Math.sin(sweep*Math.PI);const sg=c.createLinearGradient(0,-len*.48+sweep*len*.6-len*.05,0,-len*.48+sweep*len*.6+len*.05);sg.addColorStop(0,'#ffffff00');sg.addColorStop(.5,'#ffffff');sg.addColorStop(1,'#ffffff00');c.fillStyle=sg;c.fillRect(-w*.12,-len*.5,w*.24,len*.62);
  c.restore();
 }
+// 16/11: vệt sáng cho kiếm thượng phẩm — người bay LÊN nên vệt kéo XUỐNG dưới lưỡi kiếm; bứt tốc thì dài + sáng gấp đôi.
+// Chỉ gradient + 'lighter', không filter/shadowBlur; hạt tính từ thời gian (không cấp phát).
+function drawLegendAura(c,skin,w,h,t,motion,hot,light){
+ const clock=motion?t*.001:0,col=skin.color,L=(hot?3.2:1.8)*h+40;c.save();c.globalCompositeOperation='lighter';
+ // vệt kéo dài phía sau (dưới) cả thân kiếm
+ // nền đua mới sáng → vệt vẽ thường (source-over) giữ đúng màu hệ, rồi thêm lõi sáng mảnh bằng 'lighter'
+ c.globalCompositeOperation='source-over';const g=c.createLinearGradient(0,0,0,L);g.addColorStop(0,col+'d0');g.addColorStop(.4,col+'70');g.addColorStop(1,col+'00');c.fillStyle=g;
+ c.beginPath();c.moveTo(-w*.4,-2);c.lineTo(w*.4,-2);c.lineTo(w*.12,L);c.lineTo(-w*.12,L);c.closePath();c.fill();
+ c.globalCompositeOperation='lighter';const core=c.createLinearGradient(0,0,0,L*.8);core.addColorStop(0,skin.edge+'c0');core.addColorStop(1,skin.edge+'00');c.fillStyle=core;c.beginPath();c.moveTo(-w*.12,0);c.lineTo(w*.12,0);c.lineTo(0,L*.8);c.closePath();c.fill();
+ // quầng ôm lưỡi kiếm (thở)
+ const pulse=.6+.4*Math.sin(clock*4);c.save();c.scale(1,.32);const r=c.createRadialGradient(0,0,0,0,0,w*.6);r.addColorStop(0,skin.edge+'90');r.addColorStop(.5,col+'40');r.addColorStop(1,col+'00');c.globalAlpha=pulse;c.fillStyle=r;c.beginPath();c.arc(0,0,w*.6,0,Math.PI*2);c.fill();c.restore();
+ if(!light){
+  c.globalAlpha=1;const n=hot?14:8;
+  for(let i=0;i<n;i++){const u=((clock*(.9+i%3*.35)+i*.137)%1),x=(((i*73)%100)/100-.5)*w*.85,y=u*L*.9,s=(1-u)*(skin.element==='lightning'?3:4)+1;
+   c.globalAlpha=(1-u)*.9;c.fillStyle=i%2?skin.edge:col;
+   if(skin.element==='lightning'){c.strokeStyle=skin.edge;c.lineWidth=2;c.beginPath();c.moveTo(x,y);c.lineTo(x+6,y+8);c.lineTo(x-3,y+14);c.lineTo(x+4,y+22);c.stroke();}
+   else if(skin.element==='ice'){c.beginPath();c.moveTo(x,y-s*1.6);c.lineTo(x+s,y);c.lineTo(x,y+s*1.6);c.lineTo(x-s,y);c.closePath();c.fill();}
+   else{c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();}}
+ }
+ c.restore();
+}
 export function raceSwordFor(p={}){return RACE_SWORD_SKINS.find(s=>s.id===p.raceSwordChoice&&p.raceSwordSkins?.includes(s.id))||RACE_SWORD_SKINS.find(s=>p.raceSwordSkins?.includes(s.id));}
 export function racePrizeImage(scene,skin){
  if(!skin?.file||typeof Image==='undefined')return null;
@@ -51,7 +81,8 @@ export function drawRaceSword(scene,c,a,t){
  const img=racePrizeImage(scene,skin);
  if(img){
    c.save();c.translate(a.x,a.y+31*scale);c.rotate(-.07-(a.kick||0)*.22);
-   const w=(skin.prize==='elite'?226:197)*scale,h=w*img.naturalHeight/img.naturalWidth;
+   const w=(skin.legend?300:skin.prize==='elite'?226:197)*scale,h=w*img.naturalHeight/img.naturalWidth;
+   if(skin.legend)drawLegendAura(c,skin,w,h,t,scene.motion!==false,!!a.boost||a.kick>0,scene.budget?.level==='light');
    c.drawImage(img,-w/2,-h/2,w,h);
    if(skin.prize==='elite'&&scene.motion!==false){
     const u=(t*.001)%1;c.globalAlpha=Math.sin(u*Math.PI)*.9;star(c,(u-.5)*w*.84,-5*scale,10*scale,skin.color);

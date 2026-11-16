@@ -153,10 +153,26 @@ function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-P
   if(!gift&&top.length<4){c.font='800 20px Segoe UI';c.fillStyle='#ffe2a0';const note='Cần ít nhất 4 đấu thủ để trao skin và vật cưỡi về đích';c.strokeText(note,450,y+10);c.fillText(note,450,y+10);}
   if(e.repeat!==false){c.font='bold 20px Segoe UI';const nx='Lượt đua mới sau '+left+' giây · gõ bay để ghi danh';c.strokeText(nx,450,H-40);c.fillStyle='#fff1ae';c.fillText(nx,450,H-40);}
   c.restore();}
+// 16/11 (chủ game: "map chạy dọc repeat, chạy siêu nhanh"): nền trời mây NỐI LIỀN cuộn xuống (2 lớp thị sai).
+// Nhẹ: mỗi khung 2–4 lần drawImage, không dựng gì thêm. Tốc độ mượt theo trận (tăng/giảm dần, không giật).
+const SCROLL_SKY='/assets/race-v2/race-scroll-sky.webp',SCROLL_CLOUD='/assets/race-v2/race-scroll-clouds.webp';
+function raceImg(scene,src){const m=scene.raceImgs??=new Map();let im=m.get(src);if(!im&&typeof Image!=='undefined'){im=new Image();im.decoding='async';im.src=src;m.set(src,im);}return im?.complete&&im.naturalWidth?im:null;}
+export const RACE_SCROLL_SPEED=Object.freeze({idle:.06,run:.62,boost:1.5}); // px/ms
+function drawRaceScroll(scene,c,t,H,running,boost,light){
+ const st=scene.raceScrollState??={off:0,off2:0,last:t,v:0},dt=Math.min(100,Math.max(0,t-st.last));st.last=t;
+ const want=scene.motion===false?0:running?(boost?RACE_SCROLL_SPEED.boost:RACE_SCROLL_SPEED.run):RACE_SCROLL_SPEED.idle;
+ st.v+=(want-st.v)*Math.min(1,dt/450);st.off+=st.v*dt;st.off2+=st.v*dt*1.9;
+ const sky=raceImg(scene,SCROLL_SKY);if(!sky)return false;
+ const tile=(im,off,alpha,op)=>{const h=900*im.naturalHeight/im.naturalWidth,o=off%h;c.globalAlpha=alpha;c.globalCompositeOperation=op;for(let y=o-h;y<H;y+=h)c.drawImage(im,0,Math.round(y),900,Math.ceil(h)+1);};
+ tile(sky,st.off,1,'source-over');
+ const cl=!light&&raceImg(scene,SCROLL_CLOUD);if(cl)tile(cl,st.off2,.75,'screen');
+ c.globalAlpha=1;c.globalCompositeOperation='source-over';return true;
+}
 export function drawRace(scene,c,t,layer){const e=scene.raceStatus;if(!e?.active)return;const H=scene.height,now=serverNow(scene,t),running=e.phase==='running',moving=running&&scene.motion,light=scene.budget?.level==='light';
  const lead=scene.raceLead||0,ref=scene.raceRefNow||0,anyBoost=scene.targets.some(a=>a.boost),speed=moving?(anyBoost?1.7:1):0;
  c.save();
  if(layer==='back'){
+  drawRaceScroll(scene,c,t,H,running,anyBoost,light);
   // trời phủ nhẹ màu xanh để vạch tốc độ nổi
   const sky=c.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0b2a4a55');sky.addColorStop(1,'#0b2a4a00');c.fillStyle=sky;c.fillRect(0,0,900,H);
   // mây lớn trôi xuống (2 lớp thị sai)
