@@ -10,6 +10,7 @@ import {skinFor} from './cosmetics.js';
 const GIFT_IMG=new Map();
 export function giftImg(url){if(!url||typeof Image==='undefined')return null;let a=GIFT_IMG.get(url);if(!a){const im=new Image();im.decoding='async';im.referrerPolicy='no-referrer';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src=url;GIFT_IMG.set(url,a);if(GIFT_IMG.size>12)GIFT_IMG.delete(GIFT_IMG.keys().next().value);}return a.ok?a.im:null;}
 import {duelSoundPreset} from './duel-cinematic.js';
+import {makeSurface} from './performance.js';
 import {fxVariant,PALETTES,palOf,fxCamera,punch,smooth,out3,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawBeam,drawSkyLances,drawZoomLines,drawEmbers,drawVignette,drawLetterbox,drawImpactFrame,drawGhostSplit,hitStop} from './cut-fx.js?v=20261118';
 const MOTIF_TECH={karma:'soul',thunder:'lightning',fire:'fire','lotus-fire':'fire',moon:'ice',phoenix:'fire',ice:'ice',pearl:'water',stars:'star',blood:'soul'};
 
@@ -63,6 +64,13 @@ function drawPetBig(scene,c,player,pet,x,y,size,t,burst,light){
  c.save();c.translate(x,y);if(pet.coins===300)drawPremiumPetFx(c,pet,size,t,7,2.2,'front',burst);else drawRareFx(c,pet,size,t,7,3);c.restore();
 }
 
+// Độ cao mặt (đơn vị drawCaster scale 1, tính từ chân): đo 1 lần/nhân vật+skin bằng cách vẽ thử ra ô nhỏ rồi dò hàng điểm ảnh trên cùng.
+// Skin cao (áo choàng, mũ) mặt nằm cao hơn → không đo thì băng cận mặt cắt vào ngực. Chưa nạp ảnh thì dùng 78 và đo lại sau.
+const FACE=new Map();
+function faceUnits(scene,p,t){const key=(p.id||'')+'|'+(p.skinChoice||'')+'|'+(p.giftCoins||0);const v=FACE.get(key);if(v)return v;
+ let out=78;try{const s=3,W=360,Hh=480,cv=makeSurface(W,Hh),x=cv?.getContext('2d',{willReadFrequently:true});if(x){drawCaster(scene,x,p,W/2,Hh-20,s,t,false);const d=x.getImageData(W/2-40,0,80,Hh).data;let top=-1;for(let y=0;y<Hh&&top<0;y++)for(let i=0;i<80;i++)if(d[(y*80+i)*4+3]>60){top=y;break;}
+  if(top>=0&&Hh-20-top>40*s){out=Math.max(60,Math.min(140,(Hh-20-top)/s-12));FACE.set(key,out);if(FACE.size>60)FACE.delete(FACE.keys().next().value);}}}catch{}
+ return out;}
 /** 18/11: CUT-IN cận mặt kiểu gacha — băng chéo trượt ngang màn, trong là mặt người ra chiêu phóng to + vạch tốc độ. u 0..1 trong cửa sổ. */
 export function drawCutInBand(scene,c,player,H,u,P,dir,t,{yc=H*.44,bh=300,label=''}={}){
  if(!player||u<=0||u>=1)return;const inK=ease(seg(u,0,.18)),outK=easeIn(seg(u,.82,1)),off=((1-inK)*1000+outK*-1000)*dir,sl=70;
@@ -72,7 +80,7 @@ export function drawCutInBand(scene,c,player,H,u,P,dir,t,{yc=H*.44,bh=300,label=
  const g=c.createLinearGradient(0,yc-bh,0,yc+bh);g.addColorStop(0,P.deep||'#05060c');g.addColorStop(.5,P.main+'66');g.addColorStop(1,P.deep||'#05060c');c.fillStyle='#05060c';c.fillRect(-60,yc-bh,1020,bh*2);c.fillStyle=g;c.fillRect(-60,yc-bh,1020,bh*2);
  c.globalCompositeOperation='lighter';c.lineCap='round';for(let i=0;i<26;i++){const yy=yc-bh*.7+rnd(i+3)*bh*1.4,sp=(t*.003*(1+rnd(i))+rnd(i+7))%1,x0=dir>0?1000-sp*1300:-100+sp*1300,L=120+rnd(i+1)*300;c.globalAlpha=.35;c.strokeStyle=i%3?'#ffffff':P.main;c.lineWidth=1+rnd(i+2)*3;c.beginPath();c.moveTo(x0,yy);c.lineTo(x0+L*dir,yy);c.stroke();}
  c.globalCompositeOperation='source-over';c.globalAlpha=1;
- const sc=11,drift=(u-.5)*40*dir;drawCaster(scene,c,player,450+drift-dir*60,yc+sc*78,sc,t,dir<0);
+ const sc=11,drift=(u-.5)*40*dir,face=faceUnits(scene,player,t);drawCaster(scene,c,player,450+drift-dir*60,yc+sc*face,sc,t,dir<0);
  c.restore();
  c.globalCompositeOperation='lighter';c.strokeStyle=P.soft;c.lineWidth=5;c.beginPath();c.moveTo(-60,yc-bh/2+sl);c.lineTo(960,yc-bh/2-sl);c.moveTo(-60,yc+bh/2+sl);c.lineTo(960,yc+bh/2-sl);c.stroke();
  c.globalCompositeOperation='source-over';

@@ -116,6 +116,14 @@ export function warHearts(w,p,count,now,c){
  m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units+mountUnits(m,p,units),now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return moved;
 }
 // Quà: luôn tung đại chiêu + tính điểm; đẩy đủ theo coin, trần 36 đơn vị (~12 coin) / phe / 30 s.
+// 18/11 (chủ game): quà ≥30 coin → CHIẾU RIÊNG người tặng tung chiêu đẩy lùi phe địch (overlay public/war-cutscene.js).
+// Mỗi màn cách nhau ≥6 s; hàng chờ quá 10 s (đã có 1 màn chờ) thì quà vẫn đẩy trượng nhưng không chiếu (tránh trận chỉ còn màn chiếu). Giờ trận + điềm hoãn đúng thời gian chiếu.
+export const WAR_CUT=Object.freeze({min:30,ms:3600,gap:6000,maxWait:10000}); // maxWait 10 s = chờ tối đa 1 màn
+export function warCut(e,p,side,coins,truong,now){
+ if(!(coins>=WAR_CUT.min))return null;const start=Math.max(now,e.cutUntil?e.cutUntil+WAR_CUT.gap:now);if(start-now>WAR_CUT.maxWait)return null;
+ const cut={id:e.id+':cut:'+(e.cutSeq=(e.cutSeq||0)+1),at:start,ms:WAR_CUT.ms,side,user:p.id,name:p.name,coins,truong};e.cutUntil=start+WAR_CUT.ms;
+ const hold=e.cutUntil-Math.max(start,e.heldUntil||0);if(hold>0){e.endsAt+=hold;if(e.nextOmenAt)e.nextOmenAt+=hold;e.heldUntil=e.cutUntil;}
+ (e.cuts??=[]).push(cut);if(e.cuts.length>4)e.cuts.splice(0,e.cuts.length-4);return cut;}
 export function warGift(w,p,coins,now,c,event={}){
  const e=w.sectWar;if(!e||e.phase!=='running'||!real(p)||!(coins>0))return null;
  let m=e.members[p.id];if(!m){const side=warCount(e,'ma')>warCount(e,'chinh')?'chinh':'ma';m=join(w,e,p,side,now,c,true);if(!m)return null;}
@@ -124,7 +132,8 @@ export function warGift(w,p,coins,now,c,event={}){
  const allowance=WAR.giftCapUnits-giftUnits,pushed=Math.max(0,Math.min(units,allowance));
  e.gifts.push({at:now,side:m.side,pushed});m.score+=units;m.giftCoins=(m.giftCoins||0)+coins;m.lastActAt=now;m.lastGiftAt=now;
  const moved=push(w,e,m.side,pushed,now,c,true);fx(e,now,{kind:'gift',side:m.side,user:p.id,name:p.name,value:coins,capped:pushed<units,truong:Math.round(moved*TRUONG_PER_POINT)});
- checkRescue(w,e,now,c);const flip=noteLead(w,e,now,c,{id:p.id,name:p.name,coins})&&e.lead===m.side;finishIfDone(w,e,now,c);return {moved,pushed,units,side:m.side,flip,line:e.line,truong:Math.round(moved*TRUONG_PER_POINT)};
+ const cut=warCut(e,p,m.side,coins,Math.round(moved*TRUONG_PER_POINT),now);
+ checkRescue(w,e,now,c);const flip=noteLead(w,e,now,c,{id:p.id,name:p.name,coins})&&e.lead===m.side;finishIfDone(w,e,now,c);return {cut,moved,pushed,units,side:m.side,flip,line:e.line,truong:Math.round(moved*TRUONG_PER_POINT)};
 }
 // Ghi nhận lực đẩy không-quà theo cửa sổ trượt 30 s để tính hạn mức quà.
 export function warNoteFree(e,side,units,now){e.freeLog=(e.freeLog||[]).filter(x=>now-x.at<WAR.giftWindowMs);if(units>0)e.freeLog.push({at:now,side,units});if(e.freeLog.length>400)e.freeLog.splice(0,e.freeLog.length-400);e.freeUnits={chinh:0,ma:0};for(const x of e.freeLog)e.freeUnits[x.side]+=x.units;}
@@ -142,5 +151,5 @@ export function warView(w,now){
  return {id:e.id,phase:e.phase,active:warVisible(w,now),line:Math.round((e.line??50)*10)/10,registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,podiumUntil:e.podiumUntil,finishedAt:e.finishedAt,
   counts:{chinh:warCount(e,'chinh'),ma:warCount(e,'ma')},top:{chinh:warTop(e,'chinh'),ma:warTop(e,'ma')},roster:{chinh:roster('chinh'),ma:roster('ma')},
   mult:{chinh:Math.round(warMultiplier(e,'chinh',now)*100)/100,ma:Math.round(warMultiplier(e,'ma',now)*100)/100},
-  omen:e.omen&&now<e.omen.until?e.omen:null,rescued:e.rescued,boostUntil:e.boostUntil,lead:e.lead||null,fx:(e.fx||[]).filter(x=>now-x.at<15000),result:e.result||null};
+  omen:e.omen&&now<e.omen.until?e.omen:null,rescued:e.rescued,boostUntil:e.boostUntil,lead:e.lead||null,fx:(e.fx||[]).filter(x=>now-x.at<15000),cuts:(e.cuts||[]).filter(x=>now<x.at+x.ms+2000),result:e.result||null};
 }
