@@ -133,6 +133,9 @@ function mountFront(scene,c,target,t){
 }
 preloadMountArt?.();
 
+// 17/11 (chủ game): pháp bảo Tông chủ GHIM từ trang quản lý (p.equipPin, vd. kiếm trúc Hàn Lập cho Trưởng Lão) luôn hiện:
+// không thay phiên với linh thú, không ẩn lúc truyền công. Sân đông vẫn ẩn như mọi pháp bảo (chủ game: "đông thì ẩn, ít người hiện lại").
+const pinnedRelic=p=>!!p?.equipPin&&p.equipPin===p.equipped;
 export class Scene {
   constructor(canvas,onSelect,{autoFrame=true}={}){prepareCinematicArt();prepareFeedbackArt();this.feedbackFX=new LiveFeedbackDirector();this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.onSelect=onSelect;this.players=[];this.selected=null;this.effects=[];this.targets=[];this.width=900;this.height=850;this.boss=null;this.visible=true;this.crowdMode=true;this.showNames=true;this.focusId=null;this.focusUntil=0;this.worldLife={npcs:true,environment:true};this.cameraEnabled=true;this.zoom=1.25;this.camera={s:1,x:0,y:0};this.sprites=new Map();this.labels=[];this.budget=new RenderBudget();this.characterFrames=new CharacterFrames();this.environmentLayers=new Map();this.animator=new CharacterAnimator();this.standingArt=new Image();this.standingArt.src='/assets/cultivators-standing-v14.png';this.characterArt=new Image();this.characterArt.src='/assets/cultivators-v3.png';this.empressArt=new Image();this.empressArt.onload=()=>this.characterFrames.clear();this.empressArt.src=new URLSearchParams(location.search).get('spriteStyle')==='mobile'?'/assets/celestial-empress-mobile-v1.png':'/assets/celestial-empress-seated-v2.png';this.specialAtlas=new Image();this.specialAtlas.onload=()=>{this.specialArt=[];for(const [y,h]of [[0,590],[600,424]]){const sheet=makeSurface(this.specialAtlas.naturalWidth,h);if(!sheet)continue;sheet.getContext('2d').drawImage(this.specialAtlas,0,y,this.specialAtlas.naturalWidth,h,0,0,sheet.width,h);sheet.naturalWidth=sheet.width;sheet.naturalHeight=sheet.height;sheet.complete=true;this.specialArt.push(sheet);}this.characterFrames.clear();};this.specialAtlas.src='/assets/patron-sets-v18.png';this.bossAtlas=new Image();this.bossAtlas.onload=()=>{this.bossSprites=[];const sw=this.bossAtlas.naturalWidth/3;for(let i=0;i<3;i++){const frame=makeSurface(320,320);if(!frame)continue;frame.getContext('2d').drawImage(this.bossAtlas,i*sw,0,sw,this.bossAtlas.naturalHeight,0,0,320,320);this.bossSprites.push(frame);}this.bossAtlas=null;};this.bossAtlas.src='/assets/boss-atlas.png';this.formationImage=new Image();this.formationImage.onload=()=>{const sprite=makeSurface(384,384);if(sprite){sprite.getContext('2d').drawImage(this.formationImage,0,0,384,384);this.formationArt=sprite;}this.formationImage=null;};this.formationImage.src='/assets/sword-formation.png';this.art=new Image();this.art.onload=()=>this.resize();this.art.src='/assets/sect-morning-v20.png';loadImmortalArt(this);this.motion=!matchMedia('(prefers-reduced-motion: reduce)').matches;
      // Emergency viewer-side rollback: ?v7=off or ?v7Premium=off on LIVE Studio browser source.
@@ -350,7 +353,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncRac
     // Back halo is rendered once in the shared background pass, above Chân Tiên only. // v52: hào quang cảnh giới cao, sau lưng
     // 3/11: đang đột phá thì ẩn pháp bảo bay vòng quanh (trước và sau lưng) cho hiệu ứng đột phá gọn.
     const breaking=pose.mode==='ascend'||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id);
-    if(!this.raceStatus?.active&&!this.compact&&!this.minimalCrowd&&!breaking&&relicVisit(p.id)){c.save();c.translate(0,relicBob(t,p.id,this.motion));drawBackRelic(c,p,0,this.signatureSprites,false,pose);c.restore();} // pháp bảo sau lưng (vẽ trước thân) — 09/11: đứng yên, nhích nhẹ, thay phiên với linh thú
+    if(!this.raceStatus?.active&&!this.compact&&!this.minimalCrowd&&!breaking&&(relicVisit(p.id)||pinnedRelic(p))){c.save();c.translate(0,relicBob(t,p.id,this.motion));drawBackRelic(c,p,0,this.signatureSprites,false,pose);c.restore();} // pháp bảo sau lưng (vẽ trước thân) — 09/11: đứng yên, nhích nhẹ, thay phiên với linh thú
     // Giữ nguyên màu ảnh nhân vật gốc (bỏ lớp nhuộm theo cảnh giới của v33 — người dùng thấy xanh lè, mất đẹp).
     c.save();c.shadowColor=skin.color;c.shadowBlur=0;
     const hideNew=this.transforming?.id===p.id&&performance.now()<this.transforming.revealAt; // đang biến hình: giữ hình cũ tới lúc chớp sáng
@@ -389,7 +392,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncRac
   }
   drawCompactGear(c,target,t,layer){
     if(this.heavyCrowd)return;
-    const p=target.player;if(this.raceStatus?.active||!p.equipped||courtShowsSignature(this,p)||!relicVisit(p.id)||p.mountChannel||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id))return;
+    const p=target.player,pin=pinnedRelic(p);
+    if(this.raceStatus?.active||!p.equipped||courtShowsSignature(this,p)||!(relicVisit(p.id)||pin)||p.mountChannel&&!pin||this.effects?.some(e=>e.effect==='breakthrough'&&e.user===p.id))return;
     c.save();c.translate(target.x,target.y+relicBob(t,p.id,this.motion));c.scale(target.scale||1.4,target.scale||1.4);
     if(layer==='back')drawBackRelic(c,p,0,this.signatureSprites,false);
     else if(drawDoraRelic(this,c,p,0)){}
