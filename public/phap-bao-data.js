@@ -44,7 +44,7 @@ export const BAO_PITY4=10,BAO_PITY5=80,BAO_LIMITED_STOCK=12,BAO_EVENT_MS=5*60000
 // Mỗi dòng một thần thông; nhịp hồi theo bậc; sát thương % máu đối thủ × (1 + 10%/sao). 5★/GIỚI HẠN: lần phát đầu mỗi trận chiếu riêng.
 export const BAO_LINE_FX=Object.freeze({kiem:{effect:'crit',tech:'sword'},an:{effect:'stun',tech:'thunder'},dinh:{effect:'heal',tech:'lotus'},chung:{effect:'shield',tech:'bell'},phien:{effect:'knock',tech:'peachfan'},kinh:{effect:'reflect',tech:'starmirror'}});
 export const BAO_PROC=Object.freeze({4:{cd:12000,pct:.09},5:{cd:9000,pct:.13},6:{cd:7000,pct:.17}});
-export const BAO_CUT_MS=Object.freeze({5:3600,6:5200});
+export const BAO_CUT_MS=Object.freeze({5:3600,6:9500}); // GIỚI HẠN: chiêu riêng từng món (public/bao-ults.js)
 export function baoBanMenh(p){
  const items=p?.bao?.items||{},ids=Object.keys(items).filter(id=>baoItem(id)&&items[id]>0);if(!ids.length)return null;
  const pin=p.bao.ban&&ids.includes(p.bao.ban)?p.bao.ban:null,id=pin||ids.sort((x,y)=>baoItem(y).tier-baoItem(x).tier||items[y]-items[x])[0],it=baoItem(id);

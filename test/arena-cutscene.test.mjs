@@ -95,3 +95,13 @@ test('18/11: lệnh bản mệnh — xem, đổi theo số, hồi 10 phút; "th�
  assert.equal(baoBanMenhCommand(p,'1',N+1000).ok,false,'đang hồi');assert.equal(baoBanMenhCommand(p,'1',N+BAN_MENH_CD+1).ok,true);
  assert.equal(baoBanMenhCommand({name:'B'},'',N).ok,false);
 });
+
+test('18/11: 12 chiêu GIỚI HẠN — mỗi món có chiêu riêng, vẽ mọi mốc không lỗi, màn dài 9,5 s',async()=>{
+ const {BAO_ULTS,drawBaoUlt,BAO_ULT_MS}=await import('../public/bao-ults.js');const {BAO_ITEMS,BAO_CUT_MS}=await import('../public/phap-bao-data.js');
+ const lim=BAO_ITEMS.filter(x=>x.tier===6);assert.equal(lim.length,12);for(const it of lim)assert.ok(BAO_ULTS[it.id]?.move,'thiếu chiêu '+it.id);
+ assert.equal(new Set(Object.values(BAO_ULTS).map(u=>u.move)).size,12,'tên chiêu không trùng');assert.equal(BAO_CUT_MS[6],BAO_ULT_MS);
+ const g={addColorStop(){}},c=new Proxy({},{get(t,k){if(k in t)return t[k];if(k==='canvas')return null;if(/^create/.test(k))return ()=>g;if(k==='measureText')return ()=>({width:50});return ()=>{};},set(t,k,v){t[k]=v;return true;}});
+ const scene={budget:{level:'full'},motion:true};
+ for(const it of lim)for(const sec of [.2,1,2.5,3.5,4.5,5.5,6.45,6.55,7,8,9.2]){const e={n:3,by:'a',to:'b',dmg:999,ko:false,cut:{kind:'bao',bao:it.id,tier:6,ms:BAO_ULT_MS}};
+  assert.doesNotThrow(()=>drawBaoUlt(scene,c,1e6,1600,{e,age:sec*1000,k:sec*1000/BAO_ULT_MS,ms:BAO_ULT_MS},new Map()),it.id+' @'+sec);}
+});
