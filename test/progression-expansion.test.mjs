@@ -18,7 +18,7 @@ test('endgame realms are reachable after save/reload with matching overlay, ward
   assert.ok(divineHaloProfile(r).orbs<=12);
  }
  assert.equal(REALMS.length,29);assert.equal(OPPORTUNITY_COSTS.length,28);
- for(let r=24;r<28;r++)assert.ok(Math.abs(requiredQi({realm:r})-4*requiredQi({realm:r-1}))<=4);
+ for(let r=24;r<=28;r++)assert.ok(Math.abs(requiredQi({realm:r})-(r<=25?4:2)*requiredQi({realm:r-1}))<=4); /* 17/11: 24–25 ×4, từ 26 ×2 */
  assert.equal(action(w,{type:'breakthrough',userId:p.id},NOW+2e6).ok,false);
 });
 test('slower costs preserve onboarding, and blessings cannot recycle stored qi into free levels',()=>{

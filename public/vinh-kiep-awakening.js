@@ -231,7 +231,7 @@ export function drawVinhKiepAwakening(scene,c,e,t,H){
  if(a.vignette)c.drawImage(a.vignette,0,0,900,H);
  c.restore();
  const b=Math.max(0,BEATS.findLastIndex(([at])=>at<=T));
- const ui={k:s.k,realm:26,phase:s.revealed?'reveal':'gather',revealed:s.revealed,color:EMBER,title:'Vĩnh Kiếp Đạo Quân',subtitle:'Vạn Kiếp Nghịch Lưu',name:String(e.name||'Đạo hữu').normalize('NFC'),label:BEATS[b][1],detail:'',shake};
+ const ui={k:s.k,realm:26,phase:s.revealed?'reveal':'gather',revealed:s.revealed,color:EMBER,title:'Vĩnh Kiếp Đạo Quân',subtitle:'PHI THĂNG · Cõi Thái Hư Thiên Ngoại' /* 17/11 chủ game: 4 cảnh giới cuối hiện chữ PHI THĂNG */,name:String(e.name||'Đạo hữu').normalize('NFC'),label:BEATS[b][1],detail:'',shake};
  if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.save();c.textAlign='center';c.font='600 26px Arial';c.fillStyle='#fff0e6';c.fillText(ui.name,450,H*.05);c.font='700 34px Arial';c.fillText(s.revealed?'VĨNH KIẾP ĐẠO QUÂN':ui.label,450,H*.09);c.restore();}
  return ui;
 }

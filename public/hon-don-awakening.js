@@ -198,7 +198,7 @@ export function drawHonDonAwakening(scene,c,e,t,H){
  c.restore();
  if(s.motion&&!light)drawWorldSplit(c,a,s,T,image);
  const b=Math.max(0,BEATS.findLastIndex(([at])=>at<=T));
- const ui={k:s.k,realm:28,phase:s.revealed?'reveal':'gather',revealed:s.revealed,color:GOLD,title:'Hỗn Độn Vĩnh Hằng',subtitle:'Khai Thiên Định Luật',name:String(e.name||'Đạo hữu').normalize('NFC'),label:BEATS[b][1],detail:T>=HD_LAWS[0]&&T<HD.lawsIn?'Thiên luật: '+LAW_NAMES.slice(0,HD_LAWS.filter(x=>T>=x).length).join(' · '):'',shake};
+ const ui={k:s.k,realm:28,phase:s.revealed?'reveal':'gather',revealed:s.revealed,color:GOLD,title:'Hỗn Độn Vĩnh Hằng',subtitle:'PHI THĂNG · Cõi Hỗn Độn Bỉ Ngạn' /* 17/11 chủ game: 4 cảnh giới cuối hiện chữ PHI THĂNG */,name:String(e.name||'Đạo hữu').normalize('NFC'),label:BEATS[b][1],detail:T>=HD_LAWS[0]&&T<HD.lawsIn?'Thiên luật: '+LAW_NAMES.slice(0,HD_LAWS.filter(x=>T>=x).length).join(' · '):'',shake};
  if(scene.onRitualFrame)scene.onRitualFrame(ui);else{c.save();c.textAlign='center';c.font='600 26px Arial';c.fillStyle='#fff8e8';c.fillText(ui.name,450,H*.05);c.font='700 34px Arial';c.fillText(s.revealed?'HỖN ĐỘN VĨNH HẰNG':ui.label,450,H*.09);c.restore();}
  return ui;
 }

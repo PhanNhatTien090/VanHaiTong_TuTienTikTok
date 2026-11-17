@@ -110,7 +110,9 @@ export const HARD_REALM=15;
 // 17/11 (chủ game: "đột phá cực kì lâu, nới ra"): ×1,2 → ×1,1 mỗi cảnh giới (18: ×1,46 · 20: ×1,77 · 23+: ×2,36).
 export const HARD_REALM_STEP=1.1;
 export const hardRealmMult = r=>r<HARD_REALM?1:HARD_REALM_STEP**(Math.min(r,23)-(HARD_REALM-1));
-export const requiredQi = p => Math.round((p.realm<24?rewardQiBasis(p):qiCurve({realm:23})*4**(p.realm-23))*hardRealmMult(p.realm));
+// 17/11 (chủ game: "25 cần 1 trăm mấy tỷ mà 26 lên 6 trăm mấy"): 24–25 giữ ×4/bậc, từ 26 chỉ ×2/bậc.
+const lateQiStep=r=>4**(Math.min(r,25)-23)*2**Math.max(0,r-25);
+export const requiredQi = p => Math.round((p.realm<24?rewardQiBasis(p):qiCurve({realm:23})*lateQiStep(p.realm))*hardRealmMult(p.realm));
 export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p))*(p.realm<HARD_REALM?1:1+.25*(p.realm-HARD_REALM+1)));
 export function power(p) {
   return 8 + p.realm*7 + p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.damage||0),0) + (CATALOG.find(x=>x.id===p.equipped)?.damage||0) + Math.round(extraStat(p,'damage'));
