@@ -40,3 +40,13 @@ export const baoStat=(id,stars,key)=>{const it=baoItem(id),b=it?.stats?.[key]||0
 // Bảng CƠ DUYÊN trên LIVE: mốc quà → số ngọn lửa (KHÔNG hiện %). Mốc theo ảnh mẫu chủ game gửi 17/11.
 export const BAO_FLAMES=Object.freeze([{min:0,flames:1,free:true},{min:1,flames:2},{min:10,flames:3},{min:99,flames:4},{min:199,flames:5},{min:999,flames:5,each:true}]);
 export const BAO_PITY4=10,BAO_PITY5=80,BAO_LIMITED_STOCK=12,BAO_EVENT_MS=5*60000,BAO_FREE_CD=20000; // 17/11 chủ game: 20 s → 5 phút tối đa 15 lượt free, gõ đều chắc ≥10
+// 18/11: THẦN THÔNG BẢN MỆNH trong trận (Lôi Đài). Bản mệnh = món ghim (p.bao.ban) hoặc món mạnh nhất (bậc rồi sao).
+// Mỗi dòng một thần thông; nhịp hồi theo bậc; sát thương % máu đối thủ × (1 + 10%/sao). 5★/GIỚI HẠN: lần phát đầu mỗi trận chiếu riêng.
+export const BAO_LINE_FX=Object.freeze({kiem:{effect:'crit',tech:'sword'},an:{effect:'stun',tech:'thunder'},dinh:{effect:'heal',tech:'lotus'},chung:{effect:'shield',tech:'bell'},phien:{effect:'knock',tech:'peachfan'},kinh:{effect:'reflect',tech:'starmirror'}});
+export const BAO_PROC=Object.freeze({4:{cd:12000,pct:.09},5:{cd:9000,pct:.13},6:{cd:7000,pct:.17}});
+export const BAO_CUT_MS=Object.freeze({5:3600,6:5200});
+export function baoBanMenh(p){
+ const items=p?.bao?.items||{},ids=Object.keys(items).filter(id=>baoItem(id)&&items[id]>0);if(!ids.length)return null;
+ const pin=p.bao.ban&&ids.includes(p.bao.ban)?p.bao.ban:null,id=pin||ids.sort((x,y)=>baoItem(y).tier-baoItem(x).tier||items[y]-items[x])[0],it=baoItem(id);
+ return {id,tier:it.tier,line:it.line,stars:items[id],name:it.name};
+}

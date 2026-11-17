@@ -12,6 +12,11 @@ import {drawQueueAvatars} from './queue-avatars.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
 import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
 import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt,cutVeil} from './skill-cutscene.js?v=20261118';
+import {baoArt,BAO_TIER} from './phap-bao-data.js';
+const BAO_IMG=new Map();function baoImg(id){if(typeof Image==='undefined')return null;let g=BAO_IMG.get(id);if(!g){const im=new Image();im.decoding='async';g={im,ok:false};im.onload=()=>g.ok=true;im.src=baoArt(id);BAO_IMG.set(id,g);}return g.ok?g.im:null;}
+// 18/11: THẦN THÔNG BẢN MỆNH trên đài — pháp bảo hiện trên đầu người ra chiêu, xoay rồi lao vào đối thủ (Đỉnh/Chung: ở lại che thân).
+function drawBaoProc(c,e,k,A,B,t){const im=baoImg(e.bao.id);if(!im)return;const col=BAO_TIER[e.bao.tier]?.color||'#ffd36b',self=e.bao.line==='dinh'||e.bao.line==='chung',fly=self?0:clamp((k-.35)/.4)**2,x=A.x+(B.x-A.x)*fly,y=A.y-330+(B.y-150-(A.y-330))*fly,s=(e.bao.tier>=6?150:e.bao.tier>=5?130:110)*(1+.25*Math.sin(Math.PI*clamp(k/.35)));
+ c.save();c.globalAlpha=Math.min(1,k/.12,(1-k)/.15);c.globalCompositeOperation='lighter';const g=c.createRadialGradient(x,y,0,x,y,s);g.addColorStop(0,col);g.addColorStop(1,col+'00');c.fillStyle=g;c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();c.globalCompositeOperation='source-over';c.translate(x,y);c.scale(Math.cos(t*.006)||.01,1);c.drawImage(im,-s/2,-s/2,s,s);c.restore();c.globalAlpha=1;}
 
 export const ARENA_DELAY_MS=1100;
 export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708],cols:8,guide:.745,audienceScale:.98});
@@ -35,6 +40,7 @@ export function syncArena(scene,state){
   // Ảnh bí pháp + ảnh quà trợ chiêu nạp trước khi cần.
   for(const id of [m.a,m.b])for(const k of m.fighters[id].kit)if(k.art)loadSkillArt(scene,k.art);
   for(const k of ['axe','sword-rain','fire-dragon'])loadSkillArt(scene,k);
+  for(const id of [m.a,m.b]){const b=m.fighters[id].bao;if(b)baoImg(b.id);} // 18/11: ảnh pháp bản mệnh
   for(const id of [m.a,m.b])prewarmCutArt(state.players?.find?.(p=>p.id===id)?.skinChoice);
  }
 }
@@ -108,6 +114,7 @@ function drawHud(scene,c,m,H,t){
 function drawCast(scene,c,m,e,k,H,t,targets){
  if(!e?.skill||e.stunned||e.dot||e.cut)return; // 17/11: đòn chiếu riêng vẽ ở skill-cutscene.js // đòn bị choáng / nhịp độc: không có hình chiêu
  const A=targets.get(e.by),B=targets.get(e.to);if(!A||!B)return;
+ if(e.bao)drawBaoProc(c,e,k,A,B,t);
  const light=scene.budget?.level==='light'||scene.heavyCrowd;
  // Biến thể mỗi đòn (chống "reproduced content"): lệch điểm trúng, cỡ, nghiêng.
  const seed=(e.n*2654435761>>>0)%1000/1000,jx=(seed-.5)*60,jy=((seed*7)%1-.5)*40,sc=.85+seed*.35;

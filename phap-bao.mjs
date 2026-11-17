@@ -5,7 +5,7 @@
 // • Số cơ duyên CHỈ ở server (luật LIVE: không hiện %/tỷ lệ/may rủi). Dữ liệu người chơi gọn: p.bao={p4,p5,items:{id:sao},lim}.
 import {randomInt} from 'node:crypto';
 import {stageConflict} from './stage-lock.mjs';
-import {BAO_ITEMS,BAO_PITY4,BAO_PITY5,BAO_LIMITED_STOCK,BAO_EVENT_MS,BAO_FREE_CD,BAO_MAX_STARS,baoItem} from './public/phap-bao-data.js';
+import {BAO_ITEMS,BAO_PITY4,BAO_PITY5,BAO_LIMITED_STOCK,BAO_EVENT_MS,BAO_FREE_CD,BAO_MAX_STARS,baoItem,baoBanMenh,BAO_LINES,BAO_TIER} from './public/phap-bao-data.js';
 // Cơ duyên không-trượt theo nguồn (theo ảnh mẫu chủ game; chỉnh được). q5 = trong lượt trúng, phần ra 5★.
 export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g999:.80,q5:.06,soft5From:65,soft5Step:.06,limitedIn5:.08});
 const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
@@ -90,4 +90,18 @@ export function baoKhoView(w,now){
 }
 /** Lệnh "thần khí" (thankhi): bộ sưu tập ngắn gọn. */
 export function baoCollectionText(p){const b=p.bao;if(!b||!Object.keys(b.items||{}).length)return 'Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở';
- return 'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★';}
+ const bm=baoBanMenh(p);return (bm?'Bản mệnh '+bm.name+' · ':'')+'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★';}
+
+/** 18/11: lệnh "bản mệnh" — xem pháp bảo bản mệnh + danh sách đánh số; "bản mệnh N" đổi (hồi 10 phút). Bản mệnh phát thần thông trong Lôi Đài. */
+export const BAN_MENH_CD=10*60000;
+export function baoBanMenhCommand(p,rest,now){
+ const items=p.bao?.items||{},list=Object.keys(items).filter(id=>baoItem(id)).sort((x,y)=>baoItem(y).tier-baoItem(x).tier||items[y]-items[x]);
+ if(!list.length)return fail('Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở');
+ const cur=baoBanMenh(p),label=id=>{const it=baoItem(id);return BAO_TIER[it.tier].name+' '+it.name+' ★'+items[id]+' ('+BAO_LINES[it.line].skill+')';};
+ const n=parseInt(String(rest||'').trim(),10);
+ if(!n)return {ok:true,message:'Bản mệnh: '+label(cur.id)+' · đổi: gõ bản mệnh + số · '+list.slice(0,6).map((id,i)=>(i+1)+'. '+baoItem(id).name).join(' · ')};
+ const id=list[n-1];if(!id)return fail('Không có thần khí số '+n);
+ if(id===cur.id)return {ok:true,message:'Bản mệnh đã là '+label(id)};
+ const wait=(p.bao.banAt||0)+BAN_MENH_CD-now;if(wait>0)return fail('Đổi bản mệnh sau '+Math.ceil(wait/60000)+' phút nữa');
+ p.bao.ban=id;p.bao.banAt=now;return {ok:true,message:p.name+' · bản mệnh: '+label(id)};
+}

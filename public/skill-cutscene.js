@@ -3,6 +3,7 @@
 // (HÔ CHIÊU → TUNG CHIÊU → TRÚNG) → mở lại sân chính, để lại DƯ ẢNH chiêu ~1,8 s.
 // Trong pha toàn màn, scene.drawFrame trả về sớm → KHÔNG vẽ sân/khán giả/HUD → GPU chỉ lo 2 nhân vật + hiệu ứng (bùng hết cỡ được).
 import {SIGNATURE_ULTS,PET_ULTS,CUT_AFTERGLOW_MS} from './signature-ults.js';
+import {baoItem,baoArt,BAO_LINES,BAO_TIER} from './phap-bao-data.js'; // 18/11: thần khí bản mệnh
 import {petV2FramesFor,petArtFrame,drawRareFx} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {drawPremiumPetFx} from './premium-pet-fx.js?v=20261117';
 import {petById} from './spirit-pets.js';
@@ -34,6 +35,8 @@ export function findCut(log,shownAt){
 export const cutFull=cut=>!!cut&&cut.k>=CUT_PHASE.wipeIn&&cut.k<CUT_PHASE.wipeOut;
 
 function spec(e,scene){if(e.cut.kind==='skin'){const s=SIGNATURE_ULTS[e.cut.skin];return s&&{...s,kind:'skin'};}
+ // 18/11: thần thông bản mệnh 5★/GIỚI HẠN — dùng khung chiếu của thần kỹ skin, hình chiêu = ảnh pháp bảo.
+ if(e.cut.kind==='bao'){const it=baoItem(e.cut.bao),lim=e.cut.tier>=6;return it&&{kind:'skin',name:it.name,shout:(lim?'THẦN KHÍ GIỚI HẠN — ':'THẦN KHÍ — ')+BAO_LINES[it.line].skill.toUpperCase()+'!',hero:lim?'Thần khí giới hạn':'Thần khí cao cấp',color:lim?'#ff5fb8':'#ffb52e',glow:'#ffffff',deep:lim?'#12030c':'#1a0f02',motif:lim?'stars':'ice',art:baoArt(it.id),tag:'THẦN THÔNG'};}
  // 18/11 (chủ game): quà trợ chiêu KHÔNG hiện hình quà — chỉ hiệu ứng chiêu.
  if(e.cut.kind==='gift')return {kind:'gift',name:e.skill?.name||'Bạo Phát',shout:e.cut.from?Array.from(String(e.cut.from)).slice(0,14).join('')+' TRỢ CHIÊU!':'BẠO PHÁT!',hero:'Trợ chiêu',color:'#ffc44d',glow:'#fff3c4',deep:'#1c1204',motif:'gift'};
  const p=PET_ULTS[e.cut.pet],pet=petById(e.cut.pet);return p&&{...p,kind:'pet',pet,hero:pet?.name||'Linh thú',shout:(pet?.name||'').toUpperCase()+'!',glow:'#ffffff',deep:'#05070f'};}
@@ -165,9 +168,9 @@ export function drawCutFull(scene,c,t,H,cut,players){
   txt(c,S.kind==='pet'?'Linh thú của '+(A?.name||''):S.kind==='gift'?'Trợ lực cho '+(A?.name||''):S.hero+' · '+(A?.name||''),450,H*.2+58,26,P.soft,{width:6,max:820,weight:'800'});c.globalAlpha=1;}
  if(castK>0){const nk=ease(seg(castK,0,.25)),slide=(1-nk)*-600*dir;
   const tg=c.createLinearGradient(0,H*.13-40,0,H*.13+40);tg.addColorStop(0,'#fffbe6');tg.addColorStop(.5,'#ffd34d');tg.addColorStop(1,P.main);
-  c.save();c.translate(slide,0);txt(c,S.name,450,H*.13,70,tg,{width:14,max:880});txt(c,S.kind==='pet'?'LINH THÚ TUYỆT KỸ':S.kind==='gift'?'TRỢ CHIÊU · '+(A?.name||''):'THẦN KỸ · '+S.hero,450,H*.13+56,24,'#ffffff',{width:5,weight:'800'});c.restore();}
+  c.save();c.translate(slide,0);txt(c,S.name,450,H*.13,70,tg,{width:14,max:880});txt(c,S.kind==='pet'?'LINH THÚ TUYỆT KỸ':S.kind==='gift'?'TRỢ CHIÊU · '+(A?.name||''):(S.tag||'THẦN KỸ')+' · '+S.hero,450,H*.13+56,24,'#ffffff',{width:5,weight:'800'});c.restore();}
  if(k>=CUT_PHASE.cast){const u=seg(k,CUT_PHASE.cast,CUT_PHASE.wipeOut),pop=1+.5*(1-ease(seg(u,0,.25)));
-  if(e.dmg){c.save();c.translate(bx,by-330-u*30);c.scale(pop,pop);txt(c,'-'+Math.round(e.dmg).toLocaleString('vi-VN'),0,0,84,'#ffd54a',{width:12});c.restore();txt(c,e.ko?'K.O!':S.kind==='pet'?'LINH THÚ':S.kind==='gift'?'BẠO PHÁT':'THẦN KỸ',bx,by-410-u*30,34,e.ko?'#ff5b4a':'#ff9b3d',{width:7});}
+  if(e.dmg){c.save();c.translate(bx,by-330-u*30);c.scale(pop,pop);txt(c,'-'+Math.round(e.dmg).toLocaleString('vi-VN'),0,0,84,'#ffd54a',{width:12});c.restore();txt(c,e.ko?'K.O!':S.kind==='pet'?'LINH THÚ':S.kind==='gift'?'BẠO PHÁT':S.tag||'THẦN KỸ',bx,by-410-u*30,34,e.ko?'#ff5b4a':'#ff9b3d',{width:7});}
   else if(e.heal||e.shield)txt(c,e.heal?'+'+Math.round(e.heal).toLocaleString('vi-VN'):'KHIÊN +'+Math.round(e.shield).toLocaleString('vi-VN'),ax+dir*60,ay-430,60,e.heal?'#7dffa8':'#9be8ff',{width:10});}
  if(outK>0){c.globalAlpha=outK;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.globalAlpha=1;}
  // âm thanh tụ lực một lần lúc bắt đầu

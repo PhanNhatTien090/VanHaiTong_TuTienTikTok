@@ -8,6 +8,7 @@ import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from 
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
 import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
 import {SKIN_CUT_MS,PET_CUT_MS,GIFT_CUT_MS,GIFT_CUT_MIN,signatureSkinOf,petUltOf} from './public/signature-ults.js'; // 17/11: màn chiếu riêng
+import {baoBanMenh,BAO_LINES,BAO_LINE_FX,BAO_PROC,BAO_CUT_MS,BAO_TIER} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh
 export let arenaBooksOf=p=>bookLoadout(p);
 let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
 export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
@@ -182,7 +183,7 @@ function fighter(w,p,adv,c){
  const realm=Math.max(0,Number(p.realm)||0),maxHp=Math.round((60000+realm*9000)*(1+.04*adv));
  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
  return {id:p.id,name:p.name,realm,totalQi:Number(p.totalQi)||0,maxHp,hp:maxHp,rage:0,shield:0,stunUntil:0,weakUntil:0,reflectUntil:0,dot:null,lastEl:null,
-  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0};
+  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0,bao:baoBanMenh(p),baoCd:0,baoCutDone:0};
 }
 function pickSlot(m,f,foe,now){
  const U=ARENA_ULT_SLOT,P=ARENA_PET_SLOT,ready=s=>s===U?f.rage>=100&&f.ults<2:now>=f.cd[s];
@@ -221,9 +222,14 @@ function act(w,m,id,now){
  const f=m.fighters[id],foeId=id===m.a?m.b:m.a,foe=m.fighters[foeId],at=m.next[id];
  m.next[id]=at+1500+Math.round(rand(m)*600);
  if(f.stunUntil>at){pushLog(m,{n:++m.n,at,by:id,to:foeId,stunned:true});return;}
- const slot=pickSlot(m,f,foe,at),skill=f.kit[slot-1],rule=ARENA_SLOT_RULES[slot];
- const pct=(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||rand(m)<.16;
- const entry={n:++m.n,at,by:id,to:foeId,slot,tier:skill.tier||1,skill:{name:skill.name,tech:skill.tech,color:skill.color,role:skill.role,pet:skill.pet||null,hanh:skill.hanh,effect:skill.effect,art:skill.art||null},crit};
+ const slot=pickSlot(m,f,foe,at),rule=ARENA_SLOT_RULES[slot];
+ // 18/11: THẦN THÔNG BẢN MỆNH — pháp bảo Bảo Khố thay một đòn thường theo nhịp hồi của bậc (4★ 12 s · 5★ 9 s · GIỚI HẠN 7 s), từ giây thứ 5 của trận.
+ const bao=slot===1&&f.bao&&at>=(f.baoCd||0)&&at>=(m.fightAt||0)+5000?f.bao:null;if(bao)f.baoCd=at+BAO_PROC[bao.tier].cd;
+ const bfx=bao&&BAO_LINE_FX[bao.line];
+ const skill=bao?{name:bao.name+' · '+BAO_LINES[bao.line].skill,tech:bfx.tech,color:BAO_TIER[bao.tier].color,role:'attack',effect:['stun','knock','reflect'].includes(bfx.effect)?bfx.effect:'none',tier:bao.tier>=5?3:2,hanh:f.kit[0].hanh,lv:f.kit[0].lv}:f.kit[slot-1];
+ const pct=bao?BAO_PROC[bao.tier].pct*(1+.1*((bao.stars||1)-1)):(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||bfx?.effect==='crit'||rand(m)<.16;
+ const entry={n:++m.n,at,by:id,to:foeId,slot,tier:skill.tier||1,skill:{name:skill.name,tech:skill.tech,color:skill.color,role:skill.role,pet:skill.pet||null,hanh:skill.hanh,effect:skill.effect,art:skill.art||null,bao:bao?.id||null},crit};
+ if(bao)entry.bao={id:bao.id,tier:bao.tier,line:bao.line,stars:bao.stars};
  if(slot===ARENA_ULT_SLOT){f.rage=0;f.ults++;}else if(rule.cd)f.cd[slot]=at+rule.cd;
  // Ngũ hành khắc chế ±5% + liên chiêu (2 đòn cùng hành liền nhau, không tính chiêu thường, +10%).
  let mult=1;
@@ -237,14 +243,17 @@ function act(w,m,id,now){
  else{const r=hit(m,f,foe,role==='control'?pct*.6:role==='drain'?pct*.8:pct,crit,at,mult);entry.dmg=r.dmg;entry.absorbed=r.absorbed||0;entry.reflect=r.reflect||0;
   if(role==='control')applyEffect(m,f,foe,'stun',at,entry,r.dmg);
   if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}
-  if(skill.effect&&skill.effect!=='none')applyEffect(m,f,foe,skill.effect,at,entry,r.dmg);}
+  if(skill.effect&&skill.effect!=='none')applyEffect(m,f,foe,skill.effect,at,entry,r.dmg);
+  if(bfx?.effect==='heal'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.08*ARENA_SUSTAIN_SCALE));if(heal>0){f.hp+=heal;entry.heal=heal;}}
+  if(bfx?.effect==='shield'){const sh=Math.round(f.maxHp*.1*ARENA_SUSTAIN_SCALE);f.shield+=sh;entry.shield=sh;}}
  entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0||f.hp<=0;
  // 17/11: CHIẾU RIÊNG — tuyệt kỹ đầu tiên của skin ≥300 coin / chiêu đầu tiên của linh thú ≥200 coin mỗi trận.
  // Hoãn mọi đòn + độc của cả hai bên và nới giờ kết thúc trận đúng bằng thời gian chiếu → không mất đòn nào, trận không ngắn đi.
  let cut=null;
  if(slot===ARENA_ULT_SLOT&&f.sig&&!f.cutDone){f.cutDone=1;cut={kind:'skin',skin:f.sig,ms:SKIN_CUT_MS};}
  else if(slot===ARENA_PET_SLOT&&f.petUlt&&skill.pet===f.petUlt&&!f.petCutDone){f.petCutDone=1;cut={kind:'pet',pet:f.petUlt,ms:PET_CUT_MS};}
- if(cut&&at<(m.cutUntil||0)){if(cut.kind==='skin')f.cutDone=0;else f.petCutDone=0;cut=null;} // đang chiếu quà → chiêu này đánh thường, lượt sau mới chiếu
+ else if(bao&&bao.tier>=5&&!f.baoCutDone){f.baoCutDone=1;cut={kind:'bao',bao:bao.id,tier:bao.tier,line:bao.line,ms:BAO_CUT_MS[bao.tier]};} // 18/11: thần khí 5★/GIỚI HẠN — lần đầu mỗi trận chiếu riêng
+ if(cut&&at<(m.cutUntil||0)){if(cut.kind==='skin')f.cutDone=0;else if(cut.kind==='bao')f.baoCutDone=0;else f.petCutDone=0;cut=null;} // đang chiếu quà → chiêu này đánh thường, lượt sau mới chiếu
  if(cut){entry.cut=cut;holdMatch(m,at,cut.ms);if(entry.ko)m.finishAt=at+cut.ms;} // hạ gục bằng chiêu chiếu riêng → chờ chiếu xong mới báo thắng
  pushLog(m,entry);
 }
@@ -353,7 +362,7 @@ export function arenaView(w,now){
  const a=w.arena;if(!a||!(a.phase==='open'||a.podiumUntil>now))return null;
  const name=id=>w.players[id]?.name||'';
  const m=a.current,fview=f=>({name:f.name,realm:f.realm,hp:f.hp,maxHp:f.maxHp,rage:f.rage,shield:f.shield,stunned:f.stunUntil>now,weak:f.weakUntil>now,reflect:f.reflectUntil>now,poison:!!f.dot,hanh:f.hanh,
-  cd:Object.fromEntries([1,2,3,4].map(s=>[s,Math.max(0,f.cd[s]-now)])),kit:f.kit.map(k=>({slot:k.slot,name:k.name,tech:k.tech,color:k.color,role:k.role,lv:k.lv,pet:k.pet||null,tier:k.tier,effect:k.effect,hanh:k.hanh,art:k.art||null}))});
+  cd:Object.fromEntries([1,2,3,4].map(s=>[s,Math.max(0,f.cd[s]-now)])),bao:f.bao||null,kit:f.kit.map(k=>({slot:k.slot,name:k.name,tech:k.tech,color:k.color,role:k.role,lv:k.lv,pet:k.pet||null,tier:k.tier,effect:k.effect,hanh:k.hanh,art:k.art||null}))});
  return {id:a.id,master:!!a.master,phase:a.phase,endsAt:a.endsAt,podiumUntil:a.podiumUntil||0,champion:a.champion?{id:a.champion,name:name(a.champion)}:null,
   streak:a.streak,defends:a.defends,defendMax:DEFEND_MAX,best:a.best,
   queue:a.queue.map(q=>({id:q.id,name:name(q.id),avatar:w.players[q.id]?.avatar||null,...(q.vs?{vs:q.vs,vsName:name(q.vs)}:{})})),

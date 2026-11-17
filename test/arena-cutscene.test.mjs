@@ -72,3 +72,26 @@ test('quà trợ chiêu ≥99 coin được chiếu riêng (18/11: hạ từ 499
  const big2=arenaGift(w,w.players.b,2000,t+20);assert.equal(big2.cut.kind,'gift');assert.ok(big2.at>=big.at+GIFT_CUT_MS,'xếp sau màn đang chiếu');
  assert.ok(m.next.a>=big2.at+GIFT_CUT_MS&&m.next.b>=big2.at+GIFT_CUT_MS,'đòn thường hoãn tới khi chiếu xong');
 });
+
+test('18/11: thần thông bản mệnh — pháp bảo Bảo Khố phát theo nhịp hồi, 5★/GIỚI HẠN chiếu riêng lần đầu mỗi trận',async()=>{
+ const {BAO_PROC,BAO_CUT_MS,baoBanMenh}=await import('../public/phap-bao-data.js');
+ assert.equal(baoBanMenh({bao:{items:{'s4-kiem':2,'s5-chung':1}}}).id,'s5-chung','mặc định món bậc cao nhất');
+ assert.equal(baoBanMenh({bao:{items:{'s4-kiem':2,'s5-chung':1},ban:'s4-kiem'}}).id,'s4-kiem','ghim thì theo ghim');
+ const w=setup(null);w.players.a.bao={p4:0,p5:0,items:{'s5-an':1},lim:null};
+ const {log}=run(w);const procs=log.filter(e=>e.bao&&e.by==='a');
+ assert.ok(procs.length>=2,'phát nhiều lần trong trận: '+procs.length);
+ for(let i=1;i<procs.length;i++)assert.ok(procs[i].at-procs[i-1].at>=BAO_PROC[5].cd,'đúng nhịp hồi');
+ assert.equal(procs.filter(e=>e.cut?.kind==='bao').length,1,'chiếu riêng đúng 1 lần');assert.equal(procs.find(e=>e.cut).cut.ms,BAO_CUT_MS[5]);
+ assert.ok(procs.some(e=>e.stun),'Ấn = choáng');assert.ok(procs.every(e=>e.skill.bao==='s5-an'));
+ assert.ok(!log.some(e=>e.bao&&e.by==='b'),'không có thần khí thì không phát');
+});
+
+test('18/11: lệnh bản mệnh — xem, đổi theo số, hồi 10 phút; "thần khí" có dấu cách vẫn nhận',async()=>{
+ const {baoBanMenhCommand,BAN_MENH_CD}=await import('../phap-bao.mjs');const {commandWords}=await import('../engine.mjs');
+ assert.deepEqual(commandWords('thần khí'),['thankhi']);assert.deepEqual(commandWords('bản mệnh 2'),['banmenh','2']);
+ const p={name:'A',bao:{p4:0,p5:0,items:{'s4-kiem':1,'s5-dinh':2},lim:null}};
+ assert.match(baoBanMenhCommand(p,'',N).message,/Cửu Long Thần Đỉnh/);
+ assert.equal(baoBanMenhCommand(p,'2',N).ok,true);assert.equal(p.bao.ban,'s4-kiem');
+ assert.equal(baoBanMenhCommand(p,'1',N+1000).ok,false,'đang hồi');assert.equal(baoBanMenhCommand(p,'1',N+BAN_MENH_CD+1).ok,true);
+ assert.equal(baoBanMenhCommand({name:'B'},'',N).ok,false);
+});
