@@ -84,7 +84,7 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
    - Giọng quà trong sự kiện: "X thi triển cầu bảo" (`giftLines` trong `speech-lines.mjs`).
 2. Test `test/phap-bao.test.mjs` (đã soạn ý): 9 lượt đầu trượt → lượt 10 chắc 4★; lượt 80 chắc 5★; dữ liệu chỉ `items,lim,p4,p5`; 400 lượt "không may" không bao giờ ra GIỚI HẠN; người đã có GIỚI HẠN không ra món thứ 2; đúng 12 suất; "cầu" hồi 20 s; quà count=3 → 3 lượt + tu vi; `baoKhoView` không chứa `free/g999/q5/limitedIn5`; hết giờ thì phase finished, không cầu được.
 3. Overlay `public/bao-kho.js` (+ hook `scene.js` như mount-realm, + `warCutFrame`-kiểu cho màn mở bảo 5★/GIỚI HẠN dùng `cut-fx.js`): bố cục mục 4, bảng CƠ DUYÊN = ảnh quà (gift-icons) → ngọn lửa; KHÔNG góc dưới trái; cách đáy ≥11%.
-4. Ảnh: Codex đang vẽ 24 món (prompt: scratchpad `phapbao/PROMPT.md`). File ra ở thư mục chạy Codex (scratchpad, có thể bị dọn) VÀ bản gốc ở `C:\Users\Admins\.codex\generated_images\<phiên codex>\`. Session sau: kiểm 24 file, tự xem ở cỡ 64 px, chuyển webp (PIL, chạy python thường không -I) vào `public/assets/phap-bao-v1/<id>.webp`, gửi chủ game duyệt.
+4. Ảnh: ✅ ĐỦ 24 món ở `public/assets/phap-bao-v1/` (webp ≤384 px, commit b55160b), chờ user duyệt. (Ghi chú cũ: Codex đang vẽ 24 món (prompt: scratchpad `phapbao/PROMPT.md`). File ra ở thư mục chạy Codex (scratchpad, có thể bị dọn) VÀ bản gốc ở `C:\Users\Admins\.codex\generated_images\<phiên codex>\`. Session sau: kiểm 24 file, tự xem ở cỡ 64 px, chuyển webp (PIL, chạy python thường không -I) vào `public/assets/phap-bao-v1/<id>.webp`, gửi chủ game duyệt.
 5. Đợt 1 (bản mệnh + luyện hóa đồ cũ) làm LÚC KHÔNG LIVE, sao lưu trước.
 6. Chưa chốt: thanh mục tiêu chung (đề xuất đếm lệnh gõ + quà, KHÔNG đếm tim). ⚠ Theo dõi: quà 1 coin = 1 lượt → 80 quà nhỏ chắc 5★.
 
