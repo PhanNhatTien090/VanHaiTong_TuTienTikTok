@@ -9,7 +9,7 @@ export function giftPlan(gift){const g=clean(gift);return g?[{voice:'tongsu',tex
 // 08/11 tối: mảnh ghép hô chiến cho quà trong Chính Ma Đại Chiến (thay 'Đa tạ tâm ý').
 export const WAR_PUSH_PLANS=Object.freeze({chinh:Object.freeze([{voice:'tongsu',text:'phản công! Chính Đạo đẩy mạnh!'}]),ma:Object.freeze([{voice:'tongsu',text:'phản công! Ma Đạo đẩy mạnh!'}])});
 // 08/11 tối: tông chủ ban lễ — "<tên>" + "được Tông chủ ban <gói>!" làm sẵn để đọc ngay (câu đầy đủ mất ~10 s, trước đây bị bỏ).
-export const ADMIN_PLANS=Object.freeze(Object.fromEntries([['small','Tiểu Lễ'],['medium','Trung Lễ'],['large','Đại Lễ'],['buff','Phúc Duyên'],['breakthrough','Đột Phá Đan']].map(([k,n])=>[k,Object.freeze([{voice:'tongsu',text:`được Tông chủ ban ${n}!`}])])));
+export const ADMIN_PLANS=Object.freeze(Object.fromEntries([['small','Tụ Khí Đan'],['medium','Ngưng Nguyên Đan'],['large','Cửu Chuyển Kim Đan'],['buff','Phúc Duyên'],['breakthrough','Đột Phá Đan']].map(([k,n])=>[k,Object.freeze([{voice:'tongsu',text:`được Tông chủ ban ${n}!`}])])));
 export const THANKS_PLAN=Object.freeze([{voice:'tongsu',text:'tặng quà! Tu vi tăng mạnh!'}]);
 const ACTIVE_MS=20*60000;
 /** Mảnh còn thiếu cần làm tiếp (ưu tiên: câu cảm ơn chung → người vừa tương tác → quà vừa có → quà phổ biến). */

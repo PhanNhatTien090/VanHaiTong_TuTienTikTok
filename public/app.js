@@ -350,7 +350,7 @@ function renderLiveRanks(force=false){
 }
 let giftReceiptTimer;
 // 08/11 tối: tông chủ ban lễ — thẻ thông báo hiện ngay (trước đây chỉ có hiệu ứng hoa sen, không chữ).
-function showAdminReceipt(e){const el=$('#giftReceipt');if(!el)return;const r=e.reward||{},parts=[r.qi&&'+'+fmt(r.qi)+' tu vi',r.stones&&'+'+fmt(r.stones)+' linh thạch',r.herbs&&'+'+fmt(r.herbs)+' linh thảo'].filter(Boolean);
+function showAdminReceipt(e){const el=$('#giftReceipt');if(!el)return;const r=e.reward||{},parts=[r.qi&&(e.qiPct&&e.pill?'tu vi +'+e.qiPct+'% (+'+fmt(r.qi)+')':'+'+fmt(r.qi)+' tu vi'),r.stones&&'+'+fmt(r.stones)+' linh thạch',r.herbs&&'+'+fmt(r.herbs)+' linh thảo'].filter(Boolean);
   el.innerHTML=`<strong>👑 Tông chủ ban ${esc(e.comboName||'phần thưởng')} · ${esc(e.name)}</strong>${parts.length?`<span>${parts.join(' · ')}</span>`:''}${e.buff?.mult?`<span>✦ Phúc duyên ×${String(e.buff.mult).replace('.',',')} trong ${e.buff.minutes} phút</span>`:''}`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,10000);}
 function showGiftReceipt(e){
   if(e.raceGift&&e.raceBoost){const el=$('#giftReceipt');if(!el)return;el.innerHTML=`<strong>⚡ ${esc(e.name)} · ${esc(e.gift||'Quà tặng')}${(Number(e.count)||1)>1?' ×'+e.count:''}</strong><span>Bứt tốc +${fmt(e.raceBoost)} trượng</span>`;el.hidden=false;clearTimeout(giftReceiptTimer);giftReceiptTimer=setTimeout(()=>el.hidden=true,6000);return;} // 07/11: đang đua chỉ báo bứt tốc
@@ -724,7 +724,7 @@ function renderScenePicker(){const el=document.getElementById('scenePicker');if(
   el.querySelectorAll('[data-map]').forEach(b=>b.onclick=async()=>{const r=await post('/api/world-scene',{scene:b.dataset.map});if(r.ok){toast(b.dataset.map==='auto'?'Map tự đổi mỗi 5 phút.':'Đã đổi map: '+(MAP_SCENES.find(m=>m.id===b.dataset.map)?.name||''));scenePickerSig='';}});}
 
 // v80: BAN THƯỞNG NHANH — chọn người trong bảng (hoặc ngẫu nhiên 1 người đang chơi) rồi bấm gói quà.
-const QUICK_COMBOS=[['small','🎁 Tiểu Lễ','+10% tu vi cảnh giới · 30 linh thạch · 5 linh thảo'],['medium','🎁 Trung Lễ','+30% tu vi · 100 linh thạch · 15 linh thảo · phúc duyên ×3'],['large','💎 Đại Lễ','+60% tu vi · 250 linh thạch · 40 linh thảo · phúc duyên ×5'],['buff','🔥 Phúc Duyên ×8','10 phút tu luyện ×8'],['breakthrough','⚡ Đột Phá Đan','đủ tu vi + linh thạch để đột phá ngay']];
+const QUICK_COMBOS=[['small','💊 Tụ Khí Đan','+10% tu vi cảnh giới · 30 linh thạch · 5 linh thảo'],['medium','💊 Ngưng Nguyên Đan','+30% tu vi · 100 linh thạch · 15 linh thảo · phúc duyên ×3'],['large','🔱 Cửu Chuyển Kim Đan','+60% tu vi · 250 linh thạch · 40 linh thảo · phúc duyên ×5'],['buff','🔥 Phúc Duyên ×8','10 phút tu luyện ×8'],['breakthrough','⚡ Đột Phá Đan','đủ tu vi + linh thạch để đột phá ngay']];
 let quickSig='';
 function renderQuickGift(){const el=document.getElementById('quickGift');if(!el||!state)return;const p=player(),sig=(p?.id||'')+'|'+(p?.name||'')+'|'+(p?.realm??'');if(sig===quickSig)return;quickSig=sig;
   const btns=target=>QUICK_COMBOS.map(([id,label,tip])=>'<button class="small '+(id==='large'||id==='breakthrough'?'gold-button':'soft-button')+'" data-qg="'+id+'" data-target="'+target+'" title="'+tip+'">'+label+'</button>').join('');

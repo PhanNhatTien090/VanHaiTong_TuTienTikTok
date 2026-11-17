@@ -1282,9 +1282,10 @@ export function migrateSkinsV33(w){
 // v33: người điều hành chỉnh tay từng người (trang quản lý, chỉ trên máy này). Kiểm tra từng trường, ghi nhật ký.
 // v80: NÚT BAN THƯỞNG của người điều hành — gói tu vi theo % yêu cầu cảnh giới hiện tại (ai cũng thấy đáng), linh thạch, linh thảo, phúc duyên.
 export const ADMIN_COMBOS=Object.freeze({
-  small:{name:'Tiểu Lễ',qiPct:.10,stones:30,herbs:5,buff:0},
-  medium:{name:'Trung Lễ',qiPct:.30,stones:100,herbs:15,buff:3},
-  large:{name:'Đại Lễ',qiPct:.60,stones:250,herbs:40,buff:5},
+  // 17/11 (chủ game): Tiểu/Trung/Đại Lễ → ĐAN DƯỢC; % tính theo tu vi cần của cảnh giới hiện tại, giọng đọc số % thực nhận.
+  small:{name:'Tụ Khí Đan',qiPct:.10,stones:30,herbs:5,buff:0},
+  medium:{name:'Ngưng Nguyên Đan',qiPct:.30,stones:100,herbs:15,buff:3},
+  large:{name:'Cửu Chuyển Kim Đan',qiPct:.60,stones:250,herbs:40,buff:5},
   buff:{name:'Phúc Duyên',qiPct:0,stones:0,herbs:0,buff:8},
   breakthrough:{name:'Đột Phá Đan',qiPct:1,stones:0,herbs:0,buff:0,fill:true}
 });
@@ -1294,13 +1295,14 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   const c=ADMIN_COMBOS[combo];if(!c)return fail('Gói quà không hợp lệ.');
   let p;if(id==='*'){const pool=Object.values(w.players).filter(x=>!x.resident&&currentParticipant(w,x,now));if(!pool.length)return fail('Chưa có ai đang chơi.');p=pool[Math.floor(Math.random()*pool.length)];}
   else p=w.players[clean(id,80)];if(!p||p.resident)return fail('Không tìm thấy người chơi.');
-  const need=requiredQi(p);let qi=c.fill?Math.max(0,need-p.qi):Math.round(rewardQiBasis(p)*c.qiPct);
+  const need=requiredQi(p);let qi=c.fill?Math.max(0,need-p.qi):Math.round(need*c.qiPct);
   if(c.fill){p.stones=Math.max(p.stones,requiredStones(p));}
   const got=qi?gain(w,p,qi,c.stones,c.herbs,now,false,'admin'):0;if(!qi&&(c.stones||c.herbs)){p.stones+=c.stones;p.herbs+=c.herbs;}
   if(c.buff){p.buffMult=Math.max(c.buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=now+GIFT_BUFF_MS;}
   p.lastActive=Math.max(p.lastActive||0,now);
-  const parts=[got&&`+${got} tu vi`,c.stones&&!c.fill&&`+${c.stones} linh thạch`,c.herbs&&`+${c.herbs} linh thảo`,c.buff&&`phúc duyên ×${c.buff} 10 phút`,c.fill&&(readyToBreak(p,w,now)?'đủ điều kiện đột phá':'đủ tu vi và linh thạch, chờ lượt đột phá ngày sau')].filter(Boolean);
-  emit(w,p,`Tông chủ ban ${c.name} cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{achieve:{kind:'admin',item:c.name,parts},adminGift:combo,comboName:c.name,reward:{qi:got,stones:c.stones,herbs:c.herbs},buff:c.buff?{mult:c.buff,minutes:10}:null});
+  const qiPct=got&&need?Math.max(1,Math.round(got/need*100)):0;
+  const parts=[got&&(c.fill?`+${got} tu vi`:`tu vi +${qiPct}% (+${got})`),c.stones&&!c.fill&&`+${c.stones} linh thạch`,c.herbs&&`+${c.herbs} linh thảo`,c.buff&&`phúc duyên ×${c.buff} 10 phút`,c.fill&&(readyToBreak(p,w,now)?'đủ điều kiện đột phá':'đủ tu vi và linh thạch, chờ lượt đột phá ngày sau')].filter(Boolean);
+  emit(w,p,`Tông chủ ban ${c.name} cho ${p.name} • ${parts.join(' • ')}`,'lotus',now,{achieve:{kind:'admin',item:c.name,parts},adminGift:combo,comboName:c.name,qiPct,pill:!c.fill&&c.qiPct>0,reward:{qi:got,stones:c.stones,herbs:c.herbs},buff:c.buff?{mult:c.buff,minutes:10}:null});
   (w.adminLog??=[]).push({at:now,id:p.id,name:p.name,changes:['ban '+c.name]});if(w.adminLog.length>200)w.adminLog.splice(0,w.adminLog.length-200);
   checkReady(w,p,now);return {ok:true,id:p.id,name:p.name,combo:c.name,qi:got};
 }

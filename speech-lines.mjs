@@ -147,6 +147,9 @@ export function speechPlan(e){
   if(e.adminGift){const r=e.reward||{},m=e.buff?.mult,custom=e.adminGift==='custom',gift=custom?'phần thưởng riêng':(e.comboName||'phần thưởng');
     const got=[Number(r.qi)>0&&roundSay(r.qi)+' tu vi',Number(r.stones)>0&&viNumber(r.stones)+' linh thạch',Number(r.herbs)>0&&viNumber(r.herbs)+' linh thảo',m&&'phúc duyên gấp '+multWord(m)+' trong '+viNumber(e.buff.minutes||10)+' phút'].filter(Boolean);
     const head=pickBy(seed,[`Tông chủ ban ${gift} cho ${who}!`,`Tông chủ để ý đến ${who}, ban ${gift}!`,`Tông chủ để mắt tới ${who}, ban tặng ${gift}!`]);
+    // 17/11 (chủ game): ban ĐAN DƯỢC → đọc rõ tu vi tăng bao nhiêu phần trăm (số % thực nhận, server tính).
+    if(e.pill&&Number(e.qiPct)>0){const pillHead=pickBy(seed,[`Tông chủ ban ${gift} cho ${who}!`,`Tông chủ ban thưởng ${gift} cho ${who}!`,`Tông chủ để mắt tới ${who}, ban ${gift}!`]);
+      return [say('tiennu',pillHead),say('tongsu',`${Who} luyện hóa đan dược, tu vi tăng ${viNumber(e.qiPct)} phần trăm!`+(m?` Phúc duyên gấp ${multWord(m)} trong ${viNumber(e.buff.minutes||10)} phút!`:''))];}
     const tail=e.adminGift==='breakthrough'?`${Who} đã đủ tu vi, gõ đột phá ngay!`:got.length?`${Who} nhận ${list2(got)}!`:`${Who} hãy tạ ơn Tông chủ!`;
     return [say('tiennu',head),say('tongsu',tail)];}
   // v79: hướng dẫn người mới từng bước

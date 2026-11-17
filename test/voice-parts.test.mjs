@@ -33,7 +33,7 @@ test('Chính Ma: quà chỉ hô phản công / đẩy mạnh, không cảm ơn; 
 
 test('tông chủ ban lễ: giọng ưu tiên cao, chờ đủ lâu, có mảnh ghép làm sẵn; không câu dự phòng chung',async()=>{
  const {priority,voiceMaxAgeMs,fastVoiceFile}=await import('../public/voice.js');
- const e={id:'a1',user:'u',name:'An',effect:'lotus',adminGift:'small',comboName:'Tiểu Lễ',text:'Tông chủ ban Tiểu Lễ cho An • +100 tu vi'};
+ const e={id:'a1',user:'u',name:'An',effect:'lotus',adminGift:'small',comboName:'Tụ Khí Đan',text:'Tông chủ ban Tụ Khí Đan cho An • tu vi +10% (+100)'};
  assert.ok(priority(e)>=5);assert.ok(voiceMaxAgeMs(e)>=20000);assert.equal(fastVoiceFile(e),null);
- assert.equal(ADMIN_PLANS.small[0].text,'được Tông chủ ban Tiểu Lễ!');assert.equal(ADMIN_PLANS.medium[0].text,'được Tông chủ ban Trung Lễ!');
+ assert.equal(ADMIN_PLANS.small[0].text,'được Tông chủ ban Tụ Khí Đan!');assert.equal(ADMIN_PLANS.medium[0].text,'được Tông chủ ban Ngưng Nguyên Đan!');
 });
