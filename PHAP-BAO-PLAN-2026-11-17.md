@@ -3,7 +3,7 @@
 Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự kiện "cầu bảo" kiểu Genshin — **rút miễn phí bằng 1 chữ, tặng quà chỉ để nhanh hơn**; có bảo hiểm 4★/5★; đồ GIỚI HẠN hiệu ứng ngang màn đột phá. Tham khảo kênh "Vấn Đạo Tông – Vạn Bảo Các" (8 ảnh 17/11), làm khác tên/hình, không sao chép.
 
 ## 0. Luật đã chốt
-- KHÔNG ghi "tỷ lệ / % / may rủi / ngẫu nhiên / trượt" ở LIVE (bảng, chữ, giọng). Bảng **CƠ DUYÊN** = ảnh quà thật → 1–5 ngọn lửa.
+- KHÔNG ghi "tỷ lệ / % / may rủi / ngẫu nhiên" ở LIVE ("TRƯỢT" được dùng — chủ game chốt 17/11) (bảng, chữ, giọng). Bảng **CƠ DUYÊN** = ảnh quà thật → 1–5 ngọn lửa.
 - Không mồi tim. Không đoạt bảo (người tu vi cao sẽ gom hết) → thay bằng **mỗi người tối đa 1 đồ GIỚI HẠN mỗi mùa** + mỗi mùa 12 món mới.
 - Bảng không đặt góc dưới trái (bình luận che), cách đáy ≥11%. Màn toàn cảnh có biến thể (chống "reproduced content").
 - Ưu tiên không lag (xem mục 6).
@@ -11,7 +11,7 @@ Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự 
 ## 1. Bậc sao & bảo hiểm (giống Genshin)
 | Bậc | Ra khi | Hiệu ứng |
 |---|---|---|
-| 3★ | lượt thường (thay "trượt") | chỉ cộng chỉ số; dùng làm tinh hoa luyện hóa |
+| TRƯỢT | lượt thường | chỉ +tu vi an ủi, **không lưu món đồ nào** (chủ game: lưu data tốn) |
 | 4★ | **chắc chắn trong mỗi 10 lượt** | chiêu nhẹ, hiệu ứng nhẹ |
 | 5★ | **chắc chắn trong 80 lượt** (từ lượt 65 cơ duyên tăng dần — "mềm") | chiêu mạnh, màn tung chiêu đơn giản |
 | GIỚI HẠN | là một loại 5★ | hiệu ứng cực mạnh, độc lạ; tung chiêu = màn chiếu riêng ngang đột phá |
@@ -24,8 +24,9 @@ Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự 
 ## 2. Cách lấy lượt
 - **Lệnh 1 chữ: `cầu`** (nhận cả "cau"). Miễn phí, hồi 30 s/người; báo hồi lượt "X · 12 giây nữa cầu tiếp được".
 - Tặng quà trong sự kiện = thêm lượt ngay, quà lớn cơ duyên cao hơn (5 nấc lửa, ảnh quà thật): ~1 / 10 / 99 / 199 / 999 coin. Quà nào cũng +tu vi an ủi (đọc "thi triển", không "đa tạ").
-- Mỗi lượt có băng rôn nhỏ giữa màn "Tên · 3★ Thanh Phong Kiếm" (xếp tối đa 3 dòng).
+- Mỗi lượt có băng rôn nhỏ giữa màn "Tên · TRƯỢT" / "Tên · 4★ Thanh Phong Kiếm" (xếp tối đa 3 dòng).
 - Trùng đồ → lên sao (★1→★5, mỗi sao +20% chỉ số); đủ ★5 trùng nữa → tinh hoa.
+- **Gọn dữ liệu:** chỉ lưu 4★/5★/GIỚI HẠN dạng `{id: sao}` + 3 số bảo hiểm + 1 số tinh hoa mỗi người; lượt TRƯỢT không lưu gì (log "vừa cầu" chỉ giữ 20 dòng trong bộ nhớ, không ghi đĩa).
 
 ## 3. Pháp bảo bản mệnh (sửa gốc "pháp bảo lỏ")
 Hiện trạng: 864 người có pháp bảo, nhiều nhất 65 món, đeo cùng lúc tới 5 món, không món nào có cá tính.
@@ -46,7 +47,7 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
 - Sau sự kiện: bảng tổng kết top săn bảo + chủ nhân GIỚI HẠN mới.
 
 ## 5. Nội dung hình (Codex vẽ, tự xem trước rồi gửi duyệt)
-- 6 dòng × 3 bậc (3★/4★/5★) = 18 pháp bảo thường (ảnh đơn, nền trong suốt).
+- 6 dòng × 2 bậc (4★/5★) = 12 pháp bảo thường (ảnh đơn, nền trong suốt).
 - 12 GIỚI HẠN mùa 1 (mỗi món 1 ý tưởng hiệu ứng riêng: ví dụ kiếm hóa rồng, chuông đóng băng thời gian, gương phân thân, đỉnh luyện cả sân…).
 - Nền sự kiện + trận pháp + khung thẻ bậc.
 
