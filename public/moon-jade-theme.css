@@ -84,7 +84,7 @@ html body #phoneHudLeft>#gearGuide{position:relative;width:auto;max-width:100%;a
 #gearGuide span{font-size:.78em;color:#d5dccf}
 #gearGuide small{display:block;margin-top:2px;font-size:.72em;color:#e8cf9a}#gearGuide small i{font-style:normal;color:#9ff0d0}
 @keyframes gearIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-body.sword-race #gearGuide,body.abyss-fight #gearGuide,body.alchemy-on #gearGuide,body.performance-solo #gearGuide,body.social-stage #gearGuide,body:not(.overlay) #gearGuide{display:none!important}
+body.love-festival #gearGuide,body.sword-race #gearGuide,body.abyss-fight #gearGuide,body.alchemy-on #gearGuide,body.performance-solo #gearGuide,body.social-stage #gearGuide,body:not(.overlay) #gearGuide{display:none!important}
 @media(prefers-reduced-motion:reduce){#gearGuide{animation:none}}
 
 /* 08/11/2026: ảnh món quà thật thay số coin trên bảng sự kiện skin (public/gift-icons.js). */

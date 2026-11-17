@@ -14,7 +14,7 @@ export function drawSeated(scene,c,player,x,y,scale,t,flip){if(!player)return;co
 export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower.webp',rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
 // Ô cửa sổ trong ảnh Tình Lâu (tỉ lệ 0–1 theo ảnh vuông) — đo từ ảnh thật.
 export const TOWER_WINDOWS=Object.freeze([[.264,.194],[.531,.194],[.264,.383],[.531,.383],[.264,.575],[.531,.575]].map(([x,y])=>({x,y,w:.205,h:.12}))); // đo từ love-tower.webp 1254²
-export const TOWER_BOX=Object.freeze({x:652,y:.205,size:236}); // dưới bảng luật quà góc phải (bảng cao tới ~19% H) // vị trí trên màn 900 px, y theo H
+export const TOWER_BOX=Object.freeze({x:362,y:.03,size:200}); // 17/11: giữa mép trên (trên cây Nguyệt Lão) — cột phải LIVE có thêm thẻ Tiên Đế + bảng giờ lễ che mất góc phải // vị trí trên màn 900 px, y theo H
 const ROOM_PAL=[{main:'#ff5a7a',soft:'#ffd2dc',gold:'#ffe7a8',deep:'#1a0508'},{main:'#5affb4',soft:'#d8ffe9',gold:'#fff3c0',deep:'#03140c'},{main:'#8fd8ff',soft:'#e6f6ff',gold:'#f2e9ff',deep:'#040b18'}];
 const hasDoc=()=>typeof document!=='undefined';
 const imgs=new Map();
@@ -23,6 +23,7 @@ const ready=im=>im&&im.complete&&im.naturalWidth>0;
 const nowAt=(scene,t)=>(scene.stateServerNow||Date.now())+Math.min(2000,Math.max(0,t-(scene.stateReceivedAt||t)));
 export function syncLoveTower(scene,state){
   scene.loveStatus=state?.loveTower||null; // server chỉ gửi khi lễ đang mở (hoặc vừa đóng ≤20 s để chiếu nốt)
+  if(hasDoc())document.body?.classList?.toggle('love-festival',!!scene.loveStatus?.active); // ẩn bảng hướng dẫn chung (Rèn pháp bảo…) trong lễ
   if(scene.loveStatus){img(LOVE_ART.tower);for(const r of LOVE_ART.rooms)img(r);}
 }
 let heart;
