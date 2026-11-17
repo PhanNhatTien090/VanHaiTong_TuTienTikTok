@@ -117,3 +117,10 @@ export function baoEquipByName(p,rest){
  const id=Object.keys(items).find(id=>{const it=baoItem(id);if(!it)return false;const n=baoKey(it.name);return n===k||n.includes(k)||k.includes(n);});if(!id)return null;
  p.bao.ban=id;const it=baoItem(id);return {ok:true,message:p.name+' · trang bị thần khí '+it.name+' ★'+items[id]+' làm bản mệnh ('+BAO_LINES[it.line].skill+')'};
 }
+
+/** 18/11 khuya: chủ nhân thần khí VÀO SÂN (vắng ≥30 phút rồi tương tác lại) → nhắc 1 câu cách xem/đeo/dùng. Trả null nếu không có thần khí. */
+export const BAO_RETURN_AWAY=30*60000;
+export function baoReturnHint(p){
+ const bm=baoBanMenh(p);if(!bm)return null;
+ return 'Chủ nhân thần khí trở lại • bản mệnh '+BAO_TIER[bm.tier].name+' '+bm.name+' ★'+bm.stars+' tự tung '+BAO_LINES[bm.line].skill+' ở Lôi Đài · Tháp · tỷ thí • gõ thần khí để xem · trang bị + tên để đổi';
+}

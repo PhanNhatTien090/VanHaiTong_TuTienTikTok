@@ -101,3 +101,12 @@ test('18/11 khuya: quà ≥99 coin không bao giờ TRƯỢT; quà nhỏ và c�
  const w=world();for(const src of ['g99','g199','g999'])for(let i=0;i<30;i++)assert.ok(rollBao(w,ensurePlayer(w,src+i,'P',N),src,miss).tier>=4,src+' không trượt');
  assert.equal(rollBao(w,ensurePlayer(w,'f','F',N),'free',miss).tier,0);assert.equal(rollBao(w,ensurePlayer(w,'g','G',N),'g10',miss).tier,0);
 });
+
+test('chủ nhân thần khí vào sân (vắng ≥30 phút) → nhắc cách xem/đeo/dùng, 1 lần; người không có thần khí thì không',()=>{
+ const w=world(),a=ensurePlayer(w,'a','A',N),b=ensurePlayer(w,'b','B',N);a.bao={p4:0,p5:0,items:{[ 'L12-huyet-hai-dao']:1},lim:'L12-huyet-hai-dao'};
+ const hints=()=>w.events.filter(e=>e.baoReturn);
+ action(w,{type:'cultivate',userId:'a',name:'A'},N+1000);action(w,{type:'cultivate',userId:'b',name:'B'},N+1000);assert.equal(hints().length,0,'chưa vắng thì không nhắc');
+ const t=N+1000+31*60000;action(w,{type:'chat',userId:'a',name:'A',text:'cầu'},t);action(w,{type:'cultivate',userId:'b',name:'B'},t);
+ assert.equal(hints().length,1);const h=hints()[0];assert.equal(h.user,'a');assert.match(h.text,/Huyết Hải Ma Đao/);assert.match(h.text,/gõ thần khí để xem · trang bị \+ tên/);assert.doesNotMatch(h.text,/%|tỷ lệ/);
+ action(w,{type:'cultivate',userId:'a',name:'A'},t+5000);assert.equal(hints().length,1,'không lặp');
+});
