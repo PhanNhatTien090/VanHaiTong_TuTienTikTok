@@ -13,6 +13,8 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  if(s?.baoKho)return null; // 18/11: Thiên Công Bảo Khố có bảng CƠ DUYÊN riêng (ảnh quà → ngọn lửa)
  if(s?.hallWar?.active)return {kind:'hall-war',title:'NGŨ ĐƯỜNG GIAO LƯU',tone:'jade',rows:[[1,'cuồng hóa'],[5,'hồi xuân đan'],[10,'phi kiếm truy hồn'],[30,'lôi kích cửu thiên'],[99,'tuyệt chiêu Đường'],[300,'đại tuyệt chiêu']],note:'Gia nhập Đường trước · điểm trận cộng bảng tuần'};
  if(!s)return null;
+ // 17/11: Nguyệt Hạ Tình Lâu (love-tower.mjs) — quà của đôi đạo lữ = song tu (một món ≥100 = Đại Điển).
+ if(s.loveTower?.active)return {kind:'bond',title:'NGUYỆT HẠ TÌNH LÂU',tone:'rose',rows:[[1,'Tình Các song tu'],[30,'Uyên Ương Mật Thất'],[100,'Tiên Lữ Đại Điển']],note:'Đôi đạo lữ · gõ song tu · ketduyen tên'};
  const race=s.raceStatus,war=s.sectWar,alc=s.alchemy;
  if(race&&['registration','running'].includes(race.phase))return race.phase==='running'
   ?{kind:'race',title:'ĐUA PHI KIẾM',tone:'sky',rows:[[1,`+${RACE_TRUONG_PER_COIN} trượng`],[100,`+${fmt(100*RACE_TRUONG_PER_COIN)} trượng`]]}

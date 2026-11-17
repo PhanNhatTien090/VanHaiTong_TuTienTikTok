@@ -1,0 +1,169 @@
+// 17/11/2026 (chủ game): NGUYỆT HẠ TÌNH LÂU — overlay cho love-tower.mjs.
+// 1) Tình Lâu góc phải map lễ: 6 cửa sổ, phòng có đôi thì sáng hồng + 2 người ngồi đối diện + tim bay ra.
+// 2) Đình Nguyệt: quầng tim quanh đôi đang song tu trên sân.
+// 3) Chiếu riêng (server hẹn giờ, love.cuts): Uyên Ương Mật Thất (≥30) — bình phong lụa hạ xuống, chỉ thấy BÓNG hai người NGỒI
+//    đối diện chạm tay, khí song tu xoáy, 3 nhịp bùng → "SONG TU ĐẠI THÀNH". Tiên Lữ Đại Điển (một món ≥100) — lễ trên cầu rồi vào Mật Thất.
+//    Song tu kiểu tu tiên, KHÔNG cảnh quan hệ (luật TikTok). Biến thể: 3 phòng × 3 kiểu khí × màu, server né biến thể vừa dùng.
+import {makeSurface} from './performance.js';
+import {skinFor} from './cosmetics.js';
+import {drawCaster,cutVeil,txt,CUT_PHASE} from './skill-cutscene.js?v=20261118';
+import {PALETTES,fxCamera,punch,smooth,out3,seg,clamp,dot,drawCircle,drawBurst,drawEmbers,drawVignette,drawLetterbox} from './cut-fx.js?v=20261118';
+const TAU=Math.PI*2;
+// Ngồi thiền (stand:0 — tư thế song tu/cùng tu có sẵn), không vẽ tư thế mới.
+export function drawSeated(scene,c,player,x,y,scale,t,flip){if(!player)return;const oc=scene.compact,op=scene.cinematicPose;scene.compact=true;scene.cinematicPose={...(op||{}),stand:0,lift:0,lean:0};c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.scale(scale,scale);try{scene.drawCharacterBody(c,player,skinFor(player.giftCoins),t);}catch{}finally{c.restore();scene.compact=oc;scene.cinematicPose=op;}}
+export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower.webp',rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
+// Ô cửa sổ trong ảnh Tình Lâu (tỉ lệ 0–1 theo ảnh vuông) — đo từ ảnh thật.
+export const TOWER_WINDOWS=Object.freeze([[.264,.194],[.531,.194],[.264,.383],[.531,.383],[.264,.575],[.531,.575]].map(([x,y])=>({x,y,w:.205,h:.12}))); // đo từ love-tower.webp 1254²
+export const TOWER_BOX=Object.freeze({x:652,y:.205,size:236}); // dưới bảng luật quà góc phải (bảng cao tới ~19% H) // vị trí trên màn 900 px, y theo H
+const ROOM_PAL=[{main:'#ff5a7a',soft:'#ffd2dc',gold:'#ffe7a8',deep:'#1a0508'},{main:'#5affb4',soft:'#d8ffe9',gold:'#fff3c0',deep:'#03140c'},{main:'#8fd8ff',soft:'#e6f6ff',gold:'#f2e9ff',deep:'#040b18'}];
+const hasDoc=()=>typeof document!=='undefined';
+const imgs=new Map();
+function img(src){if(imgs.has(src))return imgs.get(src);if(typeof Image==='undefined'){imgs.set(src,null);return null;}const im=new Image();im.decoding='async';im.src=src;imgs.set(src,im);return im;}
+const ready=im=>im&&im.complete&&im.naturalWidth>0;
+const nowAt=(scene,t)=>(scene.stateServerNow||Date.now())+Math.min(2000,Math.max(0,t-(scene.stateReceivedAt||t)));
+export function syncLoveTower(scene,state){
+  scene.loveStatus=state?.loveTower||null; // server chỉ gửi khi lễ đang mở (hoặc vừa đóng ≤20 s để chiếu nốt)
+  if(scene.loveStatus){img(LOVE_ART.tower);for(const r of LOVE_ART.rooms)img(r);}
+}
+let heart;
+function heartSprite(){if(heart!==undefined)return heart;const s=makeSurface(40,40);heart=s||null;if(!s)return null;const c=s.getContext('2d');c.translate(20,21);const g=c.createLinearGradient(-12,-15,10,15);g.addColorStop(0,'#fff0f6');g.addColorStop(.35,'#ff8fc4');g.addColorStop(1,'#e2408a');c.beginPath();c.moveTo(0,14);c.bezierCurveTo(-7,9,-16,0,-14,-7);c.bezierCurveTo(-12,-15,-4,-16,0,-9);c.bezierCurveTo(5,-17,13,-15,14,-7);c.bezierCurveTo(16,0,6,9,0,14);c.closePath();c.fillStyle=g;c.fill();return s;}
+function drawHeart(c,x,y,s,a){const im=heartSprite();if(!im||a<=.01)return;c.globalAlpha=Math.min(1,a);c.drawImage(im,x-s/2,y-s/2,s,s);}
+// ---------- 1) Tình Lâu trên map ----------
+// Ảnh vuông có nền trời → làm mờ viền (mặt nạ tròn) để hòa vào map; dựng 1 lần.
+let feathered=null;
+function featherTower(im){if(feathered)return feathered;const S=512,s=makeSurface(S,S);if(!s)return im;const c=s.getContext('2d'),p=S*.06/1.12;c.drawImage(im,S*.0536,S*.0536,S/1.12,S/1.12);c.globalCompositeOperation='destination-in';for(const v of [0,1]){const g=v?c.createLinearGradient(0,0,0,S):c.createLinearGradient(0,0,S,0);g.addColorStop(0,'#0000');g.addColorStop(.1,'#000');g.addColorStop(.9,'#000');g.addColorStop(1,'#0000');c.fillStyle=g;c.fillRect(0,0,S,S);}feathered=s;return s;}
+export function towerRect(H){return {x:TOWER_BOX.x,y:H*TOWER_BOX.y,s:TOWER_BOX.size};}
+export function windowRect(i,H){const b=towerRect(H),w=TOWER_WINDOWS[i];return {x:b.x+w.x*b.s,y:b.y+w.y*b.s,w:w.w*b.s,h:w.h*b.s};}
+export function drawLoveTower(scene,c,t,H){
+  const L=scene.loveStatus;if(!L||scene.cutFullActive)return;
+  const now=nowAt(scene,t),b=towerRect(H),art=img(LOVE_ART.tower),light=scene.budget?.level==='light'||(scene.visibleActors||0)>30,bare=(scene.visibleActors||0)>50;
+  c.save();
+  const soft=ready(art)?featherTower(art):null;
+  if(soft){c.globalAlpha=1;c.drawImage(soft,b.x-b.s*.06,b.y-b.s*.06,b.s*1.12,b.s*1.12);}
+  else{c.globalAlpha=.85;c.fillStyle='#2a0f1e';c.fillRect(b.x,b.y,b.s,b.s);}
+  c.globalAlpha=1;txt(c,'TÌNH LÂU',b.x+b.s/2,b.y+b.s+12,17,'#ffd6e6',{width:5,weight:'900'});
+  const idx=scene.playerIndex||new Map();
+  L.rooms.forEach((r,i)=>{const w=windowRect(i,H);
+    if(!r){c.globalAlpha=.55;c.fillStyle='#120609';c.fillRect(w.x,w.y,w.w,w.h);return;}
+    const pulse=.75+.25*Math.sin(t*.004+i);c.globalAlpha=1;const g=c.createLinearGradient(0,w.y,0,w.y+w.h);g.addColorStop(0,'#ff9cc6');g.addColorStop(1,'#ff5a8f');c.fillStyle=g;c.fillRect(w.x,w.y,w.w,w.h);
+    if(!bare){c.save();c.beginPath();c.rect(w.x,w.y,w.w,w.h);c.clip();const fy=w.y+w.h*.97,sc=w.h/170;
+      drawSeated(scene,c,idx.get(r.a),w.x+w.w*.3,fy,sc,t,false);drawSeated(scene,c,idx.get(r.b),w.x+w.w*.7,fy,sc,t,true);c.restore();}
+    c.globalAlpha=.35*pulse;c.fillStyle='#ffe2ee';c.fillRect(w.x,w.y,w.w,w.h);
+    c.globalAlpha=1;c.strokeStyle='#ffd27a';c.lineWidth=2;c.strokeRect(w.x,w.y,w.w,w.h);
+    if(!light)for(let j=0;j<4;j++){const u=((t*.0006+j/4+i*.13)%1);drawHeart(c,w.x+w.w*(.3+.4*((j*37+i*11)%10)/10)+Math.sin(u*9+j)*6,w.y-u*40,10+u*6,(1-u)*.9);}
+  });
+  // tên đôi: danh sách gọn dưới lầu (cửa sổ quá nhỏ để ghi tên), tối đa 3 dòng
+  const occ=L.rooms.filter(Boolean),nm=s=>Array.from(String(s||'')).slice(0,9).join('');let ly=b.y+b.s+32;
+  for(const r of occ.slice(-3)){txt(c,'♥ '+nm(r.aName)+' · '+nm(r.bName),b.x+b.s/2,ly,13,'#ffe8f1',{width:4,weight:'800',max:b.s+20});ly+=17;}
+  const more=occ.length-3+(L.queueCount||0);if(occ.length>3||L.queueCount)txt(c,(occ.length>3?'+'+(occ.length-3)+' đôi':'')+(L.queueCount?(occ.length>3?' · ':'')+'chờ '+L.queueCount:''),b.x+b.s/2,ly,12,'#ffd2e4',{width:4,weight:'800'});
+  c.restore();
+  // 2) Đình Nguyệt — quầng tim quanh đôi đang song tu trên sân
+  if(bare)return;
+  const cam=scene.lastCam||{s:1,x:0,y:0},scr=p=>p&&{x:p.x*cam.s+cam.x,y:p.y*cam.s+cam.y};
+  for(const g of L.gardens||[]){if(g.until<now)continue;const A=scr(scene.targets?.find(p=>p.id===g.a)),B=scr(scene.targets?.find(p=>p.id===g.b));if(!A||!B)continue;
+    c.save();for(const P of [A,B]){const n=light?3:6;for(let j=0;j<n;j++){const u=((t*.0007+j/n)%1),a=j*TAU/n+t*.0012;drawHeart(c,P.x+Math.cos(a)*28,P.y-40-u*60,12,(1-u)*.85);}}
+    c.globalAlpha=.5;c.strokeStyle='#ff8fc4';c.lineWidth=2;c.beginPath();c.moveTo(A.x,A.y-50);c.quadraticCurveTo((A.x+B.x)/2,Math.min(A.y,B.y)-110,B.x,B.y-50);c.stroke();c.restore();}
+}
+// ---------- 3) Chiếu riêng ----------
+export function findLoveCut(L,now){let best=null;for(const x of L?.cuts||[]){const age=now-x.at;if(age>=0&&age<x.ms&&(!best||x.at>best.x.at))best={x,age};}return best?{x:best.x,age:best.age,k:best.age/best.x.ms}:null;}
+export function loveCutFrame(scene,c,t,H){
+  const L=scene.loveStatus,cut=L?findLoveCut(L,nowAt(scene,t)):null,full=!!cut&&cut.k>=CUT_PHASE.wipeIn&&cut.k<CUT_PHASE.wipeOut;
+  if(!!scene.loveCutOn!==!!cut){scene.loveCutOn=!!cut;if(hasDoc())document.body?.classList?.toggle('cutscene-on',!!cut);}
+  if(cut||scene.loveVeilUsed){scene.loveVeilUsed=!!cut;cutVeil(cut,full);}
+  if(!full)return false;
+  if(scene.canvas)c.setTransform(scene.canvas.width/900,0,0,scene.canvas.height/H,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over'; // như tower-cutscene: phủ đúng cả khung
+  try{drawLoveCut(scene,c,t,H,cut.x,cut.k);}catch(err){console.warn('[love-cut]',err);return false;}
+  const seen=scene.loveCutSeen??=new Set(),sec=cut.age/1000;for(const at of beatsOf(cut.x)){const id=cut.x.id+':'+at;if(sec>=at&&sec<at+.6&&!seen.has(id)){seen.add(id);scene.onFeedbackSound?.('hit',2);}}
+  if(seen.size>60)scene.loveCutSeen=new Set([...seen].slice(-20));
+  return true;
+}
+// Mốc thời gian (giây) của 3 nhịp bùng trong Mật Thất.
+const SECRET={enter:.1,screen:.3,down:.42,beats:[.55,.66,.77],done:.84};
+function secretSpan(x){return x.tier==='grand'?{from:.42,to:1}:{from:0,to:1};}
+export function beatsOf(x){const sp=secretSpan(x),ms=x.ms/1000;return SECRET.beats.map(b=>+(ms*(sp.from+(sp.to-sp.from)*b)).toFixed(2));}
+let shadowCv=null;
+function shadowLayer(w,h){if(!shadowCv||shadowCv.width!==w||shadowCv.height!==h)shadowCv=makeSurface(w,h);return shadowCv;}
+export function drawLoveCut(scene,c,t,H,x,k){
+  if(x.tier==='grand'&&k<secretSpan(x).from)return drawGrandRite(scene,c,t,H,x,k/secretSpan(x).from);
+  const sp=secretSpan(x);return drawSecretRoom(scene,c,t,H,x,(k-sp.from)/(sp.to-sp.from),x.tier==='grand');
+}
+function bgCover(c,im,H,zoom=1,fy=.5){if(!ready(im))return false;const s=Math.max(900/im.naturalWidth,H/im.naturalHeight)*zoom,w=im.naturalWidth*s,h=im.naturalHeight*s;c.drawImage(im,450-w/2,H*fy-h*fy,w,h);return true;}
+const short=(s,n=12)=>Array.from(String(s||'')).slice(0,n).join('');
+function drawSecretRoom(scene,c,t,H,x,k,grand){
+  const P=ROOM_PAL[x.room%3]||ROOM_PAL[0],motion=scene.motion!==false,light=scene.budget?.level==='light',rf=scene.reduceFlash;
+  const idx=scene.playerIndex||new Map(),A=idx.get(x.a),B=idx.get(x.b);
+  const enter=smooth(seg(k,SECRET.enter,SECRET.screen-.06)),drop=out3(seg(k,SECRET.screen,SECRET.down)),beatSec=SECRET.beats.map(b=>(k-b)*x.ms*(grand?.58:1)/1000);
+  const charge=seg(k,SECRET.down,SECRET.beats[2]),done=seg(k,SECRET.done,1);
+  const zoom=motion?1.04+.05*smooth(seg(k,0,SECRET.down))+.04*charge+beatSec.reduce((n,s)=>n+punch(s,.035),0):1;
+  fxCamera(c,450,H*.55,zoom,motion&&beatSec.some(s=>s>0&&s<.35)?6:0,t);
+  c.fillStyle=P.deep;c.fillRect(-200,-200,1300,H+400);
+  bgCover(c,img(LOVE_ART.rooms[x.room%3]),H,1.02);
+  dot(c,P.main,450,H*.55,H*.45,.18+.25*charge);
+  // Hai người bước vào, ngồi đối diện (chưa có bình phong): ảnh thật.
+  const fy=H*.6,ax=450-185+(1-enter)*-260,bx=450+185+(1-enter)*260,sc=3.1; // chân đặt lên 2 nệm trong ảnh phòng
+  const sit=enter>=.98,draw=sit?drawSeated:drawCaster;
+  if(drop<1){c.save();c.globalAlpha=1-drop*.9;draw(scene,c,A,ax,fy,sc,t,false);draw(scene,c,B,bx,fy,sc,t,true);c.restore();}
+  // Bình phong lụa hạ xuống: giấy sáng ấm, bóng hai người NGỒI đối diện in lên lụa.
+  const scrTop=H*.34,scrBot=H*.72,scrX0=170,scrX1=730,curY=scrTop-(1-drop)*(scrBot-scrTop+60);
+  if(drop>0){
+    c.save();c.beginPath();c.rect(scrX0,curY,scrX1-scrX0,scrBot-curY);c.clip();
+    const g=c.createLinearGradient(0,scrTop,0,scrBot);g.addColorStop(0,'#fff1dd');g.addColorStop(1,'#f4cfae');c.globalAlpha=.84;c.fillStyle=g;c.fillRect(scrX0,curY,scrX1-scrX0,scrBot-curY);
+    dot(c,P.soft,450,H*.6,260,.5+.3*charge); // đèn phía sau rọi lên lụa
+    const lay=shadowLayer(900,Math.ceil(H));if(lay){const s=lay.getContext('2d');s.setTransform(1,0,0,1,0,0);s.clearRect(0,0,900,H);s.globalCompositeOperation='source-over';
+      const lean=motion?Math.sin(t*.0015)*3:0;drawSeated(scene,s,A,450-150+lean,fy,sc,t,false);drawSeated(scene,s,B,450+150-lean,fy,sc,t,true);
+      s.globalCompositeOperation='source-in';s.fillStyle='#3a1020';s.fillRect(0,0,900,H);s.globalCompositeOperation='source-over';
+      c.save();c.globalAlpha=.72*smooth(seg(drop,.4,1));if('filter' in c)c.filter='blur(3px)';c.drawImage(lay,0,0);if('filter' in c)c.filter='none';c.restore();}
+    // khung gỗ + nan lụa 4 tấm
+    c.globalAlpha=1;c.strokeStyle='#7a2a1c';c.lineWidth=7;for(let i=0;i<=4;i++){const xx=scrX0+(scrX1-scrX0)*i/4;c.beginPath();c.moveTo(xx,curY);c.lineTo(xx,scrBot);c.stroke();}
+    c.lineWidth=2;c.globalAlpha=.25;for(let yy=curY+40;yy<scrBot;yy+=46){c.beginPath();c.moveTo(scrX0,yy);c.lineTo(scrX1,yy);c.stroke();}
+    c.globalAlpha=1;c.lineWidth=9;c.strokeStyle='#c9902e';c.strokeRect(scrX0,curY,scrX1-scrX0,scrBot-curY);
+    c.restore();
+  }
+  // Khí song tu giữa hai bóng (phía trước lụa): âm dương / phượng hoàng / song liên.
+  const cx=450,cy=H*.56,qa=smooth(seg(k,SECRET.down-.02,SECRET.beats[0]))*(1-done*.6);
+  if(qa>0){c.save();c.globalCompositeOperation='lighter';const spin=t*.002*(x.qi===1?-1:1);
+    if(x.qi===0){for(let i=0;i<2;i++){const a=spin+i*Math.PI,r=70+charge*40;dot(c,i?P.main:'#ffffff',cx+Math.cos(a)*r*.6,cy+Math.sin(a)*r*.6,46+charge*30,qa*.75);}drawCircle(c,cx,cy,150+charge*60,qa*.8,t,{...PALETTES.gold,...P},1);}
+    else if(x.qi===1){const n=light?40:110;for(let i=0;i<n;i++){const u=(i/n+t*.00025)%1,side=i%2?1:-1,a=u*TAU*1.5;const px=cx+side*Math.sin(a)*(120*(1-u)+20),py=cy+90-u*300;dot(c,i%3?P.main:'#ffd27a',px,py,10+(1-u)*14,qa*(1-u)*.9);}}
+    else{for(let p=0;p<2;p++){const ox=cx+(p?110:-110);for(let i=0;i<8;i++){const a=i*TAU/8+spin*.5,open=.5+.5*charge;c.globalAlpha=qa*.55;c.fillStyle=p?P.main:P.soft;c.beginPath();c.ellipse(ox+Math.cos(a)*24*open,cy+30+Math.sin(a)*12*open,30*open+8,10,a,0,TAU);c.fill();}}}
+    // tim bay lên dày dần
+    const hn=light?16:48;for(let i=0;i<hn;i++){const u=((i*.618+t*.0003)%1);drawHeart(c,cx+Math.sin(i*7.3+t*.001)*(80+u*240),cy+120-u*(H*.5),12+u*16,qa*(1-u)*.95);}
+    c.restore();}
+  // 3 nhịp bùng
+  for(const s of beatSec)if(s>=0&&s<1.4)drawBurst(c,cx,cy,s,{...P,gold:P.gold},H,{light,pillar:false,scale:.5,seed:x.hue%7+1,reduceFlash:rf});
+  drawEmbers(c,H,charge*.8,t,{...P},light);
+  c.restore();c.globalAlpha=1;
+  drawVignette(c,H,.35+.2*charge,450,H*.56);
+  drawLetterbox(c,H,seg(k,0,.08)*(1-seg(k,SECRET.done,1)));
+  // CHỮ
+  const names=short(x.aName)+' ♥ '+short(x.bName);
+  if(k<SECRET.done){const a=smooth(seg(k,.04,.14));c.globalAlpha=a;txt(c,'UYÊN ƯƠNG MẬT THẤT',450,H*.14,52,'#ffe3ee',{width:11,max:860});txt(c,names,450,H*.14+52,30,P.gold,{width:7,weight:'800',max:840});
+    if(drop>.9)txt(c,'Bế quan song tu',450,H*.85,28,'#ffffff',{width:7,weight:'800'});c.globalAlpha=1;}
+  else{const u=seg(k,SECRET.done,1),pop=1+.4*(1-out3(seg(u,0,.3)));c.save();c.translate(450,H*.3);c.scale(pop,pop);txt(c,'SONG TU ĐẠI THÀNH!',0,0,62,'#ffe9a8',{width:12,max:860});c.restore();txt(c,names,450,H*.3+62,30,'#ffd2dc',{width:7,weight:'800',max:840});
+    if(grand)txt(c,'Thần Tiên Quyến Lữ',450,H*.3+104,34,'#ffd54a',{width:8,weight:'900'});}
+  const o=seg(k,.94,1);if(o>0){c.globalAlpha=o;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.globalAlpha=1;}
+}
+// Lễ trên cầu (map lễ phóng to vào cầu): đứng đối diện, cánh hoa đỏ rơi, pháo hoa, hạc bay, chữ TIÊN LỮ ĐẠI ĐIỂN.
+function drawGrandRite(scene,c,t,H,x,k){
+  const motion=scene.motion!==false,light=scene.budget?.level==='light',rf=scene.reduceFlash,P={main:'#ff4d6d',soft:'#ffe0e8',gold:'#ffd54a',deep:'#12040c'};
+  const idx=scene.playerIndex||new Map(),A=idx.get(x.a),B=idx.get(x.b);
+  const walk=smooth(seg(k,.06,.4)),bow=seg(k,.45,.7),fw=[.5,.66,.8].map(b=>(k-b)*x.ms*.42/1000);
+  fxCamera(c,450,H*.62,motion?1+.06*smooth(k):1,0,t);
+  c.fillStyle=P.deep;c.fillRect(-200,-200,1300,H+400);
+  bgCover(c,img(LOVE_ART.bridge),H,1.9,.76);
+  c.globalAlpha=.35;c.fillStyle='#1a0418';c.fillRect(-200,-200,1300,H+400);c.globalAlpha=1;
+  dot(c,'#ffe7c2',450,H*.2,220,.35);
+  for(const s of fw)if(s>=0&&s<1.6)drawBurst(c,450+(Math.round(s*0+fw.indexOf(s))%3-1)*230,H*(.18+.05*fw.indexOf(s)),s,{...P},H,{light,pillar:false,scale:.6,seed:fw.indexOf(s)+2,reduceFlash:rf});
+  const fy=H*.74,gap=150-60*walk,ax=450-gap-(1-walk)*300,bx=450+gap+(1-walk)*300,sc=3.4;
+  c.save();if(bow>0){c.translate(0,Math.sin(bow*Math.PI)*8);}drawCaster(scene,c,A,ax,fy,sc,t,false);drawCaster(scene,c,B,bx,fy,sc,t,true);c.restore();
+  if(walk>.9){c.save();c.globalCompositeOperation='lighter';c.strokeStyle='#ff6a8a';c.lineWidth=4;c.globalAlpha=.8;c.beginPath();c.moveTo(ax+30,fy-160);c.quadraticCurveTo(450,fy-260-20*Math.sin(t*.003),bx-30,fy-160);c.stroke();c.restore();}
+  // cánh hoa đỏ + hạc
+  c.save();const n=light?30:90;for(let i=0;i<n;i++){const u=((i*.37+t*.00012)%1),px=(i*97%900)+Math.sin(t*.001+i)*30,py=-40+u*(H+80);c.globalAlpha=.8;c.fillStyle=i%3?'#ff6a8a':'#ffd2dc';c.beginPath();c.ellipse(px,py,6,3,i+t*.002,0,TAU);c.fill();}
+  for(let i=0;i<3;i++){const u=((t*.00008+i/3)%1),px=-80+u*1060,py=H*(.12+i*.05)+Math.sin(u*12)*16;c.globalAlpha=.85;c.strokeStyle='#ffffff';c.lineWidth=3;const wv=Math.sin(t*.008+i)*10;c.beginPath();c.moveTo(px-26,py-wv);c.quadraticCurveTo(px-10,py-6,px,py);c.quadraticCurveTo(px+10,py-6,px+26,py-wv);c.stroke();}
+  c.restore();
+  c.restore();c.globalAlpha=1;
+  drawVignette(c,H,.3,450,H*.6);drawLetterbox(c,H,seg(k,0,.1));
+  const a=smooth(seg(k,.05,.18)),pop=1+.3*(1-out3(seg(k,.05,.2)));c.globalAlpha=a;c.save();c.translate(450,H*.27);c.scale(pop,pop);txt(c,'TIÊN LỮ ĐẠI ĐIỂN',0,0,64,'#ffe08a',{width:12,max:860});c.restore();
+  txt(c,short(x.aName)+' ♥ '+short(x.bName),450,H*.27+62,32,'#ffd2dc',{width:7,weight:'800',max:840});
+  if(bow>0)txt(c,'Kết thành Thần Tiên Quyến Lữ',450,H*.27+106,30,'#ffffff',{width:7,weight:'800'});
+  c.globalAlpha=1;const o=seg(k,.93,1);if(o>0){c.globalAlpha=o;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.globalAlpha=1;}
+}

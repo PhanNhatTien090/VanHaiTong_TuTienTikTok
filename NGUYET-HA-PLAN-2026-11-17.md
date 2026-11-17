@@ -1,6 +1,6 @@
 # Kế hoạch: Nguyệt Hạ Kết Duyên v2 — Tình Lâu Song Tu (17/11/2026)
 
-Trạng thái: **CHỜ USER DUYỆT** (chưa code). Làm tiếp theo mục 9.
+Trạng thái: **ĐÃ DUYỆT 17/11** — mốc quà user chốt: 1 / **≥30** / **≥100** coin. Song tu sau bình phong (không cảnh quan hệ) — user không phản đối. Làm tiếp theo mục 9.
 
 ## 0. Hiện trạng (đã đo)
 
@@ -36,8 +36,8 @@ Ngoài lễ: **không** mở phòng (giữ sân thường gọn, tránh lặp c�
 |---|---|---|---|
 | Đình Nguyệt (free) | gõ `song tu` (cả hai phải gõ trong 60 s) | đôi đi ra đình dưới cây nguyệt lão, ngồi đối diện, tim nhỏ bay | +tu vi nhỏ theo lượt vận công (vẫn tính hạn mức ngày), tối đa 1 lần/đôi/lễ |
 | **Tình Các** | **1 coin** | một **cửa sổ Tình Lâu sáng hồng**, trong cửa sổ thấy 2 nhân vật ngồi đối diện (ảnh thật, nhỏ), tim + hoa đào bay ra ngoài cửa sổ | 60 s: mỗi người +0,6% tu vi cần/lượt quà cộng dồn (nguồn `gift`, miễn hạn mức), tên đôi trên khung cửa |
-| **Uyên Ương Mật Thất** | **≥99 coin** | **chiếu riêng** (`skill-cutscene.js`): phòng nến đỏ, **bình phong lụa hạ xuống → chỉ thấy bóng 2 người ngồi song tu**, âm dương khí xoáy, phượng hoàng lửa quấn quanh, 3 nhịp bùng, chữ "SONG TU ĐẠI THÀNH" | mỗi người +~8% tu vi cần (theo cỡ quà), 10 phút phúc duyên ×2 cho cả đôi |
-| **Tiên Lữ Đại Điển** | **≥500 coin** (một món) | chiếu riêng dài hơn: lễ thành hôn trên cầu (phượng quan, pháo hoa, hạc), rồi vào Mật Thất | +~20% tu vi, danh hiệu đôi vĩnh viễn "Thần Tiên Quyến Lữ" + hào quang đôi (icon cạnh tên, theo luật chữ 15/11), dây duyên vàng trên sân |
+| **Uyên Ương Mật Thất** | **≥30 coin** | **chiếu riêng** (`skill-cutscene.js`): phòng nến đỏ, **bình phong lụa hạ xuống → chỉ thấy bóng 2 người ngồi song tu**, âm dương khí xoáy, phượng hoàng lửa quấn quanh, 3 nhịp bùng, chữ "SONG TU ĐẠI THÀNH" | mỗi người +~8% tu vi cần (theo cỡ quà), 10 phút phúc duyên ×2 cho cả đôi |
+| **Tiên Lữ Đại Điển** | **≥100 coin** (một món) | chiếu riêng dài hơn: lễ thành hôn trên cầu (phượng quan, pháo hoa, hạc), rồi vào Mật Thất | +~20% tu vi, danh hiệu đôi vĩnh viễn "Thần Tiên Quyến Lữ" + hào quang đôi (icon cạnh tên, theo luật chữ 15/11), dây duyên vàng trên sân |
 
 - Mức % là đề xuất, cân lại theo `rewardQiBasis` giống quà khác; theo luật 08/11: trong lễ chỉ áp luật quà của lễ.
 - Quà từ **người ngoài** cho một đôi ("tác hợp"): để bản sau.
@@ -75,17 +75,25 @@ Ngoài lễ: **không** mở phòng (giữ sân thường gọn, tránh lặp c�
 
 ## 9. Tiến độ (làm theo thứ tự)
 
-1. [ ] User duyệt kế hoạch + chốt các câu ở mục 10
-2. [ ] Server: pha + phòng + thưởng + test (chạy được không cần hình)
-3. [ ] Codex vẽ Tình Lâu + 3 nền Mật Thất + bình phong; tự xem
-4. [ ] Overlay Tình Lâu (cửa sổ) + bảng hướng dẫn
-5. [ ] Chiếu riêng Mật Thất (3 biến thể) + Đại Điển
-6. [ ] Giọng, QA trên server thử 4399 (dữ liệu LIVE chép), xem từng khung; đo FPS
+1. [x] User duyệt kế hoạch + chốt các câu ở mục 10
+2. [x] Server: pha + phòng + thưởng + test (chạy được không cần hình)
+3. [x] Codex vẽ Tình Lâu + 3 nền Mật Thất + bình phong; tự xem
+4. [x] Overlay Tình Lâu (cửa sổ) + bảng hướng dẫn
+5. [x] Chiếu riêng Mật Thất (3 biến thể) + Đại Điển
+6. [x] Giọng, QA trên server thử 4399 (dữ liệu LIVE chép), xem từng khung; đo FPS
 7. [ ] Lên LIVE (restart an toàn), báo user làm mới nguồn Link
+
+## 9b. Đã làm (17/11 tối)
+
+- Server `love-tower.mjs` (phòng 6, hàng chờ 12, Đình Nguyệt, chiếu riêng cách ≥20 s, hàng chờ chiếu ≤2, lễ hoãn đóng khi đang chiếu), lễ 8 phút, lệnh `song tu`; quà của người chưa có đạo lữ vẫn theo luật mặc định.
+- Overlay `public/love-tower.js`: Tình Lâu góc phải dưới bảng luật quà, Mật Thất 3 phòng (nến đỏ/trúc lâm/băng cung) × 3 kiểu khí, Đại Điển trên cầu. Nhân vật NGỒI THIỀN (tư thế có sẵn), bóng = sprite người chơi tô đen.
+- Thẻ luật quà "NGUYỆT HẠ TÌNH LÂU" (1 / 30 / 100). Giọng: "thi triển song tu", "bế quan Uyên Ương Mật Thất", "Thần Tiên Quyến Lữ".
+- QA: `node scripts/qa-love-tower.mjs` (server thử 4399). Bỏ ý `tỏ tình` (để sau).
+- Chưa: đo FPS trên máy LIVE lúc đông; nghe giọng thật.
 
 ## 10. Cần user chốt
 
 1. Đồng ý thay "quan hệ" bằng **song tu sau bình phong (bóng ngồi đối diện)** như mục 1?
-2. Mốc quà: 1 / ≥99 / ≥500 coin — giữ hay đổi?
+2. ~~Mốc quà~~ → chốt 1 / 30 / 100 coin.
 3. Lễ 8 phút (3 kết duyên + 5 song tu) có quá dài trong vòng xoay 25 phút?
 4. Danh hiệu "Thần Tiên Quyến Lữ" vĩnh viễn hay theo tuần?
