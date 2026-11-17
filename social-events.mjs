@@ -1,3 +1,4 @@
+import {baoBanMenh,BAO_DUEL,baoStarK} from './public/phap-bao-data.js'; // 18/11: thần khí trong Luận Kiếm
 import {activeBonds,syncBondRefs,bondAllowance,alreadyBonded} from './bond-relations.mjs';
 import {stageConflict} from './stage-lock.mjs';
 import {petV2DuelPoints,petV2DuelTraits} from './pet-v2.mjs';
@@ -110,7 +111,7 @@ function beginRound(w,now,c){
  const selected=eligible;t.waiting=[];const quietJoin=selected.length>8;t.participants=selected.map(e=>e.id);t.phase='running';t.fighters={};
  // Sức mạnh tỷ thí = sức mạnh chiến đấu + cảnh giới×5; khoảng giãn rộng (70–160) để người mạnh hơn rõ ràng thì thắng.
  // Tỷ thí xét TỔNG TU VI: tu vi cao hơn thì mạnh hơn (thanh máu cũng theo đó). Sức mạnh trang bị chỉ cộng rất nhỏ để phân định khi bằng nhau.
- const duelPower=p=>Math.log10((Number(p.totalQi)||0)+10)*100+c.power(p)*0.05;
+ const duelPower=p=>{const bm=baoBanMenh(p);return (Math.log10((Number(p.totalQi)||0)+10)*100+c.power(p)*0.05)*(1+(bm?BAO_DUEL[bm.tier]*baoStarK(bm.stars):0));}; // 18/11: thần khí bản mệnh cộng nhẹ
  const powers=selected.map(e=>duelPower(w.players[e.id])).sort((a,b)=>a-b),median=powers[Math.floor(powers.length/2)]||1;
  for(const e of selected){const p=w.players[e.id];p.lastTournamentAt=now;const tech=c.technique(p);t.fighters[p.id]={name:p.name,tech:{id:tech.id,name:tech.name,color:tech.color,intensity:tech.intensity},strength:Math.max(70,Math.min(160,100*(duelPower(p)/median)**4)),power:c.power(p),totalQi:Number(p.totalQi)||0,realm:Number(p.realm)||0,petPoints:petV2DuelPoints(w,p),petTraits:petV2DuelTraits(w,p)};reward(w,p,'join:'+p.id,1,now,c,quietJoin);}
  pairRound(w,selected.map(e=>e.id),now,c);

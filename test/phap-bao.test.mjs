@@ -74,3 +74,24 @@ test('overlay: không phát lại lượt cũ khi vừa mở; lượt mới ra b
  for(const sec of [.5,1.5,3,3.65,4,4.3,5,7,7.8]) assert.doesNotThrow(()=>drawLimitedReveal(scene,c,1e6,1600,{x:y,age:sec*1000,ms:8000,k:sec/8},{limited:[]}));
  assert.equal(findReveal({reveals:[x]},2000).x.k,5);assert.equal(findReveal({reveals:[x]},5000),null);
 });
+
+test('18/11 tối: mỗi lượt Bảo Khố tối đa 1 món GIỚI HẠN; tỷ lệ 5★ ngẫu nhiên thấp (chủ yếu nhờ bảo hiểm)',async()=>{
+ const {BAO_LIMITED_PER_EVENT}=await import('../phap-bao.mjs');assert.equal(BAO_LIMITED_PER_EVENT,1);
+ assert.ok(BAO_ODDS.q5<=.02&&BAO_ODDS.limitedIn5<=.05);
+ const w=world();startBaoKhoEvent(w,N);const lucky=()=>0;let got=0;
+ for(let i=0;i<10;i++)if(rollBao(w,ensurePlayer(w,'x'+i,'X'+i,N),'g999',lucky).tier===6)got++;
+ assert.equal(got,1,'một lượt sự kiện chỉ ra 1 món GIỚI HẠN');
+});
+
+test('18/11 tối: "trang bị <tên thần khí>" đeo làm bản mệnh; Tháp có thần thông + tăng sát thương',async()=>{
+ const w=world(),p=ensurePlayer(w,'a','A',N);Object.assign(p,{realm:3,totalQi:1e6,lastActive:N});p.bao={p4:0,p5:0,items:{'s4-kiem':1,'L12-huyet-hai-dao':1},lim:null};
+ const r=action(w,{type:'chat',text:'trang bị huyết hải ma đao',userId:'a'},N+10);assert.equal(r.ok,true);assert.equal(p.bao.ban,'L12-huyet-hai-dao');
+ action(w,{type:'chat',text:'trang bị thanh phong kiếm',userId:'a'},N+20);assert.equal(p.bao.ban,'s4-kiem','đổi lại được, không hồi chờ');
+ assert.notEqual(action(w,{type:'chat',text:'trang bị',userId:'a'},N+30)?.message,undefined);
+ const {tickTower,startTower:st}=await import('../tower.mjs');void tickTower;void st;
+ const {startTower}=await import('../engine.mjs');p.bao.ban='L12-huyet-hai-dao';
+ assert.equal(startTower(w,N+100).ok,true);action(w,{type:'chat',text:'6',userId:'a'},N+200);tick(w,N+300);
+ const lane=w.tower.lanes.find(l=>l?.id==='a');assert.ok(lane,'đã lên đài');
+ for(let t=N+400;t<N+12000;t+=500)tick(w,t);
+ assert.ok(w.tower.fx.some(f=>f.kind==='bao'&&f.id==='L12-huyet-hai-dao'),'có thần thông bản mệnh trong Tháp');
+});

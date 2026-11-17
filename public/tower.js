@@ -5,6 +5,7 @@
 import {portraitCanvas} from './linh-bai.js';
 import {giftTokenHTML} from './gift-icons.js';
 import {queueAvatarsHTML} from './queue-avatars.js';
+import {baoArt,BAO_TIER} from './phap-bao-data.js'; // 18/11: thần thông bản mệnh trong Tháp
 const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 const mounted=new WeakMap();
 const secs=ms=>Math.max(0,Math.ceil(ms/1000));
@@ -57,6 +58,11 @@ function giftBurst(el,view,f,state,scene,esc){
  scene.onTowerSound?.(big?'milestone':'clear');
 }
 
+// 18/11 tối: thần khí bản mệnh phát thần thông trên đài — ảnh pháp bảo phóng to, tên + chiêu + máu mất, nháy viền màu bậc.
+function baoBurst(el,f,state,esc){const card=el.querySelector(`.tw2-lane[data-lane="${f.lane}"]`);if(!card)return;const col=BAO_TIER[f.tier]?.color||'#ffd36b';
+ card.style.setProperty('--fx',col);card.classList.remove('tw2-hit');void card.offsetWidth;card.classList.add('tw2-hit');setTimeout(()=>card.classList.remove('tw2-hit'),1200);
+ const pop=document.createElement('div');pop.className='tw2-pop';pop.style.setProperty('--c',col);const dmg=Math.round(f.burst/100*(state?.tower?.lanes?.[f.lane]?.maxHp||0));
+ pop.innerHTML=`<div class="tw2-pop-gift"><img src="${baoArt(f.id)}" alt="" style="width:3.2em;height:3.2em;object-fit:contain"></div><strong>${esc(f.name)}</strong><small>THẦN THÔNG · ${esc(f.skill||'')}${dmg?' · -'+fmt(dmg)+' máu':''}</small>`;card.appendChild(pop);setTimeout(()=>pop.remove(),1900);}
 export function renderTower(el,state,scene,esc,now=Date.now()){
  if(!el)return;
  const t=state?.tower;
@@ -88,7 +94,7 @@ export function renderTower(el,state,scene,esc,now=Date.now()){
    card.querySelector('.tw2-guard')?.appendChild(dmg);setTimeout(()=>dmg.remove(),800);prev.at=now;
    if(scene.motion!==false)card.querySelector('.tw2-beast')?.animate?.([{translate:'0 0'},{translate:'-4px 0'},{translate:'3px 0'},{translate:'0 0'}],{duration:220});}
   view.hp[l.lane]={k,hp:l.hp,at:prev?.k===k?prev.at:0};}
- for(const f of t.fx||[]){if(view.seenFx.has(f.id))continue;view.seenFx.add(f.id);if(f.kind==='gift'&&now-f.at<2500)giftBurst(el,view,f,state,scene,esc);}
+ for(const f of t.fx||[]){if(view.seenFx.has(f.id))continue;view.seenFx.add(f.id);if(f.kind==='gift'&&now-f.at<2500)giftBurst(el,view,f,state,scene,esc);else if(f.kind==='bao'&&now-f.at<2500)baoBurst(el,f,state,esc);}
  for(const r of t.results||[]){if(view.seenRes.has(r.seq))continue;view.seenRes.add(r.seq);const card=el.querySelector(`.tw2-lane[data-lane="${r.lane}"]`)||el.querySelector('.tw2-grid');if(!card)continue;
   const d=document.createElement('div');d.className='tw2-result '+(r.won?'tw2-win':'tw2-lose');d.textContent=r.won?`✦ ${r.name} vượt tầng ${fmt(r.floor)} · +${fmt(r.qi)} tu vi${r.mile?' · MỐC ×2':''}`:`${r.name} dừng tầng ${fmt(r.floor)}${r.why==='down'?' · kiệt sức':''} · gõ 6 thử lại`;
   el.appendChild(d);setTimeout(()=>d.remove(),2600);

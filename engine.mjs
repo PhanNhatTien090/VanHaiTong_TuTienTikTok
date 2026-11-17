@@ -21,7 +21,7 @@ import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
 import {mountCommand,tickMounts,mountBonus,mountGiftBoost} from './mounts.mjs';
-import {startBaoKho,stopBaoKho,tickBaoKho,baoKhoCommand,baoKhoGift,baoKhoView,baoKhoActive,baoCollectionText,baoBanMenhCommand} from './phap-bao.mjs'; // 17/11: Thiên Công Bảo Khố
+import {startBaoKho,stopBaoKho,tickBaoKho,baoKhoCommand,baoKhoGift,baoKhoView,baoKhoActive,baoCollectionText,baoBanMenhCommand,baoEquipByName} from './phap-bao.mjs'; // 17/11: Thiên Công Bảo Khố
 import {startMountRealm,stopMountRealm,tickMountRealm,mountRealmCommand,mountRealmGift,mountRealmHearts,mountRealmView,mountRealmActive} from './mount-realm.mjs'; // 16/11: Tọa Kỹ Bí Cảnh // 16/11: Tọa Kỹ
 import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
 import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
@@ -413,7 +413,7 @@ function actionCore(w,input,now) {
   const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
   if(type==='chat'&&!w.webShadow){const r=hallWarCommand(w,p,words,now,hallWarContext);if(r){if(!r.ok&&!cooldown(p,'hall-war-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
-  if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now);return {ok:true};}if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now);return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 17/11: Thiên Công Bảo Khố
+  if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now);return {ok:true};}if(cmd==='trangbi'&&rest){const r=baoEquipByName(p,rest);if(r){emit(w,p,r.message,'sword',now);return r;}} /* 18/11: thần khí trang bị như pháp bảo */if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now);return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 17/11: Thiên Công Bảo Khố
   if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 16/11: Tọa Kỹ Bí Cảnh
   if(type==='chat'&&!w.webShadow){
     const result=hallCommand(w,p,words,now,hallContext);

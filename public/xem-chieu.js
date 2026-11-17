@@ -7,6 +7,7 @@ import {drawVipCut,drawDivineCut} from './mount-cut.js';
 import {BAO_ITEMS} from './phap-bao-data.js';
 import {BAO_ULTS} from './bao-ults.js';
 import {MOUNTS} from './mounts.js';
+import {drawBaoAura,AURA_BURST} from './bao-aura.js';
 
 const canvas=document.getElementById('c'),c=canvas.getContext('2d'),pick=document.getElementById('pick'),info=document.getElementById('info');
 const scene={canvas,motion:true,budget:{level:'full'},playerIndex:new Map(),towerGiftArt:{}};
@@ -29,6 +30,8 @@ const mv=MOUNTS.find(m=>m.tier==='vip'),md=MOUNTS.find(m=>m.tier==='divine');
 if(mv)L.push({g:'Nở tọa kỹ',name:'VIP · '+mv.name,ms:5600,draw:(t,age,k,n,r)=>drawVipCut(scene,c,t,1600,r,age/1000),r:()=>({id:mv.id,tier:'vip',orb:'vip',stars:1,fresh:true,who:A,mname:mv.name,seed:'xem:'+mv.id})});
 if(md)L.push({g:'Nở tọa kỹ',name:'Thần · '+md.name,ms:7600,draw:(t,age,k,n,r)=>drawDivineCut(scene,c,t,1600,r,age/1000),r:()=>({id:md.id,tier:'divine',orb:'divine',stars:1,fresh:true,who:A,mname:md.name,seed:'xem:'+md.id})});
 
+// Chủ nhân GIỚI HẠN trên sân (2 món đã có chủ 18/11 + 1 món theo dòng chung)
+for(const id of ['L12-huyet-hai-dao','L03-luan-hoi-kinh','L11-loi-than-chuy'])L.push({g:'Chủ nhân GIỚI HẠN trên sân',name:(BAO_ITEMS.find(x=>x.id===id)?.name||id)+' · bùng',ms:AURA_BURST+1500,draw:(t,age)=>{c.fillStyle='#1a1224';c.fillRect(0,0,900,1600);scene.auraK=age<AURA_BURST?age/AURA_BURST:0;drawBaoAura(scene,c,{player:{id:'demo',baoLim:id},x:450,y:900,scale:3},t);scene.auraK=undefined;c.fillStyle='#ffffff22';c.fillRect(400,700,100,220);}});
 let group='';for(const [i,x] of L.entries()){if(x.g!==group){group=x.g;const og=document.createElement('optgroup');og.label=group;pick.appendChild(og);}const o=document.createElement('option');o.value=i;o.textContent=x.name;pick.lastChild.appendChild(o);}
 const q=new URLSearchParams(location.search);pick.value=q.get('i')||'0';
 let start=performance.now(),speed=1,n=1,r=null,cur=null;

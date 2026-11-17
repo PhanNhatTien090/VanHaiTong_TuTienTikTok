@@ -5,9 +5,12 @@
 // • Số cơ duyên CHỈ ở server (luật LIVE: không hiện %/tỷ lệ/may rủi). Dữ liệu người chơi gọn: p.bao={p4,p5,items:{id:sao},lim}.
 import {randomInt} from 'node:crypto';
 import {stageConflict} from './stage-lock.mjs';
-import {BAO_ITEMS,BAO_PITY4,BAO_PITY5,BAO_LIMITED_STOCK,BAO_EVENT_MS,BAO_FREE_CD,BAO_MAX_STARS,baoItem,baoBanMenh,BAO_LINES,BAO_TIER} from './public/phap-bao-data.js';
+import {BAO_ITEMS,BAO_PITY4,BAO_PITY5,BAO_LIMITED_STOCK,BAO_EVENT_MS,BAO_FREE_CD,BAO_MAX_STARS,baoItem,baoBanMenh,BAO_LINES,BAO_TIER,baoKey} from './public/phap-bao-data.js';
 // Cơ duyên không-trượt theo nguồn (theo ảnh mẫu chủ game; chỉnh được). q5 = trong lượt trúng, phần ra 5★.
-export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g999:.80,q5:.06,soft5From:65,soft5Step:.06,limitedIn5:.08});
+// 18/11 tối (chủ game: "mới 1 sự kiện mà mất 2 hạn chế, vài hôm là hết"): 5★ chủ yếu nhờ bảo hiểm 80 lượt (q5 .06→.015, mềm từ 72),
+// GIỚI HẠN trong 5★ .08→.04, và MỖI LƯỢT SỰ KIỆN TỐI ĐA 1 MÓN GIỚI HẠN (BAO_LIMITED_PER_EVENT).
+export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g999:.80,q5:.015,soft5From:72,soft5Step:.05,limitedIn5:.04});
+export const BAO_LIMITED_PER_EVENT=1;
 const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
 const fail=message=>({ok:false,message});
 const rng=()=>randomInt(0,1_000_000_000)/1_000_000_000;
@@ -29,8 +32,8 @@ export function rollBao(w,p,source,r=rng){
  if(b.p5>=BAO_PITY5||x<win*BAO_ODDS.q5+soft)tier=5;
  else if(b.p4>=BAO_PITY4||x<win)tier=4;
  if(!tier)return {tier:0};
- if(tier===5){b.p5=0;b.p4=0;const s=season(w),pool=limitedPool(w);
-  if(!b.lim||b.lim.season!==s.n)if(pool.length&&r()<BAO_ODDS.limitedIn5){const it=pool[Math.floor(r()*pool.length)];s.owners[it.id]=p.id;b.lim={season:s.n,id:it.id};return give(b,it,6);}}
+ if(tier===5){b.p5=0;b.p4=0;const s=season(w),pool=limitedPool(w),ev=w.baoKho,capped=ev&&(ev.limitedGiven||0)>=BAO_LIMITED_PER_EVENT;
+  if(!capped&&(!b.lim||b.lim.season!==s.n))if(pool.length&&r()<BAO_ODDS.limitedIn5){const it=pool[Math.floor(r()*pool.length)];s.owners[it.id]=p.id;b.lim={season:s.n,id:it.id};if(ev)ev.limitedGiven=(ev.limitedGiven||0)+1;return give(b,it,6);}}
  else b.p4=0;
  const pool=BAO_ITEMS.filter(x=>x.tier===tier),it=pool[Math.floor(r()*pool.length)];return give(b,it,tier);
 }
@@ -54,7 +57,7 @@ function record(w,p,res,now,ctx,source){
  const b=state(p),row={k:++e.seq,u:p.id,name:p.name,t:res.tier,id:res.id||null,s:res.stars||0,p4:BAO_PITY4-b.p4,p5:BAO_PITY5-b.p5,at:now};
  e.log.push(row);if(e.log.length>LOG_MAX)e.log.splice(0,e.log.length-LOG_MAX);
  if(res.tier>=5)queueReveal(e,{k:row.k,u:p.id,name:p.name,t:res.tier,id:res.id,s:res.stars},now);
- if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:''),'bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
+ if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:'')+(res.tier>=5?' • gõ thần khí để xem · trang bị + tên để đeo':''),'bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
   if(res.tier===6)ctx.audit?.(w,'bao-limited',now,{user:p.id,name:p.name,id:res.id});}
  return row;
 }
@@ -104,4 +107,11 @@ export function baoBanMenhCommand(p,rest,now){
  if(id===cur.id)return {ok:true,message:'Bản mệnh đã là '+label(id)};
  const wait=(p.bao.banAt||0)+BAN_MENH_CD-now;if(wait>0)return fail('Đổi bản mệnh sau '+Math.ceil(wait/60000)+' phút nữa');
  p.bao.ban=id;p.bao.banAt=now;return {ok:true,message:p.name+' · bản mệnh: '+label(id)};
+}
+
+/** 18/11 tối: "trang bị <tên thần khí>" — đeo thần khí làm bản mệnh như pháp bảo thường (không hồi chờ). Trả null nếu tên không phải thần khí của người này. */
+export function baoEquipByName(p,rest){
+ const k=baoKey(rest);if(!k||k.length<3)return null;const items=p.bao?.items||{};
+ const id=Object.keys(items).find(id=>{const it=baoItem(id);if(!it)return false;const n=baoKey(it.name);return n===k||n.includes(k)||k.includes(n);});if(!id)return null;
+ p.bao.ban=id;const it=baoItem(id);return {ok:true,message:p.name+' · trang bị thần khí '+it.name+' ★'+items[id]+' làm bản mệnh ('+BAO_LINES[it.line].skill+')'};
 }

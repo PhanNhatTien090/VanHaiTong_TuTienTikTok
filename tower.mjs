@@ -6,6 +6,7 @@
 //   Quà của người đang leo vào đài mình; người ngoài tặng thì vào đài mình hay trợ lực; chưa ai leo thì giữ làm "hộ thể" cho lượt của mình.
 // Mọi số tính theo % máu để tầng nào cũng cân: đúng tầm cảnh giới (tầng ≈ 2 × cảnh giới) thì tự đánh + gõ 3 vừa đủ qua; vượt cấp cần quà/trợ lực.
 import {stageConflict} from './stage-lock.mjs';
+import {baoBanMenh,BAO_TOWER,BAO_LINES,baoStarK} from './public/phap-bao-data.js'; // 18/11: thần khí bản mệnh trong Tháp
 
 export const TOWER=Object.freeze({durationMs:300000,turnMs:30000,gapMs:1500,hitCdMs:900,hitCdBoostMs:450,helpCdMs:2000,maxQueue:30,podiumMs:9000,milestone:5,lanes:4});
 export const TOWER_JOIN=['leothap','thap','vaothap'];
@@ -77,6 +78,10 @@ function applyHold(e,now){
  if(dt){for(const t of e.lanes){if(!t)continue;t.endsAt+=dt;t.lastAt+=dt;if(t.buffUntil)t.buffUntil+=dt;}e.endsAt+=dt;e.holdFrom=until;}
  if(now<e.holdUntil)return true;e.holdFrom=null;return false;
 }
+// 18/11 tối: thần khí bản mệnh — ×sát thương theo bậc, và THẦN THÔNG chém % máu thủ vệ theo nhịp (từ giây thứ 3 của lượt).
+function baoMult(p){const bm=baoBanMenh(p);return bm?1+BAO_TOWER[bm.tier].mult*baoStarK(bm.stars):1;}
+function baoProc(e,lane,t,p,now){const bm=baoBanMenh(p);if(!bm||t.hp<=0||now<(t.baoAt??(t.startedAt+3000)))return;const T=BAO_TOWER[bm.tier];t.baoAt=now+T.cd;const pct=T.pct*baoStarK(bm.stars);t.hp=Math.max(0,t.hp-pct);
+ pushFx(e,{kind:'bao',lane,id:bm.id,tier:bm.tier,name:bm.name,skill:BAO_LINES[bm.line].skill,burst:pct,from:p.id,fromName:p.name,at:now});}
 function beginTurn(w,e,lane,p,now){
  const floor=(Number(p.towerFloor)||0)+1;
  e.lanes[lane]={id:p.id,name:p.name,floor,hp:100,me:100,startedAt:now,endsAt:now+TOWER.turnMs,lastAt:now,helpers:{},helpHits:0,hits:0,next:{},buffUntil:0,buffMult:1};
@@ -101,8 +106,9 @@ export function tickTower(w,now,c){
  if(applyHold(e,now))return; // 18/11: đang chiếu riêng quà lớn → cả tháp đứng yên
  e.lanes.forEach((t,lane)=>{
   if(!t)return;const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
-  const mult=t.buffUntil>now?t.buffMult||1:1;
+  const mult=(t.buffUntil>now?t.buffMult||1:1)*baoMult(p);
   t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*mult*dt);
+  baoProc(e,lane,t,p,now);
   t.me=Math.max(0,t.me-guardDps(p?.realm,t.floor)*dt);
   if(t.hp<=0)finishTurn(w,e,lane,now,c,true);
   else if(t.me<=0)finishTurn(w,e,lane,now,c,false,'down');
@@ -141,7 +147,7 @@ export function towerCommand(w,p,cmd,now,c){
  const mine=laneOf(e,p.id);
  if(mine>=0){const t=e.lanes[mine];if(t.next[p.id]>now)return {ok:true,cooldown:true};
   const fast=t.buffUntil>now;t.next[p.id]=now+(fast?TOWER.hitCdBoostMs:TOWER.hitCdMs);t.hits++;
-  t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor)*(fast?t.buffMult||1:1));
+  t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor)*(fast?t.buffMult||1:1)*baoMult(p));
   if(t.hp<=0&&!(e.holdUntil>now))finishTurn(w,e,mine,now,c,true);return {ok:true,tower:true,lane:mine};} /* đang chiếu riêng: phá tầng sau màn (tickTower) */
  const lane=supportLane(e,p);if(lane<0)return null; // chưa ai leo → để lệnh đánh cho sự kiện khác
  const t=e.lanes[lane];if(t.next[p.id]>now)return {ok:true,cooldown:true};

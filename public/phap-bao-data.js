@@ -50,3 +50,9 @@ export function baoBanMenh(p){
  const pin=p.bao.ban&&ids.includes(p.bao.ban)?p.bao.ban:null,id=pin||ids.sort((x,y)=>baoItem(y).tier-baoItem(x).tier||items[y]-items[x])[0],it=baoItem(id);
  return {id,tier:it.tier,line:it.line,stars:items[id],name:it.name};
 }
+// 18/11 tối (chủ game: "cho trang bị như pháp bảo thường, dùng trong Tháp với tỷ thí luôn"):
+// Tháp: ×sát thương + thần thông chém % máu thủ vệ theo nhịp; Luận Kiếm: cộng nhẹ vào sức mạnh tỷ thí (bị lũy thừa 4 nên giữ nhỏ).
+export const BAO_TOWER=Object.freeze({4:{mult:.1,cd:12000,pct:5},5:{mult:.2,cd:9000,pct:8},6:{mult:.35,cd:7000,pct:12}});
+export const BAO_DUEL=Object.freeze({4:.01,5:.025,6:.04});
+export const baoStarK=stars=>1+.1*(Math.max(1,stars||1)-1);
+export const baoKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/[^a-z0-9]/g,'');
