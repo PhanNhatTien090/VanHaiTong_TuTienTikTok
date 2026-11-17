@@ -724,7 +724,7 @@ function renderScenePicker(){const el=document.getElementById('scenePicker');if(
   el.querySelectorAll('[data-map]').forEach(b=>b.onclick=async()=>{const r=await post('/api/world-scene',{scene:b.dataset.map});if(r.ok){toast(b.dataset.map==='auto'?'Map tự đổi mỗi 5 phút.':'Đã đổi map: '+(MAP_SCENES.find(m=>m.id===b.dataset.map)?.name||''));scenePickerSig='';}});}
 
 // v80: BAN THƯỞNG NHANH — chọn người trong bảng (hoặc ngẫu nhiên 1 người đang chơi) rồi bấm gói quà.
-const QUICK_COMBOS=[['small','💊 Tụ Khí Đan','+10% tu vi cảnh giới · 30 linh thạch · 5 linh thảo'],['medium','💊 Ngưng Nguyên Đan','+30% tu vi · 100 linh thạch · 15 linh thảo · phúc duyên ×3'],['large','🔱 Cửu Chuyển Kim Đan','+60% tu vi · 250 linh thạch · 40 linh thảo · phúc duyên ×5'],['buff','🔥 Phúc Duyên ×8','10 phút tu luyện ×8'],['breakthrough','⚡ Đột Phá Đan','đủ tu vi + linh thạch để đột phá ngay']];
+const QUICK_COMBOS=[['small','💊 Tụ Khí Đan','+10% tu vi cảnh giới · 30 linh thạch · 5 linh thảo'],['medium','💊 Ngưng Nguyên Đan','+30% tu vi · 100 linh thạch · 15 linh thảo · phúc duyên ×3'],['large','🔱 Cửu Chuyển Kim Đan','+50% tu vi · 250 linh thạch · 40 linh thảo · phúc duyên ×5'],['buff','🔥 Phúc Duyên ×8','10 phút tu luyện ×8'],['breakthrough','⚡ Đột Phá Đan','đủ tu vi + linh thạch để đột phá ngay']];
 let quickSig='';
 function renderQuickGift(){const el=document.getElementById('quickGift');if(!el||!state)return;const p=player(),sig=(p?.id||'')+'|'+(p?.name||'')+'|'+(p?.realm??'');if(sig===quickSig)return;quickSig=sig;
   const btns=target=>QUICK_COMBOS.map(([id,label,tip])=>'<button class="small '+(id==='large'||id==='breakthrough'?'gold-button':'soft-button')+'" data-qg="'+id+'" data-target="'+target+'" title="'+tip+'">'+label+'</button>').join('');

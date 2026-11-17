@@ -1285,7 +1285,7 @@ export const ADMIN_COMBOS=Object.freeze({
   // 17/11 (chủ game): Tiểu/Trung/Đại Lễ → ĐAN DƯỢC; % tính theo tu vi cần của cảnh giới hiện tại, giọng đọc số % thực nhận.
   small:{name:'Tụ Khí Đan',qiPct:.10,stones:30,herbs:5,buff:0},
   medium:{name:'Ngưng Nguyên Đan',qiPct:.30,stones:100,herbs:15,buff:3},
-  large:{name:'Cửu Chuyển Kim Đan',qiPct:.60,stones:250,herbs:40,buff:5},
+  large:{name:'Cửu Chuyển Kim Đan',qiPct:.50,stones:250,herbs:40,buff:5},
   buff:{name:'Phúc Duyên',qiPct:0,stones:0,herbs:0,buff:8},
   breakthrough:{name:'Đột Phá Đan',qiPct:1,stones:0,herbs:0,buff:0,fill:true}
 });
