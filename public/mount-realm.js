@@ -31,7 +31,7 @@ export function syncMountRealm(scene,state){
  if(prev?.id!==next?.id){h.pos.clear();h.seen.clear();h.bolts=[];h.gifts=[];h.drops=[];h.banner=null;}
  scene.mountRealmStatus=next;h.giftArt=state.giftArt||h.giftArt;
  if(typeof document!=='undefined')document.body.classList.toggle('mount-realm',!!next);
- if(!next)return;load(h);
+ if(!next)return;load(h,next); /* 18/11: thiếu map → mỗi lần nhận state đổi về Linh Sơn rồi lại Hỏa Diệm → nền xóa, nháy đen */
  const ids=new Set();
  for(const m of next.members||[]){
   ids.add(m.id);const p=h.pos.get(m.id);
