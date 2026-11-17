@@ -46,11 +46,12 @@ test('≥30 coin → Mật Thất chiếu riêng + phúc duyên ×2; một món 
   const say1=say(w.events.findLast(e=>e.loveGift?.tier==='grand'));assert.match(say1,/Thần Tiên Quyến Lữ/);
 });
 
-test('hàng chờ màn chiếu tối đa 2; Tình Lâu 6 phòng, đầy thì xếp hàng rồi vào khi phòng trống', () => {
+test('hàng chờ màn chiếu tối đa 2; Tình Lâu 2 phòng, đầy thì xếp hàng rồi vào khi phòng trống', () => {
   const w=setup(),f=w.bondFestival;
   for(let i=0;i<4;i++)gift(w,'a',30,N+1000+i);
   assert.ok(f.love.cuts.filter(x=>x.at>N+1000).length<=LOVE.cutQueueMax);
-  // giả 6 phòng đầy
+  assert.equal(f.love.rooms.length,2);
+  // giả 2 phòng đầy
   f.love.rooms=f.love.rooms.map((r,i)=>({bondId:'z'+i,a:'z',b:'y',aName:'Z',bName:'Y',since:N,until:N+5000,gifts:1}));
   gift(w,'c',1,N+2000);assert.equal(f.love.queue.length,1);
   tick(w,N+6000);

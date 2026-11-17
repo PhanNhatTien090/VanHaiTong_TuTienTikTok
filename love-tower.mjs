@@ -4,7 +4,7 @@
 // · một món ≥100 → Tiên Lữ Đại Điển (chiếu riêng + danh hiệu Thần Tiên Quyến Lữ).
 import {activeBonds} from './bond-relations.mjs';
 export const LOVE=Object.freeze({
-  rooms:6,queueMax:12,roomMs:60000,roomMaxMs:180000,
+  rooms:2,queueMax:20,roomMs:60000,roomMaxMs:120000 /* 17/11 chủ game: 2 phòng to, còn lại xếp hàng */,
   gardenMs:45000,gardenMax:3,songtuWindowMs:60000,
   secretMin:30,grandMin:100,
   secretMs:9000,grandMs:14000,cutGapMs:20000,cutQueueMax:2,
@@ -16,7 +16,9 @@ export const LOVE_ROOM_THEMES=Object.freeze(['nến đỏ','trúc lâm nguyệt'
 export const LOVE_QI_STYLES=Object.freeze(['âm dương','phượng hoàng','song liên']);
 const live=(w,now)=>{const f=w.bondFestival;return f&&!f.closedAt&&now>=f.startedAt&&now<f.endsAt?f:null;};
 const real=p=>p&&!p.resident&&!p.puppet&&p.actorKind!=='npc';
-function state(f){return f.love??={rooms:Array(LOVE.rooms).fill(null),queue:[],gardens:[],gardenDone:{},songtu:{},cuts:[],cutUntil:0,last:{room:-1,qi:-1},pairs:0};}
+function state(f){const L=f.love??={rooms:Array(LOVE.rooms).fill(null),queue:[],gardens:[],gardenDone:{},songtu:{},cuts:[],cutUntil:0,last:{room:-1,qi:-1},pairs:0};
+  if(L.rooms.length>LOVE.rooms){const extra=L.rooms.splice(LOVE.rooms).filter(Boolean);for(const r of extra)L.queue.unshift({bondId:r.bondId,a:r.a,b:r.b,aName:r.aName,bName:r.bName,ms:LOVE.roomMs,at:r.since});} // lễ cũ 6 phòng → dồn sang hàng chờ
+  return L;}
 // Đạo lữ đang có mặt ở LIVE (hoạt động trong 10 phút), ưu tiên người hoạt động gần nhất.
 export function lovePartner(w,p,now){
   if(!real(p))return null;

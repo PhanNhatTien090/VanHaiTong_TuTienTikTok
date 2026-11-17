@@ -101,7 +101,7 @@ import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 // 15/11/2026: chữ trên sân — sans đậm nét, nhỏ gọn kiểu kênh mẫu (user: tên to che hết người, khó nhìn).
 import {honorIcon} from './honor-icons.js';
-import {syncLoveTower,drawLoveTower,loveCutFrame} from './love-tower.js'; // 17/11: Nguyệt Hạ Tình Lâu
+import {syncLoveTower,drawLoveTower,loveCutFrame,loveRoomIds} from './love-tower.js'; // 17/11: Nguyệt Hạ Tình Lâu
 import {drawHeartQi,HEART_QI_MS} from './heart-qi-fx.js';
 const NAME_FONT='800 15px \"Segoe UI\",Arial,sans-serif',TALK_FONT='700 14px "Segoe UI",Arial,sans-serif';
 const TAU=Math.PI*2;
@@ -191,7 +191,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     }):sectElders(state.players,this.sectMaster?.userId);
     const currentEnv=state.environment?.id==='sect-hall'?{...state.environment,...SCENES.find(s=>s.id==='sect-hall')}:state.environment;const env=petCoveOn({...this,boss:state.boss})?PET_COVE_MAP:currentEnv;this.environment=env;if(env?.ambience==='underwater')loadFish(this);
     if(env?.image&&this.environmentImage!==env.image){this.environmentImage=env.image;const next=new Image();next.onload=()=>{if(this.environmentImage!==env.image)return;const previous=this.background;this.art=next;this.resize();this.previousBackground=previous;this.backgroundChangedAt=performance.now();};next.src=env.image;}
-    this.realPlayers=state.players.filter(p=>!(sectCourtVisible(this)&&(p.id===this.sectMaster?.userId||p.id===this.sectMaster?.consort?.id))).filter(p=>p.active||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)||this.warStage?.includes(p.id)||this.alcStage?.includes(p.id)||(this.heavenStrike&&p.id===this.heavenStrike.user)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];this.playerIndex=new Map(this.players.map(p=>[p.id,p]));this.feedbackFX?.snapshot(previousPlayerIndex,state.players,performance.now(),this);if(this.sectMaster?.player)this.playerIndex.set(this.sectMaster.player.id,this.sectMaster.player);if(this.sectMaster?.consort)this.playerIndex.set(this.sectMaster.consort.id,this.sectMaster.consort);this.selected=selected;this.boss=state.boss||sealingBoss(state);
+    const loveAway=loveRoomIds(this); /* 17/11: đôi đang ở Tình Lâu biến khỏi sân */this.realPlayers=state.players.filter(p=>!loveAway.has(p.id)).filter(p=>!(sectCourtVisible(this)&&(p.id===this.sectMaster?.userId||p.id===this.sectMaster?.consort?.id))).filter(p=>p.active||this.socialStage?.includes(p.id)||this.raceStage?.includes(p.id)||this.warStage?.includes(p.id)||this.alcStage?.includes(p.id)||(this.heavenStrike&&p.id===this.heavenStrike.user)).sort((a,b)=>a.joinedAt-b.joinedAt);this.residentActors=this.residents===false?[]:residentPlayers();this.players=[...this.residentActors,...this.realPlayers];this.playerIndex=new Map(this.players.map(p=>[p.id,p]));this.feedbackFX?.snapshot(previousPlayerIndex,state.players,performance.now(),this);if(this.sectMaster?.player)this.playerIndex.set(this.sectMaster.player.id,this.sectMaster.player);if(this.sectMaster?.consort)this.playerIndex.set(this.sectMaster.consort.id,this.sectMaster.consort);this.selected=selected;this.boss=state.boss||sealingBoss(state);
     const eligible=this.realPlayers.length;
     const planned=plannedActorCount(state,eligible,this.residentActors.length);
     this.audienceCount=liveAudienceCount(state);

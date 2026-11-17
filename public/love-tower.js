@@ -11,10 +11,10 @@ import {PALETTES,fxCamera,punch,smooth,out3,seg,clamp,dot,drawCircle,drawBurst,d
 const TAU=Math.PI*2;
 // Ngồi thiền (stand:0 — tư thế song tu/cùng tu có sẵn), không vẽ tư thế mới.
 export function drawSeated(scene,c,player,x,y,scale,t,flip){if(!player)return;const oc=scene.compact,op=scene.cinematicPose;scene.compact=true;scene.cinematicPose={...(op||{}),stand:0,lift:0,lean:0};c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.scale(scale,scale);try{scene.drawCharacterBody(c,player,skinFor(player.giftCoins),t);}catch{}finally{c.restore();scene.compact=oc;scene.cinematicPose=op;}}
-export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower.webp',rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
+export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower-2.webp',rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
 // Ô cửa sổ trong ảnh Tình Lâu (tỉ lệ 0–1 theo ảnh vuông) — đo từ ảnh thật.
-export const TOWER_WINDOWS=Object.freeze([[.264,.194],[.531,.194],[.264,.383],[.531,.383],[.264,.575],[.531,.575]].map(([x,y])=>({x,y,w:.205,h:.12}))); // đo từ love-tower.webp 1254²
-export const TOWER_BOX=Object.freeze({x:362,y:.03,size:200}); // 17/11: giữa mép trên (trên cây Nguyệt Lão) — cột phải LIVE có thêm thẻ Tiên Đế + bảng giờ lễ che mất góc phải // vị trí trên màn 900 px, y theo H
+export const TOWER_WINDOWS=Object.freeze([[.171,.317],[.535,.317]].map(([x,y])=>({x,y,w:.295,h:.337}))); // 2 phòng to — đo từ love-tower-2.webp
+export const TOWER_BOX=Object.freeze({x:312,y:.14,size:290}); // 17/11: bậc thang dưới cây Nguyệt Lão, gần sân — dưới bảng sự kiện nhỏ giữa mép trên (Ba Túi Linh Lộc…) — cột phải LIVE có thêm thẻ Tiên Đế + bảng giờ lễ che mất góc phải // vị trí trên màn 900 px, y theo H
 const ROOM_PAL=[{main:'#ff5a7a',soft:'#ffd2dc',gold:'#ffe7a8',deep:'#1a0508'},{main:'#5affb4',soft:'#d8ffe9',gold:'#fff3c0',deep:'#03140c'},{main:'#8fd8ff',soft:'#e6f6ff',gold:'#f2e9ff',deep:'#040b18'}];
 const hasDoc=()=>typeof document!=='undefined';
 const imgs=new Map();
@@ -23,12 +23,17 @@ const ready=im=>im&&im.complete&&im.naturalWidth>0;
 const nowAt=(scene,t)=>(scene.stateServerNow||Date.now())+Math.min(2000,Math.max(0,t-(scene.stateReceivedAt||t)));
 export function syncLoveTower(scene,state){
   scene.loveStatus=state?.loveTower||null; // server chỉ gửi khi lễ đang mở (hoặc vừa đóng ≤20 s để chiếu nốt)
+  // chỉ mục riêng: người trong phòng bị ẩn khỏi sân (không có trong scene.playerIndex) nhưng vẫn phải vẽ trong cửa sổ / màn chiếu
+  const L=scene.loveStatus,ids=new Set();for(const r of L?.rooms||[])if(r){ids.add(r.a);ids.add(r.b);}for(const x of L?.cuts||[]){ids.add(x.a);ids.add(x.b);}
+  scene.lovePlayers=new Map((state?.players||[]).filter(p=>ids.has(p.id)).map(p=>[p.id,p]));
   if(hasDoc())document.body?.classList?.toggle('love-festival',!!scene.loveStatus?.active); // ẩn bảng hướng dẫn chung (Rèn pháp bảo…) trong lễ
   if(scene.loveStatus){img(LOVE_ART.tower);for(const r of LOVE_ART.rooms)img(r);}
 }
 let heart;
 function heartSprite(){if(heart!==undefined)return heart;const s=makeSurface(40,40);heart=s||null;if(!s)return null;const c=s.getContext('2d');c.translate(20,21);const g=c.createLinearGradient(-12,-15,10,15);g.addColorStop(0,'#fff0f6');g.addColorStop(.35,'#ff8fc4');g.addColorStop(1,'#e2408a');c.beginPath();c.moveTo(0,14);c.bezierCurveTo(-7,9,-16,0,-14,-7);c.bezierCurveTo(-12,-15,-4,-16,0,-9);c.bezierCurveTo(5,-17,13,-15,14,-7);c.bezierCurveTo(16,0,6,9,0,14);c.closePath();c.fillStyle=g;c.fill();return s;}
 function drawHeart(c,x,y,s,a){const im=heartSprite();if(!im||a<=.01)return;c.globalAlpha=Math.min(1,a);c.drawImage(im,x-s/2,y-s/2,s,s);}
+// Người đang ở trong phòng Tình Lâu (còn giờ) → ẩn khỏi sân, chỉ thấy trong cửa sổ (chủ game 17/11).
+export function loveRoomIds(scene){const L=scene.loveStatus,out=new Set();if(!L?.active)return out;const now=scene.stateServerNow||Date.now();for(const r of L.rooms||[])if(r&&r.until>now){out.add(r.a);out.add(r.b);}return out;}
 // ---------- 1) Tình Lâu trên map ----------
 // Ảnh vuông có nền trời → làm mờ viền (mặt nạ tròn) để hòa vào map; dựng 1 lần.
 let feathered=null;
@@ -42,21 +47,21 @@ export function drawLoveTower(scene,c,t,H){
   const soft=ready(art)?featherTower(art):null;
   if(soft){c.globalAlpha=1;c.drawImage(soft,b.x-b.s*.06,b.y-b.s*.06,b.s*1.12,b.s*1.12);}
   else{c.globalAlpha=.85;c.fillStyle='#2a0f1e';c.fillRect(b.x,b.y,b.s,b.s);}
-  c.globalAlpha=1;txt(c,'TÌNH LÂU',b.x+b.s/2,b.y+b.s+12,17,'#ffd6e6',{width:5,weight:'900'});
-  const idx=scene.playerIndex||new Map();
+  c.globalAlpha=1;txt(c,'TÌNH LÂU',b.x+b.s/2,b.y+b.s+12,20,'#ffd6e6',{width:5,weight:'900'});
+  const idx=scene.lovePlayers||scene.playerIndex||new Map();
   L.rooms.forEach((r,i)=>{const w=windowRect(i,H);
     if(!r){c.globalAlpha=.55;c.fillStyle='#120609';c.fillRect(w.x,w.y,w.w,w.h);return;}
     const pulse=.75+.25*Math.sin(t*.004+i);c.globalAlpha=1;const g=c.createLinearGradient(0,w.y,0,w.y+w.h);g.addColorStop(0,'#ff9cc6');g.addColorStop(1,'#ff5a8f');c.fillStyle=g;c.fillRect(w.x,w.y,w.w,w.h);
-    if(!bare){c.save();c.beginPath();c.rect(w.x,w.y,w.w,w.h);c.clip();const fy=w.y+w.h*.97,sc=w.h/170;
+    if(!bare){c.save();c.beginPath();c.rect(w.x,w.y,w.w,w.h);c.clip();const fy=w.y+w.h*1.07,sc=w.h/88;
       drawSeated(scene,c,idx.get(r.a),w.x+w.w*.3,fy,sc,t,false);drawSeated(scene,c,idx.get(r.b),w.x+w.w*.7,fy,sc,t,true);c.restore();}
     c.globalAlpha=.35*pulse;c.fillStyle='#ffe2ee';c.fillRect(w.x,w.y,w.w,w.h);
     c.globalAlpha=1;c.strokeStyle='#ffd27a';c.lineWidth=2;c.strokeRect(w.x,w.y,w.w,w.h);
+    {const nm=s=>Array.from(String(s||'')).slice(0,10).join('');txt(c,nm(r.aName),w.x+w.w/2,w.y+11,12,'#fff',{width:4,weight:'800',max:w.w-6});txt(c,'♥ '+nm(r.bName),w.x+w.w/2,w.y+26,12,'#ffe1ee',{width:4,weight:'800',max:w.w-6});}
     if(!light)for(let j=0;j<4;j++){const u=((t*.0006+j/4+i*.13)%1);drawHeart(c,w.x+w.w*(.3+.4*((j*37+i*11)%10)/10)+Math.sin(u*9+j)*6,w.y-u*40,10+u*6,(1-u)*.9);}
   });
-  // tên đôi: danh sách gọn dưới lầu (cửa sổ quá nhỏ để ghi tên), tối đa 3 dòng
-  const occ=L.rooms.filter(Boolean),nm=s=>Array.from(String(s||'')).slice(0,9).join('');let ly=b.y+b.s+32;
-  for(const r of occ.slice(-3)){txt(c,'♥ '+nm(r.aName)+' · '+nm(r.bName),b.x+b.s/2,ly,13,'#ffe8f1',{width:4,weight:'800',max:b.s+20});ly+=17;}
-  const more=occ.length-3+(L.queueCount||0);if(occ.length>3||L.queueCount)txt(c,(occ.length>3?'+'+(occ.length-3)+' đôi':'')+(L.queueCount?(occ.length>3?' · ':'')+'chờ '+L.queueCount:''),b.x+b.s/2,ly,12,'#ffd2e4',{width:4,weight:'800'});
+  // 2 phòng + hàng chờ (chủ game 17/11: 2 phòng to, ai muốn vào thì xếp hàng)
+  const nm=s=>Array.from(String(s||'')).slice(0,9).join('');let ly=b.y+b.s+34;
+  if(L.queueCount){txt(c,'Hàng chờ: '+L.queueCount+' đôi',b.x+b.s/2,ly,16,'#ffffff',{width:6,weight:'900'});ly+=19;for(const q of (L.queue||[]).slice(0,2)){txt(c,nm(q.aName)+' ♥ '+nm(q.bName),b.x+b.s/2,ly,14,'#fff',{width:5,weight:'800',max:b.s+30});ly+=17;}}
   c.restore();
   // 2) Đình Nguyệt — quầng tim quanh đôi đang song tu trên sân
   if(bare)return;
@@ -92,7 +97,7 @@ function bgCover(c,im,H,zoom=1,fy=.5){if(!ready(im))return false;const s=Math.ma
 const short=(s,n=12)=>Array.from(String(s||'')).slice(0,n).join('');
 function drawSecretRoom(scene,c,t,H,x,k,grand){
   const P=ROOM_PAL[x.room%3]||ROOM_PAL[0],motion=scene.motion!==false,light=scene.budget?.level==='light',rf=scene.reduceFlash;
-  const idx=scene.playerIndex||new Map(),A=idx.get(x.a),B=idx.get(x.b);
+  const idx=scene.lovePlayers||scene.playerIndex||new Map(),A=idx.get(x.a),B=idx.get(x.b);
   const enter=smooth(seg(k,SECRET.enter,SECRET.screen-.06)),drop=out3(seg(k,SECRET.screen,SECRET.down)),beatSec=SECRET.beats.map(b=>(k-b)*x.ms*(grand?.58:1)/1000);
   const charge=seg(k,SECRET.down,SECRET.beats[2]),done=seg(k,SECRET.done,1);
   const zoom=motion?1.04+.05*smooth(seg(k,0,SECRET.down))+.04*charge+beatSec.reduce((n,s)=>n+punch(s,.035),0):1;
@@ -146,7 +151,7 @@ function drawSecretRoom(scene,c,t,H,x,k,grand){
 // Lễ trên cầu (map lễ phóng to vào cầu): đứng đối diện, cánh hoa đỏ rơi, pháo hoa, hạc bay, chữ TIÊN LỮ ĐẠI ĐIỂN.
 function drawGrandRite(scene,c,t,H,x,k){
   const motion=scene.motion!==false,light=scene.budget?.level==='light',rf=scene.reduceFlash,P={main:'#ff4d6d',soft:'#ffe0e8',gold:'#ffd54a',deep:'#12040c'};
-  const idx=scene.playerIndex||new Map(),A=idx.get(x.a),B=idx.get(x.b);
+  const idx=scene.lovePlayers||scene.playerIndex||new Map(),A=idx.get(x.a),B=idx.get(x.b);
   const walk=smooth(seg(k,.06,.4)),bow=seg(k,.45,.7),fw=[.5,.66,.8].map(b=>(k-b)*x.ms*.42/1000);
   fxCamera(c,450,H*.62,motion?1+.06*smooth(k):1,0,t);
   c.fillStyle=P.deep;c.fillRect(-200,-200,1300,H+400);
