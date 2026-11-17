@@ -5,6 +5,7 @@ export const skyStageUntil=(w,now)=>w.flowerEvent?Math.max(w.flowerEvent.endsAt,
 export function stageConflict(w,now,{allowBond=false,allowHall=false,allowPet=false}={}){
  if(['registration','running'].includes(w.hallWar?.phase)||w.hallWar?.podiumUntil>now)return 'Ngũ Đường Giao Lưu';
  if(['registration','running','boss'].includes(w.mountRealm?.phase)||w.mountRealm?.podiumUntil>now)return 'Tọa Kỹ Bí Cảnh';
+ if(w.baoKho?.phase==='open'||w.baoKho?.podiumUntil>now)return 'Thiên Công Bảo Khố';
  if(!allowHall&&w.nguDuong?.match?.endsAt>now)return 'Vân Đài thách đấu';
  if(skyStageUntil(w,now)>now)return now<w.flowerEvent.endsAt?'sao băng / mưa hoa':'trao thưởng sao băng / mưa hoa';
  if(w.boss?.hp>0&&w.boss.endsAt>now)return 'yêu thú';

@@ -10,6 +10,7 @@ import {createAuditStorage} from './audit-storage.mjs';
 import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit.mjs';
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
+import {startBaoKhoEvent,stopBaoKhoEvent} from './engine.mjs';
 import {startMountRealmEvent,stopMountRealmEvent,startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent,currentParticipant} from './engine.mjs';
 import {startArenaEvent,stopArenaEvent} from './engine.mjs';
@@ -224,6 +225,8 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='stop-race')result=stopRace(w,now);
       else if(b.action==='start-mount-realm')result=startMountRealmEvent(w,now);
       else if(b.action==='stop-mount-realm')result=stopMountRealmEvent(w,now);
+      else if(b.action==='start-bao-kho')result=startBaoKhoEvent(w,now);
+      else if(b.action==='stop-bao-kho')result=stopBaoKhoEvent(w,now);
       else if(b.action==='start-hall-war')result=startHallWar(w,now);
       else if(b.action==='stop-hall-war')result=stopHallWar(w,now);
       else if(b.action==='start-war')result=startWar(w,now);
