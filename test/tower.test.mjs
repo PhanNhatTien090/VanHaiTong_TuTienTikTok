@@ -43,7 +43,7 @@ test('quà trợ lực theo mốc 1·10·30·100·500: quà càng lớn nổ cà
  const w=setup();w.players.a.realm=1;w.players.a.towerFloor=30;chat(w,'a','6',N+100);tick(w,N+200);
  const l=w.tower.lanes[0];l.me=20;const end0=l.endsAt,hp0=l.hp;
  gift(w,'a',100,N+300);assert.match(w.events.findLast(e=>e.towerGift).text,/THIÊN HỎA/);
- assert.ok(l.hp<=hp0-28+.01);assert.equal(l.me,70);assert.equal(l.endsAt,end0+10000);assert.equal(l.buffMult,2.2);
+ assert.ok(l.hp<=hp0-85+.01,'18/11: quà 100 = 85% máu thủ vệ');assert.equal(l.me,80);assert.equal(l.endsAt,end0+10000);assert.equal(l.buffMult,2.2);
  // người ngoài tặng → trợ lực đài đang có người
  const hp1=l.hp;gift(w,'b',30,N+400);assert.ok(l.hp<hp1-13);
  // hoa hồng spam: nổ tối đa 1 lần / 1,5 s
@@ -67,4 +67,18 @@ test('mốc 5 tầng thưởng ×2 + Báo Hỷ; đóng tháp có bục vinh danh
 
 test('đánh is left to other events when nobody is climbing',()=>{
  const w=setup();const r=chat(w,'a','3',N+100);assert.notEqual(r?.tower,true);
+});
+
+test('18/11: quà ≥100 chiếu riêng — cả tháp tạm dừng đúng thời gian chiếu (không mất giây), 500 chém bay thủ vệ, phá tầng sau màn',()=>{
+ const w=setup();w.players.a.realm=1;w.players.a.towerFloor=30;w.players.b.realm=1;chat(w,'a','6',N+100);chat(w,'b','6',N+110);tick(w,N+200);
+ const la=w.tower.lanes[laneOf(w,'a')],lb=w.tower.lanes[laneOf(w,'b')],endA=la.endsAt,endB=lb.endsAt,meB=lb.me,towerEnd=w.tower.endsAt;
+ gift(w,'a',500,N+300);const cut=snapshot(w,N+400).tower.cuts[0];
+ assert.equal(cut.tier,'g500');assert.equal(cut.ko,true);assert.equal(cut.userName,'A');assert.equal(cut.ms,TOWER_GIFTS[0].cut);assert.ok(cut.guardian?.name);
+ assert.equal(la.hp,0,'500 = chém bay');
+ tick(w,N+300+cut.ms-500);assert.equal(laneOf(w,'a')>=0,true,'chưa phá tầng giữa màn chiếu');assert.equal(lb.me,meB,'đài khác không mất máu khi đang chiếu');
+ tick(w,N+300+cut.ms+100);assert.equal(laneOf(w,'a'),-1,'chiếu xong mới phá tầng');assert.equal(w.players.a.towerFloor,31);
+ assert.ok(lb.endsAt>=endB+cut.ms-1,'đài khác được bù giờ');assert.ok(w.tower.endsAt>=towerEnd+cut.ms-1,'tháp được bù giờ');
+ // 2 quà 100 liền: màn thứ 2 xếp sau màn 1
+ gift(w,'b',100,N+6100);gift(w,'b',100,N+6150);const cs=snapshot(w,N+6200).tower.cuts.filter(x=>x.tier==='g100');assert.equal(cs.length,2);assert.ok(cs[1].at>=cs[0].at+cs[0].ms,'không chồng màn');
+ void endA;
 });

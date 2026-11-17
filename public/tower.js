@@ -9,7 +9,7 @@ const fmt=n=>Number(n||0).toLocaleString('vi-VN');
 const mounted=new WeakMap();
 const secs=ms=>Math.max(0,Math.ceil(ms/1000));
 const pct=v=>Math.max(0,Math.min(100,Number(v)||0)).toFixed(1)+'%';
-export const TOWER_GIFT_GUIDE=Object.freeze([[1,'Linh Khí Hộ Thể','hồi máu · đánh nhanh'],[10,'Kiếm Vũ Trợ Trận','sát thương ×1,4'],[30,'Cửu Thiên Lôi Phạt','×1,7 · +6 giây'],[100,'Thiên Hỏa Liệu Nguyên','×2,2 · hồi nửa máu'],[500,'Vạn Kiếm Quy Tông','×3 · hồi đầy · +15 giây']]);
+export const TOWER_GIFT_GUIDE=Object.freeze([[1,'Linh Khí Hộ Thể','hồi máu · đánh nhanh'],[10,'Kiếm Vũ Trợ Trận','sát thương ×1,4'],[30,'Cửu Thiên Lôi Phạt','×1,7 · +6 giây'],[100,'Thiên Hỏa Liệu Nguyên','chém 85% máu thủ vệ'],[500,'Vạn Kiếm Quy Tông','chém bay thủ vệ']]);
 const TIER_COLOR={g1:'#9ff0d0',g10:'#9fd8ff',g30:'#c79bff',g100:'#ffb070',g500:'#ffd36b'};
 function ensureCss(){if(typeof document==='undefined'||document.getElementById('tw2-css'))return;const l=document.createElement('link');l.id='tw2-css';l.rel='stylesheet';l.href='/tower-v2.css?v=20261116b';document.head?.appendChild(l);}
 

@@ -30,10 +30,11 @@ export const guardDps=(realm,floor)=>clamp(1.4+(floor/2-(Number(realm)||0))*0.55
 // QUÀ TRỢ LỰC theo tổng coin một lần tặng (mốc 1 · 10 · 30 · 100 · 500). burst = % máu thủ vệ, heal = % máu người leo,
 // mult = ×sát thương (tự đánh + gõ) trong ms, haste = ra đòn nhanh gấp đôi, time = cộng giờ lượt.
 export const TOWER_GIFTS=Object.freeze([
- {min:500,id:'g500',name:'VẠN KIẾM QUY TÔNG',burst:55,heal:100,mult:3,ms:15000,time:15000,shake:22},
- {min:100,id:'g100',name:'THIÊN HỎA LIỆU NGUYÊN',burst:28,heal:50,mult:2.2,ms:12000,time:10000,shake:14},
- {min:30,id:'g30',name:'CỬU THIÊN LÔI PHẠT',burst:14,heal:25,mult:1.7,ms:10000,time:6000,shake:8},
- {min:10,id:'g10',name:'KIẾM VŨ TRỢ TRẬN',burst:7,heal:12,mult:1.4,ms:8000,time:3000,shake:4},
+ // 18/11 (chủ game: "quà 100 yếu thế, phải 1 chiêu gần hết máu quái"): 500 = chém bay thủ vệ, 100 = 85% máu; 30/10 nhích lên.
+ {min:500,id:'g500',name:'VẠN KIẾM QUY TÔNG',burst:100,heal:100,mult:3,ms:15000,time:15000,shake:22,cut:5600},
+ {min:100,id:'g100',name:'THIÊN HỎA LIỆU NGUYÊN',burst:85,heal:60,mult:2.2,ms:12000,time:10000,shake:14,cut:4600},
+ {min:30,id:'g30',name:'CỬU THIÊN LÔI PHẠT',burst:30,heal:25,mult:1.7,ms:10000,time:6000,shake:8},
+ {min:10,id:'g10',name:'KIẾM VŨ TRỢ TRẬN',burst:12,heal:12,mult:1.4,ms:8000,time:3000,shake:4},
  {min:1,id:'g1',name:'LINH KHÍ HỘ THỂ',burst:3,heal:6,mult:1.2,ms:6000,time:0,shake:0}]);
 export const towerGiftTier=v=>TOWER_GIFTS.find(t=>v>=t.min)||null;
 const SMALL_BURST_CD=1500; // hoa hồng spam: nổ sát thương tối đa 1 lần / 1,5 s mỗi đài (vẫn hồi máu + giữ cuồng hóa)
@@ -60,6 +61,21 @@ function applyGift(e,lane,tier,now,from,value){
  if(!(l.buffUntil>now)||rank>=(l.buffRank||0)){l.buffMult=tier.mult;l.buffRank=rank;l.buffName=tier.name;l.buffTier=tier.id;}
  l.buffUntil=Math.max(l.buffUntil||0,now+tier.ms);l.endsAt+=tier.time;l.gifts=(l.gifts||0)+1;
  pushFx(e,{kind:'gift',lane,tier:tier.id,name:tier.name,value,from:from.id,fromName:from.name,burst:burstOk?tier.burst:0,heal:tier.heal,time:tier.time,shake:tier.shake,at:now});
+ if(tier.cut)queueCut(e,{lane,tier:tier.id,name:tier.name,value,user:l.id,userName:l.name,from:from.id,fromName:from.name,floor:l.floor,dmg:Math.round(tier.burst/100*guardianHp(l.floor)),ko:l.hp<=0,ms:tier.cut},now);
+}
+// 18/11: CHIẾU RIÊNG quà ≥100 — 1 màn một lúc cho cả tháp, cách nhau ≥0,8 s, tối đa ~2 màn chờ (quá thì chỉ còn hiệu ứng trên thẻ).
+// Trong lúc chiếu, cả tháp TẠM DỪNG (giờ lượt, tự đánh, thủ vệ đánh trả) → không ai mất giây vì màn chiếu.
+const CUT_GAP=800,CUT_WAIT=9000;
+export function queueCut(e,x,now){
+ e.cuts??=[];const at=Math.max(now,(e.holdUntil||0)+(e.holdUntil>now?CUT_GAP:0));if(at-now>CUT_WAIT)return false;
+ const c={id:e.id+':c'+(++e.seq),...x,at};e.cuts.push(c);if(e.cuts.length>4)e.cuts.splice(0,e.cuts.length-4);
+ e.holdFrom??=now;e.holdUntil=at+x.ms;return true;
+}
+/** Dồn thời gian tạm dừng vào mọi mốc giờ. Trả true nếu vẫn đang dừng. */
+function applyHold(e,now){
+ if(e.holdFrom==null)return false;const until=Math.min(now,e.holdUntil||0),dt=Math.max(0,until-e.holdFrom);
+ if(dt){for(const t of e.lanes){if(!t)continue;t.endsAt+=dt;t.lastAt+=dt;if(t.buffUntil)t.buffUntil+=dt;}e.endsAt+=dt;e.holdFrom=until;}
+ if(now<e.holdUntil)return true;e.holdFrom=null;return false;
 }
 function beginTurn(w,e,lane,p,now){
  const floor=(Number(p.towerFloor)||0)+1;
@@ -82,6 +98,7 @@ function finishTurn(w,e,lane,now,c,won,why){
 }
 export function tickTower(w,now,c){
  const e=w.tower;if(!e||e.closedAt)return;lanesOf(e);e.gapUntil??=Array(TOWER.lanes).fill(0);e.fx??=[];e.results??=[];e.pending??={};
+ if(applyHold(e,now))return; // 18/11: đang chiếu riêng quà lớn → cả tháp đứng yên
  e.lanes.forEach((t,lane)=>{
   if(!t)return;const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
   const mult=t.buffUntil>now?t.buffMult||1:1;
@@ -125,11 +142,11 @@ export function towerCommand(w,p,cmd,now,c){
  if(mine>=0){const t=e.lanes[mine];if(t.next[p.id]>now)return {ok:true,cooldown:true};
   const fast=t.buffUntil>now;t.next[p.id]=now+(fast?TOWER.hitCdBoostMs:TOWER.hitCdMs);t.hits++;
   t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor)*(fast?t.buffMult||1:1));
-  if(t.hp<=0)finishTurn(w,e,mine,now,c,true);return {ok:true,tower:true,lane:mine};}
+  if(t.hp<=0&&!(e.holdUntil>now))finishTurn(w,e,mine,now,c,true);return {ok:true,tower:true,lane:mine};} /* đang chiếu riêng: phá tầng sau màn (tickTower) */
  const lane=supportLane(e,p);if(lane<0)return null; // chưa ai leo → để lệnh đánh cho sự kiện khác
  const t=e.lanes[lane];if(t.next[p.id]>now)return {ok:true,cooldown:true};
  t.next[p.id]=now+TOWER.helpCdMs;t.helpers[p.id]=(t.helpers[p.id]||0)+1;t.helpHits++;t.hp=Math.max(0,t.hp-HELP_DAMAGE);(e.follow??={})[p.id]=lane;
- if(t.hp<=0)finishTurn(w,e,lane,now,c,true);
+ if(t.hp<=0&&!(e.holdUntil>now))finishTurn(w,e,lane,now,c,true);
  return {ok:true,tower:true,lane,help:true};
 }
 // Quà trong lúc tháp mở → trợ lực. Trả {lane,tier,name} hoặc {pending} khi chưa ai leo (giữ làm hộ thể cho lượt của chính người tặng).
@@ -140,7 +157,7 @@ export function towerGift(w,p,value,now,c){
  if(lane<0){const cur=e.pending[p.id];if(!cur||cur.tier.min<=tier.min)e.pending[p.id]={tier,value};if(!e.queue.includes(p.id)&&e.queue.length<TOWER.maxQueue){e.queue.push(p.id);tickTower(w,now,c);}
   lane=laneOf(e,p.id);if(lane<0)return {pending:true,tier:tier.id,name:tier.name};}
  applyGift(e,lane,tier,now,p,value);(e.follow??={})[p.id]=lane;
- const t=e.lanes[lane];if(t&&t.hp<=0)finishTurn(w,e,lane,now,c,true);
+ const t=e.lanes[lane];if(t&&t.hp<=0&&!(e.holdUntil>now))finishTurn(w,e,lane,now,c,true);
  return {lane,tier:tier.id,name:tier.name,to:t?.name};
 }
 
@@ -151,7 +168,7 @@ export function towerView(w,now){
   return {lane:i,id:t.id,name:t.name,floor:t.floor,hp:Math.round(t.hp*10)/10,me:Math.round(t.me*10)/10,maxHp:g.maxHp,endsAt:t.endsAt,startedAt:t.startedAt,
    helpers:Object.keys(t.helpers).length,helpHits:t.helpHits,hits:t.hits,realm:p?.realm??0,guardian:g,next:Math.ceil(t.floor/TOWER.milestone)*TOWER.milestone,
    buff:t.buffUntil>now?{name:t.buffName,tier:t.buffTier,mult:t.buffMult,until:t.buffUntil}:null};});
- return {id:e.id,active:open,endsAt:e.endsAt,clears:e.clears,lanes,
+ return {id:e.id,active:open,endsAt:e.endsAt,clears:e.clears,lanes,cuts:(e.cuts||[]).filter(x=>now<x.at+x.ms+1000).map(x=>({...x,guardian:guardianOf(x.floor)})),holdUntil:e.holdUntil||0,
   queue:e.queue.slice(0,5).map(id=>w.players[id]?.name||'Đạo hữu'),queued:e.queue.length,queueAvatars:e.queue.slice(0,10).map(id=>({id,avatar:w.players[id]?.avatar||null})), // 16/11: bảng chờ chỉ avatar
   fx:(e.fx||[]).filter(f=>now-f.at<6000),
   results:(e.results||[]).filter(r=>now-r.at<4500),
