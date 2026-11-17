@@ -51,7 +51,7 @@ export function stopBaoKho(w,now,ctx){if(!baoKhoVisible(w,now))return fail('Bả
 export function tickBaoKho(w,now,ctx){
  const e=w.baoKho;if(!e||e.phase!=='open'||now<e.endsAt)return;
  e.phase='finished';e.podiumUntil=now+PODIUM_MS;e.cd={};
- const top=topHunters(w,3);ctx.emit(w,null,'THIÊN CÔNG BẢO KHỐ KHÉP LẠI • '+e.pulls+' lượt cầu'+(top[0]?' · săn bảo nhiều nhất: '+top[0].name:''),'bao-kho',now,{baoEnd:true});
+ const top=topHunters(w,3);ctx.emit(w,null,'THIÊN CÔNG BẢO KHỐ KHÉP LẠI • '+e.pulls+' lượt cầu'+(top[0]?' · săn bảo nhiều nhất: '+top[0].name:'')+' • ai đã nhận: gõ thần khí để xem, trang bị + tên để đeo','bao-kho',now,{baoEnd:true});
 }
 function topHunters(w,n){return Object.entries(w.baoKho?.hunters||{}).map(([id,h])=>({id,name:w.players[id]?.name||'',items:h.i,pulls:h.n})).sort((a,b)=>b.items-a.items||b.pulls-a.pulls).slice(0,n);}
 function record(w,p,res,now,ctx,source){
@@ -59,7 +59,7 @@ function record(w,p,res,now,ctx,source){
  const b=state(p),row={k:++e.seq,u:p.id,name:p.name,t:res.tier,id:res.id||null,s:res.stars||0,p4:BAO_PITY4-b.p4,p5:BAO_PITY5-b.p5,at:now};
  e.log.push(row);if(e.log.length>LOG_MAX)e.log.splice(0,e.log.length-LOG_MAX);
  if(res.tier>=5)queueReveal(e,{k:row.k,u:p.id,name:p.name,t:res.tier,id:res.id,s:res.stars},now);
- if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:'')+(res.tier>=5?' • gõ thần khí để xem · trang bị + tên để đeo':''),'bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
+ if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:'')+' • gõ thần khí để xem · trang bị + tên để đeo','bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
   if(res.tier===6)ctx.audit?.(w,'bao-limited',now,{user:p.id,name:p.name,id:res.id});}
  return row;
 }
@@ -95,7 +95,7 @@ export function baoKhoView(w,now){
 }
 /** Lệnh "thần khí" (thankhi): bộ sưu tập ngắn gọn. */
 export function baoCollectionText(p){const b=p.bao;if(!b||!Object.keys(b.items||{}).length)return 'Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở';
- const bm=baoBanMenh(p);return (bm?'Bản mệnh '+bm.name+' · ':'')+'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★';}
+ const bm=baoBanMenh(p);return (bm?'Bản mệnh '+bm.name+' · ':'')+'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★ · đeo: trang bị + tên thần khí';}
 
 /** 18/11: lệnh "bản mệnh" — xem pháp bảo bản mệnh + danh sách đánh số; "bản mệnh N" đổi (hồi 10 phút). Bản mệnh phát thần thông trong Lôi Đài. */
 export const BAN_MENH_CD=10*60000;
@@ -104,7 +104,7 @@ export function baoBanMenhCommand(p,rest,now){
  if(!list.length)return fail('Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở');
  const cur=baoBanMenh(p),label=id=>{const it=baoItem(id);return BAO_TIER[it.tier].name+' '+it.name+' ★'+items[id]+' ('+BAO_LINES[it.line].skill+')';};
  const n=parseInt(String(rest||'').trim(),10);
- if(!n)return {ok:true,message:'Bản mệnh: '+label(cur.id)+' · đổi: gõ bản mệnh + số · '+list.slice(0,6).map((id,i)=>(i+1)+'. '+baoItem(id).name).join(' · ')};
+ if(!n)return {ok:true,message:'Bản mệnh: '+label(cur.id)+' · đổi: gõ trang bị + tên, hoặc bản mệnh + số · '+list.slice(0,6).map((id,i)=>(i+1)+'. '+baoItem(id).name).join(' · ')};
  const id=list[n-1];if(!id)return fail('Không có thần khí số '+n);
  if(id===cur.id)return {ok:true,message:'Bản mệnh đã là '+label(id)};
  const wait=(p.bao.banAt||0)+BAN_MENH_CD-now;if(wait>0)return fail('Đổi bản mệnh sau '+Math.ceil(wait/60000)+' phút nữa');

@@ -76,7 +76,7 @@ export function speechPlan(e){
   if(e.baoGift)return [say('trongtai',Who+' thi triển cầu bảo!')];
   if(e.baoStart)return [say('tongsu','Thiên Công Bảo Khố khai mở! Gõ cầu để cầu pháp bảo.')];
   if(e.baoWin)return e.baoWin.tier>=6?[say('tongsu','Thiên địa dị tượng! Thần khí giới hạn '+(e.baoWin.item||'')+' hiện thế. '+Who+' là chủ nhân duy nhất!')]:e.baoWin.tier>=5?[say('tongsu','Chúc mừng '+who+' nhận thần khí '+(e.baoWin.item||'')+'!')]:[];
-  if(e.baoEnd)return [say('tongsu','Thiên Công Bảo Khố khép lại.')];
+  if(e.baoEnd)return [say('tongsu','Thiên Công Bảo Khố khép lại. Đạo hữu nào đã nhận thần khí, gõ thần khí để xem, gõ trang bị kèm tên thần khí để đeo.')];
   if(e.realmStart)return [say('trongtai','Tọa Kỹ Bí Cảnh mở cửa! Gõ bí cảnh để vào, cùng hạ yêu thú, nhặt Linh Châu.')];
   if(e.realmWave!=null)return [say('trongtai','Làn yêu thú thứ '+viNumber(e.realmWave+1)+' kéo đến! Các đạo hữu xuất chiêu!')];
   if(e.realmBoss)return [say('trongtai','Thú vương xuất hiện! Các đạo hữu hợp lực thu phục!')];
