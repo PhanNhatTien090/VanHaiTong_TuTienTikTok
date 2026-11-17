@@ -85,3 +85,56 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
 4. Ảnh: Codex đang vẽ 24 món (prompt: scratchpad `phapbao/PROMPT.md`). File ra ở thư mục chạy Codex (scratchpad, có thể bị dọn) VÀ bản gốc ở `C:\Users\Admins\.codex\generated_images\<phiên codex>\`. Session sau: kiểm 24 file, tự xem ở cỡ 64 px, chuyển webp (PIL, chạy python thường không -I) vào `public/assets/phap-bao-v1/<id>.webp`, gửi chủ game duyệt.
 5. Đợt 1 (bản mệnh + luyện hóa đồ cũ) làm LÚC KHÔNG LIVE, sao lưu trước.
 6. Chưa chốt: thanh mục tiêu chung (đề xuất đếm lệnh gõ + quà, KHÔNG đếm tim). ⚠ Theo dõi: quà 1 coin = 1 lượt → 80 quà nhỏ chắc 5★.
+
+## 10. HIỆU ỨNG NHẬN PHÁP BẢO + CHIÊU (chủ game 17/11: "thật chói lóa, hoành tráng, ghi rõ ai nhận; GIỚI HẠN bùng nổ nhất — rung giật, chiếu chiếu, hiện BÓNG ĐEN rồi bùng bùng bùng; chiêu GIỚI HẠN ngang màn đột phá")
+Dùng lại bộ máy sẵn có: `public/cut-fx.js` (letterbox, trận pháp, tụ khí, nổ, sóng, đứng hình, khung impact đảo màu, nhòe tách hình, nghiêng máy), `public/qi-impact.js` (cột sáng/tia tỏa/tia lửa của đột phá), `skill-cutscene.js` (`drawCutInBand` cận mặt tự đo độ cao mặt, tấm che `cutVeil`). Âm: bộ `duelSoundPreset`/`chan-tien-audio` + 3 tiếng "bùm" theo từng cú nổ.
+
+### 10.1 Ba cấp màn NHẬN (mỗi cấp một tông màu, luôn GHI RÕ TÊN NGƯỜI NHẬN)
+| | 4★ (tím) | 5★ (vàng) | GIỚI HẠN (hồng–vàng–đen) |
+|---|---|---|---|
+| Dài | 2,5 s | 4,5 s | 8 s |
+| Kiểu | thẻ to giữa màn, sân vẫn thấy | CHIẾU RIÊNG toàn màn | CHIẾU RIÊNG toàn màn, kịch bản 6 pha |
+| Hàng chờ | không chặn, xếp 2 thẻ | ≥6 s giữa 2 màn | ưu tiên chen đầu hàng |
+
+**4★ (2,5 s):** chớp tím → trận pháp tím xoay dưới món đồ → món đồ xoay 1 vòng hiện ra + 12 tia sáng tím → chữ "THẦN KHÍ TRUNG CẤP" + tên món + **"<TÊN> nhận"** + ★ + 2 chỉ số → thu nhỏ bay về góc bảng.
+
+**5★ (4,5 s) — 4 pha:**
+1. 0–0,6 s TÍN HIỆU: màn tối, letterbox kéo vào, 1 sao băng vàng rạch chéo màn (tiếng vút).
+2. 0,6–1,8 s TỤ: trận pháp vàng + cột sáng trời rọi + hạt vàng xoáy vào tâm; camera đẩy vào; cut-in băng chéo CẬN MẶT người nhận + tên.
+3. 1,8 s NỔ: đứng hình 0,1 s + khung impact đảo màu → nổ (cột sáng, 18 tia tỏa, tia lửa rơi, 2 vòng xung kích) → món đồ hiện thân giữa vầng hào quang, xoay chậm.
+4. 2,2–4,5 s VINH DANH: chữ "THẦN KHÍ CAO CẤP" đập xuống (pop) + tên món chữ vàng to + **"<TÊN> nhận thần khí"** + 3 chỉ số; mưa bụi vàng; letterbox rút.
+
+**GIỚI HẠN (8 s) — 6 pha, kịch bản "bóng đen → bùng bùng bùng":**
+1. 0–0,8 s **ĐIỀM BÁO:** cả sân RUNG GIẬT mạnh (lắc 3 nhịp), viền màn đỏ chớp, nhạc tắt lặng 0,3 s; chữ nhỏ "… thiên địa dị tượng …".
+2. 0,8–2,2 s **CHIẾU CHIẾU:** chém đen vào màn riêng; 5–7 sao băng màu đặc trưng món rạch dọc ngang, tia sét ngang trời; trận pháp 3 tầng mở ra lần lượt (mỗi tầng 1 tiếng "đoàng").
+3. 2,2–3,6 s **BÓNG ĐEN:** giữa trận pháp hiện **hình bóng đen đặc (silhouette) của món đồ**, to dần, viền phát sáng màu món; khói đen cuộn quanh; tim đập "thình… thình…" (2 nhịp âm trầm); cut-in cận mặt người nhận lóe qua.
+4. 3,6–4,6 s **BÙNG – BÙNG – BÙNG:** 3 cú nổ liên tiếp cách 0,33 s, mỗi cú: đứng hình 80 ms + khung impact đảo màu + vòng xung kích + rung; cú thứ 3 lớn nhất → bóng đen VỠ thành mảnh sáng, lộ món đồ thật đủ màu.
+5. 4,6–6,8 s **HIỆN THÂN:** món đồ xoay giữa vầng hào quang + hiệu ứng ĐẶC TRƯNG của món (ví dụ Tru Tiên: 4 kiếm xoay quanh; Hỗn Độn Chung: thời gian ngưng, hạt đứng yên; Luân Hồi Kính: 5 bóng phân thân…); chữ "✦ THẦN KHÍ GIỚI HẠN ✦" + **tên món chữ to nhất** + **"<TÊN> — CHỦ NHÂN DUY NHẤT"** + "còn X/12".
+6. 6,8–8 s **TRUYỀN THẾ:** món đồ bay vụt vào người nhận (về sân), ô tương ứng trong lưới GIỚI HẠN sáng lên, đổi "chưa có chủ" → tên người nhận; giọng tông sư đọc tên.
+- Biến thể chống lặp: màu sao băng, hướng camera, thứ tự sét, vị trí bóng đen, nhạc nền — tính theo mã lượt.
+- Overlay toàn kênh: sau màn GIỚI HẠN, 30 s tiếp theo tên người nhận có viền hồng nhấp nháy trên sân.
+
+### 10.2 Chiêu khi DÙNG pháp bảo (Lôi Đài SK1 / Luận Kiếm / Chính Ma)
+- **4★ — chiêu nhẹ (không chiếu riêng):** vệt/hạt màu dòng (Kiếm chém, Ấn đập, Đỉnh hồi, Chung khiên, Phiến gió, Kính phản) ngay trên sân, ≤1 s.
+- **5★ — chiêu mạnh, màn tung chiêu đơn giản (chiếu riêng 3 s):** letterbox + cận mặt + món đồ phóng to + 1 cú nổ + chữ tên chiêu; server hoãn trận 3 s (như `holdMatch`).
+- **GIỚI HẠN — chiêu NGANG MÀN ĐỘT PHÁ (chiếu riêng 9–10 s, 1 lần/trận, server hoãn trận đủ thời gian):** cấu trúc như đột phá "nguyên nhân → chuyển hóa → cao trào → biến hình", mỗi món MỘT CƠ CHẾ RIÊNG (không chỉ đổi màu):
+  1. Tru Tiên Kiếm Trận — 4 kiếm cắm 4 góc → trận đồ đỏ đen trải kín màn → vạn kiếm từ trời rơi theo đường xoắn → chém thành chữ "TRU".
+  2. Hỗn Độn Chung — chuông úp xuống trùm đối thủ → THỜI GIAN NGƯNG (màn xám, mọi hạt đứng yên, chỉ người dùng chuyển động) → gõ 3 tiếng chuông, mỗi tiếng sóng âm vỡ màn.
+  3. Luân Hồi Kính — gương soi → 5 phân thân bước ra từ gương → cùng tung chiêu từ 5 hướng → hợp nhất.
+  4. Thái Cực Đồ — cuộn tranh trải thành cầu âm dương khổng lồ → đối thủ bị hút vào vòng xoáy âm dương → lật ngược đen trắng.
+  5. Cửu Thiên Huyền Hỏa Đỉnh — đỉnh rơi từ trời úp xuống → lửa xanh huyền luyện → nắp bật, đan quang bắn lên trời.
+  6. Càn Khôn Đại — túi mở → cả bầu trời (mây, sao) bị hút vào túi → nhả ra một dải ngân hà đập xuống.
+  7. Phong Thần Bảng — bảng vàng mở → tên đối thủ hiện lên bảng → sấm phong ấn đóng dấu.
+  8. Định Hải Thần Châm — trụ cắm xuống → biển dâng sóng thần cuốn ngang màn → trụ phóng to chống trời.
+  9. Thất Bảo Diệu Thụ — cây mọc lên → 7 đóa bảo quang nở 7 màu → quét một nhát cầu vồng.
+  10. Hồng Mông Tử Khí Bình — bình nghiêng → tử khí tràn kín màn → ngưng tụ thành rồng tím quấn đối thủ.
+  11. Lôi Thần Chùy — chùy giơ lên trời → mây sét tụ → 9 tia sét đánh theo nhịp trống (mỗi tia một "bùm").
+  12. Huyết Hải Ma Đao — đao cắm đất → biển máu dâng → đao chém đôi biển máu, sóng đỏ dội lại.
+- Mỗi chiêu GIỚI HẠN có ảnh chiêu riêng do Codex vẽ (như `assets/signature-ults-v1`) + âm từ score riêng (như `scripts/<tên>-score.txt`).
+
+### 10.3 Chống lag cho các màn này
+- Mọi màn chiếu riêng = pha toàn màn, `scene.drawFrame` bỏ vẽ sân (như Lôi Đài/Đua/Chính Ma) → GPU chỉ lo 1–2 nhân vật + hiệu ứng, bùng hết cỡ được.
+- Ảnh món đồ/bóng đen thu nhỏ sẵn đúng cỡ; bóng đen = chính ảnh món tô đen 1 lần (cache), không filter mỗi khung.
+- Hạt ≤120 mỗi màn, giảm nửa khi `budget.light`; `reduceFlash` tắt khung đảo màu + chớp.
+- Hàng chờ server: 5★ cách nhau ≥6 s, GIỚI HẠN chen đầu; quá 3 màn chờ thì 4★/5★ chỉ hiện thẻ nhỏ.
+- Đo `/api/client-status` sau khi lên LIVE; QA bằng `scripts` kiểu `cutsheet` (vẽ trực tiếp theo mốc k) trước khi đẩy.
