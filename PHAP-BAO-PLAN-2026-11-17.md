@@ -67,3 +67,21 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
 - ✅ Lệnh: `cầu`.
 - ✅ Mốc quà theo ảnh mẫu (tạm).
 - Thanh mục tiêu chung kiểu "Linh Mạch / Bí Cảnh / Thiên Môn" (ảnh tham khảo đếm tim) — mình đề xuất đếm lệnh gõ + quà, KHÔNG đếm tim.
+
+## 9. TIẾN ĐỘ (cuối phiên 17/11) — SESSION SAU LÀM TIẾP TỪ ĐÂY
+**Đã có (commit cùng file này, CHƯA nối vào game, chưa test → không ảnh hưởng LIVE):**
+- `public/phap-bao-data.js` — 6 dòng, 24 món (6×4★, 6×5★, 12 GIỚI HẠN L01–L12) + chỉ số, `BAO_FLAMES` (mốc quà → ngọn lửa), hằng số `BAO_PITY4=10`, `BAO_PITY5=80`, `BAO_LIMITED_STOCK=12`, `BAO_EVENT_MS=5 phút`, `BAO_FREE_CD=30 s`.
+- `phap-bao.mjs` — `BAO_ODDS` (chỉ server: free .05, g1 .10, g10 .30, g99 .50, g199 .70, g999 .80, q5 .06, mềm từ lượt 65 +.06/lượt, limitedIn5 .08), `rollBao` (trượt/4★/5★/GIỚI HẠN, bảo hiểm 10/80, GIỚI HẠN không bảo hiểm, 1 món/người/mùa, 12 suất), `startBaoKho/stopBaoKho/tickBaoKho`, `baoKhoCommand` ("cau", hồi 30 s), `baoKhoGift` (mỗi quà 1 lượt, ≥999 mỗi 999 = 1 lượt, tối đa 30, +tu vi coin×100), `baoKhoView` (log 8 dòng, top 5, reveals, lưới GIỚI HẠN — không gửi số cơ duyên), `baoCollectionText` (lệnh "thần khí").
+- Dữ liệu người chơi: `p.bao={p4,p5,items:{id:sao},lim:{season,id}}`; mùa: `w.baoSeason={n,owners}`; sự kiện: `w.baoKho`.
+
+**Việc tiếp theo (theo thứ tự):**
+1. Nối vào engine (lưu ý: file CRLF, script vá phải trả về chuỗi đã sửa — lần trước lỗi closure nên KHÔNG ghi gì):
+   - `engine.mjs`: import từ `./phap-bao.mjs`; trong chat (cạnh `mountRealmCommand`, dòng ~411): lệnh `thankhi` → emit `baoCollectionText`, rồi `baoKhoCommand(w,p,cmd,now,baoContext)`; trong quà (cạnh `mountRealmGift`, ~665): `baoKhoGift(w,p,input.coins,count,now,baoContext)` + `giftEvent.text+=' • N lượt cầu bảo'`; `giftEventRule`: `if(baoKhoActive(w))return 'thiên công bảo khố'`; tick: `tickBaoKho` cạnh `tickMountRealm`; snapshot (~1052): `baoKho:baoKhoView(w,now)`; `BIG_EVENTS` thêm `['bao-kho','Thiên Công Bảo Khố',…]`; `const baoContext={emit,gain,audit:auditRecord}` + `startBaoKhoEvent/stopBaoKhoEvent` (dùng `bigSpaced`).
+   - `stage-lock.mjs`: `if(w.baoKho?.phase==='open'||w.baoKho?.podiumUntil>now)return 'Thiên Công Bảo Khố';`
+   - `server.mjs`: social-control `start-bao-kho` / `stop-bao-kho`.
+   - Giọng quà trong sự kiện: "X thi triển cầu bảo" (`giftLines` trong `speech-lines.mjs`).
+2. Test `test/phap-bao.test.mjs` (đã soạn ý): 9 lượt đầu trượt → lượt 10 chắc 4★; lượt 80 chắc 5★; dữ liệu chỉ `items,lim,p4,p5`; 400 lượt "không may" không bao giờ ra GIỚI HẠN; người đã có GIỚI HẠN không ra món thứ 2; đúng 12 suất; "cầu" hồi 30 s; quà count=3 → 3 lượt + tu vi; `baoKhoView` không chứa `free/g999/q5/limitedIn5`; hết giờ thì phase finished, không cầu được.
+3. Overlay `public/bao-kho.js` (+ hook `scene.js` như mount-realm, + `warCutFrame`-kiểu cho màn mở bảo 5★/GIỚI HẠN dùng `cut-fx.js`): bố cục mục 4, bảng CƠ DUYÊN = ảnh quà (gift-icons) → ngọn lửa; KHÔNG góc dưới trái; cách đáy ≥11%.
+4. Ảnh: Codex đang vẽ 24 món (prompt: scratchpad `phapbao/PROMPT.md`). File ra ở thư mục chạy Codex (scratchpad, có thể bị dọn) VÀ bản gốc ở `C:\Users\Admins\.codex\generated_images\<phiên codex>\`. Session sau: kiểm 24 file, tự xem ở cỡ 64 px, chuyển webp (PIL, chạy python thường không -I) vào `public/assets/phap-bao-v1/<id>.webp`, gửi chủ game duyệt.
+5. Đợt 1 (bản mệnh + luyện hóa đồ cũ) làm LÚC KHÔNG LIVE, sao lưu trước.
+6. Chưa chốt: thanh mục tiêu chung (đề xuất đếm lệnh gõ + quà, KHÔNG đếm tim). ⚠ Theo dõi: quà 1 coin = 1 lượt → 80 quà nhỏ chắc 5★.

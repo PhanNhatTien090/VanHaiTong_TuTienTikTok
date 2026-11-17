@@ -1,0 +1,81 @@
+// 17/11/2026 (chủ game): THIÊN CÔNG BẢO KHỐ — sự kiện "cầu" pháp bảo kiểu Genshin. Kế hoạch: PHAP-BAO-PLAN-2026-11-17.md.
+// • Gõ "cầu" (cau) miễn phí, hồi 30 s/người; mỗi QUÀ = 1 lượt (≥999 coin: mỗi 999 = 1 lượt). Quà nào cũng +tu vi an ủi.
+// • Kết quả: TRƯỢT (không lưu gì) · 4★ · 5★ · GIỚI HẠN. Bảo hiểm: 4★ chắc chắn trong mỗi 10 lượt, 5★ trong 80 lượt (mềm từ 65).
+//   GIỚI HẠN KHÔNG bảo hiểm, chỉ ra hiếm khi đã ra 5★; 12 suất/mùa, mỗi người tối đa 1/mùa.
+// • Số cơ duyên CHỈ ở server (luật LIVE: không hiện %/tỷ lệ/may rủi). Dữ liệu người chơi gọn: p.bao={p4,p5,items:{id:sao},lim}.
+import {randomInt} from 'node:crypto';
+import {stageConflict} from './stage-lock.mjs';
+import {BAO_ITEMS,BAO_PITY4,BAO_PITY5,BAO_LIMITED_STOCK,BAO_EVENT_MS,BAO_FREE_CD,BAO_MAX_STARS,baoItem} from './public/phap-bao-data.js';
+// Cơ duyên không-trượt theo nguồn (theo ảnh mẫu chủ game; chỉnh được). q5 = trong lượt trúng, phần ra 5★.
+export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g999:.80,q5:.06,soft5From:65,soft5Step:.06,limitedIn5:.08});
+const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
+const fail=message=>({ok:false,message});
+const rng=()=>randomInt(0,1_000_000_000)/1_000_000_000;
+const PODIUM_MS=20000,LOG_MAX=20,REVEAL_GAP=6000,REVEAL={5:3500,6:6000},REVEAL_QUEUE=3;
+export const baoKhoActive=w=>w.baoKho?.phase==='open';
+export const baoKhoVisible=(w,now)=>baoKhoActive(w)||w.baoKho?.podiumUntil>now;
+export const sourceOf=coins=>!coins?'free':coins>=999?'g999':coins>=199?'g199':coins>=99?'g99':coins>=10?'g10':'g1';
+function state(p){const b=p.bao??={p4:0,p5:0,items:{},lim:null};b.items??={};return b;}
+function season(w){return w.baoSeason??={n:1,owners:{}};}
+const limitedPool=w=>BAO_ITEMS.filter(x=>x.tier===6&&!season(w).owners[x.id]);
+
+/** Một lượt cầu (thuần, có thể test với rng giả). Trả {tier,id,stars?}. tier 0 = trượt. */
+export function rollBao(w,p,source,r=rng){
+ const b=state(p),win=BAO_ODDS[source]??BAO_ODDS.free;b.p4++;b.p5++;
+ const soft=b.p5>=BAO_ODDS.soft5From?(b.p5-BAO_ODDS.soft5From+1)*BAO_ODDS.soft5Step:0;
+ let tier=0;const x=r();
+ if(b.p5>=BAO_PITY5||x<win*BAO_ODDS.q5+soft)tier=5;
+ else if(b.p4>=BAO_PITY4||x<win)tier=4;
+ if(!tier)return {tier:0};
+ if(tier===5){b.p5=0;b.p4=0;const s=season(w),pool=limitedPool(w);
+  if(!b.lim||b.lim.season!==s.n)if(pool.length&&r()<BAO_ODDS.limitedIn5){const it=pool[Math.floor(r()*pool.length)];s.owners[it.id]=p.id;b.lim={season:s.n,id:it.id};return give(b,it,6);}}
+ else b.p4=0;
+ const pool=BAO_ITEMS.filter(x=>x.tier===tier),it=pool[Math.floor(r()*pool.length)];return give(b,it,tier);
+}
+function give(b,it,tier){const cur=b.items[it.id]||0;if(cur>=BAO_MAX_STARS)return {tier,id:it.id,stars:cur,maxed:true};b.items[it.id]=cur+1;return {tier,id:it.id,stars:cur+1,fresh:!cur};}
+
+export function startBaoKho(w,now,ctx){
+ if(baoKhoActive(w))return fail('Thiên Công Bảo Khố đang mở.');
+ const busy=stageConflict(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc.');
+ w.baoKho={id:'bao-'+now,phase:'open',startedAt:now,endsAt:now+BAO_EVENT_MS,pulls:0,log:[],hunters:{},cd:{},reveals:[],revealUntil:0,seq:0};
+ ctx.emit(w,null,'THIÊN CÔNG BẢO KHỐ KHAI MỞ • gõ "cầu" để cầu pháp bảo','bao-kho',now,{baoStart:true});return {ok:true};
+}
+export function stopBaoKho(w,now,ctx){if(!baoKhoVisible(w,now))return fail('Bảo Khố chưa mở.');w.baoKho.phase='cancelled';w.baoKho.podiumUntil=0;ctx.emit(w,null,'Thiên Công Bảo Khố đã đóng','bao-kho',now,{baoEnd:true});return {ok:true};}
+export function tickBaoKho(w,now,ctx){
+ const e=w.baoKho;if(!e||e.phase!=='open'||now<e.endsAt)return;
+ e.phase='finished';e.podiumUntil=now+PODIUM_MS;e.cd={};
+ const top=topHunters(w,3);ctx.emit(w,null,'THIÊN CÔNG BẢO KHỐ KHÉP LẠI • '+e.pulls+' lượt cầu'+(top[0]?' · săn bảo nhiều nhất: '+top[0].name:''),'bao-kho',now,{baoEnd:true});
+}
+function topHunters(w,n){return Object.entries(w.baoKho?.hunters||{}).map(([id,h])=>({id,name:w.players[id]?.name||'',items:h.i,pulls:h.n})).sort((a,b)=>b.items-a.items||b.pulls-a.pulls).slice(0,n);}
+function record(w,p,res,now,ctx,source){
+ const e=w.baoKho,h=e.hunters[p.id]??={n:0,i:0};h.n++;e.pulls++;if(res.tier)h.i++;
+ const b=state(p),row={k:++e.seq,u:p.id,name:p.name,t:res.tier,id:res.id||null,s:res.stars||0,p4:BAO_PITY4-b.p4,p5:BAO_PITY5-b.p5,at:now};
+ e.log.push(row);if(e.log.length>LOG_MAX)e.log.splice(0,e.log.length-LOG_MAX);
+ if(res.tier>=5){const start=Math.max(now,e.revealUntil?e.revealUntil+REVEAL_GAP:now);if(start-now<=REVEAL_GAP*REVEAL_QUEUE){const ms=REVEAL[res.tier];e.reveals.push({k:row.k,u:p.id,name:p.name,t:res.tier,id:res.id,s:res.stars,at:start,ms});e.revealUntil=start+ms;if(e.reveals.length>4)e.reveals.splice(0,e.reveals.length-4);}}
+ if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:''),'bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars}});
+  if(res.tier===6)ctx.audit?.(w,'bao-limited',now,{user:p.id,name:p.name,id:res.id});}
+ return row;
+}
+/** Lệnh chat: "cầu" (cau). Trả null nếu không phải lệnh của Bảo Khố. */
+export function baoKhoCommand(w,p,cmd,now,ctx){
+ if(cmd!=='cau'||!baoKhoActive(w))return null;if(!real(p))return fail('Chỉ đạo hữu thật mới cầu được pháp bảo.');
+ const e=w.baoKho,last=e.cd[p.id]||0;if(now-last<BAO_FREE_CD)return fail(p.name+' · '+Math.ceil((BAO_FREE_CD-(now-last))/1000)+' giây nữa cầu tiếp được');
+ e.cd[p.id]=now;const res=rollBao(w,p,'free');return {ok:true,...record(w,p,res,now,ctx,'free')};
+}
+/** Quà trong Bảo Khố: mỗi quà = 1 lượt (≥999: mỗi 999 coin = 1 lượt), tối đa 30 lượt/lần tặng. +tu vi an ủi. */
+export function baoKhoGift(w,p,unitCoins,count,now,ctx){
+ if(!baoKhoActive(w)||!real(p)||!(unitCoins>0))return null;
+ const src=sourceOf(unitCoins),n=Math.min(30,Math.max(1,count||1)*(unitCoins>=999?Math.floor(unitCoins/999):1));
+ const rows=[];for(let i=0;i<n;i++)rows.push(record(w,p,rollBao(w,p,src),now,ctx,src));
+ const qi=Math.round(unitCoins*Math.max(1,count||1)*100);ctx.gain?.(w,p,qi,0,0,now,false,'sect-event');
+ return {pulls:n,wins:rows.filter(r=>r.t).length,qi};
+}
+export function baoKhoView(w,now){
+ const e=w.baoKho;if(!e||!baoKhoVisible(w,now))return null;const s=season(w);
+ return {id:e.id,phase:e.phase,startedAt:e.startedAt,endsAt:e.endsAt,podiumUntil:e.podiumUntil,pulls:e.pulls,log:e.log.slice(-8),
+  top:topHunters(w,5),reveals:e.reveals.filter(r=>now<r.at+r.ms+1500),
+  limited:BAO_ITEMS.filter(x=>x.tier===6).map(x=>({id:x.id,owner:s.owners[x.id]?(w.players[s.owners[x.id]]?.name||'?'):null})),season:s.n};
+}
+/** Lệnh "thần khí" (thankhi): bộ sưu tập ngắn gọn. */
+export function baoCollectionText(p){const b=p.bao;if(!b||!Object.keys(b.items||{}).length)return 'Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở';
+ return 'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★';}
