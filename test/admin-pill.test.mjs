@@ -22,3 +22,11 @@ test('Đột Phá Đan vẫn đọc "gõ đột phá", không đọc %', () => {
   adminGift(w,'a','breakthrough',N+1000);const e=w.events.findLast(x=>x.adminGift==='breakthrough');
   assert.equal(e.pill,false);assert.match(speechPlan(e).map(s=>s.text).join(' '),/đột phá/);
 });
+
+test('sửa tay người chơi cảnh giới cao: tu vi/tổng tu vi hàng trăm tỷ không bị chặn 1 tỷ', async () => {
+  const {adminEditPlayer}=await import('../engine.mjs');
+  const w=createWorld('live');action(w,{type:'join',userId:'a',name:'An'},N);const p=w.players.a;p.realm=26;p.qi=14831408845;p.totalQi=206326433371;
+  const r=adminEditPlayer(w,'a',{realm:25,qi:98884349864,totalQi:122273492351},N+1);
+  assert.equal(r.ok,true);assert.equal(p.realm,25);assert.equal(p.qi,98884349864);assert.equal(p.totalQi,122273492351);
+  assert.equal(adminEditPlayer(w,'a',{stones:2e9},N+2).ok,false,'linh thạch vẫn giới hạn 1 tỷ');
+});

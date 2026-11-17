@@ -1352,8 +1352,9 @@ export function adminEditPlayer(w,id,patch={},now=Date.now(),{announce=false}={}
     if(patch.gender!==undefined){const g=patch.gender==='nam'||patch.gender==='nu'?patch.gender:null;if(g!==(p.gender??null)){changes.push('xưng hô');p.gender=g;}}
     const oldRealm=p.realm;
     if(patch.realm!==undefined){const r=int(patch.realm,REALMS.length-1);if(r!==p.realm){changes.push(`cảnh giới ${REALMS[p.realm]} → ${REALMS[r]}`);p.realm=r;p.readyRealm=null;}}
-    for(const [key,label] of [['qi','tu vi'],['stones','linh thạch'],['herbs','linh thảo'],['giftCoins','coin quà']]){
-      if(patch[key]===undefined)continue;const v=int(patch[key]);if(v===p[key])continue;
+    // 17/11: cảnh giới ≥10 có tu vi hàng tỷ–nghìn tỷ → tu vi/tổng tu vi cho tới MAX_SAFE_INTEGER (trước chặn 1 tỷ, không sửa được người chơi cao).
+    for(const [key,label] of [['qi','tu vi'],['totalQi','tổng tu vi'],['stones','linh thạch'],['herbs','linh thảo'],['giftCoins','coin quà']]){
+      if(patch[key]===undefined)continue;const v=int(patch[key],key==='qi'||key==='totalQi'?Number.MAX_SAFE_INTEGER:1e9);if(v===p[key])continue;
       if(key==='qi'&&v>p.qi)p.totalQi+=v-p.qi;
       changes.push(`${label} ${p[key]} → ${v}`);p[key]=v;
     }
