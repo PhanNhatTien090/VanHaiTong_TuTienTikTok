@@ -173,6 +173,8 @@ export function mountRealmHearts(w,p,count,now){
  return 1;
 }
 // Gửi xuống overlay: gọn (không gửi coin từng người).
+const ORB_STEPS=[300,500,1000];
+export function giftProgress(coins){const step=ORB_STEPS.filter(v=>coins>=v).length,prev=step?ORB_STEPS[step-1]:0,next=ORB_STEPS[step];return {step,prog:next?Math.round((coins-prev)/(next-prev)*100)/100:1};}
 export function mountRealmView(w,now){
  const e=w.mountRealm;if(!e||!mountRealmVisible(w,now))return null;
  const members=Object.values(e.members);
@@ -181,6 +183,8 @@ export function mountRealmView(w,now){
   mobs:e.mobs.map(m=>[m.x,m.y,m.wave,Math.round(m.hp/m.maxHp*100)]),
   members:members.map(m=>({id:m.id,name:w.players[m.id]?.name,avatar:w.players[m.id]?.avatar,x:m.x,y:m.y,boost:m.boostUntil>now||undefined,dash:now-(m.dashAt||0)<800||undefined})),
   top:members.filter(m=>m.dmg>0).sort((a,b)=>b.dmg-a.dmg).slice(0,5).map(m=>({id:m.id,name:w.players[m.id]?.name,dmg:m.dmg})),
+  // 18/11: người đang góp quà — chỉ gửi nấc đã đạt + tiến độ tới nấc sau (không gửi số coin: luật bảng không ghi coin)
+  givers:members.filter(m=>m.coins>0).sort((a,b)=>b.coins-a.coins).slice(0,3).map(m=>({id:m.id,name:w.players[m.id]?.name,...giftProgress(m.coins)})),
   burn:e.burn&&now<e.burn.until?{at:e.burn.at,until:e.burn.until,name:w.players[e.burn.by]?.name}:null,
   fx:e.fx.filter(f=>now-f.at<1600),gifts:(e.gifts||[]).filter(g=>now-g.at<5000).map(g=>({...g,userName:w.players[g.user]?.name})),results:e.results||null,count:members.length};
 }

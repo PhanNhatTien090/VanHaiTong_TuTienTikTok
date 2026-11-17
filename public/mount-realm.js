@@ -91,7 +91,7 @@ const secs=ms=>Math.max(0,Math.ceil(ms/1000));
 // ---------- bảng hướng dẫn ----------
 function drawGuide(c,e){
  box(c,16,136,420,186,'#b58cff99');text(c,'CÁCH CHƠI BÍ CẢNH',226,156,17,'#e8d4ff',900);
- const rows=[['bicanh','vào Bí Cảnh, tự đánh yêu thú gần nhất'],['danh / 6','lao lên đánh mạnh'],['quà','tung chiêu đánh lan (bảng bên phải)'],['hạ Thú vương','cả sân cùng thu phục'],['truyencong','mở Linh Châu ra tọa kỹ']];
+ const rows=[['bicanh','vào Bí Cảnh, tự đánh yêu thú gần nhất'],['danh / 6','lao lên đánh mạnh'],['quà','tung chiêu đánh lan (bảng bên phải)'],['hạ Thú vương','cả sân cùng thu phục'],['truyencong','mở châu ra tọa kỹ (bảng dưới phải)']];
  rows.forEach(([k,v],i)=>{const y=186+i*28;text(c,k,30,y,16,'#ffe08a',900,'left');text(c,'· '+v,30+Math.max(64,c.measureText(k).width+8),y,15,'#f3eaff',700,'left',300);});
 }
 function drawGiftBoard(c,h){
@@ -99,22 +99,34 @@ function drawGiftBoard(c,h){
  rows.forEach((tier,i)=>{const ry=y+52+i*rh,g=giftFor(h.giftArt,tier.min),im=img(h,g?.url);if(im)c.drawImage(im,x+12,ry-15,30,30);else{c.fillStyle='#ffd86b';c.beginPath();c.arc(x+27,ry,10,0,TAU);c.fill();}
   if(g?.count>1)text(c,'×'+g.count,x+48,ry+8,11,'#fff',800,'left');text(c,tier.name,x+72,ry,16,tier.id==='grand'?'#ffd56a':'#ffffff',900,'left',w-84);});
 }
-function drawOrbBoard(c,h,H){
- // 16/11: ghi rõ TẶNG QUÀ → châu tím / vàng (ảnh quà thật, không ghi coin). Tổng quà của một người trong một lượt.
- const x=16,y=H-430,w=420,hh=226;box(c,x,y,w,hh,'#7fe3ff99');text(c,'NHẬN LINH CHÂU',x+w/2,y+18,17,'#bff3ff',900);
- const orb=(kind,ox,oy,s=30)=>{const im=img(h,orbImage(kind,0));if(im)c.drawImage(im,ox,oy-s/2,s,s);};
+// 18/11 (chủ game): bảng dưới DỜI SANG CỘT PHẢI (góc dưới trái là chỗ bình luận TikTok đè) + dễ hiểu hơn:
+// 1) cách nhận châu, 2) quà cộng dồn → châu tím/vàng (ảnh quà thật, không ghi coin), 3) MỞ CHÂU gõ gì cho từng màu
+// (người chơi hay gõ "truyencong" khi chỉ còn châu tím → không mở được), 4) người đang góp quà: châu đã đủ + thanh tới châu sau.
+const ORB_COL={x:452,w:432};
+function orbBoardLayout(e,H){const givers=(e.givers||[]).length,hh=292+(givers?40+givers*30:0),bottom=Math.round(H*.89);return {x:ORB_COL.x,w:ORB_COL.w,y:bottom-hh,hh};}
+function drawOrbBoard(c,h,H,e){
+ const {x,y,w,hh}=orbBoardLayout(e,H);box(c,x,y,w,hh,'#7fe3ff99');text(c,'NHẬN LINH CHÂU',x+w/2,y+18,18,'#bff3ff',900);
+ const orb=(kind,ox,oy,s=28)=>{const im=img(h,orbImage(kind,0));if(im)c.drawImage(im,ox,oy-s/2,s,s);return ox+s;};
  const gift=(coins,ox,oy)=>{const g=giftFor(h.giftArt,coins),gi=img(h,g?.url);if(gi)c.drawImage(gi,ox,oy-14,28,28);if(g?.count>1)text(c,'×'+g.count,ox+30,oy+6,12,'#fff',900,'left');return ox+(g?.count>1?58:34);};
- let ry=y+46;orb('common',x+12,ry);text(c,'đánh yêu thú · top 3 Thú vương thêm 1',x+50,ry,14,'#f3eaff',800,'left',w-60);
- ry+=26;c.fillStyle='#ffd36b33';c.fillRect(x+10,ry-2,w-20,1);text(c,'TẶNG QUÀ TRONG BÍ CẢNH (cộng dồn cả lượt)',x+w/2,ry+12,13,'#ffe3a0',900);
- const steps=[[300,'vip',1,'châu tím'],[500,'vip',2,'2 châu tím'],[1000,'divine',1,'châu vàng · chắc chắn tọa kỹ Thần']];
- steps.forEach(([coins,kind,count,why],i)=>{const yy=ry+40+i*36;let tx=gift(coins,x+12,yy);text(c,'→',tx+4,yy,18,'#ffe3a0',900,'left');tx+=26;
-  for(let k=0;k<count;k++){orb(kind,tx,yy,kind==='divine'?36:30);tx+=kind==='divine'?38:30;}
-  text(c,why,tx+6,yy,15,kind==='divine'?'#ffe08a':'#e2c8ff',900,'left',x+w-tx-14);});
- text(c,'gõ truyencong · châu vỡ ra tọa kỹ',x+w/2,y+hh-14,14,'#bff3ff',800,'center',w-20);
+ let ry=y+48;orb('common',x+12,ry);text(c,'Đánh yêu thú đủ → 1 châu xanh',x+46,ry-1,15,'#f3eaff',800,'left',w-56);
+ ry+=22;text(c,'Top 3 đánh Thú vương → thêm 1 châu xanh',x+46,ry,13,'#cfe9ff',700,'left',w-56);
+ ry+=22;c.fillStyle='#ffd36b33';c.fillRect(x+10,ry,w-20,1);text(c,'TẶNG QUÀ (cộng dồn cả lượt)',x+w/2,ry+14,13,'#ffe3a0',900);
+ [[300,'vip',1,'1 châu tím'],[500,'vip',2,'2 châu tím'],[1000,'divine',1,'châu vàng · chắc chắn Thần']].forEach(([coins,kind,count,why],i)=>{const yy=ry+42+i*32;let tx=gift(coins,x+12,yy);text(c,'→',tx+4,yy,18,'#ffe3a0',900,'left');tx+=26;
+  for(let k=0;k<count;k++)tx=orb(kind,tx,yy,kind==='divine'?32:28)+2;text(c,why,tx+6,yy,15,kind==='divine'?'#ffe08a':'#e2c8ff',900,'left',x+w-tx-14);});
+ ry+=42+3*32-6;c.fillStyle='#7fe3ff33';c.fillRect(x+10,ry,w-20,1);text(c,'MỞ CHÂU · GÕ',x+w/2,ry+14,13,'#bff3ff',900);
+ const yy=ry+42,cols=[['common','truyencong','#9ff0d0'],['vip','truyencong vip','#e2c8ff'],['divine','truyencong than','#ffe08a']];
+ cols.forEach(([kind,cmd,col],i)=>{const cx=x+10+i*(w-20)/3;orb(kind,cx,yy,24);text(c,cmd,cx+28,yy,i?13:14,col,900,'left',(w-20)/3-32);});
+ const gv=e.givers||[];if(!gv.length)return;
+ let gy=yy+26;c.fillStyle='#ffd36b33';c.fillRect(x+10,gy,w-20,1);text(c,'ĐANG GÓP QUÀ',x+w/2,gy+14,13,'#ffe3a0',900);gy+=40;
+ for(const g of gv){const got=g.step>=3?['divine']:g.step===2?['vip','vip']:g.step===1?['vip']:[],nextKind=g.step>=2?'divine':'vip';
+  text(c,short(g.name),x+14,gy,15,'#ffffff',800,'left',130);let tx=x+150;for(const k of got)tx=orb(k,tx,gy,22)+1;
+  if(g.step<3){const bx=Math.max(tx+6,x+214),bw=x+w-46-bx;bar(c,bx,gy-5,bw,10,g.prog,g.step>=2?'#ffd36b':'#c79bff');orb(nextKind,x+w-38,gy,24);}
+  else text(c,'ĐÃ ĐỦ CHÂU VÀNG',x+w-16,gy,13,'#ffe08a',900,'right');
+  gy+=30;}
 }
 function drawTop(c,e,H){
- const top=e.top||[];if(!top.length)return;const x=452,y=H-430,w=432,hh=44+top.length*30;box(c,x,y,w,hh,'#b58cff99');text(c,'TOP SÁT THƯƠNG',x+w/2,y+20,17,'#e8d4ff',900);
- top.forEach((r,i)=>{text(c,(i+1)+'. '+short(r.name),x+16,y+52+i*30,17,i===0?'#ffe08a':'#ffffff',800,'left');text(c,String(r.dmg),x+w-16,y+52+i*30,17,'#ffe08a',800,'right');});
+ const top=(e.top||[]).slice(0,3);if(!top.length)return;const L=orbBoardLayout(e,H),x=L.x,w=L.w,hh=40+top.length*28,y=L.y-hh-10;box(c,x,y,w,hh,'#b58cff99');text(c,'TOP SÁT THƯƠNG',x+w/2,y+18,16,'#e8d4ff',900);
+ top.forEach((r,i)=>{text(c,(i+1)+'. '+short(r.name),x+16,y+46+i*28,16,i===0?'#ffe08a':'#ffffff',800,'left');text(c,String(r.dmg),x+w-16,y+46+i*28,16,'#ffe08a',800,'right');});
 }
 // ---------- hiệu ứng ----------
 // 17/11: HỎA THIÊU BÍ CẢNH — lửa phủ cả sân. Ngọn lửa là 1 ảnh dựng sẵn (cache), ~36 ngọn (nhẹ: 18) + vòng lửa viền + quầng cam.
@@ -220,7 +232,7 @@ export function drawMountRealm(scene,c,t,H){
  text(c,'TỌA KỸ BÍ CẢNH · '+realmLayout(e).name.toUpperCase(),450,50,34,'#e8d4ff',900,'center',860);text(c,phase+' · '+n+' đạo hữu',450,96,21,'#ffffff',800);
  const done=e.phase==='finished'&&e.results;
  if(!done){drawGuide(c,e);drawGiftBoard(c,h);}
- drawOrbBoard(c,h,H);drawTop(c,e,H);drawBanner(c,h,t);
+ drawOrbBoard(c,h,H,e);drawTop(c,e,H);drawBanner(c,h,t);
  if(done){const R=e.results;box(c,16,136,868,186,'#ffd36b');
   text(c,R.tamed?'THÚ VƯƠNG ĐÃ BỊ THU PHỤC':'BÍ CẢNH KHÉP LẠI',450,166,30,'#ffe08a',900);
   (R.top||[]).slice(0,3).forEach((x,i)=>text(c,(i+1)+'. '+short(x.name)+' · '+x.bossDmg+' sát thương Thú vương',450,206+i*32,21,'#ffffff',800));
