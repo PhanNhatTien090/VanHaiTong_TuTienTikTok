@@ -76,12 +76,15 @@ function mobSprite(h,wave){
 }
 // Quầng sáng tròn dựng sẵn theo màu (cộng sáng).
 function glow(h,color){let s=h.glow.get(color);if(s)return s;const cv=canvas2(128,128);if(!cv)return null;const c=cv.getContext('2d'),g=c.createRadialGradient(64,64,1,64,64,64);g.addColorStop(0,'#ffffff');g.addColorStop(.25,color+'d0');g.addColorStop(.6,color+'40');g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(0,0,128,128);h.glow.set(color,cv);return cv;}
+// 18/11: ảnh map chỉ phủ y 125–1475 → phóng cả lớp thế giới (map + người + quái + chiêu) quanh tâm map cho kín màn; bảng chữ vẽ ngoài lớp này.
+export const realmZoom=H=>Math.max(1,H/MAP_DRAW_H);
+function worldZoom(c,H){const z=realmZoom(H),cy=MAP_Y0+MAP_DRAW_H/2;if(z===1)return;c.translate(450,H/2);c.scale(z,z);c.translate(-450,-cy);}
 function background(h,H){
  const key=H+'|'+(h.map?.ready?1:0)+'|'+h.map?.src;if(h.bg?.key===key)return h.bg.cv;
  const cv=canvas2(900,H);if(!cv)return null;const c=cv.getContext('2d');c.fillStyle='#0b0a18';c.fillRect(0,0,900,H);
  if(h.map?.ready)c.drawImage(h.map.im,0,MAP_Y0,900,MAP_DRAW_H);
- const top=c.createLinearGradient(0,0,0,340);top.addColorStop(0,'#05040cf4');top.addColorStop(1,'#05040c00');c.fillStyle=top;c.fillRect(0,0,900,340);
- const bot=c.createLinearGradient(0,H-460,0,H);bot.addColorStop(0,'#05040c00');bot.addColorStop(1,'#05040cf4');c.fillStyle=bot;c.fillRect(0,H-460,900,460);
+ const top=c.createLinearGradient(0,MAP_Y0,0,330);top.addColorStop(0,'#05040ca8');top.addColorStop(1,'#05040c00');c.fillStyle=top;c.fillRect(0,0,900,330);
+ const bot=c.createLinearGradient(0,MAP_Y0+MAP_DRAW_H-300,0,MAP_Y0+MAP_DRAW_H);bot.addColorStop(0,'#05040c00');bot.addColorStop(1,'#05040ca8');c.fillStyle=bot;c.fillRect(0,MAP_Y0+MAP_DRAW_H-300,900,300+H);
  h.bg={key,cv};return cv;
 }
 function text(c,s,x,y,size,color,weight=800,align='center',max){c.font=weight+' '+size+'px "Segoe UI",Arial,sans-serif';c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';c.lineWidth=Math.max(3,size/5);c.strokeStyle='#05040c';c.strokeText(s,x,y,max);c.fillStyle=color;c.fillText(s,x,y,max);}
@@ -204,7 +207,7 @@ function shakeAt(h,t){let amp=0;for(const g of h.gifts){const k=(t-g.start)/650;
 export function drawMountRealm(scene,c,t,H){
  const e=scene.mountRealmStatus;if(!e)return 0;const h=rz(scene);load(h,e);const WAVES=realmLayout(e).waves;
  c.setTransform(scene.canvas.width/900,0,0,scene.canvas.height/H,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
- const sh=scene.motion===false?null:shakeAt(h,t);c.save();if(sh)c.translate(sh.x,sh.y);
+ const sh=scene.motion===false?null:shakeAt(h,t);c.save();if(sh)c.translate(sh.x,sh.y);worldZoom(c,H); /* 18/11: map phủ kín màn 9:16 (chủ game: không full màn điện thoại) */
  const bg=background(h,H);if(bg)c.drawImage(bg,-12,-12,924,H+24);
  const now=nowAt(scene,t),members=e.members||[],n=members.length,crowd=n>60,light=crowd||scene.budget?.level==='light',moving=scene.motion!==false;
  if(e.burn&&now<e.burn.until)drawBurn(c,h,e,t,now,light);
@@ -237,6 +240,6 @@ export function drawMountRealm(scene,c,t,H){
   text(c,R.tamed?'THÚ VƯƠNG ĐÃ BỊ THU PHỤC':'BÍ CẢNH KHÉP LẠI',450,166,30,'#ffe08a',900);
   (R.top||[]).slice(0,3).forEach((x,i)=>text(c,(i+1)+'. '+short(x.name)+' · '+x.bossDmg+' sát thương Thú vương',450,206+i*32,21,'#ffffff',800));
   text(c,R.rewarded+' đạo hữu nhận Linh Châu · gõ truyencong để mở',450,302,19,'#d9c2ff',800);}
- drawDrops(c,h,t,r);
+ c.save();worldZoom(c,H);drawDrops(c,h,t,r);c.restore();
  return n;
 }
