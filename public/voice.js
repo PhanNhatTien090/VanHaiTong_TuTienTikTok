@@ -6,21 +6,22 @@ export const raceOpeningVoice=e=>!!(e.raceEntry||e.effect==='race'&&/^VÂN HẢI
 export const realGiftVoice=e=>!!(e.gift&&Number(e.coins)>0&&!syntheticVoice(e));
 export function fastVoiceFile(e){const kind=e.adminGift?null:realGiftVoice(e)?(e.eventRule||e.raceGift||e.warGift?null:'gift'):e.effect==='breakthrough'?'breakthrough':e.effect==='ready'?'ready':e.autoArrival||e.effect==='join'?null:e.effect==='attack'?'attack':e.effect==='gather'?'gather':e.effect==='learn'?'learn':['qi','petal','lotus','sword'].includes(e.effect)?'qi':null; /* 08/11: chào người vào không dùng câu dự phòng chung (bị lặp, nói cả với người cũ). 07/11: bỏ câu dự phòng 'Tông môn đã ghi nhận…' — nghe như cảm ơn quà khi không ai tặng */return kind?'/assets/voice-fast-v1/'+kind+'.mp3':null;}
 // Tu tiên giả thường trú luôn xếp sau khách thật (0).
-export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.adminGift?5.5:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
+export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.adminGift?5.5:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift||e.stageUp?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
 
 // 08/11/2026: GIẢM GIỌNG ĐỌC (chủ game: "đọc nhiều, lộn xộn, ồn quá"). Quà, Thiên Đạo, sự kiện lớn luôn đọc.
 // Câu thường (tu luyện, hái, đánh, nhắc lệnh, chào…) giãn ra: cả sân tối đa 1 câu / 12 s, mỗi người 1 câu / 90 s;
 // người chơi lâu (≥2 giờ, ≥400 lượt hoặc từ Chân Tiên) không nghe câu nhắc thường nữa.
 // Đột phá: người từng tặng quà luôn được đọc; người chưa tặng chỉ đọc khi là người mới, tối đa 1 câu / 45 s.
 // Đang chiếu màn đột phá: chỉ đọc quà + Thiên Đạo; thông báo sự kiện chờ màn xong; câu thường bỏ.
-export const VOICE_CALM=Object.freeze({routineGapMs:12000,userRoutineGapMs:90000,breakthroughGapMs:45000,veteranActiveMs:2*3600e3,veteranInteractions:400,veteranRealm:8,ritualRetryMs:1500,arrivalGapMs:20000,arrivalRepeatMs:30*60000});
+export const VOICE_CALM=Object.freeze({routineGapMs:12000,userRoutineGapMs:90000,breakthroughGapMs:45000,veteranActiveMs:2*3600e3,veteranInteractions:400,veteranRealm:8,ritualRetryMs:1500,arrivalGapMs:20000,arrivalRepeatMs:30*60000,stageGapMs:15000});
+export const stageVoice=e=>Number.isInteger(e.stageUp)&&e.stageUp>=1&&!!e.user;
 const VETERAN_SILENT=new Set(['qi','petal','lotus','sword','attack','gather','learn','hint','status','ready','join','title','boss','pill','guide']);
 export const urgentVoice=e=>!!(e.heavenStrike||realGiftVoice(e));
 export const veteranPlayer=p=>!!p&&((p.activeMs||0)>=VOICE_CALM.veteranActiveMs||(p.interactions||0)>=VOICE_CALM.veteranInteractions||(p.realm||0)>=VOICE_CALM.veteranRealm);
 const breakthroughVoice=e=>e.effect==='breakthrough'||!!e.ritualSkipped;
 const keepsDuringRitual=e=>isEventAnnouncement(e)||raceOpeningVoice(e)||!!e.ceremony;
 /** 'play' | 'drop' | 'defer'. Thuần, để test được. */
-export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,lastRoutineAt=-Infinity,lastUserRoutineAt=-Infinity,lastBreakthroughAt=-Infinity,lastArrivalAt=-Infinity}={}){
+export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,lastRoutineAt=-Infinity,lastUserRoutineAt=-Infinity,lastBreakthroughAt=-Infinity,lastArrivalAt=-Infinity,lastStageAt=-Infinity}={}){
   if(urgentVoice(e))return 'play';
   if(ritualBusy)return keepsDuringRitual(e)?'defer':'drop';
   if(keepsDuringRitual(e))return 'play';
@@ -29,6 +30,7 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
     if((player?.giftCoins||0)>0)return 'play';
     return !vet&&now-lastBreakthroughAt>=VOICE_CALM.breakthroughGapMs?'play':'drop';
   }
+  if(stageVoice(e))return now-lastStageAt>=VOICE_CALM.stageGapMs?'play':'drop'; // 17/11: lên trung/hậu kỳ luôn được đọc (kể cả người chơi lâu), cả sân 1 câu / 15 s
   if(e.autoArrival){ // 08/11: chào người vào — cả sân tối đa 1 câu / 20 s; người chơi lâu vào lại chỉ hiện bảng, không đọc.
     if(vet&&e.returning)return 'drop';
     return now-lastArrivalAt<VOICE_CALM.arrivalGapMs?'drop':'play';
@@ -55,9 +57,9 @@ export class VoiceQueue {
     if(e.id&&(isEventAnnouncement(e)||realGiftVoice(e)||e.autoArrival)){if(this.announced.has(e.id))return;this.announced.add(e.id);if(this.announced.size>256)this.announced.delete(this.announced.values().next().value);}
     const now=Date.now(),key=(e.user||'sect')+':'+e.effect;
     if(this.calm&&!syntheticVoice(e)){
-      const users=this.calmLast.users,decision=voiceDecision(e,{now,player:e.user?this.player(e.user):null,ritualBusy:this.ritualBusy(e),lastRoutineAt:this.calmLast.routine,lastUserRoutineAt:users.get(e.user)??-Infinity,lastBreakthroughAt:this.calmLast.breakthrough,lastArrivalAt:this.calmLast.arrival});
+      const users=this.calmLast.users,decision=voiceDecision(e,{now,player:e.user?this.player(e.user):null,ritualBusy:this.ritualBusy(e),lastRoutineAt:this.calmLast.routine,lastUserRoutineAt:users.get(e.user)??-Infinity,lastBreakthroughAt:this.calmLast.breakthrough,lastArrivalAt:this.calmLast.arrival,lastStageAt:this.calmLast.stage??-Infinity});
       if(decision==='drop')return;
-      if(decision==='play'&&!urgentVoice(e)&&!keepsDuringRitual(e)){if(e.autoArrival)this.calmLast.arrival=now;else if(breakthroughVoice(e))this.calmLast.breakthrough=now;else if(priority(e)<=3){this.calmLast.routine=now;if(e.user){users.set(e.user,now);if(users.size>600)users.delete(users.keys().next().value);}}}
+      if(decision==='play'&&!urgentVoice(e)&&!keepsDuringRitual(e)){if(e.autoArrival)this.calmLast.arrival=now;else if(stageVoice(e))this.calmLast.stage=now;else if(breakthroughVoice(e))this.calmLast.breakthrough=now;else if(priority(e)<=3){this.calmLast.routine=now;if(e.user){users.set(e.user,now);if(users.size>600)users.delete(users.keys().next().value);}}}
     }
     if(priority(e)<=1&&now-(this.last.get(key)||0)<6500)return;
     if(priority(e)<=1&&this.queue.length>=3)return; // v54: hàng chờ đã dồn → bỏ câu thường, để quà/đột phá/sự kiện được đọc kịp

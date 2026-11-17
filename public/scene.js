@@ -101,6 +101,7 @@ import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 // 15/11/2026: chữ trên sân — sans đậm nét, nhỏ gọn kiểu kênh mẫu (user: tên to che hết người, khó nhìn).
 import {honorIcon} from './honor-icons.js';
+import {drawHeartQi,HEART_QI_MS} from './heart-qi-fx.js';
 const NAME_FONT='800 15px \"Segoe UI\",Arial,sans-serif',TALK_FONT='700 14px "Segoe UI",Arial,sans-serif';
 const TAU=Math.PI*2;
 const palette=['#9dcbbc','#b4bfd0','#d6c29b','#d5aeb3','#b4c69f','#c3b2d5'];
@@ -251,7 +252,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     if(event.effect==='attack'&&this.boss)this.onCombatSound?.('cast',event.technique?.id||'slash');
     if(event.petV2Cast||event.petV2Synergy)this.onCombatSound?.('cast',event.petFx||'stars');
     (this.animator??=new CharacterAnimator()).trigger(event,performance.now());const cinematic=event.gift&&giftSpectacleTier(event);if(cinematic){const action=this.animator.actions.get(event.user);if(action)action.duration=cinematic.duration*.85;}
-    this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petV2EffectDuration(event)||petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?transformMs(event):event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:1100)});
+    this.effects.push({...event,spectacleTier:cinematic,cinematicQuality:cinematicQuality(this,{focused:!!event.user&&this.presentation?.id===event.user&&['gift','breakthrough'].includes(this.presentation?.kind)}),cinematicSeed:cinematicSeed(event.id),start:performance.now(),duration:petV2EffectDuration(event)||petArrival?.duration||luxury?.duration||event.technique?.duration||(event.gift?tributeProfile(event)?.duration||2200:event.transform?transformMs(event):event.flowerRank?7000:event.effect==='breakthrough'?breakthroughDuration(event):event.kind?(event.gift?4500:3000):['dragon','victory','skin'].includes(event.effect)?2400:event.heartCultivate?HEART_QI_MS:1100)});
     // Only one premium skill title may own the ribbon at any time.
     if(event.effect==='attack'&&Number(event.technique?.intensity)>=2&&event.id&&performance.now()-(this.skillBannerTime??-1e9)>1200){this.skillBannerId=event.id;this.skillBannerTime=performance.now();}
     const limit=this.budget?.config.effects||5;
@@ -516,6 +517,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
       drawAura(c,'dusk',p.x,p.y-125,225,Math.sin(k*Math.PI)*.44);
     }
     drawGiftStage(c,fake,t,k,p,this.height,this.budget?.level==='light');drawHighGift(c,fake,t,k,p,this.height,{light:this.budget?.level==='light',phoenix:this.bossSprites?.[2],dragon:this.celestialSprites?.[0]});return;}if(e.luxury){drawLuxuryFx(c,e,t,k,p,this.height,this.budget?.level,this.formationArt);drawImmortalGift(c,e,t,k,p,this.height,this.relicSprites,this.budget?.level==='light',this.signatureSprites,this.shendeArt);drawHighGift(c,e,t,k,p,this.height,{light:this.budget?.level==='light',phoenix:this.bossSprites?.[2],dragon:this.celestialSprites?.[0]});return;}if(e.gift&&layer==='back'){drawGiftStage(c,e,t,k,p,this.height,this.budget?.level==='light');return;}if(e.kind){drawGiftFx(c,e,t,k,p,this.height);if(k>.4)return;}const alpha=Math.min(1,k*5,(1-k)*4);c.save();c.globalAlpha=alpha;
+    if(e.heartCultivate){drawHeartQi(c,e,k,p,{light:this.budget?.level==='light'||this.visibleActors>30});c.restore();return;}
     if(this.cinematicV2!==false&&e.cinematicQuality&&!e.gift&&['qi','join','skin','sword','victory'].includes(e.effect)){
       const alpha=Math.sin(k*Math.PI),theme=e.effect==='skin'||e.effect==='victory'?'gold':'jade';
       if(e.effect==='qi')drawEnergyOrb(c,theme,p.x,p.y-50,alpha*.58,-110,e.cinematicSeed||0,'light',false);

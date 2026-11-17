@@ -106,7 +106,9 @@ const rewardQiBasis = p => Math.round(qiCurve(p));
 // linh thạch +25% mỗi cảnh giới. Thưởng VẪN theo % và vẫn tăng theo cảnh giới (tính từ rewardQiBasis), chỉ tăng chậm hơn tu vi cần
 // → cảnh giới càng cao lên càng chậm dần (15 chậm ~1/6, 20 chậm ~3 lần, 23+ chậm ~5 lần so với trước).
 export const HARD_REALM=15;
-export const hardRealmMult = r=>r<HARD_REALM?1:1.2**(Math.min(r,23)-(HARD_REALM-1));
+// 17/11 (chủ game: "đột phá cực kì lâu, nới ra"): ×1,2 → ×1,1 mỗi cảnh giới (18: ×1,46 · 20: ×1,77 · 23+: ×2,36).
+export const HARD_REALM_STEP=1.1;
+export const hardRealmMult = r=>r<HARD_REALM?1:HARD_REALM_STEP**(Math.min(r,23)-(HARD_REALM-1));
 export const requiredQi = p => Math.round((p.realm<24?rewardQiBasis(p):qiCurve({realm:23})*4**(p.realm-23))*hardRealmMult(p.realm));
 export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p))*(p.realm<HARD_REALM?1:1+.25*(p.realm-HARD_REALM+1)));
 export function power(p) {
@@ -164,7 +166,8 @@ function withHallQi(amount,p,rate,commit=false){
 }
 // 15/11 (chủ game): 4 cảnh giới cuối lên quá nhanh → giảm tăng trưởng tu vi mọi nguồn từ realm 24.
 // Áp sau hạn mức ngày để chắc chắn giảm thật. Realm <24 giữ nguyên.
-export const LATE_GROWTH=Object.freeze({24:.5,25:.4,26:.3,27:.25,28:.25});
+// 17/11 (chủ game): nới ra — trước .5/.4/.3/.25/.25 làm cảnh giới 25 chậm ~64× cảnh giới thường; nay ~19×.
+export const LATE_GROWTH=Object.freeze({24:.7,25:.6,26:.5,27:.4,28:.4});
 export const lateGrowthMult=p=>LATE_GROWTH[Math.min(28,Math.floor(Number(p?.realm)||0))]??1;
 function creditQi(w,p,amount,now=Date.now(),source='free'){
   const unit=freeQiUnit(p);
@@ -549,7 +552,7 @@ function actionCore(w,input,now) {
       if(heavenStunned(p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,stunned:true};}
       if(daoTamBlocked(w,p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,daoTam:true};}
       const wait=cooldown(p,'cultivate',w.settings?.heartGate===true&&heartHeavy(p)?HEART_GATE.heavyCooldownMs:10000,now);if(wait){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,xpCooldown:wait};}
-      p.cultivatedAt??=now;const q=gain(w,p,6,1,0,now,'cultivate');emit(w,p,`Tim tụ linh • vận công +${q} tu vi${buffTag(p,now)}${practiceTag(w,p,now)}${talking(p,now)?' • luận đạo +20%':''}`,'qi',now,{heartCultivate:true});
+      p.cultivatedAt??=now;const q=gain(w,p,6,1,0,now,'cultivate');emit(w,p,`Tăng tu vi +${q}${buffTag(p,now)}${practiceTag(w,p,now)}${talking(p,now)?' • luận đạo +20%':''}`,'qi',now,{heartCultivate:true,qiGain:q}); /* 17/11: chủ game "hiện là tăng tu vi thay vì tim tụ linh" + overlay vẽ tim hóa tu vi (heart-qi-fx.js) */
       p.interactions++;w.totalInteractions++;return {ok:true,likes:count,heartCultivated:true};
     }
     if(daoTamBlocked(w,p,now)){p.interactions++;w.totalInteractions++;return {ok:true,likes:count,daoTam:true};}

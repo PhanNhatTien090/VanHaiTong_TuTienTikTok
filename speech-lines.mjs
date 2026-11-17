@@ -111,6 +111,8 @@ export function speechPlan(e){
   if(e.gift&&(e.reward||text.includes('cảm ơn đạo hữu')))return giftLines(e,who,Who,t,seed);
   // ----- người chơi -----
   if(e.vipReturn){const n=['','Bạc','Vàng','Kim Cương'][e.vipReturn];return [say('tiennu',`Hộ Pháp ${n} ${raw||''} đã trở lại tông môn!`),say('tongsu','Cả tông môn hoan nghênh, phúc khí tràn đầy!')];} // v86
+  // 17/11 (chủ game): báo lên trung kỳ / hậu kỳ / viên mãn để người chơi biết mình đang tăng tu vi. Chỉ báo hiệu ứng.
+  if(Number.isInteger(e.stageUp)&&e.stageUp>=1){const step=head.replace(/^Bước vào\s*/i,'').trim()||'cảnh giới mới';return [say('tongsu',pickBy(seed,[`${Who} bước vào ${step}!`,`Tu vi tăng vọt! ${Who} đạt ${step}!`,`${Who} tiến thêm một bước, đạt ${step}!`]))];}
   if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
   if(e.effect==='join')return [say('tongsu',pickBy(seed,[`Chào mừng ${who} gia nhập Vân Hải Tông!`,`${Who} gia nhập Vân Hải Tông! Tiên lộ bắt đầu!`,`Hoan nghênh ${who} gia nhập Vân Hải Tông!`]))];
   // v87: hồng bao · câu đố · chuỗi điểm danh · nhiệm vụ ngày · tông môn kiến tạo

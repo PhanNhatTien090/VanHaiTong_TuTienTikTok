@@ -4,10 +4,10 @@ import {createWorld,lateGrowthMult,LATE_GROWTH,giftJackpot} from '../engine.mjs'
 
 test('late realms grow slower, early realms unchanged', () => {
   assert.equal(lateGrowthMult({realm:23}),1);
-  assert.equal(lateGrowthMult({realm:24}),.5);
-  assert.equal(lateGrowthMult({realm:25}),.4);
-  assert.equal(lateGrowthMult({realm:26}),.3);
-  assert.equal(lateGrowthMult({realm:27}),.25);
+  assert.equal(lateGrowthMult({realm:24}),.7);
+  assert.equal(lateGrowthMult({realm:25}),.6);
+  assert.equal(lateGrowthMult({realm:26}),.5);
+  assert.equal(lateGrowthMult({realm:27}),.4);
   for(let r=24;r<28;r++)assert.ok(LATE_GROWTH[r+1]<=LATE_GROWTH[r]);
 });
 
@@ -17,5 +17,5 @@ test('gift jackpot qi is reduced at late realms', () => {
   const now=Date.now();
   const a=giftJackpot(lo.w,lo.p,500,now,()=>0),b=giftJackpot(hi.w,hi.p,500,now,()=>0);
   if(!a||!b)return; // jackpot blocked by stage state in this world: nothing to compare
-  assert.ok(hi.p.qi-1e9 < (lo.p.qi-1e9)*.5);
+  assert.ok(hi.p.qi-1e9 <= (lo.p.qi-1e9)*LATE_GROWTH[25]); /* 17/11: nới .4→.6 */
 });
