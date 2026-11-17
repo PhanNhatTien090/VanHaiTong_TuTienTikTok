@@ -23,7 +23,7 @@ Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự 
 
 ## 2. Cách lấy lượt
 - **Lệnh 1 chữ: `cầu`** (nhận cả "cau"). Miễn phí, hồi 30 s/người; báo hồi lượt "X · 12 giây nữa cầu tiếp được".
-- Tặng quà trong sự kiện = thêm lượt ngay, quà lớn cơ duyên cao hơn (5 nấc lửa, ảnh quà thật): ~1 / 10 / 99 / 199 / 999 coin. Quà nào cũng +tu vi an ủi (đọc "thi triển", không "đa tạ").
+- **Chốt 17/11 (tạm, theo ảnh mẫu):** mỗi lượt `cầu` free và **mỗi quà = 1 lượt**; cơ duyên không-trượt (chỉ server): `cầu` 5% · quà 1–9 coin 10% · 10–98 30% · 99–198 50% · 199–998 70% · mỗi 999 coin = 1 lượt 80%. Bảng LIVE chỉ hiện ảnh quà → 1–5 ngọn lửa. Bảo hiểm 4★/10 lượt, 5★/80 lượt tính trên mọi lượt. ⚠ Quà 1 coin cũng là 1 lượt → 80 quà nhỏ chắc 5★: theo dõi, chỉnh sau nếu ra 5★ quá nhanh. Quà nào cũng +tu vi an ủi (đọc "thi triển", không "đa tạ").
 - Mỗi lượt có băng rôn nhỏ giữa màn "Tên · TRƯỢT" / "Tên · 4★ Thanh Phong Kiếm" (xếp tối đa 3 dòng).
 - Trùng đồ → lên sao (★1→★5, mỗi sao +20% chỉ số); đủ ★5 trùng nữa → tinh hoa.
 - **Gọn dữ liệu:** chỉ lưu 4★/5★/GIỚI HẠN dạng `{id: sao}` + 2 số bảo hiểm + 1 số tinh hoa mỗi người; lượt TRƯỢT không lưu gì (log "vừa cầu" chỉ giữ 20 dòng trong bộ nhớ, không ghi đĩa).
@@ -64,6 +64,6 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
 4. Bảng hướng dẫn + 2–3 ảnh TikTok hướng dẫn cách chơi.
 
 ## 8. Cần chủ game chốt
-- Lệnh 1 chữ: `cầu` hay `rút`.
-- Mốc quà 5 nấc lửa (1/10/99/199/999 coin) có ổn không.
+- ✅ Lệnh: `cầu`.
+- ✅ Mốc quà theo ảnh mẫu (tạm).
 - Thanh mục tiêu chung kiểu "Linh Mạch / Bí Cảnh / Thiên Môn" (ảnh tham khảo đếm tim) — mình đề xuất đếm lệnh gõ + quà, KHÔNG đếm tim.
