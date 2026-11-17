@@ -37,6 +37,8 @@ const titleCase=s=>String(s).toLowerCase().replace(/(^|\s)(\p{L})/gu,(m,a,b)=>a+
 const list2=a=>a.length<=1?a.join(''):a.slice(0,-1).join(', ')+' và '+a.at(-1);
 
 function giftLines(e,who,Who,t,seed){
+ // 17/11: Nguyệt Hạ Tình Lâu — quà đôi đạo lữ = thi triển song tu (không cảm ơn, không gợi dục).
+ if(e.loveGift){const P=sayName(e.loveGift.partner)||'đạo lữ',g=e.loveGift.tier;return g==='grand'?[say('tiennu',`Tiên Lữ Đại Điển! ${Who} và ${P} kết thành Thần Tiên Quyến Lữ!`),say('tongsu','Bình phong hạ xuống, hai người bế quan song tu!')]:g==='secret'?[say('tongsu',pickBy(seed,[`${Who} thi triển song tu! ${Who} và ${P} bế quan Uyên Ương Mật Thất!`,`Bình phong hạ xuống! ${Who} cùng ${P} song tu trong Mật Thất!`,`Uyên Ương Mật Thất mở cửa! ${Who} và ${P} song tu, tu vi tăng vọt!`]))]:[say('tiennu',pickBy(seed,[`${Who} cùng ${P} vào Tình Các song tu!`,`${Who} thi triển song tu cùng ${P}!`]))];}
  if(e.raceGift&&e.raceBoost)return [say('tongsu',pickBy(seed,[`${Who} bứt tốc! Phi kiếm lao vọt ${viNumber(e.raceBoost)} trượng!`,`${Who} tăng tốc! Phi kiếm vọt lên ${viNumber(e.raceBoost)} trượng!`,`Bứt tốc! ${Who} lao lên ${viNumber(e.raceBoost)} trượng!`]))]; // 07/11: đang đua chỉ đọc bứt tốc
  const r=e.reward||{},qi=roundSay(r.qi),items=(r.itemNames||[]).slice(0,2),itemTxt=items.length?list2(items):'';
  const rewards=[itemTxt,Number(r.qi)>0?qi+' tu vi':''].filter(Boolean).join(' và ');
@@ -113,6 +115,9 @@ export function speechPlan(e){
   if(e.vipReturn){const n=['','Bạc','Vàng','Kim Cương'][e.vipReturn];return [say('tiennu',`Hộ Pháp ${n} ${raw||''} đã trở lại tông môn!`),say('tongsu','Cả tông môn hoan nghênh, phúc khí tràn đầy!')];} // v86
   // 17/11 (chủ game): báo lên trung kỳ / hậu kỳ / viên mãn để người chơi biết mình đang tăng tu vi. Chỉ báo hiệu ứng.
   if(Number.isInteger(e.stageUp)&&e.stageUp>=1){const step=head.replace(/^Bước vào\s*/i,'').trim()||'cảnh giới mới';return [say('tongsu',pickBy(seed,[`${Who} bước vào ${step}!`,`Tu vi tăng vọt! ${Who} đạt ${step}!`,`${Who} tiến thêm một bước, đạt ${step}!`]))];}
+  if(e.loveRoom)return e.loveRoom.fromQueue?[say('tiennu',`${sayName(e.loveRoom.aName)||'Đạo hữu'} và ${sayName(e.loveRoom.bName)||'đạo lữ'} vào Tình Các song tu!`)]:[]; // lượt quà đã đọc ở giftLines
+  if(e.loveGarden)return [say('tongsu',`${sayName(e.loveGarden.aName)||'Đạo hữu'} và ${sayName(e.loveGarden.bName)||'đạo lữ'} song tu dưới cây Nguyệt Lão!`)];
+  if(e.loveInvite)return [];
   if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
   if(e.effect==='join')return [say('tongsu',pickBy(seed,[`Chào mừng ${who} gia nhập Vân Hải Tông!`,`${Who} gia nhập Vân Hải Tông! Tiên lộ bắt đầu!`,`Hoan nghênh ${who} gia nhập Vân Hải Tông!`]))];
   // v87: hồng bao · câu đố · chuỗi điểm danh · nhiệm vụ ngày · tông môn kiến tạo
