@@ -50,7 +50,10 @@ function scheduleCut(w,f,L,pair,tier,now,rand){
 }
 // Quà trong lễ của 1 trong 2 người đôi đạo lữ. Trả null nếu không áp (để quà mặc định chạy).
 export function loveTowerGift(w,p,coins,unitCoins,now,c,rand=Math.random){
-  const f=live(w,now);if(!f||!(coins>0))return null;const found=lovePartner(w,p,now);if(!found)return null;
+  const f=live(w,now);if(!f||!(coins>0))return null;const found=lovePartner(w,p,now);
+  if(!found){ // 17/11: người xem không biết phải có đạo lữ → nhắc (≤1 lần/2 phút/người), quà vẫn theo luật thường
+    if(real(p)&&now-(p.loveHintAt||0)>=120000){p.loveHintAt=now;const has=activeBonds(w,p.id).length>0;c.emit(w,p,has?'Đạo lữ chưa ở LIVE • cả hai cùng có mặt mới vào Tình Lâu':'Cần đạo lữ đang ở LIVE mới vào Tình Lâu • ketduyen tên → người kia gõ dongy','status',now,{loveHint:true});}
+    return null;}
   const L=state(f),pair=pairOf(found.bond,p,found.partner),tier=unitCoins>=LOVE.grandMin?'grand':coins>=LOVE.secretMin?'secret':'room';
   const pct=tier==='grand'?Math.min(LOVE.grandPctMax,LOVE.grandPct+(unitCoins-LOVE.grandMin)*.00025):tier==='secret'?Math.min(LOVE.secretPctMax,LOVE.secretPct+(coins-LOVE.secretMin)*.001):Math.min(LOVE.roomPctMax,LOVE.roomPct*coins);
   const gains={};for(const x of [p,found.partner])gains[x.id]=award(w,x,pct,now,c);

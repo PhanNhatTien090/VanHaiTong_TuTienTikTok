@@ -29,6 +29,11 @@ test('lễ 8 phút; quà 1 coin của đôi đạo lữ → Tình Các, cả hai
 test('người chưa có đạo lữ tặng quà trong lễ → quà mặc định như cũ', () => {
   const w=setup();assert.equal(loveGiftRule(w,w.players.x,N+1000),null);
   gift(w,'x',1,N+1000);const ev=w.events.findLast(e=>e.gift);assert.equal(ev.loveGift,undefined);assert.equal(ev.eventRule,null);
+  // nhắc cách vào Tình Lâu, không lặp trong 2 phút
+  assert.match(w.events.findLast(e=>e.loveHint).text,/Cần đạo lữ/);
+  gift(w,'x',1,N+5000);assert.equal(w.events.filter(e=>e.loveHint).length,1);
+  // có đạo lữ nhưng đạo lữ vắng LIVE → nhắc khác
+  w.players.b.lastActive=N-20*60000;gift(w,'a',1,N+6000);assert.match(w.events.findLast(e=>e.loveHint).text,/chưa ở LIVE/);
 });
 
 test('≥30 coin → Mật Thất chiếu riêng + phúc duyên ×2; một món ≥100 → Đại Điển + danh hiệu', () => {
