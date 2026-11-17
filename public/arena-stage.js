@@ -11,7 +11,7 @@ import {portraitCanvas} from './linh-bai.js';
 import {drawQueueAvatars} from './queue-avatars.js';
 import {drawArtSkill,loadSkillArt} from './arena-art-skills.js?v=loi-dai-v2-20261115';
 import {arenaElement,drawElementTrail,drawElementImpact} from './arena-fx.js?v=loi-dai-fx-20261115';
-import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt,cutVeil} from './skill-cutscene.js?v=20261117';
+import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt,cutVeil} from './skill-cutscene.js?v=20261118';
 
 export const ARENA_DELAY_MS=1100;
 export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708],cols:8,guide:.745,audienceScale:.98});

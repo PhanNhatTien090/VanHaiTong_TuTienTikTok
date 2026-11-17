@@ -59,7 +59,7 @@ import {prepareAscensionArt} from './ascension-art.js';
 import {divineSelection,drawDivineBody,drawDivineHalo} from './divine-wardrobe.js';
 import {loadCelestialArt} from './celestial-bosses.js';
 import {loadPrestigeArt,notePrestigeGift,drawPrestigeAura} from './sword-prestige.js';
-import {syncRace,raceTargets,drawRace,raceActorIds,raceCutFrame} from './sword-race.js?v=event-donors-20261114';
+import {syncRace,raceTargets,drawRace,raceActorIds,raceCutFrame} from './sword-race.js?v=cut-fx-20261118';
 import {syncWar,warTargets,drawWar,drawWarResult} from './sect-war.js';
 import {syncMaze,mazeOn,drawMaze,drawMazeResult} from './maze.js';
 import {syncTease,teaseIds,drawTease} from './tease.js';
@@ -67,7 +67,7 @@ import {syncBonk,bonkIds,applyBonkWalk,drawBonk} from './bonk.js?v=minor-overlay
 import {syncAlchemy,alchemyTargets,drawAlchemy,drawAlchemyResult,drawAlchemySoot} from './alchemy.js';
 import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=loi-dai-20261115';
 import {arenaTargets as loiDaiTargets,arenaCutFrame} from './arena-stage.js?v=loi-dai-20261115';
-import {tournamentCutFrame} from './skill-cutscene.js?v=20261117';
+import {tournamentCutFrame} from './skill-cutscene.js?v=20261118';
 import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';

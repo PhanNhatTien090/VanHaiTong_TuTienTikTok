@@ -7,10 +7,10 @@ import {petV2FramesFor,petArtFrame,drawRareFx} from './spirit-pet-art.js?v=drawn
 import {drawPremiumPetFx} from './premium-pet-fx.js?v=20261117';
 import {petById} from './spirit-pets.js';
 import {skinFor} from './cosmetics.js';
-import {giftFor} from './gift-icons.js';
 const GIFT_IMG=new Map();
 export function giftImg(url){if(!url||typeof Image==='undefined')return null;let a=GIFT_IMG.get(url);if(!a){const im=new Image();im.decoding='async';im.referrerPolicy='no-referrer';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src=url;GIFT_IMG.set(url,a);if(GIFT_IMG.size>12)GIFT_IMG.delete(GIFT_IMG.keys().next().value);}return a.ok?a.im:null;}
 import {duelSoundPreset} from './duel-cinematic.js';
+import {fxVariant,PALETTES,palOf,fxCamera,punch,smooth,out3,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawBeam,drawSkyLances,drawZoomLines,drawEmbers,drawVignette} from './cut-fx.js?v=20261118';
 const MOTIF_TECH={karma:'soul',thunder:'lightning',fire:'fire','lotus-fire':'fire',moon:'ice',phoenix:'fire',ice:'ice',pearl:'water',stars:'star',blood:'soul'};
 
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>1-(1-clamp(k))**3,easeIn=k=>clamp(k)**2;
@@ -33,19 +33,14 @@ export function findCut(log,shownAt){
 export const cutFull=cut=>!!cut&&cut.k>=CUT_PHASE.wipeIn&&cut.k<CUT_PHASE.wipeOut;
 
 function spec(e,scene){if(e.cut.kind==='skin'){const s=SIGNATURE_ULTS[e.cut.skin];return s&&{...s,kind:'skin'};}
- if(e.cut.kind==='gift'){const g=giftFor(scene?.lastState?.giftArt,e.cut.coins);return {kind:'gift',name:e.skill?.name||'Bạo Phát',shout:e.cut.from?Array.from(String(e.cut.from)).slice(0,14).join('')+' TRỢ CHIÊU!':'BẠO PHÁT!',hero:'Quà trợ chiêu',color:'#ffc44d',glow:'#fff3c4',deep:'#1c1204',motif:'gift',giftUrl:g?.url||null,count:g?.count||1};}
+ // 18/11 (chủ game): quà trợ chiêu KHÔNG hiện hình quà — chỉ hiệu ứng chiêu.
+ if(e.cut.kind==='gift')return {kind:'gift',name:e.skill?.name||'Bạo Phát',shout:e.cut.from?Array.from(String(e.cut.from)).slice(0,14).join('')+' TRỢ CHIÊU!':'BẠO PHÁT!',hero:'Trợ chiêu',color:'#ffc44d',glow:'#fff3c4',deep:'#1c1204',motif:'gift'};
  const p=PET_ULTS[e.cut.pet],pet=petById(e.cut.pet);return p&&{...p,kind:'pet',pet,hero:pet?.name||'Linh thú',shout:(pet?.name||'').toUpperCase()+'!',glow:'#ffffff',deep:'#05070f'};}
 
-// ---- nền + vệt tốc độ + vòng phù văn (theo màu chiêu) ----
-function backdrop(c,H,S,k,t,light){
- const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,S.deep||'#05060c');g.addColorStop(.55,'#020206');g.addColorStop(1,S.deep||'#05060c');c.fillStyle=g;c.fillRect(-60,-60,1020,H+120);
- glow(c,450,H*.5,H*.55,S.color,.28+.12*Math.sin(t*.004));
- c.save();c.globalCompositeOperation='lighter';
- const n=light?18:36;for(let i=0;i<n;i++){const a=rnd(i)*TAU,sp=(t*.0009+rnd(i+9))%1,r0=60+sp*700,r1=r0+40+sp*160;c.globalAlpha=.25*(1-sp);c.strokeStyle=i%3?S.color:'#ffffff';c.lineWidth=1.5+2*(1-sp);c.beginPath();c.moveTo(450+Math.cos(a)*r0,H*.5+Math.sin(a)*r0);c.lineTo(450+Math.cos(a)*r1,H*.5+Math.sin(a)*r1);c.stroke();}
- // vòng phù văn sau lưng người ra chiêu
- c.save();c.translate(270,H*.6);c.scale(1,.42);c.rotate(t*.0012);c.globalAlpha=.55;c.strokeStyle=S.color;c.lineWidth=4;c.beginPath();c.arc(0,0,260,0,TAU);c.stroke();c.lineWidth=2;c.beginPath();c.arc(0,0,220,0,TAU);c.stroke();
- for(let i=0;i<16;i++){c.save();c.rotate(i*TAU/16);c.fillStyle=i%2?S.color:(S.glow||'#fff');c.fillRect(226,-5,26,10);c.restore();}c.restore();
- c.restore();
+// ---- nền tối theo màu chiêu (18/11: vòng phù văn cũ thay bằng trận pháp + lớp tụ khí ở cut-fx.js) ----
+function backdrop(c,H,P,t){
+ const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,P.deep||'#05060c');g.addColorStop(.55,'#020206');g.addColorStop(1,P.deep||'#05060c');c.fillStyle=g;c.fillRect(-200,-200,1300,H+400);
+ glow(c,450,H*.5,H*.6,P.main,.22+.08*Math.sin(t*.004));
 }
 // ---- hình chiêu theo motif (khi chưa có ảnh, hoặc lớp phụ quanh ảnh) ----
 function motifFx(c,S,x,y,size,k,t,seed,light){
@@ -68,56 +63,71 @@ function drawPetBig(scene,c,player,pet,x,y,size,t,burst,light){
  c.save();c.translate(x,y);if(pet.coins===300)drawPremiumPetFx(c,pet,size,t,7,2.2,'front',burst);else drawRareFx(c,pet,size,t,7,3);c.restore();
 }
 
-/** Pha toàn màn (gọi từ scene.drawFrame thay cho cả sân). */
+/** Pha toàn màn (gọi từ scene.drawFrame thay cho cả sân).
+ * 18/11 (chủ game chê sơ sài, bảo học màn đột phá): TỤ KHÍ (trận pháp dưới chân, cột sáng trời rọi, hạt xoáy vào, hào quang bốc, vạch tốc độ)
+ * → NÉN → PHÁT CHIÊU (nổ nhỏ ở tay + hình chiêu / sóng năng lượng / thiên giáng) → TRÚNG (cột sáng, tia tỏa, tia lửa, vòng xung kích, nứt đất, rung)
+ * → bụi sáng. Camera đẩy vào lúc tụ, giật ở 2 cú nổ. Biến thể theo mã đòn: lật bên, chiều xoay, kiểu chiêu quà, màu quà. */
 export function drawCutFull(scene,c,t,H,cut,players){
- const {e,k}=cut,S=spec(e,scene);if(!S)return false;const light=scene.budget?.level==='light';
- const A=players.get(e.by),B=players.get(e.to);
- // rung màn khi trúng
- const hitK=seg(k,CUT_PHASE.cast,CUT_PHASE.hit),shake=hitK>0&&hitK<.5&&scene.motion!==false?(1-hitK*2)*14:0;
- c.save();if(shake)c.translate(Math.sin(t*.09)*shake,Math.cos(t*.11)*shake*.6);
- backdrop(c,H,S,k,t,light);
- const shoutK=seg(k,CUT_PHASE.wipeIn,CUT_PHASE.shout),castK=seg(k,CUT_PHASE.shout,CUT_PHASE.cast),outK=seg(k,CUT_PHASE.hit,CUT_PHASE.wipeOut);
- // đối thủ bên phải (nhỏ, hơi tối) — lùi lại khi trúng
- const bx=680+hitK*60,by=H*.7;
- if(B){c.save();c.globalAlpha=.92;drawCaster(scene,c,B,bx,by,3.1,t,true);c.restore();}
- // người ra chiêu trượt vào từ trái, to
- const ax=-120+ease(shoutK/.6)*380,ay=H*.8;
- glow(c,ax,ay-260,300,S.color,.32+.15*Math.sin(t*.01));
- if(S.kind==='pet'){const pet=S.pet,lunge=Math.sin(Math.PI*clamp(castK/.75))*(bx-ax-230);if(A&&pet)drawPetBig(scene,c,A,pet,ax+40+lunge,ay-80-Math.sin(Math.PI*clamp(castK/.75))*60,470+40*ease(shoutK),t,castK>0?castK:shoutK*.8,light);}
- else drawCaster(scene,c,A,ax,ay,5.2,t,false);
- // HÔ CHIÊU: chữ hô xuất hiện từng ký tự
- if(S.kind==='gift'&&castK<.2){const gi=giftImg(S.giftUrl),pop=ease(seg(shoutK,.1,.5)),gx=450,gy=H*.42,R=150+120*pop;
-  c.save();c.globalCompositeOperation='lighter';c.translate(gx,gy);c.rotate(t*.0015);for(let i=0;i<16;i++){c.rotate(TAU/16);c.globalAlpha=.35*pop*(1-castK*5);c.fillStyle=i%2?S.color:'#ffffff';c.beginPath();c.moveTo(0,0);c.lineTo(R*2.2,-14);c.lineTo(R*2.2,14);c.fill();}c.restore();
-  glow(c,gx,gy,R*1.6,S.color,.55*pop);
-  if(gi){const sz=R*1.5*(1+.06*Math.sin(t*.01));c.save();c.globalAlpha=pop*(1-castK*5);c.drawImage(gi,gx-sz/2,gy-sz/2,sz,sz);c.restore();}
-  if(S.count>1)txt(c,'×'+S.count,gx+R*.8,gy+R*.6,54,'#ffffff',{width:9});}
+ const {e,k}=cut,S=spec(e,scene);if(!S)return false;const light=scene.budget?.level==='light',motion=scene.motion!==false,rf=scene.reduceFlash;
+ const A=players.get(e.by),B=players.get(e.to),V=fxVariant(e.n||1),fl=V.flip,dir=fl?-1:1,X=x=>fl?900-x:x;
+ const P=S.kind==='gift'?PALETTES[V.pal]:palOf(S.color,S.glow,S.deep);
+ const shoutK=seg(k,CUT_PHASE.wipeIn,CUT_PHASE.shout),castK=seg(k,CUT_PHASE.shout,CUT_PHASE.cast),hitK=seg(k,CUT_PHASE.cast,CUT_PHASE.hit),outK=seg(k,CUT_PHASE.hit,CUT_PHASE.wipeOut);
+ const secOf=k0=>(k-k0)*cut.ms/1000,relSec=secOf(CUT_PHASE.shout),hitSec=secOf(CUT_PHASE.cast);
+ const charge=seg(k,.1,CUT_PHASE.shout),comp=k<CUT_PHASE.shout?seg(k,CUT_PHASE.shout-.08,CUT_PHASE.shout):0;
+ const ax=X(-120+ease(shoutK/.6)*380),ay=H*.8,chestA=ay-330,handX=ax+dir*70;
+ const bx=X(680+hitK*60),by=H*.7,chestB=by-170;
+ // camera: đẩy vào người ra chiêu lúc tụ khí, sang đối thủ lúc trúng
+ const toB=smooth(seg(castK,.55,1)),cx=ax+(bx-ax)*toB,cy=chestA+(chestB-chestA)*toB;
+ const zoom=motion?1+.08*smooth(charge)-.06*smooth(castK)+punch(relSec,.05)+punch(hitSec,.09):1;
+ const shake=!motion?0:hitSec>0&&hitSec<.5?(1-hitSec*2)*16:comp*5;
+ fxCamera(c,cx,cy,zoom,shake,t);
+ backdrop(c,H,P,t);
+ // TỤ KHÍ — lớp sau lưng
+ const chargeA=smooth(charge)*(1-seg(castK,.15,.6));
+ drawSkyBeams(c,ax,ay,chargeA*.9,t,P);
+ drawCircle(c,ax,ay-8,260,smooth(seg(k,.09,.2))*(1-.7*seg(castK,.4,1)),t,P,V.spin);
+ drawZoomLines(c,ax,chestA,charge*.7*(1-castK),t,P,light,H);
+ drawAura(c,ax,ay,600,280,Math.max(chargeA,.45*(castK>0?1-castK:0)),t,P,light);
+ // đối thủ (nhỏ, lùi khi trúng) — vòng trận nhỏ dưới chân lúc trúng
+ if(B){c.save();c.globalAlpha=.92;drawCaster(scene,c,B,bx,by,3.1,t,!fl);c.restore();}
+ // người ra chiêu
+ if(S.kind==='pet'){const pet=S.pet,ls=Math.sin(Math.PI*clamp(castK/.75)),lunge=ls*(bx-ax-dir*230);if(A&&pet){const px=ax+dir*40+lunge;c.save();if(fl){c.translate(px*2,0);c.scale(-1,1);}drawPetBig(scene,c,A,pet,px,ay-80-ls*60,470+40*ease(shoutK),t,castK>0?castK:shoutK*.8,light);c.restore();}}
+ else drawCaster(scene,c,A,ax,ay,5.2,t,fl);
+ drawInflow(c,handX,chestA,charge*(k<CUT_PHASE.shout+.01?1:0),t,P,light);
+ drawCompress(c,handX,chestA,comp,t,P);
+ if(relSec>=0)drawBurst(c,handX,chestA,relSec,P,H,{light,pillar:false,scale:.55,seed:V.style+1,reduceFlash:rf});
+ // PHÁT CHIÊU
+ if(castK>0&&k<CUT_PHASE.hit+.03){
+  const burstK=hitK,fadeA=1-burstK;
+  if(S.kind==='skin'){
+   const fly=easeIn(seg(castK,.15,1)),x=ax+dir*60+(bx-ax-dir*60)*fly,y=ay-260+(chestB-(ay-260))*fly,size=(230+260*fly)*(1+burstK*.35);
+   drawBeam(c,handX,chestA,x,y,1,fadeA*.7*seg(castK,.1,.3),t,P,light,34);
+   const im=art(S.art);c.save();c.globalCompositeOperation='lighter';glow(c,x,y,size*.9,S.color,.4*fadeA);c.restore();
+   if(im){const w=size*2.1,h=w*im.height/im.width;c.save();if(fl){c.translate(x*2,0);c.scale(-1,1);}c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.35*fadeA;c.drawImage(im,x-w*.55-70*fly,y-h/2,w,h);c.restore();c.globalAlpha=.97*fadeA;c.drawImage(im,x-w*.55,y-h/2,w,h);c.restore();}
+   if(fadeA>.05)motifFx(c,S,x,y,size*.8,fly,t,e.n||1,light);
+  }else if(S.kind==='gift'){
+   if(V.style%2===0){drawBeam(c,handX,chestA,bx,chestB,out3(seg(castK,.05,.6)),1-seg(k,CUT_PHASE.hit-.05,CUT_PHASE.hit+.03),t,P,light,100);}
+   else{const sealY=H*.3;drawCircle(c,bx,sealY,340,smooth(seg(castK,0,.25))*fadeA,t,P,-V.spin);dot(c,P.soft,bx,sealY,120+60*Math.sin(t*.01),.5*smooth(seg(castK,0,.25))*fadeA);drawSkyLances(c,bx,by,seg(castK,.12,1)+burstK*.3,t,P,light,e.n||1,sealY);}
+  }else if(S.kind==='pet'&&fadeA>.05){const fly=clamp(castK/.75);motifFx(c,S,ax+(bx-ax)*fly,chestA+(chestB-chestA)*fly,260,fly,t,e.n||1,light);}
+ }
+ // TRÚNG
+ if(hitSec>=0)drawBurst(c,bx,chestB,hitSec,P,H,{light,pillar:true,scale:1,ground:by,seed:(e.n||1)%7,reduceFlash:rf});
+ if(hitK>0&&!scene.cutSeen?.has('hit:'+e.n)){(scene.cutSeen??=new Set()).add('hit:'+e.n);scene.onFeedbackSound?.('hit',3);}
+ drawEmbers(c,H,seg(k,CUT_PHASE.cast,CUT_PHASE.cast+.06),t,P,light);
+ c.restore();
+ drawVignette(c,H,.3+.35*comp+.25*smooth(charge)*(1-castK),cx,cy);
+ // CHỮ (không lật, không rung)
  const shoutA=1-seg(castK,0,.18);
- if(shoutA>0){const shout=S.shout,chars=Array.from(shout),nShow=Math.ceil(chars.length*clamp(shoutK/.55)),pop=1+.25*(1-ease(seg(shoutK,0,.2)));c.globalAlpha=shoutA;
+ if(shoutA>0){const chars=Array.from(S.shout),nShow=Math.ceil(chars.length*clamp(shoutK/.55)),pop=1+.25*(1-ease(seg(shoutK,0,.2)));c.globalAlpha=shoutA;
   c.save();c.translate(450,H*.2);c.scale(pop,pop);txt(c,chars.slice(0,nShow).join(''),0,0,62,'#fff6dc',{width:12,max:860});c.restore();
-  txt(c,S.kind==='pet'?'Linh thú của '+(A?.name||''):S.kind==='gift'?'Quà trợ chiêu cho '+(A?.name||''):S.hero+' · '+(A?.name||''),450,H*.2+58,26,S.glow||'#ffe9a8',{width:6,max:820,weight:'800'});c.globalAlpha=1;}
- // TUNG CHIÊU: tên chiêu lớn + hình chiêu bay từ người ra chiêu tới đối thủ
- if(castK>0){
-  const nk=ease(seg(castK,0,.25)),slide=(1-nk)*-600;
-  const tg=c.createLinearGradient(0,H*.12-40,0,H*.12+40);tg.addColorStop(0,'#fffbe6');tg.addColorStop(.5,'#ffd34d');tg.addColorStop(1,S.color);
-  c.save();c.translate(slide,0);txt(c,S.name,450,H*.13,70,tg,{width:14,max:880});txt(c,S.kind==='pet'?'LINH THÚ TUYỆT KỸ':S.kind==='gift'?'QUÀ TRỢ CHIÊU · '+(A?.name||''):'THẦN KỸ · '+S.hero,450,H*.13+56,24,'#ffffff',{width:5,weight:'800'});c.restore();
-  const burstK=seg(k,CUT_PHASE.cast,CUT_PHASE.hit),fadeA=1-burstK; // trúng: hình chiêu phình ra rồi tan
-  const fly=easeIn(seg(castK,.15,1)),x=ax+60+(bx-ax-60)*fly,y=ay-260+(by-150-(ay-260))*fly,size=(230+260*fly)*(1+burstK*.35);
-  const im=S.kind==='skin'?art(S.art):S.kind==='gift'?giftImg(S.giftUrl):null,imW=S.kind==='gift'?1.35:2.1;
-  if(S.kind==='skin'){c.save();c.globalCompositeOperation='lighter';glow(c,x,y,size*.8,S.color,.32);c.restore();}
-  if(im){const w=size*imW,h=w*im.height/im.width;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.35*fadeA;c.drawImage(im,x-w*.55-70*fly,y-h/2,w,h);c.restore();c.save();c.globalAlpha=.97*fadeA;c.drawImage(im,x-w*.55,y-h/2,w,h);c.restore();}
-  if(fadeA>.05)motifFx(c,S,x,y,size*.8,fly,t,e.n||1,light);
- }
- // TRÚNG: lóe sáng + sóng + số sát thương
- if(hitK>0){
-  if(!scene.reduceFlash){c.save();c.globalAlpha=.45*(1-hitK)**2;c.fillStyle='#ffffff';c.fillRect(-60,-60,1020,H+120);c.restore();}
-  c.save();c.globalCompositeOperation='lighter';for(let i=0;i<3;i++){const r=60+hitK*(260+i*120);c.globalAlpha=(1-hitK)*(.8-i*.2);c.strokeStyle=i%2?'#ffffff':S.color;c.lineWidth=10-i*2;c.beginPath();c.ellipse(bx,by-150,r,r*.55,0,0,TAU);c.stroke();}c.restore();
-  if(!scene.cutSeen?.has('hit:'+e.n)){(scene.cutSeen??=new Set()).add('hit:'+e.n);scene.onFeedbackSound?.('hit',3);}
- }
+  txt(c,S.kind==='pet'?'Linh thú của '+(A?.name||''):S.kind==='gift'?'Trợ lực cho '+(A?.name||''):S.hero+' · '+(A?.name||''),450,H*.2+58,26,P.soft,{width:6,max:820,weight:'800'});c.globalAlpha=1;}
+ if(castK>0){const nk=ease(seg(castK,0,.25)),slide=(1-nk)*-600*dir;
+  const tg=c.createLinearGradient(0,H*.13-40,0,H*.13+40);tg.addColorStop(0,'#fffbe6');tg.addColorStop(.5,'#ffd34d');tg.addColorStop(1,P.main);
+  c.save();c.translate(slide,0);txt(c,S.name,450,H*.13,70,tg,{width:14,max:880});txt(c,S.kind==='pet'?'LINH THÚ TUYỆT KỸ':S.kind==='gift'?'TRỢ CHIÊU · '+(A?.name||''):'THẦN KỸ · '+S.hero,450,H*.13+56,24,'#ffffff',{width:5,weight:'800'});c.restore();}
  if(k>=CUT_PHASE.cast){const u=seg(k,CUT_PHASE.cast,CUT_PHASE.wipeOut),pop=1+.5*(1-ease(seg(u,0,.25)));
   if(e.dmg){c.save();c.translate(bx,by-330-u*30);c.scale(pop,pop);txt(c,'-'+Math.round(e.dmg).toLocaleString('vi-VN'),0,0,84,'#ffd54a',{width:12});c.restore();txt(c,e.ko?'K.O!':S.kind==='pet'?'LINH THÚ':S.kind==='gift'?'BẠO PHÁT':'THẦN KỸ',bx,by-410-u*30,34,e.ko?'#ff5b4a':'#ff9b3d',{width:7});}
-  else if(e.heal||e.shield)txt(c,e.heal?'+'+Math.round(e.heal).toLocaleString('vi-VN'):'KHIÊN +'+Math.round(e.shield).toLocaleString('vi-VN'),ax+60,ay-430,60,e.heal?'#7dffa8':'#9be8ff',{width:10});}
+  else if(e.heal||e.shield)txt(c,e.heal?'+'+Math.round(e.heal).toLocaleString('vi-VN'):'KHIÊN +'+Math.round(e.shield).toLocaleString('vi-VN'),ax+dir*60,ay-430,60,e.heal?'#7dffa8':'#9be8ff',{width:10});}
  if(outK>0){c.globalAlpha=outK;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.globalAlpha=1;}
- c.restore();
  // âm thanh tụ lực một lần lúc bắt đầu
  if(!scene.cutSeen?.has('cast:'+e.n)){(scene.cutSeen??=new Set()).add('cast:'+e.n);try{scene.onCinematicSound?.('cut:'+e.n,duelSoundPreset({id:MOTIF_TECH[S.motif]||'fire'}),(e.cut.ms*(CUT_PHASE.cast-.02)-cut.age)/1000,{priority:6,charge:true,gain:.6});}catch{}}
  if(scene.cutSeen.size>60)scene.cutSeen=new Set([...scene.cutSeen].slice(-20));

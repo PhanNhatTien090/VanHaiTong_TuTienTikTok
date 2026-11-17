@@ -1,6 +1,6 @@
 import {eventPets,petRequirement,petPose} from './spirit-pets.js';
 import {giftFor} from './gift-icons.js';
-import {giftImg} from './skill-cutscene.js?v=20261117';
+import {giftImg} from './skill-cutscene.js?v=20261118';
 import {drawPetV2CoveScene} from './pet-v2-cove-fx.js';
 import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose,PET_FACES_RIGHT as FACES_RIGHT} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {loadPetArt} from './spirit-pet-art.js?v=drawn-pets-20261114';
