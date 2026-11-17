@@ -135,6 +135,6 @@ Dùng lại bộ máy sẵn có: `public/cut-fx.js` (letterbox, trận pháp, t�
 ### 10.3 Chống lag cho các màn này
 - Mọi màn chiếu riêng = pha toàn màn, `scene.drawFrame` bỏ vẽ sân (như Lôi Đài/Đua/Chính Ma) → GPU chỉ lo 1–2 nhân vật + hiệu ứng, bùng hết cỡ được.
 - Ảnh món đồ/bóng đen thu nhỏ sẵn đúng cỡ; bóng đen = chính ảnh món tô đen 1 lần (cache), không filter mỗi khung.
-- Hạt ≤120 mỗi màn, giảm nửa khi `budget.light`; `reduceFlash` tắt khung đảo màu + chớp.
+- **Chủ game 17/11: màn chiếu riêng KHÔNG vẽ đám đông → LÀM MẠNH TAY.** Cho phép: hạt tới ~400/màn, nhiều lớp chồng (2–3 trận pháp, sao băng, sét, khói, mảnh vỡ), rung mạnh, nhiều cú nổ, lớp `lighter` dày. Vẫn giữ: không `shadowBlur`/`filter` mỗi khung (iGPU máy LIVE yếu ở mục này), ảnh thu nhỏ sẵn, `reduceFlash` chỉ tắt chớp trắng/đảo màu. Ngưỡng duy nhất: đo màn nặng nhất trên máy LIVE (Chrome, cỡ 1080×1920) ≥ 40 khung/s; dưới thì giảm hạt, không giảm kịch bản.
 - Hàng chờ server: 5★ cách nhau ≥6 s, GIỚI HẠN chen đầu; quá 3 màn chờ thì 4★/5★ chỉ hiện thẻ nhỏ.
 - Đo `/api/client-status` sau khi lên LIVE; QA bằng `scripts` kiểu `cutsheet` (vẽ trực tiếp theo mốc k) trước khi đẩy.
