@@ -14,11 +14,11 @@ Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự 
 | TRƯỢT | lượt thường | chỉ +tu vi an ủi, **không lưu món đồ nào** (chủ game: lưu data tốn) |
 | 4★ | **chắc chắn trong mỗi 10 lượt** | chiêu nhẹ, hiệu ứng nhẹ |
 | 5★ | **chắc chắn trong 80 lượt** (từ lượt 65 cơ duyên tăng dần — "mềm") | chiêu mạnh, màn tung chiêu đơn giản |
-| GIỚI HẠN | là một loại 5★ | hiệu ứng cực mạnh, độc lạ; tung chiêu = màn chiếu riêng ngang đột phá |
+| GIỚI HẠN | hiếm trong 5★, không bảo hiểm | hiệu ứng cực mạnh, độc lạ; tung chiêu = màn chiếu riêng ngang đột phá |
 
-- Ra 5★: nửa cơ hội là GIỚI HẠN đang mở; lần trước không ra GIỚI HẠN → 5★ kế **chắc chắn GIỚI HẠN** (bảo hiểm kép).
-- Đã có GIỚI HẠN mùa này / hết 12 suất → ra 5★ thường (bảo hiểm kép giữ lại sang mùa sau).
-- Bộ đếm lưu theo người (`p.bao.pity4`, `pity5`, `limitedGuarantee`), **cộng dồn qua mọi lượt sự kiện**; lượt free cũng tính.
+- **GIỚI HẠN KHÔNG có bảo hiểm** (chủ game 17/11: chỉ 12 món, có bảo hiểm thì spam 80 lượt là hết). Chỉ có thể ra khi đã ra 5★, cơ duyên rất thấp (số thật chỉ ở server, chỉnh được), không cộng dồn.
+- Đã có GIỚI HẠN mùa này / hết 12 suất → ra 5★ thường.
+- Bộ đếm lưu theo người (`p.bao.pity4`, `pity5`), **cộng dồn qua mọi lượt sự kiện**; lượt free cũng tính.
 - Server-only: bảng cơ duyên số thật nằm trong `phap-bao.mjs`, không gửi xuống overlay (như ODDS tọa kỹ).
 
 ## 2. Cách lấy lượt
@@ -26,7 +26,7 @@ Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự 
 - Tặng quà trong sự kiện = thêm lượt ngay, quà lớn cơ duyên cao hơn (5 nấc lửa, ảnh quà thật): ~1 / 10 / 99 / 199 / 999 coin. Quà nào cũng +tu vi an ủi (đọc "thi triển", không "đa tạ").
 - Mỗi lượt có băng rôn nhỏ giữa màn "Tên · TRƯỢT" / "Tên · 4★ Thanh Phong Kiếm" (xếp tối đa 3 dòng).
 - Trùng đồ → lên sao (★1→★5, mỗi sao +20% chỉ số); đủ ★5 trùng nữa → tinh hoa.
-- **Gọn dữ liệu:** chỉ lưu 4★/5★/GIỚI HẠN dạng `{id: sao}` + 3 số bảo hiểm + 1 số tinh hoa mỗi người; lượt TRƯỢT không lưu gì (log "vừa cầu" chỉ giữ 20 dòng trong bộ nhớ, không ghi đĩa).
+- **Gọn dữ liệu:** chỉ lưu 4★/5★/GIỚI HẠN dạng `{id: sao}` + 2 số bảo hiểm + 1 số tinh hoa mỗi người; lượt TRƯỢT không lưu gì (log "vừa cầu" chỉ giữ 20 dòng trong bộ nhớ, không ghi đĩa).
 
 ## 3. Pháp bảo bản mệnh (sửa gốc "pháp bảo lỏ")
 Hiện trạng: 864 người có pháp bảo, nhiều nhất 65 món, đeo cùng lúc tới 5 món, không món nào có cá tính.
