@@ -160,11 +160,11 @@ function drawRaceAwards(scene,c,e,H,now,t){const age=now-((e.podiumUntil||now)-P
 // Nhẹ: mỗi khung 2–4 lần drawImage, không dựng gì thêm. Tốc độ mượt theo trận (tăng/giảm dần, không giật).
 const SCROLL_SKY='/assets/race-v2/race-scroll-sky.webp',SCROLL_CLOUD='/assets/race-v2/race-scroll-clouds.webp';
 function raceImg(scene,src){const m=scene.raceImgs??=new Map();let im=m.get(src);if(!im&&typeof Image!=='undefined'){im=new Image();im.decoding='async';im.src=src;m.set(src,im);}return im?.complete&&im.naturalWidth?im:null;}
-export const RACE_SCROLL_SPEED=Object.freeze({idle:.06,run:.62,boost:1.5}); // px/ms
+export const RACE_SCROLL_SPEED=Object.freeze({idle:.03,run:.15,boost:.3}); // px/ms — 17/11 (chủ game): người xem chóng mặt → giảm ~4 lần (trước .06/.62/1.5)
 function drawRaceScroll(scene,c,t,H,running,boost,light,turbo=1){
  const st=scene.raceScrollState??={off:0,off2:0,last:t,v:0},dt=Math.min(100,Math.max(0,t-st.last));st.last=t;
  const want=(scene.motion===false?0:running?(boost?RACE_SCROLL_SPEED.boost:RACE_SCROLL_SPEED.run):RACE_SCROLL_SPEED.idle)*turbo;
- st.v+=(want-st.v)*Math.min(1,dt/450);st.off+=st.v*dt;st.off2+=st.v*dt*1.9;
+ st.v+=(want-st.v)*Math.min(1,dt/450);st.off+=st.v*dt;st.off2+=st.v*dt*1.3; /* 17/11: mây trước ×1,9 */
  const sky=raceImg(scene,SCROLL_SKY);if(!sky)return false;
  const tile=(im,off,alpha,op)=>{const h=900*im.naturalHeight/im.naturalWidth,o=off%h;c.globalAlpha=alpha;c.globalCompositeOperation=op;for(let y=o-h;y<H;y+=h)c.drawImage(im,0,Math.round(y),900,Math.ceil(h)+1);};
  tile(sky,st.off,1,'source-over');
@@ -199,7 +199,7 @@ export function drawRaceCutFull(scene,c,t,H,p,x,k){
  const zoom=motion?1+.06*smooth(charge)+punch(boomSec,.09)-.03*smooth(dash):1,shake=!motion?0:boomSec>0&&boomSec<.45?(1-boomSec/.45)*14:0;
  fxCamera(c,450,core,zoom,shake,t);
  // nền: trời cuộn (chậm lúc tụ, ×6 lúc siêu tốc) + phủ tối màu kiếm khí
- if(!drawRaceScroll(scene,c,t,H,true,true,light,dash>0?6:1+charge)){c.fillStyle='#0b1a33';c.fillRect(-100,-100,1100,H+200);}
+ if(!drawRaceScroll(scene,c,t,H,true,true,light,dash>0?4:1+charge)){c.fillStyle='#0b1a33';c.fillRect(-100,-100,1100,H+200);}
  const dim=c.createLinearGradient(0,0,0,H);dim.addColorStop(0,P.deep+'f0');dim.addColorStop(.6,P.deep+'b0');dim.addColorStop(1,P.deep+'e8');c.save();c.globalAlpha=.68+.25*smooth(charge)-.1*smooth(dash);c.fillStyle=dim;c.fillRect(-100,-100,1100,H+200);c.restore();
  glow(c,450,core,H*.5,P.main,.18+.2*smooth(charge));
  // TỤ KIẾM KHÍ
