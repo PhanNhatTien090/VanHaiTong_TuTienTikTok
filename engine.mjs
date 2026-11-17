@@ -1188,7 +1188,8 @@ export const BIG_EVENTS=Object.freeze([
   ['tower','Vân Hải Tháp',(w,now)=>beginTower(w,now,towerContext)],
   ['maze','Mê Cung',(w,now)=>startMaze(w,now)],
   ['alchemy','Khai Lò Cửu Chuyển',(w,now)=>startAlchemy(w,now)],
-  ['mount-realm','Tọa Kỹ Bí Cảnh',(w,now)=>startMountRealmEvent(w,now)]
+  ['mount-realm','Tọa Kỹ Bí Cảnh',(w,now)=>startMountRealmEvent(w,now)],
+  ['bao-kho','Thiên Công Bảo Khố',(w,now)=>startBaoKhoEvent(w,now)] // 18/11: có màn hình overlay (public/bao-kho.js)
 ]);
 const BIG_IDS=BIG_EVENTS.map(([id])=>id);
 // 16/11: map riêng cho sự kiện lớn trước đây dùng sân thường (Codex vẽ, public/assets/event-maps-v1).
@@ -1425,9 +1426,9 @@ function advanceVisitor(w,p,input,now){
 const companionContext={emit,active:currentParticipant,ready:readyToBreak,creditQi,createPair:(w,a,b,now)=>createCompanionPair(w,a,b,now,companionContext)};
 export const controlLanternEvent=(w,op,now=Date.now())=>controlLantern(w,op,now,companionContext);
 const mountContext={emit,active:currentParticipant,audit:auditRecord};
-// 17/11: Thiên Công Bảo Khố — CHƯA vào BIG_EVENTS (overlay chưa có màn hình); chỉ bật tay qua /api/social-control.
+// 17/11: Thiên Công Bảo Khố — 18/11 vào BIG_EVENTS (overlay public/bao-kho.js); mở tay qua /api/social-control cũng tính lượt.
 const baoContext={emit,gain,audit:auditRecord};
-export const startBaoKhoEvent=(w,now=Date.now())=>startBaoKho(w,now,baoContext);
+export const startBaoKhoEvent=(w,now=Date.now())=>bigSpaced(w,now,startBaoKho(w,now,baoContext));
 export const stopBaoKhoEvent=(w,now=Date.now())=>stopBaoKho(w,now,baoContext);
 const hallContext={emit,gain:(w,p,qi,stones,herbs,now)=>gain(w,p,qi,stones,herbs,now,false,'event'),active:currentParticipant,busy:(w,now)=>w.liveSession?.active===false||!!stageConflict(w,now)||w.tower?.endsAt>now||w.quiz?.endsAt>now||w.events.some(e=>e.effect==='breakthrough'&&now-e.at<65000)};
 const socialContext={emit,gain,power,technique:attackTechnique,active:currentParticipant};

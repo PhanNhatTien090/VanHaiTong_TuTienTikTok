@@ -323,7 +323,7 @@ html body.overlay .scene-shell #phoneHudRight:has(#eventInfoDock>:not([hidden]))
 html body.overlay .scene-shell #phoneHudRight:has(#eventInfoDock>:not([hidden]))>#commandRail{display:none!important}
 body.overlay:is(.sword-race,.social-stage,.ritual-active,.pet-cove-stage,.maze-on,.ascension-stage) #eventInfoDock{display:none!important}
 
-body.overlay:is(.hall-war,.mount-realm) :is(#infoSpotlight,.info-spotlight,#phoneHudLeft,#phoneHudRight,#giftRanks,#lowerRightGuide,.live-disclosure,.scene-location,#focusCard,#spotlight,#likeGoal,#stageQueue,.inventory-deck){display:none!important}
+body.overlay:is(.hall-war,.mount-realm,.bao-kho) :is(#infoSpotlight,.info-spotlight,#phoneHudLeft,#phoneHudRight,#giftRanks,#lowerRightGuide,.live-disclosure,.scene-location,#focusCard,#spotlight,#likeGoal,#stageQueue,.inventory-deck){display:none!important}
 .hall-weekly-panel{margin:12px 0;padding:16px;border:1px solid #89c7bc66;border-radius:12px;background:#092434}
 .hall-weekly-panel table{width:100%;border-collapse:collapse}.hall-weekly-panel :is(td,th){padding:8px;text-align:left;border-bottom:1px solid #89c7bc33}
 .hall-weekly-panel p{color:#d1e9e4;line-height:1.55}.hall-weekly-panel details{margin-top:8px}

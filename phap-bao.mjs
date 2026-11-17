@@ -11,7 +11,9 @@ export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g9
 const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
 const fail=message=>({ok:false,message});
 const rng=()=>randomInt(0,1_000_000_000)/1_000_000_000;
-const PODIUM_MS=20000,LOG_MAX=20,REVEAL_GAP=6000,REVEAL={5:3500,6:6000},REVEAL_QUEUE=3;
+// 18/11: màn nhận theo kế hoạch mục 10.1 — 5★ 4,5 s, GIỚI HẠN 8 s; cách nhau ≥1,5 s (REVEAL_GAP = khoảng nghỉ giữa 2 màn).
+export const REVEAL_MS=Object.freeze({5:4500,6:8000});
+const PODIUM_MS=20000,LOG_MAX=20,REVEAL_GAP=1500,REVEAL=REVEAL_MS,REVEAL_QUEUE=3;
 export const baoKhoActive=w=>w.baoKho?.phase==='open';
 export const baoKhoVisible=(w,now)=>baoKhoActive(w)||w.baoKho?.podiumUntil>now;
 export const sourceOf=coins=>!coins?'free':coins>=999?'g999':coins>=199?'g199':coins>=99?'g99':coins>=10?'g10':'g1';
@@ -51,10 +53,20 @@ function record(w,p,res,now,ctx,source){
  const e=w.baoKho,h=e.hunters[p.id]??={n:0,i:0};h.n++;e.pulls++;if(res.tier)h.i++;
  const b=state(p),row={k:++e.seq,u:p.id,name:p.name,t:res.tier,id:res.id||null,s:res.stars||0,p4:BAO_PITY4-b.p4,p5:BAO_PITY5-b.p5,at:now};
  e.log.push(row);if(e.log.length>LOG_MAX)e.log.splice(0,e.log.length-LOG_MAX);
- if(res.tier>=5){const start=Math.max(now,e.revealUntil?e.revealUntil+REVEAL_GAP:now);if(start-now<=REVEAL_GAP*REVEAL_QUEUE){const ms=REVEAL[res.tier];e.reveals.push({k:row.k,u:p.id,name:p.name,t:res.tier,id:res.id,s:res.stars,at:start,ms});e.revealUntil=start+ms;if(e.reveals.length>4)e.reveals.splice(0,e.reveals.length-4);}}
- if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:''),'bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars}});
+ if(res.tier>=5)queueReveal(e,{k:row.k,u:p.id,name:p.name,t:res.tier,id:res.id,s:res.stars},now);
+ if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:''),'bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
   if(res.tier===6)ctx.audit?.(w,'bao-limited',now,{user:p.id,name:p.name,id:res.id});}
  return row;
+}
+/** Xếp màn nhận 5★/GIỚI HẠN. Màn đang chiếu không bị cắt; GIỚI HẠN chen lên trước các màn 5★ chưa chiếu (dời chúng ra sau).
+ * Hàng chờ quá REVEAL_QUEUE màn chưa chiếu → 5★ bỏ màn chiếu (vẫn có thẻ băng rôn + log). Thuần — test được. */
+export function queueReveal(e,r,now){
+ const live=e.reveals.filter(x=>x.at<=now&&now<x.at+x.ms),wait=e.reveals.filter(x=>x.at>now);
+ if(r.t<6&&wait.length>=REVEAL_QUEUE)return false;
+ const order=r.t>=6?[...wait.filter(x=>x.t>=6),r,...wait.filter(x=>x.t<6)]:[...wait,r];
+ let at=live.length?Math.max(...live.map(x=>x.at+x.ms))+REVEAL_GAP:now;
+ for(const x of order){x.at=at;x.ms=REVEAL[x.t];at+=x.ms+REVEAL_GAP;}
+ e.reveals=[...e.reveals.filter(x=>x.at+x.ms<=now&&!order.includes(x)).slice(-2),...live,...order];e.revealUntil=at-REVEAL_GAP;return true;
 }
 /** Lệnh chat: "cầu" (cau). Trả null nếu không phải lệnh của Bảo Khố. */
 export function baoKhoCommand(w,p,cmd,now,ctx){
