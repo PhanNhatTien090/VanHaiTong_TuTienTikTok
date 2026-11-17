@@ -10,7 +10,7 @@ import {skinFor} from './cosmetics.js';
 const GIFT_IMG=new Map();
 export function giftImg(url){if(!url||typeof Image==='undefined')return null;let a=GIFT_IMG.get(url);if(!a){const im=new Image();im.decoding='async';im.referrerPolicy='no-referrer';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src=url;GIFT_IMG.set(url,a);if(GIFT_IMG.size>12)GIFT_IMG.delete(GIFT_IMG.keys().next().value);}return a.ok?a.im:null;}
 import {duelSoundPreset} from './duel-cinematic.js';
-import {fxVariant,PALETTES,palOf,fxCamera,punch,smooth,out3,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawBeam,drawSkyLances,drawZoomLines,drawEmbers,drawVignette} from './cut-fx.js?v=20261118';
+import {fxVariant,PALETTES,palOf,fxCamera,punch,smooth,out3,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawBeam,drawSkyLances,drawZoomLines,drawEmbers,drawVignette,drawLetterbox,drawImpactFrame,drawGhostSplit,hitStop} from './cut-fx.js?v=20261118';
 const MOTIF_TECH={karma:'soul',thunder:'lightning',fire:'fire','lotus-fire':'fire',moon:'ice',phoenix:'fire',ice:'ice',pearl:'water',stars:'star',blood:'soul'};
 
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>1-(1-clamp(k))**3,easeIn=k=>clamp(k)**2;
@@ -63,6 +63,22 @@ function drawPetBig(scene,c,player,pet,x,y,size,t,burst,light){
  c.save();c.translate(x,y);if(pet.coins===300)drawPremiumPetFx(c,pet,size,t,7,2.2,'front',burst);else drawRareFx(c,pet,size,t,7,3);c.restore();
 }
 
+/** 18/11: CUT-IN cận mặt kiểu gacha — băng chéo trượt ngang màn, trong là mặt người ra chiêu phóng to + vạch tốc độ. u 0..1 trong cửa sổ. */
+export function drawCutInBand(scene,c,player,H,u,P,dir,t,{yc=H*.44,bh=300,label=''}={}){
+ if(!player||u<=0||u>=1)return;const inK=ease(seg(u,0,.18)),outK=easeIn(seg(u,.82,1)),off=((1-inK)*1000+outK*-1000)*dir,sl=70;
+ c.save();c.translate(off,0);
+ c.beginPath();c.moveTo(-60,yc-bh/2+sl);c.lineTo(960,yc-bh/2-sl);c.lineTo(960,yc+bh/2-sl);c.lineTo(-60,yc+bh/2+sl);c.closePath();
+ c.save();c.clip();
+ const g=c.createLinearGradient(0,yc-bh,0,yc+bh);g.addColorStop(0,P.deep||'#05060c');g.addColorStop(.5,P.main+'66');g.addColorStop(1,P.deep||'#05060c');c.fillStyle='#05060c';c.fillRect(-60,yc-bh,1020,bh*2);c.fillStyle=g;c.fillRect(-60,yc-bh,1020,bh*2);
+ c.globalCompositeOperation='lighter';c.lineCap='round';for(let i=0;i<26;i++){const yy=yc-bh*.7+rnd(i+3)*bh*1.4,sp=(t*.003*(1+rnd(i))+rnd(i+7))%1,x0=dir>0?1000-sp*1300:-100+sp*1300,L=120+rnd(i+1)*300;c.globalAlpha=.35;c.strokeStyle=i%3?'#ffffff':P.main;c.lineWidth=1+rnd(i+2)*3;c.beginPath();c.moveTo(x0,yy);c.lineTo(x0+L*dir,yy);c.stroke();}
+ c.globalCompositeOperation='source-over';c.globalAlpha=1;
+ const sc=11,drift=(u-.5)*40*dir;drawCaster(scene,c,player,450+drift-dir*60,yc+sc*78,sc,t,dir<0);
+ c.restore();
+ c.globalCompositeOperation='lighter';c.strokeStyle=P.soft;c.lineWidth=5;c.beginPath();c.moveTo(-60,yc-bh/2+sl);c.lineTo(960,yc-bh/2-sl);c.moveTo(-60,yc+bh/2+sl);c.lineTo(960,yc+bh/2-sl);c.stroke();
+ c.globalCompositeOperation='source-over';
+ if(label)txt(c,label,dir>0?860:40,yc+bh/2-sl-28,30,'#ffffff',{width:7,align:dir>0?'right':'left',max:600});
+ c.restore();c.globalAlpha=1;
+}
 /** Pha toàn màn (gọi từ scene.drawFrame thay cho cả sân).
  * 18/11 (chủ game chê sơ sài, bảo học màn đột phá): TỤ KHÍ (trận pháp dưới chân, cột sáng trời rọi, hạt xoáy vào, hào quang bốc, vạch tốc độ)
  * → NÉN → PHÁT CHIÊU (nổ nhỏ ở tay + hình chiêu / sóng năng lượng / thiên giáng) → TRÚNG (cột sáng, tia tỏa, tia lửa, vòng xung kích, nứt đất, rung)
@@ -73,14 +89,18 @@ export function drawCutFull(scene,c,t,H,cut,players){
  const P=S.kind==='gift'?PALETTES[V.pal]:palOf(S.color,S.glow,S.deep);
  const shoutK=seg(k,CUT_PHASE.wipeIn,CUT_PHASE.shout),castK=seg(k,CUT_PHASE.shout,CUT_PHASE.cast),hitK=seg(k,CUT_PHASE.cast,CUT_PHASE.hit),outK=seg(k,CUT_PHASE.hit,CUT_PHASE.wipeOut);
  const secOf=k0=>(k-k0)*cut.ms/1000,relSec=secOf(CUT_PHASE.shout),hitSec=secOf(CUT_PHASE.cast);
+ // 18/11 HIT-STOP: đứng hình 0,1 s lúc trúng (mọi chuyển động dùng t đã đóng băng)
+ const HS=hitStop(hitSec,t,.1),hitFx=HS.sec;t=HS.t;
  const charge=seg(k,.1,CUT_PHASE.shout),comp=k<CUT_PHASE.shout?seg(k,CUT_PHASE.shout-.08,CUT_PHASE.shout):0;
  const ax=X(-120+ease(shoutK/.6)*380),ay=H*.8,chestA=ay-330,handX=ax+dir*70;
  const bx=X(680+hitK*60),by=H*.7,chestB=by-170;
  // camera: đẩy vào người ra chiêu lúc tụ khí, sang đối thủ lúc trúng
  const toB=smooth(seg(castK,.55,1)),cx=ax+(bx-ax)*toB,cy=chestA+(chestB-chestA)*toB;
- const zoom=motion?1+.08*smooth(charge)-.06*smooth(castK)+punch(relSec,.05)+punch(hitSec,.09):1;
- const shake=!motion?0:hitSec>0&&hitSec<.5?(1-hitSec*2)*16:comp*5;
+ const zoom=motion?1+.08*smooth(charge)-.06*smooth(castK)+punch(relSec,.05)+punch(hitFx,.09):1;
+ const shake=!motion||HS.frozen?0:hitFx>0&&hitFx<.5?(1-hitFx*2)*16:comp*5;
  fxCamera(c,cx,cy,zoom,shake,t);
+ // nghiêng máy (dutch angle) lúc tụ khí
+ const dutch=motion?V.spin*.04*smooth(charge)*(1-smooth(castK)):0;if(dutch){c.translate(cx,cy);c.rotate(dutch);c.translate(-cx,-cy);}
  backdrop(c,H,P,t);
  // TỤ KHÍ — lớp sau lưng
  const chargeA=smooth(charge)*(1-seg(castK,.15,.6));
@@ -111,11 +131,17 @@ export function drawCutFull(scene,c,t,H,cut,players){
   }else if(S.kind==='pet'&&fadeA>.05){const fly=clamp(castK/.75);motifFx(c,S,ax+(bx-ax)*fly,chestA+(chestB-chestA)*fly,260,fly,t,e.n||1,light);}
  }
  // TRÚNG
- if(hitSec>=0)drawBurst(c,bx,chestB,hitSec,P,H,{light,pillar:true,scale:1,ground:by,seed:(e.n||1)%7,reduceFlash:rf});
+ if(hitSec>=0&&!HS.frozen)drawBurst(c,bx,chestB,hitFx,P,H,{light,pillar:true,scale:1,ground:by,seed:(e.n||1)%7,reduceFlash:rf});
  if(hitK>0&&!scene.cutSeen?.has('hit:'+e.n)){(scene.cutSeen??=new Set()).add('hit:'+e.n);scene.onFeedbackSound?.('hit',3);}
  drawEmbers(c,H,seg(k,CUT_PHASE.cast,CUT_PHASE.cast+.06),t,P,light);
  c.restore();
  drawVignette(c,H,.3+.35*comp+.25*smooth(charge)*(1-castK),cx,cy);
+ // 18/11 ngôn ngữ điện ảnh: khung IMPACT đảo màu lúc đứng hình, nhòe tách hình sau nổ, cut-in cận mặt lúc hô chiêu, thanh đen trên/dưới
+ if(HS.frozen&&!rf)drawImpactFrame(c,H,bx,chestB,hitSec/.1,P,e.n||1);
+ if(!HS.frozen&&hitSec>=0&&motion)drawGhostSplit(c,1-clamp(hitFx/.35),16);
+ if(relSec>=0&&relSec<.25&&motion)drawGhostSplit(c,.6*(1-relSec/.25),10);
+ if(S.kind!=='pet'||A)drawCutInBand(scene,c,A,H,seg(k,.13,.33),P,dir,t,{label:S.kind==='skin'?S.hero:''});
+ drawLetterbox(c,H,seg(k,.02,.12)*(1-seg(k,CUT_PHASE.hit+.01,CUT_PHASE.wipeOut)));
  // CHỮ (không lật, không rung)
  const shoutA=1-seg(castK,0,.18);
  if(shoutA>0){const chars=Array.from(S.shout),nShow=Math.ceil(chars.length*clamp(shoutK/.55)),pop=1+.25*(1-ease(seg(shoutK,0,.2)));c.globalAlpha=shoutA;

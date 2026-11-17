@@ -118,3 +118,17 @@ export function drawEmbers(c,H,a,t,P,light){if(a<=.01)return;const n=light?20:46
 
 /** Viền tối dồn mắt vào tâm. */
 export function drawVignette(c,H,a,cx=450,cy){if(a<=.01)return;const g=c.createRadialGradient(cx,cy??H*.55,H*.18,cx,cy??H*.55,H*.78);g.addColorStop(0,'#00000000');g.addColorStop(1,'#000000');c.save();c.globalAlpha=clamp(a);c.fillStyle=g;c.fillRect(-100,-100,1100,H+200);c.restore();}
+
+// ---- 18/11 (chủ game: "nghiên cứu cho cinematic xíu") — ngôn ngữ điện ảnh / anime ----
+// Thanh đen điện ảnh trên/dưới (a 0..1).
+export function drawLetterbox(c,H,a,h=.085){if(a<=.001)return;const b=H*h*smooth(a);c.save();c.globalAlpha=1;c.globalCompositeOperation='source-over';c.fillStyle='#000';c.fillRect(-100,-100,1100,100+b);c.fillRect(-100,H-b,1100,b+100);c.restore();}
+// Khung IMPACT kiểu anime (1–3 khung khi trúng): đảo màu cả màn (difference) + vạch tỏa đen/màu chiêu. u 0..1 trong khung.
+export function drawImpactFrame(c,H,x,y,u,P,seed=1){if(u<=0||u>=1)return;c.save();c.globalAlpha=1;
+ c.globalCompositeOperation='difference';c.fillStyle='#ffffff';c.fillRect(-100,-100,1100,H+200);
+ c.globalCompositeOperation='source-over';c.fillStyle=u<.5?'#000000':P.main;
+ for(let i=0;i<40;i++){const an=rnd(seed*13+i)*TAU,w=.012+rnd(i+seed)*.03,r0=90+rnd(i*5+seed)*120;c.globalAlpha=.85;c.beginPath();c.moveTo(x+Math.cos(an)*r0,y+Math.sin(an)*r0);c.lineTo(x+Math.cos(an-w)*1600,y+Math.sin(an-w)*1600);c.lineTo(x+Math.cos(an+w)*1600,y+Math.sin(an+w)*1600);c.closePath();c.fill();}
+ c.restore();c.globalAlpha=1;}
+// Nhòe tách hình (giả quang sai): chép lại chính khung hình lệch ngang, cộng sáng. a 0..1.
+export function drawGhostSplit(c,a,dx=14){if(a<=.02||!c.canvas)return;const cv=c.canvas;c.save();c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='lighter';c.globalAlpha=.16*a;try{c.drawImage(cv,dx*a,0);c.drawImage(cv,-dx*a,0);}catch{}c.restore();}
+// Hit-stop: đóng băng thời gian ngay sau cú trúng. Trả về {sec,t} đã trừ khoảng đứng hình.
+export function hitStop(sec,t,stop=.1){if(sec<0)return {sec,t,frozen:false};if(sec<stop)return {sec:.001,t:t-sec*1000,frozen:true};return {sec:sec-stop+.001,t:t-stop*1000,frozen:false};}

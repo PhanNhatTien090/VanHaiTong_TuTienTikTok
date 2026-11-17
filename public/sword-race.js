@@ -3,8 +3,8 @@ import {drawRaceSword,raceSwordFor,RACE_SWORD_SKINS,drawSwordSparkle,racePrizeIm
 import {raceMountFor,drawRaceMount,RACE_MOUNTS} from './race-mounts.js';
 import {drawPrestigeSword,swordPrestige} from './sword-prestige.js';
 import {makeSurface} from './performance.js';
-import {cutVeil,drawCaster,txt as ctxt,CUT_PHASE} from './skill-cutscene.js?v=20261118';
-import {fxVariant,PALETTES,fxCamera,punch,smooth,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawZoomLines,drawEmbers,drawVignette} from './cut-fx.js?v=20261118';
+import {cutVeil,drawCaster,drawCutInBand,txt as ctxt,CUT_PHASE} from './skill-cutscene.js?v=20261118';
+import {fxVariant,PALETTES,fxCamera,punch,smooth,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawZoomLines,drawEmbers,drawVignette,drawLetterbox,drawImpactFrame,drawGhostSplit,hitStop} from './cut-fx.js?v=20261118';
 // v88: đua phi kiếm "máy quay bám ĐOÀN CHÍNH".
 // - Vị trí dọc theo khoảng cách tới trung vị của đoàn (nén log), không theo người dẫn đầu: một người bứt xa
 //   không kéo cả đoàn xuống đáy; người bỏ xa bị kẹp ở mép trên kèm nhãn "bỏ xa +X".
@@ -191,7 +191,8 @@ export function raceCutFrame(scene,c,t,H){
 export const RACE_CUT_PHASE=Object.freeze({charge:.34,dash:.80,exit:.88});
 export function drawRaceCutFull(scene,c,t,H,p,x,k){
  const light=scene.budget?.level==='light',motion=scene.motion!==false,V=fxVariant((Number(x.at)||1)^(String(p.id||'').length*7919)),P=PALETTES[['gold','azure','violet','jade','crimson'][V.style+(V.flip?2:0)]||'gold'];
- const R=RACE_CUT_PHASE,ms=Number(x.ms)||3800,secOf=k0=>(k-k0)*ms/1000,boomSec=secOf(R.charge),exitSec=secOf(R.exit-.04);
+ const R=RACE_CUT_PHASE,ms=Number(x.ms)||3800,secOf=k0=>(k-k0)*ms/1000,boomRaw=secOf(R.charge),exitSec=secOf(R.exit-.04);
+ const HS=hitStop(boomRaw,t,.09),boomSec=HS.frozen?-1:HS.sec;t=HS.t; // 18/11 đứng hình lúc nổ phóng
  const charge=segk(k,CUT_PHASE.wipeIn,R.charge),dash=segk(k,R.charge,R.dash),exit=segk(k,R.dash,R.exit),comp=k<R.charge?segk(k,R.charge-.08,R.charge):0;
  const sc=4.1,tilt=(V.spin*.07+V.tilt)*(.4+.6*smooth(dash)),vib=motion?comp*5*Math.sin(t*.09):0;
  const y=H*.62-ease3(dash)*H*.1-easeIn(exit)*H*.9+(motion?Math.sin(t*.006)*8*(1-dash):0),swordY=y+30,core=y-150;
@@ -233,6 +234,11 @@ export function drawRaceCutFull(scene,c,t,H,p,x,k){
  drawEmbers(c,H,smooth(dash),t,P,light);
  c.restore();
  drawVignette(c,H,.35+.3*comp,450,core);
+ // 18/11 điện ảnh: khung IMPACT lúc nổ phóng, nhòe tách hình, cut-in cận mặt lúc tụ khí, thanh đen trên/dưới
+ if(HS.frozen&&!scene.reduceFlash)drawImpactFrame(c,H,450,swordY,boomRaw/.09,P,7);
+ if(boomSec>=0&&boomSec<.4&&motion)drawGhostSplit(c,1-boomSec/.4,18);
+ drawCutInBand(scene,c,p,H,segk(k,.1,.3),P,V.spin,t,{yc:H*.4});
+ drawLetterbox(c,H,segk(k,.02,.12)*(1-segk(k,CUT_PHASE.hit+.01,CUT_PHASE.wipeOut)));
  // chữ: TÊN TỐC BIẾN! → trượng đếm lên (18/11: bỏ hình quà)
  const sk=segk(k,CUT_PHASE.wipeIn,.4),pop=1+.3*(1-ease3(segk(sk,0,.25))),shown=Math.round((Number(x.dist)||0)*ease3(segk(k,R.charge,R.dash)));
  c.save();c.translate(450,H*.15);c.scale(pop,pop);ctxt(c,Array.from(p.name||'').slice(0,14).join('')+' TỐC BIẾN!',0,0,60,'#fff6dc',{width:12,max:860});c.restore();
