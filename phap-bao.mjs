@@ -9,7 +9,9 @@ import {BAO_ITEMS,BAO_PITY4,BAO_PITY5,BAO_LIMITED_STOCK,BAO_EVENT_MS,BAO_FREE_CD
 // Cơ duyên không-trượt theo nguồn (theo ảnh mẫu chủ game; chỉnh được). q5 = trong lượt trúng, phần ra 5★.
 // 18/11 tối (chủ game: "mới 1 sự kiện mà mất 2 hạn chế, vài hôm là hết"): 5★ chủ yếu nhờ bảo hiểm 80 lượt (q5 .06→.015, mềm từ 72),
 // GIỚI HẠN trong 5★ .08→.04, và MỖI LƯỢT SỰ KIỆN TỐI ĐA 1 MÓN GIỚI HẠN (BAO_LIMITED_PER_EVENT).
-export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g999:.80,q5:.015,soft5From:72,soft5Step:.05,limitedIn5:.04});
+export const BAO_ODDS=Object.freeze({free:.05,g1:.10,g10:.30,g99:.50,g199:.70,g999:.80,q5:.015,soft5From:72,soft5Step:.05,limitedIn5:.02}); // 18/11 khuya: GIỚI HẠN trong 5★ .04→.02 (chủ game: "5★ không thấy mà nổ 2 hạn chế")
+// 18/11 khuya (chủ game): quà ≥99 coin KHÔNG BAO GIỜ TRƯỢT — chắc chắn ít nhất 4★.
+export const BAO_SURE=new Set(['g99','g199','g999']);
 export const BAO_LIMITED_PER_EVENT=1;
 const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
 const fail=message=>({ok:false,message});
@@ -30,7 +32,7 @@ export function rollBao(w,p,source,r=rng){
  const soft=b.p5>=BAO_ODDS.soft5From?(b.p5-BAO_ODDS.soft5From+1)*BAO_ODDS.soft5Step:0;
  let tier=0;const x=r();
  if(b.p5>=BAO_PITY5||x<win*BAO_ODDS.q5+soft)tier=5;
- else if(b.p4>=BAO_PITY4||x<win)tier=4;
+ else if(b.p4>=BAO_PITY4||x<win||BAO_SURE.has(source))tier=4;
  if(!tier)return {tier:0};
  if(tier===5){b.p5=0;b.p4=0;const s=season(w),pool=limitedPool(w),ev=w.baoKho,capped=ev&&(ev.limitedGiven||0)>=BAO_LIMITED_PER_EVENT;
   if(!capped&&(!b.lim||b.lim.season!==s.n))if(pool.length&&r()<BAO_ODDS.limitedIn5){const it=pool[Math.floor(r()*pool.length)];s.owners[it.id]=p.id;b.lim={season:s.n,id:it.id};if(ev)ev.limitedGiven=(ev.limitedGiven||0)+1;return give(b,it,6);}}

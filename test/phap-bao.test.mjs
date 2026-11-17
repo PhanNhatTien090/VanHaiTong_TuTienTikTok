@@ -95,3 +95,9 @@ test('18/11 tối: "trang bị <tên thần khí>" đeo làm bản mệnh; Tháp
  for(let t=N+400;t<N+12000;t+=500)tick(w,t);
  assert.ok(w.tower.fx.some(f=>f.kind==='bao'&&f.id==='L12-huyet-hai-dao'),'có thần thông bản mệnh trong Tháp');
 });
+
+test('18/11 khuya: quà ≥99 coin không bao giờ TRƯỢT; quà nhỏ và cầu free vẫn có thể trượt; GIỚI HẠN trong 5★ ≤2%',async()=>{
+ const {BAO_SURE}=await import('../phap-bao.mjs');assert.ok(BAO_SURE.has('g99')&&BAO_SURE.has('g199')&&BAO_SURE.has('g999'));assert.ok(BAO_ODDS.limitedIn5<=.02);
+ const w=world();for(const src of ['g99','g199','g999'])for(let i=0;i<30;i++)assert.ok(rollBao(w,ensurePlayer(w,src+i,'P',N),src,miss).tier>=4,src+' không trượt');
+ assert.equal(rollBao(w,ensurePlayer(w,'f','F',N),'free',miss).tier,0);assert.equal(rollBao(w,ensurePlayer(w,'g','G',N),'g10',miss).tier,0);
+});

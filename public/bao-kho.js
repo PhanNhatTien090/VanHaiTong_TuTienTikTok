@@ -166,6 +166,7 @@ function flames(h,c,H){
   if(r.free)stx(c,'gõ “cầu”',x+62,yy,22,'#ffffff',{width:5});
   else{const g=giftFor(h.giftArt,r.min),im=g.url?giftImg(g.url):null;if(im)c.drawImage(im,x+40,yy-22,44,44);else stx(c,'quà',x+62,yy,20,'#ffffff',{width:5});}
   if(fl)for(let k=0;k<r.flames;k++)c.drawImage(fl,x+w-24-(r.flames-k)*30,yy-18,26,36);
+  if(r.min>=99)stx(c,'không trượt',x+92,yy+17,12,'#ffe28a',{width:3,weight:'700',align:'left'}); /* 18/11: quà ≥99 chắc có đồ */
  });c.globalAlpha=1;
 }
 function limited(h,c,e,H,t){
