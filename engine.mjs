@@ -1297,7 +1297,8 @@ export function adminGift(w,id,combo,now=Date.now(),custom=null){
   else p=w.players[clean(id,80)];if(!p||p.resident)return fail('Không tìm thấy người chơi.');
   const need=requiredQi(p);let qi=c.fill?Math.max(0,need-p.qi):Math.round(need*c.qiPct);
   if(c.fill){p.stones=Math.max(p.stones,requiredStones(p));}
-  const got=qi?gain(w,p,qi,c.stones,c.herbs,now,false,'admin'):0;if(!qi&&(c.stones||c.herbs)){p.stones+=c.stones;p.herbs+=c.herbs;}
+  // 17/11 (chủ game: "Cửu Chuyển Kim Đan +50% mà đột phá luôn"): đan dược cộng ĐÚNG % ghi trên đan — không nhân pháp bảo/công pháp/hệ số cảnh giới cuối.
+  let got=0;if(qi){const stageBefore=stageOf(p);p.qi+=qi;p.totalQi+=qi;w.sectQi+=qi;noteStageUp(w,p,stageBefore,now);got=qi;}p.stones+=c.stones;p.herbs+=c.herbs;
   if(c.buff){p.buffMult=Math.max(c.buff,p.buffUntil>now?p.buffMult||1:1);p.buffUntil=now+GIFT_BUFF_MS;}
   p.lastActive=Math.max(p.lastActive||0,now);
   const qiPct=got&&need?Math.max(1,Math.round(got/need*100)):0;

@@ -6,7 +6,7 @@ const N=Date.parse('2026-11-17T14:00:00Z');
 
 test('Tông chủ ban đan dược: tên đan, chữ và giọng đọc đúng % tu vi thực nhận', () => {
   assert.deepEqual([ADMIN_COMBOS.small.name,ADMIN_COMBOS.medium.name,ADMIN_COMBOS.large.name],['Tụ Khí Đan','Ngưng Nguyên Đan','Cửu Chuyển Kim Đan']);
-  for(const [combo,lo,hi] of [['small',10,30],['medium',30,90],['large',50,150]]){
+  for(const [combo,lo,hi] of [['small',10,10],['medium',30,30],['large',50,50]]){
     const w=createWorld('live');w.settings.residents=false;action(w,{type:'join',userId:'a',name:'An'},N);const p=w.players.a;p.realm=12;p.qi=0;
     const need=requiredQi(p),r=adminGift(w,'a',combo,N+1000);assert.equal(r.ok,true);
     const e=w.events.findLast(x=>x.adminGift===combo);
