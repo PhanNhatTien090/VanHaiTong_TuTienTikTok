@@ -1,0 +1,15 @@
+// Xem thử màn nở tọa kỹ: ?tier=vip|divine|common&id=<mount>&sec=2.4 (đứng yên ở giây đó) — không cần server game.
+(async()=>{try{
+const {drawVipCut,drawDivineCut}=await import('./mount-cut.js');const {drawMountReveals}=await import('./mount-reveal-fx.js');const {mountById}=await import('./mounts.js');
+const q=new URLSearchParams(location.search),tier=q.get('tier')||'vip',id=q.get('id')||(tier==='divine'?'cuu-thien-thanh-long':tier==='vip'?'that-thai-tuong-van':'kim-giap-trung'),sec=+(q.get('sec')||3);
+const canvas=document.getElementById('c'),c=canvas.getContext('2d');
+const scene={canvas,motion:true,budget:{level:'full'},playerIndex:new Map()};
+const m=mountById(id);const r={id,tier:m?.tier||tier,orb:q.get('orb')||(tier==='divine'?'divine':tier==='vip'?'vip':'common'),stars:+(q.get('stars')||1),fresh:true,who:q.get('who')||'Hoàng Thượng Đẹp Trai',mname:m?.name||id,seed:'demo:'+id+(q.get('v')||''),start:null,variant:0};
+const t0=performance.now();
+let frame=function(now){const T0=performance.now();c.setTransform(1,0,0,1,0,0);c.fillStyle='#223';c.fillRect(0,0,900,1600);
+ const t=1e6+sec*1000;
+ if(r.tier==='divine')drawDivineCut(scene,c,t,1600,r,sec);else if(r.tier==='vip')drawVipCut(scene,c,t,1600,r,sec);
+ else{scene.mountReveals=[{...r,start:t-sec*1000}];drawMountReveals(scene,c,t,1600);}
+ window.__n=(window.__n||0)+1;if(q.get('dbg')){const d=c.getImageData(450,700,1,1).data;document.title='F'+window.__n+' '+d.join(',')+' ms'+(performance.now()-T0).toFixed(1);}if(window.__n<12)setTimeout(()=>frame(),200);}
+const run=f=>n=>{try{f(n);}catch(e){document.title='ERR '+e.stack;}};frame=run(frame);frame();
+}catch(e){document.title='ERR '+e;}})();

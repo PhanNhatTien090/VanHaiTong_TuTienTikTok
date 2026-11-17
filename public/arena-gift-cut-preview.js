@@ -1,0 +1,7 @@
+// Xem thử chiếu riêng quà trợ chiêu Lôi Đài: ?trick=summon|burst|heaven&k=0.6&n=5
+import {drawCutFull} from './skill-cutscene.js?v=20261118';
+const q=new URLSearchParams(location.search),trick=q.get('trick')||'summon',k=+(q.get('k')||.6),canvas=document.getElementById('c'),c=canvas.getContext('2d');
+const scene={canvas,motion:true,budget:{level:'full'}};
+const skill=trick==='summon'?{name:'Triệu Hồi Hỏa Long',art:'fire-dragon'}:trick==='heaven'?{name:'Thiên Giáng · Khai Thiên Cự Phủ',art:'axe'}:{name:'Pháp Bảo Bạo Phát'};
+const bao=q.get('bao');const e=bao?{n:+(q.get('n')||5),by:'a',to:'b',slot:1,skill:{name:'x',bao},bao:{id:bao,tier:bao.startsWith('L')?6:5},dmg:2345,ko:false,cut:{kind:'bao',bao,tier:bao.startsWith('L')?6:5,ms:bao.startsWith('L')?9500:3600}}:{n:+(q.get('n')||5),by:'a',to:'b',gift:true,trick,skill,dmg:1234,ko:false,cut:{kind:'gift',trick,from:'Công Tài',ms:4400}}; /* ?bao=s5-an|L01-tru-tien: thần thông bản mệnh */
+let n=0;function frame(){n++;c.setTransform(1,0,0,1,0,0);c.fillStyle='#000';c.fillRect(0,0,900,1600);try{drawCutFull(scene,c,1e6+k*e.cut.ms,1600,{e,k,ms:e.cut.ms,age:k*e.cut.ms},new Map());}catch(err){document.title='ERR '+err.stack;}if(n<12)setTimeout(frame,200);}frame();
