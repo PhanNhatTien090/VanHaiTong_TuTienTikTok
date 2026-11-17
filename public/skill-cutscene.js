@@ -19,7 +19,7 @@ const seg=(k,a,b)=>clamp((k-a)/(b-a));
 // Mốc pha theo tỉ lệ thời gian chiếu.
 export const CUT_PHASE=Object.freeze({wipeIn:.08,shout:.36,cast:.72,hit:.86,wipeOut:.92});
 const ART=new Map();
-function art(name){if(!name||typeof Image==='undefined')return null;let a=ART.get(name);if(!a){const im=new Image();im.decoding='async';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src='/assets/signature-ults-v1/'+name+'.webp';ART.set(name,a);}return a.ok?a.im:null;}
+function art(name){if(!name||typeof Image==='undefined')return null;let a=ART.get(name);if(!a){const im=new Image();im.decoding='async';a={im,ok:false};im.onload=()=>{a.ok=true;};im.src=name.includes('/')?name:'/assets/signature-ults-v1/'+name+'.webp';ART.set(name,a);}return a.ok?a.im:null;}
 export function prewarmCutArt(skin){const s=SIGNATURE_ULTS[skin];if(s)art(s.art);}
 export function txt(c,s,x,y,size,fill,{stroke='#05060c',width=8,weight='900',align='center',max}={}){c.font=weight+' '+size+'px "Segoe UI",Arial,sans-serif';c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';if(width){c.lineWidth=width;c.strokeStyle=stroke;c.strokeText(s,x,y,max);}c.fillStyle=fill;c.fillText(s,x,y,max);}
 export function glow(c,x,y,r,col,a){if(a<=.01||r<=1)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col);g.addColorStop(1,col+'00');c.globalAlpha=Math.min(1,a);c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,TAU);c.fill();c.globalAlpha=1;}
@@ -94,7 +94,7 @@ export function drawCutInBand(scene,c,player,H,u,P,dir,t,{yc=H*.44,bh=300,label=
 export function drawCutFull(scene,c,t,H,cut,players){
  const {e,k}=cut,S=spec(e,scene);if(!S)return false;const light=scene.budget?.level==='light',motion=scene.motion!==false,rf=scene.reduceFlash;
  const A=players.get(e.by),B=players.get(e.to),V=fxVariant(e.n||1),fl=V.flip,dir=fl?-1:1,X=x=>fl?900-x:x;
- const P=S.kind==='gift'?PALETTES[V.pal]:palOf(S.color,S.glow,S.deep);
+ const P=S.kind==='gift'?PALETTES[e.trick==='summon'?'crimson':V.pal]:palOf(S.color,S.glow,S.deep); /* 18/11: Hỏa Long luôn tông lửa */
  const shoutK=seg(k,CUT_PHASE.wipeIn,CUT_PHASE.shout),castK=seg(k,CUT_PHASE.shout,CUT_PHASE.cast),hitK=seg(k,CUT_PHASE.cast,CUT_PHASE.hit),outK=seg(k,CUT_PHASE.hit,CUT_PHASE.wipeOut);
  const secOf=k0=>(k-k0)*cut.ms/1000,relSec=secOf(CUT_PHASE.shout),hitSec=secOf(CUT_PHASE.cast);
  // 18/11 HIT-STOP: đứng hình 0,1 s lúc trúng (mọi chuyển động dùng t đã đóng băng)
@@ -133,6 +133,14 @@ export function drawCutFull(scene,c,t,H,cut,players){
    const im=art(S.art);c.save();c.globalCompositeOperation='lighter';glow(c,x,y,size*.9,S.color,.4*fadeA);c.restore();
    if(im){const w=size*2.1,h=w*im.height/im.width;c.save();if(fl){c.translate(x*2,0);c.scale(-1,1);}c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.35*fadeA;c.drawImage(im,x-w*.55-70*fly,y-h/2,w,h);c.restore();c.globalAlpha=.97*fadeA;c.drawImage(im,x-w*.55,y-h/2,w,h);c.restore();}
    if(fadeA>.05)motifFx(c,S,x,y,size*.8,fly,t,e.n||1,light);
+  }else if(S.kind==='gift'&&e.skill?.art&&art('/assets/skills-v1/'+e.skill.art+'.webp')){
+   // 18/11: quà trợ chiêu có ảnh chiêu — 99 Hỏa Long bay từ người ra chiêu lao vào đối thủ; 2.000 Thiên Giáng rơi từ trời.
+   const im=art('/assets/skills-v1/'+e.skill.art+'.webp'),sky=e.trick==='heaven',fly=easeIn(seg(castK,.1,1));
+   const x=sky?bx:ax+dir*60+(bx-ax-dir*60)*fly,y=sky?-320+(chestB+320)*fly:ay-300+(chestB-(ay-300))*fly,size=(sky?380:260)+(sky?160:320)*fly;
+   if(!sky)drawBeam(c,handX,chestA,x,y,1,fadeA*.6*seg(castK,.1,.3),t,P,light,60);else drawSkyLances(c,bx,by,seg(castK,.3,1)+burstK*.3,t,P,light,e.n||1,-200);
+   c.save();c.globalCompositeOperation='lighter';glow(c,x,y,size*.9,P.main,.5*fadeA);c.restore();
+   const w=size*2,h=w*im.height/im.width;c.save();if(!sky&&dir<0){c.translate(x*2,0);c.scale(-1,1);}c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.35*fadeA;c.drawImage(im,x-w*.5-(sky?0:80*fly),y-h/2-(sky?60:0),w,h);c.restore();c.globalAlpha=.97*fadeA;c.drawImage(im,x-w/2,y-h/2,w,h);c.restore();c.globalAlpha=1;
+   if(fadeA>.05)motifFx(c,{...S,motif:sky?'stars':'lotus-fire',color:P.main,glow:P.soft},x,y,size*.8,fly,t,e.n||1,light);
   }else if(S.kind==='gift'){
    if(V.style%2===0){drawBeam(c,handX,chestA,bx,chestB,out3(seg(castK,.05,.6)),1-seg(k,CUT_PHASE.hit-.05,CUT_PHASE.hit+.03),t,P,light,100);}
    else{const sealY=H*.3;drawCircle(c,bx,sealY,340,smooth(seg(castK,0,.25))*fadeA,t,P,-V.spin);dot(c,P.soft,bx,sealY,120+60*Math.sin(t*.01),.5*smooth(seg(castK,0,.25))*fadeA);drawSkyLances(c,bx,by,seg(castK,.12,1)+burstK*.3,t,P,light,e.n||1,sealY);}

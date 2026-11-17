@@ -63,11 +63,11 @@ test('client: pha toàn màn chỉ trong khoảng giữa, có vào/ra + dư ản
  assert.ok(findCut([e],1000+SKIN_CUT_MS+500),'dư ảnh sau khi chiếu');
 });
 
-test('quà trợ chiêu ≥499 coin được chiếu riêng, không chồng lên màn đang chiếu; quà nhỏ thì không',async()=>{
+test('quà trợ chiêu ≥99 coin được chiếu riêng (18/11: hạ từ 499), không chồng lên màn đang chiếu; quà nhỏ thì không',async()=>{
  const {arenaGift}=await import('../arena.mjs');const {GIFT_CUT_MS}=await import('../public/signature-ults.js');
  const w=setup(null);let t=N+20;for(let i=0;i<40&&!(w.arena.current&&t>=w.arena.current.fightAt);i++){t+=250;tickArena(w,t,c);}
  const m=w.arena.current;assert.ok(m);
- const small=arenaGift(w,w.players.a,99,t);assert.equal(small.cut,undefined);
+ const small=arenaGift(w,w.players.a,30,t);assert.equal(small.cut,undefined);
  const big=arenaGift(w,w.players.a,500,t+10);assert.equal(big.cut.kind,'gift');assert.equal(big.cut.ms,GIFT_CUT_MS);assert.equal(big.at,t+10);
  const big2=arenaGift(w,w.players.b,2000,t+20);assert.equal(big2.cut.kind,'gift');assert.ok(big2.at>=big.at+GIFT_CUT_MS,'xếp sau màn đang chiếu');
  assert.ok(m.next.a>=big2.at+GIFT_CUT_MS&&m.next.b>=big2.at+GIFT_CUT_MS,'đòn thường hoãn tới khi chiếu xong');

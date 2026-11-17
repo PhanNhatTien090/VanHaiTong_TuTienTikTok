@@ -284,9 +284,10 @@ export function arenaGift(w,p,coins,now,{from=null,count=1}={}){
  else if(t.trick==='heal'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*Math.min(.12,.06+Math.log10(unit)*.03)));f.hp+=heal;entry.heal=heal;entry.target='self';}
  else{
   let pct=.12,crit=true;
-  if(t.trick==='summon'){pct=.10+Math.min(.04,Math.log10(unit/99+1)*.04);entry.skill.tech='flame';entry.skill.name='Triệu Hồi Hỏa Long';entry.skill.art='fire-dragon';}
-  if(t.trick==='burst'){pct=.17;const sh=Math.round(f.maxHp*.12);f.shield+=sh;entry.shield=sh;}
-  if(t.trick==='heaven'){pct=.28;const a=w.arena,pick=HEAVEN.find(h=>h.id!==a.lastHeaven)||HEAVEN[0];a.lastHeaven=pick.id;entry.heaven=pick.id;entry.skill.name=pick.name;entry.skill.tech=pick.tech;entry.skill.art=pick.art;}
+  // 18/11 (chủ game: "tặng 100 mà yếu như shit"): quà lớn phải thấy rõ — 99 ≈ 22–26% máu, 499 32% + khiên, 2.000 45%.
+  if(t.trick==='summon'){pct=.22+Math.min(.04,Math.log10(unit/99+1)*.06);entry.skill.tech='flame';entry.skill.name='Triệu Hồi Hỏa Long';entry.skill.art='fire-dragon';}
+  if(t.trick==='burst'){pct=.32;const sh=Math.round(f.maxHp*.12);f.shield+=sh;entry.shield=sh;}
+  if(t.trick==='heaven'){pct=.45;const a=w.arena,pick=HEAVEN.find(h=>h.id!==a.lastHeaven)||HEAVEN[0];a.lastHeaven=pick.id;entry.heaven=pick.id;entry.skill.name=pick.name;entry.skill.tech=pick.tech;entry.skill.art=pick.art;}
   const r=hit(m,f,foe,pct,crit,now);entry.dmg=r.dmg;entry.absorbed=r.absorbed;entry.reflect=r.reflect||0;entry.crit=true;
  }
  entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0;
