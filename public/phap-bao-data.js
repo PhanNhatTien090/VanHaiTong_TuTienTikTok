@@ -39,4 +39,4 @@ export const baoArt=id=>'/assets/phap-bao-v1/'+id+'.webp';
 export const baoStat=(id,stars,key)=>{const it=baoItem(id),b=it?.stats?.[key]||0;return b?Math.round(b*(1+BAO_STAR_STEP*(Math.max(1,Math.min(BAO_MAX_STARS,stars||1))-1))*10)/10:0;};
 // Bảng CƠ DUYÊN trên LIVE: mốc quà → số ngọn lửa (KHÔNG hiện %). Mốc theo ảnh mẫu chủ game gửi 17/11.
 export const BAO_FLAMES=Object.freeze([{min:0,flames:1,free:true},{min:1,flames:2},{min:10,flames:3},{min:99,flames:4},{min:199,flames:5},{min:999,flames:5,each:true}]);
-export const BAO_PITY4=10,BAO_PITY5=80,BAO_LIMITED_STOCK=12,BAO_EVENT_MS=5*60000,BAO_FREE_CD=30000;
+export const BAO_PITY4=10,BAO_PITY5=80,BAO_LIMITED_STOCK=12,BAO_EVENT_MS=5*60000,BAO_FREE_CD=20000; // 17/11 chủ game: 20 s → 5 phút tối đa 15 lượt free, gõ đều chắc ≥10

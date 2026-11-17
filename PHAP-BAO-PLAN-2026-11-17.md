@@ -22,7 +22,7 @@ Chủ game duyệt hướng: pháp bảo phải là trọng tâm tu tiên; sự 
 - Server-only: bảng cơ duyên số thật nằm trong `phap-bao.mjs`, không gửi xuống overlay (như ODDS tọa kỹ).
 
 ## 2. Cách lấy lượt
-- **Lệnh 1 chữ: `cầu`** (nhận cả "cau"). Miễn phí, hồi 30 s/người; báo hồi lượt "X · 12 giây nữa cầu tiếp được".
+- **Lệnh 1 chữ: `cầu`** (nhận cả "cau"). Miễn phí, hồi 20 s/người; báo hồi lượt "X · 12 giây nữa cầu tiếp được".
 - **Chốt 17/11 (tạm, theo ảnh mẫu):** mỗi lượt `cầu` free và **mỗi quà = 1 lượt**; cơ duyên không-trượt (chỉ server): `cầu` 5% · quà 1–9 coin 10% · 10–98 30% · 99–198 50% · 199–998 70% · mỗi 999 coin = 1 lượt 80%. Bảng LIVE chỉ hiện ảnh quà → 1–5 ngọn lửa. Bảo hiểm 4★/10 lượt, 5★/80 lượt tính trên mọi lượt. ⚠ Quà 1 coin cũng là 1 lượt → 80 quà nhỏ chắc 5★: theo dõi, chỉnh sau nếu ra 5★ quá nhanh. Quà nào cũng +tu vi an ủi (đọc "thi triển", không "đa tạ").
 - Mỗi lượt có băng rôn nhỏ giữa màn "Tên · TRƯỢT" / "Tên · 4★ Thanh Phong Kiếm" (xếp tối đa 3 dòng).
 - Trùng đồ → lên sao (★1→★5, mỗi sao +20% chỉ số); đủ ★5 trùng nữa → tinh hoa.
@@ -70,8 +70,8 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
 
 ## 9. TIẾN ĐỘ (cuối phiên 17/11) — SESSION SAU LÀM TIẾP TỪ ĐÂY
 **Đã có (commit cùng file này, CHƯA nối vào game, chưa test → không ảnh hưởng LIVE):**
-- `public/phap-bao-data.js` — 6 dòng, 24 món (6×4★, 6×5★, 12 GIỚI HẠN L01–L12) + chỉ số, `BAO_FLAMES` (mốc quà → ngọn lửa), hằng số `BAO_PITY4=10`, `BAO_PITY5=80`, `BAO_LIMITED_STOCK=12`, `BAO_EVENT_MS=5 phút`, `BAO_FREE_CD=30 s`.
-- `phap-bao.mjs` — `BAO_ODDS` (chỉ server: free .05, g1 .10, g10 .30, g99 .50, g199 .70, g999 .80, q5 .06, mềm từ lượt 65 +.06/lượt, limitedIn5 .08), `rollBao` (trượt/4★/5★/GIỚI HẠN, bảo hiểm 10/80, GIỚI HẠN không bảo hiểm, 1 món/người/mùa, 12 suất), `startBaoKho/stopBaoKho/tickBaoKho`, `baoKhoCommand` ("cau", hồi 30 s), `baoKhoGift` (mỗi quà 1 lượt, ≥999 mỗi 999 = 1 lượt, tối đa 30, +tu vi coin×100), `baoKhoView` (log 8 dòng, top 5, reveals, lưới GIỚI HẠN — không gửi số cơ duyên), `baoCollectionText` (lệnh "thần khí").
+- `public/phap-bao-data.js` — 6 dòng, 24 món (6×4★, 6×5★, 12 GIỚI HẠN L01–L12) + chỉ số, `BAO_FLAMES` (mốc quà → ngọn lửa), hằng số `BAO_PITY4=10`, `BAO_PITY5=80`, `BAO_LIMITED_STOCK=12`, `BAO_EVENT_MS=5 phút`, `BAO_FREE_CD=20 s`.
+- `phap-bao.mjs` — `BAO_ODDS` (chỉ server: free .05, g1 .10, g10 .30, g99 .50, g199 .70, g999 .80, q5 .06, mềm từ lượt 65 +.06/lượt, limitedIn5 .08), `rollBao` (trượt/4★/5★/GIỚI HẠN, bảo hiểm 10/80, GIỚI HẠN không bảo hiểm, 1 món/người/mùa, 12 suất), `startBaoKho/stopBaoKho/tickBaoKho`, `baoKhoCommand` ("cau", hồi 20 s), `baoKhoGift` (mỗi quà 1 lượt, ≥999 mỗi 999 = 1 lượt, tối đa 30, +tu vi coin×100), `baoKhoView` (log 8 dòng, top 5, reveals, lưới GIỚI HẠN — không gửi số cơ duyên), `baoCollectionText` (lệnh "thần khí").
 - Dữ liệu người chơi: `p.bao={p4,p5,items:{id:sao},lim:{season,id}}`; mùa: `w.baoSeason={n,owners}`; sự kiện: `w.baoKho`.
 
 **✅ Xong 17/11 tối:** bước 1 (nối engine/stage-lock/server — bật tay `POST /api/social-control {action:'start-bao-kho'}`, CHƯA vào `BIG_EVENTS`) + bước 2 (`test/phap-bao.test.mjs`, 3 nhóm). Lệnh `thankhi` xem bộ sưu tập. Còn: giọng "thi triển cầu bảo", bước 3 overlay, bước 4 ảnh; khi overlay xong thì thêm `['bao-kho',…]` vào `BIG_EVENTS` (dùng `bigSpaced`) và sửa test "chưa vào vòng xoay".
@@ -82,7 +82,7 @@ Bố cục 1080×1920 (tham khảo ảnh, khác hình):
    - `stage-lock.mjs`: `if(w.baoKho?.phase==='open'||w.baoKho?.podiumUntil>now)return 'Thiên Công Bảo Khố';`
    - `server.mjs`: social-control `start-bao-kho` / `stop-bao-kho`.
    - Giọng quà trong sự kiện: "X thi triển cầu bảo" (`giftLines` trong `speech-lines.mjs`).
-2. Test `test/phap-bao.test.mjs` (đã soạn ý): 9 lượt đầu trượt → lượt 10 chắc 4★; lượt 80 chắc 5★; dữ liệu chỉ `items,lim,p4,p5`; 400 lượt "không may" không bao giờ ra GIỚI HẠN; người đã có GIỚI HẠN không ra món thứ 2; đúng 12 suất; "cầu" hồi 30 s; quà count=3 → 3 lượt + tu vi; `baoKhoView` không chứa `free/g999/q5/limitedIn5`; hết giờ thì phase finished, không cầu được.
+2. Test `test/phap-bao.test.mjs` (đã soạn ý): 9 lượt đầu trượt → lượt 10 chắc 4★; lượt 80 chắc 5★; dữ liệu chỉ `items,lim,p4,p5`; 400 lượt "không may" không bao giờ ra GIỚI HẠN; người đã có GIỚI HẠN không ra món thứ 2; đúng 12 suất; "cầu" hồi 20 s; quà count=3 → 3 lượt + tu vi; `baoKhoView` không chứa `free/g999/q5/limitedIn5`; hết giờ thì phase finished, không cầu được.
 3. Overlay `public/bao-kho.js` (+ hook `scene.js` như mount-realm, + `warCutFrame`-kiểu cho màn mở bảo 5★/GIỚI HẠN dùng `cut-fx.js`): bố cục mục 4, bảng CƠ DUYÊN = ảnh quà (gift-icons) → ngọn lửa; KHÔNG góc dưới trái; cách đáy ≥11%.
 4. Ảnh: Codex đang vẽ 24 món (prompt: scratchpad `phapbao/PROMPT.md`). File ra ở thư mục chạy Codex (scratchpad, có thể bị dọn) VÀ bản gốc ở `C:\Users\Admins\.codex\generated_images\<phiên codex>\`. Session sau: kiểm 24 file, tự xem ở cỡ 64 px, chuyển webp (PIL, chạy python thường không -I) vào `public/assets/phap-bao-v1/<id>.webp`, gửi chủ game duyệt.
 5. Đợt 1 (bản mệnh + luyện hóa đồ cũ) làm LÚC KHÔNG LIVE, sao lưu trước.
