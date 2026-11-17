@@ -263,10 +263,11 @@ const itemScore=id=>{const a=CATALOG.find(x=>x.id===id);return (a?.damage||0)+(a
 const equipSeen=new WeakMap();
 // v71: tu vi càng cao càng đeo được nhiều pháp bảo cùng lúc (món chính đủ sức mạnh, món phụ 50%).
 export const relicSlots=p=>{const r=Number(p.realm)||0;return r>=12?5:r>=9?4:r>=6?3:r>=3?2:1;};
-export function autoEquipBest(p){const arts=p.artifacts||[];const sig=arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+(p.equippedExtra||[]).length;if(equipSeen.get(p)===sig)return false;
+// 17/11 (chủ game): Tông chủ ghim pháp bảo chính từ trang quản lý (p.equipPin) — vd. Thanh Trúc Phong Vân Kiếm cho hình kiếm Hàn Lập; không bị tự đổi sang món mạnh hơn.
+export function autoEquipBest(p){const arts=p.artifacts||[],pin=p.equipPin&&arts.includes(p.equipPin)?p.equipPin:null;const sig=arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+(p.equippedExtra||[]).length+'|'+pin;if(equipSeen.get(p)===sig)return false;
   const ranked=[...new Set(arts)].filter(id=>CATALOG.some(x=>x.id===id&&x.type==='artifact')).sort((a,b)=>itemScore(b)-itemScore(a));
-  const best=ranked[0]||null,extra=ranked.slice(1,relicSlots(p));const changed=best!==p.equipped||String(extra)!==String(p.equippedExtra||[]);
-  p.equipped=best;p.equippedExtra=extra;equipSeen.set(p,arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+extra.length);return changed;}
+  const best=pin||ranked[0]||null,extra=ranked.filter(id=>id!==best).slice(0,Math.max(0,relicSlots(p)-1));const changed=best!==p.equipped||String(extra)!==String(p.equippedExtra||[]);
+  p.equipped=best;p.equippedExtra=extra;equipSeen.set(p,arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+extra.length+'|'+pin);return changed;}
 const extraStat=(p,key)=>(p.equippedExtra||[]).reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.[key]||0)*.5,0);
 // Lệnh không kèm tên → chọn món: món đủ điều kiện đầu tiên; nếu chưa đủ thì món kế tiếp (để báo thiếu gì).
 function autoItem(p,type){
@@ -1351,7 +1352,7 @@ export function adminEditPlayer(w,id,patch={},now=Date.now(),{announce=false}={}
       if(i>=0){p.manuals.splice(i,1);changes.push('gỡ '+CATALOG.find(x=>x.id===itemId)?.name);}
       if(j>=0){p.artifacts.splice(j,1);if(p.equipped===itemId)p.equipped=null;changes.push('gỡ '+CATALOG.find(x=>x.id===itemId)?.name);}
     }
-    if(patch.equipped!==undefined){const e=patch.equipped||null;if(e&&!p.artifacts.includes(e))throw Error('Chỉ trang bị được pháp bảo người này đang có.');if(e!==p.equipped){changes.push('trang bị '+(CATALOG.find(x=>x.id===e)?.name||'không'));p.equipped=e;}}
+    if(patch.equipped!==undefined){const e=patch.equipped||null;if(e&&!p.artifacts.includes(e))throw Error('Chỉ trang bị được pháp bảo người này đang có.');if(e!==p.equipped){changes.push('trang bị '+(CATALOG.find(x=>x.id===e)?.name||'không'));p.equipped=e;}if((p.equipPin||null)!==e){p.equipPin=e;if(!changes.some(x=>x.startsWith('trang bị')))changes.push('ghim '+(CATALOG.find(x=>x.id===e)?.name||'bỏ ghim'));}}
     // v47: chỉnh skin. skinChoice: id skin đặc biệt (tự cấp quyền sở hữu nếu chưa có) hoặc null = áo theo bậc.
     if(patch.skinChoice!==undefined){const id=patch.skinChoice||null,skin=id&&SPECIAL_SKINS.find(s=>s.id===id);if(id&&!skin)throw Error('Skin không tồn tại.');
       p.rewardSkins??=[];if(skin&&!p.rewardSkins.includes(id)){p.rewardSkins.push(id);changes.push('cấp skin '+skin.name);}
