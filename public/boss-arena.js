@@ -1,3 +1,4 @@
+import {drawWingFx} from './wing-fx.js?v=20261117';
 // Màn đánh boss (3/11/2026): khi có yêu thú, cảnh chuyển sang chiến trường riêng.
 // Yêu thú ở trên cao, các tu sĩ xếp hàng phía dưới bắn linh quang lên; yêu thú bắn yêu khí xuống.
 // Cánh tiên vỗ nhẹ sau lưng tu sĩ (theo cảnh giới), dùng cả ngoài màn đánh boss.
@@ -46,6 +47,11 @@ export const WING_TIERS = [
   { min: 5000, name:'Tử Nguyệt Điệp Dực', art:'wings-5000-nguyet-diep.webp', width:1.12, pivot:.43 },
   { min: 6000, name:'Cực Quang Lưu Ly Dực', art:'wings-6000-cuc-quang.webp', width:1.15, pivot:.46 },
   { min: 7000, name:'Cửu Nhật Thần Dực', art:'wings-7000-cuu-nhat.webp', width:1.19, pivot:.48 },
+  // 17/11 (chủ game): mốc giãn dần, cánh ghép bộ phận + BIẾN HÌNH định kỳ (public/wing-fx.js). Không to hơn 7.000.
+  { min: 8500, name:'Vạn Kiếm Dực', fx:'swords', width:1.12 },
+  { min: 10000, name:'U Minh Quỷ Dực', fx:'demon', width:1.12 },
+  { min: 12000, name:'Thanh Liên Dực', fx:'lotus', width:1.12 },
+  { min: 15000, name:'Thiên Đạo Thần Hoàn', fx:'heaven', width:1.1 },
 ];
 export const wingTier = coins => WING_TIERS.findLast(w => coins >= w.min);
 export function playerWing(p){
@@ -55,8 +61,12 @@ export function playerWing(p){
 }
 /** Cánh tiên sau lưng (vẽ trước thân). Chưa tặng quà / NPC / tu sĩ giả thì không có cánh. */
 export function drawWings(scene, c, target, t) {
-  const p=target.player,tier=playerWing(p);if(!tier)return;
+  const p=target.player;let tier=playerWing(p);if(!tier)return;
   const coins=Number(p.giftCoins)||0;
+  if(tier.fx){const s=(target.scale||1)*(scene.compact?.9:1),w=150*s*(1+Math.min(.35,Math.log10(coins+1)*.08))*tier.width*(p.hallIndex==null?1:.78);
+    const flap=scene.motion?Math.sin(t*.0042+(hash(p.id)%628)/100):0;
+    if(drawWingFx(scene,c,target,tier.fx,t,target.x,target.y-46*s+flap*2,w,scene.compact?.85:.95))return;
+    tier=WING_TIERS.find(x=>x.min===7000)||tier;} // ảnh bộ phận chưa nạp xong → tạm vẽ cánh 7.000
   const cache = scene.premiumWingArt ??= new Map();
   if(tier.art&&!cache.has(tier.art)&&typeof Image!=='undefined'){
     const image=load('/assets/arena-v1/'+tier.art);
