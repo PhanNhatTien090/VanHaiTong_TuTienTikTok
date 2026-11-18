@@ -4,7 +4,7 @@
 // Trong pha toàn màn, scene.drawFrame trả về sớm → KHÔNG vẽ sân/khán giả/HUD → GPU chỉ lo 2 nhân vật + hiệu ứng (bùng hết cỡ được).
 import {SIGNATURE_ULTS,PET_ULTS,CUT_AFTERGLOW_MS} from './signature-ults.js';
 import {baoItem,baoArt,BAO_LINES,BAO_TIER} from './phap-bao-data.js'; // 18/11: thần khí bản mệnh
-import {drawBaoUlt} from './bao-ults.js'; // 18/11: chiêu GIỚI HẠN riêng từng món
+import {drawBaoUlt} from './bao-ults.js';import {drawBao5} from './bao5-ults.js'; // 18/11: chiêu GIỚI HẠN riêng từng món
 import {petV2FramesFor,petArtFrame,drawRareFx} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {drawPremiumPetFx} from './premium-pet-fx.js?v=20261117';
 import {petById} from './spirit-pets.js';
@@ -97,6 +97,7 @@ export function drawCutInBand(scene,c,player,H,u,P,dir,t,{yc=H*.44,bh=300,label=
  * → bụi sáng. Camera đẩy vào lúc tụ, giật ở 2 cú nổ. Biến thể theo mã đòn: lật bên, chiều xoay, kiểu chiêu quà, màu quà. */
 export function drawCutFull(scene,c,t,H,cut,players){
  if(cut.e?.cut?.kind==='bao'&&cut.e.cut.tier>=6)return drawBaoUlt(scene,c,t,H,cut,players);
+ if(cut.e?.cut?.kind==='bao'&&cut.e.cut.tier===5&&drawBao5(scene,c,t,H,cut,players))return true; // 18/11: 5★ chiêu riêng từng món (public/bao5-ults.js)
  const {e,k}=cut,S=spec(e,scene);if(!S)return false;const light=scene.budget?.level==='light',motion=scene.motion!==false,rf=scene.reduceFlash;
  const A=players.get(e.by),B=players.get(e.to),V=fxVariant(e.n||1),fl=V.flip,dir=fl?-1:1,X=x=>fl?900-x:x;
  const P=S.kind==='gift'?PALETTES[e.trick==='summon'?'crimson':V.pal]:palOf(S.color,S.glow,S.deep); /* 18/11: Hỏa Long luôn tông lửa */
