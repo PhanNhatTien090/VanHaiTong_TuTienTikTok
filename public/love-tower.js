@@ -11,7 +11,7 @@ import {PALETTES,fxCamera,punch,smooth,out3,seg,clamp,dot,drawCircle,drawBurst,d
 const TAU=Math.PI*2;
 // Ngồi thiền (stand:0 — tư thế song tu/cùng tu có sẵn), không vẽ tư thế mới.
 export function drawSeated(scene,c,player,x,y,scale,t,flip){if(!player)return;const oc=scene.compact,op=scene.cinematicPose;scene.compact=true;scene.cinematicPose={...(op||{}),stand:0,lift:0,lean:0};c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.scale(scale,scale);try{scene.drawCharacterBody(c,player,skinFor(player.giftCoins),t);}catch{}finally{c.restore();scene.compact=oc;scene.cinematicPose=op;}}
-export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower-2.webp',rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
+export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower-cut.webp' /* 18/11: đã tách nền trời (cắt theo viền lầu), cửa sổ giữ nguyên vị trí */,rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
 // Ô cửa sổ trong ảnh Tình Lâu (tỉ lệ 0–1 theo ảnh vuông) — đo từ ảnh thật.
 export const TOWER_WINDOWS=Object.freeze([[.171,.317],[.535,.317]].map(([x,y])=>({x,y,w:.295,h:.337}))); // 2 phòng to — đo từ love-tower-2.webp
 export const TOWER_BOX=Object.freeze({x:312,y:.14,size:290}); // 17/11: bậc thang dưới cây Nguyệt Lão, gần sân — dưới bảng sự kiện nhỏ giữa mép trên (Ba Túi Linh Lộc…) — cột phải LIVE có thêm thẻ Tiên Đế + bảng giờ lễ che mất góc phải // vị trí trên màn 900 px, y theo H
@@ -33,34 +33,45 @@ let heart;
 function heartSprite(){if(heart!==undefined)return heart;const s=makeSurface(40,40);heart=s||null;if(!s)return null;const c=s.getContext('2d');c.translate(20,21);const g=c.createLinearGradient(-12,-15,10,15);g.addColorStop(0,'#fff0f6');g.addColorStop(.35,'#ff8fc4');g.addColorStop(1,'#e2408a');c.beginPath();c.moveTo(0,14);c.bezierCurveTo(-7,9,-16,0,-14,-7);c.bezierCurveTo(-12,-15,-4,-16,0,-9);c.bezierCurveTo(5,-17,13,-15,14,-7);c.bezierCurveTo(16,0,6,9,0,14);c.closePath();c.fillStyle=g;c.fill();return s;}
 function drawHeart(c,x,y,s,a){const im=heartSprite();if(!im||a<=.01)return;c.globalAlpha=Math.min(1,a);c.drawImage(im,x-s/2,y-s/2,s,s);}
 // Người đang ở trong phòng Tình Lâu (còn giờ) → ẩn khỏi sân, chỉ thấy trong cửa sổ (chủ game 17/11).
+// 18/11 (chủ game: "hình ghép nhìn giả, ít nhất xóa background"): nội thất phòng ánh nến thay khối hồng — tường gỗ đỏ trầm,
+// ô cửa tròn trăng sau lưng, rèm lụa hai bên, sàn tối, quầng nến ấm sau lưng hai người. Dựng 1 lần theo cỡ ô (makeSurface), mỗi khung chỉ dán.
+const roomCache=new Map();
+function roomInterior(w,h,lit){const key=Math.round(w)+'x'+Math.round(h)+(lit?'L':'D');if(roomCache.has(key))return roomCache.get(key);
+  const s=makeSurface(Math.ceil(w),Math.ceil(h));roomCache.set(key,s||null);if(!s)return null;const c=s.getContext('2d');
+  const wall=c.createLinearGradient(0,0,0,h);wall.addColorStop(0,lit?'#3b130f':'#1a0907');wall.addColorStop(.7,lit?'#5a1d14':'#220b08');wall.addColorStop(1,lit?'#2a0d09':'#120504');c.fillStyle=wall;c.fillRect(0,0,w,h);
+  if(lit){const g=c.createRadialGradient(w/2,h*.62,4,w/2,h*.62,w*.62);g.addColorStop(0,'rgba(255,196,120,.85)');g.addColorStop(.45,'rgba(255,120,80,.35)');g.addColorStop(1,'rgba(255,90,60,0)');c.fillStyle=g;c.fillRect(0,0,w,h);}
+  c.strokeStyle=lit?'rgba(255,214,140,.55)':'rgba(255,214,140,.18)';c.lineWidth=Math.max(1.5,w*.018);c.beginPath();c.arc(w/2,h*.4,Math.min(w,h)*.27,0,TAU);c.stroke(); // ô cửa tròn
+  if(lit){const m=c.createRadialGradient(w/2,h*.4,0,w/2,h*.4,Math.min(w,h)*.26);m.addColorStop(0,'rgba(255,240,210,.35)');m.addColorStop(1,'rgba(255,240,210,0)');c.fillStyle=m;c.beginPath();c.arc(w/2,h*.4,Math.min(w,h)*.26,0,TAU);c.fill();}
+  c.fillStyle=lit?'rgba(20,6,4,.55)':'rgba(0,0,0,.5)';c.fillRect(0,h*.84,w,h*.16); // sàn
+  for(const side of [0,1]){const x0=side?w:0,d=side?-1:1,silk=c.createLinearGradient(x0,0,x0+d*w*.2,0);silk.addColorStop(0,lit?'rgba(220,40,70,.95)':'rgba(120,20,36,.8)');silk.addColorStop(1,'rgba(220,40,70,0)');c.fillStyle=silk;
+    c.beginPath();c.moveTo(x0,0);c.lineTo(x0+d*w*.3,0);c.quadraticCurveTo(x0+d*w*.12,h*.3,x0+d*w*.16,h*.62);c.quadraticCurveTo(x0+d*w*.06,h*.8,x0,h*.9);c.closePath();c.fill();}
+  const top=c.createLinearGradient(0,0,0,h*.18);top.addColorStop(0,'rgba(0,0,0,.45)');top.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=top;c.fillRect(0,0,w,h*.18);
+  return s;}
 export function loveRoomIds(scene){const L=scene.loveStatus,out=new Set();if(!L?.active)return out;const now=scene.stateServerNow||Date.now();for(const r of L.rooms||[])if(r&&r.until>now){out.add(r.a);out.add(r.b);}return out;}
 // ---------- 1) Tình Lâu trên map ----------
-// Ảnh vuông có nền trời → làm mờ viền (mặt nạ tròn) để hòa vào map; dựng 1 lần.
-let feathered=null;
-function featherTower(im){if(feathered)return feathered;const S=512,s=makeSurface(S,S);if(!s)return im;const c=s.getContext('2d'),p=S*.06/1.12;c.drawImage(im,S*.0536,S*.0536,S/1.12,S/1.12);c.globalCompositeOperation='destination-in';for(const v of [0,1]){const g=v?c.createLinearGradient(0,0,0,S):c.createLinearGradient(0,0,S,0);g.addColorStop(0,'#0000');g.addColorStop(.1,'#000');g.addColorStop(.9,'#000');g.addColorStop(1,'#0000');c.fillStyle=g;c.fillRect(0,0,S,S);}feathered=s;return s;}
 export function towerRect(H){return {x:TOWER_BOX.x,y:H*TOWER_BOX.y,s:TOWER_BOX.size};}
 export function windowRect(i,H){const b=towerRect(H),w=TOWER_WINDOWS[i];return {x:b.x+w.x*b.s,y:b.y+w.y*b.s,w:w.w*b.s,h:w.h*b.s};}
 export function drawLoveTower(scene,c,t,H){
   const L=scene.loveStatus;if(!L||scene.cutFullActive)return;
   const now=nowAt(scene,t),b=towerRect(H),art=img(LOVE_ART.tower),light=scene.budget?.level==='light'||(scene.visibleActors||0)>30,bare=(scene.visibleActors||0)>50;
   c.save();
-  const soft=ready(art)?featherTower(art):null;
-  if(soft){c.globalAlpha=1;c.drawImage(soft,b.x-b.s*.06,b.y-b.s*.06,b.s*1.12,b.s*1.12);}
+  if(ready(art)){c.globalAlpha=1;c.drawImage(art,b.x,b.y,b.s,b.s);}
   else{c.globalAlpha=.85;c.fillStyle='#2a0f1e';c.fillRect(b.x,b.y,b.s,b.s);}
-  c.globalAlpha=1;txt(c,'TÌNH LÂU',b.x+b.s/2,b.y+b.s+12,20,'#ffd6e6',{width:5,weight:'900'});
+  c.globalAlpha=1;txt(c,'TÌNH LÂU',b.x+b.s/2,b.y+b.s*.9,20,'#ffd6e6',{width:5,weight:'900'});
   const idx=scene.lovePlayers||scene.playerIndex||new Map();
   L.rooms.forEach((r,i)=>{const w=windowRect(i,H);
-    if(!r){c.globalAlpha=.55;c.fillStyle='#120609';c.fillRect(w.x,w.y,w.w,w.h);return;}
-    const pulse=.75+.25*Math.sin(t*.004+i);c.globalAlpha=1;const g=c.createLinearGradient(0,w.y,0,w.y+w.h);g.addColorStop(0,'#ff9cc6');g.addColorStop(1,'#ff5a8f');c.fillStyle=g;c.fillRect(w.x,w.y,w.w,w.h);
+    if(!r){const d=roomInterior(w.w,w.h,false);c.globalAlpha=.9;if(d)c.drawImage(d,w.x,w.y,w.w,w.h);c.globalAlpha=1;return;}
+    const pulse=.75+.25*Math.sin(t*.004+i),room=roomInterior(w.w,w.h,true);c.globalAlpha=1;if(room)c.drawImage(room,w.x,w.y,w.w,w.h);
+    c.globalAlpha=.18+.12*pulse;dot(c,'#ffb070',w.x+w.w/2,w.y+w.h*.66,w.w*.42,1);c.globalAlpha=1; /* nến lay động */
     if(!bare){c.save();c.beginPath();c.rect(w.x,w.y,w.w,w.h);c.clip();const fy=w.y+w.h*1.07,sc=w.h/88;
       drawSeated(scene,c,idx.get(r.a),w.x+w.w*.3,fy,sc,t,false);drawSeated(scene,c,idx.get(r.b),w.x+w.w*.7,fy,sc,t,true);c.restore();}
-    c.globalAlpha=.35*pulse;c.fillStyle='#ffe2ee';c.fillRect(w.x,w.y,w.w,w.h);
+    {const fl=c.createLinearGradient(0,w.y+w.h*.8,0,w.y+w.h);fl.addColorStop(0,'rgba(20,4,4,0)');fl.addColorStop(1,'rgba(20,4,4,.55)');c.fillStyle=fl;c.fillRect(w.x,w.y+w.h*.8,w.w,w.h*.2);} /* bóng sàn che chân, người như ngồi trong phòng */
     c.globalAlpha=1;c.strokeStyle='#ffd27a';c.lineWidth=2;c.strokeRect(w.x,w.y,w.w,w.h);
     {const nm=s=>Array.from(String(s||'')).slice(0,10).join('');txt(c,nm(r.aName),w.x+w.w/2,w.y+11,12,'#fff',{width:4,weight:'800',max:w.w-6});txt(c,'♥ '+nm(r.bName),w.x+w.w/2,w.y+26,12,'#ffe1ee',{width:4,weight:'800',max:w.w-6});}
     if(!light)for(let j=0;j<4;j++){const u=((t*.0006+j/4+i*.13)%1);drawHeart(c,w.x+w.w*(.3+.4*((j*37+i*11)%10)/10)+Math.sin(u*9+j)*6,w.y-u*40,10+u*6,(1-u)*.9);}
   });
   // 2 phòng + hàng chờ (chủ game 17/11: 2 phòng to, ai muốn vào thì xếp hàng)
-  const nm=s=>Array.from(String(s||'')).slice(0,9).join('');let ly=b.y+b.s+34;
+  const nm=s=>Array.from(String(s||'')).slice(0,9).join('');let ly=b.y+b.s*.9+22;
   if(L.queueCount){txt(c,'Hàng chờ: '+L.queueCount+' đôi',b.x+b.s/2,ly,16,'#ffffff',{width:6,weight:'900'});ly+=19;for(const q of (L.queue||[]).slice(0,2)){txt(c,nm(q.aName)+' ♥ '+nm(q.bName),b.x+b.s/2,ly,14,'#fff',{width:5,weight:'800',max:b.s+30});ly+=17;}}
   c.restore();
   // 2) Đình Nguyệt — quầng tim quanh đôi đang song tu trên sân
