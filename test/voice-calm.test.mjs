@@ -32,7 +32,7 @@ test('breakthrough voice: gifters always, newcomers spaced, veterans who never g
  assert.equal(voiceDecision({...bt,user:'u1'},{now,player:newbie,lastBreakthroughAt:now-10000}),'drop');
 });
 test('queue: a 30-line cultivation flood yields one routine line; the gift still waits first',()=>{
- const audio={enabled:true,duck(){}};const q=new VoiceQueue({world:'demo',audio,player:id=>id==='u2'?vet:newbie});q.running=true;
+ const audio={enabled:true,duck(){}};const q=new VoiceQueue({world:'demo',audio,shed:false,player:id=>id==='u2'?vet:newbie});q.running=true;
  q.add(gift);for(let i=0;i<30;i++)q.add(qi('q'+i,'n'+i));
  assert.equal(q.queue.length,2);assert.ok(q.queue.some(x=>x.e.id==='g'));q.stop();
 });
@@ -66,14 +66,14 @@ test('the same viewer re-entering is welcomed once per 30 minutes',()=>{
 // 08/11: giọng trễ → bỏ, không đọc điều đã qua trên màn hình.
 import {voiceMaxAgeMs} from '../public/voice.js';
 test('stale lines are dropped even after their clip is ready',async()=>{
- const audio={enabled:true,duck(){}};const played=[];const q=new VoiceQueue({world:'demo',audio,calm:false});q.play=async(_u,e)=>{played.push(e.id);};
+ const audio={enabled:true,duck(){}};const played=[];const q=new VoiceQueue({world:'demo',audio,calm:false,shed:false});q.play=async(_u,e)=>{played.push(e.id);};
  const old=globalThis.fetch;globalThis.fetch=async()=>({ok:true,blob:async()=>new Blob(['x'])});
  try{q.queue=[{e:{...gift,id:'late'},at:Date.now()-voiceMaxAgeMs(gift)-500}];await q.next();assert.deepEqual(played,[]);assert.equal(q.lagStats().stale,1);
   q.queue=[{e:{...gift,id:'fresh'},at:Date.now()-1000}];await q.next();assert.deepEqual(played,['fresh']);assert.equal(q.lagStats().n,1);}
  finally{q.stop();globalThis.fetch=old;}
 });
 test('max ages stay short: routine 5 s, arrival 5 s, gift 12 s (18/11 giọng trễ)',()=>{
- assert.equal(voiceMaxAgeMs({effect:'qi'}),5000);assert.equal(voiceMaxAgeMs({autoArrival:true}),5000);assert.equal(voiceMaxAgeMs(gift),12000);
+ assert.equal(voiceMaxAgeMs({effect:'qi'}),4000);assert.equal(voiceMaxAgeMs({autoArrival:true}),5000);assert.equal(voiceMaxAgeMs(gift),12000);
 });
 
 test('18/11: compactPlan — câu thường 1 câu ≤100 ký tự, quà/sự kiện ≤2 câu ≤160; số lớn đọc gọn',async()=>{
@@ -83,4 +83,13 @@ test('18/11: compactPlan — câu thường 1 câu ≤100 ký tự, quà/sự ki
  const imp=compactPlan(long,true);assert.equal(imp.length,2);assert.ok(imp[0].text.length<=161);
  const t=speechPlan({type:'status',effect:'status',user:'x',name:'A',text:'Tu vi 0/31832100000 • Linh thạch 9/9 • Thái Sơ Giới Chủ'})[0].text;
  assert.ok(t.length<80,t);assert.match(t,/ba mươi hai tỷ/);
+});
+
+test('18/11: hàng giọng dồn → giữ câu quan trọng (đua, quà, khoảnh khắc lớn), bỏ câu thường/nhắc lệnh trước; hàng rảnh thì đọc hết',async()=>{
+ const {shedQueue,priority}=await import('../public/voice.js');const now=100000;
+ assert.ok(priority({mountReveal:{tier:'vip',lucky:true}})>priority({effect:'breakthrough'}));assert.ok(priority({cmdFail:true,effect:'status'})<priority({effect:'status'}));
+ const q=[{e:{id:'r1',effect:'qi',user:'a'},at:now-1000},{e:{id:'st',effect:'status',user:'c',cmdFail:true},at:now-200},{e:{id:'g',gift:'Rose',coins:1,user:'d'},at:now},{e:{id:'ev',raceEntry:true,user:'e'},at:now},{e:{id:'lk',user:'f',mountReveal:{tier:'vip',lucky:true}},at:now}];
+ const r=shedQueue(q,{now,running:true});assert.deepEqual(r.keep.map(x=>x.e.id),['ev','g','lk']);assert.deepEqual(r.drop.map(x=>x.e.id).sort(),['r1','st']);
+ assert.deepEqual(shedQueue([{e:{id:'r1',effect:'qi',user:'a'},at:now}],{now}).keep.map(x=>x.e.id),['r1']);
+ const gifts=Array.from({length:8},(_,i)=>({e:{id:'g'+i,gift:'Rose',coins:1,user:'u'+i},at:now}));assert.equal(shedQueue(gifts,{now,running:true}).drop.length,0,'quà thật không bao giờ bị bỏ sớm');
 });

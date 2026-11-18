@@ -6,7 +6,8 @@ export const raceOpeningVoice=e=>!!(e.raceEntry||e.effect==='race'&&/^VÂN HẢI
 export const realGiftVoice=e=>!!(e.gift&&Number(e.coins)>0&&!syntheticVoice(e));
 export function fastVoiceFile(e){const kind=e.adminGift?null:realGiftVoice(e)?(e.eventRule||e.raceGift||e.warGift?null:'gift'):e.effect==='breakthrough'?'breakthrough':e.effect==='ready'?'ready':e.autoArrival||e.effect==='join'?null:e.effect==='attack'?'attack':e.effect==='gather'?'gather':e.effect==='learn'?'learn':['qi','petal','lotus','sword'].includes(e.effect)?'qi':null; /* 08/11: chào người vào không dùng câu dự phòng chung (bị lặp, nói cả với người cũ). 07/11: bỏ câu dự phòng 'Tông môn đã ghi nhận…' — nghe như cảm ơn quà khi không ai tặng */return kind?'/assets/voice-fast-v1/'+kind+'.mp3':null;}
 // Tu tiên giả thường trú luôn xếp sau khách thật (0).
-export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.adminGift?5.5:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift||e.stageUp?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
+// 18/11 (chủ game: "bỏ câu trễ nhưng biết câu nào nên bỏ, câu nào nên giữ"): khoảnh khắc lớn 4,5 · nhắc lệnh lỗi 1,5 · nhắc giữ châu 1.
+export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.adminGift?5.5:e.mountReveal?.lucky||e.orbCard?.stage==='earned'||e.baoWin||e.mountReveal&&e.mountReveal.tier!=='common'?4.5:e.cmdFail?1.5:e.orbCard?.stage==='remind'?1:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift||e.stageUp?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
 
 // 08/11/2026: GIẢM GIỌNG ĐỌC (chủ game: "đọc nhiều, lộn xộn, ồn quá"). Quà, Thiên Đạo, sự kiện lớn luôn đọc.
 // Câu thường (tu luyện, hái, đánh, nhắc lệnh, chào…) giãn ra: cả sân tối đa 1 câu / 12 s, mỗi người 1 câu / 90 s;
@@ -45,10 +46,19 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
 
 // 08/11/2026: CHỐNG GIỌNG TRỄ. Giọng đọc chậm sẽ nói điều không còn trên màn hình (TikTok có thể cảnh báo nội dung sai).
 // Câu nào tính từ lúc nhận sự kiện đã quá hạn thì bỏ hẳn, kể cả khi giọng vừa tạo xong.
-export function voiceMaxAgeMs(e){return e.adminGift?25000:e.heavenStrike?10000:realGiftVoice(e)?12000:raceOpeningVoice(e)?12000:isEventAnnouncement(e)?10000:e.autoArrival?5000:e.ceremony?15000:5000;} // 18/11: giọng trễ → câu thường quá 5 s thì bỏ (thà im còn hơn nói lệch hình)
+export function voiceMaxAgeMs(e){if(e.adminGift)return 25000;if(e.heavenStrike)return 10000;if(realGiftVoice(e)||raceOpeningVoice(e))return 12000;if(isEventAnnouncement(e))return 10000;if(e.autoArrival)return 5000;if(e.ceremony)return 15000;
+ const p=priority(e);return p>=4.5?10000:p>=3?6000:p>=2?5000:4000;} // 18/11: bậc càng cao chờ được càng lâu // 18/11: giọng trễ → câu thường quá 5 s thì bỏ (thà im còn hơn nói lệch hình)
 
+// 18/11: ƯỚC LƯỢNG CHỜ. VieNeu trên máy LIVE ~5 s/câu chưa tạo, ~2,5 s/câu đã tạo sẵn (đọc ×1,8). Câu nào ước tính bắt đầu sau hạn → bỏ ngay (không tốn CPU tạo giọng);
+// hàng dồn thì câu bậc thấp nhất bị bỏ trước. Trả {keep, drop}.
+export const VOICE_EST=Object.freeze({synthMs:5000,readyMs:2500,giftMs:2000 /* quà dùng mảnh ghép làm sẵn */,runningMs:3000});
+export function shedQueue(queue,{now=Date.now(),running=false,ready=()=>false}={}){
+ const order=[...queue].sort((a,b)=>priority(b.e)-priority(a.e)||a.at-b.at),keep=[],drop=[];let t=running?VOICE_EST.runningMs:0;
+ for(const x of order){const start=now+t;if(!urgentVoice(x.e)&&!x.e.file&&start-x.at>voiceMaxAgeMs(x.e)){drop.push(x);continue;}keep.push(x);t+=x.e.file||ready(x.e)?VOICE_EST.readyMs:realGiftVoice(x.e)?VOICE_EST.giftMs:VOICE_EST.synthMs;}
+ return {keep,drop};
+}
 export class VoiceQueue {
-  constructor({world,audio,onStart=()=>{},onStatus=()=>{},player=()=>null,calm=true}){this.world=world;this.audio=audio;this.player=player;this.calm=calm;this.calmLast={routine:-Infinity,breakthrough:-Infinity,arrival:-Infinity,users:new Map()};this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
+  constructor({world,audio,onStart=()=>{},onStatus=()=>{},player=()=>null,calm=true,shed=true}){this.shed=shed;this.world=world;this.audio=audio;this.player=player;this.calm=calm;this.calmLast={routine:-Infinity,breakthrough:-Infinity,arrival:-Infinity,users:new Map()};this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
   add(e){
     if(!this.enabled||!this.audio.enabled)return;
     // 4/11/2026: mỗi sự kiện chỉ vào hàng giọng một lần (giờ được thêm ngay khi nhận, trước khi hình hiện).
@@ -76,6 +86,7 @@ export class VoiceQueue {
       if(this.queue.filter(x=>x.e.autoArrival).length>=3)return;
     }
     this.queue.push({e,at:now});
+    if(this.shed){const r=shedQueue(this.queue,{now,running:this.running,ready:x=>this.prepared.has(x.id)});if(r.drop.length){for(const x of r.drop){this.noteLag(x.e,now-x.at,true);this.prepared.delete(x.e.id);}this.queue=this.queue.filter(x=>!r.drop.includes(x));if(!this.queue.length&&!this.running)return;}} // 18/11: bỏ sớm câu chắc chắn quá hạn, thấp bậc trước
     if(this.queue.length>6){const min=Math.min(...this.queue.map(x=>priority(x.e)));this.queue.splice(this.queue.findIndex(x=>priority(x.e)===min),1);}
     this.prunePrepared();
     // Tạo sẵn tối đa hai câu kế tiếp, kể cả hành động thường.
