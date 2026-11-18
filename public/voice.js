@@ -62,6 +62,7 @@ export class VoiceQueue {
       if(decision==='drop')return;
       if(decision==='play'&&!urgentVoice(e)&&!keepsDuringRitual(e)){if(e.autoArrival)this.calmLast.arrival=now;else if(stageVoice(e))this.calmLast.stage=now;else if(breakthroughVoice(e))this.calmLast.breakthrough=now;else if(priority(e)<=3){this.calmLast.routine=now;if(e.user){users.set(e.user,now);if(users.size>600)users.delete(users.keys().next().value);}}}
     }
+    if(e.cmdFail&&(this.queue.length||this.running&&(this.activePriority??0)>2))return; // 18/11: câu nhắc lệnh chỉ đọc khi rảnh, không đẩy quà/đột phá ra sau
     if(priority(e)<=1&&now-(this.last.get(key)||0)<6500)return;
     if(priority(e)<=1&&this.queue.length>=3)return; // v54: hàng chờ đã dồn → bỏ câu thường, để quà/đột phá/sự kiện được đọc kịp
     // Only the newest routine response waits. A crowded LIVE must not narrate

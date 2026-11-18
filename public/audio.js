@@ -178,7 +178,8 @@ export class CultivationAudio {
     const realm=breakthroughRealm(event),duck=DIVINE_DUCKS[realm]?DIVINE_DUCKS[realm](elapsed):realm===25?thaiSoMusicDuck(elapsed):realm===26?vinhKiepMusicDuck(elapsed):realm===27?voCucMusicDuck(elapsed):realm===28?honDonMusicDuck(elapsed):realm>=29?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
     this.qiSession?.audio.stop();
-    this.qiSession={event,duck,audio:this.scheduleRitual(event,realm,elapsed)};this.sync();
+    const t0=performance.now(),audio=this.scheduleRitual(event,realm,elapsed);this.ritualBuild={realm,ms:Math.round(performance.now()-t0),lateMs:Math.round(elapsed),at:Date.now()}; /* 18/11: đo âm thanh đột phá trễ (dựng đồ thị âm + độ trễ lúc bắt đầu) */
+    this.qiSession={event,duck,audio};this.sync();
   }
   scheduleRitual(event,realm,elapsed=0,{base=true,impact=true,boost=true,variant=true,upgrade=true,cinematicLayers}={}){
     const c=this.ctx,seconds=elapsed/1000,duration=event.duration/1000;
