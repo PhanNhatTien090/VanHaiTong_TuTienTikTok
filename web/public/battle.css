@@ -224,3 +224,20 @@
 .guide p { margin: 4px 0 8px; font-size: 14px; color: #e3efe9; }
 .guide-act { display: flex; justify-content: flex-end; gap: 12px; align-items: center; }
 .guide-act .gp-go { padding: 8px 18px; }
+/* 18/11: Bảo Khố — thần khí + tọa kỹ từ LIVE (chỉ xem + trang bị) */
+.gp-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
+.gp-tabs button { padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: #0a1c1bcc; color: inherit; font-weight: 700; }
+.gp-tabs button.active { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 12px #e8c97733; }
+.gp-treasure { border-left: 3px solid var(--c, var(--line)); }
+.gp-treasure .gp-art { width: 72px; height: 72px; object-fit: contain; flex: none; border-radius: 12px; background: radial-gradient(circle at 50% 55%, color-mix(in srgb, var(--c) 35%, transparent), transparent 70%); }
+.gp-treasure { flex-wrap: nowrap; gap: 10px; }
+.gp-treasure .gp-main { flex: 1 1 0; min-width: 0; }
+.gp-treasure .gp-main h3 small { display: inline-block; vertical-align: middle; font-size: 11px; padding: 1px 6px; }
+.gp-treasure .gp-main > small { display: block; margin-bottom: 2px; font-size: 12px; }
+.gp-treasure .meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.gp-treasure .meta .tag { font-size: 12px; padding: 2px 7px; white-space: nowrap; }
+.gp-treasure .gp-cost { flex: none; }
+.gp-treasure .gp-cost button { padding: 8px 12px; font-size: 13px; }
+.gp-stars { color: #ffd36b; letter-spacing: 1px; font-size: 14px; }
+.gp-stars i { color: #ffffff26; font-style: normal; }
+@media (max-width: 480px) { .gp-treasure { flex-wrap: wrap; } .gp-treasure .gp-art { width: 56px; height: 56px; } .gp-treasure .gp-cost { width: 100%; justify-content: flex-end; margin-top: -4px; } }

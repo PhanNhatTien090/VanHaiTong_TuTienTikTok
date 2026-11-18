@@ -1,5 +1,7 @@
 import {currentParticipant, ingest} from '../../engine.mjs';
-import {validId} from './protocol.mjs';
+import {validId,livePetsOf} from './protocol.mjs';
+// 18/11: web chỉ XEM cấp linh thú LIVE — gắn kèm khi giao nhân vật, bỏ ra khi nhận về (LIVE giữ ở petGrowthV2).
+const forWeb=(world,p)=>{const out=structuredClone(p),livePets=livePetsOf(world,p.id);if(livePets)out.livePets=livePets;else delete out.livePets;return out;};
 
 // The durable lock lives in live.json, alongside the player. It never expires
 // locally: timeout is not evidence that the cloud has stopped accepting writes.
@@ -18,7 +20,7 @@ export function createLiveTransfers({world, save}) {
     if(old&&generation<old.generation || old&&generation===old.generation&&old.id!==id)throw Error('Stale play transfer generation');
     if(kind==='acquire') {
       if(old?.id===id) {
-        if(old.phase==='web')return {ok:true,id,player:old.player};
+        if(old.phase==='web')return {ok:true,id,player:forWeb(world,old.player)};
         return {ok:false,id,message:old.message || 'Bàn giao này đã kết thúc.'};
       }
       if(old?.phase==='web')return {ok:false,id,message:'Nhân vật đang có một phiên web khác.'};
@@ -30,12 +32,12 @@ export function createLiveTransfers({world, save}) {
       // Quản trị mượn (force) chỉ vài giây cho một thao tác: ghi lại trạng thái có mặt để trả về y nguyên — người chơi không bị coi là rời LIVE.
       world.playTransfers[playerId]={id,generation,phase:'web',player:structuredClone(p),gifts:[],...(command.force?{admin:true,presence:{lastActive:p.lastActive||0,leftLiveAt:p.leftLiveAt,lastAutoArrivalAt:p.lastAutoArrivalAt,lastRealInteractionAt:p.lastRealInteractionAt}}:{})};
       save(); // Do not acknowledge ownership before its lock reaches disk.
-      return {ok:true,id,player:structuredClone(p)};
+      return {ok:true,id,player:forWeb(world,p)};
     }
     if(old?.id!==id)throw Error('Play transfer fencing mismatch');
     if(old.phase==='live')return {ok:true,id}; // ACK loss/retry must never reapply old progress.
     if(old.phase!=='web'||command.player?.id!==playerId)throw Error('Invalid player return');
-    const p=structuredClone(command.player);
+    const p=structuredClone(command.player);delete p.livePets;
     const keep=old.admin?old.presence:null,heardAt=Number(old.wantsLiveAt)||0;
     // Người chơi tự sang web: trả về coi như đã rời sân. Quản trị mượn: giữ nguyên có mặt (cộng cả lúc họ vừa tương tác trong vài giây mượn).
     const presence=()=>{

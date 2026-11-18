@@ -1,8 +1,7 @@
-// Các bảng chức năng mở từ công trình trên trang chủ: Luyện Khí Các, Linh Thú Cốc, Nhiệm vụ ngày.
+// Các bảng chức năng mở từ công trình trên trang chủ: Bảo Khố (thần khí + tọa kỹ LIVE), Linh Thú Cốc, Nhiệm vụ ngày.
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => Number(n || 0).toLocaleString('vi-VN');
 const MAT_ICON = id => `/art/ui/mat-${id}.png`;
-const MAT_NAME = { 'huyen-thiet': 'Huyền Thiết', 'tinh-kim': 'Tinh Kim', 'long-tuy': 'Long Tủy', 'linh-qua': 'Linh Quả' };
 
 export function createPanels({ api, toast, refresh, startEventBattle, openRanking }) {
   const panel = document.querySelector('#gamePanel');
@@ -11,28 +10,34 @@ export function createPanels({ api, toast, refresh, startEventBattle, openRankin
   let current = null;
   function open(name, heading) { current = name; title.textContent = heading; panel.hidden = false; panel.dataset.kind = name; }
 
-  function matsStrip(mats, stones) {
-    return `<div class="gp-mats">${stones !== undefined ? `<span><img src="/art/ui/icon-stone.png" alt="">${fmt(stones)}</span>` : ''}${mats.map(m => `<span title="${esc(m.desc)}"><img src="${m.icon}" alt="">${esc(m.name)} <b>${fmt(m.count)}</b></span>`).join('')}</div>`;
-  }
 
-  // ---------- Luyện Khí Các ----------
-  async function forge() {
-    const f = await api('/api/forge');
-    if (!f.items) return toast(f.message || 'Không mở được Luyện Khí Các.', true);
-    open('forge', 'Luyện Khí Các · Cường hóa pháp bảo');
-    const have = Object.fromEntries(f.mats.map(m => [m.id, m.count]));
-    body.innerHTML = `${matsStrip(f.mats.filter(m => m.id !== 'linh-qua'), f.stones)}
-      <p class="gp-note">Cường hóa pháp bảo đang trang bị để tăng sức mạnh và máu trong bí cảnh. Luôn thành công, không mất đồ. Nguyên liệu rơi khi vượt ải.</p>
-      <div class="gp-list">${f.items.map(it => {
-        const c = it.cost, ok = c && f.stones >= c.stones && (have[c.mat] || 0) >= c.count;
-        return `<article class="gp-row ${it.equipped ? 'on' : ''}">
-          <div class="gp-main"><h3>${esc(it.name)} <em>+${it.level}</em>${it.equipped ? ' <small class="tag gold">Đang trang bị</small>' : ''}</h3>
-            <div class="pips">${Array.from({ length: f.max }, (_, i) => `<i class="${i < it.level ? 'lit' : ''}"></i>`).join('')}</div>
-            <small class="muted">${it.damage ? '+' + it.damage + ' sát thương gốc' : 'Pháp bảo hỗ trợ'}</small></div>
-          ${c ? `<div class="gp-cost"><span><img src="/art/ui/icon-stone.png" alt="">${fmt(c.stones)}</span><span><img src="${MAT_ICON(c.mat)}" alt="">${c.count} ${MAT_NAME[c.mat]}</span>
-            <button class="gp-go" data-enhance="${esc(it.id)}" ${ok ? '' : 'disabled'}>Cường hóa +${it.level + 1}</button></div>` : '<div class="gp-cost"><b class="gold-text">Tối đa</b></div>'}
-        </article>`;
-      }).join('') || '<p class="muted">Chưa có pháp bảo. Rèn ở Tàng Kinh Các hoặc nhận từ sự kiện LIVE.</p>'}</div>`;
+  // ---------- Bảo Khố (18/11): thần khí + tọa kỹ từ LIVE — chỉ xem và trang bị ----------
+  const stars = (n, max) => `<span class="gp-stars">${'★'.repeat(n)}<i>${'★'.repeat(Math.max(0, max - n))}</i></span>`;
+  const statLine = list => list.map(x => `<span class="tag good">${esc(x.name)} +${String(x.value).replace('.', ',')}%</span>`).join('');
+  let treasuryTab = 'bao';
+  async function forge(tab) {
+    if (tab) treasuryTab = tab;
+    const d = await api('/api/treasury');
+    if (!d.bao) return toast(d.message || 'Không mở được Bảo Khố.', true);
+    open('forge', 'Bảo Khố · Đồ từ LIVE');
+    const tabs = `<div class="gp-tabs"><button data-ttab="bao" class="${treasuryTab === 'bao' ? 'active' : ''}">Thần khí ${d.bao.items.length}</button><button data-ttab="mount" class="${treasuryTab === 'mount' ? 'active' : ''}">Tọa kỹ ${d.mounts.items.length}</button></div>`;
+    const note = '<p class="gp-note">Đồ nhận trên LIVE hiện ở đây với đúng sao và chỉ số LIVE. Trên web chỉ xem và trang bị; nâng sao làm trên LIVE.</p>';
+    let list;
+    if (treasuryTab === 'bao') list = d.bao.items.map(x => `<article class="gp-row gp-treasure ${x.ban ? 'on' : ''}" style="--c:${esc(x.color)}">
+        <img class="gp-art" src="${esc(x.art)}" alt="" loading="lazy">
+        <div class="gp-main"><h3>${esc(x.name)} ${x.ban ? '<small class="tag gold">Bản mệnh</small>' : ''}</h3>
+          <small class="muted">${esc(x.tierLabel)} · ${esc(x.line)} · thần thông ${esc(x.skill)}</small>${stars(x.stars, x.maxStars)}
+          <div class="meta">${statLine(x.stats)}</div></div>
+        <div class="gp-cost">${x.ban ? '<button disabled>Đang dùng</button>' : `<button class="gp-go" data-bao="${esc(x.id)}">Đặt bản mệnh</button>`}</div></article>`).join('')
+        || '<p class="muted">Chưa có thần khí. Thần khí nhận ở sự kiện Thiên Công Bảo Khố trên LIVE (gõ "cầu").</p>';
+    else list = d.mounts.items.map(x => `<article class="gp-row gp-treasure ${x.riding ? 'on' : ''}" style="--c:${esc(x.color)}">
+        <img class="gp-art" src="${esc(x.art)}" alt="" loading="lazy">
+        <div class="gp-main"><h3>${esc(x.name)} ${x.riding ? '<small class="tag gold">Đang cưỡi</small>' : ''}</h3>
+          <small class="muted">Tọa kỹ ${esc(x.tierName)}</small>${stars(x.stars, x.maxStars)}
+          <div class="meta">${statLine(x.stats)}</div></div>
+        <div class="gp-cost">${x.riding ? '<button data-mount="none">Xuống</button>' : `<button class="gp-go" data-mount="${esc(x.id)}">Cưỡi</button>`}</div></article>`).join('')
+        || '<p class="muted">Chưa có tọa kỹ. Linh Châu có ở Tọa Kỹ Bí Cảnh trên LIVE.</p>';
+    body.innerHTML = tabs + note + `<div class="gp-list">${list}</div>`;
   }
 
   // ---------- Linh Thú Cốc ----------
@@ -40,16 +45,14 @@ export function createPanels({ api, toast, refresh, startEventBattle, openRankin
     const d = await api('/api/pets');
     if (!d.pets) return toast(d.message || 'Không mở được Linh Thú Cốc.', true);
     open('pets', 'Linh Thú Cốc');
-    body.innerHTML = `<div class="gp-mats"><span><img src="${MAT_ICON('linh-qua')}" alt="">Linh Quả <b>${fmt(d.food)}</b></span></div>
-      <p class="gp-note">Linh thú đồng hành theo bạn vào bí cảnh, lao vào cắn boss và tung kỹ năng riêng (hồi máu, tạo giáp, thiêu đốt, choáng…), cấp càng cao càng mạnh. Linh thú mở trên LIVE (thả tim/tặng quà trong sự kiện Linh Thú Cốc); trên web cho ăn để lên cấp.</p>
+    body.innerHTML = `<p class="gp-note">Linh thú đồng hành theo bạn vào bí cảnh, lao vào cắn boss và tung kỹ năng riêng. Cấp và giai đoạn lấy đúng theo LIVE; trên web chỉ chọn linh thú đồng hành, nuôi lên cấp làm trên LIVE.</p>
       <div class="gp-pets">${d.pets.map(p => `
         <article class="gp-pet ${p.owned ? '' : 'locked'} ${d.chosen === p.id ? 'on' : ''}" style="--c:${esc(p.color)}">
           <div class="pet-art" style="background-image:url(/assets/spirit-pets-v1/${esc(p.id)}.png)"></div>
-          <h3>${esc(p.name)}</h3><small>${esc(p.rank)} · Cấp ${p.level}/${p.max}</small>
+          <h3>${esc(p.name)}</h3><small>${esc(p.rank)}${p.owned ? ` · ${esc(p.stageName)} · Lv${p.level}` : ''}</small>
           <div class="muted">Trợ chiến ${p.power}% sức mạnh</div>${p.skill?`<div class="gp-skill"><b>✦ ${esc(p.skill.name)}</b> · mỗi ${p.skill.every}s<br>${esc(p.skill.desc)}</div>`:""}${p.rare&&p.flavor?`<div class="muted small">Thần thú · ${esc(p.flavor)}</div>`:""}
           ${p.owned ? `<div class="row">
-              ${d.chosen === p.id ? '<button disabled>Đang đồng hành</button>' : `<button data-choose="${p.id}">Đồng hành</button>`}
-              <button class="gp-go" data-feed="${p.id}" ${d.food >= p.feedCost && p.level < p.max ? '' : 'disabled'}>Cho ăn · ${p.feedCost}</button></div>`
+              ${d.chosen === p.id ? '<button disabled>Đang đồng hành</button>' : `<button data-choose="${p.id}">Đồng hành</button>`}</div>`
             : `<div class="muted small">Mở trên LIVE: ${fmt(p.hearts)} tim${p.coins ? ` hoặc ${fmt(p.coins)} coin quà` : ''}</div>`}
         </article>`).join('')}</div>`;
   }
@@ -159,13 +162,12 @@ export function createPanels({ api, toast, refresh, startEventBattle, openRankin
     if (rk) { panel.hidden = true; return openRanking?.(); }
     const evb = e.target.closest('[data-event]');
     if (evb) { panel.hidden = true; return startEventBattle?.(evb.dataset.event); }
-    const en = e.target.closest('[data-enhance]'), fe = e.target.closest('[data-feed]'), ch = e.target.closest('[data-choose]'), cl = e.target.closest('[data-claim]');
-    if (en) { const r = await api('/api/forge/enhance', { itemId: en.dataset.enhance }); if (!r.ok) return toast(r.message, true); toast(`Cường hóa thành công: +${r.level}!`); flash(en.closest('.gp-row')); refresh(); return forge(); }
-    if (fe) { const r = await api('/api/pets/feed', { petId: fe.dataset.feed }); if (!r.ok) return toast(r.message, true); toast(`Linh thú lên cấp ${r.level}!`); refresh(); return pets(); }
+    const tt = e.target.closest('[data-ttab]'), bo = e.target.closest('[data-bao]'), mo = e.target.closest('[data-mount]'), ch = e.target.closest('[data-choose]'), cl = e.target.closest('[data-claim]');
+    if (tt) return forge(tt.dataset.ttab);
+    if (bo || mo) { const r = await api('/api/treasury/equip', bo ? { kind: 'bao', id: bo.dataset.bao } : { kind: 'mount', id: mo.dataset.mount }); if (!r.ok) return toast(r.message, true); toast(r.message || 'Đã trang bị.'); refresh(); return forge(); }
     if (ch) { const r = await api('/api/pets/choose', { petId: ch.dataset.choose }); if (!r.ok) return toast(r.message, true); toast('Đã chọn linh thú đồng hành.'); return pets(); }
     if (cl) { const r = await api('/api/quests/claim', { id: cl.dataset.claim }); if (!r.ok) return toast(r.message, true); toast('Đã nhận thưởng nhiệm vụ!'); refresh(); return quests(); }
   });
-  function flash(el) { el?.classList.remove('flash'); void el?.offsetWidth; el?.classList.add('flash'); }
 
   return { forge, pets, quests, live, shop, mail, gift, hall, get open() { return !panel.hidden && current; } };
 }

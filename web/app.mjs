@@ -16,6 +16,7 @@ import { playerView, inventoryView, webRanking } from './game-view.mjs';
 import { createDungeon, dungeonView, staminaView, BOSSES, towerView, towerRanking, ZONES } from './dungeon.mjs';
 import { forgeView, enhance, petView, feedPet, choosePet, questView, claimQuest, bumpQuest, matsView } from './progress.mjs';
 import { webAction, addPlayerQuietly } from './isolate.mjs';
+import { treasuryView, chooseBao, chooseMount } from './collection.mjs';
 import { jadeBalance, shopView, buy, takeExtraPills, retreatView, startRetreat, claimRetreat, mailView, claimMail, welcomeMail, giftView, claimGift } from './extras.mjs';
 import { liveView } from './live-view.mjs';
 import { createErrorLog } from './error-log.mjs';
@@ -123,7 +124,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
     else return { ok: false, message: 'Thao tác không hợp lệ.' };
     if (['learn', 'craft', 'brew', 'use', 'equip'].includes(type) && !input.itemId) return { ok: false, message: 'Chọn vật phẩm.' };
     const { result, events } = webAction(world, p, input, now);
-    if (result.ok && type === 'cultivate') bumpQuest(p, 'cultivate', 1, now);
+    if (result.ok && (type === 'cultivate' || type === 'gather')) bumpQuest(p, type, 1, now);
     changed();
     return { ...result, events };
   }
@@ -388,6 +389,7 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
           case 'GET /api/dungeon': return json(req, res, { ...dungeonView(p, now), tower: towerView(p, now) });
           case 'GET /api/forge': return json(req, res, forgeView(p));
           case 'GET /api/pets': return json(req, res, petView(p));
+          case 'GET /api/treasury': return json(req, res, treasuryView(p));
           case 'GET /api/quests': return json(req, res, questView(p, now));
           case 'GET /api/shop': return json(req, res, shopView(p, now));
           case 'GET /api/retreat': return json(req, res, retreatView(p, now));
@@ -427,6 +429,9 @@ export function createWebApp({ world, dataDir, markDirty = () => {}, liveState =
         case 'GET /api/pets': return json(req, res, petView(p));
         case 'POST /api/pets/feed': { const r = feedPet(p, String(body.petId || '')); changed(); return reply(r, { pets: petView(p) }); }
         case 'POST /api/pets/choose': { const r = choosePet(p, String(body.petId || '')); changed(); return reply(r, { pets: petView(p) }); }
+        // 18/11: đồ LIVE — chỉ xem + trang bị (bản mệnh thần khí, cưỡi tọa kỹ)
+        case 'GET /api/treasury': return json(req, res, treasuryView(p));
+        case 'POST /api/treasury/equip': { const kind = String(body.kind || ''), id = String(body.id || '').slice(0, 60); const r = kind === 'bao' ? chooseBao(p, id) : kind === 'mount' ? chooseMount(p, id) : { ok: false, message: 'Loại đồ không hợp lệ.' }; if (r.ok) changed(); return reply(r, { treasury: treasuryView(p) }); }
         case 'GET /api/quests': return json(req, res, questView(p, now));
         case 'POST /api/quests/claim': { const r = claimQuest(p, String(body.id || ''), now); changed(); return reply(r, { quests: questView(p, now) }); }
         case 'POST /api/dungeon/start': return reply(dungeon.start(world, p, String(body.zone || ''), Number(body.stage), now), { extraPills: p.web?.extraPills || 0 });

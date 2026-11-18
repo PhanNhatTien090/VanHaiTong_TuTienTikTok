@@ -10,7 +10,7 @@ export const BUILDINGS = [
   { id: 'hall', name: 'Đại Điện', x: 836, y: 230, r: 150, lx: 836, ly: 345, fx: 'halo' },
   { id: 'events', name: 'Sự Kiện', x: 1462, y: 150, r: 115, lx: 1430, ly: 250, tone: 'red', fx: 'lantern' },
   { id: 'library', name: 'Tàng Kinh Các', x: 1530, y: 360, r: 95, lx: 1420, ly: 470, fx: 'halo' },
-  { id: 'forge', name: 'Luyện Khí Các', x: 220, y: 610, r: 140, lx: 255, ly: 700, fx: 'embers' },
+  { id: 'forge', name: 'Bảo Khố', x: 220, y: 610, r: 140, lx: 255, ly: 700, fx: 'embers' },
   { id: 'beasts', name: 'Linh Thú Cốc', x: 1470, y: 690, r: 150, lx: 1400, ly: 790, fx: 'sparkle' },
 ];
 const TERRACE = { x: 836, y: 840 };

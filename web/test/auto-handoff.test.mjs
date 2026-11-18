@@ -68,3 +68,21 @@ test('quản trị mượn rồi trả: người chơi vẫn hiện trên LIVE (
   live.apply({generation:2,id:'own-1',playerId:id,kind:'release',player:own.player},now+LIVE_RECENT_MS+6000);
   assert.equal(currentParticipant(w,w.players[id],now+LIVE_RECENT_MS+7000),false);
 });
+
+test('18/11: thần khí + cấp linh thú LIVE đi theo đồng bộ và bàn giao; trả về LIVE không mang livePets',async()=>{
+  const {projectWorld}=await import('../cloud/protocol.mjs');
+  const now=Date.now(),w=liveWorld(now),p=w.players[id];
+  Object.assign(p,{spiritPets:['ember-fox'],spiritPet:'ember-fox',bao:{p4:1,p5:2,items:{'s4-kiem':2},lim:null},mounts:{'kim-tru':{stars:1,at:1}},mount:'kim-tru',equipPin:'x'});
+  w.petGrowthV2={schema:2,players:{[id]:{pets:{'ember-fox':{level:6,xp:3,stage:1}}}},activeExpeditions:{},cinematics:[],coveSessions:{}};
+  const synced=projectWorld(w).players.find(x=>x.id===id);
+  assert.deepEqual(synced.livePets,{'ember-fox':{level:6,stage:1}});
+  assert.deepEqual(synced.bao.items,{'s4-kiem':2});assert.equal(synced.mount,'kim-tru');assert.equal(synced.equipPin,'x');
+  const live=createLiveTransfers({world:w,save:()=>{}});
+  const got=live.apply({generation:1,id:'t1',playerId:id,kind:'acquire'},now+LIVE_RECENT_MS+1000);
+  assert.equal(got.ok,true);assert.equal(got.player.livePets['ember-fox'].level,6);
+  assert.equal(w.players[id].livePets,undefined,'LIVE player object stays clean');
+  const back={...got.player,mount:null};
+  assert.equal(live.apply({generation:1,id:'t1',playerId:id,kind:'release',player:back},now+LIVE_RECENT_MS+5000).ok,true);
+  assert.equal(w.players[id].livePets,undefined);assert.equal(w.players[id].mount,null);
+  assert.equal(w.petGrowthV2.players[id].pets['ember-fox'].level,6,'LIVE pet growth untouched');
+});

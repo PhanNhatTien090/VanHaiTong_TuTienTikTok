@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createWorld, action } from '../../engine.mjs';
-import { enhance, enhanceCost, enhanceBonus, addMats, feedPet, choosePet, petCombat, claimQuest, questView, bumpQuest } from '../progress.mjs';
+import { enhance, enhanceBonus, addMats, feedPet, choosePet, petCombat, claimQuest, questView, bumpQuest } from '../progress.mjs';
 import { createDungeon, combatStats, dungeonView, stageInfo } from '../dungeon.mjs';
 
 function player(extra = {}) {
@@ -11,41 +11,41 @@ function player(extra = {}) {
   return { w, p };
 }
 
-test('cường hóa: tốn linh thạch + nguyên liệu, luôn thành công, tăng sức mạnh trong bí cảnh', () => {
-  const { p } = player();
-  assert.equal(enhance(p, 'jade').ok, false); // chưa có Huyền Thiết
-  addMats(p, { 'huyen-thiet': 10 });
-  const before = combatStats(p).attack;
-  const r = enhance(p, 'jade');
-  assert.equal(r.ok, true); assert.equal(r.level, 1);
-  assert.equal(p.stones, 10000 - enhanceCost(0).stones);
-  assert.equal(p.web.mats['huyen-thiet'], 10 - enhanceCost(0).count);
-  assert.ok(combatStats(p).attack > before);
-  assert.ok(enhanceBonus(p).hp > 0);
-  assert.equal(enhance(p, 'bell').ok, false); // không sở hữu
-});
-
-test('linh thú: chỉ dùng con đã mở trên LIVE; cho ăn tốn Linh Quả', () => {
-  const { p } = player({ spiritPets: ['jade-rabbit'] });
-  assert.equal(choosePet(p, 'astral-dragon').ok, false);
-  assert.equal(choosePet(p, 'jade-rabbit').ok, true);
-  assert.equal(petCombat(p).id, 'jade-rabbit');
+test('18/11: web không nâng cấp — cường hóa và cho ăn bị khóa, không cộng chỉ số riêng', () => {
+  const { p } = player({ spiritPets: ['jade-rabbit'], spiritPet: 'jade-rabbit', web: { enhance: { jade: 7 }, petLv: { 'jade-rabbit': 15 } } });
+  addMats(p, { 'huyen-thiet': 10, 'linh-qua': 50 });
+  const before = JSON.stringify(p);
+  assert.equal(enhance(p, 'jade').ok, false);
   assert.equal(feedPet(p, 'jade-rabbit').ok, false);
-  addMats(p, { 'linh-qua': 5 });
-  assert.equal(feedPet(p, 'jade-rabbit').level, 2);
-  assert.ok(combatStats(p).pet.mult > 0.25);
+  assert.equal(JSON.stringify(p), before);
+  assert.deepEqual(enhanceBonus(p), { attack: 0, hp: 0, level: 0 }); // cường hóa cũ trên web không còn tác dụng
+  assert.equal(combatStats(p).attack, combatStats(p).basePower);
+  assert.equal(petCombat(p).level, 1); // bỏ cấp nuôi riêng trên web (15) → theo LIVE
 });
 
-test('nhiệm vụ ngày: nhận khi xong, không nhận hai lần, rương cuối cần nhận hết', () => {
+test('18/11: cấp + giai đoạn linh thú lấy đúng theo LIVE (livePets)', async () => {
+  const { petView } = await import('../progress.mjs');
+  const { p } = player({ spiritPets: ['jade-rabbit', 'ember-fox'], livePets: { 'ember-fox': { level: 6, stage: 1 } } });
+  assert.equal(choosePet(p, 'astral-dragon').ok, false);
+  assert.equal(choosePet(p, 'ember-fox').ok, true);
+  assert.equal(petCombat(p).level, 6);
+  const v = petView(p), fox = v.pets.find(x => x.id === 'ember-fox');
+  assert.equal(fox.level, 6); assert.equal(fox.stage, 1); assert.equal(fox.stageName, 'Chiến Linh');
+  assert.equal(v.pets.find(x => x.id === 'jade-rabbit').level, 1);
+  assert.equal('feedCost' in fox, false);
+});
+
+test('nhiệm vụ ngày: nhận khi xong, không nhận hai lần, rương cuối cần nhận hết; không còn nhiệm vụ cường hóa', () => {
   const { p } = player();
-  assert.equal(claimQuest(p, 'enhance').ok, false);
-  bumpQuest(p, 'enhance');
+  assert.equal(questView(p).quests.some(q => q.id === 'enhance'), false);
+  assert.equal(claimQuest(p, 'gather').ok, false);
+  bumpQuest(p, 'gather', 2);
   const stones = p.stones;
-  assert.equal(claimQuest(p, 'enhance').ok, true);
+  assert.equal(claimQuest(p, 'gather').ok, true);
   assert.ok(p.stones > stones);
-  assert.equal(claimQuest(p, 'enhance').ok, false);
+  assert.equal(claimQuest(p, 'gather').ok, false);
   assert.equal(claimQuest(p, 'bonus').ok, false);
-  assert.equal(questView(p).quests.find(q => q.id === 'enhance').claimed, true);
+  assert.equal(questView(p).quests.find(q => q.id === 'gather').claimed, true);
 });
 
 test('bí cảnh: thắng thì rơi nguyên liệu, tính nhiệm vụ; vùng 2 khóa tới khi đủ cảnh giới và qua vùng 1', () => {
@@ -111,8 +111,31 @@ test('08/11: thần thú (Kỳ Lân, Lôi Oa, Văn Thú) hiện trên web khi s�
   assert.ok(['ky-lan', 'loi-oa', 'van-thu'].every(id => ids.includes(id)));
   assert.ok(v.pets.find(x => x.id === 'ky-lan').skill.name.length > 0);
   const c1 = petCombat(p); assert.ok(c1.skill.shield > 0 && c1.skill.hot && c1.skill.burn && c1.mult >= 0.85);
-  p.web.petLv = { 'ky-lan': 11 }; const c11 = petCombat(p); assert.ok(c11.skill.shield > c1.skill.shield);
+  p.livePets = { 'ky-lan': { level: 11, stage: 1 } }; const c11 = petCombat(p); assert.ok(c11.skill.shield > c1.skill.shield);
   p.spiritPet = 'loi-oa'; assert.ok(petCombat(p).skill.stun > 0 && petExtraDps(petCombat(p)) > 0);
   p.spiritPet = 'van-thu'; const vt = petCombat(p); assert.ok(vt.flying && vt.skill.leech > 0);
   const stranger = { id: 's', spiritPets: [], web: {} }; assert.ok(!petView(stranger).pets.some(x => x.id === 'ky-lan'));
+});
+
+test('18/11: Bảo Khố web — thần khí + tọa kỹ đúng sao/chỉ số LIVE, chỉ đổi bản mệnh / cưỡi', async () => {
+  const { treasuryView, chooseBao, chooseMount } = await import('../collection.mjs');
+  const { baoStat } = await import('../../public/phap-bao-data.js');
+  const { mountStat } = await import('../../public/mounts.js');
+  const { p } = player({ bao: { p4: 3, p5: 20, items: { 's4-kiem': 3, 'L12-huyet-hai-dao': 1 }, lim: null }, mounts: { 'kim-tru': { stars: 2, at: 1 } }, mount: null });
+  let v = treasuryView(p);
+  assert.equal(v.bao.items[0].id, 'L12-huyet-hai-dao'); // tự lấy món mạnh nhất làm bản mệnh như LIVE
+  assert.equal(v.bao.ban, 'L12-huyet-hai-dao');
+  const kiem = v.bao.items.find(x => x.id === 's4-kiem');
+  assert.equal(kiem.stars, 3);
+  assert.equal(kiem.stats.find(x => x.key === 'atk').value, baoStat('s4-kiem', 3, 'atk'));
+  assert.equal(v.mounts.items[0].stats[0].value, mountStat('kim-tru', 2, 'stones'));
+  assert.equal(chooseBao(p, 's5-kiem').ok, false); // không sở hữu
+  assert.equal(chooseBao(p, 's4-kiem').ok, true);
+  assert.equal(p.bao.ban, 's4-kiem');
+  assert.deepEqual(p.bao.items, { 's4-kiem': 3, 'L12-huyet-hai-dao': 1 }); // không đổi sao
+  assert.equal(chooseMount(p, 'con-bang').ok, false);
+  assert.equal(chooseMount(p, 'kim-tru').ok, true); assert.equal(p.mount, 'kim-tru');
+  assert.equal(treasuryView(p).mounts.riding, 'kim-tru');
+  assert.equal(chooseMount(p, 'none').ok, true); assert.equal(p.mount, null);
+  assert.deepEqual(p.mounts, { 'kim-tru': { stars: 2, at: 1 } });
 });

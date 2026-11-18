@@ -2,7 +2,15 @@ import crypto from 'node:crypto';
 
 export const SCHEMA_VERSION = 1;
 export const WORLD_FIELDS = ['createdAt','sectQi','settings','gifts','boss','feed','events','social','tournament','race','bondFestival','flowerEvent','visitor','petEvent','lanternFestival','companions','liveSession','patronEnabled','patronCurrent','totalGifts','totalInteractions','sectBuild','giftPolicyVersion','divineWardrobeVersion','lastBossResult','opportunity','likeGoal','quiz','envelope','competitionSchedule','nextBossAt','lastBlessingAt'];
-const PLAYER_FIELDS = ('id name gender avatar realm qi totalQi stones herbs giftCoins wingChoice interactions joinedAt lastActive lastRealInteractionAt leftLiveAt activeMs artifacts manuals pills equipped equippedExtra rewardSkins skinChoice skinChoiceSource divineRoles divineRoleChoice divineRoleHidden relicVariant socialCode bondId bondMilestone bondFestivalWins tournamentTitle tournamentWins tournamentMedals raceTitle raceWins raceMedals raceSwordChoice raceSwordSkins raceMounts spiritPet spiritPets petProgress companionPoints contribution loyaltyRewards ascensionAccess buffMult buffUntil cooldowns day checkinStreak lastCheckinDay cultivatedAt gatheredAt novicePractice web webOnly lanternTitle lanternFriendships sectFounder bonkHammer mount mounts mountOrbs mountPity mountChannel').split(' ');
+const PLAYER_FIELDS = ('id name gender avatar realm qi totalQi stones herbs giftCoins wingChoice interactions joinedAt lastActive lastRealInteractionAt leftLiveAt activeMs artifacts manuals pills equipped equippedExtra rewardSkins skinChoice skinChoiceSource divineRoles divineRoleChoice divineRoleHidden relicVariant socialCode bondId bondMilestone bondFestivalWins tournamentTitle tournamentWins tournamentMedals raceTitle raceWins raceMedals raceSwordChoice raceSwordSkins raceMounts spiritPet spiritPets petProgress companionPoints contribution loyaltyRewards ascensionAccess buffMult buffUntil cooldowns day checkinStreak lastCheckinDay cultivatedAt gatheredAt novicePractice web webOnly lanternTitle lanternFriendships sectFounder bonkHammer mount mounts mountOrbs mountPity mountChannel bao equipPin livePets').split(' ');
+// 18/11: cấp/giai đoạn linh thú LIVE (Linh Thú V2 giữ ở world.petGrowthV2, không nằm trong hồ sơ) → gắn vào hồ sơ để web hiện đúng cấp LIVE. Chỉ đọc.
+export function livePetsOf(world, id) {
+  const pets = world?.petGrowthV2?.schema === 2 && Object.hasOwn(world.petGrowthV2.players || {}, id) ? world.petGrowthV2.players[id]?.pets : null;
+  if (!pets || typeof pets !== 'object') return undefined;
+  const out = {};
+  for (const [pid, g] of Object.entries(pets)) if (validId(pid) && Number.isInteger(g?.level)) out[pid] = { level: Math.max(1, Math.min(40, g.level)), stage: Math.max(0, Math.min(3, Number(g.stage) || 0)) };
+  return Object.keys(out).length ? out : undefined;
+}
 export const digest = value => crypto.createHash('sha256').update(typeof value === 'string' || Buffer.isBuffer(value) ? value : JSON.stringify(value)).digest('hex');
 export function validId(id) { return typeof id === 'string' && id.length > 0 && id.length <= 128 && !['__proto__','constructor','prototype'].includes(id); }
 export function projectPlayer(p) {
@@ -13,7 +21,7 @@ export function projectPlayer(p) {
 }
 export function projectWorld(world) {
   if (world?.version !== 1 || !world.players || typeof world.players !== 'object') throw Error('Source world is invalid');
-  const players = Object.values(world.players).map(projectPlayer).filter(Boolean);
+  const players = Object.values(world.players).map(p => { const livePets = p?.id ? livePetsOf(world, p.id) : undefined; return projectPlayer(livePets ? { ...p, livePets } : p); }).filter(Boolean);
   const meta = {};
   for (const field of WORLD_FIELDS) if (world[field] !== undefined) meta[field] = world[field];
   meta.events = (meta.events || []).slice(-40);
