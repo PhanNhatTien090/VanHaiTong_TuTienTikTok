@@ -24,7 +24,7 @@ export function itemStats(i,category='artifact'){
  if(i.bonus>0)parts.push('+'+(Math.round(i.bonus*share*1000)/10).toLocaleString('vi-VN')+'% tu vi');
  return parts.length>1||i.on||i.secondary?parts.join(' · '):'';
 }
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin'};
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',mounts:'Tọa kỹ'};
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
@@ -32,8 +32,9 @@ function cell(i,category,esc){
  const item=category==='pets'&&raw.level?{...raw,name:raw.name+' · Lv'+raw.level}:raw;
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"${category==='pets'?` data-pet-stage="${esc(String(item.stage||0))}"`:''}`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
- const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
- return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
+ const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':category==='mounts'?'cưỡi':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
+ const no=category==='mounts'&&item.no?`<em class="vd-no">${fmt(item.no)}</em><em class="vd-stars">${'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
+ return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}${category==='mounts'&&item.tier?' is-'+esc(item.tier):''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${no}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
 }
 // 15/11 (user): HIỆN HẾT món — nhiều món thì thêm cột cho ô nhỏ lại (3→4→5→6 cột), bảng không cao quá ô góc.
 // Chỉ khi máy chủ cắt bớt (quá nhiều) mới có ô "+N".
@@ -69,6 +70,13 @@ export function inventoryDeckHTML(e,esc){
   const growth=card.currentGrowth;
    const summary=growth?`<div class="vd-pet-progress"><strong>${esc(growth.stageName||'Ấu Linh')} · Lv${fmt(growth.level)}</strong><span>Thân thiết ${fmt(growth.bond)}/100</span><span>${esc(growth.skill||'')}</span>${growth.xpNext?`<div class="vd-pet-exp"><i style="width:${pct(growth.xp,growth.xpNext).toFixed(1)}%"></i></div><small>XP ${fmt(growth.xp)}/${fmt(growth.xpNext)}</small>`:'<small>Đã đạt cấp tối đa</small>'}${growth.resonance?'<small>✦ Pháp bảo cộng hưởng</small>':''}</div>`:'';
    body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+summary+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
+ }else if(kind==='mounts'){ // 18/11: lệnh linhchau / toaky
+  const o=card.orbs||{},ON={divine:'vàng',vip:'tím',common:'xanh'},CMD={divine:'truyencong than',vip:'truyencong vip',common:'truyencong'};
+  const orbs=['divine','vip','common'].filter(k=>o[k]>0).map(k=>`<span class="vd-orb is-${k}"><img src="/assets/toa-ky-v1/orb-${k}-2.webp" alt="">${fmt(o[k])} châu ${ON[k]}</span>`).join('')||'<span>Chưa có Linh Châu</span>';
+  const ch=card.channel?`<div class="vd-state">Đang truyền công châu ${ON[card.channel.kind]||''}${card.channel.left?' · còn '+fmt(card.channel.left)+' phút':' · sắp nở'}</div>`:'';
+  const first=['divine','vip','common'].find(k=>o[k]>0);
+  const hint=!card.channel&&first?`<div class="vd-state">gõ <b>${CMD[first]}</b> để nở tọa kỹ</div>`:(card.owned?.items?.length?'<div class="vd-state">gõ <b>toaky số</b> để cưỡi</div>':'');
+  body=`<div class="vd-chips">${orbs}</div>`+ch+hint+grid([[card.owned,'mounts']],esc,'Chưa có tọa kỹ · Linh Châu có ở Tọa Kỹ Bí Cảnh');
  }else{
   const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}</span><span>Mặc: ${esc(card.current||'Áo cảnh giới')}</span></div>`+grid([[card.owned,'skins']],esc,'Chưa có skin riêng');

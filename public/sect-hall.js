@@ -4,6 +4,7 @@ import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
 import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
 import {drawCourtAdornment,showsBlackGoldGear} from './court-art.js?v=karma-halo-v5';
+import {drawMount} from './mount-fx.js'; // 18/11: tọa kỹ Tông chủ phục cạnh ngai
 // 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.
 const AVATARS=new Map(), SEATS=new Map();
 function courtSeat(kind){
@@ -102,6 +103,10 @@ export function drawSectMaster(scene,c,t){
  else{c.translate(x,y-42);c.scale(1.35,1.35);const old=scene.compact;scene.compact=true;try{scene.drawCharacterBody(c,p,skinFor(p.giftCoins),0);}finally{scene.compact=old;}}
  c.restore();
  if(throneTier>=0)drawThroneFront(c,x,y,seat.height,throneTier,t,motion,host.player.name||'Đạo hữu');
+
+ // 18/11 (chủ game: "tọa kỹ 17 đâu ko thấy"): Tông chủ ngồi ngai nên không cưỡi được → tọa kỹ đang chọn phục bên trái ngai
+ // (đạo lữ đứng bên phải). Vẽ cả lúc truyền công; sân >50 người chỉ còn hình (lod 'off').
+ if(host.player?.mount&&host.player.mounts?.[host.player.mount]){const ms=seat.height/120*.95,lod=(scene.targets?.length||0)>50?'off':'light',o={scale:ms,t:motion?t:0,lod,seed:host.player.id,flip:false};const mx=x-seat.height*1.2,my=y+seat.height*.32;if(drawMount(c,host.player.mount,mx,my,o))drawMount(c,host.player.mount,mx,my,{...o,layer:'front'});}
  if(host.player&&host.consort)drawConsort(scene,c,host.consort,x+seat.height*1.12,y+seat.height*.3,seat.height/120*.82,t);
  c.save();if(throneTier>=0)drawMasterPlate(c,x,seat.top+seat.height+8,'',throneTier);else{c.textAlign='center';c.textBaseline='middle';c.font='800 16px "Segoe UI",Arial,sans-serif';const label='TÔNG CHỦ',w=c.measureText(label).width+28;c.fillStyle='#102632ed';c.fillRect(x-w/2,seat.top+seat.height+8,w,28);c.strokeStyle='#c8ab68';c.strokeRect(x-w/2,seat.top+seat.height+8,w,28);c.fillStyle='#ffe0a0';c.fillText(label,x,seat.top+seat.height+22);}
  if(throneTier<0&&host.player){c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillStyle='#fff1c4';c.fillText(host.player.name||'Đạo hữu',x,seat.top+seat.height+49,300);}

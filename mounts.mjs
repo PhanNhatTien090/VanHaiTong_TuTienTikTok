@@ -127,6 +127,17 @@ function statusLine(p,now){
  return 'Linh Châu: '+orbs+ch+(ride?' · đang cưỡi '+ride.name+' '+p.mounts[ride.id].stars+'★':'');
 }
 
+// 18/11 (chủ game): gõ linhchau / toaky mà không thấy gì → gửi kèm BẢNG XEM "Tọa kỹ" (inventory-multi.js):
+// Linh Châu đang giữ + truyền công + danh sách tọa kỹ kèm SỐ để gõ "toaky số".
+export function mountCard(p,now){
+ ensureMountState(p);const o=p.mountOrbs||{};
+ const items=MOUNTS.map((m,i)=>[m,i+1]).filter(([m])=>p.mounts[m.id])
+  .sort(([a],[b])=>({divine:0,vip:1,common:2}[a.tier]-{divine:0,vip:1,common:2}[b.tier]))
+  .map(([m,n])=>({id:m.id,no:n,name:m.name,tier:m.tier,stars:p.mounts[m.id].stars||1,on:p.mount===m.id,art:'/assets/toa-ky-v1/'+m.id+'.webp'}));
+ const ch=p.mountChannel?{kind:p.mountChannel.kind,left:p.mountChannel.endsAt>now?minutes(p.mountChannel.endsAt-now):0}:null;
+ return {kind:'mounts',orbs:{common:o.common||0,vip:o.vip||0,divine:o.divine||0},channel:ch,current:mountById(p.mount)?.name||null,owned:{items},total:MOUNTS.length};
+}
+
 export function mountCommand(w,p,cmd,rest,now,ctx){
  const words=String(rest||'').trim();
  let kindArg=null;
@@ -138,7 +149,7 @@ export function mountCommand(w,p,cmd,rest,now,ctx){
  if(now-(p.mountCmdAt||0)<COMMAND_CD)return fail('Đợi vài giây.');
  p.mountCmdAt=now;ensureMountState(p);
  if(isChannel){const kind=orbKind(kindArg);if(!kind)return fail('Gõ truyencong, truyencong vip hoặc truyencong than.');return startChannel(w,p,kind,now,ctx.emit);}
- if(isStatus){ctx.emit(w,p,statusLine(p,now),'status',now,{mountStatus:true});return {ok:true};}
+ if(isStatus){ctx.emit(w,p,statusLine(p,now),'status',now,{mountStatus:true,card:mountCard(p,now)});return {ok:true};}
  const owned=MOUNTS.filter(m=>p.mounts[m.id]);
  if(words==='tat'||words==='xuong'){p.mount=null;ctx.emit(w,p,'Xuống tọa kỹ','status',now);return {ok:true};}
  if(words){
@@ -146,6 +157,6 @@ export function mountCommand(w,p,cmd,rest,now,ctx){
   if(!m||!p.mounts[m.id])return fail('Chưa sở hữu tọa kỹ này.');
   p.mount=m.id;ctx.emit(w,p,'Cưỡi '+m.name+' '+p.mounts[m.id].stars+'★','mount',now,{mountRide:m.id});return {ok:true};
  }
- ctx.emit(w,p,owned.length?'Tọa kỹ: '+owned.map(m=>(MOUNTS.indexOf(m)+1)+'.'+m.name+' '+p.mounts[m.id].stars+'★').join(' · ')+' · gõ toaky số để cưỡi':'Chưa có tọa kỹ · Linh Châu có ở Tọa Kỹ Bí Cảnh','status',now,{mountStatus:true});
+ ctx.emit(w,p,owned.length?'Tọa kỹ: '+owned.map(m=>(MOUNTS.indexOf(m)+1)+'.'+m.name+' '+p.mounts[m.id].stars+'★').join(' · ')+' · gõ toaky số để cưỡi':'Chưa có tọa kỹ · Linh Châu có ở Tọa Kỹ Bí Cảnh','status',now,{mountStatus:true,card:mountCard(p,now)});
  return {ok:true};
 }

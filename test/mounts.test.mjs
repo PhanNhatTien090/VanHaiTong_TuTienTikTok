@@ -132,3 +132,17 @@ test('18/11: châu xanh ra VIP 10%; nở VIP/Thần từ châu xanh → cờ luc
  const plain=run('common',.9);assert.equal(plain.mountReveal.tier,'common');assert.equal(plain.mountReveal.lucky,undefined);
  const fromVip=run('vip',.5);assert.equal(fromVip.mountReveal.lucky,undefined,'châu tím ra VIP là bình thường');
 });
+
+// 18/11 (chủ game: gõ linhchau / toaky không thấy bảng): lệnh gửi kèm BẢNG XEM "Tọa kỹ" có số để gõ toaky số.
+test('linhchau / toaky gửi kèm bảng Tọa kỹ (số, sao, đang cưỡi, châu)', async()=>{
+ const {inventoryDeckHTML,cardKind}=await import('../public/inventory-multi.js');
+ const p={id:'u1',name:'Tông chủ',mounts:{'hoa-ky-lan':{stars:1},'thanh-lan-xa':{stars:2}},mount:'hoa-ky-lan',mountOrbs:{common:8,vip:0,divine:0}};
+ for(const cmd of ['linhchau','toaky']){
+  const out=[];const ctx={emit:(w,pl,text,effect,now,extra)=>out.push(extra)};
+  assert.equal(mountCommand({},{...p,mountCmdAt:0},cmd,'',NOW,ctx).ok,true);
+  const card=out[0]?.card;assert.equal(cardKind(card),'mounts');
+  assert.deepEqual(card.owned.items.map(i=>[i.no,i.id,i.on]),[[MOUNTS.findIndex(m=>m.id==='hoa-ky-lan')+1,'hoa-ky-lan',true],[MOUNTS.findIndex(m=>m.id==='thanh-lan-xa')+1,'thanh-lan-xa',false]]);
+  const html=inventoryDeckHTML({name:p.name,card},s=>String(s));
+  assert.match(html,/8 châu xanh/);assert.match(html,/cưỡi/);assert.match(html,/toa-ky-v1\/hoa-ky-lan\.webp/);
+ }
+});
