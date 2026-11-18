@@ -82,3 +82,12 @@ test('16/11: yêu thú chui ra từ hang, đụng người thì đánh văng lù
  const path=pathAhead(e.maze,r.x,r.y,9);e.mobs=[{id:'m100',x:path[2][0],y:path[2][1],born:t,nextAt:t+1e9,px:0,py:0}];
  gift(w,'p1',30,t+MAZE.mob.firstMs+3000);assert.equal(e.mobs.length,0);assert.deepEqual([r.x,r.y],path.at(-1));
 });
+
+test('18/11: quà ≥99 ở Mê Cung → chiếu riêng (tự đi = Tốc Hành Phá Trận, đúng 100 = Thuấn Di), giờ mê cung cộng thêm thời gian chiếu; quà nhỏ không chiếu',async()=>{
+ const {MAZE_CUT}=await import('../maze.mjs');
+ const w=setup(4),t=running(w),e=w.maze,end0=e.endsAt;
+ gift(w,'p0',30,t+100);assert.equal((e.cuts||[]).length,0);
+ gift(w,'p0',99,t+200);assert.equal(e.cuts[0].kind,'walk');assert.ok(e.cuts[0].cells>0);assert.equal(e.endsAt,end0+MAZE_CUT.ms.walk);
+ gift(w,'p1',100,t+20000);assert.equal(e.cuts[1].kind,'teleport');
+ assert.deepEqual(snapshot(w,t+20000).maze.cuts.map(x=>x.kind),['teleport'],'màn đã chiếu xong thì không gửi xuống nữa');
+});

@@ -121,6 +121,15 @@ export function mazeCommand(w,p,cmd,now,c){
  arrive(w,e,r,now,c);return {ok:true,maze:true};
 }
 // Quà lúc tuyển: vào mê cung (+ lượt phá tường dùng khi chạy). Lúc đang chạy: thêm lượt phá tường. Người chưa vào thì tặng quà là vào luôn.
+// 18/11 (chủ game: quà ≥99 → CHIẾU RIÊNG): Mê Cung — quà ≥99 tự đi = TỐC HÀNH PHÁ TRẬN, đúng 100 = THUẤN DI THẦN THÔNG (tốc biến).
+// Đua về đích nên KHÔNG dừng người khác; giờ mê cung cộng thêm đúng thời gian chiếu. Cách ≥6 s, chờ ≤10 s.
+export const MAZE_CUT=Object.freeze({min:99,ms:{walk:3600,teleport:3800},gap:6000,maxWait:10000});
+export function mazeCut(e,p,kind,extra,now){
+ const ms=MAZE_CUT.ms[kind];if(!ms)return null;const start=Math.max(now,e.cutUntil?e.cutUntil+MAZE_CUT.gap:now);if(start-now>MAZE_CUT.maxWait)return null;
+ const cut={id:e.id+':cut:'+(e.cutSeq=(e.cutSeq||0)+1),at:start,ms,kind,user:p.id,name:p.name,...extra};e.cutUntil=start+ms;
+ const hold=e.cutUntil-Math.max(start,e.heldUntil||0);if(hold>0){if(e.endsAt)e.endsAt+=hold;e.heldUntil=e.cutUntil;}
+ (e.cuts??=[]).push(cut);if(e.cuts.length>4)e.cuts.splice(0,e.cuts.length-4);return cut;
+}
 export function mazeGift(w,p,coins,now,c,{unitCoins=coins}={}){
  const e=w.maze;if(!real(p)||!(coins>0))return null;
  const teleport=unitCoins===100,steps=teleport?0:tier(MAZE.walk,coins),add=teleport||steps?0:tier(MAZE.breaks,coins);
@@ -139,8 +148,8 @@ export function mazeGift(w,p,coins,now,c,{unitCoins=coins}={}){
  if(e?.phase==='registration'){const had=e.runners.some(r=>r.id===p.id),r=addRunner(w,e,p,now);if(!r)return null;if(teleport){r.pendingTeleport=true;return {teleport:true,text:'Tốc biến tới cửa ra khi khai trận'};}if(steps){r.pendingWalk=(r.pendingWalk||0)+steps;r.giftAt=now;return {walk:steps,text:(had?'':'vào mê cung • ')+`tự đi ${steps} ô khi khai trận`};}r.breaks=(r.breaks||0)+add;r.giftAt=now;return {breaks:add,text:(had?'':'vào mê cung • ')+`phá ${add} tường`};}
  if(e?.phase!=='running'||now>=e.endsAt)return null;
  const r=addRunner(w,e,p,now);if(!r||r.finishAt)return null;
- if(teleport)return send(r);
- if(steps)return walk(r);
+ if(teleport){const out=send(r);if(coins>=MAZE_CUT.min)mazeCut(e,p,'teleport',{},now);return out;}
+ if(steps){const out=walk(r);if(coins>=MAZE_CUT.min&&out.walk)mazeCut(e,p,'walk',{cells:out.walk},now);return out;}
  r.breaks=(r.breaks||0)+add;r.giftAt=now;r.giftCoins=coins;
  return {breaks:add,text:`phá ${add} tường • đâm tường là phá`};
 }
@@ -175,5 +184,5 @@ export function mazeView(w,now){
  if(!mazeVisible(w,now))return null;const m=e.maze;
  const runners=mazeRanking(e).slice(0,300).map(r=>({id:r.id,n:r.name,x:r.x,y:r.y,s:r.steps,d:distOf(e,r),f:r.finishAt||0,r:r.rank||0,m:r.moveAt||0,b:r.bumpAt||0,g:r.giftAt||0,k:r.breaks||0,bk:r.breakAt||0,h:r.hitAt||0}));
  return {id:e.id,phase:e.phase,active:true,cols:m.cols,rows:m.rows,cells:m.cells.join(''),start:m.start,exit:m.exit,startDist:m.dist[m.start.y*m.cols+m.start.x],
-  registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,count:e.runners.length,finished:e.finished,runners,teleports:(e.teleports||[]).filter(f=>now-f.at<2600),mobs:(e.mobs||[]).map(o=>[o.x,o.y,o.id]),dens:e.dens||[],hits:(e.hits||[]).filter(h=>now-h.at<1600),poofs:(e.poofs||[]).filter(h=>now-h.at<1200),walks:(e.walks||[]).filter(f=>now-f.at<3500),broken:(e.broken||[]).filter(b=>now-b.at<2500),results:e.results||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil};
+  registrationEndsAt:e.registrationEndsAt,startedAt:e.startedAt,endsAt:e.endsAt,count:e.runners.length,finished:e.finished,runners,teleports:(e.teleports||[]).filter(f=>now-f.at<2600),cuts:(e.cuts||[]).filter(x=>now<x.at+x.ms+1500),mobs:(e.mobs||[]).map(o=>[o.x,o.y,o.id]),dens:e.dens||[],hits:(e.hits||[]).filter(h=>now-h.at<1600),poofs:(e.poofs||[]).filter(h=>now-h.at<1200),walks:(e.walks||[]).filter(f=>now-f.at<3500),broken:(e.broken||[]).filter(b=>now-b.at<2500),results:e.results||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil};
 }
