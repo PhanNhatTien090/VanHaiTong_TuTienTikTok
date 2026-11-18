@@ -1,4 +1,4 @@
-// 17/11/2026 (chủ game): CÁNH BẬC CAO 8.500 / 10.000 / 12.000 / 15.000 — ghép từ BỘ PHẬN RỜI, định kỳ BIẾN HÌNH:
+// 17/11/2026 (chủ game): CÁNH BẬC CAO 8.000 / 9.000 / 10.000 / 12.000 (mốc hạ 18/11) — ghép từ BỘ PHẬN RỜI, định kỳ BIẾN HÌNH:
 //  swords  Vạn Kiếm Dực      — 14 phi kiếm bung ra, sáng lên, bay tứ tung quanh người rồi bay về xếp lại thành cánh.
 //  demon   U Minh Quỷ Dực    — cánh hóa khói, tụ thành MẶT QUỶ bay vọt khỏi thân, gầm phun lửa, bay về hóa lại cánh.
 //  lotus   Thanh Liên Dực    — cánh hoa tách ra xoáy lên đầu, nở thành ĐÓA SEN KHỔNG LỒ, rồi rơi về thành cánh.
@@ -78,7 +78,7 @@ export function drawWingFx(scene,c,target,fx,t,x,y,w,alpha=.95){
 // bitmap tĩnh mờ dần ra / hiện lại (dùng khi bộ phận rời đi)
 function ghost(c,S,a){if(a<=.01)return;c.globalAlpha=a;c.drawImage(S.cv,-S.w/2,-S.pivotY,S.w,S.h);}
 
-// ===== 8.500 VẠN KIẾM: bung → bay tứ tung → về xếp cánh =====
+// ===== 8.000 VẠN KIẾM: bung → bay tứ tung → về xếp cánh =====
 function burstSwords(c,w,k,t,seed,alpha,S){
  const sw=sized('sword',w*.25);if(!sw){ghost(c,S,alpha);return;}
  const slots=swordSlots(w),mix=smooth(seg(k,0,.16))*(1-smooth(seg(k,.72,.95))),glowA=Math.sin(Math.PI*clamp(k/.95));
@@ -112,7 +112,7 @@ function burstLotus(c,w,k,t,seed,alpha,S){
   sx=top.x+Math.cos(u)*r,sy=top.y+Math.sin(u)*r*.45,m=go*(1-back),px=s.x+(sx-s.x)*m,py=s.y+(sy-s.y)*m,rot=s.rot*(1-m)+u*m;
   c.globalCompositeOperation='lighter';dot(c,'#ff9ad0',px,py-s.L*.4,s.L*.3,.4*m);c.globalCompositeOperation='source-over';stem(c,pet,px,py,s.L,rot,alpha*vis);}
 }
-// ===== 15.000 THIÊN ĐẠO: pháp luân lên đỉnh đầu → kiếm trận xoay quanh người → về chỗ =====
+// ===== 12.000 THIÊN ĐẠO: pháp luân lên đỉnh đầu → kiếm trận xoay quanh người → về chỗ =====
 function burstHeaven(c,w,k,t,seed,alpha,S){
  const lw=sized('light-wing',w),bl=sized('light-blade',w*.22),wh=sized('dharma-wheel',w*.6);if(!lw||!bl||!wh){ghost(c,S,alpha);return;}
  const lwA=.7*(1-smooth(seg(k,.06,.2))+smooth(seg(k,.82,.96)));part(c,lw,0,0,w,0,alpha*clamp(lwA),.5,.55);

@@ -1,9 +1,9 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {_burstOf,WING_BURST_MS,WING_BURST_GAP} from '../public/wing-fx.js';
 import {WING_TIERS,wingTier} from '../public/boss-arena.js';
-test('mốc cánh mới giãn dần 8.500 / 10.000 / 12.000 / 15.000, có hiệu ứng biến hình',()=>{
- assert.deepEqual(WING_TIERS.filter(w=>w.fx).map(w=>[w.min,w.fx]),[[8500,'swords'],[10000,'demon'],[12000,'lotus'],[15000,'heaven']]);
- assert.equal(wingTier(10676).fx,'demon');assert.equal(wingTier(27420).fx,'heaven');assert.equal(wingTier(7999).min,7000);
+test('mốc cánh mới 8.000 / 9.000 / 10.000 / 12.000 (18/11), có hiệu ứng biến hình',()=>{
+ assert.deepEqual(WING_TIERS.filter(w=>w.fx).map(w=>[w.min,w.fx]),[[8000,'swords'],[9000,'demon'],[10000,'lotus'],[12000,'heaven']]);
+ assert.equal(wingTier(10676).fx,'lotus');assert.equal(wingTier(9000).fx,'demon');assert.equal(wingTier(27420).fx,'heaven');assert.equal(wingTier(7999).min,7000);
  assert.ok(WING_TIERS.filter(w=>w.fx).every(w=>w.width<=1.19),'không rộng hơn cánh 7.000');
 });
 test('chống lag: tối đa 2 người biến hình cùng lúc (sân ≥10 người: 1), mỗi người ≥45 s, sân đông/đồ họa nhẹ thì không',()=>{
@@ -15,4 +15,21 @@ test('chống lag: tối đa 2 người biến hình cùng lúc (sân ≥10 ngư
  assert.equal(_burstOf(one,'x',T+100000+WING_BURST_MS+10),null,'chưa đủ 45 s');
  assert.equal(_burstOf(seed({motion:true}),'a',T+10),null,'mới vào sân chưa bùng ngay (lệch nhịp)');
  assert.ok(_burstOf(one,'x',T+100000+WING_BURST_GAP+9000),'sau 45 s+ được bùng lại');
+});
+
+test('18/11: vừa đủ mốc cánh mới thì tự mặc cánh mới nhất (bỏ lựa chọn cũ), đổi lại vẫn được, ẩn cánh giữ nguyên',async()=>{
+ const {createWorld,action}=await import('../engine.mjs');const {playerWing}=await import('../public/boss-arena.js');
+ const N=Date.parse('2026-11-18T12:00:00+07:00'),w=createWorld('live');Object.assign(w.settings,{autoEvents:false,residents:false});w.nextBossAt=N+864e5;w.nextSmallAt=N+864e5;
+ const say=(id,text,t)=>action(w,{type:'chat',userId:id,name:id,text},t),gift=(id,coins,t)=>action(w,{type:'gift',userId:id,name:id,coins,count:1,giftName:'X',eventId:id+t},t);
+ say('a','chao',N);gift('a',8200,N+1);assert.equal(playerWing(w.players.a).name,'Vạn Kiếm Dực');
+ say('a','canh 4',N+2);assert.equal(playerWing(w.players.a).name,'Phượng Hoàng Vàng','tự chọn cánh thấp hơn');
+ gift('a',100,N+3);assert.equal(playerWing(w.players.a).name,'Phượng Hoàng Vàng','chưa qua mốc mới → giữ lựa chọn');
+ gift('a',900,N+4);assert.equal(playerWing(w.players.a).name,'U Minh Quỷ Dực','đủ 9.000 → tự mặc cánh mới');
+ say('a','canh 10',N+5);assert.equal(playerWing(w.players.a).name,'Vạn Kiếm Dực','đổi lại được');
+ say('a','huy canh',N+6);gift('a',1000,N+7);assert.equal(playerWing(w.players.a),undefined,'đã ẩn cánh thì giữ ẩn');
+ // người chọn cánh trước khi hạ mốc (10.372 coin, ghim số 10) → lên Thanh Liên Dực khi tương tác
+ say('b','chao',N);Object.assign(w.players.b,{giftCoins:10372,wingChoice:10});delete w.players.b.wingSeen;say('b','chao',N+10);
+ assert.equal(playerWing(w.players.b).name,'Thanh Liên Dực');
+ say('c','chao',N);Object.assign(w.players.c,{giftCoins:4737,wingChoice:4});delete w.players.c.wingSeen;say('c','chao',N+10);
+ assert.equal(playerWing(w.players.c).name,'Phượng Hoàng Vàng','không qua mốc mới thì giữ lựa chọn cũ');
 });

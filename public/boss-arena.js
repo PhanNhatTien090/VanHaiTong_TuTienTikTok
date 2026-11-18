@@ -47,12 +47,21 @@ export const WING_TIERS = [
   { min: 5000, name:'Tử Nguyệt Điệp Dực', art:'wings-5000-nguyet-diep.webp', width:1.12, pivot:.43 },
   { min: 6000, name:'Cực Quang Lưu Ly Dực', art:'wings-6000-cuc-quang.webp', width:1.15, pivot:.46 },
   { min: 7000, name:'Cửu Nhật Thần Dực', art:'wings-7000-cuu-nhat.webp', width:1.19, pivot:.48 },
-  // 17/11 (chủ game): mốc giãn dần, cánh ghép bộ phận + BIẾN HÌNH định kỳ (public/wing-fx.js). Không to hơn 7.000.
-  { min: 8500, name:'Vạn Kiếm Dực', fx:'swords', width:1.12 },
-  { min: 10000, name:'U Minh Quỷ Dực', fx:'demon', width:1.12 },
-  { min: 12000, name:'Thanh Liên Dực', fx:'lotus', width:1.12 },
-  { min: 15000, name:'Thiên Đạo Thần Hoàn', fx:'heaven', width:1.1 },
+  // 17/11 (chủ game): cánh ghép bộ phận + BIẾN HÌNH định kỳ (public/wing-fx.js). Không to hơn 7.000.
+  // 18/11 (chủ game): hạ mốc 8k · 9k · 10k · 12k; sau 12k là 14k · 16k · 18k · 20k (chưa có cánh — cần vẽ). THỨ TỰ GIỮ NGUYÊN (wingChoice = số thứ tự).
+  { min: 8000, name:'Vạn Kiếm Dực', fx:'swords', width:1.12 },
+  { min: 9000, name:'U Minh Quỷ Dực', fx:'demon', width:1.12 },
+  { min: 10000, name:'Thanh Liên Dực', fx:'lotus', width:1.12 },
+  { min: 12000, name:'Thiên Đạo Thần Hoàn', fx:'heaven', width:1.1 },
 ];
+export const wingTopIndex = coins => WING_TIERS.findLastIndex(w => (Number(coins)||0) >= w.min);
+// 18/11 (chủ game): vừa đủ MỐC MỚI thì tự mặc cánh mới nhất (bỏ lựa chọn cũ đang ghim); muốn đổi lại thì gõ cánh + số. Người tự ẩn cánh (wingChoice 0) giữ nguyên.
+const OLD_WING_MINS = [1,100,500,2000,3000,4000,5000,6000,7000,8500,10000,12000,15000]; // mốc trước 18/11 — để người đã chọn cánh trước khi hạ mốc cũng được lên cánh mới
+export function syncWingTop(p){
+  if(!p||p.resident||p.puppet)return false;const coins=Number(p.giftCoins)||0,top=wingTopIndex(coins);
+  if(p.wingSeen===undefined)p.wingSeen=p.wingChoice>0?OLD_WING_MINS.findLastIndex(m=>coins>=m):top;
+  if(top<=p.wingSeen)return false;p.wingSeen=top;if(p.wingChoice>0){p.wingChoice=null;return true;}return false;
+}
 export const wingTier = coins => WING_TIERS.findLast(w => coins >= w.min);
 export function playerWing(p){
   if(!p||p.resident||p.puppet||p.wingChoice===0)return undefined;

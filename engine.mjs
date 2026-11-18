@@ -1,7 +1,7 @@
 import {startHallWar as beginHallWar,stopHallWar as endHallWar,tickHallWar,hallWarCommand,hallWarGift,hallWarView,hallWarVisible} from './hall-war.mjs';
 import {creditMasterGift,unlockMasterLoadout,resetHistoricMasters} from './master-rewards.mjs';
 import {safeGiftUrl} from './public/gift-icons.js';
-import {WING_TIERS,playerWing} from './public/boss-arena.js';
+import {WING_TIERS,playerWing,syncWingTop} from './public/boss-arena.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand} from './rebirth.mjs';
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
@@ -412,7 +412,7 @@ function actionCore(w,input,now) {
   const genderCmd=['nhapmon','gioitinh','xungho','xunghieu'].includes(cmd);
   const gender=genderCmd?parseGender(rest):type==='join'&&input.gender?parseGender(input.gender):null;
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;
-  const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
+  const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;syncWingTop(p);p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(existed&&!p.resident&&!p.puppet&&w.mode==='live'&&!w.webShadow&&prevActive&&now-prevActive>=BAO_RETURN_AWAY&&!cooldown(p,'bao-return',BAO_RETURN_AWAY,now)){const h=baoReturnHint(p);if(h)emit(w,p,h,'status',now,{baoReturn:true});} // 18/11: chủ nhân thần khí vào sân → nhắc xem/đeo/dùng
   if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
@@ -644,7 +644,7 @@ function actionCore(w,input,now) {
     const itemNames=items.map(id=>CATALOG.find(x=>x.id===id).name);
     if(!input.simulated&&!input.autoRose)creditMasterGift(w,p,input.coins*count);
     if(!input.simulated&&!input.autoRose)hallContribution(w,p,now,'gift');
-    p.giftCoins+=input.coins*count;w.totalGifts+=input.coins*count;sectBuild(w,p,input.coins*count,now,engageCtx);
+    p.giftCoins+=input.coins*count;syncWingTop(p); /* 18/11: đủ mốc cánh mới → tự mặc */w.totalGifts+=input.coins*count;sectBuild(w,p,input.coins*count,now,engageCtx);
     // Quà có tên nhận diện được → sự kiện riêng (hoa hồng, mèo, sư tử…); không thì theo mốc coin.
     const kind=giftKind(input.giftName),gift=input.giftName?giftNameVi(input.giftName,kind):null;
     // Phúc duyên: sau khi tặng quà, chơi tay (tu luyện, hái, bình luận, đánh) được nhân thưởng trong 10 phút.
