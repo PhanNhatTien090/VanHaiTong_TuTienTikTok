@@ -1199,7 +1199,7 @@ export const RANDOM_EVENTS=Object.freeze([
   ['visitor-vuonglam','Tiên nhân Vương Lâm',(w,now)=>startVisitor(w,'vuonglam',now)],
   ['visitor-shende','Tiên nhân Thần Đế',(w,now)=>startVisitor(w,'shende',now)],
   ['opportunity','Cơ duyên',(w,now)=>startOpportunity(w,now)],
-  ['tournament','Phong Vân Luận Kiếm',(w,now)=>startTournament(w,now)],
+  ['arena','Vân Hải Lôi Đài',(w,now)=>startArenaEvent(w,now)], // 18/11 tối (chủ game: "Lôi Đài sao không mở mà cứ mở tỷ thí"): thay Luận Kiếm — lịch thi đấu riêng đang tắt nên Lôi Đài chưa từng tự mở
   ['race','Đua phi kiếm',(w,now)=>{const r=startRace(w,now);if(r.ok&&w.race)w.race.repeat=false;return r;}],
   ['war','Chính Ma Đại Chiến',(w,now)=>startWar(w,now)],
   ['alchemy','Khai Lò Cửu Chuyển',(w,now)=>startAlchemy(w,now)],
