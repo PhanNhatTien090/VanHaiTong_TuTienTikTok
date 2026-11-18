@@ -122,3 +122,13 @@ test('engine: quà thật lúc không có sự kiện rút ngắn truyền công
  action(w,{type:'gift',userId:'g1',name:'G1',coins:1,count:5,giftName:'Rose',eventId:'gx1'},NOW+20000);
  assert.equal(p.mountChannel.endsAt,end-5*20000);
 });
+
+test('18/11: châu xanh ra VIP 10%; nở VIP/Thần từ châu xanh → cờ lucky + "THIÊN ĐẠO CHIẾU CỐ" + giọng tông sư',async()=>{
+ const {speechPlan}=await import('../speech-lines.mjs');
+ assert.equal(ODDS.common.vip,.10);
+ const run=(kind,r)=>{const out=[];const p={id:'x',name:'X',mountChannel:{kind,startedAt:0,endsAt:1},mountPity:{vip:0,divine:0}};revealMount({players:{x:p}},p,2,{emit:(w,pl,text,type,at,extra)=>out.push({text,...extra})},()=>r);return out[0];};
+ const lucky=run('common',.05);assert.equal(lucky.mountReveal.tier,'vip');assert.equal(lucky.mountReveal.lucky,true);assert.match(lucky.text,/^THIÊN ĐẠO CHIẾU CỐ/);
+ const v=speechPlan({type:'mount',user:'x',name:'X',...lucky},{players:[{id:'x',name:'X'}]});assert.match(v[0].text,/Thiên đạo chiếu cố/);assert.equal(v[0].voice,'tongsu');
+ const plain=run('common',.9);assert.equal(plain.mountReveal.tier,'common');assert.equal(plain.mountReveal.lucky,undefined);
+ const fromVip=run('vip',.5);assert.equal(fromVip.mountReveal.lucky,undefined,'châu tím ra VIP là bình thường');
+});

@@ -85,6 +85,7 @@ export function speechPlan(e){
   if(e.orbCard?.stage==='earned')return [say('tiennu',Who+' đạt '+(e.orbCard.kind==='divine'?'Linh Châu vàng!':'Linh Châu tím!'))]; // 18/11
   if(e.orbCard?.stage==='remind'){const c=e.orbCard.counts||{[e.orbCard.kind]:e.orbCard.count||1},nm={divine:'Linh Châu vàng',vip:'Linh Châu tím',common:'Linh Châu xanh'};const list=['divine','vip','common'].filter(k=>c[k]>0).map(k=>viNumber(c[k])+' '+nm[k]).join(', ');return [say('tiennu',Who+' đang có '+list+', nhớ truyền công để nở tọa kỹ.')];} // 18/11 chủ game: nhắc ấp trứng
   if(e.mountOrb)return [say('tiennu',Who+' nhận '+(e.orbCount>1?viNumber(e.orbCount)+' ':'')+(e.mountOrb==='divine'?'Linh Châu vàng!':e.mountOrb==='vip'?'Linh Châu tím!':'Linh Châu xanh!'))];
+  if(e.mountReveal?.lucky){const nm=String(e.text||'').split('·')[1]?.replace(/hiện thân|lên \d+ sao/,'').trim()||'tọa kỹ';return [say('tongsu','Thiên đạo chiếu cố! '+Who+' chỉ dùng Linh Châu xanh mà nở ra tọa kỹ '+(e.mountReveal.tier==='divine'?'Thần':'VIP')+' '+nm+'. Cơ duyên ngàn năm hiếm có!')];} // 18/11
   if(e.mountReveal)return [say(e.mountReveal.tier==='divine'?'tongsu':'tiennu',Who+'! Linh Châu vỡ, '+(e.text.split('·')[1]||'tọa kỹ hiện thân').trim()+(e.mountReveal.tier==='divine'?'! Thần thú giáng thế!':'!'))];
   if(e.mountBoost)return [say('tiennu',Who+' truyền công gia tốc!')];
   if(e.mountChannel)return [say('tiennu',Who+' bắt đầu truyền công Linh Châu.')];

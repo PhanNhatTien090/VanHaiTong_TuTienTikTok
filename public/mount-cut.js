@@ -44,6 +44,14 @@ function namePlate(c,r,H,a,col){
  const oi=orbArt(r.orb);if(oi)c.drawImage(oi,250,py+186,44,44);text(c,L.orb,470,py+208,28,ORBS[r.orb]?.color||col,6,520);c.globalAlpha=1;
 }
 
+// 18/11 (chủ game): châu XANH mà nở VIP/Thần → băng vinh danh "THIÊN ĐẠO CHIẾU CỐ" (hiện từ lúc châu vỡ tới hết màn).
+export function luckyBanner(c,H,sec,t,tier){
+ const at=tier==='divine'?2.4:VIP_BREAK,u=sec-at;if(u<0)return;const a=Math.min(1,u/.35),pop=1+.5*Math.max(0,1-u/.4),y=H*.215; /* ngay dưới tiêu đề TỌA KỸ VIP (không đè), cách xa đáy (quà TikTok che) */
+ c.save();c.globalCompositeOperation='source-over';if('filter' in c)c.filter='none';c.globalAlpha=a*.92;c.fillStyle='#120a02';c.fillRect(30,y-62,840,130);c.globalAlpha=a;c.strokeStyle='#ffd36b';c.lineWidth=4;c.strokeRect(30,y-62,840,130);
+ c.globalCompositeOperation='lighter';glow(c,450,y,260,'#ffcf5a',.35*a*(.75+.25*Math.sin(t*.008)));c.globalCompositeOperation='source-over';c.globalAlpha=a; /* glow() để lại alpha thấp */
+ c.translate(450,y-14);c.scale(pop,pop);text(c,'✦ THIÊN ĐẠO CHIẾU CỐ ✦',0,0,58,'#ffe08a',11,800);c.restore();c.globalAlpha=a;
+ text(c,'Linh Châu xanh hóa tọa kỹ '+(tier==='divine'?'Thần':'VIP')+' · cơ duyên ngàn năm hiếm có',450,y+42,26,'#fff3cf',6,800);c.globalAlpha=1;
+}
 /** Hook đầu scene.drawFrame: true = đang chiếu riêng nở tọa kỹ VIP/Thần (bỏ sân). */
 export function mountCutFrame(scene,c,t,H){
  const list=scene.mountReveals,r=list?.[0];
@@ -57,7 +65,7 @@ export function mountCutFrame(scene,c,t,H){
  if(!full)return false;
  if(scene.canvas)c.setTransform(scene.canvas.width/900,0,0,scene.canvas.height/H,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
  const sec=age/1000;
- try{if(r.tier==='divine')drawDivineCut(scene,c,t,H,r,sec);else drawVipCut(scene,c,t,H,r,sec);}catch(err){console.warn('[mount-cut]',err);return false;}
+ try{if(r.tier==='divine')drawDivineCut(scene,c,t,H,r,sec);else drawVipCut(scene,c,t,H,r,sec);if(r.lucky)luckyBanner(c,H,sec,t,r.tier);}catch(err){console.warn('[mount-cut]',err);return false;}
  const cues=r.cues??=new Set(),cue=(key,at)=>{if(sec>=at&&sec<at+.6&&!cues.has(key)){cues.add(key);if(key[0]==='b')scene.onSpectacleImpact?.();else scene.onFeedbackSound?.('hit',key[0]==='c'?1:3);}};
  if(r.tier==='divine'){cue('g',1.2);DIVINE_BOOMS.forEach((b,i)=>cue('b'+i,b));cue('l',4.9);}else{cue('c1',1.7);cue('c2',1.95);cue('c3',2.2);cue('b0',VIP_BREAK);}
  return true;

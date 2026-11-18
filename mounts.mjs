@@ -5,7 +5,7 @@ import {MOUNTS,ORBS,MAX_STARS,mountById,orbKind,mountStat} from './public/mounts
 export {MOUNTS,ORBS,mountById};
 
 // Bậc ra theo loại châu (chỉ ở server). Châu vàng chắc chắn ra Thần.
-export const ODDS=Object.freeze({common:{vip:.11,divine:.0005},vip:{vip:.88,divine:.12} /* 18/11 chủ game: châu tím (quà 300) CHẮC CHẮN ra VIP trở lên — trước 50% ra thường */,divine:{vip:0,divine:1}});
+export const ODDS=Object.freeze({common:{vip:.10,divine:.0005} /* 18/11 chủ game: châu xanh ra VIP 11% → 10% */,vip:{vip:.88,divine:.12} /* 18/11 chủ game: châu tím (quà 300) CHẮC CHẮN ra VIP trở lên — trước 50% ra thường */,divine:{vip:0,divine:1}});
 // Bảo hiểm: 20 châu chưa ra VIP → châu kế ra ít nhất VIP; 200 lượt chưa ra Thần → ra Thần (châu tím tính 3 lượt).
 export const PITY=Object.freeze({vip:20,divine:200,vipOrbWeight:3});
 export const REVEAL_SCAN_MS=2000,COMMAND_CD=5000;
@@ -94,7 +94,8 @@ export function revealMount(w,p,now,ctx,rng=cryptoRng){
  const m=mountById(roll.id);
  const text=got.refund?'Linh Châu vỡ · '+m.name+' đã đủ '+MAX_STARS+' sao · hoàn '+got.refund+' linh thạch'
   :got.starUp?'Linh Châu vỡ · '+m.name+' lên '+got.stars+' sao':'Linh Châu vỡ · '+m.name+' hiện thân';
- ctx.emit(w,p,text,'mount',now,{mountReveal:{id:m.id,tier:m.tier,orb:ch.kind,stars:got.stars,fresh:!!got.fresh}});
+ const lucky=ch.kind==='common'&&m.tier!=='common'; // 18/11 (chủ game): châu xanh mà nở VIP/Thần → vinh danh "thiên đạo chiếu cố" + giọng
+ ctx.emit(w,p,(lucky?'THIÊN ĐẠO CHIẾU CỐ • ':'')+text,'mount',now,{mountReveal:{id:m.id,tier:m.tier,orb:ch.kind,stars:got.stars,fresh:!!got.fresh,...(lucky?{lucky:true}:{})}});
  ctx.audit?.(w,'mount-reveal',now,{user:p.id,name:p.name,orb:ch.kind,mount:m.id,tier:m.tier,stars:got.stars,refund:got.refund||0});
  return got;
 }

@@ -15,7 +15,7 @@ export function addMountReveal(scene,e,t){
  const tier=m.tier,full=tier==='divine'&&t-(scene.lastMountFlashAt??-1e12)>=REVEAL_FLASH_GAP;if(full)scene.lastMountFlashAt=t;
  let variant=Math.floor(Math.random()*3);if(variant===scene.lastMountRevealVariant)variant=(variant+1)%3;scene.lastMountRevealVariant=variant;
  const list=scene.mountReveals??=[];
- list.push({id:m.id,tier,orb:r.orb,stars:r.stars||0,fresh:!!r.fresh,who:e.name||'',uid:e.user||null,mname:m.name,start:null,full,seed:String(e.id||'')+':'+m.id,variant,queued:t});
+ list.push({lucky:!!r.lucky||r.orb==='common'&&tier!=='common',id:m.id,tier,orb:r.orb,stars:r.stars||0,fresh:!!r.fresh,who:e.name||'',uid:e.user||null,mname:m.name,start:null,full,seed:String(e.id||'')+':'+m.id,variant,queued:t});
  while(list.length>3)list.shift();
  return true;
 }
