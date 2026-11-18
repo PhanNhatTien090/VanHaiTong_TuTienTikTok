@@ -22,6 +22,7 @@ test('quay 1 triệu lần (không bảo hiểm): tỉ lệ từng bậc đúng 
   assert.ok(Math.abs(count.divine/n-ODDS[kind].divine)<.003,kind+' divine '+count.divine/n);
   assert.ok(Math.abs(count.vip/n-ODDS[kind].vip)<.003,kind+' vip '+count.vip/n);
  }
+ {const r=seeded(11);for(let i=0;i<200000;i++)assert.notEqual(rollMount('vip',{vip:0,divine:0},r).tier,'common','18/11: châu tím không bao giờ ra thường');}
  // Châu xanh: Thần 0,05% — trong 1 triệu lần phải quanh 500.
  const r=seeded(7);let d=0;for(let i=0;i<1_000_000;i++)if(rollMount('common',{vip:0,divine:0},r).tier==='divine')d++;
  assert.ok(d>380&&d<620,'divine '+d);

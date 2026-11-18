@@ -5,7 +5,7 @@ import {MOUNTS,ORBS,MAX_STARS,mountById,orbKind,mountStat} from './public/mounts
 export {MOUNTS,ORBS,mountById};
 
 // Bậc ra theo loại châu (chỉ ở server). Châu vàng chắc chắn ra Thần.
-export const ODDS=Object.freeze({common:{vip:.11,divine:.0005},vip:{vip:.42,divine:.08},divine:{vip:0,divine:1}});
+export const ODDS=Object.freeze({common:{vip:.11,divine:.0005},vip:{vip:.88,divine:.12} /* 18/11 chủ game: châu tím (quà 300) CHẮC CHẮN ra VIP trở lên — trước 50% ra thường */,divine:{vip:0,divine:1}});
 // Bảo hiểm: 20 châu chưa ra VIP → châu kế ra ít nhất VIP; 200 lượt chưa ra Thần → ra Thần (châu tím tính 3 lượt).
 export const PITY=Object.freeze({vip:20,divine:200,vipOrbWeight:3});
 export const REVEAL_SCAN_MS=2000,COMMAND_CD=5000;
