@@ -36,3 +36,28 @@ test('quà ≥199 → HỎA THIÊU BÍ CẢNH: lửa phủ sàn 6 s đốt mọi
  t+=BURN_MS;tick(w,t);const dmg=e.members.a.dmg;t+=1000;tick(w,t);
  assert.ok(!e.burn||t>=e.burn.until,'hết lửa sau 6 s');
 });
+
+test('18/11: thẻ Linh Châu — quà vừa đủ mốc hiện thẻ ngay, nhận châu có thẻ, người giữ châu được nhắc khi có mặt (20 phút/lần)',async()=>{
+ const {ORB_REMIND_MS}=await import('../mounts.mjs');
+ const w=world();for(const id of ['a','b'])chat(w,id,'chao',NOW);
+ assert.equal(startMountRealmEvent(w,NOW).ok,true);for(const id of ['a','b'])chat(w,id,'bicanh',NOW+1000);const t=NOW+REGISTER_MS+1000;tick(w,t);assert.equal(w.mountRealm.phase,'running');
+ const cards=()=>w.events.filter(e=>e.orbCard);
+ action(w,{type:'gift',userId:'a',name:'A',coins:200,count:1,eventId:'g1'},t+10);
+ assert.equal(cards().length,0,'chưa đủ 300');
+ action(w,{type:'gift',userId:'a',name:'A',coins:150,count:1,eventId:'g2'},t+20);
+ let c=cards().at(-1);assert.equal(c?.orbCard.kind,'vip');assert.equal(c.orbCard.stage,'earned');
+ action(w,{type:'gift',userId:'a',name:'A',coins:10,count:1,eventId:'g3'},t+30);
+ assert.equal(cards().length,1,'không lặp khi chưa qua mốc mới');
+ action(w,{type:'gift',userId:'a',name:'A',coins:700,count:1,eventId:'g4'},t+40);
+ c=cards().at(-1);assert.equal(c.orbCard.kind,'divine');assert.equal(c.orbCard.stage,'earned');
+ stopMountRealmEvent(w,t+60000);
+ const {grantOrbs}=await import('../mounts.mjs');const out=[];grantOrbs(w,w.players.a,'divine',1,t+61000,(w2,p,text,type,at,extra)=>out.push(extra));grantOrbs(w,w.players.a,'common',1,t+61000,(w2,p,text,type,at,extra)=>out.push(extra));
+ assert.deepEqual(out[0].orbCard,{kind:'divine',stage:'got',count:1},'nhận châu vàng có thẻ');assert.equal(out[1].orbCard,undefined,'châu xanh không có thẻ');
+ // nhắc khi có mặt, 20 phút/lần, ẩn nếu đang truyền công
+ const n0=cards().filter(e=>e.orbCard.stage==='remind').length;const t2=t+3*60000;
+ chat(w,'a','chao',t2);chat(w,'a','chao',t2+1000);
+ assert.equal(cards().filter(e=>e.orbCard.stage==='remind').length,n0+1);
+ chat(w,'a','chao',t2+ORB_REMIND_MS+5000);assert.equal(cards().filter(e=>e.orbCard.stage==='remind').length,n0+2);
+ w.players.a.mountChannel={kind:'divine',startedAt:t2,endsAt:t2+9e9};chat(w,'a','chao',t2+3*ORB_REMIND_MS);assert.equal(cards().filter(e=>e.orbCard.stage==='remind').length,n0+2,'đang truyền công thì không nhắc');
+ chat(w,'b','chao',t2+3*ORB_REMIND_MS);assert.ok(!cards().some(e=>e.user==='b'&&e.orbCard.stage==='remind'),'không giữ châu tím/vàng thì không nhắc');
+});

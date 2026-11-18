@@ -1,0 +1,23 @@
+/* 18/11/2026: thẻ Linh Châu tím/vàng (public/orb-card.js). Chỉ transform/opacity. Đặt giữa-trên màn, cách đáy xa (quà TikTok che đáy). */
+#orbCard{position:absolute;left:50%;top:22%;z-index:60;pointer-events:none;transform:translate(-50%,0)}
+#orbCard[hidden]{display:none}
+.oc-card{position:relative;width:min(560px,86vw);padding:22px 26px 24px;border-radius:26px;text-align:center;color:#fff;font-family:'Segoe UI',system-ui,sans-serif;font-weight:800;
+ background:radial-gradient(120% 90% at 50% 18%,var(--oc-glow),rgba(10,6,22,0) 62%),#0d0718;border:3px solid var(--oc-edge);box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 46px var(--oc-shadow);overflow:hidden}
+.oc-gold{--oc-glow:rgba(255,206,92,.55);--oc-edge:#ffd36b;--oc-shadow:rgba(255,196,64,.7);--oc-text:#ffe9a8}
+.oc-cyan{--oc-glow:rgba(120,225,255,.45);--oc-edge:#7fe3ff;--oc-shadow:rgba(90,200,255,.6);--oc-text:#dcf7ff}
+.oc-violet{--oc-glow:rgba(190,140,255,.5);--oc-edge:#c79bff;--oc-shadow:rgba(170,110,255,.65);--oc-text:#ecdcff}
+.oc-rays{position:absolute;left:50%;top:92px;width:520px;height:520px;margin:-260px 0 0 -260px;opacity:.55;
+ background:repeating-conic-gradient(from 0deg,var(--oc-glow) 0 7deg,transparent 7deg 22deg);border-radius:50%;animation:oc-spin 6s linear infinite}
+.oc-orb{position:relative;width:150px;height:150px;object-fit:contain;display:block;margin:0 auto 4px;animation:oc-bob 1.6s ease-in-out infinite}
+.oc-head{position:relative;font-size:34px;letter-spacing:1px;color:var(--oc-text);-webkit-text-stroke:6px #120818;paint-order:stroke fill}
+.oc-name{position:relative;font-size:40px;margin-top:2px;-webkit-text-stroke:7px #120818;paint-order:stroke fill}
+.oc-line{position:relative;font-size:22px;margin-top:6px;color:#f3eaff;-webkit-text-stroke:4px #120818;paint-order:stroke fill}
+.oc-cmd{position:relative;display:inline-block;margin-top:12px;padding:6px 18px;border-radius:999px;background:rgba(0,0,0,.55);border:2px solid var(--oc-edge);font-size:26px}
+.oc-cmd b{color:var(--oc-text)}
+#orbCard.oc-in .oc-card{animation:oc-pop .55s cubic-bezier(.2,1.6,.4,1) both}
+#orbCard.oc-out .oc-card{animation:oc-leave .38s ease-in both}
+@keyframes oc-pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes oc-leave{to{transform:translateY(-30px) scale(.9);opacity:0}}
+@keyframes oc-spin{to{transform:rotate(360deg)}}
+@keyframes oc-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.oc-rays,.oc-orb{animation:none}}

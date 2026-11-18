@@ -156,7 +156,9 @@ export function mountRealmCommand(w,p,cmd,now,ctx){
 export function mountRealmGift(w,p,value,now,ctx){
  const e=w.mountRealm;if(!mountRealmActive(w)||value<1)return null;use(e);
  const m=enroll(w,p,now);if(!m)return null;
- m.coins+=value;m.boostUntil=Math.max(m.boostUntil,now+Math.min(16000,4000+Math.sqrt(value)*500));
+ const before=orbsForCoins(m.coins);m.coins+=value;m.boostUntil=Math.max(m.boostUntil,now+Math.min(16000,4000+Math.sqrt(value)*500));
+ {const after=orbsForCoins(m.coins),kind=after.divine>before.divine?'divine':after.vip>before.vip?'vip':null; // 18/11 (chủ game): đủ mốc châu → hiện thẻ ngay cho người tặng
+  if(kind)ctx.emit(w,p,p.name+' đạt '+(kind==='divine'?'Linh Châu vàng':(after.vip>1?after.vip+' ':'')+'Linh Châu tím')+' · nhận khi Bí Cảnh kết thúc','mount',now,{orbCard:{kind,stage:'earned',count:kind==='divine'?after.divine:after.vip}});}
  const tier=giftTier(value);(e.gifts??=[]).push({id:e.id+':g'+(e.seq++),user:p.id,at:now,value,tier:tier.id,name:tier.name});if(e.gifts.length>24)e.gifts.splice(0,e.gifts.length-24);
  if(['running','boss'].includes(e.phase)){const targets=e.boss&&e.boss.hp>0?[e.boss]:e.mobs,found=nearest(grid(targets),m,40);if(found)cast(w,e,m,found.target,now,{value});
   if(tier.burn)e.burn={by:m.id,at:now,until:Math.max(now,e.burn?.until||0)+BURN_MS}; // 17/11: HỎA THIÊU — lửa phủ cả sàn, quà nối tiếp thì cộng dồn thời gian

@@ -82,6 +82,8 @@ export function speechPlan(e){
   if(e.realmBoss)return [say('trongtai','Thú vương xuất hiện! Các đạo hữu hợp lực thu phục!')];
   if(e.realmEnd)return [say('trongtai',e.cancelled?'Tọa Kỹ Bí Cảnh đã đóng.':(e.realmTamed?'Thú vương đã bị thu phục! ':'Bí cảnh khép lại! ')+'Linh Châu đã về tay các đạo hữu. Gõ truyền công để mở châu.')];
   if(e.realmTop)return [say('tiennu',Who+' đứng hạng '+viNumber(e.realmTop)+' sát thương Thú vương, nhận thêm Linh Châu!')];
+  if(e.orbCard?.stage==='earned')return [say('tiennu',Who+' đạt '+(e.orbCard.kind==='divine'?'Linh Châu vàng!':'Linh Châu tím!'))]; // 18/11
+  if(e.orbCard?.stage==='remind'){const c=e.orbCard.counts||{[e.orbCard.kind]:e.orbCard.count||1},nm={divine:'Linh Châu vàng',vip:'Linh Châu tím',common:'Linh Châu xanh'};const list=['divine','vip','common'].filter(k=>c[k]>0).map(k=>viNumber(c[k])+' '+nm[k]).join(', ');return [say('tiennu',Who+' đang có '+list+', nhớ truyền công để nở tọa kỹ.')];} // 18/11 chủ game: nhắc ấp trứng
   if(e.mountOrb)return [say('tiennu',Who+' nhận '+(e.orbCount>1?viNumber(e.orbCount)+' ':'')+(e.mountOrb==='divine'?'Linh Châu vàng!':e.mountOrb==='vip'?'Linh Châu tím!':'Linh Châu xanh!'))];
   if(e.mountReveal)return [say(e.mountReveal.tier==='divine'?'tongsu':'tiennu',Who+'! Linh Châu vỡ, '+(e.text.split('·')[1]||'tọa kỹ hiện thân').trim()+(e.mountReveal.tier==='divine'?'! Thần thú giáng thế!':'!'))];
   if(e.mountBoost)return [say('tiennu',Who+' truyền công gia tốc!')];

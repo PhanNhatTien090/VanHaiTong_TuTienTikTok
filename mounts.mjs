@@ -54,11 +54,19 @@ export function awardMount(p,id,kind,now){
 export function grantOrbs(w,p,kind,count,now,emit,{silent=false}={}){
  if(!real(p)||!ORBS[kind]||!Number.isSafeInteger(count)||count<1)return 0;
  ensureMountState(p);p.mountOrbs[kind]+=count;
- if(!silent)emit(w,p,'Nhận '+(count>1?count+' ':'')+ORBS[kind].name+' · gõ truyencong'+(kind==='common'?'':' '+(kind==='vip'?'vip':'than')),'mount',now,{mountOrb:kind,orbCount:count});
+ if(!silent)emit(w,p,'Nhận '+(count>1?count+' ':'')+ORBS[kind].name+' · gõ truyencong'+(kind==='common'?'':' '+(kind==='vip'?'vip':'than')),'mount',now,{mountOrb:kind,orbCount:count,...(kind!=='common'?{orbCard:{kind,stage:'got',count}}:{})}); // 18/11: châu tím/vàng có thẻ
  return count;
 }
 
 // Phần trăm thưởng của tọa kỹ đang cưỡi (0 nếu không cưỡi). key: arena | war | race | stones | qi.
+// 18/11 (chủ game): người đang GIỮ châu tím/vàng chưa truyền công → nhắc bằng thẻ khi họ có mặt (engine gọi, hồi 20 phút/người).
+export const ORB_REMIND_MS=20*60000;
+export const ORB_REMIND_GAP_MS=60000; // toàn kênh: 1 lời nhắc / phút (đông người không đọc liên tục)
+export function orbReminder(p){
+ if(!p?.mountOrbs||p.mountChannel)return null;const o=p.mountOrbs,kind=o.divine>0?'divine':o.vip>0?'vip':o.common>0?'common':null;if(!kind)return null;
+ const counts={divine:o.divine||0,vip:o.vip||0,common:o.common||0},list=['divine','vip','common'].filter(k=>counts[k]>0).map(k=>counts[k]+' '+ORBS[k].name);
+ return {text:p.name+' đang có '+list.join(', ')+' · gõ truyencong'+(kind==='common'?'':' '+(kind==='divine'?'than':'vip'))+' để nở tọa kỹ',card:{kind,stage:'remind',count:counts[kind],counts}};
+}
 export function mountBonus(p,key){
  const id=p?.mount,own=id&&p.mounts?.[id];if(!own)return 0;
  return mountStat(id,own.stars,key)/100;
