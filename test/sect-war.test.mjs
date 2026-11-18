@@ -87,3 +87,15 @@ test('18/11: bản mệnh tung thần thông khi xuất chiêu/thả tim — đ�
  chat(w,'p1','chien',t+5000);assert.equal(e.fx.some(x=>x.kind==='bao'&&x.user==='p1'),false,'không có thần khí');
  like(w,'p2',20,t+6000);assert.ok(e.fx.some(x=>x.kind==='bao'&&x.user==='p2'),'thả tim cũng kích thần thông');
 });
+
+// 18/11 tối (chủ game: Đỉnh/Chung phải là dòng thủ ở cả Tháp, Chính Ma): Chung = HỘ TRẬN.
+test('Chính Ma: thần khí Chung tung Hộ trận — lực đẩy phe địch (không tính quà) giảm, đẩy của mình còn 40%, không cộng dồn',async()=>{
+ const {WAR_GUARD,WAR_GUARD_MS}=await import('../sect-war.mjs');assert.deepEqual(WAR_GUARD,{4:.15,5:.2,6:.25});assert.equal(WAR_GUARD_MS,3000);
+ const w=setup(4),t=battle(w,['p0'],['p1']),e=w.sectWar;w.players.p0.bao={p4:0,p5:0,items:{'L02-hon-don-chung':1},lim:null};
+ e.line=50;chat(w,'p0','chien',t+5000);const f=e.fx.find(x=>x.kind==='bao'&&x.user==='p0');assert.ok(f,'Chung tung thần thông');
+ assert.ok(e.guard.chinh.until===t+5000+WAR_GUARD_MS&&e.guard.chinh.pct===.25,'phe Chính được che 25%');
+ // so lực đẩy của phe Ma trong lúc che và sau khi hết che
+ const pushOf=at=>{e.line=50;e.members.p1.strikeAt=0;e.members.p1.heartAt=0;like(w,'p1',40,at);return 50-e.line;};
+ const inGuard=pushOf(t+5100),afterGuard=pushOf(t+5000+WAR_GUARD_MS+6000);
+ assert.ok(inGuard>0&&Math.abs(inGuard/afterGuard-.75)<.02,'giảm 25%: '+inGuard+' / '+afterGuard);
+});

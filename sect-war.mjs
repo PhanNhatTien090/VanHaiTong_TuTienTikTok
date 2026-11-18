@@ -6,7 +6,9 @@
 // 1 coin = 3 đơn vị (= 30 tim). Bù quân số giảm còn tối đa ×1,2, Chính khí ×1,05.
 import {stageConflict} from './stage-lock.mjs';
 import {mountBonus} from './mounts.mjs';
-import {baoBanMenh,baoWarUnits,BAO_PROC,BAO_LINES} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh trong Chính Ma
+import {baoBanMenh,baoWarUnits,BAO_PROC,BAO_LINES,BAO_GUARD_DMG} from './public/phap-bao-data.js';
+// 18/11 tối: Chung = HỘ TRẬN — phe mình được che: lực đẩy (không tính quà) của phe địch giảm % trong WAR_GUARD_MS; không cộng dồn (lấy mức cao nhất).
+export const WAR_GUARD=Object.freeze({4:.15,5:.2,6:.25}),WAR_GUARD_MS=3000; // 18/11: thần thông bản mệnh trong Chính Ma
 // 16/11: Tọa Kỹ — đẩy thêm trượng khi xuất chiêu/tim (không áp vào quà). Phần lẻ cộng dồn theo người.
 const mountUnits=(m,p,units)=>{const b=mountBonus(p,'war');if(!b)return 0;m.mountCarry=(m.mountCarry||0)+units*b;const n=Math.floor(m.mountCarry);m.mountCarry-=n;return n;};
 // 08/11: đẩy mạnh hơn (unit .5 → .85) + lò xo kéo chiến tuyến về giữa 3,5%/giây → giằng co qua lại rõ, trận vẫn đủ 2 phút.
@@ -24,7 +26,8 @@ const real=p=>p&&!p.resident&&!p.puppet;
 // 18/11: bản mệnh tự tung thần thông (theo nhịp hồi BAO_PROC) khi người đó xuất chiêu hoặc thả tim đẩy được trượng. Không áp cho quà (quà đã có trần + chiếu riêng).
 function baoWar(w,e,m,p,now,c){
  const bm=baoBanMenh(p);if(!bm||now<(m.baoAt??(m.at||0)+3000))return 0;
- m.baoAt=now+BAO_PROC[bm.tier].cd;const units=baoWarUnits(bm);if(!(units>0))return 0;
+ m.baoAt=now+BAO_PROC[bm.tier].cd;let units=baoWarUnits(bm);if(!(units>0))return 0;
+ if(bm.line==='chung'){units*=BAO_GUARD_DMG;e.guard??={};const g=e.guard[m.side],pct=WAR_GUARD[bm.tier];e.guard[m.side]={until:now+WAR_GUARD_MS,pct:g&&g.until>now?Math.max(g.pct,pct):pct};}
  m.score+=units;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units,now,c);
  fx(e,now,{kind:'bao',side:m.side,user:p.id,name:p.name,item:bm.id,tier:bm.tier,skill:BAO_LINES[bm.line].skill,truong:Math.round(moved*TRUONG_PER_POINT)});return moved;
 }
@@ -55,7 +58,7 @@ function join(w,e,p,side,now,c,auto=false){
 }
 // Đẩy chiến tuyến; trả về số điểm chiến tuyến thực sự dịch chuyển.
 function push(w,e,side,units,now,c,gift=false){
- if(e.phase!=='running'||units<=0)return 0;const delta=units*WAR.unit*warMultiplier(e,side,now,gift),before=e.line;
+ if(e.phase!=='running'||units<=0)return 0;const foe=side==='chinh'?'ma':'chinh',g=!gift&&e.guard?.[foe];const delta=units*WAR.unit*warMultiplier(e,side,now,gift)*(g&&g.until>now?1-g.pct:1),before=e.line;
  e.line=Math.max(0,Math.min(100,e.line+(side==='chinh'?delta:-delta)));
  return Math.abs(e.line-before);
 }

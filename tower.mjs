@@ -7,7 +7,7 @@
 // Mọi số tính theo % máu để tầng nào cũng cân: đúng tầm cảnh giới (tầng ≈ 2 × cảnh giới) thì tự đánh + gõ 3 vừa đủ qua; vượt cấp cần quà/trợ lực.
 import {stageConflict} from './stage-lock.mjs';
 import {combatRealm} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi Ấn
-import {baoBanMenh,baoBonus,BAO_TOWER,BAO_LINES,baoStarK} from './public/phap-bao-data.js'; // 18/11: thần khí bản mệnh trong Tháp
+import {baoBanMenh,baoBonus,BAO_TOWER,BAO_LINES,baoStarK,BAO_GUARD,BAO_GUARD_DMG,BAO_HEAL_BANK} from './public/phap-bao-data.js'; // 18/11: thần khí bản mệnh trong Tháp
 
 export const TOWER=Object.freeze({durationMs:300000,turnMs:30000,gapMs:1500,hitCdMs:900,hitCdBoostMs:450,helpCdMs:2000,maxQueue:30,podiumMs:9000,milestone:5,lanes:4});
 export const TOWER_JOIN=['leothap','thap','vaothap'];
@@ -80,8 +80,12 @@ function applyHold(e,now){
  if(now<e.holdUntil)return true;e.holdFrom=null;return false;
 }
 // 18/11 tối: thần khí bản mệnh — ×sát thương theo bậc, và THẦN THÔNG chém % máu thủ vệ theo nhịp (từ giây thứ 3 của lượt).
-function baoMult(p){const bm=baoBanMenh(p);return bm?(1+BAO_TOWER[bm.tier].mult*baoStarK(bm.stars))*(1+baoBonus(bm).atk):1;} /* 18/11 tối: + chỉ số Công */
-function baoProc(e,lane,t,p,now){const bm=baoBanMenh(p);if(!bm||t.hp<=0||now<(t.baoAt??(t.startedAt+3000)))return;const T=BAO_TOWER[bm.tier];t.baoAt=now+T.cd;const pct=T.pct*baoStarK(bm.stars);t.hp=Math.max(0,t.hp-pct);
+function baoMult(p){const bm=baoBanMenh(p);return bm?(1+BAO_TOWER[bm.tier].mult*baoStarK(bm.stars)):1;} /* 18/11 tối: KHÔNG cộng chỉ số Công ở Tháp — mô phỏng: Kiếm GIỚI HẠN ★5 leo vô hạn (thần thông chém % máu + sát thương tối thiểu không giảm theo tầng) */
+function baoProc(e,lane,t,p,now){const bm=baoBanMenh(p);if(!bm||t.hp<=0||now<(t.baoAt??(t.startedAt+3000)))return;const T=BAO_TOWER[bm.tier];t.baoAt=now+T.cd;const k=baoStarK(bm.stars),guard=bm.line==='dinh'||bm.line==='chung';
+ /* 18/11 tối: Đỉnh hồi máu người leo (thừa thì tích lũy ≤30), Chung lên khiên chặn đòn thủ vệ; hồi/khiên một nửa, sát thương kèm 85% (Tháp tính giờ — mô phỏng 18/11) */
+ if(bm.line==='dinh'){const amt=BAO_GUARD[bm.tier].heal*100*k*.5,h=Math.min(100-t.me,amt);t.me+=h;if(amt>h)t.bank=Math.min(BAO_HEAL_BANK*100,(t.bank||0)+amt-h);}
+ if(bm.line==='chung')t.shield=(t.shield||0)+BAO_GUARD[bm.tier].shield*100*k*.5;
+ const pct=T.pct*k*(guard?.85:1); /* Tháp: dòng thủ giữ 85% sát thương */t.hp=Math.max(0,t.hp-pct);
  pushFx(e,{kind:'bao',lane,id:bm.id,tier:bm.tier,name:bm.name,skill:BAO_LINES[bm.line].skill,burst:pct,from:p.id,fromName:p.name,at:now});}
 function beginTurn(w,e,lane,p,now){
  const floor=(Number(p.towerFloor)||0)+1;
@@ -110,7 +114,7 @@ export function tickTower(w,now,c){
   const mult=(t.buffUntil>now?t.buffMult||1:1)*baoMult(p);
   t.hp=Math.max(0,t.hp-passiveDps(p?combatRealm(p):0,t.floor)*mult*dt);
   baoProc(e,lane,t,p,now);
-  t.me=Math.max(0,t.me-guardDps(p?combatRealm(p):0,t.floor)*dt);
+  {let hurt=guardDps(p?combatRealm(p):0,t.floor)*dt;if(t.shield>0){const a=Math.min(t.shield,hurt);t.shield-=a;hurt-=a;}t.me=Math.max(0,t.me-hurt);if(t.bank>0&&t.me<100){const r=Math.min(t.bank,100-t.me);t.me+=r;t.bank-=r;}}
   if(t.hp<=0)finishTurn(w,e,lane,now,c,true);
   else if(t.me<=0)finishTurn(w,e,lane,now,c,false,'down');
   else if(now>=t.endsAt||!p)finishTurn(w,e,lane,now,c,false,'time');
