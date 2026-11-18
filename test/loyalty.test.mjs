@@ -43,7 +43,7 @@ test('30 and 60 minute rewards progress independently; free crafting is blocked'
  p.lastActive=start+30*min;p.activeMs=30*min;assert.equal(awardLoyalty(w,p.lastActive)[0].items[0],'spirit-vase');
  const qi=p.qi;p.lastActive=start+60*min;p.activeMs=60*min;
  assert.deepEqual(awardLoyalty(w,p.lastActive)[0].items,['soul-bell']);
- assert.equal(p.qi-qi,144);assert.equal(p.artifacts.length,2);
+ assert.equal(p.qi-qi,120);assert.equal(p.artifacts.length,2); // 18/11 tối: thưởng không nhân hệ số pháp bảo (trước 144)
  assert.equal(action(w,{type:'craft',userId:'a',itemId:'cosmic-cauldron'},p.lastActive+1).ok,false);
  assert.equal(action(w,{type:'chat',userId:'a',text:'trangbi Tu Linh Binh'},p.lastActive+2).ok,true);
  assert.equal(p.equipped,'spirit-vase');

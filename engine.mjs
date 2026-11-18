@@ -133,7 +133,7 @@ export const handQiMult=p=>HAND_QI_MULT[Math.min(HAND_QI_MULT.length-1,Math.max(
 export const GOLDEN_MS=30*60000;
 export const goldenHour=(p,now,w=null)=>!!p&&w?.settings?.goldenHour===true&&!p.resident&&!p.puppet&&now!=null&&(Number(p.realm)||0)<=2&&now-(Number(p.joinedAt)||0)<GOLDEN_MS;
 const qiBonus=p=>p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.bonus||0),0)+(CATALOG.find(x=>x.id===p.equipped)?.bonus||0)+extraStat(p,'bonus');
-export const EVENT_GEAR_SHARE=.5;
+export const EVENT_GEAR_SHARE=0; // 18/11 tối: thưởng sự kiện/quà không còn ăn hệ số pháp bảo (trước .5)
 const freeQiUnit=p=>Math.ceil(rewardQiBasis(p)/ascensionPracticeReward(p.realm,'cultivate',rewardQiBasis(p),requiredStones(p)).steps);
 // 12/11: tiểu cảnh giới — báo nhẹ khi bước lên Trung kỳ / Hậu kỳ / Viên Mãn (người thật, tối đa 1 lần/phút/người).
 const stageOf=p=>realmStage(p.realm,p.qi,requiredQi(p),p.realm>=REALMS.length-1);
@@ -144,8 +144,9 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   if(hand)qi*=(1+baoBonus(baoBanMenhOf(p)).qi)*handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
   if(hand&&talking(p,now))qi*=1.2; // 4/11: Luận Đạo — có trò chuyện thường trong 5 phút gần nhất
   if(hand&&goldenHour(p,now,w)){qi*=2;stones*=3;}
-  // 09/11 (chủ game): thưởng sự kiện (nguồn 'reward': câu đố, lì xì, nhiệm vụ, lò đan…) chỉ ăn một nửa hệ số pháp bảo/công pháp.
-  const bonus=qiBonus(p)*(source==='reward'||source==='sect-event'?EVENT_GEAR_SHARE:1);
+  // 18/11 tối (chủ game, LUẬT CHUNG: "các hệ số chỉ tính vào lúc tu luyện bình thường, nhân vào quà/sự kiện thì nát game"):
+  // hệ số pháp bảo/công pháp CHỈ nhân khi chơi tay (hand). Quà, thưởng sự kiện, song tu… = số gốc, không nhân.
+  const bonus=hand?qiBonus(p):0;
   // v33: Phúc duyên (buff sau khi tặng quà) nhân tu vi + linh thạch của hành động chơi tay trong thời gian hiệu lực.
   const buff=hand&&now!==null&&p.buffUntil>now?(p.buffMult||1):1;
   // 16/11: Tọa Kỹ — linh thạch mọi nguồn; tu luyện chỉ khi chơi tay (không áp vào thưởng sự kiện 'reward'/'sect-event').
@@ -157,7 +158,7 @@ function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   }
   const at=now??Date.now(), activity=typeof hand==='string'?hand:source;
   const perk=hallBenefits(w,p,at,activity);
-  amount=withHallQi(amount,p,perk.rate,true);
+  amount=withHallQi(amount,p,hand?perk.rate:0,true); /* 18/11 tối: % tu vi Ngũ Đường cũng chỉ khi chơi tay */
   herbs+=perk.herbs;
   amount=creditQi(w,p,amount,at,source==='sect-event'?'reward':activity);
   if(['sect-event','event'].includes(source)&&amount>0)hallContribution(w,p,at,'event');
@@ -426,7 +427,7 @@ function actionCore(w,input,now) {
     if(result){if(!result.ok&&!cooldown(p,'hall-error',6000,now))emit(w,p,result.message,'status',now,{cmdFail:true});return result;}
   }
   if(type==='chat'&&cmd==='chuyensinh'){
-    const result=rebirthCommand(w,p,rest,now);
+    const result=rebirthCommand(w,p,rest,now,requiredQi(p));
     if(result.reborn)emit(w,p,result.message,'skin',now,{rebirth:true,transform:true,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});
     else if(!cooldown(p,'rebirth-info',5000,now))emit(w,p,result.message,'status',now,result.ok?undefined:{cmdFail:true});
     return {ok:result.ok,pending:result.pending,reborn:result.reborn,message:result.message};
@@ -1054,7 +1055,7 @@ export function snapshot(w,now=Date.now(),opts={}) {
   const earlyHonors=select?honorRoll(w,ranked):null,earlyRoles=select?rankDivineRoles(ranked,w.adminLog||[]):null;
   let pick=all;
   if(select){const r=socialView(w,now),rt=r.tournament,rc=r.ceremony,arenaIds=arenaVisible(w,now)?arenaStageIds(w,now):null,stage=arenaIds||(rt?.current?[rt.current.a,rt.current.b]:rt?.lastBow?.until>now&&rt.lastBow.pair?rt.lastBow.pair:rc?[rc.a,rc.b]:rt?.podiumUntil>now?[rt.winner]:[]);const ids=select({players:ranked,honors:earlyHonors,halls,socialStage:stage,raceStage:raceStageIds(w,now),patronCurrent:w.patronCurrent});pick=all.filter(p=>ids.has(p.id));}
-  const players=pick.map(p=>({...p,...(petV2View(w,p)?{petView:petV2View(w,p)}:{}),signatureArtifactOwned:COURT_VISITORS.some(v=>v.artifact===p.equipped)&&(p.artifacts||[]).includes(p.equipped),sectHallIndex:w.nguDuong&&Object.hasOwn(w.nguDuong.members,p.id)?w.nguDuong.members[p.id].index:null,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],realmStage:stageOf(p),progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM,talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
+  const players=pick.map(p=>({...p,...(petV2View(w,p)?{petView:petV2View(w,p)}:{}),signatureArtifactOwned:COURT_VISITORS.some(v=>v.artifact===p.equipped)&&(p.artifacts||[]).includes(p.equipped),sectHallIndex:w.nguDuong&&Object.hasOwn(w.nguDuong.members,p.id)?w.nguDuong.members[p.id].index:null,isPatronLeader:p.id===w.patronCurrent,power:power(p),realmName:REALMS[p.realm],realmStage:stageOf(p),progressionReady:readyToBreak(p,w,now),dailyAscensionStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyAscensionView(w,p,now):null,dailyPracticeStatus:p.realm>=5&&!p.resident&&!p.puppet?dailyPracticeView(w,p,now):null,rebirthEligible:!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM&&p.qi>=requiredQi(p),talk:p.talk&&now-p.talk.at<TALK_SHOW_MS?p.talk.text:undefined,talking:talking(p,now)||undefined,neededQi:requiredQi(p),neededStones:requiredStones(p),finalRealmEligible:finalRealmEligible(p),active:currentParticipant(w,p,now)}));
   const socialStatus=socialView(w,now),t=socialStatus.tournament,ceremony=socialStatus.ceremony;
   const socialStage=t?.current?[t.current.a,t.current.b]:t?.lastBow?.until>now&&t.lastBow.pair?t.lastBow.pair:ceremony?[ceremony.a,ceremony.b]:t?.podiumUntil>now?[t.winner]:[];
   let socialScene=tournamentActive(w)||t?.podiumUntil>now?'tournament':ceremony?'bond':null;
