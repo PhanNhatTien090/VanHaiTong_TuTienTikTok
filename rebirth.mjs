@@ -1,6 +1,10 @@
 import {REBIRTH_UNLOCK_REALM,REALM_NAMES} from './public/progression.js';
-export function rebirthCommand(w,p,rest,now){
+// 18/11: phải ĐẦY cây tu vi của cảnh giới cuối mới được chuyển sinh (need = requiredQi(p) do engine truyền vào).
+const vn=n=>Math.floor(Number(n)||0).toLocaleString('vi-VN');
+export const rebirthQiFull=(p,need)=>Number(p.qi)>=Number(need);
+export function rebirthCommand(w,p,rest,now,need=0){
  if(p.resident||p.puppet||p.realm<REBIRTH_UNLOCK_REALM)return {ok:false,message:'Chuyển sinh mở sau khi đạt '+REALM_NAMES[REBIRTH_UNLOCK_REALM]+'.'};
+ if(!rebirthQiFull(p,need))return {ok:false,message:'Chuyển sinh cần đầy tu vi '+REALM_NAMES[REBIRTH_UNLOCK_REALM]+': '+vn(p.qi)+'/'+vn(need)+' ('+Math.floor(Number(p.qi)/need*100)+'%).'};
  if(w.race?.phase==='running'&&w.race.racers?.some(x=>x.id===p.id)||w.tournament?.phase==='running'&&w.tournament.participants?.includes(p.id))return {ok:false,message:'Chờ kết thúc lượt thi đấu để chuyển sinh.'};
  if(rest!=='xac nhan'&&rest!=='xacnhan'){
   p.rebirthConfirmation={realm:p.realm,until:now+30000};

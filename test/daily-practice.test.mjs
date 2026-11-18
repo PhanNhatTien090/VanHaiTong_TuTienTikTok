@@ -62,7 +62,7 @@ test('post-Than-De realms persist and are the only path to the rebirth unlock',(
   assert.equal(action(w,{type:'breakthrough',userId:p.id},N+r*86400000).ok,true);assert.equal(p.realm,r);assert.ok(ascensionProfile(r).duration>ascensionProfile(r-1).duration);
   assert.equal(realmDivineLook(p).realm,r);assert.equal(godFormFor(p).rank,r-14);
  }
- const view=snapshot(w,N+30).players[0];assert.equal(view.rebirthEligible,true);assert.equal(view.realmName,'Hỗn Độn Vĩnh Hằng');
+ p.qi=requiredQi(p);const view=snapshot(w,N+30).players[0];assert.equal(view.rebirthEligible,true);assert.equal(view.realmName,'Hỗn Độn Vĩnh Hằng');
  const saved=JSON.parse(JSON.stringify(w));assert.equal(saved.players.a.realm,28);assert.equal(action(w,{type:'breakthrough',userId:p.id},N+31).ok,false);
 });
 
