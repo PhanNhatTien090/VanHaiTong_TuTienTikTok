@@ -17,7 +17,7 @@ export function viNumber(n){n=Math.max(0,Math.floor(Number(n)||0));if(n<10)retur
   if(n<1e9){const k=Math.floor(n/1e6),r=n%1e6;return viNumber(k)+' triệu'+(r===0?'':r<1000?' không nghìn '+viNumber(r):' '+viNumber(r));}
   const k=Math.floor(n/1e9),r=n%1e9;return viNumber(k)+' tỷ'+(r===0?'':' '+viNumber(r));}
 // số lớn đọc gọn cho câu ngắn: 13.013 → "mười ba nghìn"; 1.920 → "một nghìn chín trăm"
-const roundSay=n=>{n=Math.floor(Number(n)||0);if(n>=1e6)return viNumber(Math.round(n/1e5)*1e5);if(n>=10000)return viNumber(Math.round(n/1000)*1000);if(n>=1000)return viNumber(Math.round(n/100)*100);return viNumber(n);};
+const roundSay=n=>{n=Math.floor(Number(n)||0);if(n>=1e6){const p=10**(Math.floor(Math.log10(n))-1);return viNumber(Math.round(n/p)*p);} /* 18/11: giọng trễ — số lớn đọc gọn 2 chữ số */if(n>=10000)return viNumber(Math.round(n/1000)*1000);if(n>=1000)return viNumber(Math.round(n/100)*100);return viNumber(n);};
 // Tên chiêu viết HOA trong code → đọc/hiện dạng 'Vạn Kiếm Quy Tông' (giọng AI đọc chữ hoa dễ thành đánh vần).
 const castName=s=>String(s||'').trim().toLocaleLowerCase('vi').replace(/(^|[\s·-])(\p{L})/gu,(m,a,b)=>a+b.toLocaleUpperCase('vi'));
 const pickBy=(seed,list)=>{let h=0;for(const ch of String(seed))h=(Math.imul(h,31)+ch.charCodeAt(0))|0;return list[Math.abs(h)%list.length];};
@@ -65,6 +65,13 @@ function giftLines(e,who,Who,t,seed){
  return (Number(e.coins)||0)*(Number(e.count)||1)>=99?[say('tiennu','Vinh danh '+who+'!'),say('tongsu',master)]:[say('tongsu',master)];
 }
 
+// 18/11 (giọng trễ: VieNeu tạo ~1 giây/12 ký tự trên máy LIVE): câu thường giữ 1 câu ≤100 ký tự; quà/sự kiện ≤2 câu ≤160 ký tự, tối đa 2 đoạn.
+export function compactPlan(plan,important=false){
+ const maxSeg=important?2:1,maxChars=important?160:100,maxSent=important?2:1;
+ return (plan||[]).slice(0,maxSeg).map(seg=>{let t=String(seg.text||'').trim();const parts=t.match(/[^.!?]+[.!?]*/g)||[t];t=parts.slice(0,maxSent).join('').trim();
+  if(t.length>maxChars){const cut=t.lastIndexOf(',',maxChars);t=(cut>40?t.slice(0,cut):t.slice(0,maxChars).replace(/\s+\S*$/,''))+'.';}
+  return {...seg,text:t};}).filter(s=>s.text);
+}
 export function speechPlan(e){
   if(e.effect==='summary')return [say('tongsu',e.kind==='joins'?`Chào mừng ${viNumber(e.count)} vị đạo hữu mới đến Vân Hải Tông!`:`Tông môn náo nhiệt! ${viNumber(e.count)} lượt tu luyện liên tiếp.`)];
   const raw=sayName(e.name),t=titleOf(e.gender),who=raw?`${t} ${raw}`:'đạo hữu',Who=cap(who);
@@ -174,7 +181,7 @@ export function speechPlan(e){
     const lack=[qi<needQi&&`${roundSay(needQi-qi)} tu vi`,st<needSt&&`${viNumber(needSt-st)} linh thạch`].filter(Boolean).join(' và ');
     const how=st<needSt&&qi>=needQi?'Gõ hái hoặc điểm danh để có linh thạch.':st<needSt?'Tu luyện để tăng tu vi, gõ hái để có linh thạch.':'Trò chuyện cùng đồng môn để luận đạo.';
     if(e.missing==='stones')return [say('tongsu',`${Who} thiếu linh thạch, gõ hái để lấy linh thạch!`)]; // 08/11: chủ game muốn ngắn gọn
-    return [say('tongsu',`${Who}, cảnh giới ${realm}. Còn thiếu ${lack}. ${how}`)];
+    return [say('tongsu',`${Who}, còn thiếu ${lack}. ${qi<needQi?'Gõ tu luyện.':'Gõ hái.'}`)]; // 18/11: câu ngắn → tạo giọng nhanh (trước đọc cả cảnh giới + 2 cách)
   }
   if(text.startsWith('Kích hoạt '))return [say('tongsu',`${Who} kích hoạt ${cutWords(head.replace('Kích hoạt ',''),30)} trong trò chơi, tu vi tăng vọt!`)];
   if(text.startsWith('Chế tạo thành'))return [say('tongsu',`${Who} vừa chế tạo ${cutWords(head.replace('Chế tạo thành ',''),30)} trong trò chơi.`)];

@@ -76,7 +76,7 @@ function startChannel(w,p,kind,now,emit){
  ensureMountState(p);const orb=ORBS[kind];
  if(p.mountChannel){const left=p.mountChannel.endsAt-now,busy=ORBS[p.mountChannel.kind].name;return fail(left>0?'Đang truyền công '+busy+', còn '+minutes(left)+' phút'+(p.mountChannel.kind!==kind?' · xong mới truyền '+orb.name+' được':'')+' · tặng quà để châu vỡ sớm':'Linh Châu đã đủ công lực · đang chờ hiện thân');} // 18/11: nói rõ vì sao chưa truyền được
  if(p.mountOrbs[kind]<1)return fail('Chưa có '+orb.name+(kind==='common'?' · đánh yêu thú ở Tọa Kỹ Bí Cảnh để nhận':' · tặng quà trong Tọa Kỹ Bí Cảnh để nhận')+'.');
- if((p.stones||0)<orb.cost)return fail('Truyền công '+orb.name+' cần '+orb.cost.toLocaleString('vi-VN')+' linh thạch, còn thiếu '+(orb.cost-Math.floor(p.stones||0)).toLocaleString('vi-VN')+' · gõ hái hoặc điểm danh để có linh thạch.');
+ if((p.stones||0)<orb.cost)return fail('Thiếu '+(orb.cost-Math.floor(p.stones||0)).toLocaleString('vi-VN')+' linh thạch để truyền '+orb.name+' · gõ hái để có linh thạch');
  p.stones-=orb.cost;p.mountOrbs[kind]--;
  p.mountChannel={kind,startedAt:now,endsAt:now+orb.ms};
  (w.mountChannels??=[]).includes(p.id)||w.mountChannels.push(p.id);

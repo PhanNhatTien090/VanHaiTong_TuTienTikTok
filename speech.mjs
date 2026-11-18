@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {isEventAnnouncement} from './public/event-announcements.js';
 // v75: lời thoại + phối giọng nằm ở speech-lines.mjs
-import {speechPlan,announcement,viNumber} from './speech-lines.mjs';
+import {speechPlan,announcement,viNumber,compactPlan} from './speech-lines.mjs';
 export {speechPlan,announcement,viNumber};
 
 const VIENEU_DIR=process.env.VAN_HAI_VIENEU_DIR||'C:\\WorkSpace\\TIKTOK\\tools\\vieneu';
@@ -75,7 +75,7 @@ export function createSpeech(root,dataDir){
     if(engine==='off')throw Error('Giọng đọc đang tắt (VAN_HAI_TTS=off).');
     // v75: kế hoạch đọc nhiều đoạn, mỗi đoạn một giọng (tông sư / tiên nữ / trọng tài)
     const important=(e.gift&&Number(e.coins)>0&&!e.simulated&&!e.autoRose)||e.heavenStrike||e.adminGift||isEventAnnouncement(e);
-    return synthPlan(speechPlan(e),important,false);
+    return synthPlan(compactPlan(speechPlan(e),important),important,false); // 18/11: rút gọn câu cho giọng bớt trễ
   }
   // 08/11: dùng chung cho câu đầy đủ và mảnh ghép làm sẵn (tên người chơi, câu cảm ơn quà).
   // 08/11 tối: isBackground=true là dựng trước mảnh ghép (tên/quà) lúc rảnh — không được chiếm chỗ của câu thật.

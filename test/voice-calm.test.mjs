@@ -72,6 +72,15 @@ test('stale lines are dropped even after their clip is ready',async()=>{
   q.queue=[{e:{...gift,id:'fresh'},at:Date.now()-1000}];await q.next();assert.deepEqual(played,['fresh']);assert.equal(q.lagStats().n,1);}
  finally{q.stop();globalThis.fetch=old;}
 });
-test('max ages stay short: routine 7 s, arrival 6 s, gift 12 s',()=>{
- assert.equal(voiceMaxAgeMs({effect:'qi'}),7000);assert.equal(voiceMaxAgeMs({autoArrival:true}),6000);assert.equal(voiceMaxAgeMs(gift),12000);
+test('max ages stay short: routine 5 s, arrival 5 s, gift 12 s (18/11 giọng trễ)',()=>{
+ assert.equal(voiceMaxAgeMs({effect:'qi'}),5000);assert.equal(voiceMaxAgeMs({autoArrival:true}),5000);assert.equal(voiceMaxAgeMs(gift),12000);
+});
+
+test('18/11: compactPlan — câu thường 1 câu ≤100 ký tự, quà/sự kiện ≤2 câu ≤160; số lớn đọc gọn',async()=>{
+ const {compactPlan,speechPlan}=await import('../speech-lines.mjs');
+ const long=[{voice:'tongsu',text:'Đạo hữu A, cảnh giới Thiên Tôn. Còn thiếu rất nhiều tu vi và linh thạch, tu luyện để tăng tu vi, gõ hái để có linh thạch, điểm danh mỗi ngày.'},{voice:'tiennu',text:'Câu hai.'}];
+ const r=compactPlan(long);assert.equal(r.length,1);assert.equal(r[0].text,'Đạo hữu A, cảnh giới Thiên Tôn.');
+ const imp=compactPlan(long,true);assert.equal(imp.length,2);assert.ok(imp[0].text.length<=161);
+ const t=speechPlan({type:'status',effect:'status',user:'x',name:'A',text:'Tu vi 0/31832100000 • Linh thạch 9/9 • Thái Sơ Giới Chủ'})[0].text;
+ assert.ok(t.length<80,t);assert.match(t,/ba mươi hai tỷ/);
 });
