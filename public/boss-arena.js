@@ -73,11 +73,14 @@ export function playerWing(p){
   return chosen&&coins>=chosen.min?chosen:wingTier(coins);
 }
 /** Cánh tiên sau lưng (vẽ trước thân). Chưa tặng quà / NPC / tu sĩ giả thì không có cánh. */
+// 18/11 (chủ game: "cánh vỗ liên tục, lâu lâu mới vỗ"): cánh đứng yên, mỗi 20–30 s vỗ 2 nhịp (vào/ra mềm), lệch giờ theo người.
+export const WING_FLAP=Object.freeze({beats:2,beatMs:1496,minGap:20000,spread:10000});
+export function wingFlap(t,id){const h=hash(String(id||'')),period=WING_FLAP.minGap+h%WING_FLAP.spread,dur=WING_FLAP.beats*WING_FLAP.beatMs,ph=((t+h*37)%period+period)%period;if(ph>=dur)return 0;return Math.sin(ph*.0042)*Math.sin(Math.PI*ph/dur);}
 export function drawWings(scene, c, target, t) {
   const p=target.player;let tier=playerWing(p);if(!tier)return;
   const coins=Number(p.giftCoins)||0;
   if(tier.fx){const s=(target.scale||1)*(scene.compact?.9:1),w=150*s*(1+Math.min(.35,Math.log10(coins+1)*.08))*tier.width*(p.hallIndex==null?1:.78);
-    const flap=scene.motion?Math.sin(t*.0042+(hash(p.id)%628)/100):0;
+    const flap=scene.motion?wingFlap(t,p.id):0;
     if(drawWingFx(scene,c,target,tier.fx,t,target.x,target.y-46*s+flap*2,w,scene.compact?.85:.95))return;
     tier=WING_TIERS.find(x=>x.min===7000)||tier;} // ảnh bộ phận chưa nạp xong → tạm vẽ cánh 7.000
   const cache = scene.premiumWingArt ??= new Map();
@@ -91,7 +94,7 @@ export function drawWings(scene, c, target, t) {
   const cell=custom?0:tier.cell??1;
   const cw=img.naturalWidth/(custom?1:4),ch=img.naturalHeight,s=(target.scale||1)*(scene.compact?.9:1);
   const w=150*s*(1+Math.min(.35,Math.log10(coins+1)*.08))*(custom?tier.width:1)*(p.hallIndex==null?1:.78),h=w*ch/cw;
-  const flap = scene.motion ? Math.sin(t * .0042 + (hash(p.id) % 628) / 100) : 0;
+  const flap = scene.motion ? wingFlap(t, p.id) : 0;
   c.save(); c.translate(target.x, target.y - 46 * s); c.scale(1 + flap * .07, 1 - flap * .03);
   c.globalAlpha = scene.compact ? .85 : .95;
   c.drawImage(img, cell * cw, 0, cw, ch, -w / 2, -h * (custom?tier.pivot:.55), w, h);
