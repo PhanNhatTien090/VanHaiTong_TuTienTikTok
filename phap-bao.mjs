@@ -39,7 +39,9 @@ export function rollBao(w,p,source,r=rng){
  else b.p4=0;
  const pool=BAO_ITEMS.filter(x=>x.tier===tier),it=pool[Math.floor(r()*pool.length)];return give(b,it,tier);
 }
-function give(b,it,tier){const cur=b.items[it.id]||0;if(cur>=BAO_MAX_STARS)return {tier,id:it.id,stars:cur,maxed:true};b.items[it.id]=cur+1;return {tier,id:it.id,stars:cur+1,fresh:!cur};}
+function give(b,it,tier){const cur=b.items[it.id]||0;if(cur>=BAO_MAX_STARS)return {tier,id:it.id,stars:cur,maxed:true};b.items[it.id]=cur+1;
+ /* 18/11 tối (chủ game: "cứ cho họ tự mặc cái mạnh nhất"): món mới mạnh hơn món đang ghim → bỏ ghim, bản mệnh tự lấy món mạnh nhất */
+ if(b.ban&&b.ban!==it.id){const pin=baoItem(b.ban);if(!pin||!b.items[b.ban]||it.tier>pin.tier||(it.tier===pin.tier&&b.items[it.id]>b.items[b.ban]))b.ban=null;}return {tier,id:it.id,stars:cur+1,fresh:!cur};}
 
 export function startBaoKho(w,now,ctx){
  if(baoKhoActive(w))return fail('Thiên Công Bảo Khố đang mở.');
@@ -59,7 +61,7 @@ function record(w,p,res,now,ctx,source){
  const b=state(p),row={k:++e.seq,u:p.id,name:p.name,t:res.tier,id:res.id||null,s:res.stars||0,p4:BAO_PITY4-b.p4,p5:BAO_PITY5-b.p5,at:now};
  e.log.push(row);if(e.log.length>LOG_MAX)e.log.splice(0,e.log.length-LOG_MAX);
  if(res.tier>=5)queueReveal(e,{k:row.k,u:p.id,name:p.name,t:res.tier,id:res.id,s:res.stars},now);
- if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên ★'+res.stars:'')+' • gõ thần khí để xem · trang bị + tên để đeo','bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
+ if(res.tier){const it=baoItem(res.id);ctx.emit(w,p,(res.tier===6?'THẦN KHÍ GIỚI HẠN • ':res.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+(res.stars>1?' · lên cấp '+res.stars:'')+' • gõ thần khí để xem · trang bị + tên để đeo','bao-kho',now,{baoWin:{tier:res.tier,id:res.id,stars:res.stars,item:it.name,left:res.tier===6?limitedPool(w).length:undefined}});
   if(res.tier===6)ctx.audit?.(w,'bao-limited',now,{user:p.id,name:p.name,id:res.id});}
  return row;
 }
@@ -100,14 +102,14 @@ export function baoCard(p){const items=p.bao?.items||{},list=Object.keys(items).
  return {kind:'bao',banMenh:bm?.name||null,pity4:list.length||b.p4?Math.max(0,BAO_PITY4-(b.p4||0)):null,pity5:list.length||b.p5?Math.max(0,BAO_PITY5-(b.p5||0)):null,
   owned:{items:list.map((id,i)=>({id,no:i+1,name:baoItem(id).name,stars:items[id],tier:TIER[baoItem(id).tier]||'vip',on:id===bm?.id,art:'/assets/phap-bao-v1/'+id+'.webp'})),more:0}};}
 export function baoCollectionText(p){const b=p.bao;if(!b||!Object.keys(b.items||{}).length)return 'Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở';
- const bm=baoBanMenh(p);return (bm?'Bản mệnh '+bm.name+' · ':'')+'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★ · đeo: trang bị + tên thần khí';}
+ const bm=baoBanMenh(p);return (bm?'Bản mệnh '+bm.name+' · ':'')+'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' cấp '+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★ · đeo: trang bị + tên thần khí';}
 
 /** 18/11: lệnh "bản mệnh" — xem pháp bảo bản mệnh + danh sách đánh số; "bản mệnh N" đổi (hồi 10 phút). Bản mệnh phát thần thông trong Lôi Đài. */
 export const BAN_MENH_CD=10*60000;
 export function baoBanMenhCommand(p,rest,now){
  const items=p.bao?.items||{},list=Object.keys(items).filter(id=>baoItem(id)).sort((x,y)=>baoItem(y).tier-baoItem(x).tier||items[y]-items[x]);
  if(!list.length)return fail('Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở');
- const cur=baoBanMenh(p),label=id=>{const it=baoItem(id);return BAO_TIER[it.tier].name+' '+it.name+' ★'+items[id]+' ('+BAO_LINES[it.line].skill+')';};
+ const cur=baoBanMenh(p),label=id=>{const it=baoItem(id);return BAO_TIER[it.tier].name+' '+it.name+' cấp '+items[id]+' ('+BAO_LINES[it.line].skill+')';};
  const n=parseInt(String(rest||'').trim(),10);
  if(!n)return {ok:true,message:'Bản mệnh: '+label(cur.id)+' · đổi: gõ trang bị + tên, hoặc bản mệnh + số · '+list.slice(0,6).map((id,i)=>(i+1)+'. '+baoItem(id).name).join(' · ')};
  const id=list[n-1];if(!id)return fail('Không có thần khí số '+n);
@@ -120,12 +122,12 @@ export function baoBanMenhCommand(p,rest,now){
 export function baoEquipByName(p,rest){
  const k=baoKey(rest);if(!k||k.length<3)return null;const items=p.bao?.items||{};
  const id=Object.keys(items).find(id=>{const it=baoItem(id);if(!it)return false;const n=baoKey(it.name);return n===k||n.includes(k)||k.includes(n);});if(!id)return null;
- p.bao.ban=id;const it=baoItem(id);return {ok:true,message:p.name+' · trang bị thần khí '+it.name+' ★'+items[id]+' làm bản mệnh ('+BAO_LINES[it.line].skill+')'};
+ p.bao.ban=id;const it=baoItem(id);return {ok:true,message:p.name+' · trang bị thần khí '+it.name+' cấp '+items[id]+' làm bản mệnh ('+BAO_LINES[it.line].skill+')'};
 }
 
 /** 18/11 khuya: chủ nhân thần khí VÀO SÂN (vắng ≥30 phút rồi tương tác lại) → nhắc 1 câu cách xem/đeo/dùng. Trả null nếu không có thần khí. */
 export const BAO_RETURN_AWAY=30*60000;
 export function baoReturnHint(p){
  const bm=baoBanMenh(p);if(!bm)return null;
- return 'Chủ nhân thần khí trở lại • bản mệnh '+BAO_TIER[bm.tier].name+' '+bm.name+' ★'+bm.stars+' tự tung '+BAO_LINES[bm.line].skill+' ở Lôi Đài · Tháp · tỷ thí • gõ thần khí để xem · trang bị + tên để đổi';
+ return 'Chủ nhân thần khí trở lại • bản mệnh '+BAO_TIER[bm.tier].name+' '+bm.name+' cấp '+bm.stars+' tự tung '+BAO_LINES[bm.line].skill+' ở Lôi Đài · Tháp · tỷ thí • gõ thần khí để xem · trang bị + tên để đổi';
 }

@@ -69,3 +69,10 @@ body.overlay .tower-stage.tw2:not([hidden]){width:94%;max-width:none;top:13.5%;p
 .tw2-pod{display:flex;flex-direction:column;align-items:center;padding:.4em .7em;border-radius:10px;background:rgba(255,215,106,.12);border:1px solid rgba(255,215,106,.5)}
 .tw2-pod i{font:900 1.4em/1 Georgia,serif;font-style:normal;color:#ffd76a}.tw2-pod1{transform:scale(1.15)}.tw2-none{color:#cfe3ef}
 @media (prefers-reduced-motion:reduce){.tw2-lane.tw2-hit,.tw2-pop,.tw2-dmg,.tw2-buff{animation:none}}
+
+/* 18/11 khuya: thần thông thần khí trong Tháp — món lao vào thủ vệ + vệt chém */
+.tw2-bao-fly{position:absolute;left:8%;top:40%;width:3.4em;height:3.4em;object-fit:contain;z-index:6;pointer-events:none;filter:drop-shadow(0 0 10px var(--c)) drop-shadow(0 0 4px #fff);animation:tw2BaoFly 1.25s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes tw2BaoFly{0%{transform:translate(0,0) scale(.4) rotate(-40deg);opacity:0}25%{opacity:1;transform:translate(10%,-30%) scale(1.5) rotate(0)}70%{transform:translate(170%,-10%) scale(1.25) rotate(25deg);opacity:1}100%{transform:translate(200%,0) scale(.6) rotate(40deg);opacity:0}}
+.tw2-bao-slash{position:absolute;left:30%;top:18%;width:60%;height:.55em;z-index:5;pointer-events:none;border-radius:999px;background:linear-gradient(90deg,transparent,#fff,var(--c),transparent);box-shadow:0 0 18px var(--c);transform:rotate(-28deg) scaleX(0);transform-origin:left center;animation:tw2BaoSlash .85s ease-out .45s forwards}
+@keyframes tw2BaoSlash{0%{transform:rotate(-28deg) scaleX(0);opacity:1}45%{transform:rotate(-28deg) scaleX(1);opacity:1}100%{transform:rotate(-28deg) scaleX(1.05);opacity:0}}
+.tw2-pop-bao{animation-duration:2.6s}.tw2-pop-bao strong{font-size:1.6em}

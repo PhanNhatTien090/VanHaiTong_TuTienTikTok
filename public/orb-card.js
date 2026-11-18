@@ -14,7 +14,7 @@ const BAO_HEAD={6:['THẦN KHÍ GIỚI HẠN','rose'],5:['THẦN KHÍ CAO CẤP'
 function baoCardHTML(e,c,esc){const [head,tone]=BAO_HEAD[c.tier]||BAO_HEAD[4];
  return `<div class="oc-card oc-${tone} oc-got"><div class="oc-rays"></div><img class="oc-orb oc-item" src="${esc(baoArt(c.id))}" alt="" decoding="async">`
   +`<div class="oc-head">NHẬN ${head}</div><div class="oc-name">${esc(Array.from(String(e.name||'Đạo hữu')).slice(0,18).join(''))}</div>`
-  +`<div class="oc-line">${esc(c.item||'')} · ${'★'.repeat(Math.max(1,Math.min(5,c.stars||1)))}</div><div class="oc-cmd">gõ <b>thần khí</b> để xem</div></div>`;}
+  +`<div class="oc-line">${esc(c.item||'')} · ${c.kind==='bao'?'cấp '+Math.max(1,Math.min(5,c.stars||1)):'★'.repeat(Math.max(1,Math.min(5,c.stars||1)))}</div><div class="oc-cmd">gõ <b>thần khí</b> để xem</div></div>`;}
 export function orbCardHTML(e,esc){
  if(e?.orbCard?.kind==='bao')return baoCardHTML(e,e.orbCard,esc);
  const c=e?.orbCard,k=c&&KIND[c.kind];if(!k||!LINE[c.stage])return '';

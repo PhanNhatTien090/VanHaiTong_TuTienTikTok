@@ -83,10 +83,10 @@ function applyHold(e,now){
 function baoMult(p){const bm=baoBanMenh(p);return bm?(1+BAO_TOWER[bm.tier].mult*baoStarK(bm.stars)):1;} /* 18/11 tối: KHÔNG cộng chỉ số Công ở Tháp — mô phỏng: Kiếm GIỚI HẠN ★5 leo vô hạn (thần thông chém % máu + sát thương tối thiểu không giảm theo tầng) */
 function baoProc(e,lane,t,p,now){const bm=baoBanMenh(p);if(!bm||t.hp<=0||now<(t.baoAt??(t.startedAt+3000)))return;const T=BAO_TOWER[bm.tier];t.baoAt=now+T.cd;const k=baoStarK(bm.stars),guard=bm.line==='dinh'||bm.line==='chung';
  /* 18/11 tối: Đỉnh hồi máu người leo (thừa thì tích lũy ≤30), Chung lên khiên chặn đòn thủ vệ; hồi/khiên một nửa, sát thương kèm 85% (Tháp tính giờ — mô phỏng 18/11) */
- if(bm.line==='dinh'){const amt=BAO_GUARD[bm.tier].heal*100*k*.5,h=Math.min(100-t.me,amt);t.me+=h;if(amt>h)t.bank=Math.min(BAO_HEAL_BANK*100,(t.bank||0)+amt-h);}
- if(bm.line==='chung')t.shield=(t.shield||0)+BAO_GUARD[bm.tier].shield*100*k*.5;
+ let guardFx=null;if(bm.line==='dinh'){const amt=BAO_GUARD[bm.tier].heal*100*k*.5,h=Math.min(100-t.me,amt);guardFx={heal:Math.round(amt)};t.me+=h;if(amt>h)t.bank=Math.min(BAO_HEAL_BANK*100,(t.bank||0)+amt-h);}
+ if(bm.line==='chung'){t.shield=(t.shield||0)+BAO_GUARD[bm.tier].shield*100*k*.5;guardFx={shield:Math.round(BAO_GUARD[bm.tier].shield*100*k*.5)};}
  const pct=T.pct*k*(guard?.85:1); /* Tháp: dòng thủ giữ 85% sát thương */t.hp=Math.max(0,t.hp-pct);
- pushFx(e,{kind:'bao',lane,id:bm.id,tier:bm.tier,name:bm.name,skill:BAO_LINES[bm.line].skill,burst:pct,from:p.id,fromName:p.name,at:now});}
+ pushFx(e,{kind:'bao',lane,id:bm.id,tier:bm.tier,name:bm.name,skill:BAO_LINES[bm.line].skill,burst:pct,...(guardFx||{}),from:p.id,fromName:p.name,at:now});}
 function beginTurn(w,e,lane,p,now){
  const floor=(Number(p.towerFloor)||0)+1;
  e.lanes[lane]={id:p.id,name:p.name,floor,hp:100,me:100,startedAt:now,endsAt:now+TOWER.turnMs,lastAt:now,helpers:{},helpHits:0,hits:0,next:{},buffUntil:0,buffMult:1};

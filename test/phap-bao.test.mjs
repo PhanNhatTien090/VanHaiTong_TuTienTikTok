@@ -110,3 +110,13 @@ test('chủ nhân thần khí vào sân (vắng ≥30 phút) → nhắc cách xe
  assert.equal(hints().length,1);const h=hints()[0];assert.equal(h.user,'a');assert.match(h.text,/Huyết Hải Ma Đao/);assert.match(h.text,/gõ thần khí để xem · trang bị \+ tên/);assert.doesNotMatch(h.text,/%|tỷ lệ/);
  action(w,{type:'cultivate',userId:'a',name:'A'},t+5000);assert.equal(hints().length,1,'không lặp');
 });
+
+// 18/11 tối (chủ game: "cứ cho họ tự mặc cái mạnh nhất", "nhận trùng lên cấp, không phải lên sao").
+test('nhận món mạnh hơn món đang ghim → tự mặc món mạnh nhất; nhận trùng ghi "cấp"',async()=>{
+ const {baoBanMenh}=await import('../public/phap-bao-data.js');const {baoCollectionText}=await import('../phap-bao.mjs');
+ const w=world(),p=ensurePlayer(w,'a','A',N);p.bao={p4:0,p5:0,items:{'s4-kiem':1,'s4-an':1},lim:null,ban:'s4-an'};
+ assert.equal(baoBanMenh(p).id,'s4-an','đang ghim Ấn');
+ p.bao.p5=BAO_PITY5-1;const r=rollBao(w,p,'free',miss);assert.equal(r.tier,5,'bảo hiểm ra 5★');
+ assert.equal(p.bao.ban,null,'bỏ ghim vì món mới mạnh hơn');assert.equal(baoBanMenh(p).id,r.id,'tự mặc món 5★ mới');
+ p.bao.items['s4-kiem']=2;assert.match(baoCollectionText(p),/cấp 2/);assert.doesNotMatch(baoCollectionText(p),/★2/);
+});

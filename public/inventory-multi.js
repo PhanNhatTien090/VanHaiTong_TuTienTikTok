@@ -37,7 +37,7 @@ function cell(i,category,esc){
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"${category==='pets'?` data-pet-stage="${esc(String(item.stage||0))}"`:''}`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
  const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':NUMBERED[category]||'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
- const no=NUMBERED[category]&&item.no?`<em class="vd-no">${fmt(item.no)}</em><em class="vd-stars">${'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
+ const no=NUMBERED[category]&&item.no?`<em class="vd-no">${fmt(item.no)}</em><em class="vd-stars">${category==='bao'?'cấp '+Math.max(1,Math.min(5,item.stars||1)):'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
  return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}${NUMBERED[category]&&item.tier?' is-'+esc(item.tier):''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${no}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
 }
 // 15/11 (user): HIỆN HẾT món — nhiều món thì thêm cột cho ô nhỏ lại (3→4→5→6 cột), bảng không cao quá ô góc.

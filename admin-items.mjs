@@ -19,11 +19,11 @@ export function adminItems(w,p,patch,now,{announce=false,emit}={}){
   if(it.tier===6){const owner=season(w).owners[it.id];if(owner&&owner!==p.id)throw Error(it.name+' (GIỚI HẠN) đã có chủ: '+(w.players[owner]?.name||owner)+'. Gỡ ở người đó trước.');
    if(b.lim&&b.lim.id!==it.id&&b.items[b.lim.id])throw Error('Người này đã có thần khí GIỚI HẠN '+(baoItem(b.lim.id)?.name||'')+' (mỗi người 1 món/mùa).');
    season(w).owners[it.id]=p.id;b.lim={season:season(w).n,id:it.id};}
-  const had=b.items[it.id];b.items[it.id]=s;changes.push((had?'đổi ':'trao thần khí ')+it.name+' ★'+s);
-  say((it.tier===6?'THẦN KHÍ GIỚI HẠN • ':it.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+' ★'+s+' • gõ thần khí để xem · trang bị + tên để đeo','bao-kho',
+  const had=b.items[it.id];b.items[it.id]=s;changes.push((had?'đổi ':'trao thần khí ')+it.name+' cấp '+s);
+  say((it.tier===6?'THẦN KHÍ GIỚI HẠN • ':it.tier===5?'Thần khí cao cấp • ':'Thần khí • ')+p.name+' nhận '+it.name+' cấp '+s+' • gõ thần khí để xem · trang bị + tên để đeo','bao-kho',
    {baoWin:{tier:it.tier,id:it.id,stars:s,item:it.name},orbCard:{kind:'bao',stage:'got',id:it.id,tier:it.tier,stars:s,item:it.name}});
  }
- for(const [id,v] of Object.entries(patch.baoStars||{})){const it=baoItem(id),b=bao(p);if(!it||!b.items[id])throw Error('Người này chưa có thần khí đó.');const s=stars(v,BAO_MAX_STARS);if(s!==b.items[id]){changes.push(it.name+' ★'+b.items[id]+' → ★'+s);b.items[id]=s;}}
+ for(const [id,v] of Object.entries(patch.baoStars||{})){const it=baoItem(id),b=bao(p);if(!it||!b.items[id])throw Error('Người này chưa có thần khí đó.');const s=stars(v,BAO_MAX_STARS);if(s!==b.items[id]){changes.push(it.name+' cấp '+b.items[id]+' → cấp '+s);b.items[id]=s;}}
  for(const id of [].concat(patch.removeBao||[])){const b=bao(p);if(!b.items[id])continue;delete b.items[id];if(b.ban===id)delete b.ban;
   if(b.lim?.id===id){b.lim=null;if(season(w).owners[id]===p.id)delete season(w).owners[id];}changes.push('gỡ thần khí '+(baoItem(id)?.name||id));}
  if(patch.baoBan!==undefined){const id=patch.baoBan||null,b=bao(p);if(id&&!b.items[id])throw Error('Chỉ đặt bản mệnh bằng thần khí người này đang có.');

@@ -179,7 +179,7 @@ function limited(h,c,e,H,t){
   stx(c,it.owner?short(it.owner,8):'chưa có chủ',px,py+48,13,it.owner?'#ffe28a':'#c9bcd8',{width:3,weight:'700',max:cw-4});
  });
 }
-function bannerText(r){if(!r.t)return {s:short(r.name)+' · TRƯỢT',col:'#e6dcf4',edge:'#7f7396'};const it=baoItem(r.id),T=BAO_TIER[r.t];return {s:short(r.name)+' · '+T.name+' '+(it?.name||'')+(r.s>1?' ★'+r.s:''),col:T.color,edge:T.color};}
+function bannerText(r){if(!r.t)return {s:short(r.name)+' · TRƯỢT',col:'#e6dcf4',edge:'#7f7396'};const it=baoItem(r.id),T=BAO_TIER[r.t];return {s:short(r.name)+' · '+T.name+' '+(it?.name||'')+(r.s>1?' · cấp '+r.s:''),col:T.color,edge:T.color};}
 /** Băng rôn lượt cầu: viên thuốc to giữa màn, mới nhất ở trên, trượt vào từ phải. */
 function banners(h,c,t,H){
  const live=h.banners.filter(b=>t-b.t0<BANNER_MS).slice(-3);
@@ -215,7 +215,7 @@ function card(scene,h,c,t,H){
  drawItem(h,c,it.id,X,Y,270*S*(.6+.4*ease(sec/.4)),1,sec<.6?(1-ease(sec/.6))*TAU:0);
  if(fly<1){const a=seg(sec,.35,.6)*(1-fly);c.globalAlpha=a;
   stx(c,'THẦN KHÍ TRUNG CẤP',cx,cy-250,44,'#e2c4ff',{width:9});
-  stx(c,it.name+(cd.s>1?' ★'+cd.s:''),cx,cy+200,62,'#ecd2ff',{width:11,max:840});
+  stx(c,it.name+(cd.s>1?' · cấp '+cd.s:''),cx,cy+200,62,'#ecd2ff',{width:11,max:840});
   stx(c,short(cd.name,18)+' nhận thần khí',cx,cy+262,32,'#ffffff',{width:7,weight:'800',max:820});
   stx(c,Object.keys(it.stats).slice(0,2).map(k=>BAO_STAT_NAME[k]+' +'+baoStat(it.id,cd.s,k)+'%').join(' · '),cx,cy+306,24,'#e8dcff',{width:5,weight:'700'});stx(c,'gõ “thần khí” để xem',cx,cy+346,22,'#d9f2ff',{width:5,weight:'700'});
   c.globalAlpha=1;}
@@ -258,7 +258,7 @@ export function drawGoldReveal(scene,c,t,H,cut){
  // 4. VINH DANH
  if(sec>=2.2){const u=sec-2.2,pop=1+.6*(1-ease(seg(u,0,.25)));c.save();c.translate(450,H*.15);c.scale(pop,pop);txt(c,'THẦN KHÍ CAO CẤP',0,0,52,'#fff1b8',{width:11,max:860});c.restore();
   const tg=c.createLinearGradient(0,H*.21-40,0,H*.21+40);tg.addColorStop(0,'#fffbe6');tg.addColorStop(.5,'#ffd34d');tg.addColorStop(1,'#ff9b2e');
-  c.globalAlpha=seg(u,.1,.35);txt(c,it.name+(x.s>1?' ★'+x.s:''),450,H*.215,70,tg,{width:13,max:880});
+  c.globalAlpha=seg(u,.1,.35);txt(c,it.name+(x.s>1?' · cấp '+x.s:''),450,H*.215,70,tg,{width:13,max:880});
   txt(c,short(x.name,22)+' nhận thần khí',450,H*.66,40,'#ffffff',{width:9,max:860});
   txt(c,statsLine(it,x.s),450,H*.71,26,'#ffe9a8',{width:6,weight:'800',max:860});txt(c,'gõ “thần khí” xem · “trang bị + tên” để đeo · tự tung thần thông ở Lôi Đài, Tháp, tỷ thí',450,H*.755,22,'#d9f2ff',{width:5,weight:'800',max:860});c.globalAlpha=1;} /* 18/11: hướng dẫn dùng */
  const o=seg(sec,4.15,4.5);if(o>0){c.globalAlpha=o;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.globalAlpha=1;}
