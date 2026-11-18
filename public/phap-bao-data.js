@@ -58,4 +58,12 @@ export const BAO_DUEL=Object.freeze({4:.01,5:.025,6:.04});
 export const BAO_WAR=Object.freeze({4:1,5:2,6:3}),BAO_WAR_PHIEN=1.5;
 export const baoWarUnits=bm=>bm?Math.round(BAO_WAR[bm.tier]*baoStarK(bm.stars)*(bm.line==='phien'?BAO_WAR_PHIEN:1)*100)/100:0;
 export const baoStarK=stars=>1+.1*(Math.max(1,stars||1)-1);
+// 18/11 tối (chủ game "thêm mấy chỉ số này vào game"): chỉ số món BẢN MỆNH có tác dụng thật (tỷ lệ 0–1).
+// Công ×sát thương (Lôi Đài/Tháp) · Bạo kích +tỷ lệ chí mạng · ST bạo kích +hệ số chí mạng · Kháng bạo giảm ST chí mạng nhận vào · Tu vi +% khi chơi tay.
+export const BAO_STAT_CAP=Object.freeze({crit:.5,res:.4});
+export function baoBonus(bm){
+ const o={atk:0,crit:0,critDmg:0,res:0,qi:0};if(!bm?.id)return o;
+ for(const k of Object.keys(o))o[k]=baoStat(bm.id,bm.stars,k)/100;
+ return o;
+}
 export const baoKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/[^a-z0-9]/g,'');

@@ -8,7 +8,7 @@ import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from 
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
 import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
 import {SKIN_CUT_MS,PET_CUT_MS,GIFT_CUT_MS,GIFT_CUT_MIN,signatureSkinOf,petUltOf} from './public/signature-ults.js'; // 17/11: màn chiếu riêng
-import {baoBanMenh,BAO_LINES,BAO_LINE_FX,BAO_PROC,BAO_CUT_MS,BAO_TIER} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh
+import {baoBanMenh,baoBonus,BAO_STAT_CAP,BAO_LINES,BAO_LINE_FX,BAO_PROC,BAO_CUT_MS,BAO_TIER} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh
 export let arenaBooksOf=p=>bookLoadout(p);
 let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
 export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
@@ -183,7 +183,7 @@ function fighter(w,p,adv,c){
  const realm=Math.max(0,Number(p.realm)||0),maxHp=Math.round((60000+realm*9000)*(1+.04*adv));
  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
  return {id:p.id,name:p.name,realm,totalQi:Number(p.totalQi)||0,maxHp,hp:maxHp,rage:0,shield:0,stunUntil:0,weakUntil:0,reflectUntil:0,dot:null,lastEl:null,
-  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0,bao:baoBanMenh(p),baoCd:0,baoCutDone:0};
+  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0,bao:baoBanMenh(p),baoCd:0,baoCutDone:0,bs:baoBonus(baoBanMenh(p))}; /* 18/11 tối: chỉ số bản mệnh */
 }
 function pickSlot(m,f,foe,now){
  const U=ARENA_ULT_SLOT,P=ARENA_PET_SLOT,ready=s=>s===U?f.rage>=100&&f.ults<2:now>=f.cd[s];
@@ -199,9 +199,11 @@ function pickSlot(m,f,foe,now){
 }
 // Chênh ≥30% tu vi: người yếu không hạ được người mạnh (giữ ≥10% máu) — áp cho mọi nguồn sát thương.
 const capLocked=(m,to,dmg)=>m.locked&&m.locked===to.id?Math.min(dmg,Math.max(0,to.hp+to.shield-Math.ceil(to.maxHp*.1))):dmg;
-function hit(m,by,to,pct,crit,at=0,mult=1){
+function hit(m,by,to,pct,crit,at=0,mult=1,baoProc=false){
+ const own=baoProc?null:by.bs; /* 18/11 tối: thần thông bản mệnh đã mạnh theo bậc/sao → không cộng thêm Công/ST bạo kích */
  const lv=by.kit[0].lv||1,weak=by.weakUntil>at?.8:1;
- const dmg=capLocked(m,to,Math.round(to.maxHp*pct*ARENA_DMG_SCALE*by.atk*weak*mult*(1+.02*(lv-1))*(crit?1.5:1)));
+ const critK=crit?Math.max(1,(1.5+(own?.critDmg||0))*(1-Math.min(BAO_STAT_CAP.res,to.bs?.res||0))):1; /* 18/11 tối: ST bạo kích + kháng bạo */
+ const dmg=capLocked(m,to,Math.round(to.maxHp*pct*ARENA_DMG_SCALE*by.atk*(1+(own?.atk||0))*weak*mult*(1+.02*(lv-1))*critK));
  const absorbed=Math.min(to.shield,dmg);to.shield-=absorbed;to.hp=Math.max(0,to.hp-(dmg-absorbed));
  by.rage=Math.min(100,by.rage+14);to.rage=Math.min(100,to.rage+9);
  let reflect=0;
@@ -227,7 +229,7 @@ function act(w,m,id,now){
  const bao=slot===1&&f.bao&&at>=(f.baoCd||0)&&at>=(m.fightAt||0)+5000?f.bao:null;if(bao)f.baoCd=at+BAO_PROC[bao.tier].cd;
  const bfx=bao&&BAO_LINE_FX[bao.line];
  const skill=bao?{name:bao.name+' · '+BAO_LINES[bao.line].skill,tech:bfx.tech,color:BAO_TIER[bao.tier].color,role:'attack',effect:['stun','knock','reflect'].includes(bfx.effect)?bfx.effect:'none',tier:bao.tier>=5?3:2,hanh:f.kit[0].hanh,lv:f.kit[0].lv}:f.kit[slot-1];
- const pct=bao?BAO_PROC[bao.tier].pct*(1+.1*((bao.stars||1)-1)):(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||bfx?.effect==='crit'||rand(m)<.16;
+ const pct=bao?BAO_PROC[bao.tier].pct*(1+.1*((bao.stars||1)-1)):(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||bfx?.effect==='crit'||rand(m)<.16+Math.min(BAO_STAT_CAP.crit-.16,f.bs?.crit||0);
  const entry={n:++m.n,at,by:id,to:foeId,slot,tier:skill.tier||1,skill:{name:skill.name,tech:skill.tech,color:skill.color,role:skill.role,pet:skill.pet||null,hanh:skill.hanh,effect:skill.effect,art:skill.art||null,bao:bao?.id||null},crit};
  if(bao)entry.bao={id:bao.id,tier:bao.tier,line:bao.line,stars:bao.stars};
  if(slot===ARENA_ULT_SLOT){f.rage=0;f.ults++;}else if(rule.cd)f.cd[slot]=at+rule.cd;
@@ -240,7 +242,7 @@ function act(w,m,id,now){
  const role=slot===ARENA_PET_SLOT?skill.role:'attack';
  if(role==='support'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.1*ARENA_SUSTAIN_SCALE*(1+.02*(skill.lv-1))));f.hp+=heal;entry.heal=heal;entry.target='self';}
  else if(role==='defense'){const sh=Math.round(f.maxHp*.14*ARENA_SUSTAIN_SCALE);f.shield+=sh;entry.shield=sh;entry.target='self';if(skill.pet){const r=hit(m,f,foe,pct*.5,false,at,mult);entry.dmg=r.dmg;entry.reflect=r.reflect||0;}}
- else{const r=hit(m,f,foe,role==='control'?pct*.6:role==='drain'?pct*.8:pct,crit,at,mult);entry.dmg=r.dmg;entry.absorbed=r.absorbed||0;entry.reflect=r.reflect||0;
+ else{const r=hit(m,f,foe,role==='control'?pct*.6:role==='drain'?pct*.8:pct,crit,at,mult,!!bao);entry.dmg=r.dmg;entry.absorbed=r.absorbed||0;entry.reflect=r.reflect||0;
   if(role==='control')applyEffect(m,f,foe,'stun',at,entry,r.dmg);
   if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}
   if(skill.effect&&skill.effect!=='none')applyEffect(m,f,foe,skill.effect,at,entry,r.dmg);

@@ -6,7 +6,7 @@
 //   Quà của người đang leo vào đài mình; người ngoài tặng thì vào đài mình hay trợ lực; chưa ai leo thì giữ làm "hộ thể" cho lượt của mình.
 // Mọi số tính theo % máu để tầng nào cũng cân: đúng tầm cảnh giới (tầng ≈ 2 × cảnh giới) thì tự đánh + gõ 3 vừa đủ qua; vượt cấp cần quà/trợ lực.
 import {stageConflict} from './stage-lock.mjs';
-import {baoBanMenh,BAO_TOWER,BAO_LINES,baoStarK} from './public/phap-bao-data.js'; // 18/11: thần khí bản mệnh trong Tháp
+import {baoBanMenh,baoBonus,BAO_TOWER,BAO_LINES,baoStarK} from './public/phap-bao-data.js'; // 18/11: thần khí bản mệnh trong Tháp
 
 export const TOWER=Object.freeze({durationMs:300000,turnMs:30000,gapMs:1500,hitCdMs:900,hitCdBoostMs:450,helpCdMs:2000,maxQueue:30,podiumMs:9000,milestone:5,lanes:4});
 export const TOWER_JOIN=['leothap','thap','vaothap'];
@@ -79,7 +79,7 @@ function applyHold(e,now){
  if(now<e.holdUntil)return true;e.holdFrom=null;return false;
 }
 // 18/11 tối: thần khí bản mệnh — ×sát thương theo bậc, và THẦN THÔNG chém % máu thủ vệ theo nhịp (từ giây thứ 3 của lượt).
-function baoMult(p){const bm=baoBanMenh(p);return bm?1+BAO_TOWER[bm.tier].mult*baoStarK(bm.stars):1;}
+function baoMult(p){const bm=baoBanMenh(p);return bm?(1+BAO_TOWER[bm.tier].mult*baoStarK(bm.stars))*(1+baoBonus(bm).atk):1;} /* 18/11 tối: + chỉ số Công */
 function baoProc(e,lane,t,p,now){const bm=baoBanMenh(p);if(!bm||t.hp<=0||now<(t.baoAt??(t.startedAt+3000)))return;const T=BAO_TOWER[bm.tier];t.baoAt=now+T.cd;const pct=T.pct*baoStarK(bm.stars);t.hp=Math.max(0,t.hp-pct);
  pushFx(e,{kind:'bao',lane,id:bm.id,tier:bm.tier,name:bm.name,skill:BAO_LINES[bm.line].skill,burst:pct,from:p.id,fromName:p.name,at:now});}
 function beginTurn(w,e,lane,p,now){

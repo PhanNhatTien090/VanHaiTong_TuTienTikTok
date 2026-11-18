@@ -22,6 +22,7 @@ import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
 import {adminItems} from './admin-items.mjs'; // 18/11: quản lý thần khí / linh châu / tọa kỹ
 import {mountCommand,tickMounts,mountBonus,mountGiftBoost,orbReminder,ORB_REMIND_MS,ORB_REMIND_GAP_MS} from './mounts.mjs';
+import {baoBanMenh as baoBanMenhOf,baoBonus} from './public/phap-bao-data.js'; // 18/11 tối: chỉ số Tu vi của bản mệnh
 import {startBaoKho,stopBaoKho,tickBaoKho,baoKhoCommand,baoKhoGift,baoKhoView,baoKhoActive,baoCollectionText,baoBanMenhCommand,baoEquipByName,baoReturnHint,BAO_RETURN_AWAY} from './phap-bao.mjs'; // 17/11: Thiên Công Bảo Khố
 import {startMountRealm,stopMountRealm,tickMountRealm,mountRealmCommand,mountRealmGift,mountRealmHearts,mountRealmView,mountRealmActive} from './mount-realm.mjs'; // 16/11: Tọa Kỹ Bí Cảnh // 16/11: Tọa Kỹ
 import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
@@ -140,7 +141,7 @@ function noteStageUp(w,p,before,now){if(p.resident||p.puppet||before==null)retur
   emit(w,p,`Bước vào ${REALMS[p.realm]} ${STAGES[after]}`,'qi',t,{stageUp:after});}
 function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   if(hand&&heavenStunned(p,now??Date.now()))return 0; // 07/11: Thiên Lôi trấn áp — không tu luyện được
-  if(hand)qi*=handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
+  if(hand)qi*=(1+baoBonus(baoBanMenhOf(p)).qi)*handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
   if(hand&&talking(p,now))qi*=1.2; // 4/11: Luận Đạo — có trò chuyện thường trong 5 phút gần nhất
   if(hand&&goldenHour(p,now,w)){qi*=2;stones*=3;}
   // 09/11 (chủ game): thưởng sự kiện (nguồn 'reward': câu đố, lì xì, nhiệm vụ, lò đan…) chỉ ăn một nửa hệ số pháp bảo/công pháp.
