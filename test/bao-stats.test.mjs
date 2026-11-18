@@ -53,3 +53,28 @@ test('Tu vi: +% khi chơi tay (tu luyện), không có thần khí thì như cũ
  assert.ok(plain>0,'tu luyện có cộng');
  assert.ok(withQi>plain&&withQi<=Math.ceil(plain*1.12)+1,`${withQi} vs ${plain}`);
 });
+
+// 18/11 tối (chủ game: "sao không có hiệu ứng hồi máu với khiên"): Đỉnh/Chung là dòng thủ — hồi/khiên theo bậc + sao, sát thương còn 40%.
+test('Lôi Đài: thần thông Chung lên khiên / Đỉnh hồi máu đúng bậc, sát thương kèm theo nhỏ hơn dòng Kiếm',async()=>{
+ const {BAO_GUARD,BAO_GUARD_DMG,BAO_PROC}=await import('../public/phap-bao-data.js');
+ assert.deepEqual(BAO_GUARD,{4:{heal:.06,shield:.05},5:{heal:.08,shield:.07},6:{heal:.1,shield:.09}});assert.equal(BAO_GUARD_DMG,.4);
+ const procOf=items=>{const w=setup(items,null);const {log,m}=run(w);return {e:log.find(e=>e.by==='a'&&e.bao),m};};
+ const ch=procOf({'s5-chung':3});assert.equal(ch.e.shield,Math.round(ch.m.fighters.a.maxHp*.07*1.2),'5★ ★3: khiên 7%×1,2');
+ const dn=procOf({'s5-dinh':1});assert.ok(dn.e.heal===undefined||dn.e.heal<=Math.round(dn.m.fighters.a.maxHp*.08),'hồi tối đa 8% (không vượt máu tối đa)');
+ const kiem=procOf({'s5-kiem':1});assert.ok(ch.e.dmg<kiem.e.dmg*.6,'Chung chém nhẹ hơn Kiếm nhiều');
+});
+
+// 18/11 tối (chủ game: "hồi máu mà đầy thì tích lũy thôi, khi hết máu hồi tiếp").
+test('Lôi Đài: Đỉnh hồi thừa khi đầy máu → cất vào kho (tối đa 30%), mất máu tự rót lại',async()=>{
+ const {BAO_HEAL_BANK}=await import('../public/phap-bao-data.js');assert.equal(BAO_HEAL_BANK,.3);
+ const w=setup({'L05-huyen-hoa-dinh':5},null);let t=N+20,m=null,seen=null;
+ for(let i=0;i<1200&&!seen;i++){t+=250;tickArena(w,t,c);m=w.arena.current||m;if(!m)continue;
+  const a=m.fighters.a;if(!seen&&m.fightAt&&t>=m.fightAt+4800&&a.hp>0){a.hp=a.maxHp;} // ép đầy máu ngay trước lần phát đầu
+  seen=m.log.find(e=>e.by==='a'&&e.bao&&e.banked);}
+ assert.ok(seen,'có lần hồi thừa được cất kho');const a=m.fighters.a;
+ assert.ok(seen.banked<=a.maxHp*BAO_HEAL_BANK);
+ const bank=a.hpBank;a.hp=a.maxHp-1000;const bBefore=a.hpBank;
+ // đòn kế tiếp của đối thủ làm mất máu → kho rót lại (kho giảm)
+ for(let i=0;i<40&&a.hpBank===bBefore;i++){t+=250;tickArena(w,t,c);}
+ assert.ok(bank>0&&a.hpBank<bBefore,'kho được dùng khi mất máu');
+});

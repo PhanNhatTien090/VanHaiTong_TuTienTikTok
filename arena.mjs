@@ -8,7 +8,7 @@ import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from 
 // Bí pháp chiêu thức đã xếp ô (danh mục cài ở bước D; mặc định rỗng → dùng chiêu hệ).
 import {ARENA_BOOKS,BOOK_TIER_NAME,findBook,bookLoadout} from './public/arena-books.js';
 import {SKIN_CUT_MS,PET_CUT_MS,GIFT_CUT_MS,GIFT_CUT_MIN,signatureSkinOf,petUltOf} from './public/signature-ults.js'; // 17/11: màn chiếu riêng
-import {baoBanMenh,baoBonus,BAO_STAT_CAP,BAO_LINES,BAO_LINE_FX,BAO_PROC,BAO_CUT_MS,BAO_TIER} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh
+import {baoBanMenh,baoBonus,BAO_STAT_CAP,BAO_LINES,BAO_LINE_FX,BAO_PROC,BAO_CUT_MS,BAO_TIER,BAO_GUARD,BAO_GUARD_DMG,BAO_HEAL_BANK} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh
 export let arenaBooksOf=p=>bookLoadout(p);
 let manualNames=[];export function setArenaManualNames(list){manualNames=(list||[]).map(norm);}
 export function setArenaBooksResolver(fn){arenaBooksOf=fn;}
@@ -202,15 +202,17 @@ function pickSlot(m,f,foe,now){
 }
 // Chênh ≥30% tu vi: người yếu không hạ được người mạnh (giữ ≥10% máu) — áp cho mọi nguồn sát thương.
 const capLocked=(m,to,dmg)=>m.locked&&m.locked===to.id?Math.min(dmg,Math.max(0,to.hp+to.shield-Math.ceil(to.maxHp*.1))):dmg;
+// 18/11 tối (chủ game: "hồi máu mà đầy thì tích lũy, hết máu hồi tiếp"): phần hồi thừa của Đỉnh cất vào kho (tối đa BAO_HEAL_BANK máu tối đa), mất máu thì tự rót lại.
+function drawBank(f){if(!(f.hpBank>0)||f.hp>=f.maxHp)return 0;const r=Math.min(f.hpBank,f.maxHp-f.hp);f.hp+=r;f.hpBank-=r;return r;}
 function hit(m,by,to,pct,crit,at=0,mult=1,baoProc=false){
  const own=baoProc?null:by.bs; /* 18/11 tối: thần thông bản mệnh đã mạnh theo bậc/sao → không cộng thêm Công/ST bạo kích */
  const lv=by.kit[0].lv||1,weak=by.weakUntil>at?.8:1;
  const critK=crit?Math.max(1,(1.5+(own?.critDmg||0))*(1-Math.min(BAO_STAT_CAP.res,to.bs?.res||0))):1; /* 18/11 tối: ST bạo kích + kháng bạo */
  const dmg=capLocked(m,to,Math.round(to.maxHp*pct*ARENA_DMG_SCALE*by.atk*(1+(own?.atk||0))*weak*mult*(1+.02*(lv-1))*critK));
- const absorbed=Math.min(to.shield,dmg);to.shield-=absorbed;to.hp=Math.max(0,to.hp-(dmg-absorbed));
+ const absorbed=Math.min(to.shield,dmg);to.shield-=absorbed;to.hp=Math.max(0,to.hp-(dmg-absorbed));drawBank(to);
  by.rage=Math.min(100,by.rage+14);to.rage=Math.min(100,to.rage+9);
  let reflect=0;
- if(to.reflectUntil>at&&dmg>0){reflect=capLocked(m,by,Math.round(dmg*.25));by.hp=Math.max(0,by.hp-reflect);}
+ if(to.reflectUntil>at&&dmg>0){reflect=capLocked(m,by,Math.round(dmg*.25));by.hp=Math.max(0,by.hp-reflect);drawBank(by);}
  return {dmg,absorbed,reflect};
 }
 function applyEffect(m,f,foe,effect,at,entry,dmg){
@@ -232,7 +234,8 @@ function act(w,m,id,now){
  const bao=slot===1&&f.bao&&at>=(f.baoCd||0)&&at>=(m.fightAt||0)+5000?f.bao:null;if(bao)f.baoCd=at+BAO_PROC[bao.tier].cd;
  const bfx=bao&&BAO_LINE_FX[bao.line];
  const skill=bao?{name:bao.name+' · '+BAO_LINES[bao.line].skill,tech:bfx.tech,color:BAO_TIER[bao.tier].color,role:'attack',effect:['stun','knock','reflect'].includes(bfx.effect)?bfx.effect:'none',tier:bao.tier>=5?3:2,hanh:f.kit[0].hanh,lv:f.kit[0].lv}:f.kit[slot-1];
- const pct=bao?BAO_PROC[bao.tier].pct*(1+.1*((bao.stars||1)-1)):(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||bfx?.effect==='crit'||rand(m)<.16+Math.min(BAO_STAT_CAP.crit-.16,f.bs?.crit||0);
+ const guard=bfx&&(bfx.effect==='heal'||bfx.effect==='shield'),starK=bao?1+.1*((bao.stars||1)-1):1; /* 18/11 tối: Đỉnh/Chung = dòng thủ */
+ const pct=bao?BAO_PROC[bao.tier].pct*starK*(guard?BAO_GUARD_DMG:1):(rule.min+(rule.max-rule.min)*rand(m))*(skill.power||1),crit=slot===ARENA_ULT_SLOT||bfx?.effect==='crit'||rand(m)<.16+Math.min(BAO_STAT_CAP.crit-.16,f.bs?.crit||0);
  const entry={n:++m.n,at,by:id,to:foeId,slot,tier:skill.tier||1,skill:{name:skill.name,tech:skill.tech,color:skill.color,role:skill.role,pet:skill.pet||null,hanh:skill.hanh,effect:skill.effect,art:skill.art||null,bao:bao?.id||null},crit};
  if(bao)entry.bao={id:bao.id,tier:bao.tier,line:bao.line,stars:bao.stars};
  if(slot===ARENA_ULT_SLOT){f.rage=0;f.ults++;}else if(rule.cd)f.cd[slot]=at+rule.cd;
@@ -249,8 +252,8 @@ function act(w,m,id,now){
   if(role==='control')applyEffect(m,f,foe,'stun',at,entry,r.dmg);
   if(role==='drain'){const heal=Math.min(f.maxHp-f.hp,Math.round(r.dmg*.7));f.hp+=heal;entry.heal=heal;}
   if(skill.effect&&skill.effect!=='none')applyEffect(m,f,foe,skill.effect,at,entry,r.dmg);
-  if(bfx?.effect==='heal'){const heal=Math.min(f.maxHp-f.hp,Math.round(f.maxHp*.08*ARENA_SUSTAIN_SCALE));if(heal>0){f.hp+=heal;entry.heal=heal;}}
-  if(bfx?.effect==='shield'){const sh=Math.round(f.maxHp*.1*ARENA_SUSTAIN_SCALE);f.shield+=sh;entry.shield=sh;}}
+  if(bfx?.effect==='heal'){const amt=Math.round(f.maxHp*BAO_GUARD[bao.tier].heal*starK),heal=Math.min(f.maxHp-f.hp,amt);if(heal>0){f.hp+=heal;entry.heal=heal;}const over=amt-heal;if(over>0){f.hpBank=Math.min(Math.round(f.maxHp*BAO_HEAL_BANK),(f.hpBank||0)+over);entry.banked=over;}}
+  if(bfx?.effect==='shield'){const sh=Math.round(f.maxHp*BAO_GUARD[bao.tier].shield*starK);f.shield+=sh;entry.shield=sh;}}
  entry.hpBy=f.hp;entry.hpTo=foe.hp;entry.ko=foe.hp<=0||f.hp<=0;
  // 17/11: CHIẾU RIÊNG — tuyệt kỹ đầu tiên của skin ≥300 coin / chiêu đầu tiên của linh thú ≥200 coin mỗi trận.
  // Hoãn mọi đòn + độc của cả hai bên và nới giờ kết thúc trận đúng bằng thời gian chiếu → không mất đòn nào, trận không ngắn đi.
@@ -269,7 +272,7 @@ export function holdMatch(m,at,ms){
 // Độc/bỏng: trừ máu theo nhịp, là một mốc trong dòng thời gian như một đòn.
 function dotTick(m,id){
  const f=m.fighters[id],d=f.dot,at=d.next;d.next+=900;if(d.next>d.until)f.dot=null;
- const dmg=capLocked(m,f,d.per);f.hp=Math.max(0,f.hp-dmg);
+ const dmg=capLocked(m,f,d.per);f.hp=Math.max(0,f.hp-dmg);drawBank(f);
  pushLog(m,{n:++m.n,at,by:d.by,to:id,dot:true,dmg,hpTo:f.hp,hpBy:m.fighters[d.by].hp,ko:f.hp<=0,skill:{name:'Độc khí',tech:'soul',color:'#9dff7a'}});
 }
 function nextEvent(m){
