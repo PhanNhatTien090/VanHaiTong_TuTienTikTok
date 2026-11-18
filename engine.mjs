@@ -232,6 +232,8 @@ export function missingText(p){const q=requiredQi(p)-p.qi,st=requiredStones(p)-p
 export const statusText=(p,w=null,now=Date.now())=>`Tu vi ${p.qi}/${requiredQi(p)} • Linh thạch ${p.stones}/${requiredStones(p)} • ${REALMS[p.realm]}${p.realm<REALMS.length-1&&missingText(p)?' • '+missingText(p):''}${!finalRealmEligible(p)?' • Tiên Đế cần tổng quà 100 coin (hiện '+(p.giftCoins||0)+')':readyToBreak(p,w,now)?' • đủ đột phá':''}${w&&dailyAscensionView(w,p,now).exhausted&&p.qi>=requiredQi(p)&&p.stones>=requiredStones(p)?' • đạo cơ đang lắng đọng':''}`; // 07/11/2026: ẩn số liệu hạn mức
 // Báo một lần khi người chơi vừa đủ điều kiện đột phá cảnh giới hiện tại.
 function checkReady(w,p,now){
+  // 18/11: cảnh giới cuối đầy cây tu vi → nhắc "gõ chuyển sinh" (không phải dotpha).
+  if(!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM&&p.qi>=requiredQi(p)&&p.readyRealm!==p.realm){p.readyRealm=p.realm;p.readyHintAt=now;emit(w,p,'Đủ tu vi chuyển sinh • gõ chuyển sinh','ready',now,{rebirthReady:true});return;}
   if(!readyToBreak(p,w,now)||p.readyRealm===p.realm)return;
   p.readyRealm=p.realm;p.readyHintAt=now;emit(w,p,`Đủ tu vi đột phá ${REALMS[p.realm+1]} • gõ dotpha`,'ready',now);
 }

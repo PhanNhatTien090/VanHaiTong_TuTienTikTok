@@ -169,6 +169,7 @@ export function speechPlan(e){
   if(e.effect==='hint'){const cmd=cutWords(gameText(e.say||''),40),why=cutWords(gameText(e.why||'').split('.')[0],60);return [say('tongsu',`${Who}, hãy gõ ${cmd}. ${why}.`)];}
   if(e.effect==='blessing'){const n=Number(e.count);return [say('tiennu',`Thiên đạo ban phúc! ${n>0?cap(viNumber(n))+' vị đồng môn':'Đồng môn'} được đột phá cảnh giới!`)];}
   if(e.readyReminder){const n=Number(e.count)||1;return [say('tongsu',n===1?`${gameText(String(e.text||'').replace(/^Đủ đột phá: /,'').split(' • ')[0])} đã đủ đột phá, gõ đột phá ngay!`:`${cap(viNumber(n))} đạo hữu đã đủ đột phá, gõ đột phá ngay!`)];}
+  if(e.effect==='ready'&&e.rebirthReady)return [say('tongsu',`${Who} đã viên mãn Hỗn Độn Vĩnh Hằng! Gõ chuyển sinh để bước vào luân hồi.`)];
   if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ đột phá ngay.`)];
   if(e.hallJoin){const h=titleCase(e.hallJoin.name||'Ngũ Đường');return [say('tongsu',pickBy(seed,[`${Who} bái nhập ${h}! Đồng môn hoan nghênh!`,`${h} có thêm ${who}! Từ nay cùng tu một đạo!`,`${Who} đầu nhập ${h}, nhận lệnh bài đệ tử!`]))];} // 16/11
   if(e.cmdFail){const t=gameText(String(e.text||'')).split('·').slice(0,2).map(x=>x.trim()).filter(Boolean).join(', ').replace(/"/g,''); /* tối đa 2 ý: câu ngắn tạo giọng nhanh */return [say('tongsu',`${Who}, ${t.charAt(0).toLowerCase()+t.slice(1)}`.slice(0,190))];} // 18/11

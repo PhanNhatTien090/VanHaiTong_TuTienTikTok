@@ -35,3 +35,12 @@ test('rebirth requires a FULL final-realm qi bar (18/11)',()=>{
  p.qi=need;assert.equal(snapshot(w,N).players[0].rebirthEligible,true);
  assert.equal(chat(w,'chuyển sinh',N+1).pending,true);assert.equal(chat(w,'chuyển sinh xác nhận',N+2).reborn,true);assert.equal(p.realm,0);
 });
+
+test('full final-realm bar announces "gõ chuyển sinh" once, not dotpha (18/11)',async()=>{
+ const {speechPlan}=await import('../speech-lines.mjs');const {fastVoiceFile}=await import('../public/voice.js');
+ const {w,p}=setup();p.qi=requiredQi(p)-1;p.readyRealm=REBIRTH_UNLOCK_REALM-1;
+ action(w,{type:'heart',userId:'a',count:1},N+60000);p.qi=requiredQi(p);action(w,{type:'chat',userId:'a',text:'tuvi'},N+61000);
+ const evs=w.events.filter(e=>e.effect==='ready'&&e.rebirthReady);assert.ok(evs.length<=1);
+ const e={effect:'ready',user:'a',name:'A',text:'Đủ tu vi chuyển sinh • gõ chuyển sinh',rebirthReady:true};
+ assert.match(JSON.stringify(speechPlan(e)),/chuyển sinh/);assert.doesNotMatch(JSON.stringify(speechPlan(e)),/đột phá/);assert.equal(fastVoiceFile(e),null);
+});

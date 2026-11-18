@@ -484,7 +484,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     const ready=p.finalRealmEligible!==false&&p.progressionReady!==false&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<(this.realmCount??REALM_STYLES.length)-1,k=Math.max(0,Math.min(1,p.qi/p.neededQi)),pulse=.5+.5*Math.sin(t*.008);
     const bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle='#ffffff26';c.fillRect(bx,by,bw,3.5);
     c.fillStyle=ready?`hsl(45,100%,${55+20*pulse}%)`:'#7fdcc6';c.fillRect(bx,by,bw*k,3.5);
-    if(ready&&!this.warStatus?.active){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label='✦ Gõ đột phá',w=c.measureText(label).width+14;
+    const reborn=p.rebirthEligible===true; /* 18/11: cảnh giới cuối đầy cây → "Gõ chuyển sinh" */
+    if((ready||reborn)&&!this.warStatus?.active){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label=reborn?'✦ Gõ chuyển sinh':'✦ Gõ đột phá',w=c.measureText(label).width+14;
       c.shadowColor='#ffd76a';c.shadowBlur=10+pulse*10;c.fillStyle='#3a2a08ee';c.beginPath();c.roundRect(a.x-w/2,y-10,w,20,10);c.fill();c.shadowBlur=0;
       c.strokeStyle=`rgba(255,215,106,${.6+.4*pulse})`;c.lineWidth=1.5;c.stroke();c.fillStyle='#ffe7a3';c.textAlign='center';c.textBaseline='middle';c.fillText(label,a.x,y+1);}}
     c.restore();}
