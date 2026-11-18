@@ -147,6 +147,10 @@ export function drawBaoUlt(scene,c,t,H,cut,players){
  fxCamera(c,cx,cy,zoom,shake,t);
  const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,P.deep);g.addColorStop(.55,'#020104');g.addColorStop(1,P.deep);c.fillStyle=g;c.fillRect(-200,-200,1300,H+400);
  dot(c,P.main,cx,H*.45,H*.55,.2);
+ // 18/11 (chủ game: làm dày): KHÔNG KHÍ chung cho mọi chiêu GIỚI HẠN — hạt sáng bay lên, sương sáng dưới chân, tia xoay sau đối thủ lúc cơ chế
+ {const n=light?40:120,amb=Math.min(1,sec/.8)*(1-seg(sec,8.6,9.2));c.save();c.globalCompositeOperation='lighter';for(let i=0;i<n;i++){const u=(rn(i)+t*.00012*(1+rn(i+7)))%1,x=rn(i+3)*900+Math.sin(t*.001+i)*20,y=H*(1.05-u*1.1);dot(c,i%4?P.main:P.soft,x,y,2+rn(i+5)*4,amb*.6*Math.sin(Math.PI*u));}
+  const fog=c.createLinearGradient(0,H*.7,0,H);fog.addColorStop(0,P.main+'00');fog.addColorStop(1,P.main+'55');c.globalAlpha=amb;c.fillStyle=fog;c.fillRect(-200,H*.7,1300,H*.4);c.globalAlpha=1;
+  const mk=seg(sec,2,ULT_HIT);if(mk>0&&mk<1)rays(c,X(660),H*.5,14,620,.35*Math.sin(Math.PI*mk),t*.0004,P.main,22);c.restore();}
  // TRIỆU BẢO: trận pháp + cột sáng dưới chân, thần khí bay lên trên đầu
  drawSkyBeams(c,A.x,A.y,smooth(call)*(1-seg(sec,2.4,3))*.9,t,P);drawCircle(c,A.x,A.y,300,smooth(seg(sec,.4,.9))*(1-seg(sec,2.2,2.8)),t,P,V.spin);
  drawInflow(c,A.x,A.chest-140,call*(sec<2?1:0),t,P,light,460);
@@ -160,6 +164,7 @@ export function drawBaoUlt(scene,c,t,H,cut,players){
  // TRÚNG
  if(hitSec>=0&&!HS.frozen){drawBurst(c,B.x,B.chest,hitFx,P,H,{light,pillar:true,scale:1.5,ground:B.y,seed:(e.n||1)%7,reduceFlash:rf});rays(c,B.x,B.chest,20,700*out3(hitFx/.5),Math.exp(-hitFx*1.2),hitFx*.4,P.main,18);
   ring(c,B.x,B.y,out3(hitFx/.6)*620,12,1-seg(hitFx,0,.6),'#ffffff',.42);drawSkyLances(c,B.x,B.y,.5+hitFx*.4,t,P,light,(e.n||1)%61,-200);}
+ for(const [d,ox,oy] of [[.33,-140,-60],[.66,150,40]]){const s2=hitSec-d;if(s2>=0&&s2<1.4)drawBurst(c,B.x+ox*(dir>0?1:-1),B.chest+oy,s2,P,H,{light,pillar:false,scale:.9,seed:((e.n||1)+Math.round(d*10))%7,reduceFlash:rf});} // 18/11: bùm – bùm – bùm
  drawEmbers(c,H,seg(sec,ULT_HIT,ULT_HIT+.5)*(1-seg(sec,8.4,9)),t,P,light);
  c.restore();c.globalAlpha=1;
  drawVignette(c,H,.35+.25*smooth(call)*(hitSec<0?1:0),cx,cy);
@@ -179,6 +184,6 @@ export function drawBaoUlt(scene,c,t,H,cut,players){
  const o=seg(sec,8.8,9.5);if(o>0){c.globalAlpha=o;c.fillStyle='#000';c.fillRect(-60,-60,1020,H+120);c.globalAlpha=1;}
  // âm thanh theo nhịp (mỗi đòn 1 lần)
  const seen=scene.cutSeen??=new Set(),cue=(key,at,fn)=>{const k='bu:'+e.n+':'+key;if(sec>=at&&sec<at+.5&&!seen.has(k)){seen.add(k);fn();}};
- cue('call',.8,()=>scene.onFeedbackSound?.('hit',2));cue('mech',2.1,()=>scene.onFeedbackSound?.('hit',2));cue('mid',4.2,()=>scene.onFeedbackSound?.('hit',2));cue('hit',ULT_HIT,()=>{scene.onSpectacleImpact?.();scene.onFeedbackSound?.('hit',3);});
+ cue('call',.8,()=>scene.onFeedbackSound?.('hit',2));cue('mech',2.1,()=>scene.onFeedbackSound?.('hit',2));cue('mid',4.2,()=>scene.onFeedbackSound?.('hit',2));cue('hit',ULT_HIT,()=>{scene.onSpectacleImpact?.();scene.onFeedbackSound?.('hit',3);});cue('hit2',ULT_HIT+.33,()=>scene.onFeedbackSound?.('hit',3));cue('hit3',ULT_HIT+.66,()=>{scene.onSpectacleImpact?.();scene.onFeedbackSound?.('hit',3);});
  return true;
 }
