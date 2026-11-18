@@ -2,6 +2,7 @@
 // Luật thắng (chủ game duyệt "phương án B"): tu vi cao hơn → máu/công cao hơn rõ; chênh ≥30% tổng tu vi thì người mạnh thắng chắc;
 // sát nhau thì chiêu, linh thú, nộ khí (cổ vũ có trần) và quà của đấu thủ có thể lật kèo.
 import {stageConflict} from './stage-lock.mjs';
+import {combatRealm,luanHoiArenaHp,luanHoiArenaAtk} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi Ấn + Đạo Quả
 import {mountBonus} from './mounts.mjs'; // 16/11: Tọa Kỹ tăng sức mạnh tỷ thí
 import {seatDuelResult} from './master-seat.mjs';
 import {arenaKit,ARENA_SLOT_RULES,ARENA_ULT_SLOT,ARENA_PET_SLOT,hanhBeats} from './public/arena-skills.js';
@@ -88,7 +89,7 @@ export function arenaCommand(w,p,cmd,rest,now,c){
   if(manualNames.some(n=>n===q||n.startsWith(q)))return null;
   const b=findBook(q);if(!b)return null;
   p.arenaBooks??=[];if(p.arenaBooks.includes(b.id))return fail('Đã lĩnh ngộ '+b.name+'.');
-  if((Number(p.realm)||0)<b.realm)return fail(b.name+' cần cảnh giới cao hơn.');
+  if(combatRealm(p)<b.realm)return fail(b.name+' cần cảnh giới cao hơn.');
   if((p.tournamentMedals||0)<b.medals)return fail(b.name+' cần '+b.medals+' huy chương Lôi Đài (không bị trừ).');
   if((p.stones||0)<b.stones||(p.herbs||0)<b.herbs)return fail(b.name+' cần '+b.stones.toLocaleString('vi-VN')+' linh thạch · '+b.herbs+' linh thảo.');
   p.stones-=b.stones;p.herbs-=b.herbs;p.arenaBooks.push(b.id);
@@ -183,10 +184,10 @@ function beginMatch(w,aId,bId,now,c,kind){
  return m;
 }
 function fighter(w,p,adv,c){
- const realm=Math.max(0,Number(p.realm)||0),maxHp=Math.round((60000+realm*9000)*(1+.04*adv));
+ const realm=Math.max(0,Number(p.realm)||0),cr=combatRealm(p),maxHp=Math.round((60000+cr*9000)*(1+.04*adv)); /* 18/11 Luân Hồi Ấn */
  const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
  return {id:p.id,name:p.name,realm,totalQi:Number(p.totalQi)||0,maxHp,hp:maxHp,rage:0,shield:0,stunUntil:0,weakUntil:0,reflectUntil:0,dot:null,lastEl:null,
-  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:1+.07*adv,hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0,bao:baoBanMenh(p),baoCd:0,baoCutDone:0,bs:baoBonus(baoBanMenh(p))}; /* 18/11 tối: chỉ số bản mệnh */
+  cd:{1:0,2:0,3:0,4:0,5:0},pref:0,ults:0,atk:(1+.07*adv)*luanHoiArenaAtk(p),def:luanHoiArenaHp(p),hanh:kit[0].hanh,kit,sig:signatureSkinOf(p),petUlt:petUltOf(p),cutDone:0,petCutDone:0,bao:baoBanMenh(p),baoCd:0,baoCutDone:0,bs:baoBonus(baoBanMenh(p))}; /* 18/11 tối: chỉ số bản mệnh */
 }
 function pickSlot(m,f,foe,now){
  const U=ARENA_ULT_SLOT,P=ARENA_PET_SLOT,ready=s=>s===U?f.rage>=100&&f.ults<2:now>=f.cd[s];
@@ -208,7 +209,7 @@ function hit(m,by,to,pct,crit,at=0,mult=1,baoProc=false){
  const own=baoProc?null:by.bs; /* 18/11 tối: thần thông bản mệnh đã mạnh theo bậc/sao → không cộng thêm Công/ST bạo kích */
  const lv=by.kit[0].lv||1,weak=by.weakUntil>at?.8:1;
  const critK=crit?Math.max(1,(1.5+(own?.critDmg||0))*(1-Math.min(BAO_STAT_CAP.res,to.bs?.res||0))):1; /* 18/11 tối: ST bạo kích + kháng bạo */
- const dmg=capLocked(m,to,Math.round(to.maxHp*pct*ARENA_DMG_SCALE*by.atk*(1+(own?.atk||0))*weak*mult*(1+.02*(lv-1))*critK));
+ const dmg=capLocked(m,to,Math.round(to.maxHp*pct*ARENA_DMG_SCALE/(to.def||1)*by.atk*(1+(own?.atk||0))*weak*mult*(1+.02*(lv-1))*critK));
  const absorbed=Math.min(to.shield,dmg);to.shield-=absorbed;to.hp=Math.max(0,to.hp-(dmg-absorbed));drawBank(to);
  by.rage=Math.min(100,by.rage+14);to.rage=Math.min(100,to.rage+9);
  let reflect=0;

@@ -3,7 +3,8 @@ import {creditMasterGift,unlockMasterLoadout,resetHistoricMasters} from './maste
 import {safeGiftUrl} from './public/gift-icons.js';
 import {WING_TIERS,playerWing,syncWingTop} from './public/boss-arena.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
-import {rebirthCommand} from './rebirth.mjs';
+import {rebirthCommand,daoQuaCommand,luanHoiStatus,LUAN_HOI_CUT_MS,LUAN_HOI_CUT_LEAD} from './rebirth.mjs';
+import {combatRealm,pastLifeCost,luanHoiHandQi,luanHoiHandStones} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
 const viemWorn=p=>p?.skinChoice===VIEM_SKIN_ID&&p.rewardSkins?.includes(VIEM_SKIN_ID);
@@ -114,10 +115,11 @@ export const HARD_REALM_STEP=1.1;
 export const hardRealmMult = r=>r<HARD_REALM?1:HARD_REALM_STEP**(Math.min(r,23)-(HARD_REALM-1));
 // 17/11 (chủ game: "25 cần 1 trăm mấy tỷ mà 26 lên 6 trăm mấy"): 24–25 giữ ×4/bậc, từ 26 chỉ ×2/bậc.
 const lateQiStep=r=>4**(Math.min(r,25)-23)*2**Math.max(0,r-25);
-export const requiredQi = p => Math.round((p.realm<24?rewardQiBasis(p):qiCurve({realm:23})*lateQiStep(p.realm))*hardRealmMult(p.realm));
-export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p))*(p.realm<HARD_REALM?1:1+.25*(p.realm-HARD_REALM+1)));
+// 18/11 Luân Hồi: cảnh giới đã từng vượt ở kiếp trước chỉ cần 60% (Ký ức tiền kiếp, pastLifeCost).
+export const requiredQi = p => Math.round((p.realm<24?rewardQiBasis(p):qiCurve({realm:23})*lateQiStep(p.realm))*hardRealmMult(p.realm)*pastLifeCost(p));
+export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progressionMult(p))*(p.realm<HARD_REALM?1:1+.25*(p.realm-HARD_REALM+1))*pastLifeCost(p));
 export function power(p) {
-  return 8 + p.realm*7 + p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.damage||0),0) + (CATALOG.find(x=>x.id===p.equipped)?.damage||0) + Math.round(extraStat(p,'damage'));
+  return 8 + combatRealm(p)*7 + /* 18/11: Luân Hồi Ấn */ p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.damage||0),0) + (CATALOG.find(x=>x.id===p.equipped)?.damage||0) + Math.round(extraStat(p,'damage'));
 }
 function emit(w,p,text,effect='qi',now=Date.now(),extra={}) {
   text=gameText(text);
@@ -141,6 +143,7 @@ function noteStageUp(w,p,before,now){if(p.resident||p.puppet||before==null)retur
   emit(w,p,`Bước vào ${REALMS[p.realm]} ${STAGES[after]}`,'qi',t,{stageUp:after});}
 function gain(w,p,qi,stones=0,herbs=0,now=null,hand=false,source='free') {
   if(hand&&heavenStunned(p,now??Date.now()))return 0; // 07/11: Thiên Lôi trấn áp — không tu luyện được
+  if(hand){qi*=luanHoiHandQi(p);stones*=luanHoiHandStones(p);} // 18/11 Luân Hồi tâm pháp + Đạo Quả (chỉ chơi tay)
   if(hand)qi*=(1+baoBonus(baoBanMenhOf(p)).qi)*handQiMult(p)*(1+(VIP_TIERS[vipTier(p.giftCoins)]?.bonus||0)); // v86: VIP +10/20/30%
   if(hand&&talking(p,now))qi*=1.2; // 4/11: Luận Đạo — có trò chuyện thường trong 5 phút gần nhất
   if(hand&&goldenHour(p,now,w)){qi*=2;stones*=3;}
@@ -219,7 +222,7 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['thankhi','banmenh','chuyensinh', /* 18/11: "thần khí", "bản mệnh" có dấu cách */'phikiem','songtu','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau','biphap'];
+const COMMANDS=['daoqua','luanhoi','thankhi','banmenh','chuyensinh', /* 18/11: "thần khí", "bản mệnh" có dấu cách */'phikiem','songtu','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau','biphap'];
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -428,9 +431,16 @@ function actionCore(w,input,now) {
     const result=hallCommand(w,p,words,now,hallContext);
     if(result){if(!result.ok&&!cooldown(p,'hall-error',6000,now))emit(w,p,result.message,'status',now,{cmdFail:true});return result;}
   }
+  if(type==='chat'&&(cmd==='daoqua'||cmd==='luanhoi')){ // 18/11: Đạo Quả (lĩnh ngộ sau chuyển sinh) + xem Luân Hồi
+    const r=cmd==='daoqua'?daoQuaCommand(p,rest):{ok:true,message:luanHoiStatus(p)};
+    if(r.ok&&r.chosen)emit(w,p,r.message,'title',now,{daoQua:r.chosen});else if(!cooldown(p,'luanhoi-info',5000,now))emit(w,p,r.message,'status',now,r.ok?undefined:{cmdFail:true});
+    return r;
+  }
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now,requiredQi(p));
-    if(result.reborn)emit(w,p,result.message,'skin',now,{rebirth:true,transform:true,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});
+    // 18/11: Luân Hồi — màn chiếu riêng "Niết Bàn Luân Hồi" (overlay public/luan-hoi-cinema.js) thay cho màn đổi skin chung.
+    if(result.reborn){const cut=w.luanHoiCut={id:'lh-'+p.id+'-'+now,pid:p.id,name:p.name,n:p.reincarnations,fromRealm:p.highestRealm,at:now+LUAN_HOI_CUT_LEAD,ms:LUAN_HOI_CUT_MS,seed:Math.floor(Math.random()*1e9)};
+      emit(w,p,result.message,'rebirth',now,{rebirth:true,luanHoi:cut.id,count:p.reincarnations,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});}
     else if(!cooldown(p,'rebirth-info',5000,now))emit(w,p,result.message,'status',now,result.ok?undefined:{cmdFail:true});
     return {ok:result.ok,pending:result.pending,reborn:result.reborn,message:result.message};
   }
