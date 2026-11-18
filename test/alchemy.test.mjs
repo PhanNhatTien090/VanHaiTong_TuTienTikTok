@@ -75,3 +75,15 @@ test('giọng đọc ít: chỉ mở lò, đan kiếp, nổ lò, đan thành; kh
  assert.ok(lines({alchemyStart:true}).length>=1);assert.ok(lines({alchemyExplode:true,alchemyCulprit:'An'}).length>=1);assert.ok(lines({alchemyEnd:5,alchemyMaster:'An'}).length>=1);assert.ok(lines({alchemyTribStart:true}).length===1);
  assert.equal(lines({}).length,0,'sự kiện lò khác không đọc');const words=lines({alchemyStart:true}).map(s=>s.text).join(' ').split(/\s+/).length;assert.ok(words<=26,'câu mở lò ngắn: '+words+' từ');
 });
+
+test('18/11: quà ≥99 ở Khai Lò → màn chiếu riêng theo pha; lò ĐỨNG YÊN trong lúc chiếu, mọi mốc giờ lùi đúng thời gian chiếu',async()=>{
+ const {ALC_CUT}=await import('../alchemy.mjs');
+ const w=setup(),t=brewing(w),e=w.alchemy,end0=e.roundEndsAt;
+ gift(w,'p1',50,t+100);assert.equal((e.cuts||[]).length,0,'quà <99 không chiếu');
+ gift(w,'p2',99,t+200);const cut=e.cuts[0];assert.equal(cut.role,'fire');assert.equal(cut.ms,ALC_CUT.ms.fire);
+ assert.equal(e.roundEndsAt,end0+cut.ms,'giờ chuyển lùi đúng thời gian chiếu');
+ const heat=e.heat;tick(w,t+200+cut.ms/2);assert.equal(e.heat,heat,'lò đứng yên khi đang chiếu');
+ gift(w,'p3',300,t+300);assert.equal(e.cuts.length,1,'chờ quá 10 s → không chiếu thêm (quà vẫn có tác dụng)');
+ tick(w,cut.at+cut.ms+1);gift(w,'p4',300,cut.at+cut.ms+1000);assert.ok(e.cuts[1].at>=cut.at+cut.ms+ALC_CUT.gap,'màn sau cách ≥6 s');
+ assert.equal(snapshot(w,cut.at+cut.ms+1000).alchemy.cuts.length,2);
+});

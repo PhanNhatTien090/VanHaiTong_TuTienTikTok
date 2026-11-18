@@ -30,7 +30,7 @@ export const alchemyVisible=(w,now)=>['opening','brewing','tribulation'].include
 const announce=(w,p,text,now,c,extra={})=>c.emit(w,p,text,'alchemy',now,{alchemy:true,...extra});
 function fx(e,now,row){e.fx??=[];e.fx.push({id:e.id+':'+(e.fxSeq=(e.fxSeq||0)+1),at:now,...row});if(e.fx.length>20)e.fx.splice(0,e.fx.length-20);}
 // Vùng vàng tại thời điểm now (frontend dùng cùng công thức từ e.zone).
-export function zoneAt(e,now){const z=e.zone;if(!z)return {lo:40,hi:60,c:50};let c=z.c+(z.amp?z.amp*Math.sin((now-z.at)/z.period*Math.PI*2):0)+(z.shift||0);let half=z.half*(z.wideUntil>now?2:1);c=clamp(c,half+4,96-half);return {lo:c-half,hi:c+half,c};}
+export function zoneAt(e,now){if(e.pauseUntil&&now<e.pauseUntil)now=e.pauseUntil; /* 18/11: đang chiếu riêng → vùng vàng đứng yên (không nhảy) */const z=e.zone;if(!z)return {lo:40,hi:60,c:50};let c=z.c+(z.amp?z.amp*Math.sin((now-z.at)/z.period*Math.PI*2):0)+(z.shift||0);let half=z.half*(z.wideUntil>now?2:1);c=clamp(c,half+4,96-half);return {lo:c-half,hi:c+half,c};}
 export function gradeOf(points){return clamp(Math.ceil(Math.max(0,points)/ALC.pointsFor9*9),1,9);}
 function open(w,now,c){
  const order=['rage','wind','rat','wide','jump'].sort(()=>Math.random()-.5),zoneSet=pick(ROUND_ZONES);
@@ -117,6 +117,7 @@ function startTrib(e,now){e.phase='tribulation';e.tribStartedAt=now;e.tribEndsAt
 export function tickAlchemy(w,now,c){
  const e=w.alchemy;if(!e)return;
  if(e.phase==='queued'){if(!stageConflict(w,now))open(w,now,c);return;}
+ if(['opening','brewing','tribulation'].includes(e.phase)&&now<(e.pauseUntil||0)){e.simAt=now;return;} // 18/11: đang chiếu riêng → lò đứng yên
  if(['opening','brewing','tribulation'].includes(e.phase))countCrowd(w,e,now,c);
  if(e.phase==='opening'){if(now>=e.openEndsAt){startRound(e,now);e.simAt=now;}return;}
  if(e.phase==='brewing'){
@@ -149,18 +150,31 @@ export function alchemyHearts(w,p,count,now,c){
  return e.heat-before;
 }
 // Quà: Băng Tâm Thủy / Linh dược / Tiên Hỏa theo giá trị một lượt tặng.
+// 18/11 (chủ game: quà ≥99 → CHIẾU RIÊNG từng sự kiện): Khai Lò — quà ≥99 → màn riêng người tặng theo pha:
+// mở lò = BÁCH THẢO QUY LÔ (dược liệu bay vào lò) · đang luyện = THẦN HỎA LUYỆN ĐAN · Đan Kiếp = KIM CHUNG HỘ ĐAN.
+// Lò TẠM DỪNG HẲN trong lúc chiếu (nhiệt, sét, câu đố, sự cố đứng yên, mọi mốc giờ lùi đúng thời gian chiếu). Cách nhau ≥6 s, chờ ≤10 s.
+export const ALC_CUT=Object.freeze({min:99,ms:{herb:3800,fire:4200,shield:4200},gap:6000,maxWait:10000});
+function shiftAll(e,hold){for(const k of ['openEndsAt','roundEndsAt','tribEndsAt','nextStrikeAt','lockUntil'])if(e[k])e[k]+=hold;if(e.overSince)e.overSince+=hold;
+ const z=e.quiz;if(z){if(z.startsAt)z.startsAt+=hold;if(z.endsAt)z.endsAt+=hold;}const i=e.incident;if(i){for(const k of ['at','startsAt','endsAt'])if(i[k])i[k]+=hold;}if(e.zone?.at)e.zone.at+=hold;}
+export function alchemyCut(e,p,role,coins,now){
+ const ms=ALC_CUT.ms[role];if(!ms||!(coins>=ALC_CUT.min))return null;const start=Math.max(now,e.cutUntil?e.cutUntil+ALC_CUT.gap:now);if(start-now>ALC_CUT.maxWait)return null;
+ const cut={id:e.id+':cut:'+(e.cutSeq=(e.cutSeq||0)+1),at:start,ms,role,user:p.id,name:p.name};e.cutUntil=start+ms;
+ const hold=e.cutUntil-Math.max(start,e.pauseUntil||0);if(hold>0){shiftAll(e,hold);e.pauseUntil=e.cutUntil;}
+ (e.cuts??=[]).push(cut);if(e.cuts.length>4)e.cuts.splice(0,e.cuts.length-4);return cut;
+}
+const withCut=(e,p,coins,now,r)=>{const cut=alchemyCut(e,p,r.role,coins,now);return cut?{...r,cut:cut.id}:r;};
 export function alchemyGift(w,p,coins,now,c){
  const e=w.alchemy;if(!e||!['opening','brewing','tribulation'].includes(e.phase)||!real(p)||!(coins>0))return null;
  const m=member(e,p,now);m.gift+=coins;m.score+=coins*3;m.lastActAt=now;m.lastGiftAt=now;
- if(e.phase==='opening'){fx(e,now,{kind:'herb',user:p.id,name:p.name,value:coins});return {role:'herb'};}
- if(e.phase==='tribulation'){e.shield=Math.min(100,e.shield+Math.min(60,15*coins**.5));fx(e,now,{kind:'shield',user:p.id,name:p.name,value:coins});return {role:'shield'};}
+ if(e.phase==='opening'){fx(e,now,{kind:'herb',user:p.id,name:p.name,value:coins});return withCut(e,p,coins,now,{role:'herb'});}
+ if(e.phase==='tribulation'){e.shield=Math.min(100,e.shield+Math.min(60,15*coins**.5));fx(e,now,{kind:'shield',user:p.id,name:p.name,value:coins});return withCut(e,p,coins,now,{role:'shield'});}
  simulate(e,now);const zone=zoneAt(e,now);
  if(coins<=ALC.roseMaxCoins){const cool=Math.min(ALC.roseCoolMax,ALC.roseCool*coins**.6),before=e.heat;e.heat=clamp(e.heat-cool,0,100);m.cool+=before-e.heat;if(e.heat<ALC.overHeat)e.overSince=0;
   fx(e,now,{kind:'rose',user:p.id,name:p.name,value:coins,saved:before>=ALC.dangerHeat});return {role:'rose',cooled:before-e.heat};}
  if(coins<=ALC.herbMaxCoins){const add=Math.min(Math.max(0,ALC.herbRoundCap-e.herbRound),ALC.herbPoints+Math.floor(coins/20)*2);e.herbRound+=add;e.points+=add;e.heat+=(zone.c-e.heat)*.5;e.overSince=0;
   fx(e,now,{kind:'herb',user:p.id,name:p.name,value:coins,points:add});return {role:'herb',points:add};}
  e.lockUntil=Math.max(e.lockUntil,now)+ALC.fireLockMs;e.heat=zone.c;e.overSince=0;e.points+=ALC.firePoints;
- fx(e,now,{kind:'fire',user:p.id,name:p.name,value:coins});return {role:'fire'};
+ fx(e,now,{kind:'fire',user:p.id,name:p.name,value:coins});return withCut(e,p,coins,now,{role:'fire'});
 }
 // Lệnh chat trong lúc luyện: 1 / 2 (chọn dược liệu), bat (đuổi chuột tinh). Trả undefined nếu không phải lệnh của lò.
 export function alchemyCommand(w,p,cmd,now){
@@ -184,5 +198,5 @@ export function alchemyView(w,now){
   quiz:z&&now>=z.startsAt-1500&&now<z.endsAt+4000?{q:z.q,options:z.options,startsAt:z.startsAt,endsAt:z.endsAt,tally:z.tally||(()=>{const t=[0,0];for(const v of Object.values(z.votes))t[v]++;return t;})(),result:z.result||null,chosen:z.chosen??null}:null,
   incident:i&&i.started&&now<i.endsAt+3000?{kind:i.kind,...INCIDENTS[i.kind],endsAt:i.endsAt,need:i.need||0,have:Object.keys(i.chasers||{}).length,result:i.result||null}:null,
   shield:e.phase==='tribulation'?Math.round(e.shield):null,tribEndsAt:e.tribEndsAt,count:Object.keys(e.members).length,top:alchemyTop(e,5),
-  fx:(e.fx||[]).filter(x=>now-x.at<8000),result:e.result||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil,sootUntil:e.sootUntil||0,sootIds:e.sootUntil>now?e.sootIds:undefined};
+  fx:(e.fx||[]).filter(x=>now-x.at<8000),cuts:(e.cuts||[]).filter(x=>now<x.at+x.ms+1500),result:e.result||null,finishedAt:e.finishedAt,podiumUntil:e.podiumUntil,sootUntil:e.sootUntil||0,sootIds:e.sootUntil>now?e.sootIds:undefined};
 }
