@@ -8,7 +8,7 @@ export const LOVE=Object.freeze({
   gardenMs:45000,gardenMax:3,songtuWindowMs:60000,
   secretMin:30,grandMin:100,
   secretMs:9000,grandMs:12000,cutGapMs:3000 /* 18/11 tối: 20 s làm quà chờ quá lâu */,cutQueueMax:2,
-  roomPct:.006,roomPctMax:.05,secretPct:.08,secretPctMax:.15,grandPct:.2,grandPctMax:.3,gardenPct:.01,
+  roomPct:.006,roomPctMax:.05,smallCap:.05 /* trần quà <30 coin mỗi người mỗi lễ */,secretPct:.08,secretPctMax:.15,grandPct:.2,grandPctMax:.3,gardenPct:.01,
   buffMult:2,buffMs:10*60000,partnerIdleMs:10*60000,
   title:'Thần Tiên Quyến Lữ'
 });
@@ -63,7 +63,8 @@ export function loveTowerGift(w,p,coins,unitCoins,now,c,rand=Math.random){
     return null;}
   const L=state(f),pair=pairOf(found.bond,p,found.partner),tier=unitCoins>=LOVE.grandMin?'grand':coins>=LOVE.secretMin?'secret':'room';
   const pct=tier==='grand'?Math.min(LOVE.grandPctMax,LOVE.grandPct+(unitCoins-LOVE.grandMin)*.00025):tier==='secret'?Math.min(LOVE.secretPctMax,LOVE.secretPct+(coins-LOVE.secretMin)*.001):Math.min(LOVE.roomPctMax,LOVE.roomPct*coins);
-  const gains={};for(const x of [p,found.partner])gains[x.id]=award(w,x,pct,now,c);
+  // 18/11 tối (chủ game duyệt): quà nhỏ (<30 coin) mỗi người nhận tối đa LOVE.smallCap tu vi cần trong cả lễ (trước không trần: hoa hồng 0,6%/bông).
+  const gains={};for(const x of [p,found.partner]){let use=pct;if(tier==='room'){L.small??={};use=Math.max(0,Math.min(pct,LOVE.smallCap-(L.small[x.id]||0)));L.small[x.id]=(L.small[x.id]||0)+use;}gains[x.id]=use>0?award(w,x,use,now,c):0;}
   const slot=placeRoom(L,pair,now,tier==='room'?LOVE.roomMs:LOVE.roomMaxMs);
   let cut=null;
   if(tier!=='room'){
@@ -73,7 +74,8 @@ export function loveTowerGift(w,p,coins,unitCoins,now,c,rand=Math.random){
   if(tier==='grand'){const b=w.social?.bonds?.[found.bond.id]||found.bond;b.grandRite=now;for(const x of [p,found.partner]){x.loveTitle=LOVE.title;x.loveTitleWith=x.id===p.id?found.partner.name:p.name;}}
   const label=tier==='grand'?'Tiên Lữ Đại Điển':tier==='secret'?'Uyên Ương Mật Thất':'Tình Các';
   const where=slot.full?'Tình Lâu đã kín':slot.queued?'chờ phòng thứ '+slot.queued:slot.extended?'thêm giờ song tu':'vào '+label;
-  c.emit(w,p,`${p.name} ♥ ${found.partner.name} • ${where} • song tu +${gains[p.id]} / +${gains[found.partner.id]} tu vi`,'bond',now,{loveRoom:{tier,label,room:slot.room??null,queued:slot.queued||0,cut:cut?.id||null,a:p.id,b:found.partner.id,aName:p.name,bName:found.partner.name,partnerQi:gains[found.partner.id]}});
+  const qiTxt=gains[p.id]||gains[found.partner.id]?` • song tu +${gains[p.id]} / +${gains[found.partner.id]} tu vi`:'';
+  c.emit(w,p,`${p.name} ♥ ${found.partner.name} • ${where}${qiTxt}`,'bond',now,{loveRoom:{tier,label,room:slot.room??null,queued:slot.queued||0,cut:cut?.id||null,a:p.id,b:found.partner.id,aName:p.name,bName:found.partner.name,partnerQi:gains[found.partner.id]}});
   return {tier,label,partner:found.partner.name,partnerId:found.partner.id,text:label+' cùng '+found.partner.name,cut:cut?.id||null,gains};
 }
 // Lệnh "song tu": cả hai gõ trong 60 s → Đình Nguyệt (miễn phí, 1 lần/đôi/lễ).

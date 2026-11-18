@@ -104,3 +104,13 @@ test('song tu: 3 cảnh giới cuối nhận ít hơn, cảnh giới dưới gi�
   assert.ok(low>=LOVE.grandPct*.95,'cảnh giới 20 vẫn ~20%: '+low);
   assert.ok(r26<low*.4,'cảnh giới 26 giảm mạnh: '+r26);assert.ok(r28<r26,'28 ít hơn 26');
 });
+
+// 18/11 tối (chủ game duyệt): quà nhỏ <30 coin có trần 5% tu vi cần mỗi người mỗi lễ; quà 30/100 không bị trần này.
+test('Tình Lâu: hoa hồng có trần 5% mỗi người cả lễ, quà 30 vẫn cộng đủ', () => {
+  const w=setup(),a=w.players.a,b=w.players.b,need=requiredQi(a);
+  for(let i=0;i<30;i++)gift(w,'a',1,N+1000+i*10);
+  assert.ok(Math.abs(a.qi/need-LOVE.smallCap)<.002,'A ~5%: '+(a.qi/need));assert.ok(Math.abs(b.qi/need-LOVE.smallCap)<.002,'B ~5%');
+  const before=a.qi;gift(w,'a',1,N+2000);assert.equal(a.qi,before,'chạm trần: không cộng nữa');
+  assert.doesNotMatch(w.events.findLast(e=>e.loveRoom).text||w.events.findLast(e=>e.loveRoom).message||'',/\+0/);
+  gift(w,'a',30,N+3000);assert.ok(a.qi-before>=need*LOVE.secretPct*.9,'quà 30 vẫn cộng đủ');
+});
