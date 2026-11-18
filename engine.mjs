@@ -417,17 +417,17 @@ function actionCore(w,input,now) {
   if(existed&&!p.resident&&!p.puppet&&w.mode==='live'&&!w.webShadow&&prevActive&&now-prevActive>=BAO_RETURN_AWAY&&!cooldown(p,'bao-return',BAO_RETURN_AWAY,now)){const h=baoReturnHint(p);if(h)emit(w,p,h,'status',now,{baoReturn:true});} // 18/11: chủ nhân thần khí vào sân → nhắc xem/đeo/dùng
   if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
-  if(type==='chat'&&!w.webShadow){const r=hallWarCommand(w,p,words,now,hallWarContext);if(r){if(!r.ok&&!cooldown(p,'hall-war-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
-  if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now);return {ok:true};}if(cmd==='trangbi'&&rest){const r=baoEquipByName(p,rest);if(r){emit(w,p,r.message,'sword',now);return r;}} /* 18/11: thần khí trang bị như pháp bảo */if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now);return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 17/11: Thiên Công Bảo Khố
-  if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now);return r;}} // 16/11: Tọa Kỹ Bí Cảnh
+  if(type==='chat'&&!w.webShadow){const r=hallWarCommand(w,p,words,now,hallWarContext);if(r){if(!r.ok&&!cooldown(p,'hall-war-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}}
+  if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now);return {ok:true};}if(cmd==='trangbi'&&rest){const r=baoEquipByName(p,rest);if(r){emit(w,p,r.message,'sword',now);return r;}} /* 18/11: thần khí trang bị như pháp bảo */if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now,r.ok?undefined:{cmdFail:true});return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 17/11: Thiên Công Bảo Khố
+  if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 16/11: Tọa Kỹ Bí Cảnh
   if(type==='chat'&&!w.webShadow){
     const result=hallCommand(w,p,words,now,hallContext);
-    if(result){if(!result.ok&&!cooldown(p,'hall-error',6000,now))emit(w,p,result.message,'status',now);return result;}
+    if(result){if(!result.ok&&!cooldown(p,'hall-error',6000,now))emit(w,p,result.message,'status',now,{cmdFail:true});return result;}
   }
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now);
     if(result.reborn)emit(w,p,result.message,'skin',now,{rebirth:true,transform:true,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});
-    else if(!cooldown(p,'rebirth-info',5000,now))emit(w,p,result.message,'status',now);
+    else if(!cooldown(p,'rebirth-info',5000,now))emit(w,p,result.message,'status',now,result.ok?undefined:{cmdFail:true});
     return {ok:result.ok,pending:result.pending,reborn:result.reborn,message:result.message};
   }
   // v86: Hộ Pháp (đã tặng ≥100 coin) quay lại sau ≥30 phút vắng → chào riêng, giọng ưu tiên
@@ -438,18 +438,18 @@ function actionCore(w,input,now) {
   if(type==='attack'&&w.hallWar?.phase==='running')return hallWarCommand(w,p,['danh'],now,hallWarContext);
   if(type==='attack'&&w.sectWar?.phase==='running'){const r=warCommand(w,p,'danh',now,socialContext);if(r)return r;}
   if(type==='attack'&&w.race?.phase==='running')return raceCommand(w,p,'danh',now,socialContext);
-  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(mz.ok)hallContribution(w,p,now,'event');if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now);return mz;}} // 10/11: Bí Cảnh Mê Cung
-  if(type==='chat'){const tw=towerCommand(w,p,cmd,now,towerContext);if(tw){if(tw.ok)hallContribution(w,p,now,'event');if(!tw.ok&&!cooldown(p,'tower-error',6000,now))emit(w,p,tw.message,'status',now);return tw;}} // 11/11: Vân Hải Tháp
-  if(type==='chat'){const bk=bonkCommand(w,p,cmd,input.text,now,bonkContext);if(bk){if(bk.ok)hallContribution(w,p,now,'event');if(!bk.ok&&!cooldown(p,'bonk-error',6000,now))emit(w,p,bk.message,'status',now);return bk;}} // 10/11: Hội Gõ Đầu
-  if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now);return r;}}
-  if(type==='chat'){const lv=loveCommand(w,p,cmd,now,loveContext);if(lv){if(lv.ok)hallContribution(w,p,now,'event');if(!lv.ok&&!cooldown(p,'love-error',5000,now))emit(w,p,lv.message,'status',now);return lv;}} // 17/11: song tu (Nguyệt Hạ Tình Lâu)
-  if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now);return result;}}
-  if(type==='chat'){const ar=arenaCommand(w,p,cmd,rest,now,socialContext);if(ar){if(!ar.ok&&!cooldown(p,'arena-error',6000,now))emit(w,p,ar.message,'status',now);return ar;}} // 15/11: Vân Hải Lôi Đài
-  if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now);return gf;}} // 10/11: tặng hộ
+  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(mz.ok)hallContribution(w,p,now,'event');if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now,{cmdFail:true});return mz;}} // 10/11: Bí Cảnh Mê Cung
+  if(type==='chat'){const tw=towerCommand(w,p,cmd,now,towerContext);if(tw){if(tw.ok)hallContribution(w,p,now,'event');if(!tw.ok&&!cooldown(p,'tower-error',6000,now))emit(w,p,tw.message,'status',now,{cmdFail:true});return tw;}} // 11/11: Vân Hải Tháp
+  if(type==='chat'){const bk=bonkCommand(w,p,cmd,input.text,now,bonkContext);if(bk){if(bk.ok)hallContribution(w,p,now,'event');if(!bk.ok&&!cooldown(p,'bonk-error',6000,now))emit(w,p,bk.message,'status',now,{cmdFail:true});return bk;}} // 10/11: Hội Gõ Đầu
+  if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}}
+  if(type==='chat'){const lv=loveCommand(w,p,cmd,now,loveContext);if(lv){if(lv.ok)hallContribution(w,p,now,'event');if(!lv.ok&&!cooldown(p,'love-error',5000,now))emit(w,p,lv.message,'status',now,{cmdFail:true});return lv;}} // 17/11: song tu (Nguyệt Hạ Tình Lâu)
+  if(type==='chat'){const result=companionCommand(w,p,cmd,rest,now,companionContext);if(result){if(!result.ok&&!cooldown(p,'companion-error',5000,now))emit(w,p,result.message,'status',now,{cmdFail:true});return result;}}
+  if(type==='chat'){const ar=arenaCommand(w,p,cmd,rest,now,socialContext);if(ar){if(!ar.ok&&!cooldown(p,'arena-error',6000,now))emit(w,p,ar.message,'status',now,{cmdFail:true});return ar;}} // 15/11: Vân Hải Lôi Đài
+  if(type==='chat'){const gf=giftForCommand(w,p,cmd,input.text,now,{emit,active:currentParticipant});if(gf){if(!gf.ok&&!cooldown(p,'giftfor-error',5000,now))emit(w,p,gf.message,'status',now,{cmdFail:true});return gf;}} // 10/11: tặng hộ
   if(type==='chat'){const inv=inventoryRequest(w,p,cmd,rest,now);if(inv){const wait=cooldown(p,'inventory',15000,now);if(wait)return fail(`Xem lại sau ${wait}s.`);const card=inventoryCard(inv.kind,p,CATALOG,inv.kind==='pets'?petV2Cards(w,p):null);if(card.kind==='pets'){const tip=petEventTip(w,p,now);if(tip)card.tip=tip;}emit(w,p,inventoryText(card),'status',now,{card});return {ok:true};}} // 11/11
-  if(type==='chat'){const petV2=petV2Command(w,p,cmd,rest,now,emit);if(petV2){if(!petV2.ok&&!cooldown(p,'pet-v2-error',8000,now))emit(w,p,petV2.message,'status',now);return petV2;}}
-  if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now);return mt;}} // 16/11: Tọa Kỹ
-   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(pet.ok&&!rest){const ev=w.events.at(-1);if(ev?.petStatus&&ev.user===p.id&&!ev.card){ev.card=inventoryCard('pets',p,CATALOG,petV2Cards(w,p));const tip=petEventTip(w,p,now);if(tip)ev.card.tip=tip;}} /* 16/11: gõ thú lúc Linh Thú Cốc mở cũng hiện bảng thú */if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now);return pet;}}
+  if(type==='chat'){const petV2=petV2Command(w,p,cmd,rest,now,emit);if(petV2){if(!petV2.ok&&!cooldown(p,'pet-v2-error',8000,now))emit(w,p,petV2.message,'status',now,{cmdFail:true});return petV2;}}
+  if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now,{cmdFail:true});return mt;}} // 16/11: Tọa Kỹ
+   if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(pet.ok&&!rest){const ev=w.events.at(-1);if(ev?.petStatus&&ev.user===p.id&&!ev.card){ev.card=inventoryCard('pets',p,CATALOG,petV2Cards(w,p));const tip=petEventTip(w,p,now);if(tip)ev.card.tip=tip;}} /* 16/11: gõ thú lúc Linh Thú Cốc mở cũng hiện bảng thú */if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now,{cmdFail:true});return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
   if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
   if(type==='chat'){const war=warCommand(w,p,cmd,now,socialContext);if(war){if(war.ok)hallContribution(w,p,now,'event');if(!war.ok&&!cooldown(p,'war-error',8000,now))emit(w,p,war.message,'war',now);return war;}}
@@ -481,7 +481,7 @@ function actionCore(w,input,now) {
     const choice=cmd==='huycanh'?0:rest==='tu dong'?null:/^[1-9][0-9]*$/.test(rest)?Number(rest):NaN;
     const tier=WING_TIERS[choice-1];
     if(choice!==0&&choice!==null&&!tier)return fail('Gõ cánh kèm số từ 1 đến '+WING_TIERS.length+'.');
-    if(tier&&p.giftCoins<tier.min)return fail(tier.name+' cần '+tier.min.toLocaleString('vi-VN')+' coin tích lũy.');
+    if(tier&&p.giftCoins<tier.min)return fail('Chưa mở '+tier.name+' · cánh mở theo tổng quà đã tặng · gõ cánh để xem cánh đã có.'); // 18/11: không đọc số coin
     p.wingChoice=choice;
     const message=choice===0?'Đã ẩn cánh. Gõ cánh + số để đeo lại.':choice===null?'Đã bật tự chọn cánh theo tổng coin.':'Đã đeo '+tier.name+'.';
     emit(w,p,message,'status',now);return {ok:true,message};
@@ -1097,7 +1097,9 @@ export function ingest(w,event,now=Date.now()) {
     // real cultivation starts the newcomer journey and remembers chosen gender.
     return {ok:true,playerId:p.id,autoArrival:true};
   }
-  if(event.event==='chat')return action(w,{...base,type:'chat',text:d.comment},now);
+  if(event.event==='chat'){const before=w.events.length,r=action(w,{...base,type:'chat',text:d.comment},now); // 18/11 (chủ game): lệnh bị từ chối mà chưa báo gì (cánh, skin, rèn, học, đánh…) → báo + giọng đọc nhắc
+    if(r&&r.ok===false&&r.message&&!r.code){const p=w.players[base.userId];if(p&&!p.resident&&!p.puppet&&!w.events.slice(before).some(e=>e.user===p.id)&&!cooldown(p,'cmd-fail',8000,now))emit(w,p,r.message,'status',now,{cmdFail:true});}
+    return r;}
   if(event.event==='like'){
     const count=Number(d.likeCount??d.count);
     if(!Number.isSafeInteger(count)||count<1)return fail('Gói tym thiếu số lượt hợp lệ; không tự đoán.');

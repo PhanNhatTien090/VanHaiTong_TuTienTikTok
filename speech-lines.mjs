@@ -164,6 +164,7 @@ export function speechPlan(e){
   if(e.readyReminder){const n=Number(e.count)||1;return [say('tongsu',n===1?`${gameText(String(e.text||'').replace(/^Đủ đột phá: /,'').split(' • ')[0])} đã đủ đột phá, gõ đột phá ngay!`:`${cap(viNumber(n))} đạo hữu đã đủ đột phá, gõ đột phá ngay!`)];}
   if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ đột phá ngay.`)];
   if(e.hallJoin){const h=titleCase(e.hallJoin.name||'Ngũ Đường');return [say('tongsu',pickBy(seed,[`${Who} bái nhập ${h}! Đồng môn hoan nghênh!`,`${h} có thêm ${who}! Từ nay cùng tu một đạo!`,`${Who} đầu nhập ${h}, nhận lệnh bài đệ tử!`]))];} // 16/11
+  if(e.cmdFail){const t=gameText(String(e.text||'')).replace(/\s*·\s*/g,', ').replace(/"/g,'');return [say('tongsu',`${Who}, ${t.charAt(0).toLowerCase()+t.slice(1)}`.slice(0,190))];} // 18/11
   if(e.effect==='status'){
     const mm=text.match(/Tu vi (\d+)\/(\d+) • Linh thạch (\d+)\/(\d+) • ([^•]+)/);
     if(!mm)return [say('tongsu',`${Who}, ${head.toLowerCase()}.`)];

@@ -25,6 +25,7 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
   if(urgentVoice(e))return 'play';
   if(ritualBusy)return keepsDuringRitual(e)?'defer':'drop';
   if(keepsDuringRitual(e))return 'play';
+  if(e.cmdFail)return 'play'; // 18/11 (chủ game): gõ lệnh mà chưa đủ điều kiện → luôn đọc lý do (server đã giới hạn 5–10 s/người)
   const vet=veteranPlayer(player);
   if(breakthroughVoice(e)){
     if((player?.giftCoins||0)>0)return 'play';
