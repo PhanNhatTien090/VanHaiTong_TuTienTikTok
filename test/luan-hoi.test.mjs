@@ -57,3 +57,10 @@ test('hướng dẫn + bậc + nhạc khớp mốc',()=>{
  assert.equal(luanHoiTier(0),null);assert.equal(luanHoiTier(4).name,'Tam Luân');assert.equal(luanHoiTitle(1),'Nhất Thế Luân Hồi');
  assert.ok(LUAN_HOI_SCORE.some(c=>Math.abs(c.at-LH.impact)<.01));assert.ok(LUAN_HOI_SCORE.every(c=>c.at>=0&&c.at<LH.duration));
 });
+
+test('màn đột phá của người đã chuyển sinh có khung Luân Hồi; người thường thì không',async()=>{
+ const {luanHoiRitualInfo}=await import('../public/luan-hoi-fx.js');
+ assert.equal(luanHoiRitualInfo({realm:10}),null);assert.equal(luanHoiRitualInfo({realm:10,reincarnations:2,resident:true}),null);
+ const a=luanHoiRitualInfo({realm:10,highestRealm:27,reincarnations:2});assert.equal(a.n,2);assert.equal(a.hi,27);assert.equal(a.beyond,false);
+ assert.equal(luanHoiRitualInfo({realm:28,highestRealm:27,reincarnations:2}).beyond,true);
+});

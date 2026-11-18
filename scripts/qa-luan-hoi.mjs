@@ -17,7 +17,7 @@ try{
  await pause(4500);srv.kill();await pause(800);
  const file=path.join(data,'demo.json'),w=JSON.parse(await fs.readFile(file,'utf8'));
  Object.assign(w.players.b,{realm:28,qi:5e12,stones:1e6,giftCoins:600,lastActive:Date.now()});
- Object.assign(w.players.c,{realm:9,highestRealm:27,reincarnations:2,giftCoins:300,lastActive:Date.now()});
+ Object.assign(w.players.c,{realm:9,highestRealm:27,reincarnations:2,giftCoins:300,qi:1e12,stones:1e7,lastActive:Date.now()});
  Object.assign(w.players.d,{realm:4,highestRealm:26,reincarnations:5,lastActive:Date.now()});
  Object.assign(w.players.e,{realm:14,highestRealm:28,reincarnations:10,lastActive:Date.now()});
  for(const k of ['visitor','boss','miniEvent'])delete w[k];w.nextBossAt=Date.now()+36e5;w.nextSmallAt=Date.now()+36e5;
@@ -47,6 +47,8 @@ try{
   {const cv=document.createElement('canvas');cv.width=900;cv.height=H;m.drawLuanHoiFrame(s,cv.getContext('2d'),performance.now(),H,{...cut,n:5,seed:12},21.6);const sm=document.createElement('canvas');sm.width=450;sm.height=800;sm.getContext('2d').drawImage(cv,0,0,450,800);res['n5']=sm.toDataURL('image/jpeg',.85);}
   return res;})()`);
  for(const [k,u] of Object.entries(frames||{}))await fs.writeFile(`${out}/f-${String(k).padStart(5,'0')}.jpg`,Buffer.from(u.split(',')[1],'base64'));
+ // đột phá của người đã chuyển sinh → khung Luân Hồi đè lên màn đột phá
+ console.log('dp',(await act({type:'breakthrough',userId:'c'})).ok);await pause(3500);await shot('06-dot-pha-luan-hoi-3s');await pause(5000);await shot('07-dot-pha-luan-hoi-8s');await pause(26000);
  // chuyển sinh THẬT → màn chiếu qua hook
  console.log('cs1',(await act({type:'chat',userId:'b',text:'chuyen sinh'})).message);
  console.log('cs2',(await act({type:'chat',userId:'b',text:'chuyen sinh xac nhan'})).message);
