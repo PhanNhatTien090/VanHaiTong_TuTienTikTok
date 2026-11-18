@@ -1,3 +1,4 @@
+import {baoBanMenh} from './public/phap-bao-data.js'; // 18/11 tối: thần khí bản mệnh hiện trên người
 import {visualPreferences} from './public/visual-preferences.js';
 import {giftMasterView} from './master-rewards.mjs';
 import {editHall,editHallMember,hallRoster} from './ngu-duong.mjs';
@@ -113,7 +114,7 @@ function payload(mode,view='full'){
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));
     for(const p of [...full.players].sort((a,b)=>b.totalQi-a.totalQi).slice(0,3))top.add(p.id);
     if(full.patronCurrent)top.add(full.patronCurrent);for(const p of [full.halls?.match?.a,full.halls?.match?.b])if(p)top.add(p.id);for(const h of full.honors||[])top.add(h.id);for(const id of [...(full.socialStage||[]),...(full.raceStage||[])])top.add(id);
-    value={...full,players:full.players.filter(p=>p.active||top.has(p.id)).map(p=>({...Object.fromEntries(fields.map(k=>[k,p[k]])),skinGear:(p.artifacts||[]).filter(id=>SKIN_GEAR.includes(id)),baoLim:p.bao?.lim?.id||null /* 18/11: chủ nhân thần khí GIỚI HẠN */})),events:[...new Map([...full.events.slice(-30),...announcementHistory[mode].recent().slice(-16)].map(e=>[e.id,e])).values()].sort((a,b)=>a.at-b.at),feed:[],seen:undefined,giftCounts:undefined,adminLog:undefined};
+    value={...full,players:full.players.filter(p=>p.active||top.has(p.id)).map(p=>({...Object.fromEntries(fields.map(k=>[k,p[k]])),skinGear:(p.artifacts||[]).filter(id=>SKIN_GEAR.includes(id)),baoLim:p.bao?.lim?.id||null /* 18/11: chủ nhân thần khí GIỚI HẠN */,baoBan:baoBanMenh(p)?.id||null /* 18/11 tối: thần khí bản mệnh mọi bậc hiện cạnh vai */})),events:[...new Map([...full.events.slice(-30),...announcementHistory[mode].recent().slice(-16)].map(e=>[e.id,e])).values()].sort((a,b)=>a.at-b.at),feed:[],seen:undefined,giftCounts:undefined,adminLog:undefined};
   }else{
     // Chọn trước người sẽ gửi (đang hoạt động + top) để snapshot không phải dựng đủ ~8k hồ sơ mỗi 400 ms.
     let playerTotal=0;

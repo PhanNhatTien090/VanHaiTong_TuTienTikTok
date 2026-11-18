@@ -2,7 +2,7 @@
 // CHỦ NHÂN THẦN KHÍ GIỚI HẠN trên sân — món GIỚI HẠN bay cạnh vai (ảnh gốc, nhích nhẹ, quầng sáng màu món) và
 // BÙNG theo nhịp (3,6 s mỗi ~40 s, lệch pha theo người) với hiệu ứng riêng từng món. Luật chống lag: sân đông (heavyCrowd) thì ẩn;
 // không shadowBlur/filter; tối đa 12 người có món (12 suất/mùa).
-import {baoArt,baoItem} from './phap-bao-data.js';
+import {baoArt,baoItem,baoBanMenh} from './phap-bao-data.js';
 import {BAO_ULTS} from './bao-ults.js';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
 const hash=s=>{let h=2166136261;for(const ch of String(s))h=Math.imul(h^ch.charCodeAt(0),16777619);return h>>>0;};
@@ -30,11 +30,16 @@ const BURST={
 function genericBurst(c,k,x,y,s,col,t,im){const out=Math.sin(Math.PI*k);c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.85*out;c.strokeStyle=col;c.lineWidth=4*s;for(let i=0;i<2;i++){const R=(30+i*30+60*k)*s;c.beginPath();c.arc(x,y,R,0,TAU);c.stroke();}for(let i=0;i<8;i++){const q=i/8*TAU+t*.002;blot(c,col,x+Math.cos(q)*(50+40*k)*s,y+Math.sin(q)*(50+40*k)*s,8*s,out);}c.restore();c.globalAlpha=1;sprite(c,im,x,y,62*s*(1+.2*out),1);}
 
 /** Gọi trong lớp vẽ sau lưng nhân vật (cùng chỗ cánh). target = {player,x,y,scale}. */
-export function drawBaoAura(scene,c,target,t){
- const p=target.player,id=p?.baoLim;if(!id||scene.heavyCrowd||scene.raceStatus?.active||scene.compact)return;
+export function drawBaoAura(scene,c,target,t,layer='back'){
+ if(!!scene.compact!==(layer==='front'))return; /* 18/11 tối: sân gọn vẽ ở lớp TRƯỚC ngay sau người (lớp sau lưng bị hàng trên đè), sân thường vẽ sau lưng như cũ */
+ // 18/11 tối (chủ game: "thần khí không trang bị được vào người à"): món BẢN MỆNH mọi bậc hiện cạnh vai (baoBan từ server);
+ // 4★ nhỏ, quầng tím, không bùng · 5★ quầng vàng, bùng theo nhịp · GIỚI HẠN như cũ. Thiếu baoBan (server cũ) thì dùng baoLim.
+ const p=target.player,id=p?.baoBan||(p?.bao?baoBanMenh(p)?.id:null)||p?.baoLim; /* gói đầy đủ (trang quản lý) có p.bao → tự tính */if(!id||scene.heavyCrowd||scene.raceStatus?.active)return;
  const it=baoItem(id);if(!it)return;const im=art(id);if(!im)return;
- const s=(target.scale||1),side=hash(p.id)%2?1:-1,bob=scene.motion!==false?Math.sin(t*.0022+hash(p.id))*4*s:0,x=target.x+side*52*s,y=target.y-118*s+bob,col=BAO_ULTS[id]?.main||'#ff8fd0';
- const k=scene.auraK??(scene.motion===false?0:auraPhase(p.id,Date.now())); /* auraK: trang xem chiêu ép pha */
- if(k>0){(BURST[id]||genericBurst)(c,k,x,y,s,col,t,im);return;}
- blot(c,col,x,y,40*s,.35+.1*Math.sin(t*.003));sprite(c,im,x,y,54*s,1);
+ // 18/11 tối: sân thường LIVE luôn ở chế độ gọn (compact) — trước đây bị tắt hẳn nên thần khí không bao giờ hiện; nay vẽ nhỏ cạnh vai.
+ const cp=!!scene.compact,base=(target.scale||1)*(cp?.9:1),s=base*(cp?.55:1),side=hash(p.id)%2?1:-1,bob=scene.motion!==false?Math.sin(t*.0022+hash(p.id))*3*base:0,x=target.x+side*(cp?34:52)*base,y=target.y-(cp?40:118)*base+bob; /* gọn: theo khung cánh (tâm lưng y-46·s), cạnh vai */
+ const col=it.tier===6?BAO_ULTS[id]?.main||'#ff8fd0':it.tier===5?'#ffd36b':'#c79bff',size=it.tier===6?54:it.tier===5?50:44;
+ const k=it.tier===4?0:scene.auraK??(scene.motion===false?0:auraPhase(p.id,Date.now())); /* auraK: trang xem chiêu ép pha */
+ if(k>0){(it.tier===6&&BURST[id]||genericBurst)(c,k,x,y,s*(it.tier===5?.85:1),col,t,im);return;}
+ blot(c,col,x,y,(it.tier===4?30:38)*s,(it.tier===4?.28:.35)+.1*Math.sin(t*.003));sprite(c,im,x,y,size*s,1);
 }
