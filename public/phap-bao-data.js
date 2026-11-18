@@ -54,5 +54,8 @@ export function baoBanMenh(p){
 // Tháp: ×sát thương + thần thông chém % máu thủ vệ theo nhịp; Luận Kiếm: cộng nhẹ vào sức mạnh tỷ thí (bị lũy thừa 4 nên giữ nhỏ).
 export const BAO_TOWER=Object.freeze({4:{mult:.1,cd:12000,pct:5},5:{mult:.2,cd:9000,pct:8},6:{mult:.35,cd:7000,pct:12}});
 export const BAO_DUEL=Object.freeze({4:.01,5:.025,6:.04});
+// 18/11: Chính Ma — bản mệnh tự tung thần thông khi xuất chiêu/thả tim (nhịp hồi như Lôi Đài BAO_PROC), đẩy thêm N đơn vị × sao; dòng Phiến (đẩy lùi) ×1,5.
+export const BAO_WAR=Object.freeze({4:1,5:2,6:3}),BAO_WAR_PHIEN=1.5;
+export const baoWarUnits=bm=>bm?Math.round(BAO_WAR[bm.tier]*baoStarK(bm.stars)*(bm.line==='phien'?BAO_WAR_PHIEN:1)*100)/100:0;
 export const baoStarK=stars=>1+.1*(Math.max(1,stars||1)-1);
 export const baoKey=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().replace(/[^a-z0-9]/g,'');

@@ -74,3 +74,16 @@ test('08/11 tối: Vạn Lý Chiến Đạo — mỗi quà ghi số trượng đ
   assert.equal(TRUONG_PER_POINT, 20); assert.equal(truongOf(100), 1000); assert.equal(truongOf(0), -1000);
   assert.equal(screenX(0, warCamera(0)), 450); assert.ok(screenX(1000, warCamera(1000)) < 900, 'sơn môn cuối đường vẫn trong màn hình');
 });
+test('18/11: bản mệnh tung thần thông khi xuất chiêu/thả tim — đẩy thêm trượng theo bậc, Phiến mạnh hơn, có nhịp hồi; không thần khí thì như cũ',async()=>{
+ const {baoWarUnits,BAO_PROC}=await import('../public/phap-bao-data.js');
+ const w=setup(4);w.players.p0.bao={p4:0,p5:0,items:{'s5-kiem':1},lim:null};w.players.p2.bao={p4:0,p5:0,items:{'s5-phien':1},lim:null};
+ const t=battle(w,['p0','p2'],['p1','p3']),e=w.sectWar;
+ assert.equal(baoWarUnits({tier:5,line:'kiem',stars:1}),2);assert.equal(baoWarUnits({tier:5,line:'phien',stars:1}),3);assert.equal(baoWarUnits({tier:4,line:'an',stars:3}),1.2);
+ e.line=50;chat(w,'p0','chien',t+5000);const f=e.fx.find(x=>x.kind==='bao'&&x.user==='p0');
+ assert.ok(f&&f.item==='s5-kiem'&&f.skill==='Bạo kích'&&f.truong>0,'thần thông hiện trên sân');
+ chat(w,'p0','chien',t+5000+WAR.strikeCooldownMs);assert.equal(e.fx.filter(x=>x.kind==='bao'&&x.user==='p0').length,1,'còn hồi 9 s thì không tung lại');
+ chat(w,'p0','chien',t+5000+2*WAR.strikeCooldownMs);assert.equal(e.fx.filter(x=>x.kind==='bao'&&x.user==='p0').length,2);
+ assert.ok(BAO_PROC[5].cd<2*WAR.strikeCooldownMs);
+ chat(w,'p1','chien',t+5000);assert.equal(e.fx.some(x=>x.kind==='bao'&&x.user==='p1'),false,'không có thần khí');
+ like(w,'p2',20,t+6000);assert.ok(e.fx.some(x=>x.kind==='bao'&&x.user==='p2'),'thả tim cũng kích thần thông');
+});

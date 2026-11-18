@@ -6,6 +6,7 @@
 // 1 coin = 3 đơn vị (= 30 tim). Bù quân số giảm còn tối đa ×1,2, Chính khí ×1,05.
 import {stageConflict} from './stage-lock.mjs';
 import {mountBonus} from './mounts.mjs';
+import {baoBanMenh,baoWarUnits,BAO_PROC,BAO_LINES} from './public/phap-bao-data.js'; // 18/11: thần thông bản mệnh trong Chính Ma
 // 16/11: Tọa Kỹ — đẩy thêm trượng khi xuất chiêu/tim (không áp vào quà). Phần lẻ cộng dồn theo người.
 const mountUnits=(m,p,units)=>{const b=mountBonus(p,'war');if(!b)return 0;m.mountCarry=(m.mountCarry||0)+units*b;const n=Math.floor(m.mountCarry);m.mountCarry-=n;return n;};
 // 08/11: đẩy mạnh hơn (unit .5 → .85) + lò xo kéo chiến tuyến về giữa 3,5%/giây → giằng co qua lại rõ, trận vẫn đủ 2 phút.
@@ -20,6 +21,13 @@ export const OMENS=Object.freeze({'golden-sun':{name:'Kim Dương',text:'KIM DƯ
 const CHINH=['chinh','chinhdao','cd','chinhphai'],MA=['ma','madao','md','maphai'];
 const other=s=>s==='chinh'?'ma':'chinh';
 const real=p=>p&&!p.resident&&!p.puppet;
+// 18/11: bản mệnh tự tung thần thông (theo nhịp hồi BAO_PROC) khi người đó xuất chiêu hoặc thả tim đẩy được trượng. Không áp cho quà (quà đã có trần + chiếu riêng).
+function baoWar(w,e,m,p,now,c){
+ const bm=baoBanMenh(p);if(!bm||now<(m.baoAt??(m.at||0)+3000))return 0;
+ m.baoAt=now+BAO_PROC[bm.tier].cd;const units=baoWarUnits(bm);if(!(units>0))return 0;
+ m.score+=units;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units,now,c);
+ fx(e,now,{kind:'bao',side:m.side,user:p.id,name:p.name,item:bm.id,tier:bm.tier,skill:BAO_LINES[bm.line].skill,truong:Math.round(moved*TRUONG_PER_POINT)});return moved;
+}
 export const warActive=w=>['queued','registration','running'].includes(w.sectWar?.phase);
 export const warVisible=(w,now)=>['registration','running'].includes(w.sectWar?.phase)||w.sectWar?.podiumUntil>now;
 const announce=(w,p,text,now,c,extra={})=>c.emit(w,p,text,'war',now,{sectWar:true,...extra});
@@ -105,7 +113,7 @@ export function warCommand(w,p,cmd,now,c){
  if(side){if(!real(p))return {ok:false,message:'NPC không ra trận.'};const m=e.members[p.id];if(m)return m.side===side?{ok:true,duplicate:true}:{ok:false,message:'Đã ở '+SIDES[m.side].name+' • không đổi phe giữa trận.'};join(w,e,p,side,now,c);return {ok:true};}
  if(cmd==='chien'||cmd==='danh'&&e.phase==='running'){const m=e.members[p.id];if(!m)return {ok:false,message:'Gõ chinh hoặc ma để chọn phe trước.'};if(e.phase!=='running')return {ok:false,message:'Chưa khai chiến.'};
   if(now-m.lastStrike<WAR.strikeCooldownMs)return {ok:false,message:'Xuất chiêu hồi sau 8 giây.'};m.lastStrike=now;warNoteFree(e,m.side,WAR.strikeUnits,now);const moved=push(w,e,m.side,WAR.strikeUnits+mountUnits(m,p,WAR.strikeUnits),now,c);m.score+=WAR.strikeUnits;m.lastActAt=now;
-  fx(e,now,{kind:'strike',side:m.side,user:p.id});checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return {ok:true,moved};}
+  fx(e,now,{kind:'strike',side:m.side,user:p.id});baoWar(w,e,m,p,now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return {ok:true,moved};}
 }
 // Tim: người chưa chọn phe tự vào phe ít người (hòa → Chính Đạo). Giới hạn mỗi người theo cửa sổ 5 s.
 export function warHearts(w,p,count,now,c){
@@ -113,7 +121,7 @@ export function warHearts(w,p,count,now,c){
  let m=e.members[p.id];if(!m){const side=warCount(e,'ma')>warCount(e,'chinh')?'chinh':warCount(e,'chinh')>warCount(e,'ma')?'ma':'chinh';m=join(w,e,p,side,now,c,true);if(!m)return 0;}
  if(now-m.heartWindow>=WAR.heartWindowMs){m.heartWindow=now;m.heartUnits=0;}
  m.hearts+=count;const units=Math.min(WAR.heartCapUnits-m.heartUnits,Math.floor(m.hearts/WAR.heartsPerUnit));if(units<=0)return 0;
- m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units+mountUnits(m,p,units),now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return moved;
+ m.hearts-=units*WAR.heartsPerUnit;m.heartUnits+=units;m.score+=units;m.lastActAt=now;warNoteFree(e,m.side,units,now);const moved=push(w,e,m.side,units+mountUnits(m,p,units),now,c);baoWar(w,e,m,p,now,c);checkRescue(w,e,now,c);noteLead(w,e,now,c);finishIfDone(w,e,now,c);return moved;
 }
 // Quà: luôn tung đại chiêu + tính điểm; đẩy đủ theo coin, trần 36 đơn vị (~12 coin) / phe / 30 s.
 // 18/11 (chủ game): quà ≥30 coin → CHIẾU RIÊNG người tặng tung chiêu đẩy lùi phe địch (overlay public/war-cutscene.js).

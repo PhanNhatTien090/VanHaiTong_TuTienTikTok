@@ -4,6 +4,22 @@ import {cameraImpulse,cameraShakeStrength,drawScreenPulse,feedbackBudget} from '
 // Trái: Chính Đạo (vàng/lam). Phải: Ma Đạo (đỏ/đen). Bức tường năng lượng ở chiến tuyến; mỗi phe 6 nhân vật đầy đủ + binh sĩ mini.
 import {drawWarForces,warGiftImpact,warGiftWindup,drawWarReversal,drawWarSeal,WAR_REVERSAL_HIT} from './war-impact.js';
 import {drawWarRoad,truongOf,warCamera,screenX,TRUONG_PER_POINT} from './war-road.js';
+import {baoArt,BAO_TIER} from './phap-bao-data.js';
+// 18/11: thần thông bản mệnh trong Chính Ma — ảnh thần khí bay lên trên người tung chiêu + tên thần thông + "+N trượng" (≤1,2 s, không chiếu riêng).
+const baoImgs=new Map();
+function baoImg(id){if(typeof Image==='undefined')return null;let im=baoImgs.get(id);if(!im){im=new Image();im.decoding='async';im.src=baoArt(id);baoImgs.set(id,im);}return im.complete&&im.naturalWidth?im:null;}
+const BAO_FX_MS=1200;
+function drawBaoFx(scene,c,f,age,lx,H){
+ const a=scene.targets?.find(x=>x.id===f.user),x=a?a.x:(f.side==='chinh'?lx-120:lx+120),y=a?a.y-150:H*.52,k=age/BAO_FX_MS,col=BAO_TIER[f.tier]?.color||'#ffd36b';
+ const fade=k<.15?k/.15:k>.75?(1-k)/.25:1,rise=y-40*Math.min(1,k*2),size=(f.tier>=6?92:f.tier>=5?80:66)*(k<.2?.6+2*k:1);
+ c.save();c.globalAlpha=Math.max(0,fade);c.globalCompositeOperation='lighter';
+ const g=c.createRadialGradient(x,rise,0,x,rise,size*.9);g.addColorStop(0,col+'cc');g.addColorStop(1,col+'00');c.fillStyle=g;c.beginPath();c.arc(x,rise,size*.9,0,Math.PI*2);c.fill();
+ c.strokeStyle=col;c.lineWidth=3;c.globalAlpha=Math.max(0,fade*(1-k));c.beginPath();c.arc(x,rise,size*(.5+k*.9),0,Math.PI*2);c.stroke();
+ c.globalCompositeOperation='source-over';c.globalAlpha=Math.max(0,fade);
+ const im=baoImg(f.item);if(im){const r=Math.min(size/im.naturalWidth,size/im.naturalHeight);c.drawImage(im,x-im.naturalWidth*r/2,rise-im.naturalHeight*r/2,im.naturalWidth*r,im.naturalHeight*r);}
+ c.font='900 22px Segoe UI';c.textAlign='center';c.lineWidth=5;c.strokeStyle='#05060c';const tx=f.skill+(f.truong>0?' +'+f.truong+' trượng':'');c.strokeText(tx,x,rise-size*.78);c.fillStyle=col;c.fillText(tx,x,rise-size*.78);
+ c.restore();
+}
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);};
 const rnd=i=>{const v=Math.sin(i*127.1+311.7)*43758.5453;return v-Math.floor(v);};
 const hash=s=>{let h=2166136261;for(const ch of String(s||''))h=Math.imul(h^ch.codePointAt(0),16777619);return h>>>0;};
@@ -130,6 +146,7 @@ export function drawWar(scene,c,t,layer){
    if(f.kind==='final'&&f.left===30&&age>=0&&age<2400)drawFinal30(c,age,H,t);
    if(f.kind==='rescue'&&age>=0&&age<3200){const k=age/3200,a=Math.sin(k*Math.PI),col=COL[f.side];c.save();c.globalCompositeOperation='screen';c.globalAlpha=a;const x=f.side==='chinh'?lx-160:lx+160,g=c.createLinearGradient(x-90,0,x+90,0);g.addColorStop(0,col.main+'00');g.addColorStop(.5,col.soft);g.addColorStop(1,col.main+'00');c.fillStyle=g;c.fillRect(x-90,0,180,H);
     {const rs=pop(age,700);c.translate(450,H*.32+hop(scene,t,2,12));c.scale(rs,rs);c.translate(-450,-H*.32);}c.font='900 40px Segoe UI';c.textAlign='center';c.lineWidth=6;c.strokeStyle='#05060c';const tx=f.side==='chinh'?'HẠO NHIÊN CHÍNH KHÍ':'MA HỒN BẤT DIỆT';c.strokeText(tx,450,H*.32);c.fillStyle=col.main;c.fillText(tx,450,H*.32);c.restore();}
+   if(f.kind==='bao'&&age>=0&&age<BAO_FX_MS)drawBaoFx(scene,c,f,age,lx,H);
    if(f.kind==='strike'&&age>=0&&age<600){const a=scene.targets.find(x=>x.id===f.user);if(a){const k=age/600;c.save();c.globalCompositeOperation='screen';c.globalAlpha=1-k;c.strokeStyle=COL[f.side].main;c.lineWidth=4;c.beginPath();c.moveTo(a.x,a.y-80);c.lineTo(a.x+(lx-a.x)*k,a.y-80);c.stroke();c.restore();}}}
   const kk=scene.warKick;if(kk&&e.phase==='running'&&kk.size>=.06&&t-kk.at<700){const age=t-kk.at,side=kk.dir>0?'chinh':'ma',col=COL[side],sc=pop(age,700)*(.9+kk.size*.6);c.save();c.globalAlpha=Math.min(1,(700-age)/250);c.translate(lx+kk.dir*(40+age*.12),H*.46+hop(scene,t,5,10));c.scale(sc,sc);c.font='900 44px Segoe UI';c.textAlign='center';c.lineWidth=8;c.strokeStyle='#05060c';const tx=kk.dir>0?'ĐẨY! ▶▶':'◀◀ ĐẨY!';c.strokeText(tx,0,0);c.fillStyle=col.main;c.fillText(tx,0,0);c.restore();}
   drawTruongPopups(scene,c,e,fx,lx,H,now,t);
