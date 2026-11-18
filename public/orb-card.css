@@ -5,6 +5,7 @@
  background:radial-gradient(120% 90% at 50% 18%,var(--oc-glow),rgba(10,6,22,0) 62%),#0d0718;border:3px solid var(--oc-edge);box-shadow:0 0 0 2px rgba(0,0,0,.5),0 0 46px var(--oc-shadow);overflow:hidden}
 .oc-gold{--oc-glow:rgba(255,206,92,.55);--oc-edge:#ffd36b;--oc-shadow:rgba(255,196,64,.7);--oc-text:#ffe9a8}
 .oc-cyan{--oc-glow:rgba(120,225,255,.45);--oc-edge:#7fe3ff;--oc-shadow:rgba(90,200,255,.6);--oc-text:#dcf7ff}
+.oc-rose{--oc-glow:rgba(255,120,200,.5);--oc-edge:#ff8fd0;--oc-shadow:rgba(255,90,180,.65);--oc-text:#ffe0f2}
 .oc-violet{--oc-glow:rgba(190,140,255,.5);--oc-edge:#c79bff;--oc-shadow:rgba(170,110,255,.65);--oc-text:#ecdcff}
 .oc-rays{position:absolute;left:50%;top:92px;width:520px;height:520px;margin:-260px 0 0 -260px;opacity:.55;
  background:repeating-conic-gradient(from 0deg,var(--oc-glow) 0 7deg,transparent 7deg 22deg);border-radius:50%;animation:oc-spin 6s linear infinite}

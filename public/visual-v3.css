@@ -232,3 +232,5 @@ body.breakthrough-title-active #spotlight span{font-size:clamp(10px,1.5vw,18px)}
 .editor-wearing span{background:#0c1d19;border:1px solid var(--line);border-radius:12px;padding:3px 9px}
 .editor-wearing small{color:var(--muted);margin-right:3px}
 .item-badge{font-style:normal;font-size:10px;margin-left:4px;padding:1px 6px;border-radius:9px;background:#3a2a0c;color:#ffe2a4;border:1px solid #ffd27a66;white-space:nowrap}
+.editor-section{margin-top:6px;color:var(--muted);font-size:11px}.editor-items span select{background:#0c1d19;color:inherit;border:1px solid var(--line);border-radius:6px;font-size:11px;margin-left:4px}
+.editor-give{flex-wrap:wrap}.editor-give>select:first-child{flex:1 1 100%;min-width:0}.editor-give>select:nth-child(2){flex:0 0 auto}.editor-give>button{flex:1 1 auto}

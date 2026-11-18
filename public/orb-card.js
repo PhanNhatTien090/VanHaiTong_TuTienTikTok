@@ -2,13 +2,21 @@
 // stage: earned (quà Bí Cảnh vừa đủ mốc · nhận khi kết thúc) · got (đã vào túi) · remind (đang giữ, chưa truyền công — server hồi 20 phút/người).
 // HTML dựng theo sự kiện, chuyển động chỉ bằng CSS transform/opacity; tối đa 1 thẻ hiện + 3 chờ, trùng người thì thay nội dung.
 import {orbImage} from './mounts.js';
+import {baoArt} from './phap-bao-data.js';
 const SHOW_MS=4600,QUEUE_MAX=3;
 const KIND={divine:{name:'LINH CHÂU VÀNG',cmd:'truyencong than',tone:'gold'},vip:{name:'LINH CHÂU TÍM',cmd:'truyencong vip',tone:'violet'},common:{name:'LINH CHÂU XANH',cmd:'truyencong',tone:'cyan'}};
 const SHORT={divine:'vàng',vip:'tím',common:'xanh'};
 const LINE={earned:'Quà đã đủ mốc · nhận khi Bí Cảnh kết thúc',got:'Đã vào túi · truyền công để tọa kỹ hiện thân',remind:'Truyền công để nở tọa kỹ'};
 const countLine=c=>c.stage==='remind'&&c.counts?['divine','vip','common'].filter(x=>c.counts[x]>0).map(x=>c.counts[x]+' châu '+SHORT[x]).join(' · ')+' · ':'';
 const HEAD={earned:'ĐẠT',got:'NHẬN',remind:'ĐANG GIỮ'};
+// 18/11: thẻ THẦN KHÍ (trang quản lý trao, có tích "hiện hiệu ứng") — cùng khung, ảnh món + sao.
+const BAO_HEAD={6:['THẦN KHÍ GIỚI HẠN','rose'],5:['THẦN KHÍ CAO CẤP','gold'],4:['THẦN KHÍ TRUNG CẤP','violet']};
+function baoCardHTML(e,c,esc){const [head,tone]=BAO_HEAD[c.tier]||BAO_HEAD[4];
+ return `<div class="oc-card oc-${tone} oc-got"><div class="oc-rays"></div><img class="oc-orb oc-item" src="${esc(baoArt(c.id))}" alt="" decoding="async">`
+  +`<div class="oc-head">NHẬN ${head}</div><div class="oc-name">${esc(Array.from(String(e.name||'Đạo hữu')).slice(0,18).join(''))}</div>`
+  +`<div class="oc-line">${esc(c.item||'')} · ${'★'.repeat(Math.max(1,Math.min(5,c.stars||1)))}</div><div class="oc-cmd">gõ <b>thần khí</b> để xem</div></div>`;}
 export function orbCardHTML(e,esc){
+ if(e?.orbCard?.kind==='bao')return baoCardHTML(e,e.orbCard,esc);
  const c=e?.orbCard,k=c&&KIND[c.kind];if(!k||!LINE[c.stage])return '';
  const n=c.count>1?' ×'+c.count:'';
  return `<div class="oc-card oc-${k.tone} oc-${esc(c.stage)}"><div class="oc-rays"></div><img class="oc-orb" src="${esc(orbImage(c.kind,2))}" alt="" decoding="async">`

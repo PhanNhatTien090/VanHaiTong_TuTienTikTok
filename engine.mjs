@@ -20,6 +20,7 @@ import {automaticEventsPaused,configureEventSpacing} from './event-pacing.mjs';
 import {auditRecord,noteVisitorParticipant,archiveVisitor} from './visitor-audit.mjs';
 import {stageConflict,SKY_SETTLEMENT_MS,skyStageUntil} from './stage-lock.mjs';
 import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './spirit-pets.mjs';
+import {adminItems} from './admin-items.mjs'; // 18/11: quản lý thần khí / linh châu / tọa kỹ
 import {mountCommand,tickMounts,mountBonus,mountGiftBoost,orbReminder,ORB_REMIND_MS,ORB_REMIND_GAP_MS} from './mounts.mjs';
 import {startBaoKho,stopBaoKho,tickBaoKho,baoKhoCommand,baoKhoGift,baoKhoView,baoKhoActive,baoCollectionText,baoBanMenhCommand,baoEquipByName,baoReturnHint,BAO_RETURN_AWAY} from './phap-bao.mjs'; // 17/11: Thiên Công Bảo Khố
 import {startMountRealm,stopMountRealm,tickMountRealm,mountRealmCommand,mountRealmGift,mountRealmHearts,mountRealmView,mountRealmActive} from './mount-realm.mjs'; // 16/11: Tọa Kỹ Bí Cảnh // 16/11: Tọa Kỹ
@@ -1384,6 +1385,7 @@ export function adminEditPlayer(w,id,patch={},now=Date.now(),{announce=false}={}
     // 08/11: gỡ linh thú (thu hồi thần thú nhận nhầm theo luật Tông chủ cũ); linh thú đang dẫn bị gỡ thì đổi sang con mạnh nhất còn lại.
     for(const id of [].concat(patch.removePets||[])){const i=(p.spiritPets||[]).indexOf(id);if(i>=0){p.spiritPets.splice(i,1);if(p.spiritPet===id)p.spiritPet=[...ALL_PETS].reverse().find(x=>p.spiritPets.includes(x.id))?.id||null;changes.push('gỡ linh thú '+(ALL_PETS.find(x=>x.id===id)?.name||id));}}
     for(const id of [].concat(patch.removeSkins||[])){const i=(p.rewardSkins||[]).indexOf(id);if(i>=0){p.rewardSkins.splice(i,1);if(p.skinChoice===id)p.skinChoice=null;changes.push('gỡ skin '+(SPECIAL_SKINS.find(s=>s.id===id)?.name||id));}}
+    changes.push(...adminItems(w,p,patch,now,{announce,emit}));
     if(patch.resetCooldowns){p.cooldowns={};changes.push('xóa thời gian hồi');}
     if(announce&&p.realm>oldRealm)emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{fromRealm:oldRealm,toRealm:p.realm});
   }catch(e){return fail(e.message);}
