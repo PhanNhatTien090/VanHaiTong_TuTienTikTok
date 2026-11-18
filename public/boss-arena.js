@@ -53,6 +53,10 @@ export const WING_TIERS = [
   { min: 9000, name:'U Minh Quỷ Dực', fx:'demon', width:1.12 },
   { min: 10000, name:'Thanh Liên Dực', fx:'lotus', width:1.12 },
   { min: 12000, name:'Thiên Đạo Thần Hoàn', fx:'heaven', width:1.1 },
+  { min: 14000, name:'Băng Hoàng Dực', fx:'ice', width:1.12 },
+  { min: 16000, name:'Lôi Thần Dực', fx:'thunder', width:1.12 },
+  { min: 18000, name:'Hỗn Độn Ma Dực', fx:'chaos', width:1.12 },
+  { min: 20000, name:'Cửu Thiên Đế Dực', fx:'emperor', width:1.14 },
 ];
 export const wingTopIndex = coins => WING_TIERS.findLastIndex(w => (Number(coins)||0) >= w.min);
 // 18/11 (chủ game): vừa đủ MỐC MỚI thì tự mặc cánh mới nhất (bỏ lựa chọn cũ đang ghim); muốn đổi lại thì gõ cánh + số. Người tự ẩn cánh (wingChoice 0) giữ nguyên.

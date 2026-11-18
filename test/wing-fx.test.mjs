@@ -2,8 +2,8 @@ import {test} from 'node:test';import assert from 'node:assert/strict';
 import {_burstOf,WING_BURST_MS,WING_BURST_GAP} from '../public/wing-fx.js';
 import {WING_TIERS,wingTier} from '../public/boss-arena.js';
 test('mốc cánh mới 8.000 / 9.000 / 10.000 / 12.000 (18/11), có hiệu ứng biến hình',()=>{
- assert.deepEqual(WING_TIERS.filter(w=>w.fx).map(w=>[w.min,w.fx]),[[8000,'swords'],[9000,'demon'],[10000,'lotus'],[12000,'heaven']]);
- assert.equal(wingTier(10676).fx,'lotus');assert.equal(wingTier(9000).fx,'demon');assert.equal(wingTier(27420).fx,'heaven');assert.equal(wingTier(7999).min,7000);
+ assert.deepEqual(WING_TIERS.filter(w=>w.fx).map(w=>[w.min,w.fx]),[[8000,'swords'],[9000,'demon'],[10000,'lotus'],[12000,'heaven'],[14000,'ice'],[16000,'thunder'],[18000,'chaos'],[20000,'emperor']]);
+ assert.equal(wingTier(10676).fx,'lotus');assert.equal(wingTier(9000).fx,'demon');assert.equal(wingTier(27420).fx,'emperor');assert.equal(wingTier(15000).fx,'ice');assert.equal(wingTier(7999).min,7000);
  assert.ok(WING_TIERS.filter(w=>w.fx).every(w=>w.width<=1.19),'không rộng hơn cánh 7.000');
 });
 test('chống lag: tối đa 2 người biến hình cùng lúc (sân ≥10 người: 1), mỗi người ≥45 s, sân đông/đồ họa nhẹ thì không',()=>{
