@@ -72,12 +72,15 @@ function enqueue(w,p,now,c,vs=null){
 /** Lệnh chat. Trả null nếu không phải lệnh Lôi Đài. */
 export function arenaCommand(w,p,cmd,rest,now,c){
  const words=String(rest||'').split(' ').filter(Boolean);
+// 18/11: BẢNG chiêu thức — gõ "chiêu" hoặc "bí pháp" (cùng 1 bảng: 5 chiêu + 12 bí pháp, ✓ đã học).
+ const kitCard=(p,c,kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p)))=>{const learned=new Set(p.arenaBooks||[]);
+  return {kind:'kit',lv:kit[0]?.lv||1,kit:kit.map(k=>({slot:k.slot,name:k.name,note:k.slot===2||k.slot===3?(k.book?'bí pháp':''):''})),books:ARENA_BOOKS.map(b=>({name:b.name,grade:BOOK_TIER_NAME[b.grade],on:learned.has(b.id)}))};};
  const chieu=cmd==='chieu'?Number(words[0]):/^c[1-5]$/.test(cmd)?Number(cmd[1]):0;
  // ---- bí pháp chiêu thức ----
  if(cmd==='biphap'&&!words.length){
   if(now-(p.arenaBookListAt||0)<15000)return ok({cooldown:true});p.arenaBookListAt=now;
   const learned=new Set(p.arenaBooks||[]),groups=[1,2,3,4,5].map(g=>BOOK_TIER_NAME[g]+': '+ARENA_BOOKS.filter(b=>b.grade===g).map(b=>(learned.has(b.id)?'✓':'')+b.name).join(', '));
-  c.emit(w,p,'Bí pháp chiêu thức • '+groups.join(' • ')+' • gõ học + tên','status',now,{arenaBooks:true});return ok({count:ARENA_BOOKS.length});
+  c.emit(w,p,'Bí pháp chiêu thức • '+groups.join(' • ')+' • gõ học + tên','status',now,{arenaBooks:true,card:kitCard(p,c)});return ok({count:ARENA_BOOKS.length});
  }
  if(cmd==='hoc'&&words.length){
   const q=norm(words.join(' '));
@@ -101,7 +104,7 @@ export function arenaCommand(w,p,cmd,rest,now,c){
  if(cmd==='chieu'&&!words.length){
   if(now-(p.arenaKitAt||0)<15000)return ok({cooldown:true});p.arenaKitAt=now;
   const kit=arenaKit(p,c?.technique?(q=>c.technique(q)):undefined,arenaBooksOf(p));
-  c.emit(w,p,'Chiêu Lôi Đài (Lv'+kit[0].lv+') • '+kit.map(k=>'SK'+k.slot+' '+k.name).join(' · '),'status',now,{arenaKit:true});
+  c.emit(w,p,'Chiêu Lôi Đài (Lv'+kit[0].lv+') • '+kit.map(k=>'SK'+k.slot+' '+k.name).join(' · '),'status',now,{arenaKit:true,card:kitCard(p,c,kit)});
   return ok({kit:kit.map(k=>k.name)});
  }
  const isCmd=['lendai','loidai','xuongdai','thach','thachdau','nhan','cv1','cv2'].includes(cmd)||chieu;

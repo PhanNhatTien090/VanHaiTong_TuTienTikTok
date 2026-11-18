@@ -3,6 +3,7 @@
 // Chỉ đọc dữ liệu nhân vật, không đổi gì. Không nhắc giá quà/coin (luật LIVE).
 import {petById,ALL_PETS} from './public/spirit-pets.js';
 import {SPECIAL_SKINS} from './public/patrons.js';
+import {WING_TIERS,playerWing} from './public/boss-arena.js'; // 18/11: gộp cánh vào bảng skin
 export const BAG_CMDS=['tuido','tui','hanhtrang','xemtui'];
 const PET_CMDS=['thu','linhthu'];
 const petOpen=(w,now)=>{const e=w.petEvent;return !!(e&&!e.closedAt&&now>=e.startedAt&&now<e.endsAt);};
@@ -36,7 +37,9 @@ export function petCard(p,growth={}){
 export function skinCard(p){
  const owned=(p.rewardSkins||[]).map(id=>SPECIAL_SKINS.find(s=>s.id===id)).filter(Boolean);
  const cur=p.skinChoice&&SPECIAL_SKINS.find(s=>s.id===p.skinChoice);
+ const coins=Number(p.giftCoins)||0,wing=playerWing(p);
  return {kind:'skins',current:cur?.name||'Áo cảnh giới',
+  wings:{off:p.wingChoice===0,items:WING_TIERS.flatMap((t,i)=>coins>=t.min?[{no:i+1,name:t.name,on:t===wing}]:[])}, // không ghi mốc coin (luật bảng LIVE)
   owned:cap(owned.map(s=>({id:s.id,name:s.name,on:s.id===cur?.id})),24),
   tip:owned.length?'Gõ skin + tên để mặc · skin macdinh để về áo cảnh giới':'Skin mở từ sự kiện, đua kiếm, rèn pháp bảo'};
 }

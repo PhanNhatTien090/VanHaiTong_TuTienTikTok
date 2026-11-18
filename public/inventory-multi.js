@@ -24,7 +24,11 @@ export function itemStats(i,category='artifact'){
  if(i.bonus>0)parts.push('+'+(Math.round(i.bonus*share*1000)/10).toLocaleString('vi-VN')+'% tu vi');
  return parts.length>1||i.on||i.secondary?parts.join(' · '):'';
 }
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin',mounts:'Tọa kỹ'};
+// 18/11 (chủ game: "lệnh nào gõ xem mà không hiện bảng thì làm bảng, gộp được thì gộp"):
+//   tuvi + nhiệm vụ · skin + cánh · thần khí + bản mệnh (bao) · chiêu + bí pháp (kit) · linhchau + toaky (mounts).
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin · Cánh',mounts:'Tọa kỹ',bao:'Thần khí',kit:'Chiêu thức'};
+const NUMBERED={mounts:'cưỡi',bao:'bản mệnh'}; // ô có SỐ (gõ lệnh + số) + sao + viền theo bậc
+const hintHTML=(cmd,rest)=>`<div class="vd-state">gõ <b>${cmd}</b> ${rest}</div>`;
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
 function cell(i,category,esc){
@@ -32,9 +36,9 @@ function cell(i,category,esc){
  const item=category==='pets'&&raw.level?{...raw,name:raw.name+' · Lv'+raw.level}:raw;
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"${category==='pets'?` data-pet-stage="${esc(String(item.stage||0))}"`:''}`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
- const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':category==='mounts'?'cưỡi':'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
- const no=category==='mounts'&&item.no?`<em class="vd-no">${fmt(item.no)}</em><em class="vd-stars">${'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
- return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}${category==='mounts'&&item.tier?' is-'+esc(item.tier):''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${no}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
+ const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':NUMBERED[category]||'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
+ const no=NUMBERED[category]&&item.no?`<em class="vd-no">${fmt(item.no)}</em><em class="vd-stars">${'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
+ return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}${NUMBERED[category]&&item.tier?' is-'+esc(item.tier):''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${no}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
 }
 // 15/11 (user): HIỆN HẾT món — nhiều món thì thêm cột cho ô nhỏ lại (3→4→5→6 cột), bảng không cao quá ô góc.
 // Chỉ khi máy chủ cắt bớt (quá nhiều) mới có ô "+N".
@@ -62,6 +66,8 @@ export function inventoryDeckHTML(e,esc){
   const {p,ps,qiShort,stonesShort,state}=tuviBody({...card,next:card.next&&esc(card.next)});
   const bar=(cls,label,k,a,b,lack)=>`<div class="vd-stat ${cls}${lack?'':' is-full'}"><label>${label}</label><div class="vd-bar"><i style="width:${k.toFixed(1)}%"></i><span>${short(a)} / ${short(b)}${lack?'':' ✓'}</span></div></div>`;
   body=`<div class="vd-tuvi-body"><span class="vd-portrait" aria-hidden="true"></span><div class="vd-tuvi-info"><strong class="vd-realm">${esc(realmWithStage(card.realmName,card.stage))}</strong>${card.next?bar('vd-qi','Tu vi',p,card.qi,card.needQi,qiShort)+bar('vd-stone','Linh thạch',ps,card.stones,card.needStones,stonesShort):''}<div class="vd-state">${state}</div><div class="vd-rank">Hạng <b>#${fmt(card.rank)}</b> / ${fmt(card.players)}</div></div></div>`;
+  const tk=card.tasks; // 18/11: gộp "nhiệm vụ" vào bảng tu vi
+  if(tk?.items?.length)body+=`<div class="vd-sub">Nhiệm vụ ngày${tk.done?' · <b class="vd-ready">ĐÃ XONG</b>':''}</div><div class="vd-chips vd-list">${tk.items.map(x=>`<span class="${tk.done||x.have>=x.need?'is-on':''}">${esc(x.name)} ${fmt(x.have)}/${fmt(x.need)}${tk.done||x.have>=x.need?' ✓':''}</span>`).join('')}</div>`;
  }else if(kind==='bag'){
   body=`<div class="vd-chips"><span><img src="/assets/ui-inventory/crystal.svg" alt="">${fmt(card.stones)} linh thạch</span><span>🌿 ${fmt(card.herbs)} linh thảo</span></div>`
    +grid([[card.artifacts,'artifact'],[card.pills,'pill'],[card.manuals,'manual']],esc,'Túi trống');
@@ -77,9 +83,20 @@ export function inventoryDeckHTML(e,esc){
   const first=['divine','vip','common'].find(k=>o[k]>0);
   const hint=!card.channel&&first?`<div class="vd-state">gõ <b>${CMD[first]}</b> để nở tọa kỹ</div>`:(card.owned?.items?.length?'<div class="vd-state">gõ <b>toaky số</b> để cưỡi</div>':'');
   body=`<div class="vd-chips">${orbs}</div>`+ch+hint+grid([[card.owned,'mounts']],esc,'Chưa có tọa kỹ · Linh Châu có ở Tọa Kỹ Bí Cảnh');
+ }else if(kind==='bao'){ // 18/11: thần khí + bản mệnh
+  const it=card.owned?.items||[];
+  body=`<div class="vd-chips">${card.banMenh?`<span class="vd-orb is-divine">Bản mệnh: ${esc(card.banMenh)}</span>`:''}${card.pity4!=null?`<span>còn ${fmt(card.pity4)} lượt tới 4★</span><span>còn ${fmt(card.pity5)} lượt tới 5★</span>`:''}</div>`
+   +(it.length>1?hintHTML('bản mệnh + số','để đổi bản mệnh'):'')+grid([[card.owned,'bao']],esc,'Chưa có thần khí · gõ <b>cầu</b> khi Bảo Khố mở');
+ }else if(kind==='kit'){ // 18/11: chiêu + bí pháp
+  const books=card.books||[],learned=books.filter(b=>b.on).length;
+  body=`<div class="vd-chips"><span>Lv${fmt(card.lv||1)}</span><span>Bí pháp ${fmt(learned)}/${fmt(books.length)}</span></div>`
+   +`<ol class="vd-rows">${(card.kit||[]).map(k=>`<li><em class="vd-no">SK${fmt(k.slot)}</em><b>${esc(k.name)}</b>${k.note?`<small>${esc(k.note)}</small>`:''}</li>`).join('')}</ol>`
+   +`<div class="vd-sub">Bí pháp</div><div class="vd-chips vd-list">${books.map(b=>`<span class="${b.on?'is-on':'is-off'}">${b.on?'✓ ':''}${esc(b.name)}<small> ${esc(b.grade)}</small></span>`).join('')}</div>`
+   +hintHTML('học + tên','· <b>chiêu đổi + tên</b> để xếp vào SK2');
  }else{
-  const has=(card.owned?.items?.length||0)+(card.owned?.more||0);
+  const has=(card.owned?.items?.length||0)+(card.owned?.more||0),wg=card.wings; // 18/11: gộp "cánh" vào bảng skin
   body=`<div class="vd-chips"><span>Đã có ${fmt(has)}</span><span>Mặc: ${esc(card.current||'Áo cảnh giới')}</span></div>`+grid([[card.owned,'skins']],esc,'Chưa có skin riêng');
+  if(wg)body+=`<div class="vd-sub">Cánh${wg.off?' · đang ẩn':''}</div>`+(wg.items?.length?`<div class="vd-chips vd-list">${wg.items.map(x=>`<span class="${x.on?'is-on':''}"><b>${fmt(x.no)}</b> ${esc(x.name)}${x.on?' ✓':''}</span>`).join('')}</div>`+hintHTML('cánh + số','để đổi · <b>hủy cánh</b> để ẩn'):'<p class="vd-empty">Chưa mở cánh</p>');
  }
  return `<article class="vd-card vd-${kind}"><header><strong>${esc(e.name||'Đạo hữu')}</strong><small>${KIND_LABEL[kind]}</small></header>${body}</article>`;
 }

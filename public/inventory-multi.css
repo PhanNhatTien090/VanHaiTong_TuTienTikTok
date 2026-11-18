@@ -83,3 +83,12 @@ body.ritual-active .inventory-deck,body.hall-dueling .inventory-deck,body.ascens
 .inventory-deck .vd-cell.is-vip .vd-pic{box-shadow:inset 0 0 0 2px #c79bff}
 .inventory-deck .vd-cell.is-common .vd-pic{box-shadow:inset 0 0 0 1px #7fe3ff99}
 .inventory-deck .vd-orb.is-divine{border-color:#ffd36b99;color:#ffe9a8}.inventory-deck .vd-orb.is-vip{border-color:#c79bff99;color:#e6d4ff}
+/* 18/11: bảng gộp — tiêu đề phụ, danh sách chip nhỏ (cánh / bí pháp / nhiệm vụ), hàng chiêu SK1–5, thần khí GIỚI HẠN. */
+.inventory-deck .vd-sub{margin:.35em 0 .2em;font:800 .72em "Segoe UI",sans-serif;letter-spacing:.04em;text-transform:uppercase;color:#e6c27a}
+.inventory-deck .vd-list{font-size:.7em;gap:.25em}.inventory-deck .vd-list span{padding:.04em .45em}
+.inventory-deck .vd-list span.is-on{background:#e6c27a33;border-color:#ffd77e;color:#fff1c4}.inventory-deck .vd-list span.is-off{opacity:.55}
+.inventory-deck .vd-list small{font-size:.8em;color:#a9bfd0}
+.inventory-deck .vd-rows{list-style:none;margin:.2em 0 .1em;padding:0;display:grid;gap:.18em;font-size:.86em}
+.inventory-deck .vd-rows li{display:flex;align-items:center;gap:.4em;min-width:0}.inventory-deck .vd-rows b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff4d5}
+.inventory-deck .vd-rows .vd-no{position:static;flex:none;font-size:.78em}.inventory-deck .vd-rows small{flex:none;font-size:.7em;color:#c9b6ff;border:1px solid #c79bff77;border-radius:999px;padding:0 .4em}
+.inventory-deck .vd-cell.is-limited .vd-pic{box-shadow:inset 0 0 0 2px #ff8fd0,0 0 .5em #ff8fd088}

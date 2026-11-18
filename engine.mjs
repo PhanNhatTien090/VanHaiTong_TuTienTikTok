@@ -23,7 +23,7 @@ import {startPetEvent,stopPetEvent,petEventView,petActivity,petCommand} from './
 import {adminItems} from './admin-items.mjs'; // 18/11: quản lý thần khí / linh châu / tọa kỹ
 import {mountCommand,tickMounts,mountBonus,mountGiftBoost,orbReminder,ORB_REMIND_MS,ORB_REMIND_GAP_MS} from './mounts.mjs';
 import {baoBanMenh as baoBanMenhOf,baoBonus} from './public/phap-bao-data.js'; // 18/11 tối: chỉ số Tu vi của bản mệnh
-import {startBaoKho,stopBaoKho,tickBaoKho,baoKhoCommand,baoKhoGift,baoKhoView,baoKhoActive,baoCollectionText,baoBanMenhCommand,baoEquipByName,baoReturnHint,BAO_RETURN_AWAY} from './phap-bao.mjs'; // 17/11: Thiên Công Bảo Khố
+import {startBaoKho,stopBaoKho,tickBaoKho,baoKhoCommand,baoKhoGift,baoKhoView,baoKhoActive,baoCollectionText,baoCard,baoBanMenhCommand,baoEquipByName,baoReturnHint,BAO_RETURN_AWAY} from './phap-bao.mjs'; // 17/11: Thiên Công Bảo Khố
 import {startMountRealm,stopMountRealm,tickMountRealm,mountRealmCommand,mountRealmGift,mountRealmHearts,mountRealmView,mountRealmActive} from './mount-realm.mjs'; // 16/11: Tọa Kỹ Bí Cảnh // 16/11: Tọa Kỹ
 import {seatGift,tickSeat,seatOwnerId} from './master-seat.mjs';
 import {startArena,stopArena,arenaCommand,tickArena,arenaGift,arenaView,arenaStageIds,arenaVisible,arenaOpen,setArenaManualNames} from './arena.mjs';
@@ -52,7 +52,7 @@ import {BOSSES,environmentAt} from './public/world-rotation.js';
 import {GIFT_TIERS,GIFT_ARTIFACTS,GIFT_POLICY_VERSION,giftReward} from './public/gift-rewards.js';
 import {VIP_TIERS,vipTier} from './public/vip.js';
 import {startMiniEvent,stopMiniEvent} from './mini-events.mjs';
-import {engagementCommand,tickEngagement,trackTasks,checkinStreak,sectBuild,engagementView,startEnvelopeNow,startQuizNow} from './engagement.mjs';
+import {taskList,engagementCommand,tickEngagement,trackTasks,checkinStreak,sectBuild,engagementView,startEnvelopeNow,startQuizNow} from './engagement.mjs';
 import {topPatron,PATRON_SKIN,PATRON_SWORD,PATRON_SEAL,SPECIAL_SKINS} from './public/patrons.js';
 import {giftKind,giftNameVi} from './public/gift-kinds.js';
 import {LOYALTY_ARTIFACTS,LOYALTY_TIERS} from './public/loyalty.js';
@@ -257,7 +257,7 @@ export function profileCard(p,w,now=Date.now()){
   const real=Object.values(w.players).filter(x=>!x.resident&&!x.puppet);const rank=1+real.filter(x=>(x.totalQi||0)>(p.totalQi||0)).length;
   const settling=!!(w&&dailyAscensionView(w,p,now).exhausted&&p.qi>=needQi&&p.stones>=needStones);
   const tip=last?'Đã đạt đỉnh tu tiên':!finalRealmEligible(p)?'Tiên Đế cần tổng quà 100 coin':settling?'Đạo cơ đang lắng đọng · mai đột phá tiếp':ready?'Gõ 8 · đột phá ngay':p.qi<needQi?'Gõ 1 tu luyện · 4 luyện đan · 5 dùng đan':'Gõ 2 hái · 3 đánh để có linh thạch';
-  return {realm:p.realm,realmName:REALMS[p.realm],stage:stageOf(p),next:last?null:REALMS[p.realm+1],qi:p.qi,needQi,stones:p.stones,needStones,ready,rank,players:real.length,totalQi:p.totalQi||0,tip};
+  return {realm:p.realm,realmName:REALMS[p.realm],stage:stageOf(p),next:last?null:REALMS[p.realm+1],qi:p.qi,needQi,stones:p.stones,needStones,ready,rank,players:real.length,totalQi:p.totalQi||0,tip,tasks:p.resident||p.puppet?null:taskList(p,now,w)}; // 18/11: + nhiệm vụ ngày
 }
 export function suggestion(p){
   const pill=CATALOG.find(x=>x.type==='pill'&&p.pills[x.id]>0);if(pill)return {key:'use:'+pill.id,cmd:'dung',say:`dùng ${pill.name}`,why:pill.description};
@@ -419,7 +419,7 @@ function actionCore(w,input,now) {
   if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
   if(type==='chat'&&!w.webShadow){const r=hallWarCommand(w,p,words,now,hallWarContext);if(r){if(!r.ok&&!cooldown(p,'hall-war-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}}
-  if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now);return {ok:true};}if(cmd==='trangbi'&&rest){const r=baoEquipByName(p,rest);if(r){emit(w,p,r.message,'sword',now);return r;}} /* 18/11: thần khí trang bị như pháp bảo */if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now,r.ok?undefined:{cmdFail:true});return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 17/11: Thiên Công Bảo Khố
+  if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now,{card:baoCard(p)});return {ok:true};}if(cmd==='trangbi'&&rest){const r=baoEquipByName(p,rest);if(r){emit(w,p,r.message,'sword',now);return r;}} /* 18/11: thần khí trang bị như pháp bảo */if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now,String(rest||'').trim()?(r.ok?undefined:{cmdFail:true}):{card:baoCard(p)});return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 17/11: Thiên Công Bảo Khố
   if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 16/11: Tọa Kỹ Bí Cảnh
   if(type==='chat'&&!w.webShadow){
     const result=hallCommand(w,p,words,now,hallContext);
@@ -452,7 +452,7 @@ function actionCore(w,input,now) {
   if(type==='chat'){const mt=mountCommand(w,p,cmd,rest,now,mountContext);if(mt){if(!mt.ok&&!cooldown(p,'mount-error',6000,now))emit(w,p,mt.message,'status',now,{cmdFail:true});return mt;}} // 16/11: Tọa Kỹ
    if(type==='chat'){const pet=petCommand(w,p,cmd,rest,now,emit);if(pet){if(pet.ok&&!rest){const ev=w.events.at(-1);if(ev?.petStatus&&ev.user===p.id&&!ev.card){ev.card=inventoryCard('pets',p,CATALOG,petV2Cards(w,p));const tip=petEventTip(w,p,now);if(tip)ev.card.tip=tip;}} /* 16/11: gõ thú lúc Linh Thú Cốc mở cũng hiện bảng thú */if(!pet.ok&&!cooldown(p,'pet-error',10000,now))emit(w,p,pet.message,'status',now,{cmdFail:true});return pet;}}
   if(type==='chat'){const alc=alchemyCommand(w,p,cmd,now);if(alc)return alc;} // 08/11: Khai Lò Cửu Chuyển (1/2, bat)
-  if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg)return eg;} // v87: hồng bao / câu đố / nhiệm vụ
+  if(type==='chat'){const eg=engagementCommand(w,p,cmd,rest,now,engageCtx);if(eg){if(cmd==='nhiemvu'&&eg.ok){const ev=w.events.at(-1);if(ev?.tasks&&ev.user===p.id)ev.card=profileCard(p,w,now);} /* 18/11: nhiệm vụ → bảng tu vi */return eg;}} // v87: hồng bao / câu đố / nhiệm vụ
   if(type==='chat'){const war=warCommand(w,p,cmd,now,socialContext);if(war){if(war.ok)hallContribution(w,p,now,'event');if(!war.ok&&!cooldown(p,'war-error',8000,now))emit(w,p,war.message,'war',now);return war;}}
   if(type==='chat'){const raceResult=raceCommand(w,p,(cmd==='bay'||cmd==='baykiem')&&rest?null:cmd,now,socialContext,rest);if(raceResult){if(raceResult.ok)hallContribution(w,p,now,'event');if(!raceResult.ok&&!cooldown(p,'race-error',10000,now))emit(w,p,raceResult.message,'social',now);return raceResult;}const socialResult=socialCommand(w,p,cmd,rest,now,socialContext);if(socialResult){if(socialResult.ok&&['tythi','kiem','danh','hoikhi'].includes(cmd))hallContribution(w,p,now,'event');if(!socialResult.ok&&!cooldown(p,'social-error',10000,now))emit(w,p,socialResult.message,'social',now);return socialResult;}}
   if(type==='attack'&&tournamentActive(w))return socialCommand(w,p,'danh','',now,socialContext);
@@ -476,7 +476,7 @@ function actionCore(w,input,now) {
       const unlocked=WING_TIERS.flatMap((tier,i)=>p.giftCoins>=tier.min?[i+1+'. '+tier.name]:[]);
       const current=p.wingChoice===0?'Đã ẩn cánh':playerWing(p)?.name||'Chưa mở cánh';
       const message=current+' • '+(unlocked.length?unlocked.join(' · ')+' • Gõ cánh + số, hủy cánh hoặc cánh tự động.':'Cánh đầu tiên mở ở 1 coin.');
-      emit(w,p,message,'status',now);return {ok:true,message};
+      emit(w,p,message,'status',now,{card:inventoryCard('skins',p,CATALOG)});return {ok:true,message}; // 18/11: gõ cánh → bảng Skin · Cánh
     }
     if(cmd==='huycanh'&&rest)return fail('Gõ hủy cánh để cất cánh.');
     const choice=cmd==='huycanh'?0:rest==='tu dong'?null:/^[1-9][0-9]*$/.test(rest)?Number(rest):NaN;

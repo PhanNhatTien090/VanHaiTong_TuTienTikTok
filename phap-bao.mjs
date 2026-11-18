@@ -94,6 +94,11 @@ export function baoKhoView(w,now){
   limited:BAO_ITEMS.filter(x=>x.tier===6).map(x=>({id:x.id,owner:s.owners[x.id]?(w.players[s.owners[x.id]]?.name||'?'):null})),season:s.n};
 }
 /** Lệnh "thần khí" (thankhi): bộ sưu tập ngắn gọn. */
+// 18/11: BẢNG thần khí — gõ "thần khí" hoặc "bản mệnh" (cùng 1 bảng; số = số để gõ bản mệnh + số).
+export function baoCard(p){const items=p.bao?.items||{},list=Object.keys(items).filter(id=>baoItem(id)).sort((x,y)=>baoItem(y).tier-baoItem(x).tier||items[y]-items[x]),bm=list.length?baoBanMenh(p):null,b=p.bao||{};
+ const TIER={4:'vip',5:'divine',6:'limited'};
+ return {kind:'bao',banMenh:bm?.name||null,pity4:list.length||b.p4?Math.max(0,BAO_PITY4-(b.p4||0)):null,pity5:list.length||b.p5?Math.max(0,BAO_PITY5-(b.p5||0)):null,
+  owned:{items:list.map((id,i)=>({id,no:i+1,name:baoItem(id).name,stars:items[id],tier:TIER[baoItem(id).tier]||'vip',on:id===bm?.id,art:'/assets/phap-bao-v1/'+id+'.webp'})),more:0}};}
 export function baoCollectionText(p){const b=p.bao;if(!b||!Object.keys(b.items||{}).length)return 'Chưa có thần khí · gõ "cầu" khi Thiên Công Bảo Khố mở';
  const bm=baoBanMenh(p);return (bm?'Bản mệnh '+bm.name+' · ':'')+'Thần khí: '+Object.entries(b.items).map(([id,s])=>(baoItem(id)?.name||id)+' ★'+s).join(' · ')+' · còn '+(BAO_PITY4-b.p4)+' lượt tới 4★, '+(BAO_PITY5-b.p5)+' lượt tới 5★ · đeo: trang bị + tên thần khí';}
 

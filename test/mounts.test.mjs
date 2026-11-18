@@ -146,3 +146,16 @@ test('linhchau / toaky gửi kèm bảng Tọa kỹ (số, sao, đang cưỡi, c
   assert.match(html,/8 châu xanh/);assert.match(html,/cưỡi/);assert.match(html,/toa-ky-v1\/hoa-ky-lan\.webp/);
  }
 });
+
+// 18/11 (chủ game: "lệnh xem nào không hiện bảng thì làm, gộp được thì gộp"): mọi lệnh xem đều có bảng.
+test('mọi lệnh xem đều kèm bảng: tuvi+nhiệm vụ · skin+cánh · thần khí+bản mệnh · chiêu+bí pháp · linhchau+toaky',async()=>{
+ const {cardKind,inventoryDeckHTML}=await import('../public/inventory-multi.js');
+ const w=createWorld('live');Object.assign(w.settings,{autoEvents:false,residents:false,heartGate:false});
+ action(w,{type:'chat',userId:'u1',name:'U1',text:'xin chào'},NOW);
+ const p=w.players.u1;p.giftCoins=600;p.bao={items:{'s4-kiem':2,'s5-kiem':1},p4:2,p5:10};
+ const want={tuvi:'tuvi',nhiemvu:'tuvi',skin:'skins',canh:'skins',thankhi:'bao',banmenh:'bao',chieu:'kit',biphap:'kit',linhchau:'mounts',toaky:'mounts'};
+ let t=NOW+60000;
+ for(const [cmd,kind] of Object.entries(want)){t+=20000;const n=w.events.length;action(w,{type:'chat',userId:'u1',name:'U1',text:cmd},t);
+  const ev=w.events.slice(n).find(e=>e.user==='u1'&&e.card);assert.ok(ev,cmd+' phải có bảng');assert.equal(cardKind(ev.card),kind,cmd);
+  assert.ok(inventoryDeckHTML(ev,s=>String(s)).length>100,cmd);}
+});

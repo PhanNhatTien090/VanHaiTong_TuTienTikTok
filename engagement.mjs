@@ -146,6 +146,8 @@ export function trackTasks(w,p,input,result,now,c){if(p.resident||p.puppet||!res
     if(['cultivate','gather','attack'].includes(input.type))t[input.type]=(t[input.type]||0)+1;
   }else if(input.type==='chat'){t.chat++;if(/^\s*danh\b/i.test(input.text||''))t.attack++;}else if(input.type==='like')t.like+=Math.max(0,Math.trunc(Number(input.count)||0));else if(input.type==='attack')t.attack++;
   if(tasksFor(w).every(([k,,n])=>(t[k]||0)>=n)){t.done=true;c.gain(w,p,pct(c,p,.2),80,10,now);buff(p,3,10*60000,now);c.emit(w,p,'Hoàn thành nhiệm vụ ngày • rương thưởng','lotus',now,{tasksDone:true});}}
+// 18/11: dữ liệu nhiệm vụ ngày cho BẢNG tu vi (gõ tuvi / nhiệm vụ).
+export function taskList(p,now,w){const t=p.tasks?.day===vnDay(now)?p.tasks:{done:false};return {done:!!t.done,items:tasksFor(w).map(([k,l,n])=>({name:l,have:Math.min(t[k]||0,n),need:n}))};}
 export function taskText(p,now,w){const day=vnDay(now),t=p.tasks?.day===day?p.tasks:{done:false};
   return t.done?'Nhiệm vụ ngày đã xong • mai quay lại nhé':'Nhiệm vụ ngày • '+tasksFor(w).map(([k,l,n])=>`${l} ${Math.min(t[k]||0,n)}/${n}`).join(' • ');}
 
