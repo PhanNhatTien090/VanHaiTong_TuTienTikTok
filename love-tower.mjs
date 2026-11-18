@@ -7,7 +7,7 @@ export const LOVE=Object.freeze({
   rooms:2,queueMax:20,roomMs:60000,roomMaxMs:120000 /* 17/11 chủ game: 2 phòng to, còn lại xếp hàng */,
   gardenMs:45000,gardenMax:3,songtuWindowMs:60000,
   secretMin:30,grandMin:100,
-  secretMs:9000,grandMs:14000,cutGapMs:20000,cutQueueMax:2,
+  secretMs:9000,grandMs:12000,cutGapMs:3000 /* 18/11 tối: 20 s làm quà chờ quá lâu */,cutQueueMax:2,
   roomPct:.006,roomPctMax:.05,secretPct:.08,secretPctMax:.15,grandPct:.2,grandPctMax:.3,gardenPct:.01,
   buffMult:2,buffMs:10*60000,partnerIdleMs:10*60000,
   title:'Thần Tiên Quyến Lữ'
@@ -28,7 +28,10 @@ export function lovePartner(w,p,now){
 }
 export function loveGiftRule(w,p,now){return live(w,now)&&lovePartner(w,p,now)?'nguyệt hạ tình lâu • song tu':null;}
 const pick=(n,avoid,rand)=>{let v=Math.floor(rand()*n);if(v===avoid)v=(v+1+Math.floor(rand()*(n-1)))%n;return v;};
-function award(w,p,pct,now,c,source='gift'){const need=c.requiredQi?.(p)||0;const qi=Math.max(1,Math.round(need*pct));return c.gain(w,p,qi,Math.round(10+pct*400),0,now,false,source);}
+// 18/11 tối (chủ game: "song tu quà 30/100 lên tu vi quá nhanh — 3 cảnh giới cuối hạn chế lại, dưới giữ nguyên").
+export const LOVE_LATE_MULT=Object.freeze({26:.35,27:.3,28:.25});
+export const loveLateMult=p=>LOVE_LATE_MULT[Math.min(28,Math.floor(Number(p?.realm)||0))]??1;
+function award(w,p,pct,now,c,source='gift'){const need=c.requiredQi?.(p)||0;pct*=loveLateMult(p);const qi=Math.max(1,Math.round(need*pct));return c.gain(w,p,qi,Math.round(10+pct*400),0,now,false,source);}
 function pairOf(b,a,o){return {bondId:b.id,a:a.id,b:o.id,aName:a.name,bName:o.name};}
 function placeRoom(L,pair,now,ms){
   const i=L.rooms.findIndex(r=>r&&r.bondId===pair.bondId);
@@ -40,12 +43,16 @@ function placeRoom(L,pair,now,ms){
   L.queue.push({...pair,ms,at:now});return {queued:L.queue.length};
 }
 function scheduleCut(w,f,L,pair,tier,now,rand){
-  const pending=L.cuts.filter(x=>x.at>now).length;if(pending>=LOVE.cutQueueMax)return null;
-  const ms=tier==='grand'?LOVE.grandMs:LOVE.secretMs,at=Math.max(now,L.cutUntil?L.cutUntil+LOVE.cutGapMs:now);
+  const grand=tier==='grand',pending=L.cuts.filter(x=>x.at>now);if(!grand&&pending.length>=LOVE.cutQueueMax)return null;
+  const ms=grand?LOVE.grandMs:LOVE.secretMs;let at;
+  // 18/11 tối (chủ game: "tặng 100 coin delay rất lâu" — đo LIVE chờ 43 s): Đại Điển CHEN ĐẦU — chỉ chờ màn đang chiếu dở xong, các màn đang chờ lùi ra sau.
+  if(grand){const playing=L.cuts.find(x=>x.at<=now&&x.at+x.ms>now);at=playing?playing.at+playing.ms:now;
+    let next=at+ms+LOVE.cutGapMs;for(const x of pending.sort((p,q)=>p.at-q.at)){x.at=Math.max(x.at,next);next=x.at+x.ms+LOVE.cutGapMs;}}
+  else at=Math.max(now,L.cutUntil?L.cutUntil+LOVE.cutGapMs:now);
   const room=pick(LOVE_ROOM_THEMES.length,L.last.room,rand),qi=pick(LOVE_QI_STYLES.length,L.last.qi,rand);L.last={room,qi};
   const cut={id:'love-cut-'+now+'-'+pair.bondId,tier,at,ms,room,qi,...pair,hue:Math.floor(rand()*360)};
-  L.cuts.push(cut);L.cuts=L.cuts.filter(x=>x.at+x.ms>now-30000).slice(-6);L.cutUntil=at+ms;
-  if(at+ms+3000>f.endsAt)f.endsAt=at+ms+3000; // lễ hoãn đóng tới khi chiếu xong
+  L.cuts.push(cut);L.cuts=L.cuts.filter(x=>x.at+x.ms>now-30000).slice(-6);L.cutUntil=Math.max(...L.cuts.map(x=>x.at+x.ms));
+  if(L.cutUntil+3000>f.endsAt)f.endsAt=L.cutUntil+3000; // lễ hoãn đóng tới khi chiếu xong
   return cut;
 }
 // Quà trong lễ của 1 trong 2 người đôi đạo lữ. Trả null nếu không áp (để quà mặc định chạy).

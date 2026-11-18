@@ -43,7 +43,7 @@ test('≥30 coin → Mật Thất chiếu riêng + phúc duyên ×2; một món 
   assert.ok(a.buffMult>=2&&b.buffUntil>N+1000);
   assert.ok(a.qi>=Math.round(requiredQi(a)*LOVE.secretPct*.9));
   gift(w,'c',100,N+2000);
-  const grand=f.love.cuts[1];assert.equal(grand.tier,'grand');assert.ok(grand.at>=cut.at+cut.ms+LOVE.cutGapMs,'giãn cách giữa 2 màn chiếu');
+  const grand=f.love.cuts[1];assert.equal(grand.tier,'grand');assert.equal(grand.at,cut.at+cut.ms,'Đại Điển chỉ chờ màn đang chiếu xong (không nghỉ)');
   assert.equal(c.loveTitle,LOVE.title);assert.equal(w.players.d.loveTitle,LOVE.title);
   assert.notDeepEqual([grand.room,grand.qi],[cut.room,cut.qi],'không lặp y hệt biến thể vừa dùng');
   assert.ok(f.endsAt>=grand.at+grand.ms,'lễ hoãn đóng tới khi chiếu xong');
@@ -80,4 +80,27 @@ test('ngoài lễ: không song tu, quà như cũ; overlay có loveTower', () => 
   const late=N+500000;tick(w,late);
   assert.equal(action(w,{type:'chat',userId:'a',text:'song tu'},late+10).ok,false);
   gift(w,'a',1,late+20);assert.equal(w.events.findLast(e=>e.gift).loveGift,undefined);
+});
+
+// 18/11 tối (chủ game: "tặng 100 coin delay rất lâu" — LIVE chờ 43 s): Đại Điển chen lên trước các màn Mật Thất đang chờ.
+test('quà 100 chen đầu hàng chiếu: chỉ chờ màn đang chiếu, màn chờ lùi ra sau', () => {
+  const w=setup(),f=w.bondFestival;
+  gift(w,'a',30,N+1000);gift(w,'a',30,N+1500); // 1 màn đang chiếu + 1 màn chờ
+  const [playing,waiting]=f.love.cuts;assert.ok(waiting.at>N+1500);
+  gift(w,'c',100,N+2000);
+  const grand=f.love.cuts.find(x=>x.tier==='grand');
+  assert.equal(grand.at,playing.at+playing.ms,'ngay sau màn đang chiếu');
+  assert.ok(waiting.at>=grand.at+grand.ms,'màn chờ lùi sau Đại Điển');
+  assert.ok(grand.at-(N+2000)<=LOVE.secretMs,'chờ không quá 1 màn');
+  // hàng chờ đầy vẫn có Đại Điển
+  gift(w,'a',30,N+2500);gift(w,'a',30,N+2600);gift(w,'c',100,N+3000);
+  assert.equal(f.love.cuts.filter(x=>x.tier==='grand').length,2);
+});
+
+// 18/11 tối (chủ game: "3 cảnh giới cuối hạn chế lại, dưới giữ nguyên").
+test('song tu: 3 cảnh giới cuối nhận ít hơn, cảnh giới dưới giữ nguyên', () => {
+  const run=realm=>{const w=setup();for(const p of Object.values(w.players))p.realm=realm;const a=w.players.a;const before=a.totalQi;gift(w,'a',100,N+1000);return (a.totalQi-before)/requiredQi(a);};
+  const low=run(20),r26=run(26),r28=run(28);
+  assert.ok(low>=LOVE.grandPct*.95,'cảnh giới 20 vẫn ~20%: '+low);
+  assert.ok(r26<low*.4,'cảnh giới 26 giảm mạnh: '+r26);assert.ok(r28<r26,'28 ít hơn 26');
 });
