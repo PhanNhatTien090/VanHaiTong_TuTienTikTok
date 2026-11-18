@@ -14,15 +14,15 @@ LH.beats.forEach(b=>{drum(b,1.25);drum(b+.24,.7);});
 [293.7,261.6,220,196,174.6,146.8].forEach((hz,i)=>bell(LH.bells[i],hz,1.1,3.6,(i%2?.25:-.25)));
 chord(4.4,4.8,[146.8,174.6,220],.016,'choir');
 // III — hồi tưởng: gió dâng + vút qua tên cảnh giới (nhanh dần)
-add(LH.recallFrom,5,.07,220,3200,'rise');chord(LH.recallFrom,5.2,[146.8,220,293.7,349.2],.018);
-for(let i=0;i<16;i++){const at=LH.recallFrom+5*Math.pow(i/16,.75);add(at,.22,.05,900+i*90,260,'wind',(i%2?.5:-.5),true);}
+add(LH.recallFrom,5,.13,220,3200,'rise');chord(LH.recallFrom,5.2,[146.8,220,293.7,349.2],.034);add(LH.recallFrom,5,.05,73.4,146.8,'sine');
+for(let i=0;i<16;i++){const at=LH.recallFrom+5*Math.pow(i/16,.75);add(at,.24,.09,900+i*90,260,'wind',(i%2?.5:-.5),true);}
 // IV — thân diệt: tro lửa lách tách, đồng ca rơi
-for(let i=0;i<22;i++)add(LH.dissolve+i*.1+((i*37)%7)*.02,.06,.03,2400,1200,'crack',((i*13)%9-4)/6,true);
-add(LH.dissolve,2.4,.045,293.7,146.8,'choir');add(LH.dissolve,2.4,.04,500,160,'wind');
+for(let i=0;i<22;i++)add(LH.dissolve+i*.1+((i*37)%7)*.02,.06,.055,2400,1200,'crack',((i*13)%9-4)/6,true);
+add(LH.dissolve,2.4,.075,293.7,146.8,'choir');add(LH.dissolve,2.4,.07,500,160,'wind');
 // V — trống dồn + dâng → NỔ
 for(let i=0;i<10;i++)drum(LH.silence+.25+Math.pow(i/10,.6)*(LH.impact-LH.silence-.3),.5+i*.07);
 add(LH.silence+.2,LH.impact-LH.silence-.2,.09,140,4200,'rise');
-drum(LH.impact,3.2);add(LH.impact,2.6,.16,60,26,'sine',0,true);add(LH.impact,1.8,.12,900,90,'thunder',0,true);add(LH.impact,.25,.08,3600,400,'crack',0,true);
+drum(LH.impact,2.6);add(LH.impact,2.6,.13,60,26,'sine',0,true);add(LH.impact,1.8,.1,900,90,'thunder',0,true);add(LH.impact,.25,.08,3600,400,'crack',0,true);
 // VI — Rê trưởng huy hoàng
 chord(LH.flash,7.5,[146.8,220,293.7,370],.026,'choir');chord(LH.flash+.2,7,[73.4,110,146.8],.02,'brass');
 add(LH.descend,LH.land-LH.descend,.035,600,1800,'rise');
@@ -31,7 +31,9 @@ drum(LH.land,1.2);bell(LH.land,587.3,.9,3,0);
 drum(LH.stamp,2.2);bell(LH.stamp,98,2.2,4.5,0);add(LH.stamp,4,.05,49,49,'sine');
 // VII — 4 ân điển
 [880,987.8,1174.7,1318.5].forEach((hz,i)=>bell(LH.gifts+i*.45,hz,.55,1.8,(i-1.5)*.3));
-export const LUAN_HOI_SCORE=Object.freeze(score.sort((a,b)=>a.at-b.at).map(Object.freeze));
+// Phượng hoàng Niết Bàn: tiếng kêu (2 lớp lượn cao độ + hơi gió) và tiếng lao xuống
+add(LH.cry,1.1,.07,820,1650,'triangle',-.1,true);add(LH.cry+.05,1.0,.045,1240,2300,'sine',.1,true);add(LH.cry+.55,.9,.05,1500,980,'triangle',0,true);add(LH.cry,1.3,.05,1800,5200,'wind',0,true);
+add(LH.dive,LH.impact-LH.dive,.06,2600,500,'wind',0);export const LUAN_HOI_SCORE=Object.freeze(score.sort((a,b)=>a.at-b.at).map(Object.freeze));
 export function luanHoiMusicDuck(ms){const t=ms/1000;return t<LH.end-1.5?.1:Math.min(1,.1+(t-(LH.end-1.5))/1.5*.9);}
 const banks=new WeakMap();
 function noise(c){if(banks.has(c))return banks.get(c);const b=c.createBuffer(1,c.sampleRate*3,c.sampleRate),d=b.getChannelData(0);let seed=52711,low=0;for(let i=0;i<d.length;i++){seed=(Math.imul(seed,1664525)+1013904223)|0;const w=seed/2147483648;low=.9*low+.1*w;d[i]=low*.9+w*.18;}banks.set(c,b);return b;}

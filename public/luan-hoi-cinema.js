@@ -16,7 +16,7 @@ import {makeSurface} from './performance.js';
 import {LUAN_HOI,luanHoiTier,luanHoiTitle} from './luan-hoi-data.js';
 
 const TAU=Math.PI*2,SERIF='"Noto Serif","Times New Roman",Georgia,serif';
-export const LH=Object.freeze({duration:26,beats:[1.6,2.55],bells:[4.9,5.55,6.2,6.85,7.5,8.15],recallFrom:9,recallTo:14,dissolve:14,dark:16.4,silence:16.6,slam:17.35,impact:17.9,flash:18.1,descend:19,land:20.6,stamp:21.15,gifts:22.2,end:26});
+export const LH=Object.freeze({duration:26,beats:[1.6,2.55],bells:[4.9,5.55,6.2,6.85,7.5,8.15],recallFrom:9,recallTo:14,dissolve:14,dark:16.4,silence:16.6,slam:17.35,phoenix:15.1,cry:15.75,dive:16.9,ghost:20.7,impact:17.9,flash:18.1,descend:19,land:20.6,stamp:21.15,gifts:22.2,end:26});
 export const LUAN_HOI_MS=LH.duration*1000;
 const GLYPH=['天','人','修羅','畜生','餓鬼','地獄'],GLYPH_VN=['Thiên','Nhân','A Tu La','Súc Sinh','Ngạ Quỷ','Địa Ngục'];
 const perf=()=>globalThis.performance?.now?.()??Date.now();
@@ -80,6 +80,48 @@ function wheel(c,x,y,R,rot,P,a,flat,lit,sec,light){
  const hub=c.createRadialGradient(0,0,0,0,0,R*.3);hub.addColorStop(0,'#ffffff');hub.addColorStop(.3,P.accentSoft||P.soft);hub.addColorStop(1,(P.accent||P.main)+'00');c.fillStyle=hub;c.globalAlpha=a*(.5+.5*Math.sin(sec*2.2)**2);c.beginPath();c.arc(0,0,R*.3,0,TAU);c.fill();
  c.restore();
 }
+/** HỒI I: lốc khí Hỗn Độn xoáy quanh thân (dải xoắn vàng–tím) + vòng xung nhịp tim. */
+function chaosSwirl(c,cx,feet,scale,sec,P,a,light){if(a<=.01)return;c.save();c.globalCompositeOperation='lighter';
+ const top=feet-scale*150,n=light?3:5;
+ for(let k=0;k<n;k++){const ph=sec*(1.1+k*.17)+k*1.3,col=k%2?P.main:'#b48cff';c.strokeStyle=col;c.lineWidth=2.2-k*.25;c.globalAlpha=a*(.5-k*.06);c.beginPath();
+  for(let i=0;i<=60;i++){const u=i/60,y=feet-u*(feet-top)*1.05,r=scale*(26+20*Math.sin(u*Math.PI))*(1+.08*k),q=ph+u*7.5,x=cx+Math.cos(q)*r;const z=Math.sin(q);if(i)c.lineTo(x,y+z*scale*5);else c.moveTo(x,y+z*scale*5);}c.stroke();}
+ for(let i=0;i<(light?24:60);i++){const u=((sec*.18+rnd(i))%1),q=sec*1.6+i*2.4,r=scale*(18+40*rnd(i+5))*(1-u*.4);dot(c,i%3?P.main:'#c9a6ff',cx+Math.cos(q)*r,feet-u*scale*150,1.4+rnd(i+1)*2.4,a*.8*Math.sin(u*Math.PI));}
+ for(const b of LH.beats){const u=seg(sec,b,b+.9);if(u<=0||u>=1)continue;c.globalAlpha=a*(1-u)*.9;c.strokeStyle=P.soft;c.lineWidth=4*(1-u)+1;c.beginPath();c.ellipse(cx,feet,60+u*360,(60+u*360)*.24,0,0,TAU);c.stroke();}
+ c.restore();}
+/** Phượng hoàng lửa (Niết Bàn): kết từ tro, giang cánh, lao xuống. Hình dựng bằng hạt theo đường cong (không cần ảnh). */
+const PHX=(()=>{const pts=[];
+ // thân + đầu + mỏ
+ for(let i=0;i<40;i++){const u=i/39;pts.push([0,-1+u*1.25,1.6-u*.6,'b']);}
+ for(let i=0;i<10;i++){const u=i/9;pts.push([Math.sin(u*Math.PI)*.12-.02,-1.08-u*.1,1.3,'h']);}
+ // mào 3 cọng
+ for(let k=0;k<3;k++)for(let i=0;i<8;i++){const u=i/7;pts.push([-.05-u*.22-k*.05,-1.15-u*.22+k*.06,1-u*.5,'c']);}
+ // cánh (mép trên cong + lông vũ rủ)
+ for(const sd of [-1,1]){for(let i=0;i<46;i++){const u=i/45;pts.push([sd*u*1.42,-.5-Math.sin(u*Math.PI*.62)*.62-u*.12,1.4-u*.5,'w'+(sd>0?'r':'l'),u]);}
+  for(let f=0;f<9;f++){const u=.2+f/9*.8,bx=sd*u*1.42,by=-.5-Math.sin(u*Math.PI*.62)*.62-u*.12,len=.55-u*.25;for(let i=1;i<10;i++){const v=i/9;pts.push([bx-sd*v*.1,by+v*len,1.1-v*.6,'w'+(sd>0?'r':'l'),u]);}}}
+ // đuôi 3 dải dài uốn
+ for(let k=-1;k<=1;k++)for(let i=0;i<34;i++){const u=i/33;pts.push([k*.18*u+Math.sin(u*4+k)*.12*u,.25+u*1.35,1.3-u*.9,'t']);}
+ return pts;})();
+function phoenix(c,cx,cy,size,open,a,P,sec,light,dive=0){if(a<=.01)return;c.save();c.globalCompositeOperation='lighter';
+ // quầng lửa sau lưng
+ const gr=c.createRadialGradient(cx,cy,0,cx,cy,size*1.8);gr.addColorStop(0,'#ffcf7a'+'66');gr.addColorStop(.4,(P.fire||'#ff5a1f')+'33');gr.addColorStop(1,'#ff5a1f00');c.globalAlpha=a;c.fillStyle=gr;c.fillRect(cx-size*1.8,cy-size*1.8,size*3.6,size*3.6);
+ // thân cánh + đuôi tô lửa đặc (cho ra hình con chim, hạt chỉ là lớp viền lấp lánh)
+ const wingPt=(sd,u)=>{const flap=Math.sin(sec*5.5)*.18*(1-dive);let x=sd*u*1.42,y=-.5-Math.sin(u*Math.PI*.62)*.62-u*.12;y=y-(open-1)*u*.5+flap*u-dive*u*.6;x=x*(.35+.65*open)*(1-dive*.75);return [cx+x*size,cy+y*size*(1+dive*.4)];};
+ for(const sd of [-1,1]){c.beginPath();const [sx,sy]=wingPt(sd,0);c.moveTo(sx,sy);for(let i=1;i<=20;i++){const [x,y]=wingPt(sd,i/20);c.lineTo(x,y);}
+  for(let i=20;i>=3;i--){const u=i/20,[x,y]=wingPt(sd,u),len=(.55-u*.25)*size;c.quadraticCurveTo(x-sd*.06*size,y+len*.7,x-sd*.12*size,y+len*(i%2?1:.75));}
+  c.closePath();const wg=c.createLinearGradient(cx,cy-size,cx+sd*size*1.6,cy+size*.3);wg.addColorStop(0,'#fff1c0');wg.addColorStop(.4,P.main);wg.addColorStop(1,(P.fire||'#ff5a1f')+'99');c.globalAlpha=a*.5;c.fillStyle=wg;c.fill();}
+ c.beginPath();c.moveTo(cx-.1*size,cy-.2*size);for(let i=0;i<=16;i++){const u=i/16;c.lineTo(cx+(-.1-.3*u+Math.sin(u*4)*.1)*size,cy+(.25+u*1.35)*size*(1+dive*.4));}for(let i=16;i>=0;i--){const u=i/16;c.lineTo(cx+(.1+.3*u+Math.sin(u*4+1)*.1)*size,cy+(.25+u*1.35)*size*(1+dive*.4));}c.closePath();
+ const tg=c.createLinearGradient(0,cy,0,cy+1.6*size);tg.addColorStop(0,'#ffd27acc');tg.addColorStop(1,(P.fire||'#ff5a1f')+'00');c.globalAlpha=a*.5;c.fillStyle=tg;c.fill();
+ {const bg=c.createLinearGradient(0,cy-1.15*size,0,cy+.4*size);bg.addColorStop(0,'#ffffff');bg.addColorStop(.3,'#ffe6a0');bg.addColorStop(1,(P.fire||'#ff5a1f')+'00');c.beginPath();c.moveTo(cx,cy-1.18*size);c.quadraticCurveTo(cx+.13*size,cy-.6*size,cx+.05*size,cy+.4*size);c.lineTo(cx-.05*size,cy+.4*size);c.quadraticCurveTo(cx-.13*size,cy-.6*size,cx,cy-1.18*size);c.globalAlpha=a*.7;c.fillStyle=bg;c.fill();}
+ const step=light?2:1;
+ for(let i=0;i<PHX.length;i+=step){const [x0,y0,w,kind,u=0]=PHX[i];let x=x0,y=y0;
+  if(kind==='wl'||kind==='wr'){const sd=kind==='wr'?1:-1;const flap=Math.sin(sec*5.5)*.18*(1-dive);y=y0-(open-1)*u*.5+flap*u;x=x0*(.35+.65*open)*(1-dive*.75);y-=dive*u*.6;}
+  if(kind==='t'){x+=Math.sin(sec*3+y0*3)*.06;}
+  const jx=(rnd(i+Math.floor(sec*20))-.5)*.035,jy=(rnd(i*3+Math.floor(sec*20))-.5)*.035;
+  const px=cx+(x+jx)*size,py=cy+(y+jy)*size*(1+dive*.4),r=(1.6+w*2.6)*(size/220);
+  dot(c,kind==='h'||kind==='c'?'#ffffff':i%3?(P.fire||'#ff5a1f'):P.main,px,py,r*2.2,a*.35);dot(c,i%4?'#ffe6a8':'#ffffff',px,py,r,a*.95);}
+ // mắt
+ dot(c,'#ffffff',cx+.03*size,cy-1.1*size,5*(size/220),a);
+ c.restore();}
 /** Thân người vẽ ra lớp riêng (để tan từ chân lên). */
 function bodyLayer(scene,h,p,H,t,scale,k=1){
  const W=900,key=H+'|'+k;if(!h.layer||h.layerKey!==key){h.layer=makeSurface(Math.ceil(W*k),Math.ceil(H*k));h.layerKey=key;}const cv=h.layer;if(!cv)return null;const x=cv.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);x.setTransform(k,0,0,k,0,0);
@@ -106,7 +148,7 @@ function drawLuanHoi(scene,c,t,H,cut){
  const spinSpeed=.12+.5*seg(sec,9,14)+3.2*seg(sec,LH.slam-.6,LH.impact);const rot=v.spin*(sec*spinSpeed);
  const lit=[0,0,0,0,0,0];LH.bells.forEach((b,i)=>{lit[v.order[i]]=sec>=b?Math.min(1,.6+.4*Math.exp(-(sec-b)*3)):0;});
  if(sec>=9)for(let i=0;i<6;i++)lit[i]=Math.max(lit[i],.55+.45*Math.sin(sec*6+i));
- wheel(c,cx,wyy,R,rot,P,wIn*wOut*(sec>16.3&&sec<LH.slam-.6?.5:1),flat,lit,sec,light);
+ wheel(c,cx,wyy,R,rot,P,wIn*wOut*(sec>16.3&&sec<LH.slam-.6?.5:1)*(1-.55*seg(sec,LH.phoenix,LH.cry)*(1-seg(sec,LH.dive,LH.slam))),flat,lit,sec,light);
 
  // ── HỒI I: thân Hỗn Độn + hào quang
  const bodyA=1-seg(sec,LH.dissolve,LH.dark),scale=4.5;
@@ -114,6 +156,7 @@ function drawLuanHoi(scene,c,t,H,cut){
   // cột khí sau lưng
   c.save();c.globalCompositeOperation='lighter';const aura=(.45+.25*Math.sin(sec*3))*bodyA*(sec<LH.dissolve?1:.6);
   const ag=c.createRadialGradient(cx,feet-170,10,cx,feet-170,280);ag.addColorStop(0,P.soft+'88');ag.addColorStop(.5,P.main+'33');ag.addColorStop(1,P.main+'00');c.globalAlpha=aura;c.fillStyle=ag;c.fillRect(cx-300,feet-470,600,600);c.restore();
+  chaosSwirl(c,cx,feet,scale,sec,P,seg(sec,.2,1.4)*(1-seg(sec,LH.dissolve-.4,LH.dissolve+.6)),light);
   const dk=Math.min(2.5,Math.max(1,Math.hypot((c.getTransform?.().a)||1,(c.getTransform?.().b)||0)/(push||1))),lay=bodyLayer(scene,h,from,H,t,scale,dk); // vẽ đúng độ phân giải màn (không mờ)
   if(lay){
    const top=feet-scale*185,bot=feet+10,cut0=bot-(bot-top)*easeIO(seg(sec,LH.dissolve,LH.dark-.2)); // phần dưới cut0 đã tan
@@ -127,6 +170,12 @@ function drawLuanHoi(scene,c,t,H,cut){
    if(sec>=LH.dissolve&&cut0>top+8){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=bodyA;const gl=c.createLinearGradient(0,cut0-16,0,cut0+6);gl.addColorStop(0,P.main+'00');gl.addColorStop(.7,P.soft+'cc');gl.addColorStop(1,'#ffffff00');c.fillStyle=gl;c.fillRect(cx-170,cut0-16,340,22);c.restore();}
   }
  }
+ // ── PHƯỢNG HOÀNG NIẾT BÀN: kết từ tro trên trục bánh xe → giang cánh + kêu → (tối, im) → lao thẳng xuống thành cột sáng
+ if(sec>=LH.phoenix&&sec<LH.impact+.05){const form=easeIO(seg(sec,LH.phoenix,LH.cry)),open=.25+.75*easeIO(seg(sec,LH.cry-.3,LH.cry+.5)),dive=easeIO(seg(sec,LH.dive,LH.impact)),
+   size=215*(.55+.45*form)*(1+.25*seg(sec,LH.cry,LH.cry+.3)-.5*dive),cy=wy-60+(feet-60-(wy-60))*dive*dive,
+   a=form*(sec>LH.dark&&sec<LH.dive?.35:1)*(1-seg(sec,LH.impact-.08,LH.impact));
+  phoenix(c,cx,cy,size,open,a,P,sec,light,dive);
+  if(sec>=LH.cry&&sec<LH.cry+1)drawZoomLines(c,cx,cy-size*.6,(1-seg(sec,LH.cry,LH.cry+1))*.7,t,P,light,H);}
  // ── tro lửa (IV): bay lên về trục bánh xe
  const ember=seg(sec,LH.dissolve,LH.slam);if(ember>0&&ember<1){c.save();c.globalCompositeOperation='lighter';const N=light?160:400;
   for(let i=0;i<N;i++){const born=rnd(i+seed)*.75,u=seg(ember,born,born+.45);if(u<=0||u>=1)continue;
@@ -150,6 +199,9 @@ function drawLuanHoi(scene,c,t,H,cut){
  const sealA=seg(sec,LH.impact,LH.impact+.6)*(1-seg(sec,LH.end-1.2,LH.end-.3));
  if(sealA>0)wheel(c,cx,feet+8,250,-rot*.15,P,sealA*.85,.28,[1,1,1,1,1,1].map((_,i)=>.4+.3*Math.sin(sec*3+i)),sec,light);
 
+ // ── TIỀN THÂN HỘ ĐẠO: bóng khổng lồ của hình dạng kiếp trước, mờ vàng, đứng sau người vừa trùng sinh
+ {const ga=seg(sec,LH.ghost,LH.ghost+1.2)*(1-seg(sec,LH.end-1.4,LH.end-.4));if(ga>0){const gk=Math.min(2.5,Math.max(1,Math.hypot((c.getTransform?.().a)||1,(c.getTransform?.().b)||0))),gl=bodyLayer(scene,h,from,H,t,scale,gk);
+  if(gl){const gs=1.75,rise=(1-out3(seg(sec,LH.ghost,LH.ghost+1.6)))*60;c.save();c.globalAlpha=ga*.3;c.globalCompositeOperation='lighter';c.translate(cx,feet+rise);c.scale(gs,gs);c.translate(-cx,-feet);c.filter&&!light?c.filter='sepia(1) saturate(3) hue-rotate(-12deg) brightness(1.3)':0;c.drawImage(gl,0,0,900,H);c.filter='none';c.restore();}}}
  // ── HỒI VI: thân mới hạ xuống
  if(sec>=LH.descend-.3){const d=easeIO(seg(sec,LH.descend,LH.land)),y=feet-(1-d)*H*.42,a=seg(sec,LH.descend-.3,LH.descend+.4);
   c.save();c.globalCompositeOperation='lighter';const halo=c.createRadialGradient(cx,y-scale*60,10,cx,y-scale*60,260);halo.addColorStop(0,'#ffffffaa');halo.addColorStop(.4,P.soft+'55');halo.addColorStop(1,P.main+'00');c.globalAlpha=a*(1-.5*seg(sec,LH.land,LH.land+1.5));c.fillStyle=halo;c.fillRect(cx-280,y-scale*60-280,560,560);c.restore();
@@ -171,8 +223,10 @@ function drawLuanHoi(scene,c,t,H,cut){
   const lastBell=LH.bells.reduce((m,b,i)=>sec>=b?i:m,-1);if(lastBell>=0){const k=v.order[lastBell];stx(c,GLYPH_VN[k]+' đạo',450,H*.8+52,24,P.soft,{width:5,weight:'700',spacing:6});}c.globalAlpha=1;}
  const T3=seg(sec,9.4,10)*(1-seg(sec,13.4,14));
  if(T3>0){c.globalAlpha=T3;stx(c,'TIỀN KIẾP HỒI TƯỞNG',450,H*.8,36,'#ffffff',{width:6,spacing:8});c.globalAlpha=1;}
- const T4=seg(sec,14.4,15)*(1-seg(sec,16,16.4));
+ const T4=seg(sec,14.4,14.9)*(1-seg(sec,LH.cry-.2,LH.cry+.2));
  if(T4>0){c.globalAlpha=T4;stx(c,'Thân diệt · Đạo tồn',450,H*.8,38,P.soft,{width:6,weight:'700',spacing:6});c.globalAlpha=1;}
+ const T5=seg(sec,LH.cry,LH.cry+.35)*(1-seg(sec,LH.dark-.2,LH.dark));
+ if(T5>0){c.globalAlpha=T5;stx(c,'PHƯỢNG HOÀNG NIẾT BÀN',450,H*.8,46,goldGrad(c,H*.8,46,P),{width:7,spacing:8});c.globalAlpha=1;}
  // danh hiệu đóng dấu
  if(sec>=LH.stamp){const u=seg(sec,LH.stamp,LH.stamp+.28),sz=72*(1+1.4*(1-out3(u))),a=Math.min(1,u*2)*(1-seg(sec,LH.end-.8,LH.end-.2));const ty=H*.15;
   c.save();c.globalAlpha=a;stx(c,luanHoiTitle(n).toUpperCase(),450,ty,Math.min(sz,150),goldGrad(c,ty,sz,P),{width:9,spacing:6,max:860});
