@@ -34,7 +34,7 @@ try{
  await shot('01-festival-live');await pause(3500);await shot('02-festival-live-b');
  // Tờ khung hình: vẽ trực tiếp màn chiếu ở các mốc k (không chờ giờ thật).
  const sheet=await send('Runtime.evaluate',{awaitPromise:true,returnByValue:true,expression:`(async()=>{const m=await import('/love-tower.js');const s=window.__vhScene;if(!s?.loveStatus?.cuts?.length)return {err:'no cuts',st:!!s?.loveStatus};
-  const H=1600,out={};for(const cut of s.loveStatus.cuts.flatMap(x=>x.tier==='grand'?[0,1,2].map(q=>({...x,qi:q})):[x])){const ks=cut.tier==='grand'?[.05,.14,.25,.4,.49,.6,.69,.8,.9]:[.12,.25,.36,.45,.55,.62,.7,.8,.88];const cols=3,rows=3,cv=document.createElement('canvas');cv.width=900*cols/2;cv.height=H*rows/2;const g=cv.getContext('2d');
+  const H=1600,out={};for(const cut of s.loveStatus.cuts.flatMap(x=>x.tier==='grand'?[0].map(q=>({...x,qi:q})):[x])){const ks=cut.tier==='grand'?[.08,.3,.45,.55,.64,.72,.8,.88,.95]:[.12,.25,.36,.45,.55,.62,.7,.8,.88];const cols=3,rows=3,cv=document.createElement('canvas');cv.width=900*cols/2;cv.height=H*rows/2;const g=cv.getContext('2d');
    for(let i=0;i<ks.length;i++){const one=document.createElement('canvas');one.width=900;one.height=H;const c=one.getContext('2d');m.drawLoveCut(s,c,performance.now()+i*300,H,cut,ks[i]);g.drawImage(one,(i%cols)*450,Math.floor(i/cols)*800,450,800);g.fillStyle='#fff';g.font='bold 22px sans-serif';g.fillText('k='+ks[i],(i%cols)*450+8,Math.floor(i/cols)*800+26);}
    out[cut.tier+'-'+cut.room+'-'+cut.qi]=cv.toDataURL('image/jpeg',.8);}return out;})()`});
  const v=sheet.result?.value||{};if(v.err)console.log('sheet',v);

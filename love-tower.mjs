@@ -7,8 +7,9 @@ export const LOVE=Object.freeze({
   rooms:2,queueMax:20,roomMs:60000,roomMaxMs:120000 /* 17/11 chủ game: 2 phòng to, còn lại xếp hàng */,
   gardenMs:45000,gardenMax:3,songtuWindowMs:60000,
   secretMin:30,grandMin:100,
-  secretMs:9000,grandMs:12000,cutGapMs:3000 /* 18/11 tối: 20 s làm quà chờ quá lâu */,cutQueueMax:2,
-  roomPct:.006,roomPctMax:.05,smallCap:.05 /* trần quà <30 coin mỗi người mỗi lễ */,secretPct:.08,secretPctMax:.15,grandPct:.2,grandPctMax:.3,gardenPct:.01,
+  secretMs:9000,grandMs:18000 /* 18/11 khuya: lễ Nguyệt Lão 60% + phòng riêng Tiên Cung 40% */,cutGapMs:3000 /* 18/11 tối: 20 s làm quà chờ quá lâu */,cutQueueMax:2,
+  // 18/11 khuya (chủ game: "tăng tu vi song tu lên tý nữa"): ~+25% (đã bỏ nhân hệ số pháp bảo; 26–28 vẫn ×0,35/0,3/0,25).
+  roomPct:.0075,roomPctMax:.06,smallCap:.06 /* trần quà <30 coin mỗi người mỗi lễ */,secretPct:.1,secretPctMax:.18,grandPct:.25,grandPctMax:.35,gardenPct:.015,
   buffMult:2,buffMs:10*60000,partnerIdleMs:10*60000,
   title:'Thần Tiên Quyến Lữ'
 });

@@ -11,7 +11,7 @@ import {PALETTES,fxCamera,punch,smooth,out3,seg,clamp,dot,drawCircle,drawBurst,d
 const TAU=Math.PI*2;
 // Ngồi thiền (stand:0 — tư thế song tu/cùng tu có sẵn), không vẽ tư thế mới.
 export function drawSeated(scene,c,player,x,y,scale,t,flip){if(!player)return;const oc=scene.compact,op=scene.cinematicPose;scene.compact=true;scene.cinematicPose={...(op||{}),stand:0,lift:0,lean:0};c.save();c.translate(x,y);if(flip)c.scale(-1,1);c.scale(scale,scale);try{scene.drawCharacterBody(c,player,skinFor(player.giftCoins),t);}catch{}finally{c.restore();scene.compact=oc;scene.cinematicPose=op;}}
-export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower-cut.webp' /* 18/11: đã tách nền trời (cắt theo viền lầu), cửa sổ giữ nguyên vị trí */,rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp'});
+export const LOVE_ART=Object.freeze({tower:'/assets/love-v1/love-tower-cut.webp' /* 18/11: đã tách nền trời (cắt theo viền lầu), cửa sổ giữ nguyên vị trí */,rooms:['/assets/love-v1/room-candle.webp','/assets/love-v1/room-bamboo.webp','/assets/love-v1/room-ice.webp'],bridge:'/assets/event-maps-v1/bond-festival.webp',royal:'/assets/love-v1/room-royal.webp' /* 18/11 khuya: phòng riêng quà 100 coin (Codex vẽ) */});
 // Ô cửa sổ trong ảnh Tình Lâu (tỉ lệ 0–1 theo ảnh vuông) — đo từ ảnh thật.
 export const TOWER_WINDOWS=Object.freeze([[.171,.317],[.535,.317]].map(([x,y])=>({x,y,w:.295,h:.337}))); // 2 phòng to — đo từ love-tower-2.webp
 export const TOWER_BOX=Object.freeze({x:312,y:.14,size:290}); // 17/11: bậc thang dưới cây Nguyệt Lão, gần sân — dưới bảng sự kiện nhỏ giữa mép trên (Ba Túi Linh Lộc…) — cột phải LIVE có thêm thẻ Tiên Đế + bảng giờ lễ che mất góc phải // vị trí trên màn 900 px, y theo H
@@ -23,6 +23,7 @@ const ready=im=>im&&im.complete&&im.naturalWidth>0;
 const nowAt=(scene,t)=>(scene.stateServerNow||Date.now())+Math.min(2000,Math.max(0,t-(scene.stateReceivedAt||t)));
 export function syncLoveTower(scene,state){
   scene.loveStatus=state?.loveTower||null; // server chỉ gửi khi lễ đang mở (hoặc vừa đóng ≤20 s để chiếu nốt)
+  if(scene.loveStatus?.active)img(LOVE_ART.royal); /* 18/11 khuya: tải sẵn phòng riêng quà 100 từ lúc lễ mở — tránh nháy nền cũ giữa màn */
   // chỉ mục riêng: người trong phòng bị ẩn khỏi sân (không có trong scene.playerIndex) nhưng vẫn phải vẽ trong cửa sổ / màn chiếu
   const L=scene.loveStatus,ids=new Set();for(const r of L?.rooms||[])if(r){ids.add(r.a);ids.add(r.b);}for(const x of L?.cuts||[]){ids.add(x.a);ids.add(x.b);}
   scene.lovePlayers=new Map((state?.players||[]).filter(p=>ids.has(p.id)).map(p=>[p.id,p]));
@@ -97,13 +98,15 @@ export function loveCutFrame(scene,c,t,H){
 // Mốc thời gian (giây) của 3 nhịp bùng trong Mật Thất.
 const SECRET={enter:.1,screen:.3,down:.42,beats:[.55,.66,.77],done:.84};
 // 18/11 tối (chủ game: "song tu 100 coin xấu quá, cải tiến mạnh"): Đại Điển là MỘT màn riêng 12 s (không dùng lại Mật Thất của 30 coin).
+// 18/11 khuya (chủ game: "100 coin cho qua phòng riêng xịn hơn để song tu luôn"): Đại Điển = lễ Nguyệt Lão (GRAND_RITE đầu) → PHÒNG RIÊNG Tiên Cung song tu.
+export const GRAND_RITE=.6;
 export const GRAND={open:.1,cutA:[.08,.2],cutB:[.18,.3],thread:[.3,.5],sit:.52,gather:[.54,.68],boom:.68,boomGap:.33,reveal:.74};
 function secretSpan(){return {from:0,to:1};}
-export function beatsOf(x){const ms=x.ms/1000;if(x.tier==='grand'){const b=GRAND.boom*ms;return [0,1,2].map(i=>+(b+i*GRAND.boomGap).toFixed(2));}return SECRET.beats.map(b=>+(ms*b).toFixed(2));}
+export function beatsOf(x){const ms=x.ms/1000;if(x.tier==='grand'){const r=ms*GRAND_RITE,b=GRAND.boom*r;return [...[0,1,2].map(i=>+(b+i*GRAND.boomGap).toFixed(2)),...SECRET.beats.map(q=>+(r+(ms-r)*q).toFixed(2))];}return SECRET.beats.map(b=>+(ms*b).toFixed(2));}
 let shadowCv=null;
 function shadowLayer(w,h){if(!shadowCv||shadowCv.width!==w||shadowCv.height!==h)shadowCv=makeSurface(w,h);return shadowCv;}
 export function drawLoveCut(scene,c,t,H,x,k){
-  if(x.tier==='grand')return drawGrandRite(scene,c,t,H,x,k);
+  if(x.tier==='grand')return k<GRAND_RITE?drawGrandRite(scene,c,t,H,{...x,ms:(x.ms||16000)*GRAND_RITE},k/GRAND_RITE):drawSecretRoom(scene,c,t,H,{...x,ms:(x.ms||16000)*(1-GRAND_RITE)},(k-GRAND_RITE)/(1-GRAND_RITE),true);
   return drawSecretRoom(scene,c,t,H,x,k,false);
 }
 function bgCover(c,im,H,zoom=1,fy=.5){if(!ready(im))return false;const s=Math.max(900/im.naturalWidth,H/im.naturalHeight)*zoom,w=im.naturalWidth*s,h=im.naturalHeight*s;c.drawImage(im,450-w/2,H*fy-h*fy,w,h);return true;}
@@ -116,7 +119,8 @@ function drawSecretRoom(scene,c,t,H,x,k,grand){
   const zoom=motion?1.04+.05*smooth(seg(k,0,SECRET.down))+.04*charge+beatSec.reduce((n,s)=>n+punch(s,.035),0):1;
   fxCamera(c,450,H*.55,zoom,motion&&beatSec.some(s=>s>0&&s<.35)?6:0,t);
   c.fillStyle=P.deep;c.fillRect(-200,-200,1300,H+400);
-  bgCover(c,img(LOVE_ART.rooms[x.room%3]),H,1.02);
+  if(!(grand&&bgCover(c,img(LOVE_ART.royal),H,1.02)))bgCover(c,img(LOVE_ART.rooms[x.room%3]),H,1.02);
+  if(grand){c.save();c.globalCompositeOperation='lighter';const n=light?14:40;for(let i=0;i<n;i++){const u=((i*.37+t*.00008)%1),px=40+((i*157)%820)+Math.sin(t*.001+i)*18,py=H*(1.02-u*1.05);dot(c,i%3?'#ffd54a':'#ff8fb0',px,py,8+(i%3)*4,Math.sin(u*Math.PI)*.8);}c.restore();c.globalAlpha=1;} /* tiên cung: bụi vàng + đèn hoa bay lên */
   dot(c,P.main,450,H*.55,H*.45,.14+.14*charge);
   // Hai người bước vào, ngồi đối diện (chưa có bình phong): ảnh thật.
   const fy=H*.6,ax=450-185+(1-enter)*-260,bx=450+185+(1-enter)*260,sc=3.1; // chân đặt lên 2 nệm trong ảnh phòng
@@ -164,7 +168,7 @@ function drawSecretRoom(scene,c,t,H,x,k,grand){
   drawLetterbox(c,H,seg(k,0,.08)*(1-seg(k,SECRET.done,1)));
   // CHỮ
   const names=short(x.aName)+' ♥ '+short(x.bName);
-  if(k<SECRET.done){const a=smooth(seg(k,.04,.14));c.globalAlpha=a;txt(c,'UYÊN ƯƠNG MẬT THẤT',450,H*.14,52,'#ffe3ee',{width:11,max:860});txt(c,names,450,H*.14+52,30,P.gold,{width:7,weight:'800',max:840});
+  if(k<SECRET.done){const a=smooth(seg(k,.04,.14));c.globalAlpha=a;txt(c,grand?'NGUYỆT HẠ TIÊN CUNG':'UYÊN ƯƠNG MẬT THẤT',450,H*.14,grand?56:52,grand?'#ffe08a':'#ffe3ee',{width:11,max:860});txt(c,names,450,H*.14+52,30,P.gold,{width:7,weight:'800',max:840});
     if(drop>.9)txt(c,'Bế quan song tu',450,H*.85,28,'#ffffff',{width:7,weight:'800'});c.globalAlpha=1;}
   else{const u=seg(k,SECRET.done,1),pop=1+.4*(1-out3(seg(u,0,.3)));c.save();c.translate(450,H*.3);c.scale(pop,pop);txt(c,'SONG TU ĐẠI THÀNH!',0,0,62,'#ffe9a8',{width:12,max:860});c.restore();txt(c,names,450,H*.3+62,30,'#ffd2dc',{width:7,weight:'800',max:840});
     if(grand)txt(c,'Thần Tiên Quyến Lữ',450,H*.3+104,34,'#ffd54a',{width:8,weight:'900'});}
