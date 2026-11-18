@@ -14,6 +14,7 @@ export function warGuidePage(war){
   ['chinh · ma','chọn phe nếu chưa vào'],
   ['chiến','xuất chiêu đẩy chiến tuyến · hồi 8 giây'],
   ['❤ tim','đẩy chiến tuyến về phe mình'],
+  ['✦ thần khí','bản mệnh tự tung thần thông khi chiến/thả tim · đẩy thêm trượng'],
   ['🏯 thắng','đẩy tới sơn môn đối phương']],
   note:'Chưa chọn phe: thả tim tự vào phe ít người'};
  return {title:'CHÍNH MA ĐẠI CHIẾN · VINH DANH',rows:[['🏆','phe thắng và top 3 mỗi phe nhận thưởng']],note:''};
