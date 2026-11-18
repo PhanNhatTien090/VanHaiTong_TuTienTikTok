@@ -6,6 +6,7 @@
 //   Quà của người đang leo vào đài mình; người ngoài tặng thì vào đài mình hay trợ lực; chưa ai leo thì giữ làm "hộ thể" cho lượt của mình.
 // Mọi số tính theo % máu để tầng nào cũng cân: đúng tầm cảnh giới (tầng ≈ 2 × cảnh giới) thì tự đánh + gõ 3 vừa đủ qua; vượt cấp cần quà/trợ lực.
 import {stageConflict} from './stage-lock.mjs';
+import {combatRealm} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi Ấn
 import {baoBanMenh,baoBonus,BAO_TOWER,BAO_LINES,baoStarK} from './public/phap-bao-data.js'; // 18/11: thần khí bản mệnh trong Tháp
 
 export const TOWER=Object.freeze({durationMs:300000,turnMs:30000,gapMs:1500,hitCdMs:900,hitCdBoostMs:450,helpCdMs:2000,maxQueue:30,podiumMs:9000,milestone:5,lanes:4});
@@ -107,9 +108,9 @@ export function tickTower(w,now,c){
  e.lanes.forEach((t,lane)=>{
   if(!t)return;const p=w.players[t.id];const dt=Math.max(0,Math.min(5000,now-t.lastAt))/1000;t.lastAt=now;
   const mult=(t.buffUntil>now?t.buffMult||1:1)*baoMult(p);
-  t.hp=Math.max(0,t.hp-passiveDps(p?.realm,t.floor)*mult*dt);
+  t.hp=Math.max(0,t.hp-passiveDps(p?combatRealm(p):0,t.floor)*mult*dt);
   baoProc(e,lane,t,p,now);
-  t.me=Math.max(0,t.me-guardDps(p?.realm,t.floor)*dt);
+  t.me=Math.max(0,t.me-guardDps(p?combatRealm(p):0,t.floor)*dt);
   if(t.hp<=0)finishTurn(w,e,lane,now,c,true);
   else if(t.me<=0)finishTurn(w,e,lane,now,c,false,'down');
   else if(now>=t.endsAt||!p)finishTurn(w,e,lane,now,c,false,'time');
@@ -147,7 +148,7 @@ export function towerCommand(w,p,cmd,now,c){
  const mine=laneOf(e,p.id);
  if(mine>=0){const t=e.lanes[mine];if(t.next[p.id]>now)return {ok:true,cooldown:true};
   const fast=t.buffUntil>now;t.next[p.id]=now+(fast?TOWER.hitCdBoostMs:TOWER.hitCdMs);t.hits++;
-  t.hp=Math.max(0,t.hp-hitDamage(p.realm,t.floor)*(fast?t.buffMult||1:1)*baoMult(p));
+  t.hp=Math.max(0,t.hp-hitDamage(combatRealm(p),t.floor)*(fast?t.buffMult||1:1)*baoMult(p));
   if(t.hp<=0&&!(e.holdUntil>now))finishTurn(w,e,mine,now,c,true);return {ok:true,tower:true,lane:mine};} /* đang chiếu riêng: phá tầng sau màn (tickTower) */
  const lane=supportLane(e,p);if(lane<0)return null; // chưa ai leo → để lệnh đánh cho sự kiện khác
  const t=e.lanes[lane];if(t.next[p.id]>now)return {ok:true,cooldown:true};

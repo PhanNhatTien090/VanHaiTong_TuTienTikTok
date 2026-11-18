@@ -24,6 +24,10 @@ export function infoPages(state={}){
  // 15/11: luật ghế Tông chủ (master-seat.mjs).
  pages.push({id:'master',title:'👑 GHẾ TÔNG CHỦ',note:'Đấu tại Lôi Đài · thua vẫn giữ danh hiệu và đồ',rows:[['Vương miện','một món · mở danh hiệu Tông chủ'],['Gặp nhau','2 Tông chủ cùng có mặt → đấu ngay'],['Thắng','ngồi ghế Tông chủ'],['Đại lễ 5k','lên ghế ngay, không cần đấu']]});
  pages.push({id:'bao',title:'✦ THẦN KHÍ · BẢO KHỐ',note:'Bảo Khố mở trong vòng sự kiện lớn · bản web: mục Bảo Khố xem + đặt bản mệnh',rows:[['cầu','cầu thần khí khi Bảo Khố mở · 20 giây một lượt'],['thần khí','xem bộ sưu tập + còn bao lượt tới 4★/5★'],['trang bị + tên','đeo thần khí làm bản mệnh (như pháp bảo)'],['bản mệnh','xem món đang mang · bản mệnh + số để đổi'],['tự phát · không cần gõ','bản mệnh tự tung thần thông ở Lôi Đài · Tháp · tỷ thí · Chính Ma · 5★/GIỚI HẠN có màn chiếu riêng'],['GIỚI HẠN','12 món mỗi mùa · mỗi người tối đa 1 món']]}); // 18/11: hướng dẫn tính năng mới
+ { // 18/11: LUÂN HỒI — chỉ hiện khi đã có người ở 3 cảnh giới cuối hoặc đã chuyển sinh
+  const pl=state.players||[],lh=pl.filter(p=>p.reincarnations>0).sort((a,b)=>b.reincarnations-a.reincarnations||(b.totalQi||0)-(a.totalQi||0)).slice(0,3);
+  if(lh.length||pl.some(p=>p.realm>=26))pages.push({id:'luanhoi',title:'☸ LUÂN HỒI · CHUYỂN SINH',note:'Đầy tu vi Hỗn Độn Vĩnh Hằng mới chuyển sinh được',rows:[['chuyển sinh','về Phàm nhân · nhận ân điển vĩnh viễn'],['luân hồi','xem ân điển của mình'],['đạo quả kiếm / thể / đan / phúc','mỗi lần chuyển sinh lĩnh ngộ 1 tầng'],...lh.map(p=>['☸ '+p.name,p.reincarnations+' thế luân hồi'])]});
+ }
  pages.push({id:'arena',title:'⚔ VÂN HẢI LÔI ĐÀI',note:'Mở theo lịch thi đấu · thắng và giữ đài nhận huy chương',rows:[['chiêu','xem bộ 5 chiêu của mình'],['bí pháp','xem 12 bí pháp chiêu thức'],['học + tên','học bí pháp · có chiêu mới'],['chiêu đổi + tên','đưa bí pháp vào SK2'],['lên đài','làm Đài Chủ hoặc xếp hàng'],['thách + tên','hẹn đấu · người kia gõ nhận'],['cv1 · cv2','cổ vũ trái / phải']]});
  return pages;
 }

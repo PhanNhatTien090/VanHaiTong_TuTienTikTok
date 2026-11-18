@@ -24,6 +24,7 @@ const DIVINE_CUES={14:scheduleDaoToAudio,15:scheduleThienTonAudio,16:scheduleTha
 import {scheduleVinhKiepAudio,vinhKiepMusicDuck} from './vinh-kiep-audio.js';
 import {scheduleVoCucAudio,voCucMusicDuck} from './vo-cuc-audio.js';
 import {scheduleHonDonAudio,honDonMusicDuck} from './hon-don-audio.js';
+import {scheduleLuanHoiAudio} from './luan-hoi-audio.js'; // 18/11: Niết Bàn Luân Hồi
 import {scheduleTienDeAudio,tienDeMusicDuck} from './tien-de-audio.js';import {scheduleMaThanAudio,maThanMusicDuck} from './ma-than-audio.js';import {scheduleThienMaAudio,thienMaMusicDuck} from './thien-ma-audio.js';import {scheduleDietTheAudio,dietTheMusicDuck} from './diet-the-audio.js';
 import {CinematicSfx} from './cinematic-sfx.js';
 import {prepareFeedbackAudio,playFeedbackAudio} from './feedback-audio.js';
@@ -269,6 +270,12 @@ export class CultivationAudio {
     try{playAlchemySound(this.ctx,this.fxBus,kind,strength);}catch{}
   }
   feedback(kind,level=1){return playFeedbackAudio(this,kind,level);}
+  // 18/11: màn chiếu riêng chuyển sinh — 1 lần mỗi mã cảnh; hạ nhạc nền suốt màn.
+  luanHoi(cut,elapsedMs=0){
+    if(!cut||!this.enabled||this.ctx?.state!=='running'||this.sfx<=0||this.luanHoiId===cut.id)return;this.luanHoiId=cut.id;
+    try{this.luanHoiStop?.();this.luanHoiStop=scheduleLuanHoiAudio(this.ctx,this.fxBus,Math.max(0,elapsedMs/1000),1);}catch{}
+    const hold={duck:.1};if(!this.qiSession){this.qiSession=hold;this.sync();clearTimeout(this.luanHoiTimer);this.luanHoiTimer=setTimeout(()=>{if(this.qiSession===hold){this.qiSession=null;this.sync();}},Math.max(0,26000-elapsedMs));}
+  }
   cinematicCue(id,preset,delay=0,options={}){
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;
     this.cinematic.schedule(id,preset,delay,{...options,gain:(options.gain??.82)*(this.ducked?.63:1)});
