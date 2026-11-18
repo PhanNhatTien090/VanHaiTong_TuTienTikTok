@@ -99,7 +99,7 @@ function battleTick(w,e,now,ctx){
 }
 // 17/11: lửa thiêu sàn — mỗi giây đốt MỌI yêu thú đang sống (~3 nhịp là cháy rụi làn thường), Thú vương mất ít hơn. Công tính cho người tặng.
 function burnTick(w,e,now){
- const b=e.burn;if(!b||now>=b.until)return;const m=e.members[b.by],p=m&&w.players[m.id];if(!p)return;
+ const b=e.burn;if(!b||now>=b.until||now<(b.at||0))return; /* 18/11: lửa chờ màn chiếu riêng xong mới cháy */const m=e.members[b.by],p=m&&w.players[m.id];if(!p)return;
  for(const mob of e.mobs)if(mob.hp>0)strike(e,m,mob,mob.maxHp*.36,now);
  if(e.boss&&e.boss.hp>0)strike(e,m,e.boss,Math.max(power(p)*4,e.boss.maxHp*.012),now);
 }
@@ -153,6 +153,15 @@ export function mountRealmCommand(w,p,cmd,now,ctx){
  if(found){if(found.dist>RANGE){step(m,found.target.x,found.target.y,found.dist-RANGE*.8);m.dashAt=now;}cast(w,e,m,found.target,now,{manual:true});}
  return {ok:true};
 }
+// 18/11 (chủ game: quà ≥99 hiệu ứng yếu → CHIẾU RIÊNG từng sự kiện): Bí Cảnh — quà ≥99 → màn chiếu riêng người tặng (99 Vạn Thú Phục · 199 Hỏa Thiêu · 300 Ngự Thú Đại Chiêu).
+// Mỗi màn cách nhau ≥6 s, hàng chờ quá 10 s thì quà vẫn có tác dụng nhưng không chiếu; giờ đợt quái hoãn đúng thời gian chiếu.
+export const REALM_CUT=Object.freeze({min:99,ms:{ultimate:3800,inferno:4400,grand:5200},gap:6000,maxWait:10000});
+export function realmCut(e,p,tier,now){
+ const ms=REALM_CUT.ms[tier.id];if(!ms)return null;const start=Math.max(now,e.cutUntil?e.cutUntil+REALM_CUT.gap:now);if(start-now>REALM_CUT.maxWait)return null;
+ const cut={id:e.id+':cut:'+(e.cutSeq=(e.cutSeq||0)+1),at:start,ms,tier:tier.id,move:tier.name,user:p.id,name:p.name,boss:e.bossMount||null};e.cutUntil=start+ms;
+ const hold=e.cutUntil-Math.max(start,e.heldUntil||0);if(hold>0){if(e.waveEndsAt)e.waveEndsAt+=hold;e.heldUntil=e.cutUntil;}
+ (e.cuts??=[]).push(cut);if(e.cuts.length>4)e.cuts.splice(0,e.cuts.length-4);return cut;
+}
 export function mountRealmGift(w,p,value,now,ctx){
  const e=w.mountRealm;if(!mountRealmActive(w)||value<1)return null;use(e);
  const m=enroll(w,p,now);if(!m)return null;
@@ -160,10 +169,11 @@ export function mountRealmGift(w,p,value,now,ctx){
  {const after=orbsForCoins(m.coins),kind=after.divine>before.divine?'divine':after.vip>before.vip?'vip':null; // 18/11 (chủ game): đủ mốc châu → hiện thẻ ngay cho người tặng
   if(kind)ctx.emit(w,p,p.name+' đạt '+(kind==='divine'?'Linh Châu vàng':(after.vip>1?after.vip+' ':'')+'Linh Châu tím')+' · nhận khi Bí Cảnh kết thúc','mount',now,{orbCard:{kind,stage:'earned',count:kind==='divine'?after.divine:after.vip}});}
  const tier=giftTier(value);(e.gifts??=[]).push({id:e.id+':g'+(e.seq++),user:p.id,at:now,value,tier:tier.id,name:tier.name});if(e.gifts.length>24)e.gifts.splice(0,e.gifts.length-24);
- if(['running','boss'].includes(e.phase)){const targets=e.boss&&e.boss.hp>0?[e.boss]:e.mobs,found=nearest(grid(targets),m,40);if(found)cast(w,e,m,found.target,now,{value});
-  if(tier.burn)e.burn={by:m.id,at:now,until:Math.max(now,e.burn?.until||0)+BURN_MS}; // 17/11: HỎA THIÊU — lửa phủ cả sàn, quà nối tiếp thì cộng dồn thời gian
+ let cut=null;
+ if(['running','boss'].includes(e.phase)){cut=value>=REALM_CUT.min?realmCut(e,p,tier,now):null;const targets=e.boss&&e.boss.hp>0?[e.boss]:e.mobs,found=nearest(grid(targets),m,40);if(found)cast(w,e,m,found.target,now,{value});
+  if(tier.burn){const from=cut?cut.at+cut.ms:now;e.burn={by:m.id,at:Math.max(from,e.burn&&now<e.burn.until?e.burn.at:from),until:Math.max(from,e.burn?.until||0)+BURN_MS};} // 17/11: HỎA THIÊU — lửa phủ cả sàn; 18/11: có màn chiếu thì lửa cháy sau màn
  }
- return {tier:tier.id,name:tier.name,coins:m.coins};
+ return {tier:tier.id,name:tier.name,coins:m.coins,cut:cut?.id||null};
 }
 // Tim tự vào bí cảnh và tích thành đòn đánh (không hứa thưởng gì cho tim).
 export function mountRealmHearts(w,p,count,now){
@@ -188,5 +198,6 @@ export function mountRealmView(w,now){
   // 18/11: người đang góp quà — chỉ gửi nấc đã đạt + tiến độ tới nấc sau (không gửi số coin: luật bảng không ghi coin)
   givers:members.filter(m=>m.coins>0).sort((a,b)=>b.coins-a.coins).slice(0,3).map(m=>({id:m.id,name:w.players[m.id]?.name,...giftProgress(m.coins)})),
   burn:e.burn&&now<e.burn.until?{at:e.burn.at,until:e.burn.until,name:w.players[e.burn.by]?.name}:null,
+  cuts:(e.cuts||[]).filter(x=>now<x.at+x.ms+1500), // 18/11: màn chiếu riêng quà ≥99
   fx:e.fx.filter(f=>now-f.at<1600),gifts:(e.gifts||[]).filter(g=>now-g.at<5000).map(g=>({...g,userName:w.players[g.user]?.name})),results:e.results||null,count:members.length};
 }

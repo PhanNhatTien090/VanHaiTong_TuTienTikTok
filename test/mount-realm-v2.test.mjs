@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createWorld,action,tick,startMountRealmEvent,stopMountRealmEvent} from '../engine.mjs';
-import {REGISTER_MS} from '../mount-realm.mjs';
+import {createWorld,action,tick,snapshot,startMountRealmEvent,stopMountRealmEvent} from '../engine.mjs';
+import {REGISTER_MS,REALM_CUT} from '../mount-realm.mjs';
 import {REALM_MAPS,realmLayout,giftTier,BURN_MS} from '../public/mount-realm-layout.js';
 
 const NOW=Date.parse('2026-11-17T21:00:00+07:00');
@@ -29,7 +29,9 @@ test('quà ≥199 → HỎA THIÊU BÍ CẢNH: lửa phủ sàn 6 s đốt mọi
  const e=w.mountRealm,alive=()=>e.mobs.filter(m=>m.hp>0).length;assert.ok(alive()>0,'có yêu thú');
  const before=e.members.a.dmg;
  action(w,{type:'gift',userId:'a',name:'A',coins:199,count:1,giftName:'X',eventId:'burn1'},t+10);
- assert.ok(e.burn&&e.burn.until===t+10+BURN_MS);
+ const cutMs=REALM_CUT.ms.inferno;assert.ok(e.cuts?.length===1&&e.cuts[0].tier==='inferno','quà 199 có màn chiếu riêng');
+ assert.ok(e.burn&&e.burn.at===t+10+cutMs&&e.burn.until===t+10+cutMs+BURN_MS,'18/11: lửa cháy sau màn chiếu');
+ t+=cutMs;
  const spawnedBefore=e.spawned;for(let i=0;i<4;i++){t+=1000;tick(w,t);}
  assert.ok(e.members.a.dmg>before+50,'người tặng được tính sát thương');
  assert.ok(e.kills>0,'lửa thiêu chết yêu thú');
@@ -60,4 +62,18 @@ test('18/11: thẻ Linh Châu — quà vừa đủ mốc hiện thẻ ngay, nh�
  chat(w,'a','chao',t2+ORB_REMIND_MS+5000);assert.equal(cards().filter(e=>e.orbCard.stage==='remind').length,n0+2);
  w.players.a.mountChannel={kind:'divine',startedAt:t2,endsAt:t2+9e9};chat(w,'a','chao',t2+3*ORB_REMIND_MS);assert.equal(cards().filter(e=>e.orbCard.stage==='remind').length,n0+2,'đang truyền công thì không nhắc');
  chat(w,'b','chao',t2+3*ORB_REMIND_MS);assert.ok(!cards().some(e=>e.user==='b'&&e.orbCard.stage==='remind'),'không giữ châu tím/vàng thì không nhắc');
+});
+
+test('18/11: quà ≥99 trong Bí Cảnh → màn chiếu riêng theo mức (99/199/300), cách ≥6 s, hoãn giờ đợt quái; quà nhỏ không chiếu',()=>{
+ const w=world();for(const id of ['a','b'])chat(w,id,'chao',NOW);
+ startMountRealmEvent(w,NOW);for(const id of ['a','b'])chat(w,id,'bicanh',NOW+1000);
+ const t=NOW+REGISTER_MS+10;tick(w,t);const e=w.mountRealm,ends0=e.waveEndsAt;
+ action(w,{type:'gift',userId:'a',name:'A',coins:30,count:1,giftName:'X',eventId:'s1'},t+10);assert.equal((e.cuts||[]).length,0);
+ action(w,{type:'gift',userId:'a',name:'A',coins:99,count:1,giftName:'X',eventId:'c1'},t+20);
+ action(w,{type:'gift',userId:'b',name:'B',coins:300,count:1,giftName:'X',eventId:'c2'},t+30);
+ assert.deepEqual(e.cuts.map(x=>x.tier),['ultimate','grand']);
+ assert.ok(e.cuts[1].at>=e.cuts[0].at+e.cuts[0].ms+REALM_CUT.gap,'cách nhau ≥6 s');
+ assert.equal(e.waveEndsAt,ends0+e.cuts[0].ms+e.cuts[1].ms,'giờ đợt quái hoãn đúng tổng thời gian chiếu (khoảng nghỉ giữa 2 màn sân vẫn chơi)');
+ action(w,{type:'gift',userId:'a',name:'A',coins:199,count:1,giftName:'X',eventId:'c3'},t+40);assert.equal(e.cuts.length,2,'hàng chờ quá 10 s thì không chiếu thêm');
+ assert.equal(snapshot(w,t+40).mountRealm.cuts.length,2);
 });
