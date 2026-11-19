@@ -1,6 +1,7 @@
 // Vân Hải Lôi Đài — vẽ sân khấu (15/11/2026). Server quyết mọi con số; file này chỉ dựng hình theo nhật ký trận.
 // Nhật ký phát chậm ARENA_DELAY_MS để mọi đòn (server tính mỗi giây) hiện đúng nhịp, không dồn cục.
 import {TECHNIQUES,drawCombatTechnique} from './combat-techniques.js';
+import {tmOn,inkPanel} from './ink-panel.js';
 import {drawShockwave,drawAura,drawSeal} from './cinematic-vfx.js';
 import {drawV7Variant,v7SkillSpec,prewarmVariantArt} from './ultimate-variants-v7.js';
 import {drawDuelV6Ultimate,v6SkillFamily,prewarmDuelV6} from './duel-showcase-v6.js';
@@ -65,7 +66,7 @@ function text(c,s,x,y,{size=20,color='#fff',stroke='#071018',weight='900',align=
  c.font=`${weight} ${size}px "Segoe UI",Arial,sans-serif`;c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';
  if(stroke){c.lineWidth=width;c.strokeStyle=stroke;c.strokeText(s,x,y,max);}c.fillStyle=color;c.fillText(s,x,y,max);
 }
-function panel(c,x,y,w,h,fill='#06121fcc',stroke='#ffd98a66'){c.fillStyle=fill;c.fillRect(x,y,w,h);c.strokeStyle=stroke;c.lineWidth=1;c.strokeRect(x+.5,y+.5,w-1,h-1);}
+function panel(c,x,y,w,h,fill='#06121fcc',stroke='#ffd98a66'){if(tmOn()){inkPanel(c,x,y,w,h,4);return;}c.fillStyle=fill;c.fillRect(x,y,w,h);c.strokeStyle=stroke;c.lineWidth=1;c.strokeRect(x+.5,y+.5,w-1,h-1);}
 
 function drawHud(scene,c,m,H,t){
  const L=ARENA_LAYOUT,y=H*L.hud,at=shown(scene),realms=scene.lastState?.realms||[];

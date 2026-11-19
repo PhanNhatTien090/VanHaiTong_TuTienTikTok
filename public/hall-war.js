@@ -2,6 +2,7 @@
 // vẽ avatar tròn (ảnh TikTok) + viền màu Đường + thanh máu, chiêu bay đúng từ người ra chiêu tới mục tiêu.
 // Hiệu năng: nền map + nhãn trại vẽ sẵn 1 lần; avatar/tên cache bitmap 2×; số chiêu/số bay giới hạn theo đông người.
 import {donorPortrait} from './gift-donor.js';
+import {tmOn,INK_FILL} from './ink-panel.js';
 import {giftFor} from './gift-icons.js';
 import {MAP_IMAGE,MAP_Y0,MAP_DRAW_H,ALTAR,HALL_SKILLS,GIFT_TIERS,GIFT_SHORT,HALL_SPECIALS} from './hall-war-layout.js';
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=k=>1-(1-k)**3;
@@ -64,7 +65,7 @@ export function hallWarPlaces(event,scene,t=perf()){
 }
 // ---------- vẽ cơ bản ----------
 function text(c,s,x,y,size,color='#fff',width=850,weight=800){c.font=weight+' '+size+'px "Segoe UI",Arial,sans-serif';c.fillStyle=color;c.lineWidth=Math.max(2.5,size/6);c.strokeStyle='#050a12';c.lineJoin='round';c.textAlign='center';c.textBaseline='middle';c.strokeText(s,x,y,width);c.fillText(s,x,y,width);}
-function box(c,x,y,w,h,color,fill='#061625e8',r=10,lw=1.5){c.fillStyle=fill;c.strokeStyle=color;c.lineWidth=lw;c.beginPath();c.roundRect(x,y,w,h,r);c.fill();c.stroke();}
+function box(c,x,y,w,h,color,fill='#061625e8',r=10,lw=1.5){if(tmOn())fill=INK_FILL;c.fillStyle=fill;c.strokeStyle=color;c.lineWidth=lw;c.beginPath();c.roundRect(x,y,w,h,r);c.fill();c.stroke();}
 function sigil(c,x,y,r,color,mark,angle=0,sy=1){
  c.save();c.translate(x,y);c.scale(1,sy);c.rotate(angle);c.strokeStyle=color;c.lineWidth=2;
  c.beginPath();c.arc(0,0,r,0,TAU);c.stroke();c.beginPath();c.arc(0,0,r*.78,.1,5.2);c.stroke();

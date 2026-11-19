@@ -4,6 +4,7 @@
 // Nhẹ máy: nền vẽ sẵn 1 lần, avatar/tên/yêu thú cache bitmap, nội suy vị trí 1 s, số chiêu/châu rơi giới hạn theo đông người.
 // Chữ trên màn: chỉ lệnh + hiệu ứng, không số coin, không "ngẫu nhiên/tỷ lệ", không hứa thưởng cho tim.
 import {donorPortrait} from './gift-donor.js';
+import {tmOn,INK_FILL} from './ink-panel.js';
 import {giftFor} from './gift-icons.js';
 import {MAP_Y0,MAP_DRAW_H,GIFT_TIERS,realmLayout} from './mount-realm-layout.js';
 import {drawMount} from './mount-fx.js';
@@ -88,7 +89,7 @@ function background(h,H){
  h.bg={key,cv};return cv;
 }
 function text(c,s,x,y,size,color,weight=800,align='center',max){c.font=weight+' '+size+'px "Segoe UI",Arial,sans-serif';c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';c.lineWidth=Math.max(3,size/5);c.strokeStyle='#05040c';c.strokeText(s,x,y,max);c.fillStyle=color;c.fillText(s,x,y,max);}
-function box(c,x,y,w,hh,stroke){c.fillStyle='#0b0820d8';c.strokeStyle=stroke;c.lineWidth=1.6;c.beginPath();c.roundRect(x,y,w,hh,10);c.fill();c.stroke();}
+function box(c,x,y,w,hh,stroke){c.fillStyle=tmOn()?INK_FILL:'#0b0820d8';c.strokeStyle=stroke;c.lineWidth=1.6;c.beginPath();c.roundRect(x,y,w,hh,10);c.fill();c.stroke();}
 function bar(c,x,y,w,hh,k,color){c.fillStyle='#000000b0';c.fillRect(x-1,y-1,w+2,hh+2);c.fillStyle=color;c.fillRect(x,y,w*clamp(k),hh);}
 const secs=ms=>Math.max(0,Math.ceil(ms/1000));
 // ---------- bảng hướng dẫn ----------

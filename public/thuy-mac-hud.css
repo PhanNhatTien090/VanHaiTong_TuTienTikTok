@@ -72,3 +72,10 @@ html body.overlay.ui-tm .scene-shell #phoneHudRight .scene-guide-dock{background
 
 /* bảng lớn góc phải (Rèn pháp bảo, Lôi Đài…) che hàng người → ẩn; hướng dẫn theo ngữ cảnh làm sau */
 html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight){display:none!important}
+
+/* bảng HTML nền tối của sự kiện (Linh Thú Cốc, đồng hành…) → BẢNG MỰC (chữ sáng giữ nguyên) */
+html body.overlay.ui-tm .scene-shell :is(#companionHud.spirit-pet-hud,.spirit-pet-hud,.pet-cove-strip,.pet-cove-banner){background:rgba(22,17,12,.9)!important;border:1.6px solid rgba(222,196,140,.9)!important;box-shadow:inset 0 0 0 4px rgba(22,17,12,.9),inset 0 0 0 5px rgba(222,196,140,.4)!important;border-radius:6px!important}
+/* Linh Thú Cốc: thẻ thú chiếm cả trên cùng → ẩn lệnh bài */
+html body.overlay.ui-tm.pet-cove-stage .tm-tokens{display:none!important}
+/* màn sự kiện vẽ trên canvas có luật riêng (Lôi Đài, Linh Thú Cốc, Ngũ Đường chiến, Bí Cảnh, Bảo Khố): giữ như cũ — ẩn cột phải */
+html body.overlay.ui-tm:is(.arena-stage,.pet-cove-stage,.hall-war,.mount-realm,.bao-kho) .scene-shell #phoneHudRight.phone-hud-rail{display:none!important}

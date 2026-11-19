@@ -7,6 +7,7 @@
 // • Server xếp lịch màn (phap-bao.mjs queueReveal). Biến thể theo mã lượt (màu sao băng, hướng máy, thứ tự sét, vị trí bóng).
 // • Không shadowBlur/filter mỗi khung; bóng đen = ảnh món tô đen 1 lần (cache).
 import {txt,drawCaster,drawCutInBand,cutVeil,giftImg,CUT_PHASE} from './skill-cutscene.js?v=20261118';
+import {tmOn} from './ink-panel.js';
 import {clamp,seg,out3,smooth,dot,fxCamera,punch,drawBurst,drawEmbers,drawVignette,drawLetterbox,drawImpactFrame,drawGhostSplit,hitStop,drawSkyBeams,drawCircle,drawZoomLines} from './cut-fx.js?v=20261118';
 import {giftFor} from './gift-icons.js';
 import {BAO_ITEMS,BAO_TIER,BAO_STAT_NAME,BAO_FLAMES,BAO_LIMITED_STOCK,baoItem,baoArt,baoStat} from './phap-bao-data.js';
@@ -87,7 +88,7 @@ function flameSprite(h){
 const rr=(c,x,y,w,hh,r)=>{c.beginPath();if(c.roundRect)c.roundRect(x,y,w,hh,r);else c.rect(x,y,w,hh);};
 /** Khung bảng vàng hai lớp + góc hoa văn + dải tiêu đề. */
 function panel(c,x,y,w,hh,title,{col='#d9a84a',tcol='#ffe7a8',accent=null}={}){
- c.save();const g=c.createLinearGradient(0,y,0,y+hh);g.addColorStop(0,'#1a0e24e8');g.addColorStop(1,'#08040ee0');c.fillStyle=g;rr(c,x,y,w,hh,12);c.fill();
+ c.save();const g=c.createLinearGradient(0,y,0,y+hh);g.addColorStop(0,tmOn()?'#221a12ee':'#1a0e24e8');g.addColorStop(1,tmOn()?'#0f0b07e8':'#08040ee0');c.fillStyle=g;rr(c,x,y,w,hh,12);c.fill();
  c.strokeStyle=col;c.lineWidth=2.5;rr(c,x,y,w,hh,12);c.stroke();c.globalAlpha=.55;c.strokeStyle='#fff0c0';c.lineWidth=1;rr(c,x+6,y+6,w-12,hh-12,8);c.stroke();c.globalAlpha=1;
  c.fillStyle=col;for(const [cx,cy] of [[x,y],[x+w,y],[x,y+hh],[x+w,y+hh]]){c.save();c.translate(cx,cy);c.rotate(Math.PI/4);c.fillRect(-6,-6,12,12);c.restore();}
  if(title){const ty=y+26;stx(c,title,x+w/2,ty,24,accent||tcol,{width:5,max:w-60});c.font='900 24px '+SERIF;const tw=Math.min(w-60,c.measureText?.(title)?.width||120);

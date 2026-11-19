@@ -1,4 +1,5 @@
 import {eventPets,petRequirement,petPose} from './spirit-pets.js';
+import {tmOn,INK_FILL} from './ink-panel.js';
 import {giftFor} from './gift-icons.js';
 import {giftImg} from './skill-cutscene.js?v=20261118';
 import {drawPetV2CoveScene} from './pet-v2-cove-fx.js';
@@ -65,7 +66,7 @@ function drawLegend(scene,c,pets,t,H){
 function drawGuide(scene,c,t,H){
  if(!scene.petV2Settings?.enabled)return;
  const lit=scene.motion===false?-1:petCoveGuideStep(t).index,x=14,w=872,top=H*.193,head=28,rowH=31,h=head+rowH*4+8,colW=w/2;
- c.fillStyle='#071b2aeb';c.fillRect(x,top,w,h);c.strokeStyle='#ffd98a88';c.lineWidth=1;c.strokeRect(x+.5,top+.5,w-1,h-1);
+ c.fillStyle=tmOn()?INK_FILL:'#071b2aeb';c.fillRect(x,top,w,h);c.strokeStyle='#ffd98a88';c.lineWidth=1;c.strokeRect(x+.5,top+.5,w-1,h-1);
  c.fillStyle='#3a2a0cf0';c.fillRect(x,top,w,head);
  c.textAlign='center';c.fillStyle='#ffe2a4';c.font='bold 17px Arial';c.fillText('NUÔI LINH THÚ · GÕ LỆNH VÀO BÌNH LUẬN',450,top+20,w-20);
  for(const [i,[cmd,text]] of PET_COVE_GUIDE.entries()){
@@ -94,7 +95,7 @@ function drawRoamer(scene,c,pet,i,t,H){
 // Tên nhỏ dưới chân, vẽ trên cùng để không bị thú khác che: người xem nối được thú đang chạy với bảng mốc phía trên.
 function drawRoamerName(c,pet,at){
  c.font='bold 15px Arial';c.textAlign='center';const tw=Math.min(170,c.measureText(pet.name).width)+14;
- c.fillStyle='#04121ccc';c.fillRect(at.x-tw/2,at.y,tw,20);c.fillStyle=pet.color;c.fillText(pet.name,at.x,at.y+15,160);
+ c.fillStyle=tmOn()?INK_FILL:'#04121ccc';c.fillRect(at.x-tw/2,at.y,tw,20);c.fillStyle=pet.color;c.fillText(pet.name,at.x,at.y+15,160);
 }
 export function drawPetCove(scene,c,t,H){
  if(!petCoveOn(scene))return;const featured=scene.petEvent.featured||null,premium=scene.petEvent.premium||null,pets=eventPets(featured,premium);loadPetArt(scene,pets.map(p=>({spiritPet:p.id})));
