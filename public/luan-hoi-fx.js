@@ -21,7 +21,7 @@ export function drawLuanHoiAuras(scene,c,t){
  if(scene.bareCrowd||scene.raceStatus?.active||scene.warStatus?.active)return;
  const list=scene.targets||[];if(list.length>30)return;
  const now=Date.now(),light=scene.budget?.level==='light';
- for(const a of list){const p=a.player,n=rebirths(p);if(!n||p.resident||p.puppet)continue;const tier=luanHoiTier(n);if(!tier)continue;
+ for(const a of list){const p=a.player,n=rebirths(p);if(!n||p.resident||p.puppet)continue;if(scene.gearAlpha&&scene.gearAlpha(p.id,t)<.5)continue; /* 19/11: đang biến hình thì ẩn */const tier=luanHoiTier(n);if(!tier)continue;
   const s=a.scale||1,R=s*30,fy=a.y+s*3,b=luanBurst(p.id,now),rot=t*.00035*(n%2?1:-1);
   c.save();c.globalCompositeOperation='lighter';
   wheel(c,a.x,fy,R,rot,tier.main,.22+.5*b);
