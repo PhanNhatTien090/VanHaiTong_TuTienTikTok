@@ -219,6 +219,11 @@ const hallIndex = (w,s,arg) => {
   return defs.findIndex((hall,i)=>hallEnabled(hall)&&(hall.key===arg || hall.key+' duong'===arg || !!arg&&nameKey(w.players[s.halls[i].elder]?.name)===arg));
 };
 
+// 19/11 (chủ game: "thách đấu lúc được lúc không, cho luôn là thách đấu được"): thách đấu Trưởng Lão KHÔNG cần top 10 Thiên Bảng,
+// không chờ 30 phút sau khi thua, Trưởng Lão không còn miễn chiến 10 phút. Chỉ giữ: người thật, không phải Tông chủ, không đang giữ ghế, không ở bản web.
+function canChallenge(w,s,id,master) {
+  return real(w.players[id]) && id!==master && !s.halls.some(h=>h.elder===id) && w.playTransfers?.[id]?.phase!=='web';
+}
 function eligible(w,s,id,master,ranked) {
   return real(w.players[id]) && id!==master && !s.halls.some(h=>h.elder===id) && ranked.some(p=>p.id===id)
     && w.playTransfers?.[id]?.phase!=='web';
@@ -276,10 +281,8 @@ export function hallCommand(w,p,words,now,ctx) {
   if(command==='thach dau'){
     if(!s.halls.some(h=>h.elder))tickHalls(w,now,ctx,true);
     if(index<0 || !s.halls[index].elder)return failure('Chọn ghế Trưởng Lão bằng lệnh thách đấu kèm số hoặc tên Đường.');
-    const master=masterId(w,ctx.active,now), ranked=thienBang(w,ctx.active,now,master);
-    if(!eligible(w,s,p.id,master,ranked))return failure('Người trong Thiên Bảng đang không giữ chức vị mới có thể thách đấu.');
-    if(p.hallDefeatUntil>now)return failure('Chờ '+Math.ceil((p.hallDefeatUntil-now)/60000)+' phút để thách đấu lại.');
-    if(s.halls[index].guardUntil>now)return failure('Trưởng Lão đang được miễn chiến.');
+    const master=masterId(w,ctx.active,now);
+    if(!canChallenge(w,s,p.id,master))return failure(p.id===master?'Tông chủ không thách đấu Trưởng Lão.':s.halls.some(h=>h.elder===p.id)?'Trưởng Lão đang giữ ghế, không thách đấu ghế khác.':'Đang chơi trên bản web • về LIVE rồi thách đấu.');
     if(s.match?.a===p.id||s.queue.some(q=>q.id===p.id))return failure('Đạo hữu đã có lượt trên Vân Đài.');
     s.queue.push({id:p.id,index,queuedAt:now});
     tickHalls(w,now,ctx,true);
@@ -373,7 +376,7 @@ export function tickHalls(w,now,ctx,force=false){
   if(ctx.busy(w,now)||s.nextMatchAt>now)return;
   while(s.queue.length){
     const q=s.queue.shift(), h=s.halls[q.index], b=w.players[h.elder], a=w.players[q.id];
-    if(!b||!ctx.active(w,a,now)&&now-q.queuedAt>10*60000||h.guardUntil>now||!eligible(w,s,q.id,master,ranked)||a.hallDefeatUntil>now)continue;
+    if(!b||!ctx.active(w,a,now)&&now-q.queuedAt>10*60000||!canChallenge(w,s,q.id,master))continue;
     s.match={a:a.id,b:b.id,index:q.index,startedAt:now,endsAt:now+MATCH_MS,attackQi:Math.max(1,score(a)),defenseQi:Math.max(1,score(b)),offense:0,defense:0,support:{},defenderPresent:ctx.active(w,b,now)};
     ctx.emit(w,a,'Thách đấu Trưởng Lão '+b.name+' · '+defs[q.index].name,'status',now,{hallChallenge:true});
     break;
