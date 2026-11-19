@@ -130,3 +130,8 @@ html body.overlay.ui-tm .bao-hy :is(.bh-line,.bh-thanks){color:var(--tm-ink)!imp
 html body.overlay.ui-tm .linh-bai :is(.lb-path,b){color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
 html body.overlay.ui-tm .linh-bai :is(.lb-path i,.lb-ready,span,small,em,li,p,div){color:var(--tm-ink)!important}
 html body.overlay.ui-tm .linh-bai .lb-need{background:#efe0bd!important;border-color:#b3261e!important;color:var(--tm-ink)!important}
+/* 19/11 duyệt nhánh: tiêu đề "NGŨ ĐƯỜNG · TUẦN" dài hơn "THIÊN BẢNG" → thu chữ để không bị viền cuộn cắt */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>b{font-size:clamp(10px,2.3cqw,25px)!important;letter-spacing:.03em}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>small{font-size:clamp(7px,1.4cqw,15px)!important;padding:0 2px}
+/* thẻ Cúng phụng hiện tạm vài giây: lúc đó nhường chỗ thẻ Tặng quà, không chồng 2 thẻ lên hàng người */
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight:has(#honorBanner:not([hidden])) #giftBoard.gift-board.gift-rule-card:not([hidden]){display:none!important}
