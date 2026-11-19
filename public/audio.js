@@ -119,7 +119,7 @@ function scheduleDivineCue(c,destination,elapsed,duration,realm){
 }
 
 // 14/11: nhạc chỉ hạ còn 55% khi tông sư đọc (trước 28%) để nhạc không tắt lịm.
-export const VOICE_MUSIC_DUCK=.55;
+export const VOICE_MUSIC_DUCK=.3; // 19/11: .55 → .3 (chủ game: nhạc lấn giọng đọc)
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.45;this.ambient=.6;this.sfx=.85;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){

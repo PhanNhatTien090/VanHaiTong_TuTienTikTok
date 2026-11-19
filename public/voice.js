@@ -1,4 +1,5 @@
 import {isEventAnnouncement} from './event-announcements.js';
+import {routeVoice} from './voice-fx.js';
 // 4/11/2026: tốc độ đọc (1 = gốc). Trình duyệt giữ nguyên cao độ khi preservesPitch=true.
 export const VOICE_RATE=1.8;
 export const syntheticVoice=e=>!!(e.resident||e.actorKind==='npc'||e.simulated||e.autoRose||String(e.user||'').startsWith('puppet-'));
@@ -147,6 +148,7 @@ export class VoiceQueue {
   }
   async play(url,e,generation=this.generation){
     const clip=new Audio(url);this.current=clip;clip.volume=this.clipVolume();clip.preload='auto';clip.preservesPitch=true;clip.playbackRate=VOICE_RATE; // 4/11: đọc nhanh 1,8× giữ cao độ
+    const unroute=routeVoice(this.audio.ctx,clip); // 19/11: giọng to + trong hơn (voice-fx.js)
     let finish;const ended=new Promise(resolve=>finish=resolve);let timer;
     clip.onended=clip.onerror=()=>finish();this.cancelPlayback=()=>{clip.pause();finish();};
     this.audio.duck(true);
@@ -154,7 +156,7 @@ export class VoiceQueue {
       await clip.play();if(generation!==this.generation){clip.pause();return;}
       this.onStatus('Giọng Việt đang hoạt động');this.onStart(e,Math.min(12000,(Number.isFinite(clip.duration)?clip.duration:5)*1000/VOICE_RATE));
       timer=setTimeout(()=>{clip.pause();finish();},15000);await ended;
-    }finally{clearTimeout(timer);clip.pause();if(this.current===clip)this.current=null;if(generation===this.generation)this.audio.duck(false);}
+    }finally{clearTimeout(timer);clip.pause();unroute?.();if(this.current===clip)this.current=null;if(generation===this.generation)this.audio.duck(false);}
   }
   /** Lời tông sư lúc vắng: chỉ phát khi không có gì đang đọc/chờ đọc. */
   async idle(line){
