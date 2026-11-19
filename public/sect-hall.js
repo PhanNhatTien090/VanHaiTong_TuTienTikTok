@@ -35,7 +35,7 @@ export function sectHallTargets(players,H,withHalls=false){
   }
   // Keep feet and nameplates above the bottom 30% occupied by LIVE comments.
   const rows=Math.max(2,...groups.map(g=>g.length),Math.ceil(players.length/cols));
-  const top=H*.54,bottom=H*.675,step=(bottom-top)/(rows-1);
+  const top=H*(tmOn()?.568:.54),bottom=H*(tmOn()?.69:.675),step=(bottom-top)/(rows-1); // 19/11 Thủy Mặc: chừa chỗ thẻ Trưởng Lão
   const scale=Math.min(Math.max(.62,Math.min(1.2,step/90)),5.6/cols) /* 15/11: người to hơn ~15% */,targets=[],occupied=new Set();
   // 15/11: hàng so le trái/phải trong mỗi cột → tên hàng trên không đè lên đầu người hàng dưới.
   const sway=row=>(row%2?1:-1)*(885/Math.max(5,cols))*.2;
@@ -132,13 +132,14 @@ export function drawSectCourt(scene,c,t){
   const count=scene.sectHalls.length,scale=Math.min(1,5/count);
   for(const [column,hall] of scene.sectHalls.entries()){
    c.save();c.translate(hallX(column,count),y);c.scale(scale,scale);
-   if(tmOn()){ // 19/11 Thủy Mặc: đệm ngồi ngay dưới Trưởng Lão, bảng tên giấy phía trên đầu, tên dưới đệm
+   if(tmOn()){ // 19/11 Thủy Mặc: đệm ngồi dưới Trưởng Lão; MỘT bảng giấy dưới đệm: "TRƯỞNG LÃO · tên Đường" + tên người ngồi (không chồng lên đệm Tông chủ)
     const cushion=courtSeat('elder');if(cushion)paintSeat(c,cushion,0,92,140);
-    c.fillStyle='rgba(243,234,216,.95)';c.strokeStyle='#1b1813';c.lineWidth=1.5;c.beginPath();c.roundRect(-76,-86,152,40,3);c.fill();c.stroke();c.fillStyle=hall.color;c.fillRect(-76,-86,6,40);
-    c.textAlign='center';c.fillStyle='#b3261e';c.font='900 15px "Noto Serif",Georgia,serif';c.fillText('TRƯỞNG LÃO',0,-70,144);
-    c.fillStyle='#1b1813';c.font='700 14px "Segoe UI",Arial,sans-serif';c.fillText(hall.name,0,-54,144);
-    if(!active.has(hall.elder?.id)){c.fillStyle=hall.color;c.font='700 30px "Noto Serif",Georgia,serif';c.fillText(hall.mark,0,70);}
-    c.font='800 15px "Segoe UI",Arial,sans-serif';c.lineWidth=3;c.strokeStyle='#1b1813cc';c.strokeText(hall.elder?.name||'Ghế trống',0,140,156);c.fillStyle='#f3ead8';c.fillText(hall.elder?.name||'Ghế trống',0,140,156);
+    if(!active.has(hall.elder?.id)){c.textAlign='center';c.fillStyle=hall.color;c.font='700 30px "Noto Serif",Georgia,serif';c.fillText(hall.mark,0,70);}
+    const short=String(hall.name||'').replace(/ Đường$/,''),who=hall.elder?.name||'Ghế trống';
+    // thẻ giấy treo trước đệm (gọn, không lấn hàng người phía dưới)
+    c.fillStyle='rgba(243,234,216,.96)';c.strokeStyle='#1b1813';c.lineWidth=1.2;c.beginPath();c.roundRect(-70,96,140,20,2);c.fill();c.stroke();c.fillStyle=hall.color;c.fillRect(-70,96,5,20);
+    c.textAlign='center';c.fillStyle='#b3261e';c.font='900 11px "Noto Serif",Georgia,serif';c.fillText('TRƯỞNG LÃO · '+short.toUpperCase(),3,110,128);
+    c.font='800 13px "Segoe UI",Arial,sans-serif';c.lineWidth=3;c.strokeStyle='#1b1813dd';c.strokeText(who,0,131,150);c.fillStyle='#fff3d6';c.fillText(who,0,131,150);
     c.restore();continue;
    }
    const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,150*(elder.wk||1));
