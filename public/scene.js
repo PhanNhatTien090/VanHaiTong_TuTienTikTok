@@ -1,7 +1,7 @@
 import {displayActorName} from './live-integrity.js';
 import {withRim,rimTint} from './rim-light.js?v=20261119';
 import {drawNhapMon} from './nhap-mon-fx.js?v=20261119';
-import {tanDeTuIds,drawTanDeTuBack,drawTanDeTuHint} from './tan-de-tu.js?v=20261119';
+import {tanThuIds,tanDeTuIds,drawTanDeTuBack,drawTanDeTuHint} from './tan-de-tu.js?v=20261119c';
 import {syncHallWar,drawHallWar} from './hall-war.js';
 import {syncMountRealm,drawMountRealm} from './mount-realm.js'; // 16/11: Tọa Kỹ Bí Cảnh
 import {drawRealmSkinV2,ensureRealmSkinV2} from './realm-skins-v2.js';
@@ -26,7 +26,7 @@ import {tributeProfile,drawGiftTribute,prepareGiftTribute} from './gift-tribute.
 import {drawAscensionStageIdle,isAscensionEvent} from './ascension-stage.js';
 import {prepareNguyenAnhArt} from './nguyen-anh-art.js';
 import {drawHallDuel} from './hall-duel.js';
-import {sectHallTargets,drawSectCourt,sectElders,seatSectElders,sectCourtVisible} from './sect-hall.js?v=hall-management';
+import {sectHallTargets,drawSectCourt,sectElders,seatSectElders,sectCourtVisible} from './sect-hall.js?v=tm-20261119';
 import {loadImpactArt} from './ascension-impact.js';
 import {prepareBreakthroughSpectacle} from './breakthrough-spectacle.js';
 import {smallGift,compactPlaza,crowdTargets,stableTargets,PLAZA_CAPACITY,drawRitual} from './live-cinema.js';
@@ -494,7 +494,8 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     const tm=tmOn(),bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle=tm?'#1b181324':'#ffffff26';c.fillRect(bx,by,bw,3.5);
     c.fillStyle=ready?(tm?`hsl(4,72%,${38+12*pulse}%)`:`hsl(45,100%,${55+20*pulse}%)`):(tm?'#2f7d6b':'#7fdcc6');c.fillRect(bx,by,bw*k,3.5);
     const reborn=p.rebirthEligible===true; /* 18/11: cảnh giới cuối đầy cây → "Gõ chuyển sinh" */
-    if((ready||reborn)&&!this.warStatus?.active&&!this.tanDeTu?.has(p.id)){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label=tm?(reborn?'Gõ chuyển sinh':'Gõ 8 · đột phá'):reborn?'✦ Gõ chuyển sinh':'✦ Gõ đột phá',w=c.measureText(label).width+14;
+    if(tm){if(this._bpT!==t){this._bpT=t;this._bpN=0;}} /* 19/11 Thủy Mặc: tối đa 5 nhãn đột phá mỗi khung, tránh rối sân */
+    if((ready||reborn)&&!this.warStatus?.active&&!this.tanDeTu?.has(p.id)&&!(tm&&++this._bpN>5)){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label=tm?(reborn?'Gõ chuyển sinh':'Gõ 8 · đột phá'):reborn?'✦ Gõ chuyển sinh':'✦ Gõ đột phá',w=c.measureText(label).width+14;
       if(tm){/* 19/11 Thủy Mặc: nhãn đột phá thành thẻ son viền vàng */c.shadowColor='#b3261e';c.shadowBlur=6+pulse*8;c.fillStyle='#9e2219f2';c.beginPath();c.roundRect(a.x-w/2,y-10,w,20,3);c.fill();c.shadowBlur=0;}else{c.shadowColor='#ffd76a';c.shadowBlur=10+pulse*10;c.fillStyle='#3a2a08ee';c.beginPath();c.roundRect(a.x-w/2,y-10,w,20,10);c.fill();c.shadowBlur=0;}
       c.strokeStyle=`rgba(255,215,106,${.6+.4*pulse})`;c.lineWidth=1.5;c.stroke();c.fillStyle='#ffe7a3';c.textAlign='center';c.textBaseline='middle';c.fillText(label,a.x,y+1);}}
     c.restore();}
@@ -675,7 +676,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     this.compact=compactPlaza(this)&&!solo;const st=this.stage??=new StageDirector(),mv=this.mover??=new Mover();
     // 08/11 LIVE: >20 người tối đa 30 ghế, >30 người tối đa 50 ghế (chỉ ảnh skin) (ghế xoay theo người vừa tương tác/tặng quà). Vẽ cả 80 người làm GPU tích hợp tụt 2-3 FPS và mất tiếng.
     st.seats=this.heavyCrowd?Math.min(this.minimalCrowd?50:30,Math.max(this.budget?.config.seats||16,(this.realPlayers||[]).length)):Math.max(this.budget?.config.seats||16,(this.realPlayers||[]).length);st.seats=Math.min(PLAZA_CAPACITY,st.seats);const required=new Set([...(this.focusUntil>t?[this.focusId]:[]),...(document.body.classList.contains('overlay')?[]:[this.selected]),...this.effects.map(e=>e.user),...[...(this.engagementReactions||new Map()).values()].filter(e=>t-e.start<3400).map(e=>e.user)].filter(Boolean));
-    this.tanDeTu=new Set(this.compact&&!this.raceStatus?.active?tanDeTuIds(this.realPlayers||[],Date.now()):[]);for(const id of this.tanDeTu)required.add(id); // 19/11: Tân Đệ Tử luôn có mặt trên sân
+    this.tanDeTu=new Set(this.compact&&!this.raceStatus?.active?tanDeTuIds(this.realPlayers||[],Date.now()):[]);this.tanThu=new Set(this.compact&&!this.raceStatus?.active&&(this.realPlayers?.length||0)<=80?tanThuIds(this.realPlayers||[],this.tanDeTu,Date.now()):[]);for(const id of this.tanDeTu)required.add(id); // 19/11: Tân Đệ Tử luôn có mặt trên sân
     for(const id of teaseIds(this))required.add(id); // 10/11: chọc ghẹo — đưa 2 người lên sân
     for(const id of bonkIds(this,t))required.add(id); // 10/11: Hội Gõ Đầu — người gõ + người bị gõ lên sân
     if(!this.compact&&this.motion&&t-(this.calmAt||0)>12000){if((this.recentEvents||0)<3)st.calmSwap();this.calmAt=t;this.recentEvents=0;}

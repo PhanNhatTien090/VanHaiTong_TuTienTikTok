@@ -203,7 +203,7 @@ const arrivalWelcomes=new ArrivalWelcomes({voice:narrator,show:(e,duration)=>{
  }
  scene.welcomeFocus={id:e.user,until:performance.now()+duration};tone('join');welcomeShownAt=t0;welcomeMore=[];
  welcomeBanner.dataset.kind=e.returning?'back':'new';
- welcomeBanner.innerHTML='<div class="aw-token"><small>'+(e.returning?'ĐỒNG MÔN TRỞ LẠI':'ĐỆ TỬ MỚI')+'</small><strong>'+esc(e.name||'Đạo hữu')+'</strong><span>'+(e.returning?'Gõ <b>1</b> tu luyện tiếp':'Gõ <b>1</b> hoặc chào một câu<br>để nhập môn')+'</span><i class="aw-seal" aria-hidden="true">VÂN<br>HẢI<br>TÔNG</i></div><p class="aw-more"></p>';
+ const away=e.returning&&e.awayDays>=1?e.awayDays:0; /* 19/11: vắng từ 1 ngày → chào mừng trở lại + số ngày */welcomeBanner.innerHTML='<div class="aw-token"><small>'+(away?'CHÀO MỪNG TRỞ LẠI':e.returning?'ĐỒNG MÔN TRỞ LẠI':'ĐỆ TỬ MỚI')+'</small><strong>'+esc(e.name||'Đạo hữu')+'</strong><span>'+(away?'Vắng '+away+' ngày · gõ <b>1</b> tu luyện tiếp':e.returning?'Gõ <b>1</b> tu luyện tiếp':'Gõ <b>1</b> hoặc chào một câu<br>để nhập môn')+'</span><i class="aw-seal" aria-hidden="true">VÂN<br>HẢI<br>TÔNG</i></div><p class="aw-more"></p>';
  welcomeBanner.hidden=false;clearTimeout(welcomeBannerTimer);welcomeBannerTimer=setTimeout(()=>welcomeBanner.hidden=true,duration);
 }});
 const overlayUrl=()=>`${location.origin}/?overlay=1&world=${mode}&sound=1&zoom=1&quality=auto&v=46#tiktok.studio`;

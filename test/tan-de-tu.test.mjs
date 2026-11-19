@@ -31,3 +31,17 @@ test('người mới chiếm 6 ghế giữa sân, người cũ đang ngồi đó
  const moved=old.filter(p=>before.get(p.id)!==seats.get(p.id)).length;assert.ok(moved<=2,'chỉ người ở ghế giữ bị dời, dời '+moved);
  stableTargets(seats,all,H,()=>false,undefined,()=>false,ids);assert.equal(old.filter(p=>before.get(p.id)!==seats.get(p.id)).length,moved,'không xáo ghế liên tục');
 });
+
+test('nhiệm vụ tân thủ 3 ngày: bước kế tiếp đúng thứ tự, xong cả 3 hoặc quá 3 ngày thì thôi', async () => {
+  const {tanThuQuest,tanThuIds,vnDay}=await import('../public/tan-de-tu.js');
+  const now=Date.UTC(2026,10,19,10),today=vnDay(now),day=864e5;
+  const p={id:'a',realm:1,joinedAt:now-day,day:null};
+  assert.deepEqual(tanThuQuest(p,now,today),{done:0,total:3,next:'điểm danh',day:2});
+  assert.equal(tanThuQuest({...p,day:today},now,today).next,'lên cảnh giới 2');
+  assert.equal(tanThuQuest({...p,day:today,realm:2},now,today).next,'vào đường 1-5');
+  assert.equal(tanThuQuest({...p,day:today,realm:2,sectHallIndex:0},now,today),null);
+  assert.equal(tanThuQuest({...p,joinedAt:now-3*day},now,today),null);
+  assert.equal(tanThuQuest({...p,resident:true},now,today),null);
+  const many=Array.from({length:9},(_,i)=>({id:'p'+i,realm:0,joinedAt:now-i*1000}));
+  assert.deepEqual(tanThuIds(many,new Set(['p0']),now),['p1','p2','p3']);
+});

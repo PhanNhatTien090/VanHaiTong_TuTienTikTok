@@ -17,6 +17,17 @@ export function tanDeTuHint(p){
  const ready=p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi&&p.stones>=(p.neededStones||0);
  return ready?'Đầy · gõ 8 đột phá':'Gõ 1 · tu luyện';
 }
+// 19/11 — NHIỆM VỤ TÂN THỦ 3 NGÀY (kế hoạch GĐ2): điểm danh hôm nay · lên cảnh giới 2 · vào một Đường.
+// Hiện dưới tên người vào game trong 3 ngày (sau 15 phút Tân Đệ Tử), tối đa 3 người mới nhất (sân đã đông chữ); xong cả 3 thì thôi.
+export const TAN_THU_DAYS=3,TAN_THU_MAX=3;
+export const vnDay=(now=Date.now())=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+export function tanThuQuest(p,now=Date.now(),today=vnDay(now)){
+ if(!p||p.resident||p.puppet||p.webOnly)return null;const age=now-Number(p.joinedAt);if(!Number.isFinite(age)||age<0||age>=TAN_THU_DAYS*864e5)return null;
+ const steps=[[p.day===today,'điểm danh'],[(Number(p.realm)||0)>=2,(Number(p.realm)||0)<1?'gõ 1 tu luyện':'lên cảnh giới 2'],[p.sectHallIndex!=null,'vào đường 1-5']];
+ const done=steps.filter(x=>x[0]).length;if(done===steps.length)return null;return {done,total:steps.length,next:steps.find(x=>!x[0])[1],day:Math.floor(age/864e5)+1};
+}
+export function tanThuIds(players,skip=new Set(),now=Date.now()){const today=vnDay(now);
+ return players.filter(p=>!skip.has(p.id)&&tanThuQuest(p,now,today)).sort((a,b)=>Number(b.joinedAt)-Number(a.joinedAt)).slice(0,TAN_THU_MAX).map(p=>p.id);}
 const art=new Map();
 function surface(key,w,h,draw){if(art.has(key))return art.get(key);const s=makeSurface(w,h);if(s)draw(s.getContext('2d'),w,h);art.set(key,s);return s;}
 // Vòng dưới chân: vệt mực loang + viền ngọc mảnh + 4 chấm son (bitmap 2×).
@@ -27,11 +38,11 @@ function ringArt(){return surface('ring',240,84,(x,w,h)=>{x.scale(2,2);const cx=
  x.strokeStyle='rgba(244,201,106,.75)';x.lineWidth=1.2;x.beginPath();x.arc(0,0,50,0,Math.PI*2);x.stroke();
  x.fillStyle='#b3261e';for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;x.beginPath();x.arc(Math.cos(a)*50,Math.sin(a)*50,3.2,0,Math.PI*2);x.fill();}x.restore();});}
 // Nhãn giấy dó viền son, chữ mực; nhãn "đột phá" nền son chữ vàng cho nổi.
-function hintArt(text){const key='hint:'+text;if(art.has(key))return art.get(key);const hot=text.startsWith('Đầy');
+function hintArt(text,quest=false){const key='hint:'+quest+':'+text;if(art.has(key))return art.get(key);const hot=!quest&&text.startsWith('Đầy');
  const probe=makeSurface(4,4)?.getContext('2d');if(!probe)return null;const font='800 13px "Segoe UI",Arial,sans-serif';probe.font=font;const w=Math.ceil(probe.measureText(text).width)+22,h=22;
  return surface(key,(w+4)*2,(h+4)*2,x=>{x.scale(2,2);x.translate(2,2);
-  x.fillStyle=hot?'#9e2219':'rgba(243,234,216,.97)';x.beginPath();x.roundRect(0,0,w,h,4);x.fill();
-  x.strokeStyle=hot?'#f4c96a':'#b3261e';x.lineWidth=1.4;x.beginPath();x.roundRect(1.5,1.5,w-3,h-3,3);x.stroke();
+  x.fillStyle=hot?'#9e2219':quest?'rgba(226,240,232,.97)':'rgba(243,234,216,.97)';x.beginPath();x.roundRect(0,0,w,h,4);x.fill();
+  x.strokeStyle=hot?'#f4c96a':quest?'#2f7d6b':'#b3261e';x.lineWidth=1.4;x.beginPath();x.roundRect(1.5,1.5,w-3,h-3,3);x.stroke();
   x.font=font;x.textAlign='center';x.textBaseline='middle';x.lineWidth=3;x.strokeStyle=hot?'#3a0d08':'rgba(243,234,216,1)';x.strokeText(text,w/2,h/2+.5);x.fillStyle=hot?'#ffe7a3':'#1b1813';x.fillText(text,w/2,h/2+.5);});}
 // Quầng ngọc sau thân (vẽ sẵn): lõi sáng ngọc nhạt + viền mực mỏng, thấy rõ cả khi bảng tên che chân.
 function haloArt(){return surface('halo',200,200,(x,w)=>{const r=w/2,g=x.createRadialGradient(r,r,4,r,r,r);g.addColorStop(0,'rgba(190,255,232,.55)');g.addColorStop(.45,'rgba(127,220,198,.32)');g.addColorStop(.78,'rgba(127,220,198,.10)');g.addColorStop(1,'rgba(127,220,198,0)');x.fillStyle=g;x.fillRect(0,0,w,w);
@@ -46,7 +57,10 @@ export function drawTanDeTuBack(scene,c,t){
 }
 // Nhãn bước kế: vẽ NGAY DƯỚI bảng tên, cùng lượt vẽ tên (gọi từ drawQiBar) → không bị bảng tên hàng khác đè.
 export function drawTanDeTuHint(scene,c,l,t){
- const p=l.player;if(!scene.tanDeTu?.has(p?.id)||scene.raceStatus?.active||scene.warStatus?.active)return;const im=hintArt(tanDeTuHint(p));if(!im)return;
+ const p=l.player;if(scene.raceStatus?.active||scene.warStatus?.active)return;let im=null;
+ if(scene.tanDeTu?.has(p?.id))im=hintArt(tanDeTuHint(p));
+ else if(scene.tanThu?.has(p?.id)){const q=tanThuQuest(p);if(q)im=hintArt(`${q.done}/${q.total} · ${q.next}`,true);}
+ if(!im)return;
  const w=im.width/2,h=im.height/2,bob=scene.motion===false?0:Math.sin(t*.004+l.x*.02)*1.5;
  c.drawImage(im,Math.max(4,Math.min(896-w,l.x+l.w/2-w/2)),l.y+l.h+2+bob,w,h);
 }

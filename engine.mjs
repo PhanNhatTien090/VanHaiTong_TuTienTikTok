@@ -1116,12 +1116,12 @@ export function ingest(w,event,now=Date.now()) {
   if(event.event==='member'){
     // Only per-viewer arrivals; roomUser is an aggregate counter, not a roster.
     if(d.actionId!==undefined&&Number(d.actionId)!==1)return {ok:true,ignored:true};
-    const prior=w.players[clean(base.userId,80)];
+    const prior=w.players[clean(base.userId,80)],priorSeen=Number(prior?.lastActive)||0; /* 19/11: vắng >1 ngày → "Chào mừng trở lại" */
     if(prior?.resident||prior?.puppet||w.liveSession?.active===false)return {ok:true,ignored:true};
     if(prior&&(now-(prior.lastAutoArrivalAt||0)<15000))return {ok:true,duplicate:true};
     const p=ensurePlayer(w,base.userId,base.name,now);if(base.avatar)p.avatar=base.avatar;p.lastAutoArrivalAt=now;p.leftLiveAt=null;
     const arrival=!prior?w.events.findLast(e=>e.user===p.id&&e.effect==='join'&&e.at===now):null;
-    Object.assign(arrival||emit(w,p,'Chào đạo hữu trở lại','join',now),{autoArrival:true,newcomerWelcome:true,returning:!!prior});
+    Object.assign(arrival||emit(w,p,'Chào đạo hữu trở lại','join',now),{autoArrival:true,newcomerWelcome:true,returning:!!prior,awayDays:prior&&priorSeen?Math.floor((now-priorSeen)/864e5):0});
     // Arrival itself grants no tu vi, gift credit or task progress. The first
     // real cultivation starts the newcomer journey and remembers chosen gender.
     return {ok:true,playerId:p.id,autoArrival:true};

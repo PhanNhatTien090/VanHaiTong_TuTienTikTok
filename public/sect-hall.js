@@ -82,8 +82,9 @@ function drawConsort(scene,c,p,x,y,scale,t){
  const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
  try{c.save();c.translate(x,y);c.scale(scale,scale);scene.drawCharacterBody(c,p,skinFor(p.giftCoins),t);c.restore();}finally{scene.compact=compact;scene.cinematicPose=pose;}
  c.save();c.textAlign='center';c.textBaseline='middle';c.font='800 13px "Segoe UI",Arial,sans-serif';const label='ĐẠO LỮ TÔNG CHỦ',w=c.measureText(label).width+20;
- c.fillStyle='#3a0f2aee';c.beginPath();c.roundRect?c.roundRect(x-w/2,y+14,w,22,11):c.rect(x-w/2,y+14,w,22);c.fill();c.strokeStyle='#ffb3dc';c.lineWidth=1.5;c.stroke();c.fillStyle='#ffd6ee';c.fillText(label,x,y+25);
- c.font='800 15px "Segoe UI",Arial,sans-serif';c.lineWidth=3;c.strokeStyle='#05070d';c.strokeText(p.name||'Đạo hữu',x,y+48,200);c.fillStyle='#fff1f8';c.fillText(p.name||'Đạo hữu',x,y+48,200);c.restore();
+ const tm=tmOn(); /* 19/11 Thủy Mặc: thẻ giấy dó viền son, tên chữ mực trên giấy */
+ c.fillStyle=tm?'#f3ead8f2':'#3a0f2aee';c.beginPath();c.roundRect?c.roundRect(x-w/2,y+14,w,22,tm?2:11):c.rect(x-w/2,y+14,w,22);c.fill();c.strokeStyle=tm?'#b3261e':'#ffb3dc';c.lineWidth=1.5;c.stroke();c.fillStyle=tm?'#9e2219':'#ffd6ee';c.fillText(label,x,y+25);
+ c.font='800 15px "Segoe UI",Arial,sans-serif';if(tm){const nw=Math.min(200,c.measureText(p.name||'Đạo hữu').width)+16;c.fillStyle='#f3ead8eb';c.fillRect(x-nw/2,y+38,nw,21);c.strokeStyle='#1b1813b8';c.lineWidth=1;c.strokeRect(x-nw/2+.5,y+38.5,nw-1,20);c.fillStyle='#1b1813';c.fillText(p.name||'Đạo hữu',x,y+49,200);}else{c.lineWidth=3;c.strokeStyle='#05070d';c.strokeText(p.name||'Đạo hữu',x,y+48,200);c.fillStyle='#fff1f8';c.fillText(p.name||'Đạo hữu',x,y+48,200);}c.restore();
 }
 export function drawSectMaster(scene,c,t){
  if(!sectCourtVisible(scene)||scene.sectMaster?.enabled===false||scene.presentation?.until>t)return false;
