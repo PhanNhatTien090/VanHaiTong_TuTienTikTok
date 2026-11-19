@@ -5,6 +5,8 @@ import {luxuryTier} from './luxury-fx.js';
 import {breakthroughDuration,breakthroughRealm} from './breakthrough-fx.js';
 import {signatureVisitor} from './court-rewards.js';
 import {transformMs} from './transform-fx.js';
+// Đột phá của người chơi thật (không phải NPC/thường trú) — chiếu thẳng, không xếp sau hiệu ứng khác.
+export const urgentBreakthrough=e=>e?.effect==='breakthrough'&&!e.resident&&e.actorKind!=='npc'&&!e.simulated;
 export const isBlackGoldAward=e=>!!signatureVisitor(e?.transform);
 export const presentationPriority=e=>isBlackGoldAward(e)?9:e.achieve&&!e.gift&&!e.resident?3:e.gift&&!e.resident?(luxuryTier(e)?8.5:8):e.heavenStrike?7:e.ceremony?6:e.autoArrival?2.5:e.petAward?(petArrivalProfile(e)?.vip?3.5:2.5):e.eventGiftFx?3:luxuryTier(e)?5:e.transform?4:e.effect==='breakthrough'?4+breakthroughRealm(e)/100:e.gift||e.loyaltyAward||e.bossChampion?3:['skin','victory','opportunity','blessing','status','hint','ready','title','flower','visitor','tournament','bond','social'].includes(e.effect)?2:1;
 export function presentationDuration(e){if(e.card)return 5200; // 11/11: Linh Bài đạo hữu
@@ -40,5 +42,7 @@ export class PresentationQueue{
    this.startedRituals.delete(id);
   }
   for(let i=this.items.length-1;i>=0;i--){const e=this.items[i];if(e.skyPresentationUntil&&now+presentationDuration(e)>e.skyPresentationUntil||now-e._queuedAt>(e.effect==='breakthrough'?1200000:presentationPriority(e)>=3?180000:20000)){this.items.splice(i,1);this.coalesced++;}}}
- take(now=Date.now(),allowed=()=>true){this.prune(now);const eligible=this.items.map((e,i)=>({e,i})).filter(x=>allowed(x.e));if(!eligible.length)return;const overdue=eligible.filter(x=>now-x.e._queuedAt>=12000).sort((a,b)=>a.e._queuedAt-b.e._queuedAt);return this.items.splice((overdue[0]||eligible[0]).i,1)[0];}
+ // 19/11 (chủ game: "đột phá phải ưu tiên hơn tất cả"): luật "chờ ≥12 s thì chiếu trước" từng đẩy hàng chục khung vặt (tu luyện, vận công…)
+ // lên trước màn đột phá vừa đến → đột phá trễ 12–20 s cả hình lẫn tiếng. Nay đột phá của người thật luôn lấy trước (cảnh giới cao trước, cùng bậc thì cũ trước).
+ take(now=Date.now(),allowed=()=>true){this.prune(now);const eligible=this.items.map((e,i)=>({e,i})).filter(x=>allowed(x.e));if(!eligible.length)return;const urgent=eligible.filter(x=>urgentBreakthrough(x.e)).sort((a,b)=>presentationPriority(b.e)-presentationPriority(a.e)||a.e._queuedAt-b.e._queuedAt);if(urgent.length)return this.items.splice(urgent[0].i,1)[0];const overdue=eligible.filter(x=>now-x.e._queuedAt>=12000).sort((a,b)=>a.e._queuedAt-b.e._queuedAt);return this.items.splice((overdue[0]||eligible[0]).i,1)[0];}
 }

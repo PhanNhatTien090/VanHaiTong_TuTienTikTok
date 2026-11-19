@@ -13,3 +13,12 @@ test('AudioContext chưa chạy → không định tuyến (giọng phát thẳn
  assert.equal(routeVoice(ctx('suspended'),{}),null);assert.equal(routeVoice(null,{}),null);
 });
 test('nhạc lùi sâu khi giọng đọc',()=>{assert.ok(VOICE_MUSIC_DUCK<=.3);});
+test('đột phá người thật: hình lấy trước mọi khung chờ lâu, giọng trên quà',async()=>{
+ const {PresentationQueue,urgentBreakthrough}=await import('../public/presentation.js');const {priority}=await import('../public/voice.js');
+ const q=new PresentationQueue(12),t=1e6;
+ for(let i=0;i<8;i++)q.push({id:'s'+i,user:'u'+i,effect:'status',text:'Tu luyện'},t+i*100);
+ q.push({id:'bt',user:'x',effect:'breakthrough',realm:3,name:'X'},t+15000);
+ assert.equal(q.take(t+15050).id,'bt','đột phá không bị khung vặt quá hạn 12 s chen trước');
+ assert.equal(urgentBreakthrough({effect:'breakthrough',resident:true}),false);
+ assert.ok(priority({effect:'breakthrough',user:'x'})>priority({gift:true,coins:5,user:'y'}));
+});
