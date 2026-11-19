@@ -79,3 +79,9 @@ html body.overlay.ui-tm .scene-shell :is(#companionHud.spirit-pet-hud,.spirit-pe
 html body.overlay.ui-tm.pet-cove-stage .tm-tokens{display:none!important}
 /* màn sự kiện vẽ trên canvas có luật riêng (Lôi Đài, Linh Thú Cốc, Ngũ Đường chiến, Bí Cảnh, Bảo Khố): giữ như cũ — ẩn cột phải */
 html body.overlay.ui-tm:is(.arena-stage,.pet-cove-stage,.hall-war,.mount-realm,.bao-kho) .scene-shell #phoneHudRight.phone-hud-rail{display:none!important}
+/* phù lục: lên góc trên-trái (không che mặt người được zoom), chừa lệnh bài bên phải; dòng thưởng chữ mực */
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight{top:2.5%!important;left:33%!important;width:58%!important;max-width:58%!important;min-width:0!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight.spot-transform{top:68%!important;left:50%!important}
+html body.overlay.ui-tm #spotlight .spot-reward{color:#5a3a1a!important;font-weight:700!important;opacity:1!important}
+/* Vân Đài chờ lượt: dải mực nhỏ dưới phù lục */
+html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:17%!important;left:33%!important;right:auto!important;transform:none!important;width:auto!important;max-width:40%!important;background:rgba(22,17,12,.86)!important;border:1px solid rgba(222,196,140,.8)!important;border-radius:4px!important;box-shadow:none!important}
