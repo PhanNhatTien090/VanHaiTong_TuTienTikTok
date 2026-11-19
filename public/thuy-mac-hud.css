@@ -97,3 +97,10 @@ html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-lea
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>em{font-size:clamp(9px,1.95cqw,21px)!important}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>i{font-size:clamp(9px,2cqw,22px)!important;color:var(--tm-ink-soft)!important}
 html body.overlay.ui-tm .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;backdrop-filter:none!important}
+/* 19/11 map ngoài trời: chừa BẦU TRỜI — Công Đức Bảng xuống góc dưới phải, cột cúng phụng/vinh danh xuống góc dưới trái (cách đáy ≥11%) */
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{top:auto!important;bottom:12.5%!important;right:1.2%!important;width:40%!important}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{top:auto!important;bottom:12.5%!important;left:1.2%!important;width:42%!important;flex-direction:column-reverse!important}
+/* bia Thiên Bảng gọn hơn để trời giữa thoáng */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft{width:37%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail #honorBanner.honor-banner{background-image:none!important;background-color:transparent!important}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{align-items:flex-start!important}

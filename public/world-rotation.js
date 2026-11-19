@@ -13,7 +13,11 @@ export const SCENES=Object.freeze([
  {id:'morning',name:'Vân Hải Bình Minh',image:'/assets/sect-morning-v20.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
  {id:'twilight',name:'Hoàng Hôn Tụ Linh',image:'/assets/sect-twilight-v2.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
  {id:'thien-khuyet',name:'Vân Hải Thiên Khuyết',image:'/assets/thien-khuyet/map.webp',ambience:'sect',floorY:.65,layout:'sect'},
- {id:'sect-hall',name:'Vân Hải Nguyệt Cung',image:'/assets/realm-skins-v2/moon-jade/background-v1.png',ambience:'sect',floorY:.65,layout:'sect'}
+ {id:'sect-hall',name:'Vân Hải Nguyệt Cung',image:'/assets/realm-skins-v2/moon-jade/background-v1.png',ambience:'sect',floorY:.65,layout:'sect'},
+ // 19/11 (chủ game: "đổi map, không ở trong lâu đài, có trời"): 3 map ngoài trời Thủy Mặc, cùng bố cục sàn với Thiên Khuyết (đệm Tông chủ/Trưởng Lão giữ chỗ).
+ {id:'tm-van-dinh',name:'Vân Đỉnh',image:'/assets/maps-thuy-mac/dinh-nui.webp',ambience:'sect',floorY:.65,layout:'sect',group:'thuy-mac'},
+ {id:'tm-tich-duong',name:'Tịch Dương Nhai',image:'/assets/maps-thuy-mac/hoang-hon.webp',ambience:'sect',floorY:.65,layout:'sect',group:'thuy-mac'},
+ {id:'tm-tinh-ha',name:'Tinh Hà Đài',image:'/assets/maps-thuy-mac/dem-sao.webp',ambience:'sect',floorY:.65,layout:'sect',group:'thuy-mac'}
 ]);
 export const BOSSES=Object.freeze([
  {species:'thunder-tiger',name:'Lôi Hổ',cell:0},
@@ -23,6 +27,7 @@ export const BOSSES=Object.freeze([
 ]);
 export function environmentAt(epoch,now,mode='auto'){
  const turn=Math.max(0,Math.floor((now-epoch)/SCENE_INTERVAL));
+ if(mode==='thuy-mac'){const g=SCENES.filter(s=>s.group==='thuy-mac');return {...g[turn%g.length],mode,changesAt:epoch+(turn+1)*SCENE_INTERVAL};} // xoay 3 map ngoài trời
  const selected=mode!=='auto'&&SCENES.find(s=>s.id===mode);return {...(selected||SCENES[turn%SCENES.length]),mode:selected?mode:'auto',changesAt:selected?null:epoch+(turn+1)*SCENE_INTERVAL};
 }
 export function drawBossSprite(c,boss,now,x,y,sprites,celestialSprites=null,abyssArt=null,motion=true){

@@ -12,7 +12,7 @@ const data=await fs.mkdtemp(path.join(os.tmpdir(),'qashot-'));for(const f of ['d
  if(w.visitor){w.visitor.closedAt=now-1000;w.visitor.endsAt=Math.min(w.visitor.endsAt,now-1000);}
  for(const k of ['boss','miniEvent','opportunity','envelope'])delete w[k];
  for(const [k,v] of Object.entries(w))if(v&&typeof v==='object'&&!Array.isArray(v)&&k!=='visitor'){if(v.phase&&!['idle','closed','done','ended','finished'].includes(v.phase)){v.phase='idle';v.endsAt=now-1000;v.closedAt=now-1000;}else if(v.endsAt>now&&!v.closedAt){v.endsAt=now-1000;v.closedAt=now-1000;}}
- for(const k of ['nextBossAt','nextSmallAt','nextBigEventAt','nextVisitorAt','nextOpportunityAt','nextMiniAt','nextBlessingAt','nextAutoEventAt'])w[k]=far;if(w.engagement)w.engagement.nextSmallAt=far;w.settings={...(w.settings||{}),bigEvents:false};w.lastCeremonyAt=now;w.honorStageUntil=0;
+ for(const k of ['nextBossAt','nextSmallAt','nextBigEventAt','nextVisitorAt','nextOpportunityAt','nextMiniAt','nextBlessingAt','nextAutoEventAt'])w[k]=far;if(w.engagement)w.engagement.nextSmallAt=far;w.settings={...(w.settings||{}),bigEvents:false};w.lastCeremonyAt=now;w.honorStageUntil=0;if(plan.sceneMode)w.settings.sceneMode=plan.sceneMode;
  const all=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&!p.webOnly).sort((a,b)=>(b.lastActive||0)-(a.lastActive||0));
  all.forEach((p,i)=>{if(i<(plan.people??45)){p.lastActive=now-i*2000;p.lastRealInteractionAt=now-i*2000;delete p.leftLiveAt;}else{p.lastActive=0;p.leftLiveAt=now-1;}});
  w.playTransfers={};w.liveSession={...(w.liveSession||{}),active:true,startedAt:now-3600e3};

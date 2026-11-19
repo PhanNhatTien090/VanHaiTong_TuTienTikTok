@@ -11,7 +11,7 @@ export function hallsRankHTML(state,esc,now){
     const rows=[...halls].sort(hallStandingOrder);
     return `<div class="qi-leaders hall-ranks"><b>NGŨ ĐƯỜNG · TUẦN</b><small>Hoạt động + Đường chiến · thưởng cuối tuần</small>${rows.map(h=>`<span>${emblem(h)}<em>${esc(hallLabel(h))}</em><strong>${points(h.points)}</strong>${h.champion?'<small>+5% tu vi tuần này</small>':''}</span>`).join('')}</div>`;
   }
-  return `<div class="qi-leaders hall-ranks"><b>THIÊN BẢNG · TOP ${Math.min(10,top.length)}</b>${top.slice(0,10).map(p=>`<span><i>${p.rank}</i><em>${esc(p.name)}${p.active?'<u title="Đang ở LIVE"></u>':''}</em><strong>${compact.format(p.totalQi)}</strong><small>${p.master?'Tông Chủ · ':''}${esc(state.realms[p.realm])}</small></span>`).join('')}</div>`;
+  return `<div class="qi-leaders hall-ranks"><b>THIÊN BẢNG</b>${top.slice(0,10).map(p=>`<span><i>${p.rank}</i><em>${esc(p.name)}${p.active?'<u title="Đang ở LIVE"></u>':''}</em><strong>${compact.format(p.totalQi)}</strong><small>${p.master?'Tông Chủ · ':''}${esc(state.realms[p.realm])}</small></span>`).join('')}</div>`;
 }
 
 function hallRoster(h,esc){

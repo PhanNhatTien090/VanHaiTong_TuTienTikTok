@@ -283,7 +283,7 @@ const server=http.createServer(async(req,res)=>{
       }
     }
     if(url.pathname==='/api/flower-event'&&req.method==='POST'){const b=await body(req);const result=startFlowerEvent(worlds[mode],Date.now(),b.minutes,b.kind||'flower');if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}
-    if(url.pathname==='/api/world-scene'&&req.method==='POST'){const b=await body(req);if(b.scene!=='auto'&&!SCENES.some(s=>s.id===b.scene)){json(res,{ok:false,message:'Cảnh không hợp lệ.'},400);return;}worlds[mode].settings.sceneMode=b.scene;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,scene:b.scene});return;}
+    if(url.pathname==='/api/world-scene'&&req.method==='POST'){const b=await body(req);if(b.scene!=='auto'&&b.scene!=='thuy-mac'&&!SCENES.some(s=>s.id===b.scene)){json(res,{ok:false,message:'Cảnh không hợp lệ.'},400);return;}worlds[mode].settings.sceneMode=b.scene;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,scene:b.scene});return;}
     // 09/11: nhạc nền LIVE — 'auto' (tự đổi mỗi 30 phút), số thứ tự (giữ cố định), 'next' (bài kế).
     if(url.pathname==='/api/music'&&req.method==='POST'){const b=await body(req),w=worlds[mode],next=applyMusicCommand(w.settings?.music,b.cmd,Date.now());if(!next){json(res,{ok:false,message:'Bài nhạc không hợp lệ.'},400);return;}w.settings??={};w.settings.music=next;persist(true);payloadCache.clear();broadcast();json(res,{ok:true,music:next});return;}
     if(url.pathname==='/api/event-settings'&&req.method==='POST'){const b=await body(req);const result=setEventSettings(worlds[mode],b);if(result.ok)persist(true);broadcast();json(res,result,result.ok?200:400);return;}
