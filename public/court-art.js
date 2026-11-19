@@ -1,7 +1,8 @@
-import {BLACK_GOLD_VISITOR,KARMA_VISITOR,COURT_VISITORS,SIGNATURE_VISITORS,courtRelic} from './court-rewards.js';
+import {BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,COURT_VISITORS,SIGNATURE_VISITORS,courtRelic} from './court-rewards.js';
 import {drawCourtAuraLayer} from './court-skin-fx.js';
 import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
 import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-halo-v5';
+import {drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal} from './tinh-ha-fx.js?v=20261119';
 import {feedbackBudget} from './cinematic-feedback.js';
 import {ownsGear} from './skin-gear.js';
 import {skinFxOn} from './performance.js';
@@ -18,7 +19,8 @@ const figure=(spec,pose,onReady)=>load(spec.artwork?.[pose]||'/assets/thien-khuy
 // Skin có bộ hiệu ứng riêng: Hắc Kim (lửa vàng) và Nhân Quả (trắng đen).
 const FX={
  [BLACK_GOLD_VISITOR.kind]:{aura:drawBlackGoldAura,gear:drawBlackGoldGear,reveal:drawBlackGoldReveal},
- [KARMA_VISITOR.kind]:{aura:drawKarmaAura,gear:drawKarmaGear,reveal:drawKarmaReveal}
+ [KARMA_VISITOR.kind]:{aura:drawKarmaAura,gear:drawKarmaGear,reveal:drawKarmaReveal},
+ [TINH_HA_VISITOR.kind]:{aura:drawTinhHaAura,gear:drawTinhHaGear,reveal:drawTinhHaReveal}
 };
 const gearArt=new Map();
 function signatureArt(spec){
@@ -46,11 +48,13 @@ export function drawCourtSkin(c,p,pose,t){
  if((stand<.999&&!seated)||(stand>.001&&!standing))return false;
  const big=spec===BLACK_GOLD_VISITOR;
  c.save();c.translate(0,pose.lift||0);c.rotate(pose.lean||0);
- for(const [img,a,h] of [[seated,1-stand,big?91*HAC_KIM_SEATED:91],[standing,stand,big?125*HAC_KIM_STANDING:125]]){
+ for(let [img,a,h] of [[seated,1-stand,big?91*HAC_KIM_SEATED:91],[standing,stand,big?125*HAC_KIM_STANDING:125]]){
   if(!img||a<=.001)continue;
   // The seated exports include the bottom edge of the standing cell above them.
   const trimTop=img===seated&&!spec.artwork?Math.round(img.naturalHeight*54/618):0;
-  const sourceHeight=img.naturalHeight-trimTop,w=h*img.naturalWidth/sourceHeight;
+  const sourceHeight=img.naturalHeight-trimTop;let w=h*img.naturalWidth/sourceHeight;
+  // 19/11: khung đệm nhân vật (CharacterFrames) chỉ rộng 120 → ảnh rộng (Tinh Hà ngồi 136) bị cắt thẳng 2 mép; thu vừa khung, giữ tỷ lệ.
+  if(w>116){h*=116/w;w=116;}
   c.save();c.globalAlpha*=a;c.drawImage(img,0,trimTop,img.naturalWidth,sourceHeight,-w/2,25-h,w,h);c.restore();
  }
  c.restore();return true;
@@ -65,7 +69,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
   if(spec===BLACK_GOLD_VISITOR){const k=hacKimSize(pose.stand);c.translate(0,25);c.scale(k,k);c.translate(0,-25);}
   const revealing=scene.transforming?.id===p.id&&t<scene.transforming.revealAt;
   // Màn biến hình Nhân Quả tự vẽ hào quang + thương suốt màn → tránh vẽ chồng.
-  const karmaShow=scene.effects?.some(e=>e.user===p.id&&e.transform===KARMA_VISITOR.kind&&t<e.start+e.duration);
+  const karmaShow=scene.effects?.some(e=>e.user===p.id&&(e.transform===KARMA_VISITOR.kind||e.transform===TINH_HA_VISITOR.kind)&&t<e.start+e.duration);
   let seed=0;for(const ch of String(p.id))seed=(seed*31+ch.codePointAt(0))%997;
   if(FX[spec?.kind]&&!revealing&&!karmaShow&&skinFxOn(scene,p,t))FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light,seed});
   const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
@@ -133,7 +137,7 @@ export function drawBlackGoldAward(scene,c,e,t,k,target,layer,reveal){
  if(!fx)return;
  const pose=scene.animator?.pose(target.player||{},t,motion&&!scene.compact)||{};
  // Nhân Quả: một mốc 500 coin nhận cả skin + thương → màn biến hình luôn có thương.
- const art=e.hacKimArtifact||spec===KARMA_VISITOR?signatureArt(spec):null;
+ const art=e.hacKimArtifact||spec===KARMA_VISITOR||spec===TINH_HA_VISITOR?signatureArt(spec):null; /* 19/11: Tinh Hà cũng 1 mốc 500 = skin + kiếm */
  fx.reveal(c,t,k,{...target,y:target.y+(pose.lift||0)},layer,reveal,art,{
   motion,light:feedbackBudget(scene),pose,seed:e.id
  });

@@ -13,10 +13,19 @@ export const KARMA_VISITOR=Object.freeze({
  aura:'Âm dương nhân quả · tơ trắng đen · Xích Long Thương',
  artwork:{blade:'/assets/nhan-qua/spear.webp',halo:'/assets/nhan-qua/halo-gold.webp',seated:'/assets/nhan-qua/seated.webp',standing:'/assets/nhan-qua/standing.webp'}
 });
+// 19/11: Tinh Hà Kiếm Đế — một mốc 500 coin: skin + Tinh Hà Kiếm cùng lúc (Cửu Tinh Kiếm Trận, Tinh Đồ). Hình do Codex vẽ theo đề bài.
+export const TINH_HA_VISITOR=Object.freeze({
+ kind:'tinh-ha',aliases:['tinh ha kiem de','tinh ha','tinhha','kiem de'],skin:'tinh-ha-kiem-de',name:'Tinh Hà Kiếm Đế',
+ artifact:'tinh-ha-kiem',relic:'Tinh Hà Kiếm',
+ color:'#9cc0ff',trim:'#eef4ff',dark:'#0a0620',technique:'stararrow',icon:'sword',skinCoins:500,artifactCoins:500,
+ aura:'Tinh Đồ · Cửu Tinh Kiếm Trận · tinh vân · sao băng',
+ artwork:{blade:'/assets/tinh-ha/blade.webp',halo:'/assets/tinh-ha/halo.webp',seated:'/assets/tinh-ha/seated.webp',standing:'/assets/tinh-ha/standing.webp'}
+});
 // Skin có bộ hiệu ứng riêng (màn biến hình ưu tiên cao, pháp bảo theo người).
-export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR];
+export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR];
 export const signatureVisitor=kind=>SIGNATURE_VISITORS.find(v=>v.kind===kind)||null;
 export const COURT_VISITORS=[
+ TINH_HA_VISITOR,
  KARMA_VISITOR,
  BLACK_GOLD_VISITOR,
  {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},

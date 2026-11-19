@@ -18,7 +18,7 @@ function setup(skinA,petA){
 function run(w){let t=N+20,log=[],m;for(let i=0;i<1200;i++){t+=250;tickArena(w,t,c);if(w.arena.current){m=w.arena.current;for(const e of m.log)if(!log.some(x=>x.n===e.n))log.push(e);}else if(m)break;}return {log,m,t};}
 
 test('chỉ skin ≥300 coin đang mặc + đã sở hữu mới có chiêu riêng',()=>{
- assert.equal(Object.keys(SIGNATURE_ULTS).length,6);
+ assert.equal(Object.keys(SIGNATURE_ULTS).length,7); // 19/11: + Tinh Hà Kiếm Đế
  assert.equal(signatureSkinOf({skinChoice:'nhan-qua-vuong-lam',rewardSkins:['nhan-qua-vuong-lam']}),'nhan-qua-vuong-lam');
  assert.equal(signatureSkinOf({skinChoice:'nhan-qua-vuong-lam',rewardSkins:[]}),null);
  assert.equal(signatureSkinOf({skinChoice:'tudo-ma-ton',rewardSkins:['tudo-ma-ton']}),null,'skin 200 coin không có');

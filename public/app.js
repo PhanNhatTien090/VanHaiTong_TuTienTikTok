@@ -563,6 +563,7 @@ function playNext(){
    clearTimeout(spotTimer);spotTimer=setTimeout(()=>{panel.hidden=true;busy=false;current=null;playNext();},duration);return;
  }
  if(e.card&&showLinhBai(document.getElementById('linhBai'),e,scene,state?.players?.find(p=>p.id===e.user),esc,duration)){clearTimeout(spotTimer);spotTimer=setTimeout(()=>{busy=false;current=null;playNext();},duration+150);return;} // 11/11: gõ 9 → Linh Bài thay khung tên
+ $('#spotlight').classList.toggle('spot-transform',e.effect==='transform'); // 19/11: chữ biến hình xuống dưới chân, không đè mặt/hào quang người đang biến hình
  $('#spotlight').classList.add('visible');clearTimeout(spotTimer);
  spotTimer=setTimeout(()=>{$('#spotlight').classList.remove('visible');busy=false;current=null;playNext();},duration+150);
 }
