@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {VOICE_MUSIC_DUCK} from '../public/audio.js';
-test('nhạc lùi sâu khi giọng đọc',()=>{assert.ok(VOICE_MUSIC_DUCK<=.2);});
+test('nhạc lùi sâu khi giọng đọc',()=>{assert.ok(VOICE_MUSIC_DUCK<=.15);});
 test('đột phá người thật: hình lấy trước mọi khung chờ lâu, giọng trên quà',async()=>{
  const {PresentationQueue,urgentBreakthrough}=await import('../public/presentation.js');const {priority}=await import('../public/voice.js');
  const q=new PresentationQueue(12),t=1e6;

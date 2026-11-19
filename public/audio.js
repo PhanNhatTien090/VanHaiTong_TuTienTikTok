@@ -64,7 +64,7 @@ function softClipper(c){if(!c.createWaveShaper)return c.createGain();const w=c.c
 // 08/11 tối: 3 bản nhạc nền tu tiên, chuẩn hóa -19 LUFS (to hơn bản cũ -23 LUFS ~4 dB). Nguồn + giấy phép: public/assets/AUDIO.md.
 // 09/11: 8 bài; mỗi bài lặp tới lúc đổi (tự đổi mỗi 30 phút hoặc theo trang quản lý) — xem music-rotation.js.
 // 10/11 (chủ game): nhạc nền to hơn ~4 dB, chỉ nhạc nền (không đụng tiếng hiệu ứng).
-export const MUSIC_GAIN=1.6;
+export const MUSIC_GAIN=1.25; // 19/11: 1.6 → 1.25 (chủ game: nhạc lấn giọng, giọng + nhạc cộng dồn bị rè)
 export function ascensionImpactRatio(realm){
   if(EARLY_IMPACT[realm])return EARLY_IMPACT[realm];
   if(DIVINE_TIMING[realm]&&DIVINE_CUES[realm])return DIVINE_TIMING[realm].impact/DIVINE_TIMING[realm].duration;
@@ -119,7 +119,7 @@ function scheduleDivineCue(c,destination,elapsed,duration,realm){
 }
 
 // 14/11: nhạc chỉ hạ còn 55% khi tông sư đọc (trước 28%) để nhạc không tắt lịm.
-export const VOICE_MUSIC_DUCK=.2; // 19/11: .55 → .2 (chủ game: nhạc lấn giọng). KHÔNG xử lý/khuếch đại giọng qua WebAudio — đã thử, giọng trầm + rè
+export const VOICE_MUSIC_DUCK=.15; // 19/11: .55 → .2 (chủ game: nhạc lấn giọng). KHÔNG xử lý/khuếch đại giọng qua WebAudio — đã thử, giọng trầm + rè
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.45;this.ambient=.6;this.sfx=.85;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){

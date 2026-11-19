@@ -47,6 +47,6 @@ test('tournament lobby feet stay on floor, fast casts alternate with an ultimate
 });
 test('louder music and SFX mix; speech ducking restores both music and stale lease',()=>{
  const a=new CultivationAudio();a.music={volume:0};a.sync();const normal=a.music.volume;
- assert.ok(normal>.4);assert.equal(a.sfx,.85);a.duck(true);assert.ok(a.music.volume>=normal*.15&&a.music.volume<=normal*.25); // 19/11: nhạc lùi sâu hơn khi giọng đọca.duck(false);assert.equal(a.music.volume,normal);
+ assert.ok(normal>.3);assert.equal(a.sfx,.85);a.duck(true);/* 19/11: nhạc lùi sâu khi giọng đọc */assert.ok(a.music.volume>=normal*.1&&a.music.volume<=normal*.2);a.duck(false);assert.equal(a.music.volume,normal);
  a.enabled=true;a.ducked=true;a.duckUntil=1;a.keepAlive();assert.equal(a.ducked,false);
 });
