@@ -69,7 +69,7 @@ import {syncTease,teaseIds,drawTease} from './tease.js';
 import {syncBonk,bonkIds,applyBonkWalk,drawBonk} from './bonk.js?v=minor-overlay-20261114';
 import {syncAlchemy,alchemyTargets,drawAlchemy,drawAlchemyResult,drawAlchemySoot} from './alchemy.js';
 import {syncSocialStage,socialTargets,tournamentLobbyTargets,drawSocialStage,drawBondLinks} from './social-stage.js?v=loi-dai-20261115';
-import {arenaTargets as loiDaiTargets,arenaCutFrame} from './arena-stage.js?v=loi-dai-20261115';
+import {arenaTargets as loiDaiTargets,arenaCutFrame} from './arena-stage.js?v=loi-dai-20261119';
 import {tournamentCutFrame} from './skill-cutscene.js?v=20261118';
 import {warCutFrame} from './war-cutscene.js?v=20261118';import {realmCutFrame} from './realm-cutscene.js';import {alchemyCutFrame} from './alchemy-cutscene.js';import {mazeCutFrame} from './maze-cutscene.js'; /* 18/11: chiếu riêng quà ≥99 Mê Cung */ /* 18/11: chiếu riêng quà ≥99 Khai Lò */ /* 18/11: chiếu riêng quà ≥99 Bí Cảnh */import {mountCutFrame} from './mount-cut.js';import {syncBaoKho,drawBaoKho,baoCutFrame} from './bao-kho.js';import {syncTowerCut,towerCutFrame} from './tower-cutscene.js';import {drawBaoAura} from './bao-aura.js'; /* 18/11: chủ nhân thần khí GIỚI HẠN */ /* 18/11: chiếu riêng quà ≥100 Vân Hải Tháp */ /* 18/11: Thiên Công Bảo Khố */ /* 18/11: chiếu riêng nở tọa kỹ VIP/Thần */ // 18/11: chiếu riêng quà ≥30 Chính Ma
 import {drawCombatTechnique} from './combat-techniques.js';

@@ -10,7 +10,7 @@ import {prewarmDuelV6,drawDuelV6Ultimate,v6SkillFamily,v6CounterProgress} from '
 import {prewarmVariantArt,drawV7Variant,v7SkillSpec} from './ultimate-variants-v7.js';
 import {prewarmOverdrive} from './cinematic-overdrive-v7.js';
 import {prewarmV7Premium} from './v7-premium-art.js';
-import {syncArena,drawArena} from './arena-stage.js?v=loi-dai-20261115';
+import {syncArena,drawArena} from './arena-stage.js?v=loi-dai-20261119';
 // 15/11: chiêu thường xoay vòng 3 chiêu đầu của bộ Lôi Đài; tuyệt kỹ giữ chiêu chính (ảnh V6/V7 đã nạp sẵn theo chiêu chính).
 export function duelSkillTech(match,id,cast){
  const base=match?.techniques?.[id],kit=match?.kits?.[id];

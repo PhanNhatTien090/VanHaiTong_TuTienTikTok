@@ -20,7 +20,7 @@ function drawBaoProc(c,e,k,A,B,t){const im=baoImg(e.bao.id);if(!im)return;const 
  c.save();c.globalAlpha=Math.min(1,k/.12,(1-k)/.15);c.globalCompositeOperation='lighter';const g=c.createRadialGradient(x,y,0,x,y,s);g.addColorStop(0,col);g.addColorStop(1,col+'00');c.fillStyle=g;c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();c.globalCompositeOperation='source-over';c.translate(x,y);c.scale(Math.cos(t*.006)||.01,1);c.drawImage(im,-s/2,-s/2,s,s);c.restore();c.globalAlpha=1;}
 
 export const ARENA_DELAY_MS=1100;
-export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.548,.628,.708],cols:8,guide:.745,audienceScale:.98});
+export const ARENA_LAYOUT=Object.freeze({floor:.355,leftX:262,rightX:638,soloX:450,fighterScale:2.05,hud:.392,rows:[.574,.648,.722],cols:8,guide:.752,audienceScale:.98});
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>1-(1-clamp(k))**3;
 const DUR=Object.freeze({0:1700,1:950,2:1150,3:1150,4:1250,5:2600});
 const ULT=5,PET=4,CD_TOTAL={2:6000,3:8000,4:10000};

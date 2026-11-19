@@ -135,3 +135,8 @@ html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-lea
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>small{font-size:clamp(7px,1.4cqw,15px)!important;padding:0 2px}
 /* thẻ Cúng phụng hiện tạm vài giây: lúc đó nhường chỗ thẻ Tặng quà, không chồng 2 thẻ lên hàng người */
 html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight:has(#honorBanner:not([hidden])) #giftBoard.gift-board.gift-rule-card:not([hidden]){display:none!important}
+/* 19/11 duyệt nhánh: bảng hướng dẫn theo ngữ cảnh gọn 1 dòng/mục để bớt che hàng người bên phải */
+html body.overlay.ui-tm .scene-shell>#infoSpotlight{width:52%!important;padding:6px 9px!important}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight li{white-space:nowrap}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight li>span{overflow:hidden;text-overflow:ellipsis;font-size:.8em!important}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight ol{gap:1px!important}
