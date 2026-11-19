@@ -16,9 +16,18 @@ function scrubCoins(root){
  const title=root.querySelector('.gift-leaders>b');if(title&&title.textContent!=='CÔNG ĐỨC BẢNG')title.textContent='CÔNG ĐỨC BẢNG';
  for(const s of root.querySelectorAll('#honorBanner small'))if(/coin/i.test(s.textContent))s.textContent='Công đức tông môn';
 }
+// Chữ lớn trên canvas (tiêu đề đột phá, chiếu riêng, biến hình…: ~30 file tự đặt font) → font khắc Noto Serif cho đồng bộ.
+// Chỉ đổi họ font khi cỡ ≥26px; chữ tên/HUD nhỏ giữ nguyên. Chạy ở setter nên không tốn thêm khi vẽ.
+function serifTitles(){
+ const P=globalThis.CanvasRenderingContext2D?.prototype,d=P&&Object.getOwnPropertyDescriptor(P,'font');if(!d?.set||P.__tmFont)return;P.__tmFont=true;
+ const re=/^((?:italic\s+|normal\s+|small-caps\s+)*(?:[1-9]00|bold|bolder|normal)?\s*)(\d+(?:\.\d+)?)px(\/[\d.]+)?\s+(.+)$/;
+ Object.defineProperty(P,'font',{configurable:true,get(){return d.get.call(this);},set(v){const m=typeof v==='string'&&re.exec(v);
+  if(m&&+m[2]>=26&&!/Noto Serif|monospace|emoji/i.test(m[4]))v=`${m[1]}${m[2]}px${m[3]||''} "Noto Serif",Georgia,serif`;d.set.call(this,v);}});
+ try{document.fonts?.load('900 40px "Noto Serif"');document.fonts?.load('700 40px "Noto Serif"');}catch{}
+}
 export function initThuyMac(){
  if(!thuyMacOn)return false;
- document.body.classList.add('ui-tm');
+ document.body.classList.add('ui-tm');serifTitles();
  const shell=document.querySelector('.scene-shell');if(!shell)return true;
  tokens(shell);
  // bảng chữ cũ đã thay bằng lệnh bài → ẩn hẳn (inline !important thắng mọi CSS cũ)

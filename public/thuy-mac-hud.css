@@ -115,3 +115,18 @@ html body.overlay.ui-tm.info-spotlight-on:not(.tm-event) .scene-shell #giftRanks
 /* phù lục: dưới lệnh bài, bên phải (bia Thiên Bảng chiếm góc trái) */
 html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:18.5%!important;left:auto!important;right:1.2%!important;width:58%!important;max-width:58%!important;transform:none!important}
 html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:31%!important;left:auto!important;right:1.2%!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight.spot-transform{width:auto!important;min-width:60%!important;max-width:94%!important;left:50%!important;transform:translateX(-50%)!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight.spot-transform span{font-size:clamp(10px,2.3cqw,24px)!important}
+
+/* thẻ BÁO HỶ (lên Trưởng Lão, rèn thành, thăng VIP…) + LINH BÀI (thẻ tu vi của mình) → giấy dó, chữ mực, băng son */
+html body.overlay.ui-tm :is(.bao-hy,.linh-bai):not([hidden]){background:#f3ead8f5!important;border:0!important;border-radius:2px!important;color:var(--tm-ink)!important;
+ box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 6px #f3ead8,inset 0 0 0 7px #1b181366,0 6px 20px #0006!important}
+html body.overlay.ui-tm :is(.bao-hy,.linh-bai) *{text-shadow:none!important}
+html body.overlay.ui-tm .bao-hy .bh-ribbon span{background:#b3261e!important;border:0!important;box-shadow:none!important;color:#fff4dc!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm .bao-hy .bh-portrait{background:radial-gradient(circle at 50% 45%,#e8d6ae,#f3ead800 68%)!important}
+html body.overlay.ui-tm .bao-hy .bh-title{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm .bao-hy .bh-title em{color:#8a5a12!important}
+html body.overlay.ui-tm .bao-hy :is(.bh-line,.bh-thanks){color:var(--tm-ink)!important}
+html body.overlay.ui-tm .linh-bai :is(.lb-path,b){color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm .linh-bai :is(.lb-path i,.lb-ready,span,small,em,li,p,div){color:var(--tm-ink)!important}
+html body.overlay.ui-tm .linh-bai .lb-need{background:#efe0bd!important;border-color:#b3261e!important;color:var(--tm-ink)!important}
