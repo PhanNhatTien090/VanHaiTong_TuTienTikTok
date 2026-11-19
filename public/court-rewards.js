@@ -21,11 +21,20 @@ export const TINH_HA_VISITOR=Object.freeze({
  aura:'Tinh Đồ · Cửu Tinh Kiếm Trận · tinh vân · sao băng',
  artwork:{blade:'/assets/tinh-ha/blade.webp',halo:'/assets/tinh-ha/halo.webp',seated:'/assets/tinh-ha/seated.webp',standing:'/assets/tinh-ha/standing.webp'}
 });
+// 19/11: Bích Lân Độc Hậu — skin NỮ độc tu 500 coin (skin + Vạn Cổ Xà Trượng cùng lúc), có mãng xà linh hồn trườn sau lưng.
+export const BICH_LAN_VISITOR=Object.freeze({
+ kind:'bich-lan',aliases:['bich lan doc hau','bich lan','bichlan','doc hau'],skin:'bich-lan-doc-hau',name:'Bích Lân Độc Hậu',
+ artifact:'van-co-xa-truong',relic:'Vạn Cổ Xà Trượng',
+ color:'#5cff8a',trim:'#eaffd8',dark:'#03140a',technique:'vortex',icon:'orb',skinCoins:500,artifactCoins:500,
+ aura:'Xà Hoàn · mãng xà linh hồn · độc trì · độc điệp',
+ artwork:{blade:'/assets/bich-lan/blade.webp',halo:'/assets/bich-lan/halo.webp',seated:'/assets/bich-lan/seated.webp',standing:'/assets/bich-lan/standing.webp',serpent:'/assets/bich-lan/serpent.webp'}
+});
 // Skin có bộ hiệu ứng riêng (màn biến hình ưu tiên cao, pháp bảo theo người).
-export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR];
+export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR];
 export const signatureVisitor=kind=>SIGNATURE_VISITORS.find(v=>v.kind===kind)||null;
 export const COURT_VISITORS=[
  TINH_HA_VISITOR,
+ BICH_LAN_VISITOR,
  KARMA_VISITOR,
  BLACK_GOLD_VISITOR,
  {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},
