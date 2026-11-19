@@ -40,7 +40,7 @@ html body.overlay.ui-tm #honorBanner strong{color:var(--tm-ink)!important}
 html body.overlay.ui-tm #honorBanner small{color:var(--tm-ink-soft)!important}
 
 /* ---- cột phải: Cúng phụng (luật quà) + chiếu chỉ sự kiện ---- */
-html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail{display:flex!important;flex-direction:column;gap:5px;top:30%!important;left:1.2%!important;right:auto!important;width:41%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail{display:flex!important;flex-direction:column;gap:5px;top:33.5%!important;left:1.2%!important;right:auto!important;width:41%!important}
 /* có sự kiện: chiếu chỉ + luật quà sự kiện ở trái trên (rộng), ẩn bia + Công Đức; lệnh bài giữ */
 html body.overlay.ui-tm.tm-event .scene-shell #phoneHudLeft>#liveRanks.live-ranks,html body.overlay.ui-tm.tm-event .scene-shell #giftRanks.live-ranks{display:none!important}
 html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight.phone-hud-rail{top:4px!important;width:64%!important}
@@ -90,3 +90,10 @@ html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock *{color:var(-
 html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock :is(b,strong,h3,h4,.visitor-title,[class*=title]){color:var(--tm-seal)!important}
 /* vinh danh hộ pháp: thẻ nhỏ dưới bia, không đè sân */
 html body.overlay.ui-tm .scene-shell #phoneHudRight #honorBanner{max-width:100%!important}
+
+/* Thiên Bảng top 10: mỗi dòng gọn 1 hàng (bỏ dòng cảnh giới), top 3 nổi bật */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders:not(:has(.hall-emblem))>span>small{display:none!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span{padding:1px 0!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>em{font-size:clamp(9px,1.95cqw,21px)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>i{font-size:clamp(9px,2cqw,22px)!important;color:var(--tm-ink-soft)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;backdrop-filter:none!important}

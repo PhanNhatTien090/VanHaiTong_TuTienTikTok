@@ -1,4 +1,5 @@
 import {artworkCrop} from './courtyard-layout.js';
+import {tmOn} from './ink-panel.js';
 import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
@@ -135,9 +136,9 @@ export function drawSectCourt(scene,c,t){
    c.fillStyle=hall.color;c.textAlign='center';c.font='700 32px Georgia';
    if(!active.has(hall.elder?.id))c.fillText(hall.mark,0,-16);
    c.fillStyle=hall.color;c.beginPath();c.moveTo(-60,-65);c.lineTo(-43,-65);c.lineTo(-48,-39);c.lineTo(-55,-42);c.closePath();c.fill();
-   c.fillStyle='#092028';c.beginPath();c.roundRect(-83,16,166,51,8);c.fill();c.stroke();
-   c.fillStyle=hall.color;c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillText('TRƯỞNG LÃO',0,36,154);
-   c.fillStyle='#f7e8c6';c.font='700 14px "Segoe UI",Arial,sans-serif';c.fillText(hall.name,0,56,156);
+   const tm=tmOn();c.fillStyle=tm?'rgba(243,234,216,.95)':'#092028';if(tm){c.strokeStyle='#1b1813';c.lineWidth=1.5;}c.beginPath();c.roundRect(-83,16,166,51,tm?3:8);c.fill();c.stroke();if(tm){c.fillStyle=hall.color;c.fillRect(-83,16,6,51);}
+   c.fillStyle=tm?'#b3261e':hall.color;c.font=(tm?'900 15px "Noto Serif",Georgia,serif':'800 15px "Segoe UI",Arial,sans-serif');c.fillText('TRƯỞNG LÃO',0,36,154);
+   c.fillStyle=tm?'#1b1813':'#f7e8c6';c.font='700 14px "Segoe UI",Arial,sans-serif';c.fillText(hall.name,0,56,156);
    c.font='800 15px "Segoe UI",Arial,sans-serif';c.fillStyle='#e9d7b0';c.fillText(hall.elder?.name||'Ghế trống',0,88,156);
    c.restore();
   }

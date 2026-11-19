@@ -5,12 +5,13 @@ const emblem = h => `<i class="hall-emblem" style="--hall-color:${h.color}" aria
 
 export function hallsRankHTML(state,esc,now){
   const {thienBang:top,halls}=state.halls;
-  const pages=top.length>5?2:top.length?1:0, page=Math.floor(now/8000)%(pages+1);
-  if(page===pages){
+  // 19/11 (chủ game): Thiên Bảng hiện luôn TOP 10 một lượt (20 s), xen Ngũ Đường 8 s.
+  const cyc=now%28000, showHalls=top.length?cyc>=20000:true;
+  if(showHalls){
     const rows=[...halls].sort(hallStandingOrder);
     return `<div class="qi-leaders hall-ranks"><b>NGŨ ĐƯỜNG · TUẦN</b><small>Hoạt động + Đường chiến · thưởng cuối tuần</small>${rows.map(h=>`<span>${emblem(h)}<em>${esc(hallLabel(h))}</em><strong>${points(h.points)}</strong>${h.champion?'<small>+5% tu vi tuần này</small>':''}</span>`).join('')}</div>`;
   }
-  return `<div class="qi-leaders hall-ranks"><b>THIÊN BẢNG · ${page?'6–10':'1–5'}</b>${top.slice(page*5,page*5+5).map(p=>`<span><i>${p.rank}</i><em>${esc(p.name)}${p.active?'<u title="Đang ở LIVE"></u>':''}</em><strong>${compact.format(p.totalQi)}</strong><small>${p.master?'Tông Chủ · ':''}${esc(state.realms[p.realm])}</small></span>`).join('')}</div>`;
+  return `<div class="qi-leaders hall-ranks"><b>THIÊN BẢNG · TOP ${Math.min(10,top.length)}</b>${top.slice(0,10).map(p=>`<span><i>${p.rank}</i><em>${esc(p.name)}${p.active?'<u title="Đang ở LIVE"></u>':''}</em><strong>${compact.format(p.totalQi)}</strong><small>${p.master?'Tông Chủ · ':''}${esc(state.realms[p.realm])}</small></span>`).join('')}</div>`;
 }
 
 function hallRoster(h,esc){
