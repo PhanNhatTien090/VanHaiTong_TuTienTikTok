@@ -1,0 +1,29 @@
+/* 19/11/2026 — Thủy Mặc cho màn chào web (đăng nhập + lấy nhân vật): giấy dó, chữ mực, dấu son; nền là map tông môn của LIVE.
+   Chỉ đổi #authView và #startView; phần game bên trong giữ nguyên. */
+:root{--tm-paper:#f3ead8;--tm-paper2:#e9dcc2;--tm-ink:#1b1813;--tm-ink-soft:#5a5145;--tm-seal:#b3261e;--tm-jade:#2f7d6b;--tm-title:"Noto Serif",Georgia,serif}
+#authView,#startView{background:linear-gradient(180deg,#0b1d1c00 0%,#0b1d1c55 45%,#0b1d1cdd 100%),url(/art/tm-hero.webp) center top/cover no-repeat;min-height:100%;align-content:end;padding-block:18vh 28px}
+#authView .card,#startView .card{background:var(--tm-paper);color:var(--tm-ink);border:0;border-radius:3px;box-shadow:inset 0 0 0 2px var(--tm-ink),inset 0 0 0 5px var(--tm-paper),inset 0 0 0 6px #1b181355,0 24px 60px #000a}
+#authView .brand b{color:var(--tm-seal);font:700 20px/1.2 var(--tm-title);letter-spacing:.14em}
+#authView .brand small{color:var(--tm-ink-soft)}
+#authView .seal{background:var(--tm-seal);color:#fff4dc;border:0;border-radius:4px;box-shadow:inset 0 0 0 2px var(--tm-seal),inset 0 0 0 3.5px #fff4dc;font-family:var(--tm-title)}
+#authView label,#startView label,#startView h1{color:var(--tm-ink)}
+#startView h1{font:700 22px/1.3 var(--tm-title)}
+#authView input,#startView input:not([type=radio]):not([type=checkbox]){background:#fffaf0;color:var(--tm-ink);border:1px solid #1b181366;border-radius:3px}
+#authView input:focus-visible,#startView input:focus-visible{outline:2px solid var(--tm-seal);outline-offset:1px}
+#authView .field-hint,#authView small,#startView small{color:var(--tm-ink-soft)}
+#authView button.primary,#startView button.primary{background:var(--tm-seal);color:#fff4dc;border:0;border-radius:3px;font-weight:700;letter-spacing:.04em;box-shadow:inset 0 0 0 2px var(--tm-seal),inset 0 0 0 3.5px #f4c96a}
+#authView button.link,#startView button.link{color:var(--tm-seal);background:none;border:0}
+#authView .info-box,#startView .info-box{background:var(--tm-paper2);color:var(--tm-ink);border:1px solid #1b181333;border-radius:3px}
+#authView .char-card,#startView .choice{background:#fffaf0;color:var(--tm-ink);border:1px solid #1b181355;border-radius:3px}
+#authView .char-card.on{border-color:var(--tm-seal);box-shadow:inset 0 0 0 1px var(--tm-seal)}
+#startView .choice b{color:var(--tm-seal)}#startView .choice span{color:var(--tm-ink-soft)}
+#startView .steps li{color:var(--tm-ink-soft)}#startView .steps li.on b,#startView .steps li.done b{background:var(--tm-seal);color:#fff4dc}
+#authView .error,#startView .error{color:var(--tm-seal)}
+/* 3 bước nhập môn ngay trên thẻ đăng nhập */
+.tm-steps{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tm-steps li{display:grid;gap:4px;justify-items:center;text-align:center;font-size:12.5px;line-height:1.3;color:var(--tm-ink-soft)}
+.tm-steps b{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;border:1.5px solid var(--tm-seal);color:var(--tm-seal);font:700 15px/1 var(--tm-title)}
+.tm-steps li:first-child b{background:var(--tm-seal);color:#fff4dc}
+.tm-lead{margin:-6px 0 14px;color:var(--tm-ink-soft);font-size:14px;line-height:1.5}
+#authView,#startView{min-height:100vh;min-height:100dvh;box-sizing:border-box}
+#authView .card,#startView .card{box-sizing:border-box;width:min(420px,calc(100vw - 32px));max-width:calc(100vw - 32px)}

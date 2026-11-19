@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Điều hành LIVE · Vân Hải Tông</title>
+<!-- 19/11/2026 — TRANG ĐIỀU HÀNH MỘT MÀN (kế hoạch Đổi Mới, GĐ5): dùng trên điện thoại lúc đang LIVE.
+     Tình trạng (TikFinity, người đang có mặt, FPS overlay) + sự kiện bấm một chạm + đổi map. Script tách file vì CSP chặn inline. -->
+<style>
+:root{--paper:#f3ead8;--paper2:#e9dcc2;--ink:#1b1813;--soft:#5a5145;--seal:#b3261e;--jade:#2f7d6b;--warn:#a8650a;--line:#1b181326;
+ --title:"Noto Serif",Georgia,"Times New Roman",serif;--body:"Segoe UI",system-ui,Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body);padding-block:max(12px,env(safe-area-inset-top)) 28px;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+main{max-width:720px;margin:0 auto;display:grid;gap:16px}
+header{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--seal);padding-bottom:10px}
+.seal{width:38px;height:38px;display:grid;place-items:center;background:var(--seal);color:#fff4dc;border-radius:4px;font:700 20px/1 var(--title);box-shadow:inset 0 0 0 2px var(--seal),inset 0 0 0 3.5px #fff4dc;flex:none}
+h1{margin:0;font:700 20px/1.2 var(--title);color:var(--seal);letter-spacing:.06em}
+h2{margin:0;font:700 16px/1.3 var(--title);letter-spacing:.04em}
+header small{display:block;color:var(--soft);font-size:12.5px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:#fffaf0;border:1px solid var(--line);border-radius:3px;padding:10px 12px;display:grid;gap:2px;min-width:0}
+.tile b{font:700 22px/1.15 var(--body);font-variant-numeric:tabular-nums}
+.tile span{font-size:12.5px;color:var(--soft)}
+.tile[data-state=ok]{box-shadow:inset 3px 0 0 var(--jade)}.tile[data-state=warn]{box-shadow:inset 3px 0 0 var(--warn)}.tile[data-state=bad]{box-shadow:inset 3px 0 0 var(--seal)}
+section{display:grid;gap:10px}
+.now{background:var(--paper2);border:1px solid var(--line);border-radius:3px;padding:10px 12px;font-size:14px;min-height:42px}
+.btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+button{font:600 15px/1.25 var(--body);padding:14px 12px;border-radius:3px;border:1px solid #1b181366;background:#fffaf0;color:var(--ink);cursor:pointer;text-align:left;display:grid;gap:2px}
+button small{font-weight:400;font-size:12px;color:var(--soft)}
+button.go{background:var(--seal);color:#fff4dc;border-color:var(--seal);box-shadow:inset 0 0 0 2px var(--seal),inset 0 0 0 3.5px #f4c96a}
+button.go small{color:#fbe3c8}
+button.on{box-shadow:inset 0 0 0 2px var(--jade)}
+button:focus-visible{outline:2px solid var(--seal);outline-offset:2px}
+button[disabled]{opacity:.55;cursor:wait}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff4dc;border:1.5px solid var(--seal);border-radius:3px;padding:10px 12px}
+.confirm[hidden]{display:none}
+.confirm button{padding:8px 14px}
+#toast{min-height:22px;font-size:14px;color:var(--jade)}#toast.err{color:var(--seal)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:12px;color:var(--soft);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.wrap{overflow-x:auto}
+.note{font-size:12.5px;color:var(--soft)}
+</style>
+</head>
+<body>
+<main>
+ <header><span class="seal">令</span><div><h1>ĐIỀU HÀNH LIVE</h1><small id="updated">Đang kết nối máy chủ…</small></div></header>
+
+ <div class="tiles" aria-live="polite">
+  <div class="tile" id="tTik"><b>…</b><span>TikFinity</span></div>
+  <div class="tile" id="tPeople"><b>…</b><span>người đang có mặt</span></div>
+  <div class="tile" id="tFps"><b>…</b><span>FPS overlay LIVE</span></div>
+  <div class="tile" id="tClients"><b>…</b><span>nguồn overlay đang mở</span></div>
+ </div>
+
+ <section>
+  <h2>Đang diễn ra</h2>
+  <div class="now" id="now">…</div>
+ </section>
+
+ <section>
+  <h2>Mở sự kiện (một chạm, có bước xác nhận)</h2>
+  <div class="btns">
+   <button class="go" data-act="boss">Yêu thú<small>Gọi một yêu thú lên sân</small></button>
+   <button class="go" data-act="opportunity">Cơ duyên<small>Quà tích điểm, tự đột phá</small></button>
+   <button class="go" data-act="arena">Lôi Đài 8 phút<small>Mở đài, người xem gõ lên đài</small></button>
+   <button class="go" data-act="pet">Linh Thú Cốc 5 phút<small>Thả tim nhận linh thú</small></button>
+   <button data-act="arenaStop">Đóng Lôi Đài<small>Kết thúc đài đang mở</small></button>
+   <button data-act="petStop">Đóng Linh Thú Cốc<small>Giữ linh thú đã nhận</small></button>
+  </div>
+  <div class="confirm" id="confirm" hidden><span id="confirmText"></span><button class="go" id="confirmYes">Mở ngay</button><button id="confirmNo">Thôi</button></div>
+  <p id="toast" role="status"></p>
+ </section>
+
+ <section>
+  <h2>Map sân</h2>
+  <div class="btns" id="maps">
+   <button data-scene="thuy-mac">Thủy Mặc<small>Xoay 3 map ngoài trời</small></button>
+   <button data-scene="auto">Tự động<small>Map theo giờ</small></button>
+  </div>
+ </section>
+
+ <section>
+  <h2>Nguồn overlay</h2>
+  <div class="wrap"><table><thead><tr><th>Nguồn</th><th>FPS</th><th>Khung chậm</th><th>Chất lượng</th><th>Cỡ</th></tr></thead><tbody id="clients"><tr><td colspan="5">Chưa có nguồn nào báo về.</td></tr></tbody></table></div>
+  <p class="note">Hơn 1 nguồn overlay (sound=1) cùng mở sẽ nghe trùng nhạc và nặng máy. Chỉ để 1 nguồn trong OBS/LIVE Studio.</p>
+ </section>
+
+ <section>
+  <h2>Người mới gần nhất</h2>
+  <div class="wrap"><table><thead><tr><th>Tên</th><th>Cảnh giới</th><th>Vào lúc</th></tr></thead><tbody id="fresh"></tbody></table></div>
+ </section>
+</main>
+<script src="/dieu-hanh.js?v=20261119"></script>
+</body>
+</html>
