@@ -426,6 +426,14 @@ function actionCore(w,input,now) {
   if(existed&&!p.resident&&!p.puppet&&w.mode==='live'&&!w.webShadow&&prevActive&&now-prevActive>=BAO_RETURN_AWAY&&!cooldown(p,'bao-return',BAO_RETURN_AWAY,now)){const h=baoReturnHint(p);if(h)emit(w,p,h,'status',now,{baoReturn:true});} // 18/11: chủ nhân thần khí vào sân → nhắc xem/đeo/dùng
   if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
+  // 19/11 (chủ game duyệt): 85% người mới chưa từng gõ lệnh → người còn cảnh giới 0 BÌNH LUẬN BẤT KỲ lần đầu = nhập môn: tự đột phá lên cảnh giới 1.
+    // Chỉ bình luận THẬT từ TikTok (ingest gắn fromLive). Dùng chung cờ + quà với Tân thủ lệnh (starterBoost) → mỗi người chỉ một lần.
+  if(type==='chat'&&input.fromLive&&!w.webShadow&&w.mode==='live'&&w.settings?.firstStepChat!==false&&!p.resident&&!p.puppet&&p.realm===0&&!p.firstStepAt&&!p.starterDone&&!warActive(w)&&!(w.nguDuong?.match?.endsAt>now)){
+    p.firstStepAt=now;p.starterDone=true;p.qi=Math.max(p.qi||0,requiredQi(p));p.stones=Math.max(p.stones||0,requiredStones(p));
+    p.qi-=requiredQi(p);p.stones-=requiredStones(p);p.realm=1;p.stones+=20;p.herbs=(p.herbs||0)+5;finishIntro(w,p,now);
+    emit(w,p,`NHẬP MÔN • ĐỘT PHÁ ${REALMS[1].toUpperCase()}`,'breakthrough',now,{fromRealm:0,toRealm:1,firstStep:true,starter:true});
+    if(['dotpha','8'].includes(cmd)||!cmd)return {ok:true,playerId:p.id,firstStep:true};
+  }
   if(type==='chat'&&!w.webShadow){const r=hallWarCommand(w,p,words,now,hallWarContext);if(r){if(!r.ok&&!cooldown(p,'hall-war-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}}
   if(type==='chat'&&!w.webShadow){if(cmd==='thankhi'){if(!cooldown(p,'bao-collection',8000,now))emit(w,p,baoCollectionText(p),'status',now,{card:baoCard(p)});return {ok:true};}if(cmd==='trangbi'&&rest){const r=baoEquipByName(p,rest);if(r){emit(w,p,r.message,'sword',now);return r;}} /* 18/11: thần khí trang bị như pháp bảo */if(cmd==='banmenh'){const r=baoBanMenhCommand(p,rest,now);if(!cooldown(p,'bao-ban',5000,now))emit(w,p,r.message,'status',now,String(rest||'').trim()?(r.ok?undefined:{cmdFail:true}):{card:baoCard(p)});return r;}const r=baoKhoCommand(w,p,cmd,now,baoContext);if(r){if(!r.ok&&!cooldown(p,'bao-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 17/11: Thiên Công Bảo Khố
   if(type==='chat'&&!w.webShadow){const r=mountRealmCommand(w,p,cmd,now,mountContext);if(r){if(!r.ok&&!cooldown(p,'realm-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}} // 16/11: Tọa Kỹ Bí Cảnh
@@ -1115,7 +1123,7 @@ export function ingest(w,event,now=Date.now()) {
     // real cultivation starts the newcomer journey and remembers chosen gender.
     return {ok:true,playerId:p.id,autoArrival:true};
   }
-  if(event.event==='chat'){const before=w.events.length,r=action(w,{...base,type:'chat',text:d.comment},now); // 18/11 (chủ game): lệnh bị từ chối mà chưa báo gì (cánh, skin, rèn, học, đánh…) → báo + giọng đọc nhắc
+  if(event.event==='chat'){const before=w.events.length,r=action(w,{...base,type:'chat',text:d.comment,fromLive:true},now); // 18/11 (chủ game): lệnh bị từ chối mà chưa báo gì (cánh, skin, rèn, học, đánh…) → báo + giọng đọc nhắc
     if(r&&r.ok===false&&r.message&&!r.code){const p=w.players[base.userId];if(p&&!p.resident&&!p.puppet&&!w.events.slice(before).some(e=>e.user===p.id)&&!cooldown(p,'cmd-fail',8000,now))emit(w,p,r.message,'status',now,{cmdFail:true});}
     return r;}
   if(event.event==='like'){

@@ -1,0 +1,20 @@
+/* 19/11/2026 — giao diện THỦY MẶC (chủ game chọn). Giai đoạn 2: lời chào người mới = LỆNH BÀI NHẬP MÔN.
+   Lệnh bài gỗ mun + giấy dó (ảnh Codex vẽ, assets/ui-thuy-mac/token.webp), chữ mực, dấu son "Vân Hải Tông" đóng xuống.
+   Người vào dồn dập: dải "Tân đệ tử: A · B" dưới lệnh bài (app.js). Chỉ CSS + 1 ảnh → không thêm việc vẽ mỗi khung. */
+:root{--tm-ink:#1b1813;--tm-ink-soft:#5a4a3a;--tm-seal:#b3261e;--tm-paper:#f3ead8;--tm-title:"Noto Serif","Times New Roman",Georgia,serif;--tm-body:"Segoe UI","Be Vietnam Pro",system-ui,sans-serif}
+html body.overlay .arrival-welcome{left:50%;right:auto;top:21%;width:22%;padding:0;transform:translateX(-50%);background:none;border:0;box-shadow:none;border-radius:0;color:var(--tm-ink);text-align:center;animation:tm-token-drop .7s cubic-bezier(.2,1.4,.4,1) both;transform-origin:50% 0}
+html body.overlay .arrival-welcome .aw-token{position:relative;aspect-ratio:360/1086;background:url(/assets/ui-thuy-mac/token.webp) center/100% 100% no-repeat;animation:tm-token-sway 3.2s ease-in-out .7s infinite alternate;transform-origin:50% 0}
+html body.overlay .arrival-welcome .aw-token>small,html body.overlay .arrival-welcome .aw-token>strong,html body.overlay .arrival-welcome .aw-token>span{position:absolute;left:13%;right:13%;display:block;margin:0;text-shadow:none}
+html body.overlay .arrival-welcome .aw-token>small{top:26%;font:800 clamp(9px,1.7cqw,19px)/1.2 var(--tm-body);letter-spacing:.16em;color:var(--tm-seal)}
+html body.overlay .arrival-welcome .aw-token>strong{top:31%;height:14%;display:flex;align-items:center;justify-content:center;font:900 clamp(15px,3.1cqw,34px)/1.12 var(--tm-title);color:var(--tm-ink);overflow-wrap:anywhere;overflow:hidden}
+html body.overlay .arrival-welcome .aw-token>span{top:47%;font:700 clamp(9px,1.75cqw,19px)/1.35 var(--tm-body);color:var(--tm-ink-soft)}
+html body.overlay .arrival-welcome .aw-token>span b{font:900 clamp(14px,2.8cqw,30px)/1 var(--tm-title);color:var(--tm-seal);vertical-align:-.08em}
+html body.overlay .arrival-welcome .aw-seal{position:absolute;right:-6%;top:53%;width:27%;aspect-ratio:1;display:grid;place-items:center;font:900 clamp(6px,1.05cqw,12px)/1.02 var(--tm-title);font-style:normal;color:var(--tm-seal);border:clamp(2px,.35cqw,4px) solid var(--tm-seal);border-radius:12%;background:#f3ead8b0;transform:rotate(-10deg);opacity:0;animation:tm-seal-stamp .45s cubic-bezier(.3,1.6,.5,1) .55s forwards}
+html body.overlay .arrival-welcome .aw-more{position:absolute;left:50%;top:66%;transform:translateX(-50%);width:max-content;max-width:300%;margin:0;padding:.35em 1em;font:800 clamp(9px,1.8cqw,19px)/1.3 var(--tm-body);color:var(--tm-ink);background:linear-gradient(90deg,#f3ead800,#f3ead8f0 12%,#f3ead8f0 88%,#f3ead800);border-top:1px solid #1b181340;border-bottom:1px solid #1b181340}
+html body.overlay .arrival-welcome .aw-more:empty{display:none}
+html body.overlay .arrival-welcome[data-kind="back"] .aw-token>small{color:var(--tm-ink-soft)}
+html body.overlay.pet-cove-stage .arrival-welcome{top:30%;width:18%}
+@keyframes tm-token-drop{from{opacity:0;transform:translateX(-50%) translateY(-18%) rotate(-4deg)}to{opacity:1;transform:translateX(-50%) translateY(0) rotate(0)}}
+@keyframes tm-token-sway{from{transform:rotate(-1.6deg)}to{transform:rotate(1.6deg)}}
+@keyframes tm-seal-stamp{0%{opacity:0;transform:rotate(-10deg) scale(2.2)}70%{opacity:1;transform:rotate(-10deg) scale(.92)}100%{opacity:.95;transform:rotate(-10deg) scale(1)}}
+@media(prefers-reduced-motion:reduce){html body.overlay .arrival-welcome,html body.overlay .arrival-welcome .aw-token,html body.overlay .arrival-welcome .aw-seal{animation:none;opacity:1}}

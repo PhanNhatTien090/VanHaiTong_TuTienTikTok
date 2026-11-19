@@ -187,12 +187,20 @@ const narrator=new VoiceQueue({world:mode,audio:cultivationAudio,player:voicePla
   clearTimeout(voiceCaptionTimer);voiceCaptionTimer=setTimeout(()=>caption.hidden=true,duration+300);
 }});
 const welcomeBanner=document.createElement('aside');welcomeBanner.className='arrival-welcome';welcomeBanner.hidden=true;welcomeBanner.setAttribute('aria-live','polite');$('.scene-shell').appendChild(welcomeBanner);
-let welcomeBannerTimer;
+let welcomeBannerTimer,welcomeShownAt=0,welcomeMore=[];
 const arrivalWelcomes=new ArrivalWelcomes({voice:narrator,show:(e,duration)=>{
  if(state)scene.update(state,selected);
- scene.noteEvent(e);scene.addEffect(e);scene.welcomeFocus={id:e.user,until:performance.now()+duration};tone('join');
- // A short greeting, not another fixed instruction table. Names are escaped.
- welcomeBanner.innerHTML='<small>'+ (e.returning?'MỪNG ĐỒNG MÔN TRỞ LẠI':'HOAN NGHÊNH GIA NHẬP TÔNG MÔN')+'</small><strong>'+esc(e.name||'Đạo hữu')+'</strong><span>Nhân vật của bạn đã vào sân · gõ <b>tu luyện</b> để thử</span>';
+ scene.noteEvent(e);scene.addEffect(e);
+ // 19/11 (Thủy Mặc): lệnh bài nhập môn khắc tên + dấu son. Người vào trong 3 s sau đó → dải "Tân đệ tử" bên dưới, không đè lệnh bài.
+ const t0=Date.now();
+ if(!welcomeBanner.hidden&&t0-welcomeShownAt<3000){
+  welcomeMore=[...welcomeMore.filter(n=>n!==e.name),String(e.name||'Đạo hữu').slice(0,18)].slice(-4);
+  const strip=welcomeBanner.querySelector('.aw-more');if(strip)strip.textContent=(welcomeBanner.dataset.kind==='back'?'Đồng môn trở lại: ':'Tân đệ tử: ')+welcomeMore.join(' · ');
+  clearTimeout(welcomeBannerTimer);welcomeBannerTimer=setTimeout(()=>welcomeBanner.hidden=true,Math.max(2200,duration*.6));return;
+ }
+ scene.welcomeFocus={id:e.user,until:performance.now()+duration};tone('join');welcomeShownAt=t0;welcomeMore=[];
+ welcomeBanner.dataset.kind=e.returning?'back':'new';
+ welcomeBanner.innerHTML='<div class="aw-token"><small>'+(e.returning?'ĐỒNG MÔN TRỞ LẠI':'ĐỆ TỬ MỚI')+'</small><strong>'+esc(e.name||'Đạo hữu')+'</strong><span>'+(e.returning?'Gõ <b>1</b> tu luyện tiếp':'Gõ <b>1</b> hoặc chào một câu<br>để nhập môn')+'</span><i class="aw-seal" aria-hidden="true">VÂN<br>HẢI<br>TÔNG</i></div><p class="aw-more"></p>';
  welcomeBanner.hidden=false;clearTimeout(welcomeBannerTimer);welcomeBannerTimer=setTimeout(()=>welcomeBanner.hidden=true,duration);
 }});
 const overlayUrl=()=>`${location.origin}/?overlay=1&world=${mode}&sound=1&zoom=1&quality=auto&v=46#tiktok.studio`;
@@ -470,7 +478,7 @@ const giftCombos=new GiftComboBuffer({quiet:350,maxWait:2000});
 setInterval(()=>{for(const e of giftCombos.drain(Date.now()))enqueueReady(e);},150);
 // 4/11/2026: chống lặp hình — Luyện Khí (tân thủ nào cũng có) chỉ chiếu màn toàn cảnh nếu 90 s qua chưa có màn đột phá nào; không thì hiệu ứng ngắn.
 let lastFullRitualAt=0;
-function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.resident&&e.actorKind!=='npc')return e;const now=Date.now();// 4/11 tối: mọi cảnh giới tối đa 1 màn toàn cảnh / 60 s (Luyện Khí 90 s) — nhiều người đột phá liền nhau từng tạo cảnh lặp nối đuôi.
+function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.resident&&e.actorKind!=='npc'&&!e.firstStep)return e; /* 19/11: lượt NHẬP MÔN (bình luận đầu tiên) cũng giới hạn màn toàn cảnh */const now=Date.now();// 4/11 tối: mọi cảnh giới tối đa 1 màn toàn cảnh / 60 s (Luyện Khí 90 s) — nhiều người đột phá liền nhau từng tạo cảnh lặp nối đuôi.
   if(now-lastFullRitualAt<(breakthroughRealm(e)<=1?90000:60000))return {...e,effect:"qi",kind:undefined,ritualSkipped:true};lastFullRitualAt=now;return e;}
 function enqueue(e){if(!overlay)return;e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
 let engagementSoundAt=-Infinity;
