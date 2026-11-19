@@ -37,7 +37,7 @@ try{
   else if(kind==='member')tik({event:'member',data:{userId:a[0],nickname:a[1],uniqueId:'qa'+a[0],actionId:1}});
   else if(kind==='chat')tik({event:'chat',data:{userId:a[0],nickname:a[1],uniqueId:'qa'+a[0],comment:a[2],msgId:'m'+a[0]+Date.now()}});
   else if(kind==='gift')tik({event:'gift',data:{userId:a[0],nickname:a[1],uniqueId:'qa'+a[0],diamondCount:a[2],repeatCount:1,repeatEnd:true,giftType:1,giftName:a[3]||'Rose',msgId:'g'+a[0]+Date.now()}});
-  else if(kind==='eval'){const r=await send('Runtime.evaluate',{returnByValue:true,expression:a[0]});console.log('eval',JSON.stringify(r.result?.value??r.exceptionDetails?.text).slice(0,3000));}}
+  else if(kind==='eval'){const r=await send('Runtime.evaluate',{returnByValue:true,awaitPromise:true,expression:a[0]});console.log('eval',JSON.stringify(r.result?.value??r.exceptionDetails?.text).slice(0,3000));}}
  const fps=await send('Runtime.evaluate',{awaitPromise:true,returnByValue:true,expression:`new Promise(r=>{let n=0,t=performance.now();const f=()=>{n++;if(performance.now()-t<2000)requestAnimationFrame(f);else r(n/2)};requestAnimationFrame(f)})`});
  console.log('fps',fps.result?.value,'| lỗi JS:',errs.length?'\n'+errs.join('\n'):'không');ws.close();
 }finally{ch.kill();srv.kill();fake.close();}

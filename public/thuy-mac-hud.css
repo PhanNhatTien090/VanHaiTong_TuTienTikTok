@@ -69,3 +69,6 @@ html body.overlay.ui-tm .scene-shell #phoneHudRight #basicCommands.basic-command
 /* có sự kiện: thẻ luật quà sát trái, hẹp → không che yêu thú/sân giữa */
 html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{align-self:flex-start;width:58%!important;max-width:58%!important}
 html body.overlay.ui-tm .scene-shell #phoneHudRight .scene-guide-dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+
+/* bảng lớn góc phải (Rèn pháp bảo, Lôi Đài…) che hàng người → ẩn; hướng dẫn theo ngữ cảnh làm sau */
+html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight){display:none!important}
