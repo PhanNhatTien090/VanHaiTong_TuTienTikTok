@@ -489,7 +489,7 @@ let engagementSoundAt=-Infinity;
 // Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.
 const GIFT_STALE_MS=10000;let current=null,currentTimer=null;
 const giftValue=e=>(Number(e.coins)||0)*Math.max(1,Number(e.count)||1);
-function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony||isBlackGoldAward(cur))return false;if(cur.effect==='breakthrough')return (giftValue(g)>=99||!!luxuryTier(g))&&breakthroughRealm(cur)<=5;return true;}
+function giftMayPreempt(cur,g){if(!cur||cur.gift||cur.heavenStrike||cur.ceremony||isBlackGoldAward(cur))return false;if(cur.effect==='breakthrough')return giftValue(g)>=(breakthroughRealm(cur)<=5?500:1000);return true;} /* 19/11 chủ game: màn đột phá chỉ bị cắt bởi quà ≥500 coin (cảnh giới ≤5) hoặc ≥1000 coin (cảnh giới cao hơn); quà 99 chờ xếp hàng */
 function interruptShow(){clearTimeout(spotTimer);clearTimeout(currentTimer);$('#spotlight').classList.remove('visible');scene.interruptPresentation?.();cultivationAudio.ritual(null);busy=false;current=null;}
 function showDiscipleNotice(e,title=null,sub=null){
  let box=document.getElementById('discipleNotices');
