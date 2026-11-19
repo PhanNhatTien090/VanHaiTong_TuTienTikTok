@@ -22,6 +22,8 @@ export function infoPages(state={}){
  pages.push({id:'gear',title:'⚔ PHÁP BẢO & TRANG BỊ',note:'',rows:[['trang bị','đeo món mạnh nhất đang có'],['trang bị + tên','đeo đúng món mình chọn'],['3 · đánh','pháp bảo tung chiêu, tăng tu vi'],['túi đồ','xem pháp bảo, đan, bí pháp đang có'],['hồi khí','tỷ thí: hồi linh lực, tối đa 3 lần']]});
  // 15/11: Vân Hải Lôi Đài (arena.mjs) — lệnh thật.
  // 15/11: luật ghế Tông chủ (master-seat.mjs).
+ // 19/11 Thủy Mặc: bảng Lệnh Ngũ Đường riêng đã bỏ → thành 1 trang ở đây.
+ if(typeof document!=='undefined'&&document.body?.classList.contains('ui-tm'))pages.push({id:'duong',title:'⛩ NGŨ ĐƯỜNG',note:'Gõ trong bình luận',rows:[['đường','xem các Đường'],['vào đường 1–5','gia nhập Đường'],['rời đường','rời Đường'],['đường chiến','vào trận Ngũ Đường'],['thách đấu 1–5','tranh ghế Trưởng Lão'],['trợ lực','hỗ trợ Vân Đài'],['chân truyền + tên','mời Chân Truyền'],['bái sư','nhận lời Chân Truyền']]});
  pages.push({id:'master',title:'👑 GHẾ TÔNG CHỦ',note:'Đấu tại Lôi Đài · thua vẫn giữ danh hiệu và đồ',rows:[['Vương miện','một món · mở danh hiệu Tông chủ'],['Gặp nhau','2 Tông chủ cùng có mặt → đấu ngay'],['Thắng','ngồi ghế Tông chủ'],['Đại lễ 5k','lên ghế ngay, không cần đấu']]});
  pages.push({id:'bao',title:'✦ THẦN KHÍ · BẢO KHỐ',note:'Bảo Khố mở trong vòng sự kiện lớn · bản web: mục Bảo Khố xem + đặt bản mệnh',rows:[['cầu','cầu thần khí khi Bảo Khố mở · 20 giây một lượt'],['thần khí','xem bộ sưu tập + còn bao lượt tới 4★/5★'],['trang bị + tên','đeo thần khí làm bản mệnh (như pháp bảo)'],['bản mệnh','xem món đang mang · bản mệnh + số để đổi'],['tự phát · không cần gõ','bản mệnh tự tung thần thông ở Lôi Đài · Tháp · tỷ thí · Chính Ma · 5★/GIỚI HẠN có màn chiếu riêng'],['GIỚI HẠN','12 món mỗi mùa · mỗi người tối đa 1 món']]}); // 18/11: hướng dẫn tính năng mới
  { // 18/11: LUÂN HỒI — chỉ hiện khi đã có người ở 3 cảnh giới cuối hoặc đã chuyển sinh
@@ -45,7 +47,19 @@ const BLOCK=['sword-race','sect-war','maze-on','ritual-active','pet-cove-stage',
 export function renderInfoSpotlight(state,esc,now=Date.now()){
  const root=document.querySelector('.scene-shell');if(!root||!state)return;
  let el=document.getElementById('infoSpotlight');if(!el){el=document.createElement('aside');el.id='infoSpotlight';el.className='info-spotlight';el.hidden=true;root.appendChild(el);}
- const blocked=BLOCK.some(c=>document.body.classList.contains(c)),p=blocked?null:spotlightPage(state,now),html=spotlightHTML(p,esc);
+ const forced=forcedPage&&now<forcedPage.until?infoPages(state).find(x=>x.id===forcedPage.id):null;
+ const blocked=BLOCK.some(c=>document.body.classList.contains(c)),p=blocked?null:forced||spotlightPage(state,now),html=spotlightHTML(p,esc);
  if(el.dataset.html!==html){el.innerHTML=html;el.dataset.html=html;}
  el.hidden=!p;document.body.classList.toggle('info-spotlight-on',!!p);
+}
+
+// 19/11 Thủy Mặc: bảng hướng dẫn THEO NGỮ CẢNH — có người gõ lệnh liên quan (rèn, học, đường, đan, trang bị, thiếu đột phá…) → hiện đúng trang 20 s.
+let forcedPage=null,lastForce=0;
+const CMD_PAGE={ren:'forge','7':'forge',hoc:'manual',duong:'duong',vao:'duong',roi:'duong',thachdau:'duong',chantruyen:'duong',baisu:'duong',troluc:'duong',hai:'pill','2':'pill',luyendan:'pill','4':'pill',dung:'pill','5':'pill',trangbi:'gear',dotpha:'me','8':'me',tuvi:'me','9':'me',tongchu:'master',thankhi:'bao',cau:'bao'};
+const GUIDE_RULES=[[/rèn|pháp bảo/i,'forge'],[/bí pháp|học /i,'manual'],[/Đường|Trưởng Lão|Chân Truyền|bái sư|thách đấu/,'duong'],[/đan|linh thảo|hái/i,'pill'],[/trang bị|đeo /i,'gear'],[/Chưa đủ đột phá|tu vi.*thiếu/i,'me'],[/huy hiệu|danh hiệu/i,'honor'],[/Tông chủ|Vương miện/i,'master']];
+export function guideFromEvent(e,now=Date.now()){
+ if(!e||e.gift||!e.user||now-lastForce<8000)return null;const text=String(e.text||'');if(!(e.cmdFail||e.effect==='status'||['craft','learn','equip','brew','use','hall'].includes(e.effect)))return null;
+ const byCmd=e.cmd&&CMD_PAGE[String(e.cmd).replace(/\s+/g,'')];if(byCmd){forcedPage={id:byCmd,until:now+20000};lastForce=now;return byCmd;}
+ for(const [re,id] of GUIDE_RULES)if(re.test(text)){forcedPage={id,until:now+20000};lastForce=now;return id;}
+ return null;
 }

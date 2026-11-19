@@ -121,9 +121,11 @@ export const requiredStones = p=>Math.round((30 + 40*p.realm)*Math.sqrt(progress
 export function power(p) {
   return 8 + combatRealm(p)*7 + /* 18/11: Luân Hồi Ấn */ p.manuals.reduce((n,id)=>n+(CATALOG.find(x=>x.id===id)?.damage||0),0) + (CATALOG.find(x=>x.id===p.equipped)?.damage||0) + Math.round(extraStat(p,'damage'));
 }
+let currentCmd=null;
 function emit(w,p,text,effect='qi',now=Date.now(),extra={}) {
   text=gameText(text);
   const e={id:`${now}-${Math.random().toString(36).slice(2,8)}`,at:now,user:p?.id,name:p?.name||'Vân Hải Tông',text,effect,...extra};
+  if(currentCmd&&p&&currentCmd.user===p.id&&effect==='status'&&!e.cmd)e.cmd=currentCmd.cmd; // 19/11: lệnh gốc → overlay mở đúng trang hướng dẫn
   if(p?.puppet||p?.resident)e.actorKind='npc';
   w.feed.unshift(e); w.feed=w.feed.slice(0,70); w.events.push(e); w.events=w.events.slice(-100); return e;
 }
@@ -419,6 +421,7 @@ function actionCore(w,input,now) {
   }
   const words=type==='chat'?commandWords(input.text):[];const quick=type==='chat'?resolveQuick(w,words,now):null;if(quick){words.splice(0,1,quick);input={...input,text:quick,quick:true};} // 11/11: lệnh số 1–6
   const cmd=words[0];const rest=words.slice(1).join(' ');
+  if(type==='chat')currentCmd=cmd?{user:clean(input.userId,80),cmd}:null; // lệnh con (craft…) giữ lệnh gốc
   const genderCmd=['nhapmon','gioitinh','xungho','xunghieu'].includes(cmd);
   const gender=genderCmd?parseGender(rest):type==='join'&&input.gender?parseGender(input.gender):null;
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;

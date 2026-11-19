@@ -51,7 +51,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio} from './audio.js?v=context-music-20261114';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
-import {renderInfoSpotlight} from './info-spotlight.js?v=20261115';
+import {renderInfoSpotlight,guideFromEvent} from './info-spotlight.js?v=20261119';
 import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=honor-legend-20261115';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-management';
@@ -483,7 +483,7 @@ setInterval(()=>{for(const e of giftCombos.drain(Date.now()))enqueueReady(e);},1
 let lastFullRitualAt=0;
 function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.resident&&e.actorKind!=='npc'&&!e.firstStep)return e; /* 19/11: lượt NHẬP MÔN (bình luận đầu tiên) cũng giới hạn màn toàn cảnh */const now=Date.now();// 4/11 tối: mọi cảnh giới tối đa 1 màn toàn cảnh / 60 s (Luyện Khí 90 s) — nhiều người đột phá liền nhau từng tạo cảnh lặp nối đuôi.
   if(now-lastFullRitualAt<(breakthroughRealm(e)<=1?90000:60000))return {...e,effect:"qi",kind:undefined,ritualSkipped:true};lastFullRitualAt=now;return e;}
-function enqueue(e){if(!overlay)return;if(e?.firstStep&&!ascensionStage){/* 19/11 (chủ game: ~30 người cùng lúc phải đẹp): nhập môn = hiệu ứng TẠI CHỖ ngay, song song, không chiếm toàn màn */addNhapMon(scene,e);scene.noteEvent?.(e);return;}e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
+function enqueue(e){if(!overlay)return;if(document.body.classList.contains('ui-tm')&&guideFromEvent(e))renderInfoSpotlight(state,esc);if(e?.firstStep&&!ascensionStage){/* 19/11 (chủ game: ~30 người cùng lúc phải đẹp): nhập môn = hiệu ứng TẠI CHỖ ngay, song song, không chiếm toàn màn */addNhapMon(scene,e);scene.noteEvent?.(e);return;}e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
 let engagementSoundAt=-Infinity;
 // 07/11/2026: QUÀ HIỆN NGAY LÚC TẶNG. Thẻ quà hiện lập tức; quà ưu tiên cao nhất và cắt ngang hiệu ứng thường.
 // Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.

@@ -70,8 +70,6 @@ html body.overlay.ui-tm .scene-shell #phoneHudRight #basicCommands.basic-command
 html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{align-self:flex-start;width:58%!important;max-width:58%!important}
 html body.overlay.ui-tm .scene-shell #phoneHudRight .scene-guide-dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
 
-/* bảng lớn góc phải (Rèn pháp bảo, Lôi Đài…) che hàng người → ẩn; hướng dẫn theo ngữ cảnh làm sau */
-html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight){display:none!important}
 
 /* bảng HTML nền tối của sự kiện (Linh Thú Cốc, đồng hành…) → BẢNG MỰC (chữ sáng giữ nguyên) */
 html body.overlay.ui-tm .scene-shell :is(#companionHud.spirit-pet-hud,.spirit-pet-hud,.pet-cove-strip,.pet-cove-banner){background:rgba(22,17,12,.9)!important;border:1.6px solid rgba(222,196,140,.9)!important;box-shadow:inset 0 0 0 4px rgba(22,17,12,.9),inset 0 0 0 5px rgba(222,196,140,.4)!important;border-radius:6px!important}
@@ -104,3 +102,16 @@ html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rai
 html body.overlay.ui-tm .scene-shell #phoneHudLeft{width:37%!important}
 html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail #honorBanner.honor-banner{background-image:none!important;background-color:transparent!important}
 html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{align-items:flex-start!important}
+
+/* bảng hướng dẫn lớn (4 phút ẩn · 1 phút hiện, mỗi lần 1 chủ đề): giấy dó, thế chỗ Công Đức Bảng ở góc dưới phải */
+html body.overlay.ui-tm .scene-shell>#infoSpotlight{right:1.2%!important;bottom:12.5%!important;width:46%!important;border-radius:2px!important;text-shadow:none!important;animation:tm-scroll-in .5s ease-out}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight :is(span,li,small){color:var(--tm-ink)!important;text-shadow:none!important}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight code{color:#fff4dc!important;padding:0 .3em;border-radius:2px}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight ol.info-cols code{color:var(--tm-seal)!important;background:none!important}
+html body.overlay.ui-tm .scene-shell>#infoSpotlight small{border-top-color:#1b181333!important}
+html body.overlay.ui-tm.info-spotlight-on:not(.tm-event) .scene-shell #giftRanks.live-ranks{display:none!important}
+@keyframes tm-scroll-in{from{opacity:0;clip-path:inset(0 50% 0 50%)}to{opacity:1;clip-path:inset(0 0 0 0)}}
+
+/* phù lục: dưới lệnh bài, bên phải (bia Thiên Bảng chiếm góc trái) */
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:18.5%!important;left:auto!important;right:1.2%!important;width:58%!important;max-width:58%!important;transform:none!important}
+html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:31%!important;left:auto!important;right:1.2%!important}
