@@ -102,13 +102,18 @@ export function plazaSlots(H,centerY){const top=H*.43,bottom=H*.85,pitch=(bottom
  return out;}
 // 09/11: người mặc skin lớn (lửa/rồng/đao bay — isBig) giữ trống 2 ghế bên cạnh + 2 ghế ngay phía sau (bị che);
 // ai đang ngồi trong vùng đó được dời sang ghế trống khác — trường hợp duy nhất có người bị đổi chỗ.
-export function stableTargets(seats,players,H,isFake=()=>false,centerY,isBig=()=>false){const slots=plazaSlots(H,centerY),best=[...slots].sort((a,b)=>a.rank-b.rank||a.i-b.i).map(s=>s.i),edge=[...slots.filter(s=>s.rank<=1).sort((a,b)=>b.rank-a.rank),...slots.filter(s=>s.rank>1).sort((a,b)=>a.rank-b.rank)].map(s=>s.i);
+// 19/11: newIds = Set người mới (Tân Đệ Tử, tối đa 6, mới nhất trước) → giữ 6 ghế giữa sân; ai đang ngồi đó bị dời ghế khác.
+export function stableTargets(seats,players,H,isFake=()=>false,centerY,isBig=()=>false,newIds=null){const slots=plazaSlots(H,centerY),best=[...slots].sort((a,b)=>a.rank-b.rank||a.i-b.i).map(s=>s.i),edge=[...slots.filter(s=>s.rank<=1).sort((a,b)=>b.rank-a.rank),...slots.filter(s=>s.rank>1).sort((a,b)=>a.rank-b.rank)].map(s=>s.i);
  const pitch=slots.length>7?slots[7].y-slots[0].y:1,zone=i=>slots.filter(o=>o.i!==i&&((Math.abs(o.y-slots[i].y)<1&&Math.abs(o.x-slots[i].x)<=120)||(Math.abs(o.y-(slots[i].y-pitch))<1&&Math.abs(o.x-slots[i].x)<=60))).map(o=>o.i);
  const ids=new Set(players.map(p=>p.id));for(const id of [...seats.keys()])if(!ids.has(id))seats.delete(id);
  const byId=new Map(players.map(p=>[p.id,p])),blocked=new Set(),owner=new Map([...seats].map(([id,i])=>[i,id]));
  const block=i=>{for(const j of zone(i)){blocked.add(j);const who=owner.get(j);if(who!=null&&!isBig(byId.get(who))){seats.delete(who);owner.delete(j);}}};
  for(const [id,i] of [...seats])if(isBig(byId.get(id)))block(i);
  const free=i=>!owner.has(i)&&!blocked.has(i),take=(p,i)=>{seats.set(p.id,i);owner.set(i,p.id);};
+ if(newIds?.size){const reserved=best.filter(i=>!blocked.has(i)).slice(0,newIds.size);
+  for(const id of newIds){const p=byId.get(id);if(!p||isBig(p))continue;const cur=seats.get(id);if(cur!=null&&reserved.includes(cur))continue;
+   const spot=reserved.find(i=>!owner.has(i))??reserved.find(i=>!newIds.has(owner.get(i)));if(spot==null)continue;
+   const who=owner.get(spot);if(who!=null){seats.delete(who);owner.delete(spot);}if(cur!=null){owner.delete(cur);seats.delete(id);}take(p,spot);}}
  const queue=[...players.filter(p=>isBig(p)),...players.filter(p=>!isBig(p))];
  for(const p of queue){if(seats.has(p.id))continue;if(seats.size>=PLAZA_CAPACITY)break;const order=isFake(p)?edge:best;
   if(isBig(p)){const pick=order.find(i=>free(i)&&zone(i).every(j=>!owner.has(j)))??order.find(free);if(pick==null)continue;take(p,pick);block(pick);continue;}

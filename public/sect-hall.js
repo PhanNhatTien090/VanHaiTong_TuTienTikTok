@@ -24,7 +24,7 @@ function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar
  c.shadowColor='#000a';c.shadowBlur=8;c.fillStyle='#183843';c.beginPath();c.arc(0,0,r+5,0,Math.PI*2);c.fill();c.shadowBlur=0;
  c.save();c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.clip();if(img)c.drawImage(img,-r,-r,r*2,r*2);else{c.fillStyle='#ffe7a0';c.font='900 30px Georgia';c.textAlign='center';c.textBaseline='middle';c.fillText(Array.from(p.name||'Đ')[0]||'Đ',0,2);}c.restore();
  c.lineWidth=4;c.strokeStyle=ring;c.beginPath();c.arc(0,0,r+2,0,Math.PI*2);c.stroke();c.restore();}
-export function sectHallTargets(players,H,withHalls=false){
+export function sectHallTargets(players,H,withHalls=false,newIds=null){
  const halls=Array.isArray(withHalls)?withHalls:withHalls?Array.from({length:5},(_,index)=>({index})):[];
  if(halls.length){
   const cols=halls.length,columns=new Map(halls.map((h,i)=>[h.index,i]));
@@ -51,6 +51,11 @@ export function sectHallTargets(players,H,withHalls=false){
   const free=Array.from({length:rows*cols},(_,i)=>i).filter(i=>!occupied.has(i));
   free.sort((a,b)=>seed('seat:'+a)-seed('seat:'+b));
   visitors.sort((a,b)=>seed(a.id)-seed(b.id));
+  // 19/11 Tân Đệ Tử: người mới (chưa có Đường) lấy ô HÀNG TRƯỚC gần GIỮA (vẫn trên vùng bình luận), không rơi lên hàng sát bảng Trưởng Lão.
+  if(newIds?.size){const mid=(cols-1)/2,front=[...free].sort((a,b)=>Math.floor(b/cols)-Math.floor(a/cols)||Math.abs(a%cols-mid)-Math.abs(b%cols-mid)||a-b);
+   const fresh=visitors.filter(p=>newIds.has(p.id)),picked=front.slice(0,fresh.length);
+   for(let k=free.length-1;k>=0;k--)if(picked.includes(free[k]))free.splice(k,1);free.unshift(...picked);
+   visitors.sort((a,b)=>(newIds.has(b.id)?1:0)-(newIds.has(a.id)?1:0));}
   visitors.forEach((player,i)=>{
    const slot=free[i],row=Math.floor(slot/cols),col=slot%cols;
    const x=hallX(col,cols)+sway(row)+(seed(player.id+':x')-.5)*Math.min(14,70/cols);

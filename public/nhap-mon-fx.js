@@ -18,7 +18,7 @@ export function drawNhapMon(scene,c,t){
   const h=150*s,g=c.createLinearGradient(0,feet-h,0,feet);g.addColorStop(0,'rgba(255,240,200,0)');g.addColorStop(1,'rgba(255,236,180,'+(.55*(1-k))+')');
   c.save();c.globalCompositeOperation='lighter';c.fillStyle=g;c.fillRect(x-6*s,feet-h,12*s,h);c.restore();
   // thẻ giấy NHẬP MÔN trên đầu
-  const ty=p.y-100*s0-10-14*ease(k/.25),T=1.55; // thẻ cỡ cố định (dễ đọc kể cả sân đông)c.font='900 '+Math.round(13*T)+'px "Noto Serif",Georgia,serif';
+  const ty=p.y-100*s0-10-14*ease(k/.25),T=1.55; /* thẻ cỡ cố định (dễ đọc kể cả sân đông) */c.font='900 '+Math.round(13*T)+'px "Noto Serif",Georgia,serif';
   const t1='NHẬP MÔN',w1=c.measureText(t1).width;c.font='800 '+Math.round(11*T)+'px "Segoe UI",sans-serif';const w2=c.measureText(e.name).width;
   const bw=Math.max(w1,w2)*1.12+26*T,bh=34*T;c.fillStyle='rgba(243,234,216,.96)';c.fillRect(x-bw/2,ty-bh,bw,bh);
   c.strokeStyle='#b3261e';c.lineWidth=1.6*T;c.strokeRect(x-bw/2+2*T,ty-bh+2*T,bw-4*T,bh-4*T);

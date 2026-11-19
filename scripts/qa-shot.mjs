@@ -19,7 +19,7 @@ const data=await fs.mkdtemp(path.join(os.tmpdir(),'qashot-'));for(const f of ['d
  await fs.writeFile(path.join(data,'live.json'),JSON.stringify(w));}
 const srv=spawn(process.execPath,['server.mjs'],{env:{...process.env,PORT:String(port),VAN_HAI_DATA_DIR:data,VAN_HAI_TTS:'off',VAN_HAI_WEB:'0',WEB_SYNC_SECRET:'',VAN_HAI_TIKFINITY_URL:'ws://127.0.0.1:21299/'},stdio:'ignore',windowsHide:true});
 const prof=await fs.mkdtemp(path.join(os.tmpdir(),'qashot-ch-'));
-const ch=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--remote-debugging-port=0','--no-first-run',`--user-data-dir=${prof}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
+const ch=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--remote-debugging-port=0','--no-first-run','--mute-audio',`--user-data-dir=${prof}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
 const post=async(p,b={})=>{try{return await(await fetch(base+p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)})).json();}catch(e){return {err:String(e)};}};
 try{
  for(let i=0;i<120;i++){try{await fetch(base+'/api/state?world=live');break;}catch{await pause(250);}}
@@ -33,6 +33,7 @@ try{
  const t0=Date.now();
  for(const [ms,kind,...a] of plan.steps||[[0,'shot','']]){const wait=t0+ms-Date.now();if(wait>0)await pause(wait);
   if(kind==='shot'){const r=await send('Page.captureScreenshot',{format:'jpeg',quality:84});if(r.data){const f=`${out}/${name}${a[0]?'-'+a[0]:''}.jpg`;await fs.writeFile(f,Buffer.from(r.data,'base64'));console.log('shot',f);}}
+  else if(kind==='zoom'){const [n,x,y,w,h]=a;const r=await send('Page.captureScreenshot',{format:'jpeg',quality:88,clip:{x,y,width:w,height:h,scale:3}});if(r.data){const f=`${out}/${name}-${n}.jpg`;await fs.writeFile(f,Buffer.from(r.data,'base64'));console.log('shot',f);}}
   else if(kind==='post')console.log(kind,a[0],JSON.stringify(await post(a[0],a[1]||{})).slice(0,120));
   else if(kind==='member')tik({event:'member',data:{userId:a[0],nickname:a[1],uniqueId:'qa'+a[0],actionId:1}});
   else if(kind==='chat')tik({event:'chat',data:{userId:a[0],nickname:a[1],uniqueId:'qa'+a[0],comment:a[2],msgId:'m'+a[0]+Date.now()}});
