@@ -46,3 +46,13 @@ test('cộng dồn nhiều món trong sự kiện: 5 × 100 = đủ 500',()=>{
  for(let i=0;i<5;i++){const e=giftEvent('u3',100);e.data.msgId='x'+i;ingest(w,e,N+5000+i*3000);}
  assert.ok(w.players.u3.rewardSkins.includes(TINH_HA_VISITOR.skin));
 });
+test('19/11: sở hữu skin sự kiện → tự mặc pháp bảo đi kèm (kể cả khi túi có món mạnh hơn); đổi skin khác thì về món mạnh nhất',async()=>{
+ const {autoEquipBest,skinArtifactOf}=await import('../engine.mjs');
+ const w=createWorld('demo');action(w,{type:'join',userId:'u4',name:'B'},N);const p=w.players.u4;
+ p.artifacts.push('thien-kinh','tien-de-an');startVisitor(w,'tinh-ha',N+1000);
+ ingest(w,giftEvent('u4',500),N+5000);
+ assert.equal(skinArtifactOf(p),TINH_HA_VISITOR.artifact);assert.equal(p.equipped,TINH_HA_VISITOR.artifact);
+ autoEquipBest(p);assert.equal(p.equipped,TINH_HA_VISITOR.artifact,'lần tự xếp đồ sau vẫn giữ');
+ p.skinChoice=null;autoEquipBest(p);assert.notEqual(skinArtifactOf(p),TINH_HA_VISITOR.artifact);
+ p.equipPin='thien-kinh';p.skinChoice=TINH_HA_VISITOR.skin;autoEquipBest(p);assert.equal(p.equipped,'thien-kinh','ghim tay quản trị ưu tiên');
+});

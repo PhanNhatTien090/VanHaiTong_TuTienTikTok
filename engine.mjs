@@ -279,7 +279,9 @@ const equipSeen=new WeakMap();
 // v71: tu vi càng cao càng đeo được nhiều pháp bảo cùng lúc (món chính đủ sức mạnh, món phụ 50%).
 export const relicSlots=p=>{const r=Number(p.realm)||0;return r>=12?5:r>=9?4:r>=6?3:r>=3?2:1;};
 // 17/11 (chủ game): Tông chủ ghim pháp bảo chính từ trang quản lý (p.equipPin) — vd. Thanh Trúc Phong Vân Kiếm cho hình kiếm Hàn Lập; không bị tự đổi sang món mạnh hơn.
-export function autoEquipBest(p){const arts=p.artifacts||[],pin=p.equipPin&&arts.includes(p.equipPin)?p.equipPin:null;const sig=arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+(p.equippedExtra||[]).length+'|'+pin;if(equipSeen.get(p)===sig)return false;
+// 19/11 (chủ game chốt): đang mặc skin sự kiện có pháp bảo đi kèm (Tinh Hà Kiếm, Huyết Đao…) và sở hữu nó → luôn mặc pháp bảo đó (ghim tay quản trị vẫn ưu tiên).
+export function skinArtifactOf(p){const arts=p?.artifacts||[];if(!p?.skinChoice)return null;for(const r of Object.values(VISITOR_GIFT_REWARDS))if(r?.skin===p.skinChoice&&r.artifact&&arts.includes(r.artifact))return r.artifact;return null;}
+export function autoEquipBest(p){const arts=p.artifacts||[],pin=(p.equipPin&&arts.includes(p.equipPin)?p.equipPin:null)||skinArtifactOf(p);const sig=arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+(p.equippedExtra||[]).length+'|'+pin;if(equipSeen.get(p)===sig)return false;
   const ranked=[...new Set(arts)].filter(id=>CATALOG.some(x=>x.id===id&&x.type==='artifact')).sort((a,b)=>itemScore(b)-itemScore(a));
   const best=pin||ranked[0]||null,extra=ranked.filter(id=>id!==best).slice(0,Math.max(0,relicSlots(p)-1));const changed=best!==p.equipped||String(extra)!==String(p.equippedExtra||[]);
   p.equipped=best;p.equippedExtra=extra;equipSeen.set(p,arts.length+'|'+p.equipped+'|'+relicSlots(p)+'|'+extra.length+'|'+pin);return changed;}
@@ -506,7 +508,7 @@ function actionCore(w,input,now) {
     const skin=SPECIAL_SKINS.find(s=>s.id===rest||normalize(s.name)===rest||s.aliases?.includes(rest));
     if(!skin||!p.rewardSkins?.includes(skin.id))return fail('Chưa sở hữu bộ này. Gõ skin kèm tên bộ đã mở khóa, hoặc skin macdinh để mặc áo cảnh giới.');
     const wait=cooldown(p,'skin',10000,now);if(wait)return fail(`Đổi áo sau ${wait}s.`);
-    p.skinChoice=skin.id;p.skinChoiceSource='manual';
+    p.skinChoice=skin.id;p.skinChoiceSource='manual';autoEquipBest(p); // 19/11: mặc skin sự kiện → mặc luôn pháp bảo đi kèm
     const signature=SIGNATURE_VISITORS.find(v=>v.skin===skin.id);
     if(signature)emit(w,p,'Biến hình '+skin.name,'transform',now,{transform:signature.kind,skinName:skin.name});
     else emit(w,p,skin.id==='vuonglam-avatar'?visitorSkinName('vuonglam',p.gender):skin.name,'skin',now);
@@ -696,7 +698,7 @@ function actionCore(w,input,now) {
     if(visitorReward.kind){giftEvent.visitorProgress={kind:visitorReward.kind,coins:visitorReward.coins,...(giftRecipient?{to:recipient.id,toName:recipient.name}:{})};if(!giftRecipient){giftEvent.reward.skinNames=visitorReward.skinNames;p.giftHistory.at(-1).reward.skinNames=visitorReward.skinNames;}}
     // v51: nhận skin khách mời → sự kiện BIẾN HÌNH riêng (thông báo + hiệu ứng), chạy sau màn cảm ơn quà.
     if(visitorReward.skinNames?.length){const skinName=visitorReward.skinNames[0].replace(/^Skin /,'');emit(w,recipient,`Biến hình ${skinName} • ${giftRecipient?p.name+' tặng skin truyền thừa':'nhận skin truyền thừa'}`,'transform',now,{transform:visitorReward.kind,skinName,...(giftRecipient?{giftFrom:p.name,giftFromId:p.id}:{})});}
-    if(visitorReward.items.length){const id=visitorReward.items[0];if(itemScore(id)>itemScore(recipient.equipped))recipient.equipped=id;if(giftRecipient)emit(w,recipient,'Nhận '+visitorReward.itemNames.join(' · ')+' • '+p.name+' tặng','visitor',now,{visitorAward:true,visitorKind:visitorReward.kind,itemNames:visitorReward.itemNames,reward:{items:visitorReward.items,itemNames:visitorReward.itemNames},giftFrom:p.name,giftFromId:p.id});else giftEvent.visitorTechnique=visitorReward.kind;}
+    if(visitorReward.items.length){const id=visitorReward.items[0];if(itemScore(id)>itemScore(recipient.equipped)||skinArtifactOf(recipient)===id)recipient.equipped=id;autoEquipBest(recipient);if(giftRecipient)emit(w,recipient,'Nhận '+visitorReward.itemNames.join(' · ')+' • '+p.name+' tặng','visitor',now,{visitorAward:true,visitorKind:visitorReward.kind,itemNames:visitorReward.itemNames,reward:{items:visitorReward.items,itemNames:visitorReward.itemNames},giftFrom:p.name,giftFromId:p.id});else giftEvent.visitorTechnique=visitorReward.kind;}
     if(visitorReward.kind===BLACK_GOLD_VISITOR.kind&&visitorReward.items.includes(BLACK_GOLD_VISITOR.artifact)){
       emit(w,recipient,'Khai ấn '+BLACK_GOLD_VISITOR.relic,'transform',now,{
         transform:BLACK_GOLD_VISITOR.kind,hacKimArtifact:true,skinName:BLACK_GOLD_VISITOR.relic
