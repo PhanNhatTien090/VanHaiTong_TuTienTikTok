@@ -31,3 +31,11 @@ test('Bích Lân qua engine thật: tặng 500 → mặc skin, tự mặc Xà Tr
  const p=w.players.n;assert.equal(p.skinChoice,'bich-lan-doc-hau');assert.equal(p.equipped,'van-co-xa-truong');
  assert.ok(w.events.some(e=>e.user==='n'&&e.effect==='transform'&&e.transform==='bich-lan'));
 });
+test('Bích Lân: mãng xà sau lưng là pháp bảo — luôn vẽ ở lớp gear, không phụ thuộc nhịp bùng aura',async()=>{
+ const {drawBichLanGear,drawBichLanAura}=await import('../public/bich-lan-fx.js');
+ const serpent={naturalWidth:400,naturalHeight:200},art={serpent,halo:null,blade:null};
+ const fake=()=>{const hits=[];const c=new Proxy({},{get:(o,k)=>k==='drawImage'?(im)=>hits.push(im):k in o?o[k]:(typeof k==='string'&&/^(create)/.test(k)?()=>({addColorStop(){}}):()=>{}),set:(o,k,v)=>(o[k]=v,true)});return {c,hits};};
+ const g=fake();drawBichLanGear(g.c,art,1000,{stand:0},'back',{motion:true,light:true});assert.ok(g.hits.includes(serpent),'gear back phải vẽ rắn');
+ const s=fake();drawBichLanGear(s.c,art,0,{stand:1},'back',{motion:false});assert.ok(s.hits.includes(serpent),'đứng yên vẫn có rắn');
+ const au=fake();drawBichLanAura(au.c,1000,0,'back',{motion:false,light:true,art});assert.ok(!au.hits.includes(serpent),'aura không vẽ rắn nữa (tránh vẽ đôi)');
+});

@@ -6,7 +6,7 @@ const pause=ms=>new Promise(r=>setTimeout(r,ms));const profile=await fs.mkdtemp(
 const post=(p,b)=>fetch(base+p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b),signal:AbortSignal.timeout(8000)}).then(r=>r.json()).catch(e=>({err:e.message}));
 const act=b=>post('/api/action?world=demo',b);const ctl=action=>post('/api/social-control?world=demo',{action});
 const users=Array.from({length:10},(_,i)=>({id:'qa'+i,name:['An Nhiên','Bảo Ngọc','Chí Thanh','Dạ Lan','Hoàng Long','Kim Chi','Lạc Thiên','Minh Châu','Ngọc Hà','Phong Vân'][i]}));
-const ch=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--remote-debugging-port=0','--no-first-run','--autoplay-policy=no-user-gesture-required',`--user-data-dir=${profile}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
+const ch=spawn('C:/Program Files/Google/Chrome/Application/chrome.exe',['--headless=new','--remote-debugging-port=0','--no-first-run','--autoplay-policy=no-user-gesture-required','--mute-audio',`--user-data-dir=${profile}`,'about:blank'],{windowsHide:true,stdio:'ignore'});
 let ws,id=0;const pending=new Map(),logs=[];
 const send=(method,params={})=>new Promise((res,rej)=>{const i=++id;pending.set(i,{res,rej});ws.send(JSON.stringify({id:i,method,params}));setTimeout(()=>{if(pending.has(i)){pending.delete(i);rej(Error('timeout '+method));}},20000);});
 const clear=async()=>{for(const kind of ['boss','flowerEvent','visitor','opportunity'])await post('/api/social-control?world=demo',{action:'stop-current',kind});for(const a of ['stop-race','stop-war','stop-tournament','stop-bond-festival','stop-alchemy'])await ctl(a);};

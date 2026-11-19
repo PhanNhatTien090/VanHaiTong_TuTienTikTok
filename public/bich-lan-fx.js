@@ -116,9 +116,7 @@ export function drawBichLanAura(c,t,stand,layer,{motion=true,light=false,seed=0,
   img(c,mistArt(),-90,hy-60,180,190,.75+breathe*.05);
   if(motion)venomMist(c,time,hy+20,light?.6:1,light?3:5);
   if(!light)greenRays(c,time,hy,200+stand*30,.8+breathe*.1);
-  // mãng xà trườn sau lưng, đầu nhô qua vai phải
-  if(a?.serpent)spiritSerpent(c,a,time,-6,hy+40,130+stand*34,{alpha:.78,amp:light?5:7,strips:light?10:26,flip:-1}); // đầu rắn bên trái, Xà Trượng bên phải
-  if(motion){venomFlames(c,time,light?5:12,34,88+stand*24,1);if(!light)pillars(c,time,4,40,1);}
+   if(motion){venomFlames(c,time,light?5:12,34,88+stand*24,1);if(!light)pillars(c,time,4,40,1);}
   if(motion&&!light)snakeTrails(c,time,'back');
  }else if(motion){
   chestCore(c,time,stand,light?.6:1);
@@ -132,6 +130,8 @@ export function drawBichLanGear(c,a,t,pose,layer,{motion=true,light=false}={}){
  const stand=clamp(pose.stand||0),time=motion?t:0,sway=motion?Math.sin(time*.0019):0,hy=HALO_Y(stand);
  if(layer==='back'){
   poisonPool(c,a,time,96+stand*8,.9,motion,light);
+  // 19/11: mãng xà linh hồn là PHÁP BẢO đi kèm skin → vẽ ở lớp gear (luôn hiện với người sở hữu), không nằm trong aura bùng 8 s/nghỉ 32 s.
+  if(a?.serpent)spiritSerpent(c,a,time,-6,hy+40,130+stand*34,{alpha:.78,amp:light?5:7,strips:light?10:26,flip:-1}); // đầu rắn bên trái, Xà Trượng bên phải
   haloLayer(c,a,time,hy,haloWidth(stand),{motion,alpha:.92});
   img(c,smokeArt(),-40,CHEST_Y(stand)-58,80,120,.34);
   if(!light)runeRing(c,time,hy,haloWidth(stand),1);

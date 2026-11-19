@@ -6,5 +6,5 @@ const gift={id:'g',user:'a',gift:'Hoa hồng',coins:1,count:1,effect:'petal',tex
 test('real gifts outrank every other presentation; NPC gifts do not',()=>{
  for(const other of [{effect:'breakthrough',toRealm:12},{ceremony:true},{heavenStrike:{seed:1}},{transform:true,effect:'skin'},{effect:'visitor'}])assert.ok(presentationPriority(gift)>presentationPriority(other),JSON.stringify(other));
  assert.ok(presentationPriority({...gift,resident:true})<presentationPriority(gift));
- const q=new PresentationQueue();q.push({id:'b',user:'x',effect:'breakthrough',toRealm:3},1);q.push({id:'c',ceremony:true},2);q.push(gift,3);assert.equal(q.take(4).id,'g');
+ const q=new PresentationQueue();q.push({id:'b',user:'x',effect:'breakthrough',toRealm:3},1);q.push({id:'c',ceremony:true},2);q.push(gift,3);assert.equal(q.take(4).id,'b');assert.equal(q.take(5).id,'g'); // 19/11: đột phá người thật lấy trước cả quà (thẻ quà vẫn hiện ngay lúc tặng)
 });

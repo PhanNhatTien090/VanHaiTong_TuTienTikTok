@@ -28,7 +28,7 @@ import {BLACK_GOLD_VISITOR} from './court-rewards.js';
 import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 import {VISITORS} from './visitor-event.js';
 import {HonorUI} from './honor-ui.js';
-import {PresentationQueue,presentationDuration,presentationPriority,isBlackGoldAward} from './presentation.js?v=tieu-viem-transform-v2';
+import {PresentationQueue,presentationDuration,presentationPriority,isBlackGoldAward,urgentBreakthrough} from './presentation.js?v=bt-first-20261119';
 import {strikeProfile,HEAVEN_STRIKE_MS} from './heaven-strike.js';
 import {scheduleHeavenStrikeAudio} from './heaven-strike-audio.js';
 import {luxuryTier} from './luxury-fx.js';
@@ -527,6 +527,8 @@ function enqueueReady(e){
   if(e.resident&&!e.scheduled&&(busy||queue.length))return; // đột phá/nhập môn theo lịch của NPC không bị bỏ khi đang bận
   if(e.effect==='join'&&!e.vipReturn&&queue.length>=3){joinBatch++;return;}
   if(e.effect==='attack'&&e.technique&&!e.resident){pushAttack(e);return;}
+  // 19/11: đột phá người thật đến lúc đang chiếu khung vặt (ưu tiên <3, không phải quà) → cắt ngang, chiếu đột phá NGAY (hình + tiếng cùng lúc).
+  if(urgentBreakthrough(e)&&busy&&current&&!current.e.gift&&current.e.effect!=='breakthrough'&&presentationPriority(current.e)<3&&!ascensionHeld(state)&&!state?.halls?.match)interruptShow();
   presentations.push(e);playNext();
 }
 // v76: đòn đánh yêu thú chạy LÀN RIÊNG song song (2 người cùng lúc, ≥12 người đang chơi → 3), không chờ hàng hiệu ứng chung.

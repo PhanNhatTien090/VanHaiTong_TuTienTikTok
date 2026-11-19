@@ -87,7 +87,7 @@ test('18/11: compactPlan — câu thường 1 câu ≤100 ký tự, quà/sự ki
 
 test('18/11: hàng giọng dồn → giữ câu quan trọng (đua, quà, khoảnh khắc lớn), bỏ câu thường/nhắc lệnh trước; hàng rảnh thì đọc hết',async()=>{
  const {shedQueue,priority}=await import('../public/voice.js');const now=100000;
- assert.ok(priority({mountReveal:{tier:'vip',lucky:true}})>priority({effect:'breakthrough'}));assert.ok(priority({cmdFail:true,effect:'status'})<priority({effect:'status'}));
+ assert.ok(priority({mountReveal:{tier:'vip',lucky:true}})<priority({effect:'breakthrough'})); // 19/11: đột phá trên mọi khoảnh khắc khácassert.ok(priority({cmdFail:true,effect:'status'})<priority({effect:'status'}));
  const q=[{e:{id:'r1',effect:'qi',user:'a'},at:now-1000},{e:{id:'st',effect:'status',user:'c',cmdFail:true},at:now-200},{e:{id:'g',gift:'Rose',coins:1,user:'d'},at:now},{e:{id:'ev',raceEntry:true,user:'e'},at:now},{e:{id:'lk',user:'f',mountReveal:{tier:'vip',lucky:true}},at:now}];
  const r=shedQueue(q,{now,running:true});assert.deepEqual(r.keep.map(x=>x.e.id),['ev','g','lk']);assert.deepEqual(r.drop.map(x=>x.e.id).sort(),['r1','st']);
  assert.deepEqual(shedQueue([{e:{id:'r1',effect:'qi',user:'a'},at:now}],{now}).keep.map(x=>x.e.id),['r1']);
