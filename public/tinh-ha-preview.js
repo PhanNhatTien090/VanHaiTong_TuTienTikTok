@@ -19,6 +19,7 @@ function frame(t,k){
  else{x.save();x.translate(target.x,target.y);x.scale(target.scale,target.scale);aura(x,t,stand,'back',{light});gear(x,art,t,pose,'back',{light});x.restore();
   body();x.save();x.translate(target.x,target.y);x.scale(target.scale,target.scale);gear(x,art,t,pose,'front',{light});aura(x,t,stand,'front',{light});x.restore();}
 }
+window.__frame=frame; // quay video xem thử: gọi __frame(t,k) từng khung
 const fixedK=q.has('k')?Number(q.get('k')):null,fixedT=q.has('t')?Number(q.get('t')):null;
 if(fixedK!==null||fixedT!==null){frame(fixedT??4000,fixedK??0);document.title='ready';}
 else{const start=performance.now();const loop=now=>{const k=((now-start)%10000)/9000;frame(now,Math.min(k,1));requestAnimationFrame(loop);};requestAnimationFrame(loop);}
