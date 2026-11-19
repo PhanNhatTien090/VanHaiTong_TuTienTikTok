@@ -76,6 +76,8 @@ for(const [mode,w]of Object.entries(worlds)){
  if(repairs.length)console.log(`[${mode}] Đối soát và bù ${repairs.length} lượt thưởng tiên nhân.`);
 }
 if(fs.existsSync(visitorRecovery))fs.renameSync(visitorRecovery,visitorRecovery+'.applied-'+Date.now());
+// Script restart đặt data/watchdog.pause trước khi chụp dữ liệu. Chỉ tin file còn mới (≤10 phút) để file sót không khóa bàn giao mãi.
+function restartInProgress(){try{return Date.now()-fs.statSync(path.join(dataDir,'watchdog.pause')).mtimeMs<600000;}catch{return false;}}
 function persistPlayTransfer(){
   persist(true);
   const fd=fs.openSync(path.join(dataDir,'live.json'),'r+');try{fs.fsyncSync(fd);}finally{fs.closeSync(fd);}
@@ -168,6 +170,8 @@ const server=http.createServer(async(req,res)=>{
       if(!String(req.headers['content-type']).startsWith('application/json')){json(res,{ok:false,message:'Cần JSON.'},415);return;}
     }
     if(url.pathname==='/internal/play-transfer'&&req.method==='POST'){
+      // Đang restart (script restart đã chụp live.json và sẽ chép đè): không nhận bàn giao, agent tự gửi lại khi server mới lên.
+      if(restartInProgress()){json(res,{ok:false,message:'Server đang khởi động lại.'},503);return;}
       const secret=webSyncSecret();
       const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>1024*1024){json(res,{ok:false},413);return;}chunks.push(chunk);}
       const raw=Buffer.concat(chunks);
