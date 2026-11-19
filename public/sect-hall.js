@@ -10,12 +10,14 @@ import {drawMount} from './mount-fx.js'; // 18/11: tọa kỹ Tông chủ phục
 const AVATARS=new Map(), SEATS=new Map();
 function courtSeat(kind){
  if(typeof Image==='undefined')return null;
- if(!SEATS.has(kind)){const image=new Image();image.decoding='async';image.src='/assets/thien-khuyet/'+kind+'.webp';SEATS.set(kind,image);}
- const art=SEATS.get(kind);return art.complete&&art.naturalWidth?art:null;
+ // 19/11 Thủy Mặc: ngai/ghế → ĐỆM NGỒI (bồ đoàn) trên đài sen ngọc; anchor = điểm ngồi tính từ đỉnh ảnh.
+ const tm=tmOn(),key=kind+(tm?'-tm':'');
+ if(!SEATS.has(key)){const image=new Image();image.decoding='async';image.src='/assets/thien-khuyet/'+key+'.webp';if(tm){image.anchor=kind==='throne'?.40:.33;image.dyk=.15;image.wk=kind==='throne'?.62:.72;}SEATS.set(key,image);}
+ const art=SEATS.get(key);return art.complete&&art.naturalWidth?art:null;
 }
 function paintSeat(c,art,x,y,w){
  const h=w*art.naturalHeight/art.naturalWidth;
- c.drawImage(art,x-w/2,y-h*.79,w,h);
+ c.drawImage(art,x-w/2,y-h*(art.anchor??.79)+w*(art.dyk||0),w,h);
 }
 function avatarImage(url){if(!url||typeof Image==='undefined')return null;let e=AVATARS.get(url);if(e&&e.failed&&Date.now()<e.retry)return null;if(!e||e.failed){if(AVATARS.size>40)AVATARS.delete(AVATARS.keys().next().value);const img=new Image();img.referrerPolicy='no-referrer';img.decoding='async';e={img,ready:false,failed:false};img.onload=()=>{e.ready=true;};img.onerror=()=>{e.failed=true;e.retry=Date.now()+60000;};img.src=url;AVATARS.set(url,e);}return e.ready?e.img:null;}
 function drawElderAvatar(c,p,i,y){const r=34,img=avatarImage(safeAvatar(p.avatar)),ring=i===0?'#ffd76a':'#cfe6ff';c.save();c.translate(0,y);
@@ -87,7 +89,7 @@ export function drawSectMaster(scene,c,t){
  let throneTier=-1;loadSectMasterArt(scene);c.save();c.globalAlpha=appear;
  if(host.player){
   const height=seat.height,scale=height/120,tier=masterTier(host.player.giftCoins);throneTier=tier;
-  if(throne)paintSeat(c,throne,x,y,height*1.85);else drawThroneBack(c,x,y,height,tier,t,motion); // 12/11: ngai rồng vàng vẽ 1 lần (cache) + hiệu ứng theo cấp
+  if(throne)paintSeat(c,throne,x,y,height*1.85*(throne.wk||1));else drawThroneBack(c,x,y,height,tier,t,motion); // 12/11: ngai rồng vàng vẽ 1 lần (cache) + hiệu ứng theo cấp
   const target={id:host.player.id,player:host.player,x,y,scale};
   drawWings(scene,c,target,t);
   const compact=scene.compact,pose=scene.cinematicPose;scene.compact=true;scene.cinematicPose={stand:0,lean:0,lift:0};
@@ -130,7 +132,16 @@ export function drawSectCourt(scene,c,t){
   const count=scene.sectHalls.length,scale=Math.min(1,5/count);
   for(const [column,hall] of scene.sectHalls.entries()){
    c.save();c.translate(hallX(column,count),y);c.scale(scale,scale);
-   const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,150);
+   if(tmOn()){ // 19/11 Thủy Mặc: đệm ngồi ngay dưới Trưởng Lão, bảng tên giấy phía trên đầu, tên dưới đệm
+    const cushion=courtSeat('elder');if(cushion)paintSeat(c,cushion,0,92,140);
+    c.fillStyle='rgba(243,234,216,.95)';c.strokeStyle='#1b1813';c.lineWidth=1.5;c.beginPath();c.roundRect(-76,-86,152,40,3);c.fill();c.stroke();c.fillStyle=hall.color;c.fillRect(-76,-86,6,40);
+    c.textAlign='center';c.fillStyle='#b3261e';c.font='900 15px "Noto Serif",Georgia,serif';c.fillText('TRƯỞNG LÃO',0,-70,144);
+    c.fillStyle='#1b1813';c.font='700 14px "Segoe UI",Arial,sans-serif';c.fillText(hall.name,0,-54,144);
+    if(!active.has(hall.elder?.id)){c.fillStyle=hall.color;c.font='700 30px "Noto Serif",Georgia,serif';c.fillText(hall.mark,0,70);}
+    c.font='800 15px "Segoe UI",Arial,sans-serif';c.lineWidth=3;c.strokeStyle='#1b1813cc';c.strokeText(hall.elder?.name||'Ghế trống',0,140,156);c.fillStyle='#f3ead8';c.fillText(hall.elder?.name||'Ghế trống',0,140,156);
+    c.restore();continue;
+   }
+   const elder=courtSeat('elder');if(elder)paintSeat(c,elder,0,0,150*(elder.wk||1));
    c.fillStyle='#102b32';c.strokeStyle=hall.color;c.lineWidth=2;
    c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();if(!elder){c.fill();c.stroke();}
    c.fillStyle=hall.color;c.textAlign='center';c.font='700 32px Georgia';

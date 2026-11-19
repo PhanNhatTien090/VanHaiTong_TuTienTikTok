@@ -1,4 +1,5 @@
 import {displayActorName} from './live-integrity.js';
+import {withRim,rimTint} from './rim-light.js?v=20261119';
 import {drawNhapMon} from './nhap-mon-fx.js?v=20261119';
 import {syncHallWar,drawHallWar} from './hall-war.js';
 import {syncMountRealm,drawMountRealm} from './mount-realm.js'; // 16/11: Tọa Kỹ Bí Cảnh
@@ -328,7 +329,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
       const {tick,at}=actorSample(this.compact&&!this.raceStatus?.active?0:t,config.poseFps,p.id,this.motion&&(!this.compact||this.raceStatus?.active));
       const action=this.animator?.actions.get(p.id);
       const key=[!!this.raceStatus?.active,this.raceStatus?.active?Math.floor(t/65):0,this.raceStatus?.active?this.targets?.find(a=>a.id===p.id)?.boost:false,tick,this.compact,skin.level,p.realm,p.gender,robeCell(p),this.transforming?.id===p.id&&performance.now()<this.transforming.revealAt,p.relicVariant,p.equipped,p.skinChoice,p.skinChoiceSource,p.divineRoles?.join(),p.divineRoleChoice,p.divineRoleHidden,p.rewardSkins?.join(),action?.id,this.motion,config.mesh,config.poseFps,this.budget?.level,!!this.minimalCrowd].join(':');
-      if(this.characterFrames.draw(c,p.id,key,x=>{this.ellipse(x,0,12,22,6,'#081c2770');if(!this.minimalCrowd){const ga=x.globalAlpha;if(this.compact)x.globalAlpha=ga*.55;this.drawSkinVFX(x,specialSkinFor(p)||skin,at,p);x.globalAlpha=ga;}this.drawCharacterBody(x,p,skin,at);},Math.min(8,Math.max((config.spriteScale||2),Math.ceil(Math.hypot(c.getTransform().a,c.getTransform().b)*2)/2))))return;
+      if(this.characterFrames.draw(c,p.id,key,x=>{this.ellipse(x,0,12,22,6,'#081c2770');if(!this.minimalCrowd){const ga=x.globalAlpha;if(this.compact)x.globalAlpha=ga*.55;this.drawSkinVFX(x,specialSkinFor(p)||skin,at,p);x.globalAlpha=ga;}withRim(x,y=>this.drawCharacterBody(y,p,skin,at),rimTint(p,(specialSkinFor(p)||skin)?.color));},Math.min(8,Math.max((config.spriteScale||2),Math.ceil(Math.hypot(c.getTransform().a,c.getTransform().b)*2)/2))))return;
     }
     this.ellipse(c,0,12,22,6,'#081c2770');this.drawSkinVFX(c,specialSkinFor(p)||skin,t,p);this.drawCharacterBody(c,p,skin,t);
   }

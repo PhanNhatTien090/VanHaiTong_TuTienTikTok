@@ -3,6 +3,7 @@
 // BÙNG theo nhịp (3,6 s mỗi ~40 s, lệch pha theo người) với hiệu ứng riêng từng món. Luật chống lag: sân đông (heavyCrowd) thì ẩn;
 // không shadowBlur/filter; tối đa 12 người có món (12 suất/mùa).
 import {baoArt,baoItem,baoBanMenh} from './phap-bao-data.js';
+import {rimmed} from './rim-light.js?v=20261119';
 import {BAO_ULTS} from './bao-ults.js';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
 const hash=s=>{let h=2166136261;for(const ch of String(s))h=Math.imul(h^ch.charCodeAt(0),16777619);return h>>>0;};
@@ -11,7 +12,7 @@ const GLOW=new Map();function glow(col){let g=GLOW.get(col);if(g)return g;let cv
 export const AURA_PERIOD=40000,AURA_BURST=3600;
 /** Nhịp bùng (0 = nghỉ, 0..1 = đang bùng). Lệch pha theo người để không bùng cùng lúc. */
 export function auraPhase(id,now){const k=((now+hash(id)%AURA_PERIOD)%AURA_PERIOD)/AURA_BURST;return k<1?k:0;}
-function sprite(c,im,x,y,s,a=1,rot=0){if(!im||a<=.01)return;c.save();c.globalAlpha=a;c.translate(x,y);if(rot)c.rotate(rot);c.drawImage(im,-s/2,-s/2,s,s);c.restore();}
+function sprite(c,im,x,y,s,a=1,rot=0){if(!im||a<=.01)return;c.save();c.globalAlpha=a;c.translate(x,y);if(rot)c.rotate(rot);{const rim=rimmed(im,['#ffffff','#ffd98a'],5),k=rim===im?0:s*rim.rimPad/im.naturalWidth;c.drawImage(rim,-s/2-k,-s/2-k,s+2*k,s+2*k);}c.restore();}
 function blot(c,col,x,y,r,a){const g=glow(col);if(!g||a<=.01)return;c.save();c.globalCompositeOperation='lighter';c.globalAlpha=Math.min(1,a);c.drawImage(g,x-r,y-r,r*2,r*2);c.restore();}
 // Hiệu ứng bùng riêng: theo món (2 món đã có chủ làm kỹ), còn lại theo dòng.
 const BURST={

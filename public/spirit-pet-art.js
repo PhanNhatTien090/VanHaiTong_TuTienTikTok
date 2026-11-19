@@ -1,4 +1,5 @@
 import {petById,petPose} from './spirit-pets.js';
+import {rimmed} from './rim-light.js?v=20261119';
 import {makeSurface} from './performance.js';
 import {PET_V2_ART_APPROVED,petV2AssetSpec} from './pet-v2-art-manifest.js';
 import {drawPetV2Adornment} from './pet-v2-fx.js';
@@ -184,7 +185,7 @@ export function drawPet(scene,c,target,t,visit=null){
  const petLight=scene.budget?.level==='light'||scene.budget?.crowded||scene.budget?.pressured; // 15/11: sân đông/FPS thấp → chỉ hình thú
  const premiumFx=pet.coins===300&&scene.motion&&!petLight;
  if(premiumFx)drawPremiumPetFx(c,pet,size,t,seed,1,'back');
- if(at.behind)c.globalAlpha=.78;c.save();if(at.flip)c.scale(-1,1);c.drawImage(image,-size/2,-size*.65,size,size);c.restore();c.globalAlpha=1;
+ if(at.behind)c.globalAlpha=.78;c.save();if(at.flip)c.scale(-1,1);{const rim=rimmed(image,['#fffbe8','#ffd98a'],6),k=rim===image?0:size*rim.rimPad/image.naturalWidth;c.drawImage(rim,-size/2-k,-size*.65-k,size+2*k,size+2*k);}c.restore();c.globalAlpha=1;
  if(!scene.petV2Settings?.evolutionArt||!scene.petArt?.get(petV2Key(p.spiritPet,p.petView?.stage)))drawPetV2Adornment(c,pet,p.petView,t,size,{motion:scene.motion,light:scene.budget?.level==='light'||scene.heavyCrowd});
  const arrival=scene.petArrivals?.get(p.id),progress=arrival==null?2:(t-arrival)/1800;
  if(progress>=0&&progress<1){c.globalAlpha=1-progress;c.strokeStyle=pet.color;c.lineWidth=1.5;c.beginPath();c.ellipse(0,0,size*(.2+progress*.6),size*(.1+progress*.3),0,0,Math.PI*2);c.stroke();c.globalAlpha=1;}

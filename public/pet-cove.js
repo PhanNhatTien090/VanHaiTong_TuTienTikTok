@@ -1,4 +1,5 @@
 import {eventPets,petRequirement,petPose} from './spirit-pets.js';
+import {rimmed} from './rim-light.js?v=20261119';
 import {tmOn,INK_FILL} from './ink-panel.js';
 import {giftFor} from './gift-icons.js';
 import {giftImg} from './skill-cutscene.js?v=20261118';
@@ -88,7 +89,7 @@ function drawRoamer(scene,c,pet,i,t,H){
  c.fillStyle='#00000033';c.beginPath();c.ellipse(0,size*.42+hop,size*(.3-hop/size),size*.06,0,0,Math.PI*2);c.fill();
  const g=c.createRadialGradient(0,0,0,0,0,size*.6);g.addColorStop(0,pet.color+'30');g.addColorStop(1,pet.color+'00');c.fillStyle=g;c.fillRect(-size*.6,-size*.6,size*1.2,size*1.2);
  if(pet.fx==='lightning'&&scene.motion){const beat=Math.floor(t/900),k=(t%900)/900;if(k<.22){c.globalAlpha=1-k/.22;drawPetBolt(c,(beat%3-1)*36,-size*.6,(beat%2?-1:1)*size*.12,-size*.2,beat,'#c4b5ff',2.2);c.globalAlpha=1;}}else if(pet.fx&&scene.motion)drawRareFx(c,pet,size,t,i*131,1.4);
- c.save();c.rotate(pose.tilt*.4);if(flip)c.scale(-1,1);if(im)c.drawImage(im,-size/2,-size*.55,size,size);c.restore();
+ c.save();c.rotate(pose.tilt*.4);if(flip)c.scale(-1,1);if(im){const rim=rimmed(im,['#fffbe8','#ffd98a'],6),k=rim===im?0:size*rim.rimPad/im.naturalWidth;c.drawImage(rim,-size/2-k,-size*.55-k,size+2*k,size+2*k);}c.restore();
  c.restore();
  return {x:at.x,y:at.y+size*.47-hop+pose.bob};
 }
