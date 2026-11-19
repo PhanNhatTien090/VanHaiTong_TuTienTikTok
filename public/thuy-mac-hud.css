@@ -1,0 +1,71 @@
+/* 19/11/2026 — HUD THỦY MẶC (body.ui-tm, bật bởi thuy-mac-hud.js; ?ui=old = giao diện cũ).
+   Khung = ảnh Codex vẽ cắt 9 mảnh (border-image) → co giãn theo nội dung, không vẽ lại mỗi khung hình.
+   Bố cục 540×960 CSS px: trái trên = bia Thiên Bảng; phải trên = 3 lệnh bài; dưới = Công Đức Bảng + thẻ Cúng phụng;
+   giữa = phù lục thông báo; sự kiện = chiếu chỉ. ~25% dưới để trống (TikTok che). */
+html body.overlay.ui-tm{--tm-ink:#1b1813;--tm-ink-soft:#4a3d30;--tm-seal:#b3261e;--tm-gold:#8a5a12;--tm-title:"Noto Serif","Times New Roman",Georgia,serif;--tm-body:"Segoe UI","Be Vietnam Pro",system-ui,sans-serif}
+/* bảng phụ: chỉ hiện theo ngữ cảnh → ẩn */
+html body.overlay.ui-tm :is(#lowerRightGuide,#basicCommands,.basic-commands,#commandRail,.command-rail){display:none!important}
+html body.overlay.ui-tm #gearGuide:not(.war-guide){display:none!important}
+html body.overlay.ui-tm :is(#liveRanks,#giftRanks,#giftBoard,#honorBanner,#eventInfoDock,#infoSpotlight,.info-spotlight,#spotlight) *{text-shadow:none!important}
+
+/* ---- BIA THIÊN BẢNG (trái trên) ---- */
+html body.overlay.ui-tm #phoneHudLeft{top:6px!important;left:6px!important;width:41%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks{width:100%!important;background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-width:30px 20px 30px 20px!important;border-image:url(/assets/ui-thuy-mac/stele.webp) 96 52 96 52 fill / 30px 20px 30px 20px!important;padding:2px 2px 0!important;color:var(--tm-ink)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>b{display:block;white-space:nowrap;text-align:center;font:900 clamp(11px,2.75cqw,30px)/1.15 var(--tm-title)!important;letter-spacing:.08em;color:var(--tm-seal)!important;margin:0 0 4px!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>small{display:block;text-align:center;font:600 clamp(8px,1.6cqw,17px)/1.25 var(--tm-body)!important;color:var(--tm-ink-soft)!important;margin-bottom:3px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span{display:grid!important;grid-template-columns:auto 1fr auto;column-gap:5px;align-items:baseline;padding:2px 0!important;border:0!important;border-bottom:1px solid #1b181322!important;background:none!important;color:var(--tm-ink)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>i{font:900 clamp(11px,2.5cqw,27px)/1 var(--tm-title)!important;font-style:normal!important;color:var(--tm-seal)!important;min-width:1.1em;text-align:center}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>i.hall-emblem{color:var(--tm-ink)!important;background:none!important;border:1.5px solid var(--tm-seal)!important;border-radius:3px!important;padding:1px 2px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>em{font:800 clamp(10px,2.2cqw,24px)/1.2 var(--tm-body)!important;font-style:normal!important;color:var(--tm-ink)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong{font:900 clamp(10px,2.1cqw,23px)/1.2 var(--tm-body)!important;color:var(--tm-seal)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>small{grid-column:2/4;font:600 clamp(8px,1.6cqw,17px)/1.2 var(--tm-body)!important;color:var(--tm-ink-soft)!important;margin-top:-1px}
+
+/* ---- 3 LỆNH BÀI (phải trên) ---- */
+html body.overlay .tm-tokens{display:none}
+html body.overlay.ui-tm .tm-tokens{position:absolute;z-index:6;top:0;right:1.2%;width:33%;display:grid;grid-template-columns:repeat(3,1fr);gap:2%;pointer-events:none}
+html body.overlay.ui-tm .tm-token{position:relative;aspect-ratio:360/1086;background:url(/assets/ui-thuy-mac/token.webp) center/100% 100% no-repeat;transform-origin:50% 0;animation:tm-token-sway 3.4s ease-in-out calc(var(--i)*-1.1s) infinite alternate}
+html body.overlay.ui-tm .tm-token b{position:absolute;left:0;right:0;top:27%;text-align:center;font:900 clamp(18px,5.4cqw,58px)/1 var(--tm-title);color:var(--tm-seal)}
+html body.overlay.ui-tm .tm-token span{position:absolute;left:8%;right:8%;top:46%;text-align:center;font:800 clamp(8px,1.75cqw,19px)/1.15 var(--tm-body);color:var(--tm-ink)}
+
+/* ---- CÔNG ĐỨC BẢNG (thay Top quà, không ghi coin) + VINH DANH ---- */
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks{top:22.5%!important;right:1.2%!important;left:auto!important;width:38%!important;background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-width:26px 18px 14px 18px!important;border-image:url(/assets/ui-thuy-mac/plaque.webp) 110 66 40 66 fill / 26px 18px 14px 18px!important;padding:0 2px 2px!important;color:var(--tm-ink)!important}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-leaders>b{display:block;text-align:center;font:900 clamp(11px,2.6cqw,28px)/1.2 var(--tm-title)!important;letter-spacing:.08em;color:var(--tm-seal)!important;margin-bottom:2px}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top{display:flex!important;align-items:center;gap:5px;background:none!important;border:0!important;padding:1px 0!important}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-portrait{width:clamp(18px,4.4cqw,48px)!important;height:clamp(18px,4.4cqw,48px)!important;flex:none;filter:sepia(.35) saturate(.85)}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-title{font:800 clamp(7px,1.45cqw,15px)/1.1 var(--tm-body)!important;color:var(--tm-gold)!important;letter-spacing:.06em}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-line{font:800 clamp(10px,2.1cqw,23px)/1.2 var(--tm-body)!important;color:var(--tm-ink)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+html body.overlay.ui-tm #honorBanner{background:none!important;box-shadow:none!important;border-style:solid!important;border-width:26px 18px 14px 18px!important;border-image:url(/assets/ui-thuy-mac/plaque.webp) 110 66 40 66 fill / 26px 18px 14px 18px!important;color:var(--tm-ink)!important}
+html body.overlay.ui-tm #honorBanner b{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm #honorBanner strong{color:var(--tm-ink)!important}
+html body.overlay.ui-tm #honorBanner small{color:var(--tm-ink-soft)!important}
+
+/* ---- cột phải: Cúng phụng (luật quà) + chiếu chỉ sự kiện ---- */
+html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail{display:flex!important;flex-direction:column;gap:5px;top:30%!important;left:1.2%!important;right:auto!important;width:41%!important}
+/* có sự kiện: chiếu chỉ + luật quà sự kiện ở trái trên (rộng), ẩn bia + Công Đức; lệnh bài giữ */
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudLeft>#liveRanks.live-ranks,html body.overlay.ui-tm.tm-event .scene-shell #giftRanks.live-ranks{display:none!important}
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight.phone-hud-rail{top:4px!important;width:64%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{background:#f0dc8ef2!important;box-shadow:inset 0 0 0 2px #b3261e,inset 0 0 0 5px #f0dc8e,inset 0 0 0 6px #b3261e88!important;border:0!important;border-radius:2px!important;color:var(--tm-ink)!important;padding:6px 8px!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card .grc-title{color:var(--tm-seal)!important;font:900 clamp(10px,2.2cqw,24px)/1.2 var(--tm-title)!important;letter-spacing:.05em;text-align:center}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card em,html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card i{color:var(--tm-ink)!important;font-weight:800!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>:not([hidden]){background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-width:16px 26px 16px 26px!important;border-image:url(/assets/ui-thuy-mac/scroll.webp) 70 80 70 80 fill / 16px 26px 16px 26px!important;color:var(--tm-ink)!important;padding:2px!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>* b{color:var(--tm-seal)!important;font-family:var(--tm-title)!important;font-size:clamp(11px,2.6cqw,28px)!important;letter-spacing:.03em}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>* :is(span,small,em,li,p){color:var(--tm-ink)!important}
+
+/* ---- PHÙ LỤC thông báo (tên + hiệu ứng giữa màn) + phụ đề tông sư ---- */
+html body.overlay.ui-tm #spotlight{background:none!important;border-style:solid!important;border-width:20px 30px 20px 30px!important;border-image:url(/assets/ui-thuy-mac/talisman-h.webp) 60 90 60 90 fill / 20px 30px 20px 30px!important;min-width:46%!important;padding:0 6px!important}
+html body.overlay.ui-tm #spotlight strong{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm #spotlight span{color:#5a1208!important;font-weight:800!important}
+html body.overlay.ui-tm #voiceCaption{background:linear-gradient(90deg,#f3ead800,#f3ead8ee 10%,#f3ead8ee 90%,#f3ead800)!important;color:var(--tm-ink)!important;text-shadow:none!important;border:0!important;border-top:1px solid #1b181340!important;border-bottom:1px solid #1b181340!important;border-radius:0!important}
+
+/* ---- bảng lớn góc phải (4 phút hiện 1 phút) ---- */
+html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight){background:#f3ead8f2!important;box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 5px #f3ead8,inset 0 0 0 6px #1b181366!important;border:0!important;color:var(--tm-ink)!important}
+html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight) b{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight) :is(span,small,li){color:var(--tm-ink)!important}
+html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight) code{background:#b3261e!important;color:#fff4dc!important}
+@media(prefers-reduced-motion:reduce){html body.overlay.ui-tm .tm-token{animation:none}}
+
+html body.overlay.ui-tm .scene-shell #phoneHudRight>#eventInfoDock{order:-1}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #basicCommands.basic-commands,html body.overlay.ui-tm .scene-shell #phoneHudRight>#basicCommands{display:none!important}
+/* có sự kiện: thẻ luật quà sát trái, hẹp → không che yêu thú/sân giữa */
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{align-self:flex-start;width:58%!important;max-width:58%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight .scene-guide-dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}

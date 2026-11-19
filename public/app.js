@@ -10,6 +10,7 @@ import {streamState,participantCounts,liveRulesActive} from './live-integrity.js
 import {smallGift,shouldFocusEvent,mountRitualHud} from './live-cinema.js';
 import {isNewbie} from './vip.js';
 import {ArrivalWelcomes,isArrivalWelcome} from './arrival-welcome.js';
+import {initThuyMac} from './thuy-mac-hud.js?v=20261119';
 import {hallGuideRows,renderSimpleGuide} from './simple-guide.js?v=hall-management';
 import {mountHallAdmin} from './hall-admin.js';
 import {GiftComboBuffer} from './gift-combos.js';
@@ -188,6 +189,7 @@ const narrator=new VoiceQueue({world:mode,audio:cultivationAudio,player:voicePla
 }});
 const welcomeBanner=document.createElement('aside');welcomeBanner.className='arrival-welcome';welcomeBanner.hidden=true;welcomeBanner.setAttribute('aria-live','polite');$('.scene-shell').appendChild(welcomeBanner);
 let welcomeBannerTimer,welcomeShownAt=0,welcomeMore=[];
+initThuyMac(); // 19/11: giao diện Thủy Mặc (?ui=old = giao diện cũ)
 const arrivalWelcomes=new ArrivalWelcomes({voice:narrator,show:(e,duration)=>{
  if(state)scene.update(state,selected);
  scene.noteEvent(e);scene.addEffect(e);
