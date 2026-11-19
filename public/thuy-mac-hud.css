@@ -140,3 +140,7 @@ html body.overlay.ui-tm .scene-shell>#infoSpotlight{width:52%!important;padding:
 html body.overlay.ui-tm .scene-shell>#infoSpotlight li{white-space:nowrap}
 html body.overlay.ui-tm .scene-shell>#infoSpotlight li>span{overflow:hidden;text-overflow:ellipsis;font-size:.8em!important}
 html body.overlay.ui-tm .scene-shell>#infoSpotlight ol{gap:1px!important}
+/* 19/11: màn đột phá — tên người thành thẻ giấy dó chữ mực, tiêu đề cảnh giới chữ có chân (giữ màu hiệu ứng) */
+html body.overlay.ui-tm .ritual-hud .ritual-name{display:inline-block;background:#f3ead8f2;color:var(--tm-ink)!important;font-family:var(--tm-title)!important;font-weight:700;padding:.15em .8em;border-radius:2px;box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 4px #f3ead8,inset 0 0 0 5px #1b181366;text-shadow:none!important}
+html body.overlay.ui-tm .ritual-hud h2{font-family:var(--tm-title)!important;letter-spacing:.06em}
+html body.overlay.ui-tm .ritual-hud .ritual-sub{font-family:var(--tm-title)!important}
