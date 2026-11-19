@@ -18,12 +18,13 @@ try{
  let id=0;const pend=new Map(),logs=[];const send=(m,p={})=>new Promise((res,rej)=>{const i=++id;pend.set(i,{res,rej});ws.send(JSON.stringify({id:i,method:m,params:p}));});
  ws.on('message',m=>{const d=JSON.parse(m);if(d.id&&pend.has(d.id)){const p=pend.get(d.id);pend.delete(d.id);d.error?p.rej(Error(d.error.message)):p.res(d.result);}if(d.method==='Runtime.exceptionThrown'){const t=String(d.params.exceptionDetails.exception?.description||'');if(!t.includes("reading 'stop'"))logs.push('EXC '+t.slice(0,300));}});
  await send('Runtime.enable');await send('Page.enable');await send('Emulation.setDeviceMetricsOverride',{width:540,height:960,deviceScaleFactor:2,mobile:false});
- const shot=async n=>{const r=await send('Page.captureScreenshot',{format:'jpeg',quality:84});await fs.writeFile(`${out}/${n}.jpg`,Buffer.from(r.data,'base64'));};
+ const shot=async (n,clip)=>{const r=await send('Page.captureScreenshot',{format:'jpeg',quality:84,...(clip?{clip}:{})});await fs.writeFile(`${out}/${n}.jpg`,Buffer.from(r.data,'base64'));};
  await send('Page.navigate',{url:`${base}/?overlay=1&world=demo&stage=world&quality=high&qa=1`});await pause(6000);
  console.log('visitor',JSON.stringify(await post('/api/visitor-event?world=demo',{kind:'bich-lan'})).slice(0,200));await pause(3500);await shot('01-su-kien');
  console.log('gift',JSON.stringify(await act({type:'gift',userId:'a',name:'Đế giang',coins:500,count:1,giftName:'Vương miện',eventId:'g500'})).slice(0,300));
- for(const [ms,n] of [[1500,'02-bien-hinh-1s5'],[2000,'03-bien-hinh-3s5'],[1500,'04-bien-hinh-5s'],[2500,'05-bien-hinh-7s5'],[4000,'06-sau-bien-hinh']])
+ for(const [ms,n] of [[1500,'02-bien-hinh-1s5'],[2000,'03-bien-hinh-3s5'],[1500,'04-bien-hinh-5s'],[2500,'05-bien-hinh-7s5'],[4000,'06-sau-bien-hinh'],[12000,'07-luc-aura-nghi-1'],[12000,'08-luc-aura-nghi-2']])
   {await pause(ms);await shot(n);}
+ await shot('09-zoom-nguoi-mua',{x:190,y:430,width:160,height:120,scale:3});
  const perf=await send('Runtime.evaluate',{awaitPromise:true,returnByValue:true,expression:`new Promise(r=>{let n=0,t0=performance.now();const f=()=>{n++;if(performance.now()-t0<3000)requestAnimationFrame(f);else r(n/3);};requestAnimationFrame(f);})`});
  console.log('fps',perf.result?.value);
  const st=await (await fetch(base+'/api/state?world=demo')).json(),p=st.players.find(x=>x.id==='a');console.log('a',JSON.stringify({skin:p.skinChoice,skins:p.rewardSkins,arts:(p.artifacts||[]).filter(x=>x.includes('xa-truong'))}));
