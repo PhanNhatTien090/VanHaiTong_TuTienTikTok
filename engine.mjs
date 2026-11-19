@@ -691,7 +691,7 @@ function actionCore(w,input,now) {
     if(!input.simulated&&!input.autoRose){const bg=baoKhoGift(w,p,input.coins,count,now,baoContext);if(bg){giftEvent.baoGift=bg;giftEvent.text+=' • '+bg.pulls+' lượt cầu bảo';}} // 17/11: quà trong Bảo Khố = lượt cầu
     if(!input.simulated&&!input.autoRose){const rg=mountRealmGift(w,p,input.coins*count,now,mountContext);if(rg)giftEvent.realmGift=rg;} // 16/11: quà trong Tọa Kỹ Bí Cảnh
     if(!input.simulated&&!input.autoRose){const lg=loveTowerGift(w,p,input.coins*count,input.coins,now,loveContext);if(lg){giftEvent.loveGift=lg;giftEvent.text+=' • '+lg.text;}} // 17/11: quà đôi đạo lữ trong Nguyệt Hạ = song tu
-    const visitorReward=creditVisitorGift(w,recipient,input.coins*count,now);
+    const visitorReward=creditVisitorGift(w,recipient,input.coins*count,now,input.visitorAt);
     if(!giftRecipient){items.push(...visitorReward.items);itemNames.push(...visitorReward.itemNames);}
     if(visitorReward.kind){giftEvent.visitorProgress={kind:visitorReward.kind,coins:visitorReward.coins,...(giftRecipient?{to:recipient.id,toName:recipient.name}:{})};if(!giftRecipient){giftEvent.reward.skinNames=visitorReward.skinNames;p.giftHistory.at(-1).reward.skinNames=visitorReward.skinNames;}}
     // v51: nhận skin khách mời → sự kiện BIẾN HÌNH riêng (thông báo + hiệu ứng), chạy sau màn cảm ơn quà.
@@ -702,7 +702,7 @@ function actionCore(w,input,now) {
         transform:BLACK_GOLD_VISITOR.kind,hacKimArtifact:true,skinName:BLACK_GOLD_VISITOR.relic
       });
     }
-    const jackpot=input.simulated||input.autoRose?null:giftJackpot(w,p,input.coins*count,now,Math.random,qiBeforeGift);if(jackpot){giftEvent.jackpot=jackpot;giftEvent.text+=' • ĐẠI LỄ: +'+jackpot.qi+' tu vi (50%)'+(jackpot.skinName?' + skin '+jackpot.skinName:'');giftEvent.reward.qi+=jackpot.qi;giftEvent.reward.stones+=jackpot.stones;giftEvent.reward.herbs+=jackpot.herbs;if(jackpot.skinName){giftEvent.reward.skinNames=['Skin '+jackpot.skinName];itemNames.push('Skin '+jackpot.skinName);}}
+    const jackpot=input.simulated||input.autoRose||input.visitorAt?.visitorId?null:giftJackpot(w,p,input.coins*count,now,Math.random,qiBeforeGift);if(jackpot){giftEvent.jackpot=jackpot;giftEvent.text+=' • ĐẠI LỄ: +'+jackpot.qi+' tu vi (50%)'+(jackpot.skinName?' + skin '+jackpot.skinName:'');giftEvent.reward.qi+=jackpot.qi;giftEvent.reward.stones+=jackpot.stones;giftEvent.reward.herbs+=jackpot.herbs;if(jackpot.skinName){giftEvent.reward.skinNames=['Skin '+jackpot.skinName];itemNames.push('Skin '+jackpot.skinName);}}
     auditRecord(w,'gift',now,{id:input.eventId,user:p.id,name:p.name,gift:gift||input.giftName||tier.name,unitCoins:input.coins,count,coins:input.coins*count,simulated:!!(p.puppet||p.resident||input.simulated||input.autoRose),eventId:visitorReward.kind?w.visitor.id:null,eventKind:visitorReward.kind||null,contextEventId:w.visitor?.id||null,reason:p.puppet||p.resident||input.simulated||input.autoRose?'simulated':visitorReward.kind?'in-event':'outside-event-window',eventCoins:visitorReward.coins||0,skinNames:visitorReward.skinNames,items:visitorReward.items,...(giftRecipient?{recipient:giftRecipient.id,recipientName:giftRecipient.name}:{})});
     creditOpportunity(w,p,input.coins*count,now);
     flowerScore(w,p,input.coins*count*100,now); // v59: 1 coin quà = 100 điểm sự kiện
@@ -1093,7 +1093,9 @@ export function ingest(w,event,now=Date.now()) {
     if(event.event==='gift'){
       const queue=w.playTransfers[base.userId].gifts??=[];
       const encoded=JSON.stringify(event);
-      if(!queue.some(x=>JSON.stringify(x)===encoded))queue.push(structuredClone(event));
+      // 19/11: ghi lúc quà đến + sự kiện skin đang mở → trả nhân vật về muộn (sự kiện đã đóng) vẫn tính đúng tiến độ skin.
+      const v=w.visitor,visitorId=v&&!v.closedAt&&now>=v.startedAt&&now<v.endsAt?v.id:null;
+      if(!queue.some(x=>{const {vhQueued,...raw}=x;return JSON.stringify(raw)===encoded;}))queue.push({...structuredClone(event),vhQueued:{at:now,visitorId}});
       return {ok:true,pending:true,queuedGift:true};
     }
     return {ok:false,code:'PLAYING_WEB',message:'Nhân vật đang ở web. Nếu không còn chơi web, vài giây nữa sẽ tự về LIVE.'};
@@ -1140,7 +1142,7 @@ export function ingest(w,event,now=Date.now()) {
   const stableId=eventId|| (group?`gift:${base.userId}:${d.giftId||gift.id}:${group}:${total}`:null);
   if(!stableId)return fail('Quà thiếu msgId/groupId; cần kiểm tra cấu trúc sự kiện TikFinity.');
   const giftName=clean(d.giftName??gift.name??d.extendedGiftInfo?.name??'',40)||undefined;
-  return action(w,{...base,type:'gift',coins,count,eventId:stableId,giftName,comboKey:group?String(group):undefined,comboFinal:!streak||d.repeatEnd===true},now);
+  return action(w,{...base,type:'gift',coins,count,eventId:stableId,giftName,comboKey:group?String(group):undefined,comboFinal:!streak||d.repeatEnd===true,...(event.vhQueued?{visitorAt:event.vhQueued}:{})},now);
 }
 // v37: Sự kiện bất ngờ "Thiên Hoa Vũ" do người điều hành bấm. Tim = 1 điểm, coin quà = 100 điểm (v59).
 // Tham gia → Phúc duyên ×2 ngay. Hết giờ: Top 1–3 nhận pháp bảo lớn, mọi người ≥10 điểm nhận Tụ Linh Bình + thưởng.

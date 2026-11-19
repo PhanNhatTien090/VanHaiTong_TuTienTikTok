@@ -15,8 +15,18 @@ export function visitorSkinCell(p){
  const r=Object.values(VISITOR_GIFT_REWARDS).find(r=>r.skin===p.skinChoice&&p.rewardSkins?.includes(r.skin));return r?.cell??null;
 }
 // Rewards use already-deduplicated gift deltas. Free-event participation is separate.
-export function creditVisitorGift(w,p,coins,now){
- const e=w.visitor,r=VISITOR_GIFT_REWARDS[e?.kind],result={items:[],itemNames:[],skinNames:[]};
+// queued (19/11): quà đến lúc nhân vật đang ở bản web (engine giữ lại tới khi trả về) → tính theo LÚC ĐẾN và đúng sự kiện lúc đó,
+// kể cả khi sự kiện đã đóng — trước đây trả về muộn là mất tiến độ skin.
+export function creditVisitorGift(w,p,coins,now,queued=null){
+ const result={items:[],itemNames:[],skinNames:[]};
+ if(queued){
+  if(!queued.visitorId)return result;
+  const e=[w.visitor,...(w.visitorArchive||[])].find(x=>x?.id===queued.visitorId),r=VISITOR_GIFT_REWARDS[e?.kind],at=Number(queued.at);
+  if(!e||!r||(p.resident||p.puppet)||!(at>=e.startedAt&&at<e.endsAt&&(!e.closedAt||at<e.closedAt))||!Number.isSafeInteger(coins)||coins<1)return result;
+  e.giftProgress??={};const progress=e.giftProgress[p.id]??={coins:0,skinAwarded:false,artifactAwarded:false};progress.coins+=coins;
+  return grantVisitorProgress(p,e,r,progress,true);
+ }
+ const e=w.visitor,r=VISITOR_GIFT_REWARDS[e?.kind];
  if(!e||!r||(p.resident||p.puppet)||e.closedAt||now<e.startedAt||now>=e.endsAt||!Number.isSafeInteger(coins)||coins<1)return result;
  e.giftProgress??={};const progress=e.giftProgress[p.id]??={coins:0,skinAwarded:false,artifactAwarded:false};progress.coins+=coins;
  return grantVisitorProgress(p,e,r,progress,true);
