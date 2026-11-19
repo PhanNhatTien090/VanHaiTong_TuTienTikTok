@@ -1227,11 +1227,14 @@ const BIG_IDS=BIG_EVENTS.map(([id])=>id);
 export const EVENT_MAPS=Object.freeze({
   bond:{id:'bond-festival',name:'Nguyệt Hạ Kết Duyên',image:'/assets/event-maps-v1/bond-festival.webp',ambience:'jade',layout:'ground',floorY:.6},
   tower:{id:'tower-gate',name:'Vân Hải Tháp',image:'/assets/event-maps-v1/tower-gate.webp',ambience:'jade',layout:'ground',floorY:.62},
-  alchemy:{id:'alchemy-hall',name:'Khai Lò Cửu Chuyển',image:'/assets/event-maps-v1/alchemy-hall.webp',ambience:'jade',layout:'ground',floorY:.6}});
+  alchemy:{id:'alchemy-hall',name:'Khai Lò Cửu Chuyển',image:'/assets/event-maps-v1/alchemy-hall.webp',ambience:'jade',layout:'ground',floorY:.6},
+  // 19/11: sự kiện skin (tiên nhân giáng thế) — tiên nhân đứng trên đỉnh Tiên Nhân Đài (mặt đài ~38% cao), đệ tử ngồi sân dưới.
+  visitor:{id:'tien-nhan-dai',name:'Tiên Nhân Đài',image:'/assets/event-maps-v1/tien-nhan-dai.webp',ambience:'jade',layout:'ground',floorY:.62}});
 function eventMap(w,now){
   if(['opening','brewing','tribulation'].includes(w.alchemy?.phase)||w.alchemy?.podiumUntil>now)return EVENT_MAPS.alchemy;
   if(w.tower?.endsAt>now&&!w.tower.closedAt)return EVENT_MAPS.tower;
   if(!w.bondFestival?.closedAt&&w.bondFestival?.endsAt>now)return EVENT_MAPS.bond;
+  if(w.visitor&&!w.visitor.closedAt&&now>=w.visitor.startedAt&&now<w.visitor.endsAt)return EVENT_MAPS.visitor;
   return null;}
 // 16/11: mở tay một bí cảnh lớn (nút Sự kiện) cũng tính lượt — cái tự động kế tiếp lùi đủ khoảng cách, không nối đuôi ngay.
 function bigSpaced(w,now,r){if(r?.ok)w.nextBigEventAt=Math.max(w.nextBigEventAt||0,now+Math.max(15,w.settings?.bigEventMinutes??BIG_EVENT_MINUTES)*60000);return r;}
