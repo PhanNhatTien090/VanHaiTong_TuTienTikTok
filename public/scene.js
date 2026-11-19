@@ -103,7 +103,7 @@ import {drawTransform,transformMs,REVEAL_AT} from './transform-fx.js';
 import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 // 15/11/2026: chữ trên sân — sans đậm nét, nhỏ gọn kiểu kênh mẫu (user: tên to che hết người, khó nhìn).
-import {honorIcon} from './honor-icons.js';import {luanHoiCutFrame} from './luan-hoi-cinema.js?v=20261118';import {drawLuanHoiAuras,drawLuanBadge,drawLuanHoiRitualFrame} from './luan-hoi-fx.js?v=20261118b'; /* 18/11: Luân Hồi */
+import {honorIcon,honorSeal} from './honor-icons.js?v=20261119';import {tmOn} from './ink-panel.js';import {luanHoiCutFrame} from './luan-hoi-cinema.js?v=20261118';import {drawLuanHoiAuras,drawLuanBadge,drawLuanHoiRitualFrame} from './luan-hoi-fx.js?v=20261118b'; /* 18/11: Luân Hồi */
 import {syncLoveTower,drawLoveTower,loveCutFrame,loveRoomIds} from './love-tower.js'; // 17/11: Nguyệt Hạ Tình Lâu
 import {drawHeartQi,HEART_QI_MS} from './heart-qi-fx.js';
 const NAME_FONT='800 15px \"Segoe UI\",Arial,sans-serif',TALK_FONT='700 14px "Segoe UI",Arial,sans-serif';
@@ -436,28 +436,28 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
       this.labelLayoutInputs=targets.map(({id,x,y,scale,player})=>({id,x,y,scale,name:displayActorName(player)}));
       this.labels=layoutLabels(targets,name=>{if(!this.nameWidths.has(name))this.nameWidths.set(name,c.measureText(name).width);return this.nameWidths.get(name);});
     }
-    const cache=this.nameBitmaps??=new BitmapCache(160);
+    const cache=this.nameBitmaps??=new BitmapCache(160),tm=tmOn();
     for(const l of this.labels){
       if(l.hidden&&l.id!==this.selected&&!(this.focusId===l.id&&this.focusUntil>t))continue; // 17/11: kẹt chỗ → ẩn tên, không đặt lạc xa thân
       const skin=skinFor(l.player.giftCoins),selected=l.id===this.selected,focus=this.focusId===l.id&&this.focusUntil>t&&this.focusId===l.id;
       const paint=(x,offscreen=true)=>{
         // 3/11: tên rõ hơn — nền đậm hơn, chữ trắng đậm có viền tối, chữ tối thiểu 11px (thà rút gọn còn hơn chữ li ti).
-        if(offscreen)x.setTransform(2,0,0,2,2,2);x.fillStyle=selected||focus?'#06121df8':'#04101af2';x.beginPath();x.roundRect(0,0,l.w,l.h,4);x.fill();
-        x.strokeStyle=skin.level?skin.trim+'d0':selected?'#e6d1a1':'#cfe6e870';x.lineWidth=1.2;x.stroke();
+        if(offscreen)x.setTransform(2,0,0,2,2,2);if(tm){/* 19/11 Thủy Mặc: thẻ tên giấy dó, viền mực; người có skin viền son đậm */x.fillStyle=selected||focus?'#fff6dcf8':'#f3ead8eb';x.beginPath();x.roundRect(0,0,l.w,l.h,2);x.fill();x.strokeStyle=skin.level?'#b3261e':'#1b1813b8';x.lineWidth=skin.level?1.8:1.1;x.stroke();if(skin.level){x.fillStyle='#b3261e';x.fillRect(l.w-5,1.5,3.5,3.5);}}else{x.fillStyle=selected||focus?'#06121df8':'#04101af2';x.beginPath();x.roundRect(0,0,l.w,l.h,4);x.fill();
+        x.strokeStyle=skin.level?skin.trim+'d0':selected?'#e6d1a1':'#cfe6e870';x.lineWidth=1.2;x.stroke();}
         x.textAlign='center';x.textBaseline='middle';x.font=NAME_FONT;
         // 4/11: giữ nguyên cỡ chữ, không ép dẹt (bỏ maxWidth), không cắt "…" — tên dài đã xuống dòng ở layoutLabels.
         if(l.scroll)return; // tên chạy chữ: chữ vẽ riêng bên dưới
-        const lines=l.lines||[l.name],lh=l.lineH||18;x.lineJoin='round';x.lineWidth=2.6;x.strokeStyle='#000000d0';
-        lines.forEach((line,i)=>{const yy=l.h/2+(i-(lines.length-1)/2)*lh;x.strokeText(line,l.w/2,yy);x.fillStyle=skin.level?'#fff6dc':'#ffffff';x.fillText(line,l.w/2,yy);});
+        const lines=l.lines||[l.name],lh=l.lineH||18;x.lineJoin='round';x.lineWidth=tm?2:2.6;x.strokeStyle=tm?'#f3ead8':'#000000d0';
+        lines.forEach((line,i)=>{const yy=l.h/2+(i-(lines.length-1)/2)*lh;x.strokeText(line,l.w/2,yy);x.fillStyle=tm?(skin.level?'#7a140e':'#1b1813'):skin.level?'#fff6dc':'#ffffff';x.fillText(line,l.w/2,yy);});
       };
-      const key=[l.name,l.w,l.h,l.scroll?1:0,skin.level,skin.trim,selected,focus].join(':');
+      const key=[l.name,l.w,l.h,l.scroll?1:0,skin.level,skin.trim,selected,focus,tm].join(':');
       const bitmap=cache.get(key,Math.ceil((l.w+2)*2),(l.h+2)*2,paint);
       if(bitmap)c.drawImage(bitmap,l.x-1,l.y-1,bitmap.width/2,bitmap.height/2);
       else{c.save();c.translate(l.x,l.y);paint(c,false);c.restore();}
       // 4/11/2026: đông người → tên dài chạy chữ trong khung (giữ cỡ chữ 24, không che mặt hàng dưới).
       // Dừng 1,5 s ở đầu → trượt 35 đv/s → dừng 1,2 s ở cuối → trượt về. Ảnh chữ vẽ một lần, mỗi khung chỉ dịch + cắt.
-      if(l.scroll){const tw=Math.ceil(l.textW)+12,paintText=x=>{x.setTransform(2,0,0,2,2,2);x.textAlign='left';x.textBaseline='middle';x.font=NAME_FONT;x.lineJoin='round';x.lineWidth=2.6;x.strokeStyle='#000000d0';x.strokeText(l.name,6,l.h/2);x.fillStyle=skin.level?'#fff6dc':'#ffffff';x.fillText(l.name,6,l.h/2);};
-        const text=cache.get('txt:'+l.name+':'+l.h+':'+skin.level,(tw+2)*2,(l.h+2)*2,paintText),inner=l.w-10,travel=Math.max(0,tw-inner),move=travel/35*1000,cycle=2*(move)+2700,u=this.motion===false?0:(t+(String(l.id).length*397))%cycle;
+      if(l.scroll){const tw=Math.ceil(l.textW)+12,paintText=x=>{x.setTransform(2,0,0,2,2,2);x.textAlign='left';x.textBaseline='middle';x.font=NAME_FONT;x.lineJoin='round';x.lineWidth=tm?2:2.6;x.strokeStyle=tm?'#f3ead8':'#000000d0';x.strokeText(l.name,6,l.h/2);x.fillStyle=tm?(skin.level?'#7a140e':'#1b1813'):skin.level?'#fff6dc':'#ffffff';x.fillText(l.name,6,l.h/2);};
+        const text=cache.get('txt:'+l.name+':'+l.h+':'+skin.level+':'+tm,(tw+2)*2,(l.h+2)*2,paintText),inner=l.w-10,travel=Math.max(0,tw-inner),move=travel/35*1000,cycle=2*(move)+2700,u=this.motion===false?0:(t+(String(l.id).length*397))%cycle;
         const off=u<1500?0:u<1500+move?travel*(u-1500)/move:u<2700+move?travel:travel*(1-(u-2700-move)/move);
         c.save();c.beginPath();c.rect(l.x+5,l.y,inner,l.h);c.clip();if(text)c.drawImage(text,l.x+5-off-1,l.y-1,text.width/2,text.height/2);c.restore();}
       // 15/11: danh hiệu + Chân Truyền thành icon tròn nhỏ hai bên khung tên (không còn dòng chữ đè lên người).
@@ -467,7 +467,10 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     }
     this.drawTalkBubbles(c,t,cache);
   }
-  drawBadge(c,x,y,icon,ring,cache){const r=10.5,bm=cache.get('badge:'+icon+':'+ring,(r*2+4)*2,(r*2+4)*2,b=>{b.setTransform(2,0,0,2,0,0);b.beginPath();b.arc(r+2,r+2,r,0,TAU);b.fillStyle='#071722f0';b.fill();b.lineWidth=1.6;b.strokeStyle=ring;b.stroke();b.font='13px "Segoe UI Emoji","Segoe UI",sans-serif';b.textAlign='center';b.textBaseline='middle';b.fillText(icon,r+2,r+2.5);});
+  drawBadge(c,x,y,icon,ring,cache){if(tmOn())return this.drawSealBadge(c,x,y,icon,cache);const r=10.5,bm=cache.get('badge:'+icon+':'+ring,(r*2+4)*2,(r*2+4)*2,b=>{b.setTransform(2,0,0,2,0,0);b.beginPath();b.arc(r+2,r+2,r,0,TAU);b.fillStyle='#071722f0';b.fill();b.lineWidth=1.6;b.strokeStyle=ring;b.stroke();b.font='13px "Segoe UI Emoji","Segoe UI",sans-serif';b.textAlign='center';b.textBaseline='middle';b.fillText(icon,r+2,r+2.5);});
+    if(bm)c.drawImage(bm,x-r-2,y-r-2,bm.width/2,bm.height/2);}
+  // 19/11 Thủy Mặc: ấn triện vuông son, chữ khắc (宗 Tông Chủ, 老 Trưởng Lão, 傳 Chân Truyền…) thay emoji.
+  drawSealBadge(c,x,y,icon,cache){const r=10,ch=honorSeal(icon),bm=cache.get('seal:'+ch,(r*2+4)*2,(r*2+4)*2,b=>{b.setTransform(2,0,0,2,0,0);b.fillStyle='#b3261e';b.beginPath();b.roundRect(2,2,r*2,r*2,3);b.fill();b.strokeStyle='#f3ead8';b.lineWidth=1.2;b.beginPath();b.roundRect(4,4,r*2-4,r*2-4,2);b.stroke();b.font='900 13px "Microsoft YaHei","SimSun",serif';b.textAlign='center';b.textBaseline='middle';b.fillStyle='#fff4dc';b.fillText(ch,r+2,r+2.5);});
     if(bm)c.drawImage(bm,x-r-2,y-r-2,bm.width/2,bm.height/2);}
   // 4/11/2026: bong bóng thoại — câu trò chuyện thường (đã lọc ở server, talk.mjs) hiện trên đầu nhân vật ~6 s.
   // Thời gian tính ở máy khách (lần đầu thấy câu đó), vì có thể vài giây không có snapshot mới. Chữ 20px, không thu nhỏ.
@@ -488,11 +491,11 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
   // Thanh tu vi dưới tên: xanh = đang tích lũy, vàng nhấp nháy + "✦ Gõ đột phá" trên đầu = đủ đột phá.
   drawQiBar(c,l,t){const p=l.player;if(p.resident||p.puppet||!p.neededQi)return;
     const ready=p.finalRealmEligible!==false&&p.progressionReady!==false&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<(this.realmCount??REALM_STYLES.length)-1,k=Math.max(0,Math.min(1,p.qi/p.neededQi)),pulse=.5+.5*Math.sin(t*.008);
-    const bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle='#ffffff26';c.fillRect(bx,by,bw,3.5);
-    c.fillStyle=ready?`hsl(45,100%,${55+20*pulse}%)`:'#7fdcc6';c.fillRect(bx,by,bw*k,3.5);
+    const tm=tmOn(),bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle=tm?'#1b181324':'#ffffff26';c.fillRect(bx,by,bw,3.5);
+    c.fillStyle=ready?(tm?`hsl(4,72%,${38+12*pulse}%)`:`hsl(45,100%,${55+20*pulse}%)`):(tm?'#2f7d6b':'#7fdcc6');c.fillRect(bx,by,bw*k,3.5);
     const reborn=p.rebirthEligible===true; /* 18/11: cảnh giới cuối đầy cây → "Gõ chuyển sinh" */
-    if((ready||reborn)&&!this.warStatus?.active&&!this.tanDeTu?.has(p.id)){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label=reborn?'✦ Gõ chuyển sinh':'✦ Gõ đột phá',w=c.measureText(label).width+14;
-      c.shadowColor='#ffd76a';c.shadowBlur=10+pulse*10;c.fillStyle='#3a2a08ee';c.beginPath();c.roundRect(a.x-w/2,y-10,w,20,10);c.fill();c.shadowBlur=0;
+    if((ready||reborn)&&!this.warStatus?.active&&!this.tanDeTu?.has(p.id)){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label=tm?(reborn?'Gõ chuyển sinh':'Gõ 8 · đột phá'):reborn?'✦ Gõ chuyển sinh':'✦ Gõ đột phá',w=c.measureText(label).width+14;
+      if(tm){/* 19/11 Thủy Mặc: nhãn đột phá thành thẻ son viền vàng */c.shadowColor='#b3261e';c.shadowBlur=6+pulse*8;c.fillStyle='#9e2219f2';c.beginPath();c.roundRect(a.x-w/2,y-10,w,20,3);c.fill();c.shadowBlur=0;}else{c.shadowColor='#ffd76a';c.shadowBlur=10+pulse*10;c.fillStyle='#3a2a08ee';c.beginPath();c.roundRect(a.x-w/2,y-10,w,20,10);c.fill();c.shadowBlur=0;}
       c.strokeStyle=`rgba(255,215,106,${.6+.4*pulse})`;c.lineWidth=1.5;c.stroke();c.fillStyle='#ffe7a3';c.textAlign='center';c.textBaseline='middle';c.fillText(label,a.x,y+1);}}
     c.restore();}
   drawEffect(c,e,t,layer='front'){if(this.raceStatus?.active)return;const age=t-e.start,k=age/e.duration;if(k<0||k>1)return;
