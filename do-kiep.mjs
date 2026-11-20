@@ -8,8 +8,10 @@
 //    30 Thiên Cương Tán (khiên mình + che 6 người) · 99 PHẢN LÔI NGHỊCH THIÊN (cả sân khiên + đánh ngược mây kiếp, màn chiếu ngắn).
 //  • Thưởng (nguồn 'reward' — KHÔNG nhân hệ số, cùng mức Mê Cung): còn trụ 1,5% tu vi cảnh giới + 20 đá; hóa tro 0,3% + 3 đá;
 //    người che được nhiều người nhất (Hộ Đạo Chân Quân) thêm 3% + 50 đá + danh hiệu 1 giờ. Quà cộng tu vi gốc coin×100 như Bảo Khố.
-export const DOKIEP=Object.freeze({registerMs:25000,waves:9,waveGapMs:11000,warnMs:3500,firstMs:2500,lives:2,dodge:.5,podiumMs:12000,maxShield:2,
- share:[.08,.1,.12,.14,.16,.18,.2,.24,.35],maxTargets:40,maxPeople:600,lateJoinBefore:5,
+// 20/11 tối (chủ game: "không ai hiểu, nhàm, không biết bị sét đánh thì bị gì") — làm lại nhịp: 7 đạo, báo trước 6 s (bình luận TikTok trễ 2–4 s),
+// mỗi đạo GỌI TÊN người bị nhắm (giọng + cuộn đỏ), nhắm nhiều hơn (15% → 45%), ĐẠO CUỐI nhắm CẢ SÂN; trụ tới cuối có danh hiệu Độ Kiếp Tán Tiên.
+export const DOKIEP=Object.freeze({registerMs:15000,waves:7,waveGapMs:10000,warnMs:6000,firstMs:3000,lives:3,dodge:.5,podiumMs:14000,maxShield:2,
+ share:[.12,.15,.18,.22,.26,.32,1],maxTargets:60,maxPeople:600,lateJoinBefore:4,survivorTitle:'Độ Kiếp Tán Tiên',
  reward:{alive:.015,aliveStones:20,ash:.003,ashStones:3,mvp:.03,mvpStones:50},titleMs:3600000,qiPerCoin:100,
  gifts:[[99,'phan','Phản Lôi Nghịch Thiên',0],[30,'tan','Thiên Cương Tán',6],[10,'hoi','Hồi Xuân Đan',2],[1,'phu','Hộ Thân Phù',0]]});
 export const DOKIEP_JOIN=['dokiep','kiep','vaokiep'],DOKIEP_DODGE=['ne','tranh','nelo','neloi'];
@@ -24,7 +26,7 @@ export function startDoKiep(w,now,c){
  if(doKiepActive(w))return fail('Bách Nhân Độ Kiếp đang diễn ra.');
  const busy=c.stageConflict?.(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc.');
  w.doKiep={id:'kiep-'+now,phase:'registration',startedAt:now,regEndsAt:now+DOKIEP.registerMs,wave:0,nextAt:0,waves:[],people:{},guard:{},log:[],reversals:[],seq:0};
- c.emit(w,null,'BÁCH NHÂN ĐỘ KIẾP • kiếp vân tụ trên Vân Hải Tông • cửu đạo thiên lôi sắp giáng • bị nhắm thì gõ ne để né','kiep',now,{kiepStart:true});
+ c.emit(w,null,'BÁCH NHÂN ĐỘ KIẾP • sét gọi tên ai thì người đó gõ ne để né • trúng 3 lần hóa tro, mất thưởng • trụ đến cuối nhận tu vi + danh hiệu Độ Kiếp Tán Tiên','kiep',now,{kiepStart:true});
  return {ok:true};
 }
 export function stopDoKiep(w,now,c){const e=w.doKiep;if(!doKiepVisible(w,now))return fail('Không có Bách Nhân Độ Kiếp đang mở.');
@@ -70,7 +72,8 @@ function startWave(w,e,now,c){const list=alive(e);if(!list.length)return finish(
  const n=e.wave+1,share=DOKIEP.share[n-1]??.35,count=Math.max(1,Math.min(DOKIEP.maxTargets,list.length,Math.ceil(list.length*share)));
  const targets=list.map(([id])=>id).sort(()=>Math.random()-.5).slice(0,count);
  e.wave=n;e.waves.push({n,warnAt:now,strikeAt:now+DOKIEP.warnMs,targets,res:{}});if(e.waves.length>DOKIEP.waves)e.waves.shift();
- if(n===1||n===5||n===DOKIEP.waves)c.emit(w,null,n===DOKIEP.waves?'ĐẠO LÔI CUỐI • Tử Tiêu Thần Lôi giáng xuống '+count+' đạo hữu':'Đạo lôi thứ '+n+' • nhắm '+count+' đạo hữu','kiep',now,{kiepWave:n});
+ const names=targets.slice(0,4).map(id=>e.people[id]?.name||w.players[id]?.name||'').filter(Boolean),final=n===DOKIEP.waves;
+ c.emit(w,null,(final?'TỬ TIÊU THẦN LÔI • cả sân bị nhắm':'⚡ Đạo lôi '+n+' nhắm '+names.join(', ')+(count>names.length?' và '+(count-names.length)+' đạo hữu':''))+' • gõ ne để né','kiep',now,{kiepWave:n,kiepFinal:final,kiepNames:names,kiepCount:count});
 }
 function strike(w,e,v,now,c){
  for(const id of v.targets){const m=e.people[id];if(!m||m.hp<=0){v.res[id]='gone';continue;}
@@ -78,13 +81,14 @@ function strike(w,e,v,now,c){
   if(m.dodge===v.n&&Math.random()<DOKIEP.dodge){v.res[id]='dodge';continue;}
   m.hp--;m.hits++;v.res[id]=m.hp<=0?'ash':'burn';if(m.hp<=0)m.ashAt=now;}
  v.done=true;
+ {const by=k=>v.targets.filter(id=>v.res[id]===k).map(id=>e.people[id]?.name||'');e.last={n:v.n,at:now,dodge:by('dodge'),shield:by('shield'),burn:by('burn'),ash:by('ash')};}
  if(v.n>=DOKIEP.waves||!alive(e).length)return finish(w,e,now,c);
  e.nextAt=now+DOKIEP.waveGapMs-DOKIEP.warnMs;
 }
 function finish(w,e,now,c){if(e.phase==='finished')return;e.phase='finished';e.finishedAt=now;e.podiumUntil=now+DOKIEP.podiumMs;const R=DOKIEP.reward;
  const ids=Object.keys(e.people),survivors=ids.filter(id=>e.people[id].hp>0);
  const mvpId=Object.entries(e.guard).sort((a,b)=>b[1]-a[1])[0]?.[0]||null;
- for(const id of ids){const p=w.players[id];if(!real(p))continue;const m=e.people[id],ok=m.hp>0;
+ for(const id of ids){const p=w.players[id];if(!real(p))continue;const m=e.people[id],ok=m.hp>0;if(ok&&id!==mvpId)p.funTitle={name:DOKIEP.survivorTitle,until:now+DOKIEP.titleMs};
   m.qi=c.gain(w,p,Math.max(10,Math.round((c.requiredQi?.(p)||300)*(ok?R.alive:R.ash))),ok?R.aliveStones:R.ashStones,0,now);}
  if(mvpId&&w.players[mvpId]){const p=w.players[mvpId];c.gain(w,p,Math.max(20,Math.round((c.requiredQi?.(p)||300)*R.mvp)),R.mvpStones,0,now);p.funTitle={name:'Hộ Đạo Chân Quân',until:now+DOKIEP.titleMs};}
  e.result={total:ids.length,survivors:survivors.length,mvp:mvpId?{id:mvpId,name:w.players[mvpId]?.name||'',n:e.guard[mvpId]}:null};
@@ -105,6 +109,6 @@ export function doKiepView(w,now){const e=w.doKiep;if(!e||!doKiepVisible(w,now))
  const ppl={};for(const [id,m] of Object.entries(e.people))ppl[id]=[m.hp,m.shield||0,m.ashAt||0];
  const list=Object.values(e.people);
  return {id:e.id,phase:e.phase,startedAt:e.startedAt,regEndsAt:e.regEndsAt,wave:e.wave,waves:DOKIEP.waves,podiumUntil:e.podiumUntil||0,
-  wv:e.waves.slice(-2).map(v=>({n:v.n,warnAt:v.warnAt,strikeAt:v.strikeAt,targets:v.targets,res:v.res,done:!!v.done})),
-  ppl,total:list.length,alive:list.filter(m=>m.hp>0).length,log:(e.log||[]).slice(-6),reversals:e.reversals||[],result:e.result||null,
+  wv:e.waves.slice(-2).map(v=>({n:v.n,warnAt:v.warnAt,strikeAt:v.strikeAt,targets:v.targets,names:v.targets.slice(0,4).map(id=>e.people[id]?.name||''),res:v.res,done:!!v.done})),
+  ppl,last:e.last||null,total:list.length,alive:list.filter(m=>m.hp>0).length,log:(e.log||[]).slice(-6),reversals:e.reversals||[],result:e.result||null,
   guard:Object.entries(e.guard).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([id,n])=>({id,name:w.players[id]?.name||'',n}))};}

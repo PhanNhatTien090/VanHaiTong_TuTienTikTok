@@ -237,6 +237,14 @@ export function speechPlan(e){
     if(e.mazeEnd){const n=sayName(e.mazeWinner);return [say('tongsu',n?`Mê cung khép lại! Mê Cung Chi Chủ là ${n}!`:'Mê cung khép lại! Lần sau tìm đường nhanh hơn nhé!')];}
     return [];
   }
+  // ----- Bách Nhân Độ Kiếp (20/11 tối): đọc luật lúc mở, GỌI TÊN người bị sét nhắm mỗi đạo, kết quả cuối -----
+  if(e.effect==='kiep'){
+    if(e.kiepStart)return [say('tongsu','Bách nhân độ kiếp! Lão phu gọi tên ai, người đó gõ né để né sét! Trúng ba lần là hóa tro! Trụ đến cuối nhận tu vi và danh hiệu Độ Kiếp Tán Tiên!')];
+    if(e.kiepFinal)return [say('tongsu',pickBy(seed,['Tử Tiêu Thần Lôi! Cả sân đều bị nhắm! Gõ né mau!','Đạo lôi cuối cùng! Toàn tông môn gõ né mau!']))];
+    if(e.kiepWave){const ns=(e.kiepNames||[]).slice(0,3).map(sayName).filter(Boolean);return [say('tongsu',ns.length?`Thiên lôi nhắm ${ns.join(', ')}! Gõ né mau!`:'Thiên lôi sắp giáng! Ai bị gọi tên gõ né mau!')];}
+    if(e.kiepEnd){const r=e.kiepResult,n=sayName(r?.mvp?.name);return [say('tongsu',r?.survivors?`Độ kiếp thành công! ${viNumber(r.survivors)} đạo hữu trụ qua thiên lôi!`+(n?` Hộ Đạo Chân Quân là ${n}!`:''):'Kiếp vân tan! Lần sau gõ né nhanh hơn nhé!')];}
+    return [];
+  }
   // ----- Hội Gõ Đầu (10/11): chỉ đọc lúc mở và lúc khép, từng cú gõ không đọc -----
   if(e.effect==='bonk'){
     if(e.bonkStart)return [say('tongsu',pickBy(seed,['Hội gõ đầu khai mạc! Gõ go kèm tên để đi gõ đầu đạo hữu!','Hội gõ đầu mở rồi! Ai muốn gõ đầu ai thì gõ go kèm tên!']))];

@@ -42,3 +42,14 @@ test('Độ Kiếp: gõ ne khi bị nhắm được ghi nhận; người mới b
   e.wave=DOKIEP.lateJoinBefore;const late=ensurePlayer(w,'late','Muộn',t);late.lastActive=t;
   action(w,{type:'chat',userId:'late',name:'Muộn',text:'1'},t+200);assert.equal(e.people.late,undefined);
 });
+
+test('Độ Kiếp: gõ "né" có dấu cũng né; mỗi đạo gọi tên người bị nhắm; đạo cuối nhắm cả sân; trụ đến cuối có danh hiệu', () => {
+  const w=world(10);startDoKiep(w,N);let t=N+DOKIEP.registerMs+10;tick(w,t);t+=DOKIEP.firstMs+10;tick(w,t);
+  const e=w.doKiep,v=e.waves.at(-1),id=v.targets[0];
+  assert.equal(action(w,{type:'chat',userId:id,name:'x',text:'né'},t+100).dodge,true);
+  const ev=w.events.findLast(x=>x.kiepWave===1);assert.ok(ev&&ev.kiepNames.length>=1,'gọi tên');
+  for(const m of Object.values(e.people)){m.shield=2;}
+  t=runAll(w,t);const last=e.waves.at(-1);assert.equal(last.n,DOKIEP.waves);
+  const aliveAtFinal=Object.keys(e.people).filter(id=>!(e.people[id].ashAt<last.warnAt));assert.equal(last.targets.length,aliveAtFinal.length,'đạo cuối nhắm cả sân');
+  const surv=Object.keys(e.people).find(id=>e.people[id].hp>0&&id!==e.result?.mvp?.id);if(surv)assert.equal(w.players[surv].funTitle?.name,'Độ Kiếp Tán Tiên');
+});
