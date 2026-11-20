@@ -34,15 +34,18 @@ function pearl(c,im,p){if(!im||p.alpha<=0)return;const R=p.r*1.45*PEARL;c.save()
 // ── 20/11 v6 (chủ game: "cải tiến đột phá, bắt đầu từ Luyện Khí") ─────────────────────────────────────────────
 // Xem trên điện thoại: nền tối kiểu mực (bỏ lớp vàng cam đục), máy quay gần hơn, linh châu to, nét khí dày (LW trong
 // luyen-khi-formation/qi-energy), lúc nổ mực văng + sóng ngọc, đạo bào đổi màu quét từ chân lên, tên cảnh giới trên giấy (CSS).
-const PEARL=1.55,BASE_ZOOM=1.42;
-// Nền chuyển tông mực: bớt bão hòa, tối dần ra mép, chừa sáng quanh người.
-function drawInkWash(c,H,k,cy){
+const PEARL=1.55,BASE_ZOOM=1.12;
+// Nền chuyển tông mực: phủ mực xanh đậm + tối ra mép, chừa sáng quanh người.
+// 20/11 chiều (chủ game: "Luyện Khí bị giật khựng"): bỏ hòa trộn 'saturation'/'multiply' toàn màn (đo: ~15 ms/khung, trên GPU
+// tích hợp còn nặng hơn) → một lớp phủ thường + quầng tối vẽ sẵn (drawImage), gần như không tốn.
+function inkVignette(scene,H){const key='ink:'+H;if(scene.lkInkVig?.key===key)return scene.lkInkVig.surface;const surface=makeSurface(225,Math.ceil(H/4));if(surface){const x=surface.getContext('2d'),cy=surface.height*.48,g=x.createRadialGradient(112,cy,30,112,cy,surface.height*.62);g.addColorStop(0,'rgba(8,16,14,0)');g.addColorStop(.55,'rgba(8,16,14,.4)');g.addColorStop(1,'rgba(6,10,9,.88)');x.fillStyle=g;x.fillRect(0,0,surface.width,surface.height);}scene.lkInkVig={key,surface};return surface;}
+function drawInkWash(scene,c,H,k){
  const a=smooth(k/.08)*(1-.25*smooth((k-.72)/.1));if(a<=0)return;
- c.save();c.globalCompositeOperation='saturation';c.globalAlpha=.92*a;c.fillStyle='#808080';c.fillRect(0,0,900,H);
- c.globalCompositeOperation='multiply';c.globalAlpha=.7*a;c.fillStyle='#3a5650';c.fillRect(0,0,900,H);
- c.globalCompositeOperation='source-over';c.globalAlpha=a;const g=c.createRadialGradient(450,cy,120,450,cy,H*.62);g.addColorStop(0,'rgba(8,16,14,0)');g.addColorStop(.55,'rgba(8,16,14,.35)');g.addColorStop(1,'rgba(6,10,9,.82)');c.fillStyle=g;c.fillRect(0,0,900,H);c.restore();
+ c.save();c.globalAlpha=.5*a;c.fillStyle='#0f2a25';c.fillRect(0,0,900,H);
+ const v=inkVignette(scene,H);if(v){c.globalAlpha=a;c.drawImage(v,0,0,900,H);}c.restore();
 }
 // Mực văng sau lưng lúc nổ: các vệt mực dài toả ra, viền ngọc; góc theo biến thể (không lặp y hệt).
+let haloArt=null;const splashHalo=()=>{if(haloArt!==null)return haloArt;haloArt=makeSurface(128,128)||false;if(haloArt){const x=haloArt.getContext('2d'),g=x.createRadialGradient(64,64,6,64,64,64);g.addColorStop(0,'rgba(11,20,17,0)');g.addColorStop(.5,'rgba(11,20,17,.5)');g.addColorStop(1,'rgba(11,20,17,0)');x.fillStyle=g;x.fillRect(0,0,128,128);}return haloArt;};
 function drawInkSplash(c,k,o,v){
  const u=(k-QI_IMPACT)/.16;if(u<0||u>1)return;const grow=1-Math.pow(1-clamp(u/.55),3),fade=1-smooth((u-.4)/.6),n=9;
  const rnd=j=>{const h=Math.sin((j+1)*12.9898+v.phase*78.233)*43758.5453;return h-Math.floor(h);};
@@ -53,7 +56,7 @@ function drawInkSplash(c,k,o,v){
   c.globalAlpha=fade*.7;c.beginPath();c.moveTo(o.x+cx*d0+nx*w,o.y+sy*d0+ny*w);c.quadraticCurveTo(mx+nx*w*.45,my+ny*w*.45,ex,ey);c.quadraticCurveTo(mx-nx*w*.45,my-ny*w*.45,o.x+cx*d0-nx*w,o.y+sy*d0-ny*w);c.closePath();c.fill();
   for(let j=0;j<2;j++){const rr=rnd(i*7+j),dd=len*(1.08+.22*rr+.12*j),ds=w*(.42-.14*j)*(1-.3*u);c.globalAlpha=fade*.75;c.beginPath();c.arc(o.x+cx*(d0+dd)+nx*(rr-.5)*24,o.y+sy*(d0+dd)+ny*(rr-.5)*24,ds,0,TAU);c.fill();}}
  // quầng mực loang sau lưng làm nền cho người sáng lên
- const g=c.createRadialGradient(o.x,o.y,20,o.x,o.y,90+200*grow);g.addColorStop(0,'rgba(11,20,17,.0)');g.addColorStop(.5,'rgba(11,20,17,'+(.5*fade)+')');g.addColorStop(1,'rgba(11,20,17,0)');c.globalAlpha=1;c.fillStyle=g;c.beginPath();c.ellipse(o.x,o.y,90+200*grow,(90+200*grow)*.8,0,0,TAU);c.fill();
+ const halo=splashHalo();if(halo){const R=90+200*grow;c.globalAlpha=fade;c.drawImage(halo,o.x-R,o.y-R*.8,R*2,R*1.6);}
  c.restore();
 }
 // Sóng ngọc dày lan ra ngay khi nổ (trước người).
@@ -74,10 +77,10 @@ export function drawQiAwakening(scene,c,e,t,H){
  drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:scene.ritualAppearance?.palette.main2||'#9deed1',feet:s.feet}); // 4/11: thiên đài cả trên LIVE
  drawQiEnvironment(scene,c,k,H,s.origin,true);
  const lk=luyenKhiState(k);drawLkSky(scene,c,lk,H,v);drawRitualTint(scene,c,H); // v5: núi mực + biển mây lấp nửa trên
- drawInkWash(c,H,k,s.feet-220); // v6: nền mực, hiệu ứng nổi lên
+ drawInkWash(scene,c,H,k); // v6: nền mực, hiệu ứng nổi lên
  const halo=c.createRadialGradient(x,s.center.y,10,x,s.center.y,340);halo.addColorStop(0,'#3f8e7d22');halo.addColorStop(1,'#3f8e7d00');c.fillStyle=halo;c.fillRect(80,s.center.y-340,740,680);
  // Camera đẩy vào quanh thân người tu luyện.
- const zoom=BASE_ZOOM*(1+(qiCamera(k,motion&&scene.cameraEnabled!==false)-1)*v.zoom),fy=s.feet-150+v.dy; /* v6: gần hơn ~42% */c.save();c.translate(x,fy);c.scale(zoom,zoom);c.translate(-x,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
+ const zoom=BASE_ZOOM*(1+(qiCamera(k,motion&&scene.cameraEnabled!==false)-1)*v.zoom),fy=s.feet-150+v.dy; /* v6: gần hơn 12% (1,42 làm mỗi khung tốn thêm ~15–25 ms vì phải tô vùng lớn hơn) */c.save();c.translate(x,fy);c.scale(zoom,zoom);c.translate(-x,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
  c.fillStyle='#00000045';c.beginPath();c.ellipse(x,s.feet+32,150,25,0,0,TAU);c.fill();
  const energy=qiEnergyState(sk,motion),jolt=motion&&scene.cameraEnabled!==false?energy.burst*7:0;c.translate(Math.sin(k*1700)*jolt,Math.cos(k*1400)*jolt*.6);
  drawQiGround(scene,c,sk,s);
@@ -91,15 +94,17 @@ export function drawQiAwakening(scene,c,e,t,H){
  drawQiAura(scene,c,k,s.origin,s.feet);
  drawLkWheel(scene,c,lk,s,v);       // v5: pháp luân sau lưng khi hiện thân
  drawInkSplash(c,k,{x,y:s.feet-170},v); // v6: mực văng sau lưng lúc nổ
- const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user),to=e.visualTo||live,from=e.visualFrom||(to?{...to,realm:e.fromRealm??0}:null),wipe=motion?clamp((k-QI_IMPACT-.012)/.075):(s.revealed?1:0),actor=s.revealed&&wipe>=1?to:from;
+ const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user),to=e.visualTo||live,from=e.visualFrom||(to?{...to,realm:e.fromRealm??0}:null),wipe=motion?clamp((k-QI_IMPACT-.012)/.075):(s.revealed?1:0),wiping=!!(to&&from&&wipe>0&&wipe<1&&scene.lkFromSnap&&scene.lkFromSnapId===e.id),actor=s.revealed&&(wipe>=1||wiping)?to:from;
  if(actor){scene.targets=[{id:e.user,player:actor,x,y:s.feet,scale:4.2}];const wasCompact=scene.compact,wasRitual=scene.ritualDrawing;scene.compact=true;scene.ritualDrawing=true;c.save();c.translate(0,-s.lift);try{// Tint through the actor's alpha: energy lights the body, not a rectangle.
  const surface=scene.qiActorSurface??=makeSurface(600,760);
  if(surface){const a=surface.getContext('2d');a.setTransform(1,0,0,1,0,0);a.clearRect(0,0,600,760);a.save();a.translate(300-x,530-s.feet);scene.drawPlayer(a,actor,x,s.feet,t-e.start);a.restore();c.drawImage(surface,x-300,s.feet-530);
+  if(actor===from&&to&&motion&&k>=QI_IMPACT-.06&&k<QI_IMPACT+.012){const snap=scene.lkFromSnap??=makeSurface(600,760);if(snap){const sx=snap.getContext('2d');sx.clearRect(0,0,600,760);sx.drawImage(surface,0,0);scene.lkFromSnapId=e.id;}} // v6: chụp bản cũ để quét
   // v4: viền sáng linh khí thay cho phủ trắng đặc (trước đây nhân vật thành khối trắng lúc nổ).
   const strength=Math.min(.45,energy.charge*.22+energy.burst*.28+(k>=QI_IMPACT?(1-clamp((k-QI_IMPACT)/.2))*.12:0));
   if(strength>0){a.save();a.globalCompositeOperation='source-in';const g=a.createLinearGradient(0,530,0,240);g.addColorStop(0,'#91ffd0');g.addColorStop(.55,'#e4fff3');g.addColorStop(1,'#b2faff');a.fillStyle=g;a.fillRect(0,0,600,760);a.globalCompositeOperation='destination-in';a.drawImage(surface,0,0);a.drawImage(surface,0,0);a.restore();c.save();c.globalCompositeOperation='screen';c.globalAlpha=strength;c.drawImage(surface,x-300,s.feet-530);c.restore();}
  }else scene.drawPlayer(c,actor,x,s.feet,t-e.start);}finally{scene.compact=wasCompact;scene.ritualDrawing=wasRitual;c.restore();}}
- if(to&&from&&wipe>0&&wipe<1){const top=s.feet-520,yLine=s.feet+30-(s.feet+30-top)*wipe;c.save();c.translate(0,-s.lift);c.beginPath();c.rect(0,yLine,900,s.feet+80-yLine);c.clip();const wasCompact=scene.compact,wasRitual=scene.ritualDrawing;scene.compact=true;scene.ritualDrawing=true;try{scene.drawPlayer(c,to,x,s.feet,t-e.start);}finally{scene.compact=wasCompact;scene.ritualDrawing=wasRitual;}c.restore();drawWipeLine(c,x,yLine-s.lift,170);} // v6: đạo bào mới quét từ chân lên
+ // v6: đạo bào mới quét từ chân lên — người chỉ vẽ 1 lần (bản mới); phần trên vạch là ảnh chụp bản cũ (chụp 1 lần trước lúc quét)
+ if(wiping){const top=s.feet-520,yLine=s.feet+30-(s.feet+30-top)*wipe;c.save();c.translate(0,-s.lift);c.beginPath();c.rect(0,0,900,yLine);c.clip();c.drawImage(scene.lkFromSnap,x-300,s.feet-530);c.restore();drawWipeLine(c,x,yLine-s.lift,170);}
  drawLkMeridians(scene,c,lk,s,s.lift); // v5: kinh mạch + tiểu chu thiên
  for(const p of s.parts.filter(p=>p.z>=0)){trail(c,sk,H,p.id,motion);pearl(c,im,p);}
  drawQiStreams(scene,c,sk,s,'front');
