@@ -3,7 +3,7 @@
 File này là trí nhớ chung của dự án. `/batdau` chỉ đọc file này. `/ketthuc` cập nhật mục 5 và 6.
 Dòng "Cập nhật" ở dưới do `/ketthuc` ghi lại.
 
-Cập nhật: 19/11/2026.
+Cập nhật: 20/11/2026.
 
 ---
 
@@ -129,12 +129,13 @@ Tiến trình khi đang chạy: `server.mjs` (node), `scripts/server-watchdog.mj
 
 ## 5. Trạng thái hiện tại
 
-- **Server LIVE (sáng 19/11): đang chạy BẢN CŨ** — restart cuối thành công 18/11 23:21 (`d4a1a7d`). 3 commit sau (`2973f7b` thần khí tự mặc/lên cấp/Tháp, `e0257c8` Lôi Đài vào túi sự kiện, `6126db0` Tình Lâu phòng riêng + song tu +25%) đã push nhưng CHƯA lên LIVE: restart `-DuringLive` hỏng vì TikFinity Desktop đã tắt (LIVE kết thúc, `liveSession.active=false`), restart không cờ bị chặn quyền → **user cần chạy `! powershell.exe -NoProfile -ExecutionPolicy Bypass -File scriptsestart-cloud-sync.ps1`** (lúc không LIVE). **Nhiều phiên song song cùng sửa `main`** — chỉ commit đúng file/đoạn của mình (tách đoạn bằng `git diff -U0` + `git apply --cached --unidiff-zero`).
+- **20/11 tối: server LIVE chạy bản mới nhất** (restart an toàn 20/11 ~21h, PID đổi theo watchdog). Kế hoạch cải tiến toàn game + mục user đã duyệt: **`docs/CAI-TIEN-2026-11-20.md`**; phân tích "người xem tặng để nhận lại gì" + ý tưởng A–F: **`docs/Y-TUONG-2026-11-20.md`** (A–E XONG, F chờ chốt thiết kế). Còn lại: mục 4 CSS `@layer` + mục 6 dọn gốc/tách `app.js` (làm lúc KHÔNG LIVE, chỉ 1 phiên); WebP còn `honor-v2`/`sect-hall-v1`/`honor-frames`, xóa PNG gốc sau ~1 tuần không lỗi; 7 thư mục `realm-skins-v2/{dao-to,than-*,thien-ton}` (44 MB) không còn dùng → xóa ở mục 6.
+- (Cũ, đã xử lý 20/11) Server LIVE sáng 19/11 chạy bản cũ — restart cuối thành công 18/11 23:21 (`d4a1a7d`). 3 commit sau (`2973f7b` thần khí tự mặc/lên cấp/Tháp, `e0257c8` Lôi Đài vào túi sự kiện, `6126db0` Tình Lâu phòng riêng + song tu +25%) đã push nhưng CHƯA lên LIVE: restart `-DuringLive` hỏng vì TikFinity Desktop đã tắt (LIVE kết thúc, `liveSession.active=false`), restart không cờ bị chặn quyền → **user cần chạy `! powershell.exe -NoProfile -ExecutionPolicy Bypass -File scriptsestart-cloud-sync.ps1`** (lúc không LIVE). **Nhiều phiên song song cùng sửa `main`** — chỉ commit đúng file/đoạn của mình (tách đoạn bằng `git diff -U0` + `git apply --cached --unidiff-zero`).
 - Git: mới nhất `a077d45` (phiên Luân Hồi). Chưa commit: skin Tinh Hà (đang dở, xem dòng dưới), `than-to-awakening.js`, `HALL-WAR-V2-WIP.mjs.txt`, `live-cinema.js` (phiên khác), `SO-TAY.md`/`NHAT-KY-CU.md`. Test 956/956.
-- **⏸ ĐANG DỞ — skin sự kiện TINH HÀ KIẾM ĐẾ 500 coin (user giao 19/11: "tự sáng tạo, đẹp hơn tất cả skin hiện có, làm xong tự so sánh"). CHƯA COMMIT, nằm ngay trong thư mục chính:**
+- (XONG trước 20/11, commit `fc6286c`…) skin sự kiện TINH HÀ KIẾM ĐẾ 500 coin (user giao 19/11: "tự sáng tạo, đẹp hơn tất cả skin hiện có, làm xong tự so sánh"). CHƯA COMMIT, nằm ngay trong thư mục chính:**
   - Đã có: 5 ảnh Codex vẽ (đề bài + ảnh gốc ở scratchpad `tinh-ha/`, có thể mất) → `public/assets/tinh-ha/{standing,seated,halo,blade}.webp` + `assets/signature-ults-v1/ult-tinh-ha.webp`; VFX 10 lớp + CỬU TINH KIẾM TRẬN (9 tinh kiếm dựng đứng xoay quanh người) + sao băng + màn biến hình 9 s `public/tinh-ha-fx.js`; khai báo `TINH_HA_VISITOR` (`court-rewards.js`, đứng đầu `COURT_VISITORS`), `court-art.js` FX, `skin-gear.js` (`tinh-ha-kiem`), `transform-fx.js` 9000, chiêu Lôi Đài `tinh-ha-kiem-de` (`signature-ults.js`, motif stars). Trang xem thử `/tinh-ha-preview.html?skin=tinh-ha|nhan-qua|hac-kim&mode=idle|reveal&k=&t=&pose=seat`. Test `test/tinh-ha.test.mjs` + `skin-gear` đạt.
   - Đã tự xem + so với Vương Lâm/Tiêu Viêm trên cùng nền (đã sửa: Tinh Đồ quá to, kiếm trận nằm ngang cắt ngực → dựng đứng). **Còn: chạy `node scripts/qa-tinh-ha.mjs` (overlay thật trên server thử 4399: mở sự kiện `tinh-ha`, tặng 500, chụp biến hình + sân, FPS, lỗi) → tự xem → chạy cả bộ test → commit đúng các file trên → push → restart (đổi `court-rewards` = backend) bằng `restart-cloud-sync.ps1 -RequiredArtifact tinh-ha-kiem` → báo user mở sự kiện ở `#events`.**
-- **Việc kế tiếp user đã giao (19/11, chưa bắt đầu): soát toàn game xem hiệu ứng nào gây lag → cải tiến; được phép HẠ ĐỘ PHÂN GIẢI ẢNH ("hiện tại quá nét").** Lúc 19/11 không có overlay nối nên `client-status` rỗng → đo bằng server thử + Chrome headless.
+- (Phần ảnh XONG 20/11: 144 PNG → WebP ~306 MB → ~59 MB) Việc user giao 19/11: soát hiệu ứng gây lag; được phép HẠ ĐỘ PHÂN GIẢI ẢNH. Lúc 19/11 không có overlay nối nên `client-status` rỗng → đo bằng server thử + Chrome headless.
 - **Luân Hồi (chuyển sinh) đã LÊN LIVE 18/11** — tài liệu `LUAN-HOI-PLAN-2026-11-18.md`. Đợt 2 chưa làm: skin/pháp bảo độc quyền lần 3 (cần vẽ, hỏi user), ghế Luân Hồi Trưởng Lão lần 5.
 - **Chờ user làm mới nguồn Link** để thấy: thần khí cạnh vai, màn Đại Điển 100 coin mới + phòng Tiên Cung, hiệu ứng thần khí ở Tháp (CHƯA tự xem hình Tháp), chiếu riêng cinematic, cánh mới. Chưa đo FPS LIVE lúc chiếu Đại Điển / có cánh biến hình.
 - **Đề xuất chờ user chọn — người chơi mới (số liệu 18/11):** 2.717 người mới/7 ngày, chỉ 5,8% quay lại sau >1 ngày; 68% người hoạt động kẹt cảnh giới 0. Đề xuất: (1) thẻ "gõ 1 tu luyện · đủ gõ 8 đột phá" cho cảnh giới 0–1 + chúc mừng lần đột phá đầu; (2) màn hình gọn lúc không sự kiện, thẻ hướng dẫn chỉ 3 chủ đề cơ bản; (3) cảnh giới 0→1 nhanh hơn. Claude gợi ý làm (1) trước.
@@ -145,6 +146,14 @@ Tiến trình khi đang chạy: `server.mjs` (node), `scripts/server-watchdog.mj
 - 3 cảnh giới 22–24 vẫn skin tạm đổi màu. Hoãn: Linh căn. Chờ chuyển dự án sang `C:GAMEVanHaiTong` khi không LIVE.
 
 ## 6. Nhật ký phiên (mới nhất ở trên, giữ tối đa 8 phiên; phiên cũ hơn chuyển sang `NHAT-KY-CU.md`)
+
+### 20/11/2026 (cả ngày, phiên Claude "tien-gioi-live-db") — Tam Tiên, soát toàn game, hướng dẫn 3 tầng, dọn data, WebP, bộ điều phối quà, ý tưởng A–E
+- Sự kiện skin **Tam Tiên** (`a822485`→`7c48f82`): 3 vị/lượt, 4 phút; vị giá riêng đủ coin là nhận, vị trùng giá đúng 1 món riêng (nhận theo `giftName`); MUA 1 LÀ 1. Ví tiên duyên giữ mãi (`bb2aa20`, `p.skinWallet`).
+- Soát toàn game (số liệu `data/audit` 18 ngày): kế hoạch `docs/CAI-TIEN-2026-11-20.md`. Đã làm: xóa 5.993 hồ sơ cảnh giới 0 chưa tặng (backup `data/backups/prune-realm0-20261120T035701`); **hướng dẫn 3 tầng** (`64c91ad`: lệnh bài + "GÕ SỐ VÀO BÌNH LUẬN", ≤4 nhãn `HINT_MAX`, Sổ lệnh xoay trong cuộn Thiên Bảng `public/so-lenh.js`, bỏ `info-spotlight`, giọng "gõ số…" idle v21); Thiên Bảng hiện tên cảnh giới; thanh tu vi rõ lại; lúc sự kiện ẩn lệnh bài + thẻ Trưởng Lão, thẻ cá nhân góc dưới phải; **dọn data 6,4 GB → 701 MB** (regex giữ 48 bản trong `server.mjs` viết sai nên chưa từng xóa; `scripts/clean-data.mjs`); **WebP** 2 đợt (`scripts/png-to-webp.py`); **bộ điều phối quà** `GIFT_ROUTES`/`giftRoute()` (`b798765`, không đổi cách tính, thêm lớp chặn).
+- Ý tưởng (`docs/Y-TUONG-2026-11-20.md`, user "duyệt hết"): A ví tiên duyên · B sàn trình diễn skin lúc đông (`public/skin-showcase.js`) · C vòng phúc duyên (`public/buff-ring.js`) · D khoe trong ngày 10/30/99 (`public/day-tier.js`) · E báo lượt kế (`w.nextVisitorKind`, dòng cuối bảng Tặng quà). F (Chính Ma/Tháp/Gõ Đầu) chờ chốt.
+- Sửa lỗi người khác để lại: `3aad652` overlay chết trắng (`overlay` dùng trước khi khai báo); `d37da4e` engine.mjs thiếu 2 dòng → lỗi cú pháp trên origin. Lệnh "truyền công" có dấu; Tình Lâu chỉ vẽ khi lễ đang mở.
+- Kiểm: test cuối 1026/1026 (1 lần đỏ là `simple-play` do đổi chữ, đã cập nhật); QA bằng server thử 4399 + Chrome (`scripts/qa-guide-tour.mjs`: vẽ khung vùng TikTok, `EVENT=`, `ALIGN=`, `NEXTV=`, `CROWD=`). Chưa kiểm: nghe giọng idle v21; FPS LIVE thật với vòng/hào quang/sàn trình diễn.
+- Bài học: **nhiều phiên cùng sửa `main`** → commit bằng cách dựng file từ `git show HEAD:file` + áp bản vá của mình rồi `git update-index --cacheinfo`, luôn `node --check` bản đã stage; tiến trình server thử 4399 sót làm QA nối nhầm → kiểm cổng trước/sau; bảng đo trước/sau (probe) trước khi refactor tiền.
 
 ### 20/11/2026 — Chào người mới bằng câu đọc sẵn, câu chúc nhập môn, Giờ Vàng hiện trên màn
 - Vì sao: giọng chào tạo theo tên mất vài giây, trình phát chỉ chờ 1,5 s rồi BỎ → người mới lướt đi mới được chào hoặc không được chào.
