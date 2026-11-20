@@ -78,6 +78,7 @@ import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';
 import {lineupSlotGift} from './gift-icons.js';
 import {pickSkinShow,withFullFx,drawSkinShowBack,drawSkinShowFront} from './skin-showcase.js';
+import {drawBuffRings} from './buff-ring.js';
 import {loadImmortalArt,robeCell,outfitArt,drawPngRelic,drawImmortalGift,drawBackRelic} from './immortal-art.js';
 import {drawVisitor,VISITORS} from './visitor-event.js';
 import {drawBossSprite,SCENES} from './world-rotation.js';
@@ -724,7 +725,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     this.skinShow=pickSkinShow(this,premium); // 20/11 B: sàn trình diễn skin lúc đông (skin-showcase.js)
     this.premiumTargets=(this.raceStatus?.active?[]:this.heavyCrowd?this.targets.filter(a=>premium(a.player)).slice(0,8):this.targets).filter(a=>a!==this.skinShow);
     if(this.skinShow){const a=this.skinShow;drawSkinShowBack(c,a,t);withFullFx(this,()=>{drawSeaAdornment(this,c,a,t,'back');drawTudoAdornment(this,c,a,t,'back');drawKhuyAdornment(this,c,a,t,'back');drawViemAdornment(this,c,a,t,'back');drawCourtAdornment(this,c,a,t,'back');});}
-    for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.gearDraw(c,target,t,()=>this.drawCompactGear(c,target,t,'back'));}drawTanDeTuBack(this,c,t);
+    for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.gearDraw(c,target,t,()=>this.drawCompactGear(c,target,t,'back'));}drawTanDeTuBack(this,c,t);drawBuffRings(this,c,t,(this.lastState?.serverNow||Date.now())+(performance.now()-(this._snapAt||performance.now()))); /* 20/11 C: vòng phúc duyên dưới chân */
     if(!this.raceStatus?.active&&!solo&&!arena&&!petCoveOn(this)&&!mazeOn(this))drawSectCourt(this,c,t); // màn đánh boss: ẩn ngai tông chủ để yêu thú chiếm trời
     if(!this.reducePresence&&!this.minimalCrowd&&!this.raceStatus?.active)drawGodAuras(this,c,t,'back');
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn
