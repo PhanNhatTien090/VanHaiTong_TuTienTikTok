@@ -29,7 +29,9 @@ function load(h,e){
 function posOf(h,id,t){const p=h.pos.get(id);if(!p)return null;const k=clamp((t-p.t0)/1000);return {x:p.fx+(p.tx-p.fx)*k,y:p.fy+(p.ty-p.fy)*k};}
 export function syncMountRealm(scene,state){
  const next=state.mountRealm||null,h=rz(scene),t=perf(),prev=scene.mountRealmStatus;
- if(prev?.id!==next?.id){h.pos.clear();h.seen.clear();h.bolts=[];h.gifts=[];h.drops=[];h.banner=null;}
+ if(prev?.id!==next?.id){h.pos.clear();h.seen.clear();h.bolts=[];h.gifts=[];h.drops=[];h.banner=null;h.hits=[];h.deaths=[];h.mobHit=new Map();}
+ // 20/11 tối: quái biến mất mà lúc trước đã yếu (≤35% máu) → coi là bị hạ → nổ linh khí + hồn bay lên
+ if(prev?.id===next?.id&&prev?.mobs&&next?.mobs){const near=(x,y)=>next.mobs.some(([a,b])=>Math.abs(a-x)<22&&Math.abs(b-y)<22);h.deaths??=[];for(const [x,y,,hp] of prev.mobs)if(hp<=35&&!near(x,y)&&h.deaths.length<24)h.deaths.push({x,y,start:t});}
  scene.mountRealmStatus=next;h.giftArt=state.giftArt||h.giftArt;
  if(typeof document!=='undefined')document.body.classList.toggle('mount-realm',!!next);
  if(!next)return;load(h,next); /* 18/11: thiếu map → mỗi lần nhận state đổi về Linh Sơn rồi lại Hỏa Diệm → nền xóa, nháy đen */
@@ -198,6 +200,11 @@ function drawSpells(c,h,t,light){
  h.bolts=h.bolts.filter(b=>t-b.start<SPELL_MS);
  for(const b of h.bolts){const k=(t-b.start)/SPELL_MS;if(k<0)continue;const from=posOf(h,b.from,t)||{x:b.x1,y:b.y1},idx=hash(b.from)%5;
   drawBlast(c,h,b,k,t,light);
+  { // 20/11 tối: ĐẦU SAO CHỔI + vệt đuôi bay vòng cung → thấy rõ ai đánh ai; trúng thì ghi lại để vẽ số sát thương + quái lóe
+   const col=b.boss?'#ffe08a':ELEMENT_COLORS[idx],gl=glow(h,col);
+   if(k<.55&&gl){const at=u=>{const q=clamp(u/.55);return {x:from.x+(b.x2-from.x)*q,y:from.y+(b.y2-from.y)*q-Math.sin(q*Math.PI)*(b.manual?20:46)};};c.save();c.globalCompositeOperation='lighter';for(let j=5;j>=0;j--){if(k-j*.03<0)continue;const p=at(k-j*.03),R=(b.manual?26:18)*(1-j*.13);c.globalAlpha=.9-j*.14;c.drawImage(gl,p.x-R,p.y-R,R*2,R*2);}c.restore();}
+   if(b.manual&&k<.5&&!light){c.save();c.globalCompositeOperation='lighter';c.strokeStyle=col;c.globalAlpha=(.5-k)*1.6;c.lineWidth=5;c.lineCap='round';c.beginPath();c.moveTo(from.x,from.y);c.lineTo(from.x+(b.x2-from.x)*clamp(k/.5),from.y+(b.y2-from.y)*clamp(k/.5));c.stroke();c.restore();} // vệt tốc biến
+   if(k>=.55&&!b.hitDone){b.hitDone=true;(h.hits??=[]).push({x:b.x2,y:b.y2,dmg:b.damage,col,manual:!!b.manual,boss:!!b.boss,start:t,seed:hash(b.id||b.from)});if(h.hits.length>28)h.hits.shift();(h.mobHit??=new Map()).set(gridKey(b.x2,b.y2),t);for(const [hx,hy] of b.hits||[])h.mobHit.set(gridKey(hx,hy),t);if(h.mobHit.size>200)h.mobHit.clear();}}
   drawSpellFx(c,{index:idx,manual:b.manual,ultimate:b.assist==='grand'||b.assist==='ultimate',assist:b.assist==='spread'?undefined:b.assist},from,{x:b.x2,y:b.y2},b.boss?'#ffe08a':ELEMENT_COLORS[idx],k,light);
   if(b.hits&&k>.45&&!light){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=(1-k)*.9;const gl=glow(h,BLAST[b.assist]?.color||ELEMENT_COLORS[idx]);for(const [hx,hy] of b.hits.slice(0,12))if(gl)c.drawImage(gl,hx-26,hy-26,52,52);c.restore();}}
 }
@@ -212,7 +219,7 @@ export function drawMountRealm(scene,c,t,H){
  const bg=background(h,H);if(bg)c.drawImage(bg,-12,-12,924,H+24);
  const now=nowAt(scene,t),members=e.members||[],n=members.length,crowd=n>60,light=crowd||scene.budget?.level==='light',moving=scene.motion!==false;
  if(e.burn&&now<e.burn.until)drawBurn(c,h,e,t,now,light);
- for(const [x,y,wave,hp] of (e.mobs||[]).slice(0,70)){const s=mobSprite(h,WAVES[wave]);if(!s)continue;const bob=moving?Math.sin(t*.004+x)*2:0;c.drawImage(s.cv,x-s.w/2,y-s.h+bob,s.w,s.h);if(hp<100)bar(c,x-18,y+4,36,4,hp/100,'#ff6a6a');}
+ for(const [x,y,wave,hp] of (e.mobs||[]).slice(0,70)){const s=mobSprite(h,WAVES[wave]);if(!s)continue;const bob=moving?Math.sin(t*.004+x)*2:0,ht=mobHitAt(h,x,y),hk=ht?clamp(1-(t-ht)/220):0,jx=hk*Math.sin(t*.09)*5;c.drawImage(s.cv,x-s.w/2+jx,y-s.h+bob,s.w,s.h);if(hk>0){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=hk*.75;c.drawImage(s.cv,x-s.w/2+jx,y-s.h+bob,s.w,s.h);c.restore();}if(hp<100)bar(c,x-18,y+4,36,4,hp/100,'#ff6a6a');}
  if(e.boss&&e.boss.hp>0){const m=mountById(e.boss.mount),sc=1.45;drawMount(c,e.boss.mount,e.boss.x,e.boss.y+70,{scale:sc,t:moving?t:0,lod:crowd?'light':'full',seed:'boss'});drawMount(c,e.boss.mount,e.boss.x,e.boss.y+70,{scale:sc,t:moving?t:0,lod:crowd?'light':'full',seed:'boss',layer:'front'});
   text(c,'THÚ VƯƠNG · '+(m?.name||'').toUpperCase(),450,350,22,'#ffe08a',900);bar(c,170,370,560,14,e.boss.hp/e.boss.maxHp,'#ffcf5a');}
  const r=n<=40?19:n<=120?15:12,pts=[];
@@ -230,7 +237,7 @@ export function drawMountRealm(scene,c,t,H){
   if(hot){c.save();c.strokeStyle='#ffcf6a';c.lineWidth=3;c.globalAlpha=.7+.3*Math.sin(t/100);c.beginPath();c.arc(x,y,r*1.42,0,TAU);c.stroke();c.restore();}
   if(!crowd){const l=label(h,short(m.name));if(l)c.drawImage(l.cv,x-l.w/2,y+r+2,l.w,l.h);}
  }
- drawSpells(c,h,t,light);drawGiftFx(c,h,t,r);c.restore();
+ drawSpells(c,h,t,light);drawDeaths(c,h,t,light);drawHits(c,h,t,light);drawGiftFx(c,h,t,r);c.restore();
  if(sh&&sh.amp>10){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=Math.min(.35,(sh.amp-10)/18);c.fillStyle='#ffe9b0';c.fillRect(0,0,900,H);c.restore();}
  const phase=e.phase==='registration'?'TẬP HỢP · '+secs(e.registrationEndsAt-now)+' s':e.phase==='running'?'LÀN '+(e.wave+1)+'/3 · '+(realmLayout(e).waves[e.wave]?.name||'')+' · '+secs(e.waveEndsAt-now)+' s':e.phase==='boss'?'THÚ VƯƠNG · '+secs(e.waveEndsAt-now)+' s':'KHÉP LẠI';
  text(c,'TỌA KỸ BÍ CẢNH · '+realmLayout(e).name.toUpperCase(),450,50,34,'#e8d4ff',900,'center',860);text(c,phase+' · '+n+' đạo hữu',450,96,21,'#ffffff',800);
@@ -244,3 +251,20 @@ export function drawMountRealm(scene,c,t,H){
  c.save();worldZoom(c,H);drawDrops(c,h,t,r);c.restore();
  return n;
 }
+// 20/11 tối (chủ game: "cải tiến hiệu ứng đánh của Tọa Kỹ Bí Cảnh"): quái lóe + giật khi trúng, số sát thương, chém X cho đòn danh, quái chết nổ linh khí.
+const gridKey=(x,y)=>Math.round(x/24)+':'+Math.round(y/24);
+function mobHitAt(h,x,y){const m=h.mobHit;if(!m?.size)return 0;return m.get(gridKey(x,y))||0;}
+function drawHits(c,h,t,light){if(!h.hits?.length)return;h.hits=h.hits.filter(x=>t-x.start<900);let shown=0;
+ for(const x of h.hits){const k=(t-x.start)/900;if(k<0)continue;
+  if(k<.25){const gl=glow(h,x.col);if(gl){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=1-k/.25;const R=x.manual?64:x.boss?70:42;c.drawImage(gl,x.x-R,x.y-R-14,R*2,R*2);c.restore();}}
+  if(x.manual&&k<.45){c.save();c.globalCompositeOperation='lighter';c.strokeStyle='#ffffff';c.lineCap='round';c.globalAlpha=1-k/.45;c.lineWidth=5;const L=34*(.6+k);for(const d of [-1,1]){c.beginPath();c.moveTo(x.x-L,x.y-14-L*d*.8);c.lineTo(x.x+L,x.y-14+L*d*.8);c.stroke();}c.strokeStyle=x.col;c.lineWidth=2.5;c.beginPath();c.arc(x.x,x.y-14,30+k*70,0,TAU);c.stroke();c.restore();}
+  if(!(x.dmg>0)||shown>=(light?8:16))continue;shown++;
+  const up=k*46,sz=x.boss?30:x.manual?28:20,a=k<.15?k/.15:1-clamp((k-.6)/.4);
+  c.save();c.globalAlpha=a;c.font='900 '+sz+'px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=sz*.22;c.strokeStyle='#120a18';
+  const s='-'+Math.round(x.dmg)+(x.manual?'!':''),xx=x.x+((x.seed%30)-15),yy=x.y-34-up;c.strokeText(s,xx,yy);c.fillStyle=x.boss?'#ffe08a':x.manual?'#ffffff':x.col;c.fillText(s,xx,yy);c.restore();}}
+function drawDeaths(c,h,t,light){if(!h.deaths?.length)return;h.deaths=h.deaths.filter(d=>t-d.start<1100);const gl=glow(h,'#b9f3ff');
+ for(const d of h.deaths){const k=(t-d.start)/1100;if(k<0)continue;c.save();c.globalCompositeOperation='lighter';
+  if(gl){c.globalAlpha=(1-k)*.9;const R=30+k*60;c.drawImage(gl,d.x-R,d.y-20-R,R*2,R*2);}
+  c.fillStyle='#e6fbff';const n=light?6:12;for(let i=0;i<n;i++){const q=i/n*TAU+d.x,dist=10+k*70;c.globalAlpha=(1-k);c.beginPath();c.arc(d.x+Math.cos(q)*dist,d.y-20+Math.sin(q)*dist*.6-k*20,2.5,0,TAU);c.fill();}
+  if(gl){c.globalAlpha=(1-k)*.8;const R=14;c.drawImage(gl,d.x-R,d.y-40-k*90-R,R*2,R*2);} // hồn bay lên
+  c.restore();}}
