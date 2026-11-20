@@ -65,12 +65,12 @@ test('MUA 1 LÀ 1: tặng 500 chỉ ra skin 500, không kèm skin rẻ hơn',()=
  gift(w,'b',500,'Money Gun');assert.ok(has(w,'b','tinh-ha'));assert.ok(!has(w,'b','hanlap'));assert.ok(!has(w,'b','tudo'));
  assert.equal(w.players.b.skinChoice,VISITOR_GIFT_REWARDS['tinh-ha'].skin);
  assert.ok(w.events.some(x=>x.effect==='transform'&&x.transform==='tinh-ha'&&x.user==='b'));
- assert.equal(w.visitor.giftProgress['b|*'].coins,0);
+ assert.equal(w.players.b.skinWallet.coins,0);
 });
 
 test('đủ coin: trao món đắt nhất vừa đủ, trừ đúng giá, dư mới tính tiếp',()=>{
  const w=world();setLineup(w,['tinh-ha','hanlap','tudo']);
- gift(w,'a',100,'Hand Heart');assert.ok(has(w,'a','hanlap'));assert.equal(w.visitor.giftProgress['a|*'].coins,0);
+ gift(w,'a',100,'Hand Heart');assert.ok(has(w,'a','hanlap'));assert.equal(w.players.a.skinWallet.coins,0);
  gift(w,'a',200,'Baglama',1,N+2000);assert.ok(has(w,'a','tudo'));assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
  assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.tudo.skin);
  gift(w,'a',1,'Rose',99,N+3000);assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
@@ -84,4 +84,20 @@ test('lượt 4 phút; lời mở và lời kết của lượt tam tiên',()=>{
  const w=world();startVisitor(w,'tinh-ha',N);assert.equal(w.visitor.endsAt-w.visitor.startedAt,LINEUP_MS);
  const start=w.events.find(x=>x.visitorStart);assert.match(start.text,/^TAM TIÊN GIÁNG LÂM/);assert.equal(start.visitorLineup.length,3);
  tick(w,w.visitor.endsAt+10);assert.ok(w.events.some(x=>x.visitorEnd&&/^Tam tiên/.test(x.text)));
+});
+
+test('A — VÍ TIÊN DUYÊN: tặng thiếu, hết lượt không mất; lần sau tặng phần còn thiếu là nhận',()=>{
+ const w=world(),b=w.players.b,R=VISITOR_GIFT_REWARDS;setLineup(w,['tinh-ha','hanlap','tudo']);
+ b.rewardSkins=[R.hanlap.skin,R.tudo.skin];b.artifacts.push(R.hanlap.artifact,R.tudo.artifact); // đã đủ đồ vị rẻ → chỉ còn Tinh Hà 500
+ gift(w,'b',100,'Hand Heart',3,N+1000);assert.ok(!has(w,'b','tinh-ha'));assert.equal(b.skinWallet.coins,300);
+ const ev=w.events.findLast(e=>e.gift);assert.equal(ev.visitorProgress.toward.kind,'tinh-ha');assert.equal(ev.visitorProgress.toward.left,200);
+ tick(w,w.visitor.endsAt+10);assert.equal(b.skinWallet.coins,300,'hết lượt: ví còn nguyên');
+ const t2=w.visitor.endsAt+60000;startVisitor(w,'tinh-ha',t2);w.visitor.lineup=assignLineupGifts(['tinh-ha','hanlap','tudo'],w.giftArt);
+ gift(w,'b',100,'Hand Heart',2,t2+1000);assert.ok(has(w,'b','tinh-ha'),'lần sau tặng thêm 200 là nhận');assert.equal(b.skinWallet.coins,0);
+});
+test('A — vị TRÙNG GIÁ vẫn phải đúng món: ví đủ mà tặng món khác thì không mua vị trùng giá',()=>{
+ const w=world();setLineup(w,['tinh-ha','bich-lan','hanlap']);
+ gift(w,'a',1,'Rose',600,N+1000);assert.ok(has(w,'a','hanlap'));assert.ok(!has(w,'a','tinh-ha')&&!has(w,'a','bich-lan'));
+ assert.equal(w.players.a.skinWallet.coins,400,'600 − skin Hàn Lập 100 − pháp bảo Hàn Lập 100');
+ gift(w,'a',500,w.visitor.lineup[0].giftName,1,N+2000);assert.ok(has(w,'a','tinh-ha'));assert.equal(w.players.a.skinWallet.coins,400,'mua 1 là 1: trừ đúng 500');
 });

@@ -53,26 +53,25 @@ export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins,giftName){
  e.giftProgress??={};
  const grant=(kind,key)=>{const r=VISITOR_GIFT_REWARDS[kind];if(!r)return null;const progress=e.giftProgress[key]??={coins:0,skinAwarded:false,artifactAwarded:false};return {r,progress};};
  if(!e.lineup?.length){const g=grant(e.kind,p.id);if(!g)return result;g.progress.coins+=coins;return grantVisitorProgress(p,e,g.r,g.progress,true);}
- // 1) Đúng món của một vị trùng giá → chỉ vị đó.
- const k=giftKey(giftName),named=k&&e.lineup.find(s=>s.giftName&&giftKey(s.giftName)===k&&(!Number.isSafeInteger(unitCoins)||unitCoins===s.price));
- const ownsAll=s=>{const r=VISITOR_GIFT_REWARDS[s.kind];return !!r&&p.rewardSkins?.includes(r.skin)&&p.artifacts?.includes(r.artifact);};
- if(named&&!ownsAll(named)){const g=grant(named.kind,p.id+'|'+named.kind);g.progress.coins+=coins;return grantVisitorProgress(p,{...e,kind:named.kind},g.r,g.progress,true);}
- // 2) Còn lại cộng vào phần "đủ coin" của người này → mở mọi vị giá riêng đã đủ.
- const open=e.lineup.filter(s=>!s.giftName);if(!open.length)return result;
- // 2) MUA 1 LÀ 1 (user chốt): coin cộng vào "ví" của người này; đủ giá món nào thì trao ĐÚNG 1 món và TRỪ đúng giá đó.
- //    Món kế của một vị: chưa có skin → skin (giá skin; cùng giá pháp bảo thì kèm pháp bảo); có skin rồi → pháp bảo (phần chênh).
- //    Đủ cho nhiều món thì lấy món ĐẮT NHẤT trước; còn dư đủ món khác mới trao tiếp (đã trả đủ tiền cả hai).
- const pot=e.giftProgress[p.id+'|*']??={coins:0};pot.coins+=coins;
+ // 20/11 (A — chủ game duyệt): VÍ TIÊN DUYÊN giữ MÃI (p.skinWallet). Quà trong lượt Tam Tiên cộng vào ví; mua món nào trừ ĐÚNG giá món đó;
+ // hết lượt coin dư KHÔNG mất, lần sau tặng thêm phần thiếu là nhận (trước: 23 lượt người xem tặng ≥30 coin rồi mất trắng).
+ // Luật giữ nguyên: MUA 1 LÀ 1; vị TRÙNG GIÁ chỉ mua khi tặng ĐÚNG món riêng của vị đó; vị GIÁ RIÊNG đủ ví là nhận.
+ const wallet=p.skinWallet??={coins:0};wallet.coins+=coins;wallet.at=now;
+ // Món kế của một vị: chưa có skin → skin (cùng giá pháp bảo thì kèm); có skin rồi → pháp bảo (phần chênh). null = đã đủ cả.
  const next=s=>{const r=VISITOR_GIFT_REWARDS[s.kind],pr=visitorPrices(s.kind);if(!r)return null;const skin=p.rewardSkins?.includes(r.skin),art=p.artifacts?.includes(r.artifact);
   if(!skin)return {s,r,need:pr.skin,coins:pr.skin};if(!art&&pr.artifact>pr.skin)return {s,r,need:pr.artifact-pr.skin,coins:pr.artifact};return null;};
  let kind=null,wear=null;
- for(let guard=0;guard<6;guard++){
-  const pick=open.map(next).filter(x=>x&&x.need<=pot.coins).sort((a,b)=>b.need-a.need)[0];if(!pick)break;
-  pot.coins-=pick.need;const got=grantVisitorProgress(p,{...e,kind:pick.s.kind},pick.r,{coins:pick.coins},!kind);
-  if(!kind&&got.skinNames.length)wear=pick.r.skin;kind??=pick.s.kind;result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);
- }
+ const buy=pick=>{wallet.coins-=pick.need;const got=grantVisitorProgress(p,{...e,kind:pick.s.kind},pick.r,{coins:pick.coins},!kind);
+  if(!kind&&got.skinNames.length)wear=pick.r.skin;kind??=pick.s.kind;result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);};
+ const k=giftKey(giftName),named=k&&e.lineup.find(s=>s.giftName&&giftKey(s.giftName)===k&&(!Number.isSafeInteger(unitCoins)||unitCoins===s.price));
+ const open=e.lineup.filter(s=>!s.giftName);
+ if(named){const pick=next(named);if(pick&&pick.need<=wallet.coins)buy(pick);} // 1) đúng món riêng → chỉ vị đó
+ else for(let guard=0;guard<6;guard++){const pick=open.map(next).filter(x=>x&&x.need<=wallet.coins).sort((a,b)=>b.need-a.need)[0];if(!pick)break;buy(pick);} // 2) đắt nhất vừa đủ trước
  if(wear){p.skinChoice=wear;p.skinChoiceSource='visitor';} // mặc món đắt nhất vừa mua, không để món rẻ trao sau đè
- return {...result,kind:kind||open[0].kind,coins:pot.coins};
+ // Hiển thị: vị gần nhất còn thiếu (đúng món riêng → vị đó; không thì vị giá riêng rẻ nhất chưa đủ).
+ const goals=(named?[named]:open).map(next).filter(x=>x&&x.need>wallet.coins).sort((a,b)=>a.need-b.need);
+ const toward=goals[0]?{kind:goals[0].s.kind,need:goals[0].need,left:goals[0].need-wallet.coins}:null;
+ return {...result,kind:kind||named?.kind||open[0]?.kind||e.kind,coins:wallet.coins,wallet:wallet.coins,toward};
 }
 export function visitorSkinName(kind,gender){return kind==='vuonglam'?(gender==='nu'?'Lý Mộ Uyển':'Vương Lâm'):VISITOR_GIFT_REWARDS[kind]?.skinName||'Tiên nhân';}
 function grantVisitorProgress(p,e,r,progress,equip=false){const result={items:[],itemNames:[],skinNames:[]};
