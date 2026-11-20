@@ -819,7 +819,17 @@ export function currentParticipant(w,p,now=Date.now()){
   return now-p.lastActive<LIVE_ACTIVE_MS&&w.liveSession?.active!==false&&p.lastActive>=(w.liveSession?.startedAt||0)&&!p.resident&&w.playTransfers?.[p.id]?.phase!=='web'&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=20000); // 08/11: chỉ ghé vào (chưa tim/chat/quà) thì rời sân sau 20 s (trước 90 s)
 }
 export function markLiveSession(w,isLive,now=Date.now()){
-  if(isLive){if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};}
+  if(isLive){const fresh=!w.liveSession||!w.liveSession.active;if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};if(fresh)holdAutoEvents(w,w.settings?.liveWarmupMinutes??LIVE_WARMUP_MINUTES,now);}
+// 20/11 (chủ game: "lần sau mới bật live lên đừng có bật sự kiện liền"): mở LIVE mới → giữ mọi sự kiện TỰ ĐỘNG trong liveWarmupMinutes (mặc định 10),
+// rồi nhả lần lượt (không dồn cùng lúc). Mở tay trên trang Sự kiện vẫn được ngay.
+export const LIVE_WARMUP_MINUTES=10;
+const HOLD_STAGGER=[["nextSmallAt",0],["nextQuizAt",0],["nextEnvelopeAt",1],["nextAutoEventAt",0],["nextThienTaiAt",2],["nextBossAt",3],["nextVisitorAt",6],["nextBigEventAt",10]];
+export function holdAutoEvents(w,minutes,now=Date.now()){const m=Math.max(0,Math.min(120,Number(minutes)||0)),until=now+m*60000;w.autoHoldUntil=until;
+ for(const [k,extra] of HOLD_STAGGER){const at=until+extra*60000;if(!(w[k]>=at))w[k]=at;}
+ if(w.competitionSchedule&&!(w.competitionSchedule.nextAt>=until+15*60000))w.competitionSchedule.nextAt=until+15*60000;
+ w.lastCeremonyAt=Math.max(w.lastCeremonyAt||0,until);w.lastBlessingAt=Math.max(w.lastBlessingAt||0,until);if(w.eventPacing)w.eventPacing.lastOccupiedAt=Math.max(w.eventPacing.lastOccupiedAt||0,until);
+ return {ok:true,until};}
+export function releaseAutoHold(w,now=Date.now()){const back=Math.max(0,(w.autoHoldUntil||0)-now);w.autoHoldUntil=0;if(back){for(const [k] of HOLD_STAGGER)if(w[k]>now)w[k]=Math.max(now+60000,w[k]-back);if(w.competitionSchedule?.nextAt>now)w.competitionSchedule.nextAt=Math.max(now+60000,w.competitionSchedule.nextAt-back);}return {ok:true};}
   else if(w.liveSession)w.liveSession.active=false;
 }
 export function reconcilePatron(w,now=Date.now()){
@@ -1279,9 +1289,14 @@ function randomEvent(w,now){if(['registration','running'].includes(w.race?.phase
   for(const id of [...w.randomBag]){const start=RANDOM_EVENTS.find(e=>e[0]===id)[2];let r;try{r=start(w,now);}catch{r=null;}
     if(r?.ok){w.randomBag.splice(w.randomBag.indexOf(id),1);w.lastRandomEvent=id;return id;}}
   return null;}
-export function setEventSettings(w,{autoEvents,autoEventMinutes,autoRandom,scheduledCompetitions,eventSpacing,bossIntervalMinutes,huntBeforeCompetition,visitorEveryFive,randomExclude,quiz,envelope,heartPlay}={}){
+export function setEventSettings(w,{liveWarmupMinutes,bigEvents,bigEventMinutes,holdMinutes,releaseHold,autoEvents,autoEventMinutes,autoRandom,scheduledCompetitions,eventSpacing,bossIntervalMinutes,huntBeforeCompetition,visitorEveryFive,randomExclude,quiz,envelope,heartPlay}={}){
   // 4/11/2026: công tắc từng sự kiện trên trang điều hành (có hiệu lực ngay trên LIVE).
-  if(randomExclude!==undefined){if(!Array.isArray(randomExclude))return fail('Danh sách sự kiện tắt không hợp lệ.');const ids=new Set(RANDOM_EVENTS.map(([id])=>id));w.settings??={};w.settings.randomExclude=[...new Set(randomExclude.map(String))].filter(id=>ids.has(id));if(w.randomBag)w.randomBag=w.randomBag.filter(id=>!w.settings.randomExclude.includes(id));}
+  if(randomExclude!==undefined){if(!Array.isArray(randomExclude))return fail('Danh sách sự kiện tắt không hợp lệ.');const ids=new Set([...RANDOM_EVENTS.map(([id])=>id),...BIG_IDS]); /* 20/11: tắt tự động được cả sự kiện lớn (Mê Cung, Bí Cảnh, Bảo Khố…) */w.settings??={};w.settings.randomExclude=[...new Set(randomExclude.map(String))].filter(id=>ids.has(id));if(w.randomBag)w.randomBag=w.randomBag.filter(id=>!w.settings.randomExclude.includes(id));}
+  if(liveWarmupMinutes!==undefined){const m=Math.round(Number(liveWarmupMinutes));if(!Number.isFinite(m)||m<0||m>60)return fail('Thời gian chờ đầu LIVE 0–60 phút.');w.settings??={};w.settings.liveWarmupMinutes=m;}
+  if(typeof bigEvents==='boolean'){w.settings??={};w.settings.bigEvents=bigEvents;}
+  if(bigEventMinutes!==undefined){const m=Math.round(Number(bigEventMinutes));if(!Number.isFinite(m)||m<15||m>120)return fail('Nhịp sự kiện lớn 15–120 phút.');w.settings??={};w.settings.bigEventMinutes=m;if(w.nextBigEventAt)w.nextBigEventAt=Math.min(w.nextBigEventAt,Date.now()+m*60000);}
+  if(holdMinutes!==undefined){const m=Math.round(Number(holdMinutes));if(!Number.isFinite(m)||m<1||m>120)return fail('Hoãn 1–120 phút.');holdAutoEvents(w,m,Date.now());}
+  if(releaseHold===true)releaseAutoHold(w);
   for(const [k,v] of [['quiz',quiz],['envelope',envelope],['heartPlay',heartPlay]])if(typeof v==='boolean'){w.settings??={};w.settings[k]=v;}
   if(bossIntervalMinutes!==undefined){const m=Number(bossIntervalMinutes);if(!Number.isInteger(m)||m<10||m>120)return fail('Nhịp yêu thú cần từ 10 đến 120 phút.');w.settings??={};w.settings.bossInterval=m*60;w.nextBossAt=Math.min(w.nextBossAt||Infinity,Date.now()+m*60000);}
   if(typeof eventSpacing==='boolean')configureEventSpacing(w,eventSpacing,Date.now());
@@ -1293,7 +1308,7 @@ export function setEventSettings(w,{autoEvents,autoEventMinutes,autoRandom,sched
   if(typeof scheduledCompetitions==='boolean'){w.settings??={};w.settings.scheduledCompetitions=scheduledCompetitions;if(scheduledCompetitions&&!w.competitionSchedule)w.competitionSchedule={nextAt:Date.now()+COMPETITION_INTERVAL_MS,intervalMs:COMPETITION_INTERVAL_MS,nextKind:'race',cycleVersion:2,cycleIndex:0};}
   w.settings??={};if(typeof autoEvents==='boolean')w.settings.autoEvents=autoEvents;if(typeof autoRandom==='boolean'){w.settings.autoRandom=autoRandom;if(autoRandom)w.settings.autoEvents=true;}
   if(autoEventMinutes!==undefined){const m=Math.round(Number(autoEventMinutes));if(!Number.isFinite(m)||m<5||m>120)return fail('Khoảng cách 5–120 phút.');w.settings.autoEventMinutes=m;if(w.nextAutoEventAt)w.nextAutoEventAt=Math.min(w.nextAutoEventAt,Date.now()+m*60000);}
-  return {ok:true,settings:{autoEvents:w.settings.autoEvents!==false,autoRandom:!!w.settings.autoRandom,autoEventMinutes:w.settings.autoEventMinutes??15,nextAutoEventAt:w.nextAutoEventAt||null,randomExclude:w.settings.randomExclude||[],quiz:w.settings.quiz!==false,envelope:w.settings.envelope!==false,heartPlay:w.settings.heartPlay!==false,scheduledCompetitions:!!w.settings.scheduledCompetitions,huntBeforeCompetition:!!w.settings.huntBeforeCompetition}};
+  return {ok:true,settings:{liveWarmupMinutes:w.settings.liveWarmupMinutes??LIVE_WARMUP_MINUTES,bigEvents:w.settings.bigEvents!==false,bigEventMinutes:w.settings.bigEventMinutes??BIG_EVENT_MINUTES,autoHoldUntil:w.autoHoldUntil||0,autoEvents:w.settings.autoEvents!==false,autoRandom:!!w.settings.autoRandom,autoEventMinutes:w.settings.autoEventMinutes??15,nextAutoEventAt:w.nextAutoEventAt||null,randomExclude:w.settings.randomExclude||[],quiz:w.settings.quiz!==false,envelope:w.settings.envelope!==false,heartPlay:w.settings.heartPlay!==false,scheduledCompetitions:!!w.settings.scheduledCompetitions,huntBeforeCompetition:!!w.settings.huntBeforeCompetition}};
 }
 function flowerScore(w,p,points,now){
   const ev=w.flowerEvent;if(!ev||now<ev.startedAt||now>=ev.endsAt||p.resident||points<=0)return;

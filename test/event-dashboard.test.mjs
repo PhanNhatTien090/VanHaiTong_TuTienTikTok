@@ -2,13 +2,13 @@ import test from 'node:test';import assert from 'node:assert/strict';import {eve
 const N=1800000000000,state={serverNow:N,players:[],socialStatus:{tournament:null,bonds:[],invites:[]},settings:{}};
 test('Ma Long is a prominent direct action, every activity remains reachable and extended rules collapse',()=>{
  const html=eventDashboardHTML(state);
- assert.match(html,/Mở Ma Long/);assert.match(html,/data-species="abyss-dragon"/);assert.ok(html.indexOf('abyss-dragon')<html.indexOf('data-panel="visitors"'));
+ assert.match(html,/Hắc Uyên Ma Long/);assert.match(html,/data-species="abyss-dragon"/);assert.ok(html.indexOf('abyss-dragon')<html.indexOf('data-panel="skins"'));
  for(const action of ['sea-event','visitor','boss','start-race','arena-start','start-lantern','start-bond-festival','flower','opportunity','world-scene','pet-start','blessing'])assert.ok(html.includes(`data-social="${action}"`),action);
- assert.match(html,/<details class="event-group" data-panel="help">/);assert.match(html,/Yêu lực ×10/);
+ assert.match(html,/<details class="event-group" data-panel="help">/);assert.match(html,/data-panel="big"/); // 20/11: trang gọn — chi tiết Ma Long ở mục Luật
 });
 test('occupied stage labels current event and disables starts while retaining explicit stop',()=>{
  const html=eventDashboardHTML({...state,boss:{name:'Hắc Uyên Ma Long',endsAt:N+45000}});
- assert.match(html,/0:45 còn lại/);assert.match(html,/data-social="stop-current" data-kind="boss"/);assert.match(html,/data-species="abyss-dragon" disabled/);
+ assert.match(html,/<em>0:45<\/em>/);assert.match(html,/data-social="stop-current" data-kind="boss"/);assert.match(html,/data-species="abyss-dragon" disabled/);
  const safe=eventDashboardHTML({...state,boss:{name:'<script>alert(1)</script>',endsAt:N+1000}});assert.ok(!safe.includes('<script>'));
 });
 test('boss/skin/pet buttons dispatch exactly one intended request, mounting never activates an event',()=>{

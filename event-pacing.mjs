@@ -1,5 +1,6 @@
 import {stageConflict} from './stage-lock.mjs';
 export function automaticEventsPaused(w,now){
+ if(w.autoHoldUntil>now)return true; // 20/11: đang giữ sự kiện tự động (đầu LIVE / bấm Hoãn)
  const hunt=w.settings?.huntBeforeCompetition&&w.settings?.scheduledCompetitions&&w.competitionSchedule?.huntStartedAt&&w.competitionSchedule?.huntForAt===w.competitionSchedule?.nextAt&&now<w.competitionSchedule.nextAt;
  if(!w.settings?.eventSpacing)return !!hunt;
  const pacing=w.eventPacing??={lastOccupiedAt:now};

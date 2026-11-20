@@ -7,3 +7,38 @@
 #eventsView .event-hero-tudo small{color:#ff9a7a}
 #eventsView .event-hero-viem{background:linear-gradient(120deg,#3a0c04,#1a0d08);border-color:#ff7a2a66}
 #eventsView .event-hero-viem small{color:#ffb070}
+
+/* 20/11 — trang Sự kiện gọn: đang diễn ra (mỗi cái 1 nút dừng) · tự động · mở sự kiện */
+#eventsView .event-status-main{display:grid;gap:6px;flex:1}
+#eventsView .run-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-top:1px solid #537c7933}
+#eventsView .run-row:first-of-type{border-top:0}
+#eventsView .run-row strong{flex:1;font-size:16px}
+#eventsView .run-row em{font:600 14px Arial;color:#f0c987;font-style:normal;min-width:48px;text-align:right}
+#eventsView .event-action-stop,#eventsView .event-status .event-action-stop{flex:none;min-height:36px;padding:7px 16px;background:#7a2b33;border-color:#e08a86;color:#fff}
+#eventsView .event-action-stop:hover:not(:disabled){background:#9a3540}
+#eventsView .auto-panel{border:1px solid #47636366;background:#0c2329;border-radius:11px;padding:12px 16px;display:grid;gap:10px}
+#eventsView .auto-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#eventsView .auto-head b{display:block;font:600 15px Arial;color:#cfe9d9}
+#eventsView .auto-head b.auto-hold{color:#f3c87a}
+#eventsView .auto-head b.auto-off{color:#ef9a90}
+#eventsView .auto-head span{font:12px Arial;color:#a9c0bf}
+#eventsView .auto-btns{display:flex;gap:6px;flex-wrap:wrap}
+#eventsView .auto-btns .event-action{flex:none;min-height:34px;padding:6px 12px}
+#eventsView .auto-row{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+#eventsView .auto-chk{display:inline-flex;align-items:center;gap:6px;font:13px Arial;color:#d6e4df;cursor:pointer}
+#eventsView .auto-num{display:inline-flex;align-items:center;gap:6px;font:13px Arial;color:#d6e4df}
+#eventsView .auto-num input{width:58px;padding:5px;border-radius:6px;border:1px solid #66858270;background:#102f36;color:#fff;font:600 14px Arial;text-align:center}
+#eventsView .auto-num small{color:#8fa9a7;font-size:12px}
+#eventsView .auto-list summary{cursor:pointer;font:600 13px Arial;color:#ead8b1}
+#eventsView .auto-list>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px 12px;padding-top:8px}
+#eventsView .auto-list small{grid-column:1/-1;color:#8fa9a7;font:12px Arial}
+#eventsView .ev-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;width:100%}
+#eventsView .ev-card{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid #b580574f;border-radius:10px;background:linear-gradient(120deg,#271a24,#142935)}
+#eventsView .ev-card img{width:46px;height:60px;object-fit:contain;flex:none}
+#eventsView .ev-card>div{display:grid;gap:3px;flex:1;min-width:0}
+#eventsView .ev-card b{font:600 13px Arial;color:#fff0cf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#eventsView .ev-card small{font:11px Arial;color:#c9b38a}
+#eventsView .ev-card .event-action{min-height:30px;padding:4px 10px;flex:none}
+#eventsView .ev-card a{font:11px Arial;color:#91d9ef}
+#eventsView .event-group-body table{width:100%;font:12px Arial;color:#cfe0dc;border-collapse:collapse}
+#eventsView .event-group-body td,#eventsView .event-group-body th{padding:4px 6px;border-bottom:1px solid #47636344;text-align:left}
