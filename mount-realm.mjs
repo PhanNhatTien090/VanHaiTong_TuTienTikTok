@@ -34,7 +34,7 @@ export function startMountRealm(w,now,ctx){
  const boss=BOSS_POOL.filter(id=>id!==w.lastRealmBoss);const pick=boss[hash(now)%boss.length];w.lastRealmBoss=pick;
  const maps=REALM_MAPS.filter(m=>m.id!==w.lastRealmMap),map=maps[hash('map'+now)%maps.length].id;w.lastRealmMap=map;
  w.mountRealm={id:'realm-'+now,phase:'registration',startedAt:now,registrationEndsAt:now+REGISTER_MS,members:{},mobs:[],boss:null,bossMount:pick,map,wave:-1,spawned:0,quota:0,fx:[],seq:0};
- ctx.emit(w,null,'TỌA KỸ BÍ CẢNH MỞ CỬA • gõ bicanh để vào · đánh yêu thú nhặt Linh Châu','mount-realm',now,{realmStart:true});
+ ctx.emit(w,null,'TỌA KỸ BÍ CẢNH MỞ CỬA • cả sân tự vào · tọa kỹ tự đánh yêu thú · gõ danh để lao lên đánh mạnh','mount-realm',now,{realmStart:true});
  return {ok:true};
 }
 export function stopMountRealm(w,now,ctx){
@@ -115,10 +115,12 @@ function spread(list){
 }
 export function tickMountRealm(w,now,ctx){
  const e=w.mountRealm;if(!e||!mountRealmActive(w))return;use(e);
- if(e.phase==='registration'){if(now<e.registrationEndsAt)return;
+ // 20/11 tối (chủ game: "cho người ta tự vào chơi luôn, không cần gõ bicanh"): ai đang có mặt ở LIVE tự vào Bí Cảnh — lúc khai trận và mỗi giây sau đó (người mới tới cũng vào)
+ const autoJoin=()=>{for(const p of Object.values(w.players))if(real(p)&&!Object.hasOwn(e.members,p.id)&&ctx.active?.(w,p,now))enroll(w,p,now);};
+ if(e.phase==='registration'){if(now<e.registrationEndsAt)return;autoJoin();
   if(!Object.keys(e.members).length){e.phase='cancelled';ctx.emit(w,null,'Tọa Kỹ Bí Cảnh khép lại • chưa có đạo hữu vào','mount-realm',now,{realmEnd:true});return;}
   e.phase='running';e.battleStartedAt=now;nextWave(w,e,now,ctx);return;}
- if(now-(e.tickAt||0)<1000)return;e.tickAt=now;
+ if(now-(e.tickAt||0)<1000)return;e.tickAt=now;if(e.phase==='running'||e.phase==='boss')autoJoin();
  battleTick(w,e,now,ctx);
  if(e.phase==='running'&&(now>=e.waveEndsAt||e.spawned>=e.quota&&!e.mobs.length))nextWave(w,e,now,ctx);
  else if(e.phase==='boss'&&(e.boss.hp<=0||now>=e.waveEndsAt))finish(w,now,ctx);
@@ -146,7 +148,7 @@ export function mountRealmCommand(w,p,cmd,now,ctx){
  if(!join&&!attack)return null;
  if(!mountRealmActive(w))return join?fail('Tọa Kỹ Bí Cảnh chưa mở.'):null;
  const m=enroll(w,p,now);if(!m)return fail('Chỉ đệ tử đang ở LIVE mới vào được Bí Cảnh.');
- if(join&&!attack)return {ok:true,message:'Đã vào Bí Cảnh.'};
+ if(join&&!attack)return {ok:true,message:'Đã vào Bí Cảnh (cả sân vốn tự vào).'};
  if(now-m.lastManual<MANUAL_CD)return fail('Chiêu đang hồi.');
  m.lastManual=now;
  const targets=e.boss&&e.boss.hp>0?[e.boss]:e.mobs,found=nearest(grid(targets),m,40);

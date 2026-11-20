@@ -51,6 +51,7 @@ export function drawDoKiep(scene,c,t,H,layer){const k=scene.doKiep;if(!k)return;
    word(c,'☠',x,head-s*14,Math.round(s*17),'#e8e1d6',.95);continue;}
   if(hp===1){word(c,'♥',x,head-s*14,Math.round(s*15),'#ff5a5a',.95);c.save();c.globalCompositeOperation='multiply';const bg2=c.createRadialGradient(x,feet-s*32,s*4,x,feet-s*32,s*30);bg2.addColorStop(0,'rgba(110,96,86,.45)');bg2.addColorStop(1,'rgba(110,96,86,0)');c.fillStyle=bg2;c.fillRect(x-s*30,feet-s*62,s*60,s*60);c.restore();
    if(!crowd)for(let i=0;i<3;i++){const u=((t*.0007+i/3+hashId(id)%5/5)%1),r=s*(3+u*7),yy=head-u*s*30;const sg=c.createRadialGradient(x,yy,0,x,yy,r);sg.addColorStop(0,'rgba(60,58,56,.5)');sg.addColorStop(1,'rgba(60,58,56,0)');c.globalAlpha=1-u;c.fillStyle=sg;c.fillRect(x-r,yy-r,r*2,r*2);}c.globalAlpha=1;}
+  if(st[3]){c.save();c.globalCompositeOperation='lighter';c.strokeStyle='rgba(140,235,255,.85)';c.lineWidth=2.2;c.setLineDash([s*4,s*5]);c.lineDashOffset=t*.03;for(const k2 of [0,1]){c.beginPath();c.ellipse(x,feet-s*(10+k2*26),s*(26-k2*4),s*(7-k2),0,0,TAU);c.stroke();}c.setLineDash([]);c.restore();} /* thân pháp: vòng xanh xoay quanh người đã gõ ne */
   if(sh>0){c.save();c.globalCompositeOperation='lighter';const R=s*30,bg=c.createRadialGradient(x,feet-s*30,R*.5,x,feet-s*30,R*1.1);bg.addColorStop(0,'rgba(255,214,120,0)');bg.addColorStop(.8,'rgba(255,214,120,.12)');bg.addColorStop(1,'rgba(255,214,120,0)');c.fillStyle=bg;c.beginPath();c.ellipse(x,feet-s*30,R,R*1.25,0,0,TAU);c.fill();
    c.strokeStyle='rgba(255,224,150,.75)';c.lineWidth=1.6;c.setLineDash([s*6,s*4]);c.lineDashOffset=-t*.02;c.beginPath();c.ellipse(x,feet-s*30,R,R*1.25,0,0,TAU);c.stroke();c.setLineDash([]);
    if(sh>1){c.beginPath();c.ellipse(x,feet-s*30,R*1.12,R*1.38,0,0,TAU);c.stroke();}c.restore();}}
@@ -85,10 +86,10 @@ export function drawDoKiepHud(scene,c,t,H){const k=scene.doKiep;if(!k)return;con
   else if(k.result){title=k.result.survivors?'ĐỘ KIẾP THÀNH CÔNG':'ĐỘ KIẾP THẤT BẠI';sub=k.result.survivors+'/'+k.result.total+' trụ qua thiên lôi · nhận danh hiệu Độ Kiếp Tán Tiên'+(k.result.mvp?' · Hộ Đạo: '+k.result.mvp.name:'');}
   if(k.phase!=='cancelled')paperBanner(c,title,sub,450,H*.2,36,a,Math.min(1,(now-k.startedAt)/700),11);
   // LUẬT (lúc ghi danh): thẻ giấy giữa màn — người xem hiểu ngay bị sét đánh thì sao
-  if(k.phase==='registration'){const u=Math.min(1,(now-k.startedAt)/900);guide(c,H,u,[['⚡','Lão phu GỌI TÊN ai → người đó gõ ne để NÉ (50%)'],['♥','Mỗi người 3 mạng · trúng sét mất 1 mạng'],['☠','Mất cả 3 mạng → HÓA TRO, không nhận thưởng'],['✦','Trụ đến cuối → tu vi + danh hiệu Độ Kiếp Tán Tiên'],['🛡','Tặng quà → khiên che mình và đồng môn']]);}
+  if(k.phase==='registration'){const u=Math.min(1,(now-k.startedAt)/900);guide(c,H,u,[['⚡','Gõ ne bất cứ lúc nào → vận THÂN PHÁP, sét tới là né'],['♥','Mỗi người 3 mạng · trúng sét mất 1 mạng'],['☠','Mất cả 3 mạng → HÓA TRO, không nhận thưởng'],['✦','Trụ đến cuối → tu vi + danh hiệu Độ Kiếp Tán Tiên'],['🛡','Tặng quà → khiên che mình và đồng môn']]);}
   // ĐANG NHẮM: cuộn đỏ gọi tên + đếm ngược
   const v=(k.wv||[]).at(-1);if(k.phase==='running'&&v&&!v.done&&now>=v.warnAt){const left=Math.max(0,Math.ceil((v.strikeAt-now)/1000)),names=(v.names||[]).filter(Boolean),more=v.targets.length-names.length,final=v.n>=k.waves;
-   callout(c,H,final?'⚡ TỬ TIÊU THẦN LÔI · CẢ SÂN BỊ NHẮM':'⚡ SÉT NHẮM: '+names.map(n=>String(n).slice(0,14)).join(' · ')+(more>0?' +'+more:''),'GÕ  ne  ĐỂ NÉ · '+left+' giây',Math.min(1,(now-v.warnAt)/300));}
+   callout(c,H,final?'⚡ TỬ TIÊU THẦN LÔI · CẢ SÂN BỊ NHẮM':'⚡ SÉT NHẮM: '+names.map(n=>String(n).slice(0,14)).join(' · ')+(more>0?' +'+more:''),'AI CŨNG GÕ  ne  ĐỂ VẬN THÂN PHÁP · '+left+' giây',Math.min(1,(now-v.warnAt)/300));}
   // KẾT QUẢ đạo vừa giáng (3,5 s)
   const L=k.last;if(L&&now-L.at<3500&&k.phase!=='cancelled'){const parts=[];const nm=a=>a.slice(0,2).map(n=>String(n).slice(0,12)).join(', ')+(a.length>2?' +'+(a.length-2):'');
    if(L.dodge.length)parts.push('NÉ ĐƯỢC: '+nm(L.dodge));if(L.shield.length)parts.push('KHIÊN ĐỠ: '+nm(L.shield));if(L.burn.length)parts.push('−1 MẠNG: '+nm(L.burn));if(L.ash.length)parts.push('HÓA TRO: '+nm(L.ash));

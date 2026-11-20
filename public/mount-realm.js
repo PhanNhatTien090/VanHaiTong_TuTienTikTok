@@ -95,7 +95,7 @@ const secs=ms=>Math.max(0,Math.ceil(ms/1000));
 // ---------- bảng hướng dẫn ----------
 function drawGuide(c,e){
  box(c,16,136,420,186,'#b58cff99');text(c,'CÁCH CHƠI BÍ CẢNH',226,156,17,'#e8d4ff',900);
- const rows=[['bicanh','vào Bí Cảnh, tự đánh yêu thú gần nhất'],['danh / 6','lao lên đánh mạnh'],['quà','tung chiêu đánh lan (bảng bên phải)'],['hạ Thú vương','cả sân cùng thu phục'],['truyền công','mở châu ra tọa kỹ (bảng dưới phải)']];
+ const rows=[['tự vào','có mặt ở LIVE là tọa kỹ tự đánh yêu thú'],['danh / 6','lao lên đánh mạnh'],['quà','tung chiêu đánh lan (bảng bên phải)'],['hạ Thú vương','cả sân cùng thu phục'],['truyền công','mở châu ra tọa kỹ (bảng dưới phải)']];
  rows.forEach(([k,v],i)=>{const y=186+i*28;text(c,k,30,y,16,'#ffe08a',900,'left');text(c,'· '+v,30+Math.max(64,c.measureText(k).width+8),y,15,'#f3eaff',700,'left',300);});
 }
 function drawGiftBoard(c,h){

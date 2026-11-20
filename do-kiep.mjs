@@ -10,7 +10,7 @@
 //    người che được nhiều người nhất (Hộ Đạo Chân Quân) thêm 3% + 50 đá + danh hiệu 1 giờ. Quà cộng tu vi gốc coin×100 như Bảo Khố.
 // 20/11 tối (chủ game: "không ai hiểu, nhàm, không biết bị sét đánh thì bị gì") — làm lại nhịp: 7 đạo, báo trước 6 s (bình luận TikTok trễ 2–4 s),
 // mỗi đạo GỌI TÊN người bị nhắm (giọng + cuộn đỏ), nhắm nhiều hơn (15% → 45%), ĐẠO CUỐI nhắm CẢ SÂN; trụ tới cuối có danh hiệu Độ Kiếp Tán Tiên.
-export const DOKIEP=Object.freeze({registerMs:15000,waves:7,waveGapMs:10000,warnMs:6000,firstMs:3000,lives:3,dodge:.5,podiumMs:14000,maxShield:2,
+export const DOKIEP=Object.freeze({registerMs:15000,waves:7,waveGapMs:10000,warnMs:6000,firstMs:3000,lives:3,dodge:.7,stanceMs:25000,podiumMs:14000,maxShield:2,
  share:[.12,.15,.18,.22,.26,.32,1],maxTargets:60,maxPeople:600,lateJoinBefore:4,survivorTitle:'Độ Kiếp Tán Tiên',
  reward:{alive:.015,aliveStones:20,ash:.003,ashStones:3,mvp:.03,mvpStones:50},titleMs:3600000,qiPerCoin:100,
  gifts:[[99,'phan','Phản Lôi Nghịch Thiên',0],[30,'tan','Thiên Cương Tán',6],[10,'hoi','Hồi Xuân Đan',2],[1,'phu','Hộ Thân Phù',0]]});
@@ -26,7 +26,7 @@ export function startDoKiep(w,now,c){
  if(doKiepActive(w))return fail('Bách Nhân Độ Kiếp đang diễn ra.');
  const busy=c.stageConflict?.(w,now);if(busy)return fail('Đang có '+busy+' • chờ kết thúc.');
  w.doKiep={id:'kiep-'+now,phase:'registration',startedAt:now,regEndsAt:now+DOKIEP.registerMs,wave:0,nextAt:0,waves:[],people:{},guard:{},log:[],reversals:[],seq:0};
- c.emit(w,null,'BÁCH NHÂN ĐỘ KIẾP • sét gọi tên ai thì người đó gõ ne để né • trúng 3 lần hóa tro, mất thưởng • trụ đến cuối nhận tu vi + danh hiệu Độ Kiếp Tán Tiên','kiep',now,{kiepStart:true});
+ c.emit(w,null,'BÁCH NHÂN ĐỘ KIẾP • gõ ne để vận Thân Pháp né sét (gõ sớm, gõ thường xuyên) • trúng 3 lần hóa tro, mất thưởng • trụ đến cuối nhận tu vi + danh hiệu Độ Kiếp Tán Tiên','kiep',now,{kiepStart:true});
  return {ok:true};
 }
 export function stopDoKiep(w,now,c){const e=w.doKiep;if(!doKiepVisible(w,now))return fail('Không có Bách Nhân Độ Kiếp đang mở.');
@@ -42,9 +42,9 @@ export function doKiepCommand(w,p,cmd,now,c){
  const e=w.doKiep;if(!e||!doKiepActive(w)||!real(p))return;
  const had=!!e.people[p.id],m=join(w,e,p,now);
  if(DOKIEP_JOIN.includes(cmd)){if(!m)return fail('Kiếp vân đã khép • chờ lượt sau.');return {ok:true,kiep:true,duplicate:had};}
- if(DOKIEP_DODGE.includes(cmd)){const v=pending(e);if(!m||m.hp<=0)return {ok:true,kiep:true,ignored:true};
-  if(!v||!v.targets.includes(p.id))return {ok:true,kiep:true,ignored:true}; // né khi không bị nhắm: không phạt, không báo
-  m.dodge=v.n;return {ok:true,kiep:true,dodge:true};}
+ // 20/11 tối (LIVE: "không ai né được"): hình LIVE tới người xem trễ 5–10 s + bình luận trễ 2–4 s → thấy tên mình rồi mới gõ thì sét đã giáng.
+ // Nên "ne" gõ LÚC NÀO cũng tính: vận THÂN PHÁP 25 s, sét đánh tới thì 70% né (dùng xong mất, gõ lại để vận tiếp).
+ if(DOKIEP_DODGE.includes(cmd)){if(!m||m.hp<=0)return {ok:true,kiep:true,ignored:true};const fresh=!(m.stance>now);m.stance=now+DOKIEP.stanceMs;return {ok:true,kiep:true,dodge:true,duplicate:!fresh};}
  return undefined;
 }
 function pick(e,v,list,n){const out=[];const pri=list.filter(([id,m])=>v&&v.targets.includes(id)&&!(m.shield>0)),rest=list.filter(x=>!pri.includes(x));
@@ -78,7 +78,7 @@ function startWave(w,e,now,c){const list=alive(e);if(!list.length)return finish(
 function strike(w,e,v,now,c){
  for(const id of v.targets){const m=e.people[id];if(!m||m.hp<=0){v.res[id]='gone';continue;}
   if(m.shield>0){m.shield--;v.res[id]='shield';continue;}
-  if(m.dodge===v.n&&Math.random()<DOKIEP.dodge){v.res[id]='dodge';continue;}
+  if(m.stance>now){m.stance=0;if(Math.random()<DOKIEP.dodge){v.res[id]='dodge';continue;}}
   m.hp--;m.hits++;v.res[id]=m.hp<=0?'ash':'burn';if(m.hp<=0)m.ashAt=now;}
  v.done=true;
  {const by=k=>v.targets.filter(id=>v.res[id]===k).map(id=>e.people[id]?.name||'');e.last={n:v.n,at:now,dodge:by('dodge'),shield:by('shield'),burn:by('burn'),ash:by('ash')};}
@@ -106,7 +106,7 @@ export function tickDoKiep(w,now,c){
 }
 /** Gói gọn cho overlay (không gửi cả bảng người khi đông): người trên sân lấy theo id. */
 export function doKiepView(w,now){const e=w.doKiep;if(!e||!doKiepVisible(w,now))return null;
- const ppl={};for(const [id,m] of Object.entries(e.people))ppl[id]=[m.hp,m.shield||0,m.ashAt||0];
+ const ppl={};for(const [id,m] of Object.entries(e.people))ppl[id]=[m.hp,m.shield||0,m.ashAt||0,m.stance>now?1:0];
  const list=Object.values(e.people);
  return {id:e.id,phase:e.phase,startedAt:e.startedAt,regEndsAt:e.regEndsAt,wave:e.wave,waves:DOKIEP.waves,podiumUntil:e.podiumUntil||0,
   wv:e.waves.slice(-2).map(v=>({n:v.n,warnAt:v.warnAt,strikeAt:v.strikeAt,targets:v.targets,names:v.targets.slice(0,4).map(id=>e.people[id]?.name||''),res:v.res,done:!!v.done})),

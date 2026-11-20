@@ -38,7 +38,8 @@ test('Độ Kiếp: khiên đỡ đòn, quà hồi sinh, 99 che cả sân, quà 
 test('Độ Kiếp: gõ ne khi bị nhắm được ghi nhận; người mới bình luận muộn (sau đạo 4) không vào', () => {
   const w=world(8);startDoKiep(w,N);let t=N+DOKIEP.registerMs+10;tick(w,t);t+=DOKIEP.firstMs+10;tick(w,t);
   const e=w.doKiep,v=e.waves.at(-1),id=v.targets[0];
-  const r=action(w,{type:'chat',userId:id,name:'x',text:'ne'},t+100);assert.equal(r.dodge,true);assert.equal(e.people[id].dodge,1);
+  const r=action(w,{type:'chat',userId:id,name:'x',text:'ne'},t+100);assert.equal(r.dodge,true);assert.ok(e.people[id].stance>t,'vận thân pháp');
+  const other=Object.keys(e.people).find(x=>!v.targets.includes(x));assert.equal(action(w,{type:'chat',userId:other,name:'y',text:'ne'},t+120).dodge,true,'chưa bị nhắm gõ ne cũng tính');
   e.wave=DOKIEP.lateJoinBefore;const late=ensurePlayer(w,'late','Muộn',t);late.lastActive=t;
   action(w,{type:'chat',userId:'late',name:'Muộn',text:'1'},t+200);assert.equal(e.people.late,undefined);
 });
@@ -52,4 +53,14 @@ test('Độ Kiếp: gõ "né" có dấu cũng né; mỗi đạo gọi tên ngư�
   t=runAll(w,t);const last=e.waves.at(-1);assert.equal(last.n,DOKIEP.waves);
   const aliveAtFinal=Object.keys(e.people).filter(id=>!(e.people[id].ashAt<last.warnAt));assert.equal(last.targets.length,aliveAtFinal.length,'đạo cuối nhắm cả sân');
   const surv=Object.keys(e.people).find(id=>e.people[id].hp>0&&id!==e.result?.mvp?.id);if(surv)assert.equal(w.players[surv].funTitle?.name,'Độ Kiếp Tán Tiên');
+});
+
+test('Độ Kiếp: người chăm gõ ne (kể cả gõ trễ so với lúc bị gọi tên) né được phần lớn đòn', () => {
+  let dodged=0,hit=0;
+  for(let run=0;run<20;run++){const w=world(10);startDoKiep(w,N);let t=N;
+    for(let i=0;i<400&&['registration','running'].includes(w.doKiep.phase);i++){t+=500;
+      if(i%16===0)for(const id of Object.keys(w.doKiep.people))action(w,{type:'chat',userId:id,name:'x',text:'ne'},t); // gõ ne ~8 s một lần, không cần biết đang bị nhắm
+      tick(w,t);}
+    for(const v of w.doKiep.waves)for(const r of Object.values(v.res)){if(r==='dodge')dodged++;else if(r==='burn'||r==='ash')hit++;}}
+  assert.ok(dodged/(dodged+hit)>.5,`né ${dodged}/${dodged+hit}`);
 });

@@ -84,7 +84,7 @@ export function speechPlan(e){
   if(e.baoStart)return [say('tongsu','Thiên Công Bảo Khố khai mở! Gõ cầu để cầu pháp bảo.')];
   if(e.baoWin)return e.baoWin.tier>=6?[say('tongsu','Thiên địa dị tượng! Thần khí giới hạn '+(e.baoWin.item||'')+' hiện thế. '+Who+' là chủ nhân duy nhất!')]:e.baoWin.tier>=5?[say('tongsu','Chúc mừng '+who+' nhận thần khí '+(e.baoWin.item||'')+'!')]:[];
   if(e.baoEnd)return [say('tongsu','Thiên Công Bảo Khố khép lại. Đạo hữu nào đã nhận thần khí, gõ thần khí để xem, gõ trang bị kèm tên thần khí để đeo.')];
-  if(e.realmStart)return [say('trongtai','Tọa Kỹ Bí Cảnh mở cửa! Gõ bí cảnh để vào, cùng hạ yêu thú, nhặt Linh Châu.')];
+  if(e.realmStart)return [say('trongtai','Tọa Kỹ Bí Cảnh mở cửa! Cả sân tự vào, tọa kỹ tự đánh yêu thú! Gõ đánh để lao lên đánh mạnh, nhặt Linh Châu!')];
   if(e.realmWave!=null)return [say('trongtai','Làn yêu thú thứ '+viNumber(e.realmWave+1)+' kéo đến! Các đạo hữu xuất chiêu!')];
   if(e.realmBoss)return [say('trongtai','Thú vương xuất hiện! Các đạo hữu hợp lực thu phục!')];
   if(e.realmEnd)return [say('trongtai',e.cancelled?'Tọa Kỹ Bí Cảnh đã đóng.':(e.realmTamed?'Thú vương đã bị thu phục! ':'Bí cảnh khép lại! ')+'Linh Châu đã về tay các đạo hữu. Gõ truyền công để mở châu.')];
@@ -239,7 +239,7 @@ export function speechPlan(e){
   }
   // ----- Bách Nhân Độ Kiếp (20/11 tối): đọc luật lúc mở, GỌI TÊN người bị sét nhắm mỗi đạo, kết quả cuối -----
   if(e.effect==='kiep'){
-    if(e.kiepStart)return [say('tongsu','Bách nhân độ kiếp! Lão phu gọi tên ai, người đó gõ né để né sét! Trúng ba lần là hóa tro! Trụ đến cuối nhận tu vi và danh hiệu Độ Kiếp Tán Tiên!')];
+    if(e.kiepStart)return [say('tongsu','Bách nhân độ kiếp! Gõ né để vận thân pháp, sét đánh tới là né! Gõ sớm, gõ thường xuyên! Trúng ba lần là hóa tro! Trụ đến cuối nhận danh hiệu Độ Kiếp Tán Tiên!')];
     if(e.kiepFinal)return [say('tongsu',pickBy(seed,['Tử Tiêu Thần Lôi! Cả sân đều bị nhắm! Gõ né mau!','Đạo lôi cuối cùng! Toàn tông môn gõ né mau!']))];
     if(e.kiepWave){const ns=(e.kiepNames||[]).slice(0,3).map(sayName).filter(Boolean);return [say('tongsu',ns.length?`Thiên lôi nhắm ${ns.join(', ')}! Gõ né mau!`:'Thiên lôi sắp giáng! Ai bị gọi tên gõ né mau!')];}
     if(e.kiepEnd){const r=e.kiepResult,n=sayName(r?.mvp?.name);return [say('tongsu',r?.survivors?`Độ kiếp thành công! ${viNumber(r.survivors)} đạo hữu trụ qua thiên lôi!`+(n?` Hộ Đạo Chân Quân là ${n}!`:''):'Kiếp vân tan! Lần sau gõ né nhanh hơn nhé!')];}
