@@ -14,7 +14,7 @@ export function giftImg(url){if(!url||typeof Image==='undefined')return null;let
 import {duelSoundPreset} from './duel-cinematic.js';
 import {makeSurface} from './performance.js';
 import {fxVariant,PALETTES,palOf,fxCamera,punch,smooth,out3,dot,drawCircle,drawInflow,drawSkyBeams,drawAura,drawCompress,drawBurst,drawBeam,drawSkyLances,drawZoomLines,drawEmbers,drawVignette,drawLetterbox,drawImpactFrame,drawGhostSplit,hitStop} from './cut-fx.js?v=20261118';
-const MOTIF_TECH={karma:'soul',thunder:'lightning',fire:'fire','lotus-fire':'fire',moon:'ice',phoenix:'fire',ice:'ice',pearl:'water',stars:'star',blood:'soul',venom:'soul'};
+const MOTIF_TECH={karma:'soul',thunder:'lightning',fire:'fire','lotus-fire':'fire',moon:'ice',phoenix:'fire',ice:'ice',pearl:'water',stars:'star',blood:'soul',venom:'soul',souls:'soul'};
 
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>1-(1-clamp(k))**3,easeIn=k=>clamp(k)**2;
 const seg=(k,a,b)=>clamp((k-a)/(b-a));

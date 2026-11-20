@@ -37,13 +37,22 @@ export const NU_OA_VISITOR=Object.freeze({
  aura:'Trăng · vòng nước · ngọc trai · sen nở · hoa trắng',
  artwork:{blade:'/assets/nu-oa/orb.webp',halo:'/assets/nu-oa/halo.webp',seated:'/assets/nu-oa/seated.webp',standing:'/assets/nu-oa/standing.webp'}
 });
+// 21/11: U Minh Ma Đế — skin NAM ma đạo đen tím 500 coin (skin + Vạn Hồn Phiên cùng lúc). Ma nhãn, hắc viêm, xích U Minh, hồn bị hút vào cờ.
+export const U_MINH_VISITOR=Object.freeze({
+ kind:'u-minh',aliases:['u minh ma de','u minh','uminh','ma de','ma đế'],skin:'u-minh-ma-de',name:'U Minh Ma Đế',
+ artifact:'van-hon-phien',relic:'Vạn Hồn Phiên',
+ color:'#b070ff',trim:'#f0d8ff',dark:'#0a0014',technique:'vortex',icon:'orb',skinCoins:500,artifactCoins:500,
+ aura:'Ma nhãn · U Minh Môn · hắc viêm · xích U Minh · hồn phách',
+ artwork:{blade:'/assets/u-minh/banner.webp',halo:'/assets/u-minh/halo.webp',seated:'/assets/u-minh/seated.webp',standing:'/assets/u-minh/standing.webp'}
+});
 // Skin có bộ hiệu ứng riêng (màn biến hình ưu tiên cao, pháp bảo theo người).
-export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR];
+export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR,U_MINH_VISITOR];
 export const signatureVisitor=kind=>SIGNATURE_VISITORS.find(v=>v.kind===kind)||null;
 export const COURT_VISITORS=[
  TINH_HA_VISITOR,
  BICH_LAN_VISITOR,
  NU_OA_VISITOR,
+ U_MINH_VISITOR,
  KARMA_VISITOR,
  BLACK_GOLD_VISITOR,
  {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},

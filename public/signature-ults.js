@@ -4,6 +4,7 @@ export const SKIN_CUT_MS=5200,PET_CUT_MS=3600,GIFT_CUT_MS=4400,GIFT_CUT_MIN=99,R
 export const SIGNATURE_ULTS=Object.freeze({
  'bich-lan-doc-hau':{name:'Vạn Xà Phệ Thiên',shout:'VẠN XÀ — PHỆ THIÊN!',hero:'Bích Lân Độc Hậu',color:'#5cff8a',glow:'#eaffd8',deep:'#03140a',motif:'venom',art:'ult-bich-lan'},
  'nu-oa':{name:'Ngũ Sắc Bổ Thiên',shout:'NGŨ SẮC — BỔ THIÊN!',hero:'Nữ Oa',color:'#c8c4ff',glow:'#fffaf0',deep:'#0c0a2a',motif:'pearl',art:'ult-nu-oa'},
+ 'u-minh-ma-de':{name:'Vạn Hồn Phệ Thiên',shout:'VẠN HỒN — PHỆ THIÊN!',hero:'U Minh Ma Đế',color:'#b070ff',glow:'#f0d8ff',deep:'#0a0014',motif:'souls',art:'ult-u-minh'},
  'tinh-ha-kiem-de':{name:'Cửu Tinh Quy Nhất Kiếm',shout:'CỬU TINH — QUY NHẤT!',hero:'Tinh Hà Kiếm Đế',color:'#9cc0ff',glow:'#ffffff',deep:'#0a0620',motif:'stars',art:'ult-tinh-ha'},
  'nhan-qua-vuong-lam':{name:'Nhân Quả Luân Hồi Trảm',shout:'NHÂN QUẢ — LUÂN HỒI!',hero:'Nhân Quả Vương Lâm',color:'#ff4a3a',glow:'#ffd27a',deep:'#2a0306',motif:'karma',art:'ult-nhan-qua'},
  'khuy-niet-loi-ton':{name:'Âm Dương Tử Lôi Kiếp',shout:'THIÊN LÔI — DIỆT THẾ!',hero:'Khuy Niết Lôi Tôn',color:'#b06bff',glow:'#ffe27a',deep:'#12052a',motif:'thunder',art:'ult-khuy-niet'},

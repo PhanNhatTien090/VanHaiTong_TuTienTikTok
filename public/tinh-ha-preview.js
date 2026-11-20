@@ -5,9 +5,10 @@ import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma
 import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
 import {drawBichLanAura,drawBichLanGear,drawBichLanReveal} from './bich-lan-fx.js?v=20261119';
 import {drawNuOaAura,drawNuOaGear,drawNuOaReveal} from './nu-oa-fx.js?v=20261121';
-import {TINH_HA_VISITOR,KARMA_VISITOR,BLACK_GOLD_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR} from './court-rewards.js';
+import {drawUMinhAura,drawUMinhGear,drawUMinhReveal} from './u-minh-fx.js?v=20261121';
+import {TINH_HA_VISITOR,KARMA_VISITOR,BLACK_GOLD_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR,U_MINH_VISITOR} from './court-rewards.js';
 const q=new URLSearchParams(location.search),mode=q.get('mode')||'idle',stand=q.get('pose')==='seat'?0:1,skin=q.get('skin')||'tinh-ha';
-const SK={'nu-oa':[NU_OA_VISITOR,drawNuOaAura,drawNuOaGear,drawNuOaReveal,.45],'bich-lan':[BICH_LAN_VISITOR,drawBichLanAura,drawBichLanGear,drawBichLanReveal,.45],'tinh-ha':[TINH_HA_VISITOR,drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal,.45],'nhan-qua':[KARMA_VISITOR,drawKarmaAura,drawKarmaGear,drawKarmaReveal,.45],'hac-kim':[BLACK_GOLD_VISITOR,drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal,.45]};
+const SK={'u-minh':[U_MINH_VISITOR,drawUMinhAura,drawUMinhGear,drawUMinhReveal,.45],'nu-oa':[NU_OA_VISITOR,drawNuOaAura,drawNuOaGear,drawNuOaReveal,.45],'bich-lan':[BICH_LAN_VISITOR,drawBichLanAura,drawBichLanGear,drawBichLanReveal,.45],'tinh-ha':[TINH_HA_VISITOR,drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal,.45],'nhan-qua':[KARMA_VISITOR,drawKarmaAura,drawKarmaGear,drawKarmaReveal,.45],'hac-kim':[BLACK_GOLD_VISITOR,drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal,.45]};
 const [V,aura,gear,rev,REV]=SK[skin];
 const load=src=>new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
 const a=V.artwork||{};
