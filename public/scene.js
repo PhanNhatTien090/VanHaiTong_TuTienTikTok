@@ -79,6 +79,7 @@ import {visitorSkinCell} from './visitor-rewards.js';
 import {lineupSlotGift} from './gift-icons.js';
 import {pickSkinShow,withFullFx,drawSkinShowBack,drawSkinShowFront} from './skin-showcase.js';
 import {drawBuffRings} from './buff-ring.js';
+import {dayTierOf,drawDayAuras} from './day-tier.js';
 import {loadImmortalArt,robeCell,outfitArt,drawPngRelic,drawImmortalGift,drawBackRelic} from './immortal-art.js';
 import {drawVisitor,VISITORS} from './visitor-event.js';
 import {drawBossSprite,SCENES} from './world-rotation.js';
@@ -446,7 +447,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
       const skin=skinFor(l.player.giftCoins),selected=l.id===this.selected,focus=this.focusId===l.id&&this.focusUntil>t&&this.focusId===l.id;
       const paint=(x,offscreen=true)=>{
         // 3/11: tên rõ hơn — nền đậm hơn, chữ trắng đậm có viền tối, chữ tối thiểu 11px (thà rút gọn còn hơn chữ li ti).
-        if(offscreen)x.setTransform(2,0,0,2,2,2);if(tm){/* 19/11 Thủy Mặc: thẻ tên giấy dó, viền mực; người có skin viền son đậm */x.fillStyle=selected||focus?'#fff6dcf8':'#f3ead8eb';x.beginPath();x.roundRect(0,0,l.w,l.h,2);x.fill();x.strokeStyle=skin.level?'#b3261e':'#1b1813b8';x.lineWidth=skin.level?1.8:1.1;x.stroke();if(skin.level){x.fillStyle='#b3261e';x.fillRect(l.w-5,1.5,3.5,3.5);}}else{x.fillStyle=selected||focus?'#06121df8':'#04101af2';x.beginPath();x.roundRect(0,0,l.w,l.h,4);x.fill();
+        if(offscreen)x.setTransform(2,0,0,2,2,2);if(tm){/* 19/11 Thủy Mặc: thẻ tên giấy dó, viền mực; người có skin viền son đậm. 20/11 D: bậc ngày → giấy VÀNG */x.fillStyle=dt?'#ffe39af4':selected||focus?'#fff6dcf8':'#f3ead8eb';x.beginPath();x.roundRect(0,0,l.w,l.h,2);x.fill();x.strokeStyle=dt?'#9a6a00':skin.level?'#b3261e':'#1b1813b8';x.lineWidth=dt?2.6:skin.level?1.8:1.1;x.stroke(); /* 20/11 D: ≥10 coin hôm nay → viền vàng */if(skin.level){x.fillStyle='#b3261e';x.fillRect(l.w-5,1.5,3.5,3.5);}}else{x.fillStyle=selected||focus?'#06121df8':'#04101af2';x.beginPath();x.roundRect(0,0,l.w,l.h,4);x.fill();
         x.strokeStyle=skin.level?skin.trim+'d0':selected?'#e6d1a1':'#cfe6e870';x.lineWidth=1.2;x.stroke();}
         x.textAlign='center';x.textBaseline='middle';x.font=NAME_FONT;
         // 4/11: giữ nguyên cỡ chữ, không ép dẹt (bỏ maxWidth), không cắt "…" — tên dài đã xuống dòng ở layoutLabels.
@@ -454,7 +455,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
         const lines=l.lines||[l.name],lh=l.lineH||18;x.lineJoin='round';x.lineWidth=tm?2:2.6;x.strokeStyle=tm?'#f3ead8':'#000000d0';
         lines.forEach((line,i)=>{const yy=l.h/2+(i-(lines.length-1)/2)*lh;x.strokeText(line,l.w/2,yy);x.fillStyle=tm?(skin.level?'#7a140e':'#1b1813'):skin.level?'#fff6dc':'#ffffff';x.fillText(line,l.w/2,yy);});
       };
-      const key=[l.name,l.w,l.h,l.scroll?1:0,skin.level,skin.trim,selected,focus,tm].join(':');
+      const dt=dayTierOf(l.player),key=[l.name,l.w,l.h,l.scroll?1:0,skin.level,skin.trim,selected,focus,tm,dt].join(':'); /* 20/11 D: bậc trong ngày vào khóa đệm */
       const bitmap=cache.get(key,Math.ceil((l.w+2)*2),(l.h+2)*2,paint);
       if(bitmap)c.drawImage(bitmap,l.x-1,l.y-1,bitmap.width/2,bitmap.height/2);
       else{c.save();c.translate(l.x,l.y);paint(c,false);c.restore();}
@@ -725,7 +726,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     this.skinShow=pickSkinShow(this,premium); // 20/11 B: sàn trình diễn skin lúc đông (skin-showcase.js)
     this.premiumTargets=(this.raceStatus?.active?[]:this.heavyCrowd?this.targets.filter(a=>premium(a.player)).slice(0,8):this.targets).filter(a=>a!==this.skinShow);
     if(this.skinShow){const a=this.skinShow;drawSkinShowBack(c,a,t);withFullFx(this,()=>{drawSeaAdornment(this,c,a,t,'back');drawTudoAdornment(this,c,a,t,'back');drawKhuyAdornment(this,c,a,t,'back');drawViemAdornment(this,c,a,t,'back');drawCourtAdornment(this,c,a,t,'back');});}
-    for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.gearDraw(c,target,t,()=>this.drawCompactGear(c,target,t,'back'));}drawTanDeTuBack(this,c,t);drawBuffRings(this,c,t,(this.lastState?.serverNow||Date.now())+(performance.now()-(this._snapAt||performance.now()))); /* 20/11 C: vòng phúc duyên dưới chân */
+    for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.gearDraw(c,target,t,()=>this.drawCompactGear(c,target,t,'back'));}drawTanDeTuBack(this,c,t);drawDayAuras(this,c,t); /* 20/11 D: ≥30 coin hôm nay → hào quang nhỏ */drawBuffRings(this,c,t,(this.lastState?.serverNow||Date.now())+(performance.now()-(this._snapAt||performance.now()))); /* 20/11 C: vòng phúc duyên dưới chân */
     if(!this.raceStatus?.active&&!solo&&!arena&&!petCoveOn(this)&&!mazeOn(this))drawSectCourt(this,c,t); // màn đánh boss: ẩn ngai tông chủ để yêu thú chiếm trời
     if(!this.reducePresence&&!this.minimalCrowd&&!this.raceStatus?.active)drawGodAuras(this,c,t,'back');
     {const ga=c.globalAlpha;if(this.compact)c.globalAlpha=ga*.35; // chế độ gọn: hào quang cảnh giới mờ nhẹ, không bỏ hẳn

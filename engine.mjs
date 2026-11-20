@@ -63,6 +63,7 @@ import {gameText} from './public/game-language.js';
 import {BLACK_GOLD_VISITOR,COURT_RELICS,COURT_VISITORS,SIGNATURE_VISITORS} from './public/court-rewards.js';
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
+import {creditDayGift} from './public/day-tier.js';
 import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,lineupFeasible,lineupGiftsAt,LINEUP_SIZE,LINEUP_MS} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
 import {RACE_CUT_MS,RACE_CUT_MIN} from './public/signature-ults.js';
@@ -687,6 +688,7 @@ function actionCore(w,input,now) {
     let buff=null;if(defaults){const mult=Math.max(giftBuff(input.coins*count),firstGift?5:1,p.buffUntil>now?p.buffMult||1:1);p.buffMult=mult;p.buffUntil=now+(firstGift?2:1)*GIFT_BUFF_MS;buff={mult,minutes:(firstGift?2:1)*GIFT_BUFF_MS/60000};}
     const giftEvent=emit(w,p,defaults?`${gift||tier.name}${count>1?` ×${count}`:''} • +${q} tu vi • phúc duyên ×${String(buff.mult).replace('.',',')} 10 phút`:`${gift||tier.name}${count>1?` ×${count}`:''} • ${eventRule}`,tier.effect,now,{kind,gift,count,tier:tier.name,coins:input.coins,comboKey:input.comboKey,comboFinal:input.comboFinal,buff,firstGift,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});
     if(!input.simulated&&!input.autoRose&&unlockMasterLoadout(w,p,CATALOG,now,input.coins)){giftEvent.sectMasterAward=true;giftEvent.masterUnlocked=true;const seat=seatGift(w,p,input.coins,now,socialContext);if(seat)giftEvent.masterSeat=seat;} // 15/11: tranh ghế Tông chủ
+    {const dt=creditDayGift(p,input.coins*count,now,!input.simulated&&!input.autoRose&&!p.puppet&&!p.resident);if(dt){giftEvent.dayTier=dt;if(dt===3)emit(w,p,'HỘ PHÁP HÔM NAY • '+p.name,'title',now,{dayTier:3});}} // 20/11 D: bậc thang quà trong ngày (public/day-tier.js)
     if(vipTier(p.giftCoins)>vipBefore&&!p.puppet){const t=vipTier(p.giftCoins);emit(w,p,'THĂNG VIP '+VIP_TIERS[t].name.toUpperCase(),'skin',now,{vipUp:t,achieve:{kind:'vip',item:VIP_TIERS[t].name}});} // v86
     if(own('race')&&['registration','running'].includes(w.race?.phase)){w.race.giftScores??={};w.race.giftScores[p.id]=(w.race.giftScores[p.id]||0)+input.coins*count;} // v85: quà đua
     if(own('race')&&w.race?.phase==='running'&&w.race.racers.some(r=>r.id===p.id)){const value=input.coins*count,tier=value>=100?3:value>=10?2:1;giftEvent.raceBoost=raceBoost(w,p,now,value,socialContext,'gift');giftEvent.raceGift=true;if(racing)giftEvent.text=`${gift||tier.name}${count>1?` ×${count}`:''} • BỨT TỐC +${giftEvent.raceBoost} trượng`;
