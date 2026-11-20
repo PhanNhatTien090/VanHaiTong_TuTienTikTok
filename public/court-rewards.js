@@ -29,21 +29,21 @@ export const BICH_LAN_VISITOR=Object.freeze({
  aura:'Xà Hoàn · mãng xà linh hồn · độc trì · độc điệp',
  artwork:{blade:'/assets/bich-lan/blade.webp',halo:'/assets/bich-lan/halo.webp',seated:'/assets/bich-lan/seated.webp',standing:'/assets/bich-lan/standing.webp',serpent:'/assets/bich-lan/serpent.webp'}
 });
-// 20/11: Tuyết Phách Tiên Hậu — skin NỮ băng tuyết 500 coin (skin + Thiên Sương Phiến cùng lúc), có Hàn Băng Phượng bay vòng quanh người.
-export const TUYET_PHACH_VISITOR=Object.freeze({
- kind:'tuyet-phach',aliases:['tuyet phach tien hau','tuyet phach','tuyetphach','tien hau'],skin:'tuyet-phach-tien-hau',name:'Tuyết Phách Tiên Hậu',
- artifact:'thien-suong-phien',relic:'Thiên Sương Phiến',
- color:'#9fdcff',trim:'#f4fbff',dark:'#06142e',technique:'lotus',icon:'orb',skinCoins:500,artifactCoins:500,
- aura:'Tuyết hoàn · Hàn Băng Phượng · băng trì · tuyết rơi',
- artwork:{blade:'/assets/tuyet-phach/blade.webp',halo:'/assets/tuyet-phach/halo.webp',seated:'/assets/tuyet-phach/seated.webp',standing:'/assets/tuyet-phach/standing.webp',phoenix:'/assets/tuyet-phach/phoenix.webp'}
+// 21/11: Nữ Oa — skin NỮ 500 coin (skin + Bổ Thiên Linh Châu cùng lúc). Ảnh theo ảnh mẫu chủ game; trăng, vòng nước, ngọc trai, hoa trắng.
+export const NU_OA_VISITOR=Object.freeze({
+ kind:'nu-oa',aliases:['nu oa','nuoa','nu-oa','nữ oa'],skin:'nu-oa',name:'Nữ Oa',
+ artifact:'bo-thien-linh-chau',relic:'Bổ Thiên Linh Châu',
+ color:'#c8c4ff',trim:'#fffaf0',dark:'#0c0a2a',technique:'lotus',icon:'orb',skinCoins:500,artifactCoins:500,
+ aura:'Trăng · vòng nước · ngọc trai · sen nở · hoa trắng',
+ artwork:{blade:'/assets/nu-oa/orb.webp',halo:'/assets/nu-oa/halo.webp',seated:'/assets/nu-oa/seated.webp',standing:'/assets/nu-oa/standing.webp'}
 });
 // Skin có bộ hiệu ứng riêng (màn biến hình ưu tiên cao, pháp bảo theo người).
-export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR,TUYET_PHACH_VISITOR];
+export const SIGNATURE_VISITORS=[BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR];
 export const signatureVisitor=kind=>SIGNATURE_VISITORS.find(v=>v.kind===kind)||null;
 export const COURT_VISITORS=[
  TINH_HA_VISITOR,
  BICH_LAN_VISITOR,
- TUYET_PHACH_VISITOR,
+ NU_OA_VISITOR,
  KARMA_VISITOR,
  BLACK_GOLD_VISITOR,
  {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},

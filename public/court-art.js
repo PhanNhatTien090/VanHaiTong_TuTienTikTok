@@ -1,10 +1,10 @@
-import {BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR,TUYET_PHACH_VISITOR,COURT_VISITORS,SIGNATURE_VISITORS,courtRelic} from './court-rewards.js';
+import {BLACK_GOLD_VISITOR,KARMA_VISITOR,TINH_HA_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR,COURT_VISITORS,SIGNATURE_VISITORS,courtRelic} from './court-rewards.js';
 import {drawCourtAuraLayer} from './court-skin-fx.js';
 import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
 import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-halo-v5';
 import {drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal} from './tinh-ha-fx.js?v=20261119';
 import {drawBichLanAura,drawBichLanGear,drawBichLanReveal} from './bich-lan-fx.js?v=20261119-gear';
-import {drawTuyetPhachAura,drawTuyetPhachGear,drawTuyetPhachReveal} from './tuyet-phach-fx.js?v=20261120';
+import {drawNuOaAura,drawNuOaGear,drawNuOaReveal} from './nu-oa-fx.js?v=20261121';
 import {feedbackBudget} from './cinematic-feedback.js';
 import {ownsGear} from './skin-gear.js';
 import {skinFxOn} from './performance.js';
@@ -24,12 +24,12 @@ const FX={
  [KARMA_VISITOR.kind]:{aura:drawKarmaAura,gear:drawKarmaGear,reveal:drawKarmaReveal},
  [TINH_HA_VISITOR.kind]:{aura:drawTinhHaAura,gear:drawTinhHaGear,reveal:drawTinhHaReveal},
  [BICH_LAN_VISITOR.kind]:{aura:drawBichLanAura,gear:drawBichLanGear,reveal:drawBichLanReveal},
- [TUYET_PHACH_VISITOR.kind]:{aura:drawTuyetPhachAura,gear:drawTuyetPhachGear,reveal:drawTuyetPhachReveal}
+ [NU_OA_VISITOR.kind]:{aura:drawNuOaAura,gear:drawNuOaGear,reveal:drawNuOaReveal}
 };
 const gearArt=new Map();
 function signatureArt(spec){
  const art=gearArt.get(spec.kind)||{blade:null,halo:null};gearArt.set(spec.kind,art);
- art.blade??=load(spec.artwork.blade);art.halo??=load(spec.artwork.halo);if(spec.artwork.serpent)art.serpent??=load(spec.artwork.serpent);if(spec.artwork.phoenix)art.phoenix??=load(spec.artwork.phoenix);return art;
+ art.blade??=load(spec.artwork.blade);art.halo??=load(spec.artwork.halo);if(spec.artwork.serpent)art.serpent??=load(spec.artwork.serpent);return art;
 }
 // Pháp bảo skin đặc biệt người này sở hữu (ưu tiên cái đang trang bị).
 export const signatureGearOf=p=>SIGNATURE_VISITORS.find(v=>v.skin===p?.skinChoice&&ownsGear(p,v.artifact))
@@ -77,7 +77,7 @@ export function drawCourtAdornment(scene,c,target,t,layer){
   if(spec===BLACK_GOLD_VISITOR){const k=hacKimSize(pose.stand);c.translate(0,25);c.scale(k,k);c.translate(0,-25);}
   const revealing=scene.transforming?.id===p.id&&t<scene.transforming.revealAt;
   // Màn biến hình Nhân Quả tự vẽ hào quang + thương suốt màn → tránh vẽ chồng.
-  const karmaShow=scene.effects?.some(e=>e.user===p.id&&(e.transform===KARMA_VISITOR.kind||e.transform===TINH_HA_VISITOR.kind||e.transform===BICH_LAN_VISITOR.kind||e.transform===TUYET_PHACH_VISITOR.kind)&&t<e.start+e.duration);
+  const karmaShow=scene.effects?.some(e=>e.user===p.id&&(e.transform===KARMA_VISITOR.kind||e.transform===TINH_HA_VISITOR.kind||e.transform===BICH_LAN_VISITOR.kind||e.transform===NU_OA_VISITOR.kind)&&t<e.start+e.duration);
   let seed=0;for(const ch of String(p.id))seed=(seed*31+ch.codePointAt(0))%997;
   if(FX[spec?.kind]&&!revealing&&!karmaShow&&skinFxOn(scene,p,t))FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light,seed,art:spec.artwork?signatureArt(spec):null});
   const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
@@ -145,7 +145,7 @@ export function drawBlackGoldAward(scene,c,e,t,k,target,layer,reveal){
  if(!fx)return;
  const pose=scene.animator?.pose(target.player||{},t,motion&&!scene.compact)||{};
  // Nhân Quả: một mốc 500 coin nhận cả skin + thương → màn biến hình luôn có thương.
- const art=e.hacKimArtifact||spec===KARMA_VISITOR||spec===TINH_HA_VISITOR||spec===BICH_LAN_VISITOR||spec===TUYET_PHACH_VISITOR?signatureArt(spec):null; /* 19/11: Tinh Hà cũng 1 mốc 500 = skin + kiếm */
+ const art=e.hacKimArtifact||spec===KARMA_VISITOR||spec===TINH_HA_VISITOR||spec===BICH_LAN_VISITOR||spec===NU_OA_VISITOR?signatureArt(spec):null; /* 19/11: Tinh Hà cũng 1 mốc 500 = skin + kiếm */
  fx.reveal(c,t,k,{...target,y:target.y+(pose.lift||0)},layer,reveal,art,{
   motion,light:feedbackBudget(scene),pose,seed:e.id
  });

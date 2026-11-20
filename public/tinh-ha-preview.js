@@ -4,15 +4,15 @@ import {drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal} from './tinh-ha-fx.js?v=
 import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-halo-v5';
 import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-gold-fx.js';
 import {drawBichLanAura,drawBichLanGear,drawBichLanReveal} from './bich-lan-fx.js?v=20261119';
-import {drawTuyetPhachAura,drawTuyetPhachGear,drawTuyetPhachReveal} from './tuyet-phach-fx.js?v=20261120';
-import {TINH_HA_VISITOR,KARMA_VISITOR,BLACK_GOLD_VISITOR,BICH_LAN_VISITOR,TUYET_PHACH_VISITOR} from './court-rewards.js';
+import {drawNuOaAura,drawNuOaGear,drawNuOaReveal} from './nu-oa-fx.js?v=20261121';
+import {TINH_HA_VISITOR,KARMA_VISITOR,BLACK_GOLD_VISITOR,BICH_LAN_VISITOR,NU_OA_VISITOR} from './court-rewards.js';
 const q=new URLSearchParams(location.search),mode=q.get('mode')||'idle',stand=q.get('pose')==='seat'?0:1,skin=q.get('skin')||'tinh-ha';
-const SK={'tuyet-phach':[TUYET_PHACH_VISITOR,drawTuyetPhachAura,drawTuyetPhachGear,drawTuyetPhachReveal,.45],'bich-lan':[BICH_LAN_VISITOR,drawBichLanAura,drawBichLanGear,drawBichLanReveal,.45],'tinh-ha':[TINH_HA_VISITOR,drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal,.45],'nhan-qua':[KARMA_VISITOR,drawKarmaAura,drawKarmaGear,drawKarmaReveal,.45],'hac-kim':[BLACK_GOLD_VISITOR,drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal,.45]};
+const SK={'nu-oa':[NU_OA_VISITOR,drawNuOaAura,drawNuOaGear,drawNuOaReveal,.45],'bich-lan':[BICH_LAN_VISITOR,drawBichLanAura,drawBichLanGear,drawBichLanReveal,.45],'tinh-ha':[TINH_HA_VISITOR,drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal,.45],'nhan-qua':[KARMA_VISITOR,drawKarmaAura,drawKarmaGear,drawKarmaReveal,.45],'hac-kim':[BLACK_GOLD_VISITOR,drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal,.45]};
 const [V,aura,gear,rev,REV]=SK[skin];
 const load=src=>new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src;});
 const a=V.artwork||{};
-const [bg,seated,standing,blade,halo,serpent,phoenix]=await Promise.all([load(q.get('map')||'/assets/thien-khuyet/map.webp'),load(a.seated||'/assets/thien-khuyet/'+V.kind+'-seated.webp'),load(a.standing||'/assets/thien-khuyet/'+V.kind+'-standing.webp'),load(a.blade),load(a.halo),load(a.serpent),load(a.phoenix)]);
-const art={blade,halo,serpent,phoenix},c=document.getElementById('c'),x=c.getContext('2d'),H=1600,target={x:450,y:1180,scale:4.6};
+const [bg,seated,standing,blade,halo,serpent]=await Promise.all([load(q.get('map')||'/assets/thien-khuyet/map.webp'),load(a.seated||'/assets/thien-khuyet/'+V.kind+'-seated.webp'),load(a.standing||'/assets/thien-khuyet/'+V.kind+'-standing.webp'),load(a.blade),load(a.halo),load(a.serpent)]);
+const art={blade,halo,serpent},c=document.getElementById('c'),x=c.getContext('2d'),H=1600,target={x:450,y:1180,scale:4.6};
 function body(){const img=stand?standing:seated;if(!img)return;const h=stand?125:91,w=h*img.naturalWidth/img.naturalHeight;x.save();x.translate(target.x,target.y);x.scale(target.scale,target.scale);x.drawImage(img,-w/2,25-h,w,h);x.restore();}
 function frame(t,k){
  x.clearRect(0,0,900,H);if(bg){const s=Math.max(900/bg.naturalWidth,H/bg.naturalHeight);x.drawImage(bg,(900-bg.naturalWidth*s)/2,(H-bg.naturalHeight*s)/2,bg.naturalWidth*s,bg.naturalHeight*s);}
