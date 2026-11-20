@@ -16,6 +16,7 @@ export function stageConflict(w,now,{allowBond=false,allowHall=false,allowPet=fa
  if(['registration','running'].includes(w.sectWar?.phase)||w.sectWar?.podiumUntil>now)return 'chính ma đại chiến';
  if(['opening','brewing','tribulation'].includes(w.alchemy?.phase)||w.alchemy?.podiumUntil>now)return 'lò luyện đan';
  if(['registration','running'].includes(w.maze?.phase)||w.maze?.podiumUntil>now)return 'bí cảnh mê cung';
+ if(['registration','running'].includes(w.doKiep?.phase)||w.doKiep?.podiumUntil>now)return 'Bách Nhân Độ Kiếp'; // 20/11
  if(!allowPet&&w.petEvent&&!w.petEvent.closedAt&&w.petEvent.endsAt>now)return 'Linh Thú Cốc';
  if(w.tower?.endsAt>now&&!w.tower.closedAt)return 'Vân Hải Tháp';
  if(w.honorStageUntil>now)return 'đại điển vinh danh';

@@ -24,7 +24,7 @@ import {MOUNTS,MOUNT_TIERS,MAX_STARS as MOUNT_MAX_STARS} from './mounts.js'; // 
 import {isEventAnnouncement} from './event-announcements.js';
 import {breakthroughRealm,REALM_NAMES,breakthroughDuration} from './breakthrough-fx.js';
 import {divineSelection} from './divine-wardrobe.js';
-import {mountEventTab,renderSocialUI} from './social-ui.js?v=20261120gon';
+import {mountEventTab,renderSocialUI} from './social-ui.js?v=20261120kiep';
 import {BLACK_GOLD_VISITOR} from './court-rewards.js';
 import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 import {VISITORS} from './visitor-event.js';
@@ -64,7 +64,7 @@ import {realmWithStage} from './realm-stage.js';
 import {showBaoHy} from './bao-hy.js';
 import {renderTower} from './tower.js';
 import {giftTokenHTML,lineupSlotHTML} from './gift-icons.js';
-import {giftRules,giftRuleHTML} from './gift-rule-card.js?v=hall-war-20261114';
+import {giftRules,giftRuleHTML} from './gift-rule-card.js?v=20261120kiep';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
 const cultivationAudio=new CultivationAudio();cultivationAudio.extraLeadMs=Number(new URLSearchParams(location.search).get('audioLead'))||0; // 20/11: chỉnh tay nếu âm đột phá vẫn chậm hơn hình trên LIVE (ms, tối đa 400)
@@ -183,6 +183,7 @@ scene.onFeedbackSound=(kind,level)=>cultivationAudio.feedback(kind,level);scene.
 scene.onCombatSound=(kind,variant)=>cultivationAudio.combat(kind,variant);scene.onBonkSound=(kind,o)=>cultivationAudio.bonk(kind,o); /* 10/11: Hội Gõ Đầu */
 scene.onGiftSound=kind=>cultivationAudio.play(kind,true);
 scene.onMazePortalSound=()=>cultivationAudio.play('maze-portal',true);
+scene.onKiepSound=kind=>cultivationAudio.play(kind==='reverse'?'ascension-screen-impact':'impact',true); // 20/11: Bách Nhân Độ Kiếp
 scene.onTowerSound=kind=>cultivationAudio.play('tower-'+kind,true);
 scene.onEventGiftSound=(kind,context)=>cultivationAudio.eventGift(kind,context);
 if(overlay)mountRitualHud($('.scene-shell'),scene);

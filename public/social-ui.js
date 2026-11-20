@@ -1,4 +1,4 @@
-import {eventDashboardHTML} from './event-dashboard.js?v=20261120gon';
+import {eventDashboardHTML} from './event-dashboard.js?v=20261120kiep';
 import {SCENES} from './world-rotation.js';
 import {safeAvatar} from './honors.js';
 const esc=s=>String(s??'').normalize('NFC').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

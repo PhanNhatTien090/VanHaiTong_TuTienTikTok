@@ -21,6 +21,8 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
   :{kind:'race',title:'ĐUA PHI KIẾM · TUYỂN',tone:'sky',rows:[[1,'điểm đua'],[100,'top nhận thú cưỡi']]};
  // 10/11: mê cung (maze.mjs): quà = lượt phá tường (≥1: 1 · ≥20: 4 · ≥99: 10), lúc tuyển tặng là vào luôn
  // 10/11: Hội Gõ Đầu (bonk.mjs): quà cộng dồn = búa xịn giữ vĩnh viễn, gõ rơi nhiều linh thạch hơn
+ // 20/11: Bách Nhân Độ Kiếp (do-kiep.mjs): quà = hộ đạo — 1 khiên mình/hồi sinh · 10 hồi đầy + che 2 · 30 che 6 · 99 Phản Lôi che cả tông
+ if(['registration','running'].includes(s.doKiep?.phase))return {kind:'kiep',title:'ĐỘ KIẾP · HỘ ĐẠO',tone:'sky',rows:[[1,'khiên · hồi sinh'],[10,'hồi xuân · che 2'],[30,'che 6 đạo hữu'],[99,'PHẢN LÔI · che cả tông']]};
  const mz=s.maze;if(mz?.active&&mz.phase==='registration')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'vào + phá 1 tường'],[10,'tự đi 3 ô'],[30,'tự đi 9 ô'],[99,'tự đi 20 ô'],[100,'tốc biến lúc khai trận']]};
  if(mz?.active&&mz.phase==='running')return {kind:'maze',title:'BÍ CẢNH MÊ CUNG',tone:'jade',rows:[[1,'phá 1 tường'],[10,'tự đi 3 ô'],[30,'tự đi 9 ô'],[99,'tự đi 20 ô'],[100,'tốc biến thẳng cửa ra']]};
  if(war?.active&&war.phase==='running')return {kind:'war',title:'CHÍNH MA ĐẠI CHIẾN',tone:'war',rows:[[1,`đẩy ${WAR_TRUONG_PER_COIN} trượng`],[99,'sóng năng lượng']]};

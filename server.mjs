@@ -12,7 +12,7 @@ import {auditRecord,repairVisitorHistory,visitorAuditView} from './visitor-audit
 import {installRuntimeLog} from './runtime-log.mjs';
 import {mergeGiftPresentation} from './public/gift-combos.js';
 import {startBaoKhoEvent,stopBaoKhoEvent} from './engine.mjs';
-import {startMountRealmEvent,stopMountRealmEvent,startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
+import {startMountRealmEvent,stopMountRealmEvent,startHallWar,stopHallWar,startWar,stopWar,startAlchemy,stopAlchemy,startMaze,stopMaze,startDoKiep,stopDoKiep,startBonk,stopBonk,startTower,stopTower,teasePair,controlLanternEvent} from './engine.mjs';
 import {controlPetEvent,currentParticipant} from './engine.mjs';
 import {startArenaEvent,stopArenaEvent} from './engine.mjs';
 import {petV2Configure} from './pet-v2.mjs';
@@ -150,7 +150,7 @@ function connect(){
       // Chẩn đoán: loại sự kiện gần đây + mẫu thô (rút gọn) để đối chiếu payload TikFinity.
       connection.types=[...(connection.types||[]),String(event.event)].slice(-15);bridgeSamples.push(JSON.stringify(event).slice(0,600));if(bridgeSamples.length>8)bridgeSamples.shift();if(event.event==='liveStatusChange'){connection.roomLive=event.data?.isLive===true;markLiveSession(worlds.live,connection.roomLive);}const result=ingest(worlds.live,event);if(result.queuedGift)persistPlayTransfer();if(result.autoArrival&&result.playerId)prewarmArrival(result.playerId);else prewarmSpeech();if(result.ok&&!result.ignored){connection.lastViewerEvent=Date.now();connection.lastError=null;}
       if(!result.ok)connection.lastError=result.message;
-      broadcast(event.event==='gift'||result.maze===true||result.knocked===true); // 16/11: bước đi Mê Cung gửi ngay (~120 ms), không chờ nhịp gộp 400 ms
+      broadcast(event.event==='gift'||result.maze===true||result.kiep===true||result.knocked===true); // 16/11: bước đi Mê Cung gửi ngay (~120 ms), không chờ nhịp gộp 400 ms
     }catch(e){connection.lastError=`Không đọc được sự kiện: ${e.message}`;}
   });
   bridge.on('error',()=>{connection.lastError='Chưa kết nối được TikFinity Desktop tại cổng 21213. Kiểm tra app và Event API.';});
@@ -243,6 +243,8 @@ const server=http.createServer(async(req,res)=>{
       else if(b.action==='tease-pair')result=teasePair(w,b.a,b.b,now); // 10/11: chọc ghẹo 2 người (chỉ hiệu ứng)
       else if(b.action==='start-maze')result=startMaze(w,now);
       else if(b.action==='stop-maze')result=stopMaze(w,now);
+      else if(b.action==='start-dokiep')result=startDoKiep(w,now); // 20/11: Bách Nhân Độ Kiếp
+      else if(b.action==='stop-dokiep')result=stopDoKiep(w,now);
       else if(b.action==='start-bonk')result=startBonk(w,now); // 10/11: Hội Gõ Đầu
       else if(b.action==='stop-bonk')result=stopBonk(w,now);
       else if(b.action==='start-tower')result=startTower(w,now); // 11/11: Vân Hải Tháp

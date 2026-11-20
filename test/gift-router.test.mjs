@@ -8,7 +8,7 @@ const world=()=>{const w=createWorld(N-1e5);w.liveSession={active:true,startedAt
 const give=(w,coins=500,at=N+2000)=>{const n=w.events.length;action(w,{type:'gift',userId:'u0',name:'U0',coins,count:1,giftName:'Money Gun',eventId:'g'+at},at);return w.events.slice(n).find(e=>e.gift);};
 
 test('bảng tuyến: thứ tự ưu tiên cố định, id duy nhất, giftEventRule đọc từ bảng',()=>{
- assert.deepEqual(GIFT_ROUTES.map(r=>r.id),['hall','realm','bao','race','war','alchemy','maze','tower','visitor','opportunity','flower','bonk','love']);
+ assert.deepEqual(GIFT_ROUTES.map(r=>r.id),['hall','realm','bao','race','war','alchemy','kiep','maze','tower','visitor','opportunity','flower','bonk','love']);
  const w=world();assert.equal(giftRoute(w,N),null);assert.equal(giftEventRule(w,N),null);
  startVisitor(w,'hanlap',N);assert.equal(giftRoute(w,N+1).id,'visitor');assert.equal(giftEventRule(w,N+1),'tiên nhân truyền đạo');
 });
