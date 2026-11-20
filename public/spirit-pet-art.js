@@ -43,7 +43,7 @@ function fetchPetFrames(id,animated=!!PREMIUM_PET_PERIODS[id]){
   const image=new Image();image.decoding='async';
   image.onload=()=>{try{resolve(animated?slicePremiumPetFrames(image,id):slicePetFrames(image,id));}catch(e){reject(e);}};
   image.onerror=()=>animated?fetchPetFrames(id,false).then(resolve,reject):reject(Error('Pet artwork unavailable: '+id));
-  image.src='/assets/spirit-pets-v1/'+(animated?'animated/'+id+'-'+PREMIUM_PET_ATLAS.version+'.webp':id+'.png');
+  image.src='/assets/spirit-pets-v1/'+(animated?'animated/'+id+'-'+PREMIUM_PET_ATLAS.version+'.webp':id+'.webp');
  });
 }
 // 15/11: ảnh nhỏ cho bảng xem linh thú — dùng chung cache khung với sân khấu.

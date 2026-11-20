@@ -15,7 +15,7 @@ const ease=k=>1-(1-clamp(k))**3;
 const IMG=new Map();
 function img(src){if(!src||typeof Image==='undefined')return null;let g=IMG.get(src);if(!g){const im=new Image();im.decoding='async';g={im,ok:false};im.onload=()=>g.ok=true;im.src=src;IMG.set(src,g);}return g.ok?g.im:null;}
 const PETS=['astral-dragon','ky-lan','sun-phoenix','frost-tiger','xich-ha-phuong','ember-fox','hac-tinh-ho','ngoc-chau-long','bach-nguyet-ho'];
-const petSrc=id=>'/assets/spirit-pets-v1/'+id+'.png';
+const petSrc=id=>'/assets/spirit-pets-v1/'+id+'.webp';
 // vẽ khung đầu (ô 1/3) của ảnh sheet ngang 3 ô; w = bề ngang hiển thị, đáy ảnh đặt tại (0,0)
 function drawCell(c,im,cells,cell,w){const cw=im.naturalWidth/cells,h=w*im.naturalHeight/cw;c.drawImage(im,cell*cw,0,cw,im.naturalHeight,-w/2,-h,w,h);}
 function drawMob(c,wave,w){if(wave?.art){const im=img('/assets/toa-ky-v1/'+wave.art+'.webp');if(im){const h=w*im.naturalHeight/im.naturalWidth;c.drawImage(im,-w/2,-h,w,h);return true;}return false;}const at=img('/assets/boss-atlas.webp');if(!at)return false;drawCell(c,at,3,wave?.cell??0,w);return true;}
