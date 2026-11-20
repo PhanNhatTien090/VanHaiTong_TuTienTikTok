@@ -27,9 +27,13 @@ function season(w){return w.baoSeason??={n:1,owners:{}};}
 const limitedPool=w=>BAO_ITEMS.filter(x=>x.tier===6&&!season(w).owners[x.id]);
 
 /** Một lượt cầu (thuần, có thể test với rng giả). Trả {tier,id,stars?}. tier 0 = trượt. */
+// 20/11 (chủ game dặn, CHỈ 1 LẦN): lượt cầu đầu tiên của Chan Bố Mày Đê trong Bảo Khố kế tiếp → Tru Tiên Kiếm Trận. Dùng xong ghi w.baoGrantsDone, không lặp lại.
+export const BAO_GRANT_ONCE=Object.freeze({key:'chan-tru-tien-20261120',user:'6752665324011652098',id:'L01-tru-tien'});
 export function rollBao(w,p,source,r=rng){
  const b=state(p),win=BAO_ODDS[source]??BAO_ODDS.free;b.p4++;b.p5++;
  const soft=b.p5>=BAO_ODDS.soft5From?(b.p5-BAO_ODDS.soft5From+1)*BAO_ODDS.soft5Step:0;
+ if(p.id===BAO_GRANT_ONCE.user&&w.baoKho?.phase==='open'&&!(w.baoGrantsDone||[]).includes(BAO_GRANT_ONCE.key)){(w.baoGrantsDone??=[]).push(BAO_GRANT_ONCE.key);const s=season(w),it=baoItem(BAO_GRANT_ONCE.id);
+  if(it&&!s.owners[it.id]&&(!b.lim||b.lim.season!==s.n)){s.owners[it.id]=p.id;b.lim={season:s.n,id:it.id};b.p5=0;b.p4=0;if(w.baoKho)w.baoKho.limitedGiven=(w.baoKho.limitedGiven||0)+1;return give(b,it,6);}}
  let tier=0;const x=r();
  if(b.p5>=BAO_PITY5||x<win*BAO_ODDS.q5+soft)tier=5;
  else if(b.p4>=BAO_PITY4||x<win||BAO_SURE.has(source))tier=4;
