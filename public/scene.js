@@ -687,7 +687,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     { // 20/11 (soát hướng dẫn, chủ game: màn hình không rối): TỔNG nhãn hướng dẫn trên sân ≤ HINT_MAX — người mới (≤3) > đủ đột phá > nhiệm vụ tân thủ.
       const L=new Set([...this.tanDeTu].slice(0,3)),last=(this.realmCount??REALM_STYLES.length)-1;
       for(const p of this.realPlayers||[]){if(L.size>=HINT_MAX)break;if(p.rebirthEligible===true||p.finalRealmEligible!==false&&p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<last)L.add(p.id);}
-      for(const id of this.tanThu){if(L.size>=HINT_MAX)break;L.add(id);}this.hintIds=L;}
+      let q=0;for(const id of this.tanThu){if(L.size>=HINT_MAX||q>=1)break;L.add(id);q++;}this.hintIds=L;} /* 20/11: nhãn nhiệm vụ tân thủ tối đa 1 — nó đè tên hàng dưới */
     for(const id of teaseIds(this))required.add(id); // 10/11: chọc ghẹo — đưa 2 người lên sân
     for(const id of bonkIds(this,t))required.add(id); // 10/11: Hội Gõ Đầu — người gõ + người bị gõ lên sân
     if(!this.compact&&this.motion&&t-(this.calmAt||0)>12000){if((this.recentEvents||0)<3)st.calmSwap();this.calmAt=t;this.recentEvents=0;}

@@ -43,6 +43,7 @@ try{
  const srv=await server();try{await view(540,960);await send('Page.navigate',{url:overlay});await pause(7000);
   if(process.env.ALIGN){const want=Number(process.env.ALIGN)>1?Number(process.env.ALIGN):24000,c=Date.now()%40000;await pause((want-c+40000)%40000);} // ALIGN=1: chụp đúng lúc cuộn đang ở Sổ lệnh (giây 20–32 mỗi vòng 40 s)
   for(let i=0;i<(process.env.QUICK?1:Number(process.env.SHOTS||10));i++){await shotZ('01-san-'+String(i*30).padStart(3,'0')+'s');if(i===0||i===5)console.log('--- bảng đang hiện @'+i*30+'s\n'+await txt());await pause(Number(process.env.EVERY||30000));}
+  if(process.env.EVENT){console.log('event',JSON.stringify(await post('/api/visitor-event?world=demo',{kind:process.env.EVENT})).slice(0,80));await pause(5000);await shotZ('01b-su-kien');} // EVENT=tinh-ha: soát che khuất lúc có sự kiện
   // người mới vào + gõ lệnh thiếu điều kiện
   await act({type:'join',userId:'newbie-qa',name:'Người Mới Toanh'});await pause(2500);await shotZ('02-nguoi-moi-vao');
   await act({type:'chat',userId:'newbie-qa',name:'Người Mới Toanh',text:'rèn'});await pause(2000);await shotZ('03-go-ren-thieu-tien');console.log('--- sau khi gõ rèn\n'+await txt());

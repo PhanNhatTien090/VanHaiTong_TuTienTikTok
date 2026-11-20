@@ -13,7 +13,7 @@ test('15/11 nhắc đột phá: gộp tối đa 5 người đang có mặt vào 
  const now=Date.now(),w=world(7,now);
  tick(w,now+1000);
  let r=w.events.filter(e=>e.readyReminder);
- assert.equal(r.length,1);assert.equal(r[0].ids.length,READY_REMIND.max);assert.match(r[0].text,/gõ dotpha/);
+ assert.equal(r.length,1);assert.equal(r[0].ids.length,READY_REMIND.max);assert.match(r[0].text,/gõ 8/);
  tick(w,now+60000);assert.equal(w.events.filter(e=>e.readyReminder).length,1,'chưa đủ 2 phút thì không nhắc lại');
  tick(w,now+1000+READY_REMIND.everyMs+10);r=w.events.filter(e=>e.readyReminder);
  assert.equal(r.length,2);assert.ok(r[1].ids.includes('u5')||r[1].ids.includes('u6'),'lượt sau ưu tiên người chưa được nhắc');

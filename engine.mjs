@@ -240,7 +240,7 @@ function checkReady(w,p,now){
   // 18/11: cảnh giới cuối đầy cây tu vi → nhắc "gõ chuyển sinh" (không phải dotpha).
   if(!p.resident&&!p.puppet&&p.realm>=REBIRTH_UNLOCK_REALM&&p.qi>=requiredQi(p)&&p.readyRealm!==p.realm){p.readyRealm=p.realm;p.readyHintAt=now;emit(w,p,'Đủ tu vi chuyển sinh • gõ chuyển sinh','ready',now,{rebirthReady:true});return;}
   if(!readyToBreak(p,w,now)||p.readyRealm===p.realm)return;
-  p.readyRealm=p.realm;p.readyHintAt=now;emit(w,p,`Đủ tu vi đột phá ${REALMS[p.realm+1]} • gõ dotpha`,'ready',now);
+  p.readyRealm=p.realm;p.readyHintAt=now;emit(w,p,`Đủ tu vi đột phá ${REALMS[p.realm+1]} • gõ 8`,'ready',now);
 }
 // 15/11/2026: nhiều người đủ đột phá nhưng không biết gõ dotpha (trước chỉ báo 1 lần mỗi cảnh giới).
 // Mỗi 2 phút gộp tối đa 5 người đang có mặt vào MỘT lời nhắc (1 câu giọng + bong bóng trên đầu từng người) — không chiếm hàng hiệu ứng.
@@ -252,7 +252,7 @@ function readyReminderTick(w,now){
     .sort((a,b)=>(a.readyHintAt||0)-(b.readyHintAt||0)||(b.lastActive||0)-(a.lastActive||0)).slice(0,READY_REMIND.max);
   if(!picks.length)return;
   for(const p of picks)p.readyHintAt=now;w.lastGuideAt=now;
-  emit(w,null,`Đủ đột phá: ${picks.map(p=>p.name).join(' · ')} • gõ dotpha`,'ready',now,{readyReminder:true,ids:picks.map(p=>p.id),count:picks.length});
+  emit(w,null,`Đủ đột phá: ${picks.map(p=>p.name).join(' · ')} • gõ 8`,'ready',now,{readyReminder:true,ids:picks.map(p=>p.id),count:picks.length});
 }
 // Gợi ý bước tiếp theo cho từng người: đủ linh thạch thì chỉ đúng lệnh cần gõ.
 // Mỗi gợi ý chỉ nói một lần mỗi người; mỗi người cách nhau ≥3 phút; cả tông môn ≥20 giây một gợi ý.
@@ -267,6 +267,8 @@ export function profileCard(p,w,now=Date.now()){
   const tip=last?'Đã đạt đỉnh tu tiên':!finalRealmEligible(p)?'Tiên Đế cần tổng quà 100 coin':settling?'Đạo cơ đang lắng đọng · mai đột phá tiếp':ready?'Gõ 8 · đột phá ngay':p.qi<needQi?'Gõ 1 tu luyện · 4 luyện đan · 5 dùng đan':'Gõ 2 hái · 3 đánh để có linh thạch';
   return {realm:p.realm,realmName:REALMS[p.realm],stage:stageOf(p),next:last?null:REALMS[p.realm+1],qi:p.qi,needQi,stones:p.stones,needStones,ready,rank,players:real.length,totalQi:p.totalQi||0,tip,tasks:p.resident||p.puppet?null:taskList(p,now,w)}; // 18/11: + nhiệm vụ ngày
 }
+// 20/11: thẻ gợi ý hiện lệnh dễ đọc theo kiểu "Gõ <số> · <việc>" (trước in thô "Gõ: hoc")
+const HINT_LABEL={dung:'5 · dùng đan',hoc:'học · bí pháp',ren:'7 · rèn pháp bảo',luyendan:'4 · luyện đan'};
 export function suggestion(p){
   const pill=CATALOG.find(x=>x.type==='pill'&&p.pills[x.id]>0);if(pill)return {key:'use:'+pill.id,cmd:'dung',say:`dùng ${pill.name}`,why:pill.description};
   const can=x=>!x.exclusive&&x.tier<=p.realm&&p.stones>=x.price&&p.herbs>=x.herbs;
@@ -318,7 +320,7 @@ function maybeHint(w,p,now){
   if(readyToBreak(p,w,now)||now-(p.joinedAt||0)<30000)return;const s=suggestion(p);if(!s)return;p.hints??=[];
   if(p.hints.includes(s.key)||now-(p.hintAt||0)<90000||now-(w.lastHintAt||0)<12000)return;
   p.hints.push(s.key);p.hints=p.hints.slice(-20);p.hintAt=now;w.lastHintAt=now;
-  emit(w,p,`Gõ: ${s.cmd}`,'hint',now,{say:s.say,why:s.why});
+  emit(w,p,`Gõ ${HINT_LABEL[s.cmd]||s.cmd}`,'hint',now,{say:s.say,why:s.why});
 }
 // Simulated actors are a DEMO tool; LIVE retains existing actors as labeled NPCs.
 const PUPPET_TYPES=['chat','like','gift','attack','breakthrough','follow','checkin','gather','cultivate'];
@@ -530,7 +532,7 @@ function actionCore(w,input,now) {
       const wait=cooldown(p,'status',15000,now);if(wait)return fail(`Hỏi lại sau ${wait}s.`);
       if(readyToBreak(p,w,now)){emit(w,p,statusText(p,w,now),'status',now);return {ok:true};}
       if(p.intro&&!p.intro.advancedAt){emit(w,p,'Thả tim • vận công; khoảng một phút đầu sẽ nhận Tân thủ lệnh','hint',now,{guide:'cultivate'});return {ok:true};}
-      const s=suggestion(p);if(s){emit(w,p,`Gõ: ${s.cmd}`,'hint',now,{say:s.say,why:s.why});return {ok:true};}
+      const s=suggestion(p);if(s){emit(w,p,`Gõ ${HINT_LABEL[s.cmd]||s.cmd}`,'hint',now,{say:s.say,why:s.why});return {ok:true};}
       emit(w,p,statusText(p,w,now),'status',now);return {ok:true};
     }
     if(['tuvi','xem','thongtin','tv','check'].includes(cmd)){
@@ -818,8 +820,6 @@ export function currentParticipant(w,p,now=Date.now()){
   // Vế rẻ nhất, loại nhiều nhất (đa số ~8k hồ sơ đã rời LIVE) đứng trước; mọi vế là boolean không tác dụng phụ nên kết quả không đổi.
   return now-p.lastActive<LIVE_ACTIVE_MS&&w.liveSession?.active!==false&&p.lastActive>=(w.liveSession?.startedAt||0)&&!p.resident&&w.playTransfers?.[p.id]?.phase!=='web'&&!(p.leftLiveAt&&p.leftLiveAt>=(p.lastRealInteractionAt||0))&&!(p.lastAutoArrivalAt>=(p.lastRealInteractionAt||0)&&now-p.lastAutoArrivalAt>=20000); // 08/11: chỉ ghé vào (chưa tim/chat/quà) thì rời sân sau 20 s (trước 90 s)
 }
-export function markLiveSession(w,isLive,now=Date.now()){
-  if(isLive){const fresh=!w.liveSession||!w.liveSession.active;if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};if(fresh)holdAutoEvents(w,w.settings?.liveWarmupMinutes??LIVE_WARMUP_MINUTES,now);}
 // 20/11 (chủ game: "lần sau mới bật live lên đừng có bật sự kiện liền"): mở LIVE mới → giữ mọi sự kiện TỰ ĐỘNG trong liveWarmupMinutes (mặc định 10),
 // rồi nhả lần lượt (không dồn cùng lúc). Mở tay trên trang Sự kiện vẫn được ngay.
 export const LIVE_WARMUP_MINUTES=10;
@@ -830,6 +830,8 @@ export function holdAutoEvents(w,minutes,now=Date.now()){const m=Math.max(0,Math
  w.lastCeremonyAt=Math.max(w.lastCeremonyAt||0,until);w.lastBlessingAt=Math.max(w.lastBlessingAt||0,until);if(w.eventPacing)w.eventPacing.lastOccupiedAt=Math.max(w.eventPacing.lastOccupiedAt||0,until);
  return {ok:true,until};}
 export function releaseAutoHold(w,now=Date.now()){const back=Math.max(0,(w.autoHoldUntil||0)-now);w.autoHoldUntil=0;if(back){for(const [k] of HOLD_STAGGER)if(w[k]>now)w[k]=Math.max(now+60000,w[k]-back);if(w.competitionSchedule?.nextAt>now)w.competitionSchedule.nextAt=Math.max(now+60000,w.competitionSchedule.nextAt-back);}return {ok:true};}
+export function markLiveSession(w,isLive,now=Date.now()){
+  if(isLive){const fresh=!w.liveSession||!w.liveSession.active;if(!w.liveSession)w.liveSession={startedAt:now-LIVE_ACTIVE_MS,active:true};else if(!w.liveSession.active)w.liveSession={startedAt:now,active:true};if(fresh)holdAutoEvents(w,w.settings?.liveWarmupMinutes??LIVE_WARMUP_MINUTES,now);}
   else if(w.liveSession)w.liveSession.active=false;
 }
 export function reconcilePatron(w,now=Date.now()){

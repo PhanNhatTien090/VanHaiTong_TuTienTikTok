@@ -18,7 +18,7 @@ test('advanced hints wait for introductory completion, are spoken once, and are 
   action(w,{type:'chat',userId:'a',name:'Lan',text:'tu luyện'},now+=60000);
   assert.equal(hints().length,0,'no crafting checklist during introduction');w.players.a.intro.advancedAt=now;w.players.b.intro.advancedAt=now;
   action(w,{type:'cultivate',userId:'a'},now+=11000);
-  assert.equal(hints().length,1);assert.equal(hints()[0].text,'Gõ: hoc');
+  assert.equal(hints().length,1);assert.equal(hints()[0].text,'Gõ học · bí pháp');
   assert.match(announcement({...hints()[0],gender:'nu'}),/^Sư tỷ Lan, hãy gõ học để lĩnh ngộ Thanh Tâm Quyết\. Tu luyện nhận thêm mười lăm phần trăm tu vi\.$/);
   action(w,{type:'chat',userId:'b',name:'Minh',text:'hai'},now+=1000);assert.equal(hints().length,1,'sect-wide 12s gap');
   action(w,{type:'chat',userId:'b',name:'Minh',text:'tuluyen'},now+=15000);assert.equal(hints().length,2);

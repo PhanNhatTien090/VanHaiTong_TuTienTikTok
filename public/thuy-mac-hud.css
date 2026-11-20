@@ -178,3 +178,12 @@ html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-lea
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){padding:0 0 1px!important}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm)>em{line-height:1.08!important}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{line-height:1!important;margin-top:-1px}
+/* ===== 20/11 (chủ game: "sự kiện nào thiết kế mới cũng che tùm lum") — lúc có sự kiện góc trên chỉ còn bảng sự kiện + luật quà ===== */
+html body.overlay.ui-tm.tm-event .tm-tokens{display:none!important}
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #honorBanner{display:none!important}
+/* Thẻ cá nhân (người vừa gõ lệnh/đủ đột phá…): nhỏ lại, xuống GÓC DƯỚI PHẢI, không chiếm giữa màn nữa. Thẻ biến hình (.spot-transform) giữ chỗ cũ dưới chân. */
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:auto!important;bottom:12.5%!important;right:1.2%!important;left:auto!important;width:44%!important;max-width:44%!important;transform:none!important;border-width:12px 18px 12px 18px!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) strong{font-size:clamp(11px,2.8cqw,30px)!important;line-height:1.15!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(8px,1.9cqw,20px)!important;line-height:1.2!important}
+/* cùng góc với Công Đức Bảng → thẻ hiện thì bảng tạm ẩn */
+html body.overlay.ui-tm .scene-shell:has(#spotlight.spotlight.visible:not(.spot-transform)) #giftRanks.live-ranks{visibility:hidden!important}
