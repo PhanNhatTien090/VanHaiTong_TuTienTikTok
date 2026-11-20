@@ -8,7 +8,7 @@
 import {stageConflict} from './stage-lock.mjs';
 
 // 10/11 tối (chủ game: "hơi dễ"): 11×15 ô, gần như không có đường vòng (3%), đường ngắn nhất ~85 bước, chạy 5 phút.
-export const MAZE=Object.freeze({cols:11,rows:15,registerMs:40000,runMs:300000,afterTop3Ms:30000,podiumMs:15000,moveGapMs:300,maxRunners:400,
+export const MAZE=Object.freeze({cols:11,rows:15,registerMs:20000 /* 21/11: cả sân tự vào → không cần chờ gõ mecung 40 s */,runMs:300000,afterTop3Ms:30000,podiumMs:15000,moveGapMs:300,maxRunners:400,
  breaks:[[1,1]],walk:[[500,40],[99,20],[30,9],[10,3]] /* 16/11 (chủ game): 30 coin = 9 ô (trước 6), hạc 99 = 20 ô (trước 12) */,braid:.03,targetDist:85,
  // 16/11 (chủ game: "họ biết chơi hết rồi"): YÊU THÚ chui ra từ hang (ngõ cụt), lang thang; đụng người → đánh văng lùi 1 ô (choáng 1,2 s) rồi tan.
  mob:{dens:4,everyMs:12000,firstMs:8000,lifeMs:45000,stepMs:2000,chase:3,stunMs:1200,base:3,perRunners:15,max:10},
@@ -89,7 +89,7 @@ function tickMobs(e,now){
 function register(w,now,c){
  const seed=(now^Math.floor(Math.random()*2**31))>>>0;
  const maze=pickMaze(seed);w.maze={id:'maze-'+now,phase:'registration',seed,maze,dens:pickDens(maze,seed),mobs:[],registrationEndsAt:now+MAZE.registerMs,runners:[],finished:0};
- announce(w,null,'BÍ CẢNH MÊ CUNG • gõ mecung để vào • tất cả xuất phát ở mốc, mỗi người tự tìm đường ra',now,c,{mazeStart:true});
+ announce(w,null,'BÍ CẢNH MÊ CUNG • cả sân tự vào • khai cửa thì gõ lên, xuống, trái, phải để đi • ai ra cửa trước thắng',now,c,{mazeStart:true});
 }
 export function startMaze(w,now,c){if(mazeActive(w))return {ok:false,message:'Mê cung đang mở.'};
  if(stageConflict(w,now)){w.maze={id:'maze-q'+now,phase:'queued'};return {ok:true,queued:true};}
@@ -165,6 +165,8 @@ export function tickMaze(w,now,c){
  const e=w.maze;if(!e)return;
  if(e.phase==='queued'){if(!stageConflict(w,now))register(w,now,c);return;}
  if(e.phase==='registration'&&now>=e.registrationEndsAt){
+  // 21/11 (chủ game: tự vào chơi luôn, không cần gõ): ai đang có mặt ở LIVE tự vào mê cung lúc khai cửa
+  for(const p of Object.values(w.players))if(real(p)&&c.active?.(w,p,now)&&!e.runners.some(x=>x.id===p.id))addRunner(w,e,p,now);
   e.runners=e.runners.filter(r=>w.players[r.id]);
   if(!e.runners.length){e.phase='finished';e.podiumUntil=now+4000;e.results=[];announce(w,null,'Bí cảnh mê cung khép lại • chưa có đạo hữu nào vào',now,c,{mazeEmpty:true});return;}
   e.phase='running';e.startedAt=now;e.endsAt=now+MAZE.runMs;for(const r of e.runners)r.at=now;

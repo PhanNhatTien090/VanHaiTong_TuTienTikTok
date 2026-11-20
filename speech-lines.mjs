@@ -231,7 +231,7 @@ export function speechPlan(e){
   }
   // ----- Bí Cảnh Mê Cung (10/11): chỉ đọc mở tuyển, mở cửa, top 3 thoát, kết thúc -----
   if(e.effect==='maze'){
-    if(e.mazeStart)return [say('tongsu',pickBy(seed,['Bí cảnh mê cung mở! Gõ mê cung để vào!','Mê cung bí cảnh hiện thế! Gõ mê cung để vào, tự tìm lối ra!']))];
+    if(e.mazeStart)return [say('tongsu',pickBy(seed,['Bí cảnh mê cung mở! Cả sân tự vào! Khai cửa thì gõ lên, xuống, trái, phải để đi!','Mê cung bí cảnh hiện thế! Cả sân tự vào, tự tìm lối ra!']))];
     if(e.mazeRun)return [say('tongsu',pickBy(seed,['Mê cung mở cửa! Gõ lên, xuống, trái, phải để đi!','Xuất phát! Mỗi tin một bước, tìm cửa ra!']))];
     if(e.mazeFinishRank){const rank=['','nhất','nhì','ba'][e.mazeFinishRank];return [say('tiennu',`${Who} thoát mê cung hạng ${rank}!`)];}
     if(e.mazeEnd){const n=sayName(e.mazeWinner);return [say('tongsu',n?`Mê cung khép lại! Mê Cung Chi Chủ là ${n}!`:'Mê cung khép lại! Lần sau tìm đường nhanh hơn nhé!')];}

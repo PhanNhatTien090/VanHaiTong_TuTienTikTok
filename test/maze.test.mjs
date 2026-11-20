@@ -39,9 +39,9 @@ test('quà: phá tường (đâm tường là phá và bước qua), không soi 
  const d0=e.maze.dist[r.y*e.maze.cols+r.x];gift(w,'p1',20,t+2000);assert.equal(r.breaks,0);assert.equal(e.maze.dist[r.y*e.maze.cols+r.x],d0-3,'tự đi 3 ô về phía cửa');
  gift(w,'p3',99,t+3000);const r3=e.runners.find(x=>x.id==='p3');assert.ok(r3&&r3.steps===20,'người chưa vào tặng quà là vào luôn + tự đi 20 ô');
 });
-test('không ai vào thì khép lại; dừng tay được; snapshot gửi mê cung gọn',()=>{
- const w=setup();assert.ok(startMaze(w,N).ok);tick(w,N+MAZE.registerMs);assert.equal(w.maze.phase,'finished');
- const w2=setup(),t=running(w2);const v=snapshot(w2,t+10).maze;assert.equal(v.cells.length,MAZE.cols*MAZE.rows);assert.equal(v.runners.length,2);assert.ok(stopMaze(w2,t+20).ok);assert.equal(snapshot(w2,t+30).maze,null);
+test('không ai có mặt thì khép lại; cả sân có mặt TỰ VÀO (21/11); dừng tay được; snapshot gửi mê cung gọn',()=>{
+ const w=setup();for(const p of Object.values(w.players))p.lastActive=0;assert.ok(startMaze(w,N).ok);tick(w,N+MAZE.registerMs);assert.equal(w.maze.phase,'finished');
+ const w2=setup(),t=running(w2);const v=snapshot(w2,t+10).maze;assert.equal(v.cells.length,MAZE.cols*MAZE.rows);assert.equal(v.runners.length,4,'cả 4 người có mặt tự vào');assert.ok(stopMaze(w2,t+20).ok);assert.equal(snapshot(w2,t+30).maze,null);
 });
 test('300 người cùng đi không lỗi, mỗi người một vị trí riêng',()=>{
  const w=setup(300);assert.ok(startMaze(w,N).ok);for(let i=0;i<300;i++)chat(w,'p'+i,'mecung',N+i);tick(w,N+MAZE.registerMs);const t=N+MAZE.registerMs,e=w.maze;

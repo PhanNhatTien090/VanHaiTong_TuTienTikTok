@@ -173,7 +173,7 @@ function fmtTime(ms){const s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/
 function drawHud(scene,c,e,t,H,now,L){
  txt(c,'BÍ CẢNH MÊ CUNG',400,H*.065,'900 38px Segoe UI','#bff7ea',8);
  if(e.phase==='registration'){const left=e.registrationEndsAt-now;
-  txt(c,'gõ  mecung  để vào • mở cửa sau '+Math.max(0,Math.ceil(left/1000))+' giây',450,H*.108,'800 26px Segoe UI','#ffe7a3',6);
+  txt(c,'cả sân tự vào • mở cửa sau '+Math.max(0,Math.ceil(left/1000))+' giây',450,H*.108,'800 26px Segoe UI','#ffe7a3',6);
   c.save();c.globalAlpha=.92;pill(c,130,H*.42,640,170,26);c.fillStyle='#061219e6';c.fill();c.strokeStyle='#5fe3c8';c.lineWidth=3;c.stroke();c.restore();
   txt(c,(e.count||0)+' đạo hữu đã vào',450,H*.42+52,'900 40px Segoe UI','#ffffff',7);
   txt(c,'tất cả xuất phát ở mốc • mỗi người tự tìm đường',450,H*.42+100,'700 24px Segoe UI','#bdf3ff',5);
