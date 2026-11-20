@@ -6,6 +6,8 @@
 // Hiệu năng: vòng + nhãn vẽ sẵn thành bitmap 1 lần (makeSurface), mỗi khung chỉ drawImage; sân rất đông (minimalCrowd) bỏ vòng, giữ nhãn.
 import {makeSurface} from './performance.js';
 export const TAN_DE_TU_MAX=6,TAN_DE_TU_MS=15*60000;
+// 20/11: tổng số nhãn hướng dẫn trên sân (Tân Đệ Tử + đủ đột phá + nhiệm vụ tân thủ) — chủ game: màn hình không được rối.
+export const HINT_MAX=4;
 export const isTanDeTu=(p,now=Date.now())=>!!p&&!p.resident&&!p.puppet&&!p.webOnly&&(Number(p.realm)||0)<=1&&Number.isFinite(Number(p.joinedAt))&&now-Number(p.joinedAt)<TAN_DE_TU_MS;
 // 6 người mới nhất (vào sau cùng đứng đầu) trong danh sách đang lên sân.
 export function tanDeTuIds(players,now=Date.now()){
@@ -15,7 +17,7 @@ export function tanDeTuIds(players,now=Date.now()){
 export function tanDeTuHint(p){
  if((Number(p.realm)||0)===0&&!(p.qi>0))return 'Gõ 1 · nhập môn';
  const ready=p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi&&p.stones>=(p.neededStones||0);
- return ready?'Đầy · gõ 8 đột phá':p.golden?'Gõ 1 · tu luyện ×2':'Gõ 1 · tu luyện'; // 20/11: Giờ Vàng (30 phút đầu, gõ tay ×2 tu vi) phải THẤY được
+ return ready?'Gõ 8 · đột phá':p.golden?'Gõ 1 · tu luyện ×2':'Gõ 1 · tu luyện'; // 20/11: kiểu "Gõ <số> · <việc>"; Giờ Vàng (30 phút đầu, gõ tay ×2) phải THẤY được
 }
 // 19/11 — NHIỆM VỤ TÂN THỦ 3 NGÀY (kế hoạch GĐ2): điểm danh hôm nay · lên cảnh giới 2 · vào một Đường.
 // Hiện dưới tên người vào game trong 3 ngày (sau 15 phút Tân Đệ Tử), tối đa 3 người mới nhất (sân đã đông chữ); xong cả 3 thì thôi.
@@ -38,7 +40,7 @@ function ringArt(){return surface('ring',240,84,(x,w,h)=>{x.scale(2,2);const cx=
  x.strokeStyle='rgba(244,201,106,.75)';x.lineWidth=1.2;x.beginPath();x.arc(0,0,50,0,Math.PI*2);x.stroke();
  x.fillStyle='#b3261e';for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;x.beginPath();x.arc(Math.cos(a)*50,Math.sin(a)*50,3.2,0,Math.PI*2);x.fill();}x.restore();});}
 // Nhãn giấy dó viền son, chữ mực; nhãn "đột phá" nền son chữ vàng cho nổi.
-function hintArt(text,quest=false){const key='hint:'+quest+':'+text;if(art.has(key))return art.get(key);const hot=!quest&&text.startsWith('Đầy');
+function hintArt(text,quest=false){const key='hint:'+quest+':'+text;if(art.has(key))return art.get(key);const hot=!quest&&text.startsWith('Gõ 8');
  const probe=makeSurface(4,4)?.getContext('2d');if(!probe)return null;const font='800 13px "Segoe UI",Arial,sans-serif';probe.font=font;const w=Math.ceil(probe.measureText(text).width)+22,h=22;
  return surface(key,(w+4)*2,(h+4)*2,x=>{x.scale(2,2);x.translate(2,2);
   x.fillStyle=hot?'#9e2219':quest?'rgba(226,240,232,.97)':'rgba(243,234,216,.97)';x.beginPath();x.roundRect(0,0,w,h,4);x.fill();
@@ -57,7 +59,7 @@ export function drawTanDeTuBack(scene,c,t){
 }
 // Nhãn bước kế: vẽ NGAY DƯỚI bảng tên, cùng lượt vẽ tên (gọi từ drawQiBar) → không bị bảng tên hàng khác đè.
 export function drawTanDeTuHint(scene,c,l,t){
- const p=l.player;if(scene.raceStatus?.active||scene.warStatus?.active)return;let im=null;
+ const p=l.player;if(scene.raceStatus?.active||scene.warStatus?.active)return;if(scene.hintIds&&!scene.hintIds.has(p?.id))return;let im=null;
  if(scene.tanDeTu?.has(p?.id))im=hintArt(tanDeTuHint(p));
  else if(scene.tanThu?.has(p?.id)){const q=tanThuQuest(p);if(q)im=hintArt(`${q.done}/${q.total} · ${q.next}`,true);}
  if(!im)return;

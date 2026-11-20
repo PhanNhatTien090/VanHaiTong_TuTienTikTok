@@ -233,7 +233,7 @@ export function commandWords(text){
 export const finalRealmEligible=p=>p.ascensionAccess==='free'||p.realm<12||Number(p.giftCoins||0)>=100;
 export const readyToBreak=(p,w=null,now=Date.now())=>finalRealmEligible(p)&&p.realm<REALMS.length-1&&p.qi>=requiredQi(p)&&p.stones>=requiredStones(p)&&(!w||!dailyAscensionView(w,p,now).exhausted);
 // 08/11: nêu rõ phần còn thiếu + lệnh kiếm thêm (trước đây chỉ có số, người đủ tu vi nhưng thiếu linh thạch tưởng là lỗi).
-export function missingText(p){const q=requiredQi(p)-p.qi,st=requiredStones(p)-p.stones;return [q>0&&'thiếu '+q.toLocaleString('vi-VN')+' tu vi · gõ tu luyện',st>0&&'thiếu '+st.toLocaleString('vi-VN')+' linh thạch · gõ hái'].filter(Boolean).join(' • ');}
+export function missingText(p){const q=requiredQi(p)-p.qi,st=requiredStones(p)-p.stones;return [q>0&&'thiếu '+q.toLocaleString('vi-VN')+' tu vi · gõ 1',st>0&&'thiếu '+st.toLocaleString('vi-VN')+' linh thạch · gõ 2'].filter(Boolean).join(' • ');}
 export const statusText=(p,w=null,now=Date.now())=>`Tu vi ${p.qi}/${requiredQi(p)} • Linh thạch ${p.stones}/${requiredStones(p)} • ${REALMS[p.realm]}${p.realm<REALMS.length-1&&missingText(p)?' • '+missingText(p):''}${!finalRealmEligible(p)?' • Tiên Đế cần tổng quà 100 coin (hiện '+(p.giftCoins||0)+')':readyToBreak(p,w,now)?' • đủ đột phá':''}${w&&dailyAscensionView(w,p,now).exhausted&&p.qi>=requiredQi(p)&&p.stones>=requiredStones(p)?' • đạo cơ đang lắng đọng':''}`; // 07/11/2026: ẩn số liệu hạn mức
 // Báo một lần khi người chơi vừa đủ điều kiện đột phá cảnh giới hiện tại.
 function checkReady(w,p,now){

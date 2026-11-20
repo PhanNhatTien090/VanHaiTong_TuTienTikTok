@@ -97,11 +97,12 @@ html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-lea
 html body.overlay.ui-tm .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;backdrop-filter:none!important}
 /* 19/11 map ngoài trời: chừa BẦU TRỜI — Công Đức Bảng xuống góc dưới phải, cột cúng phụng/vinh danh xuống góc dưới trái (cách đáy ≥11%) */
 html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{top:auto!important;bottom:12.5%!important;right:1.2%!important;width:40%!important}
-html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{top:auto!important;bottom:12.5%!important;left:1.2%!important;width:42%!important;flex-direction:column-reverse!important}
+/* 20/11: bảng Tặng quà rời đáy trái (trùng vùng bình luận TikTok) → góc phải ngay dưới 3 lệnh bài (vùng trời) */
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{top:21%!important;bottom:auto!important;left:auto!important;right:1.2%!important;width:33%!important;flex-direction:column!important}
 /* bia Thiên Bảng gọn hơn để trời giữa thoáng */
 html body.overlay.ui-tm .scene-shell #phoneHudLeft{width:37%!important}
 html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail #honorBanner.honor-banner{background-image:none!important;background-color:transparent!important}
-html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{align-items:flex-start!important}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{align-items:stretch!important}
 
 /* bảng hướng dẫn lớn (4 phút ẩn · 1 phút hiện, mỗi lần 1 chủ đề): giấy dó, thế chỗ Công Đức Bảng ở góc dưới phải */
 html body.overlay.ui-tm .scene-shell>#infoSpotlight{right:1.2%!important;bottom:12.5%!important;width:46%!important;border-radius:2px!important;text-shadow:none!important;animation:tm-scroll-in .5s ease-out}
@@ -144,3 +145,25 @@ html body.overlay.ui-tm .scene-shell>#infoSpotlight ol{gap:1px!important}
 html body.overlay.ui-tm .ritual-hud .ritual-name{display:inline-block;background:#f3ead8f2;color:var(--tm-ink)!important;font-family:var(--tm-title)!important;font-weight:700;padding:.15em .8em;border-radius:2px;box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 4px #f3ead8,inset 0 0 0 5px #1b181366;text-shadow:none!important}
 html body.overlay.ui-tm .ritual-hud h2{font-family:var(--tm-title)!important;letter-spacing:.06em}
 html body.overlay.ui-tm .ritual-hud .ritual-sub{font-family:var(--tm-title)!important}
+
+/* ===== 20/11 SOÁT HƯỚNG DẪN (docs/CAI-TIEN-2026-11-20.md mục 3) ===== */
+/* Tầng 1: dòng son dưới 3 lệnh bài — người lạ biết phải gõ SỐ vào BÌNH LUẬN */
+html body.overlay.ui-tm .tm-tokens .tm-tokens-head{grid-column:1/-1;margin-top:-4%;padding:.18em .3em;border-radius:2px;background:var(--tm-seal);color:#fff4dc;font:900 clamp(8px,2cqw,21px)/1.25 "Segoe UI",Arial,sans-serif;letter-spacing:.06em;text-align:center;box-shadow:0 2px 6px #0006}
+/* Tầng 3: SỔ LỆNH trong cuộn Thiên Bảng — mỗi dòng: ấn son (lệnh) + chữ mực (việc) */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>span{display:flex!important;align-items:center;gap:.55em;padding:.34em 0!important;grid-template-columns:none!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh .sl-key{flex:none;min-width:2em;padding:.12em .45em;border-radius:3px;background:var(--tm-seal)!important;color:#fff4dc!important;font:900 clamp(10px,2.5cqw,27px)/1.2 "Segoe UI",Arial,sans-serif!important;font-style:normal!important;text-align:center;white-space:nowrap}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh em{flex:1;min-width:0;color:var(--tm-ink)!important;font:700 clamp(9px,2.15cqw,23px)/1.25 "Segoe UI",Arial,sans-serif!important;font-style:normal!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>small{display:block}
+/* Sổ lệnh: vừa đủ 4 dòng trong cuộn (chữ nhỏ lại một nấc, được xuống dòng thay vì bị cắt "…") */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>span{padding:.22em 0!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh .sl-key{font-size:clamp(9px,2.15cqw,23px)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh em{font-size:clamp(8px,1.95cqw,21px)!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15!important}
+/* Thẻ cá nhân (người vừa gõ lệnh) nằm TRÊN bảng Tặng quà cùng góc — trước đây bị bảng quà che */
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight{z-index:40!important}
+/* Công Đức Bảng: thu hẹp sát mép phải để không lấn vùng bình luận TikTok (bình luận rộng ~74% từ trái) */
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{width:25%!important;right:1%!important;left:auto!important}
+/* Hạng 4–10 Thiên Bảng chữ mờ/nhỏ (dòng 95–96) không áp cho Sổ lệnh — ô lệnh dòng 4 từng bị chữ nâu trên nền son */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.so-lenh>span:nth-of-type(n)>i.sl-key{color:#fff4dc!important;font-size:clamp(9px,2.15cqw,23px)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.so-lenh>span:nth-of-type(n)>em{font-size:clamp(8px,1.95cqw,21px)!important}
+/* Cuộn trái hạ khỏi dải trên cùng (TikTok hiện avatar + tên chủ LIVE ở ~8% đầu màn) */
+html body.overlay.ui-tm #phoneHudLeft{top:4.5%!important}

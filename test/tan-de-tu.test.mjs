@@ -16,8 +16,8 @@ test('chỉ người thật, cảnh giới 0–1, vào trong 15 phút; tối đa
 test('nhãn: nhập môn → tu luyện → đầy gõ 8 (chỉ lệnh gõ, không mồi tim/follow)',()=>{
  assert.equal(tanDeTuHint(mk('a',{realm:0})),'Gõ 1 · nhập môn');
  assert.equal(tanDeTuHint(mk('a',{realm:1,qi:10})),'Gõ 1 · tu luyện');
- assert.equal(tanDeTuHint(mk('a',{realm:1,qi:100})),'Đầy · gõ 8 đột phá');
- for(const s of ['Gõ 1 · nhập môn','Gõ 1 · tu luyện','Đầy · gõ 8 đột phá'])assert.doesNotMatch(s,/tim|follow|share|theo dõi/i);
+ assert.equal(tanDeTuHint(mk('a',{realm:1,qi:100})),'Gõ 8 · đột phá');
+ for(const s of ['Gõ 1 · nhập môn','Gõ 1 · tu luyện','Gõ 8 · đột phá'])assert.doesNotMatch(s,/tim|follow|share|theo dõi/i);
 });
 test('người mới chiếm 6 ghế giữa sân, người cũ đang ngồi đó bị dời chứ không biến mất; người cũ còn lại giữ ghế',()=>{
  const seats=new Map(),old=Array.from({length:30},(_,i)=>mk('o'+i));

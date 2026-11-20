@@ -7,7 +7,7 @@ const TOKENS=[['1','Tu luyện'],['8','Đột phá'],['6','Cơ duyên']];
 function tokens(shell){
  if(shell.querySelector('.tm-tokens'))return;
  const box=document.createElement('div');box.className='tm-tokens';box.setAttribute('aria-label','Lệnh bài: gõ số trong bình luận');
- box.innerHTML=TOKENS.map(([n,w],i)=>`<div class="tm-token" style="--i:${i}"><b>${n}</b><span>${w}</span></div>`).join('');
+ box.innerHTML=TOKENS.map(([n,w],i)=>`<div class="tm-token" style="--i:${i}"><b>${n}</b><span>${w}</span></div>`).join('')+'<div class="tm-tokens-head">GÕ SỐ VÀO BÌNH LUẬN</div>'; // 20/11: người lạ chưa biết 1·8·6 là gì
  shell.appendChild(box);
 }
 // Công Đức Bảng: "Anh Tran · 6.293 coin" → "Anh Tran" (giữ danh vị Đệ Nhất/Nhị/Tam Cung Phụng).

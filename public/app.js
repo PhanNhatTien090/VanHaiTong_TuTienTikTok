@@ -52,7 +52,7 @@ import {residentCycle,setResidentRealm} from './residents.js';
 import {CultivationAudio,PRERENDER_FROM,PRERENDER_KEEP} from './audio.js?v=prerender-20261120';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
-import {renderInfoSpotlight,guideFromEvent} from './info-spotlight.js?v=20261119';
+import {forceSoLenh} from './so-lenh.js?v=20261120'; // 20/11: thay bảng thông tin góc dưới phải (info-spotlight.js) bằng Sổ lệnh trong cuộn Thiên Bảng
 import {mountGearGuide,renderGearGuide} from './gear-guide.js?v=honor-legend-20261115';
 import {renderStageQueue} from './stage-queue.js';
 import {hallsRankHTML,hallCardHTML,hallDuelHTML} from './ngu-duong-ui.js?v=hall-management';
@@ -68,12 +68,6 @@ import {giftRules,giftRuleHTML} from './gift-rule-card.js?v=hall-war-20261114';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
 const cultivationAudio=new CultivationAudio();cultivationAudio.extraLeadMs=Number(new URLSearchParams(location.search).get('audioLead'))||0; // 20/11: chỉnh tay nếu âm đột phá vẫn chậm hơn hình trên LIVE (ms, tối đa 400)
-// 20/11: dựng trước âm đột phá (≥ Hóa Thần) cho người SẮP đột phá — lúc chiếu chỉ phát 1 nguồn âm, hết rè/trễ (audio.js prerenderRitual).
-// Chỉ làm khi không có màn đột phá đang chiếu; mỗi lần 1 cảnh giới; người gần đủ (≥85% tu vi) xếp theo quà.
-if(overlay)setInterval(()=>{const A=cultivationAudio;if(!A.enabled||A.qiSession||A.prerendering||!state?.players)return;
- const near=p=>p.active&&!p.puppet&&p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi*.85&&(p.stones||0)>=(p.neededStones||0)*.85;
- const want=[...new Set(state.players.filter(p=>near(p)&&(p.realm||0)+1>=PRERENDER_FROM&&(p.realm||0)+1<REALM_NAMES.length).sort((a,b)=>(b.giftCoins||0)-(a.giftCoins||0)).map(p=>(p.realm||0)+1))].slice(0,PRERENDER_KEEP);
- const r=want.find(r=>!A.prerendered?.has(r));if(r)A.prerenderRitual(r,breakthroughDuration({effect:'breakthrough',fromRealm:r-1,toRealm:r}));},4000);
 import {BGM_LIST,musicIndex,musicForState,musicChangesAt} from './music-rotation.js?v=event-music-20261115';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').normalize('NFC').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
@@ -121,6 +115,12 @@ const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);
 }
 
 const params=new URLSearchParams(location.search),mode=params.get('world')==='live'?'live':'demo',overlay=params.get('overlay')==='1';
+// 20/11: dựng trước âm đột phá (≥ Hóa Thần) cho người SẮP đột phá — lúc chiếu chỉ phát 1 nguồn âm, hết rè/trễ (audio.js prerenderRitual). (20/11 sửa: khối này từng nằm TRƯỚC khai báo overlay → ReferenceError, overlay chết trắng; phải đứng sau dòng params)
+// Chỉ làm khi không có màn đột phá đang chiếu; mỗi lần 1 cảnh giới; người gần đủ (≥85% tu vi) xếp theo quà.
+if(overlay)setInterval(()=>{const A=cultivationAudio;if(!A.enabled||A.qiSession||A.prerendering||!state?.players)return;
+ const near=p=>p.active&&!p.puppet&&p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi*.85&&(p.stones||0)>=(p.neededStones||0)*.85;
+ const want=[...new Set(state.players.filter(p=>near(p)&&(p.realm||0)+1>=PRERENDER_FROM&&(p.realm||0)+1<REALM_NAMES.length).sort((a,b)=>(b.giftCoins||0)-(a.giftCoins||0)).map(p=>(p.realm||0)+1))].slice(0,PRERENDER_KEEP);
+ const r=want.find(r=>!A.prerendered?.has(r));if(r)A.prerenderRitual(r,breakthroughDuration({effect:'breakthrough',fromRealm:r-1,toRealm:r}));},4000);
 if(overlay)document.body.classList.add('overlay');else{document.body.classList.add('management-only');document.title='Vân Hải Tông · Quản lý LIVE';const panel=$('#audioPanel');panel.hidden=false;$('#managementDisplaySettings').append(panel);}
 $('#worldSelect').value=mode;
 let state=null,selected=null,online=false,initialized=false,seen=new Set(),auto=null,sound=false,lastProfile='',lastFeed='',lastCards='',toastTimer,spotTimer,queue=[],busy=false,currentTab='scene';
@@ -443,7 +443,7 @@ applyResidents();
 // Cột phải: luôn giữ bảng Quà → Thưởng; các bảng phụ (Linh Thú Cốc, Cùng tu, sự kiện…) chỉ hiện MỘT cái, xoay vòng 8 giây,
 // để cột không dài xuống đè lên nhân vật ở hàng ghế trên.
 if(overlay)setInterval(()=>renderGearGuide(state,esc),1000);
-if(overlay)setInterval(()=>renderInfoSpotlight(state,esc),1000); // 15/11: bảng thông tin to góc dưới phải, 4 phút hiện 1 phút
+if(overlay)setInterval(()=>renderLiveRanks(),2000); // 20/11: cuộn Thiên Bảng ↔ Sổ lệnh ↔ Ngũ Đường xoay theo đồng hồ, không chờ state mới
 if(overlay){
   const tower=document.getElementById('towerStage');
   setInterval(()=>{if(state?.tower||!tower.hidden)renderTower(tower,state,scene,esc);},250);
@@ -493,7 +493,7 @@ setInterval(()=>{for(const e of giftCombos.drain(Date.now()))enqueueReady(e);},1
 let lastFullRitualAt=0;
 function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.resident&&e.actorKind!=='npc'&&!e.firstStep)return e; /* 19/11: lượt NHẬP MÔN (bình luận đầu tiên) cũng giới hạn màn toàn cảnh */const now=Date.now();// 4/11 tối: mọi cảnh giới tối đa 1 màn toàn cảnh / 60 s (Luyện Khí 90 s) — nhiều người đột phá liền nhau từng tạo cảnh lặp nối đuôi.
   if(now-lastFullRitualAt<(breakthroughRealm(e)<=1?90000:60000))return {...e,effect:"qi",kind:undefined,ritualSkipped:true};lastFullRitualAt=now;return e;}
-function enqueue(e){if(!overlay)return;if(document.body.classList.contains('ui-tm')&&guideFromEvent(e))renderInfoSpotlight(state,esc);if(e?.firstStep&&!ascensionStage){/* 19/11 (chủ game: ~30 người cùng lúc phải đẹp): nhập môn = hiệu ứng TẠI CHỖ ngay, song song, không chiếm toàn màn */addNhapMon(scene,e);scene.noteEvent?.(e);if(!e.resident)narrator.add({id:e.id+':nm',user:e.user,name:e.name,gender:e.gender,effect:'nhapmon',text:'Nhập môn',nhapMonVoice:true,clipKind:'nhapmon',at:e.at});return;} /* 20/11: kèm câu chúc nhập môn đọc sẵn (cả sân 1 câu / 8 s) */e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
+function enqueue(e){if(!overlay)return;if(forceSoLenh(e))renderLiveRanks(true);if(e?.firstStep&&!ascensionStage){/* 19/11 (chủ game: ~30 người cùng lúc phải đẹp): nhập môn = hiệu ứng TẠI CHỖ ngay, song song, không chiếm toàn màn */addNhapMon(scene,e);scene.noteEvent?.(e);return;}e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
 let engagementSoundAt=-Infinity;
 // 07/11/2026: QUÀ HIỆN NGAY LÚC TẶNG. Thẻ quà hiện lập tức; quà ưu tiên cao nhất và cắt ngang hiệu ứng thường.
 // Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.

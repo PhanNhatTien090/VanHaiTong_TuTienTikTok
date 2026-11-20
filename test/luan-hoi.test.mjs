@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {createWorld,ensurePlayer,action,requiredQi,requiredStones,power} from '../engine.mjs';
 import {REBIRTH_UNLOCK_REALM} from '../public/progression.js';
 import {LUAN_HOI,combatRealm,pastLifeCost,luanHoiHandQi,luanHoiArenaHp,luanHoiArenaAtk,daoFree,luanHoiTier,luanHoiTitle} from '../public/luan-hoi-data.js';
-import {infoPages} from '../public/info-spotlight.js';
+import {soLenhPage,lateSoLenh,SO_LENH,BOARD_CYCLE_MS} from '../public/so-lenh.js';
 import {LUAN_HOI_SCORE} from '../public/luan-hoi-audio.js';
 import {LH,LUAN_HOI_MS,findLuanHoi} from '../public/luan-hoi-cinema.js';
 const N=Date.parse('2026-11-18T20:00:00+07:00');
@@ -52,8 +52,9 @@ test('đạo quả: 1 điểm mỗi lần chuyển sinh, tối đa 3 tầng mỗ
 });
 
 test('hướng dẫn + bậc + nhạc khớp mốc',()=>{
- const page=infoPages({players:[{name:'X',realm:3,reincarnations:2,totalQi:9},{name:'Y',realm:27}]}).find(p=>p.id==='luanhoi');assert.ok(page);assert.ok(page.rows.some(r=>r[0]==='☸ X'));
- assert.equal(infoPages({players:[{name:'Z',realm:10}]}).find(p=>p.id==='luanhoi'),undefined);
+ // 20/11: trang Luân Hồi chuyển sang Sổ lệnh (so-lenh.js) — chỉ xoay tới khi đã có người cảnh giới 26+ hoặc đã chuyển sinh
+ assert.ok(lateSoLenh({players:[{name:'X',realm:3,reincarnations:2}]}));assert.ok(lateSoLenh({players:[{name:'Y',realm:27}]}));assert.equal(lateSoLenh({players:[{name:'Z',realm:10}]}),false);
+ const ids=late=>new Set(Array.from({length:SO_LENH.length*2},(_,i)=>soLenhPage(i*BOARD_CYCLE_MS,late).id));assert.ok(ids(true).has('luan'));assert.ok(!ids(false).has('luan'));
  assert.equal(luanHoiTier(0),null);assert.equal(luanHoiTier(4).name,'Tam Luân');assert.equal(luanHoiTitle(1),'Nhất Thế Luân Hồi');
  assert.ok(LUAN_HOI_SCORE.some(c=>Math.abs(c.at-LH.impact)<.01));assert.ok(LUAN_HOI_SCORE.every(c=>c.at>=0&&c.at<LH.duration));
 });

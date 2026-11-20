@@ -1,3 +1,4 @@
+import {soLenhHTML,soLenhPage,soLenhForced,lateSoLenh,BOARD_CYCLE_MS,TOP_MS,SO_LENH_MS} from './so-lenh.js';
 const compact = new Intl.NumberFormat('vi-VN',{notation:'compact',maximumFractionDigits:1});
 const points = n => Number(n||0).toLocaleString('vi-VN');
 const hallLabel = h => h.name.replace(/ Đường$/,'');
@@ -6,7 +7,10 @@ const emblem = h => `<i class="hall-emblem" style="--hall-color:${h.color}" aria
 export function hallsRankHTML(state,esc,now){
   const {thienBang:top,halls}=state.halls;
   // 19/11 (chủ game): Thiên Bảng hiện luôn TOP 10 một lượt (20 s), xen Ngũ Đường 8 s.
-  const cyc=now%28000, showHalls=top.length?cyc>=20000:true;
+  // 20/11: thêm SỔ LỆNH 12 s giữa hai bảng (so-lenh.js) — có người gõ thiếu điều kiện thì trang đúng chủ đề hiện ngay.
+  const cyc=now%BOARD_CYCLE_MS;
+  if(soLenhForced(now)||top.length&&cyc>=TOP_MS&&cyc<TOP_MS+SO_LENH_MS)return soLenhHTML(soLenhPage(now,lateSoLenh(state)),esc);
+  const showHalls=top.length?cyc>=TOP_MS+SO_LENH_MS:true;
   if(showHalls){
     const rows=[...halls].sort(hallStandingOrder);
     return `<div class="qi-leaders hall-ranks"><b>NGŨ ĐƯỜNG · TUẦN</b><small>Hoạt động + Đường chiến · thưởng cuối tuần</small>${rows.map(h=>`<span>${emblem(h)}<em>${esc(hallLabel(h))}</em><strong>${points(h.points)}</strong>${h.champion?'<small>+5% tu vi tuần này</small>':''}</span>`).join('')}</div>`;

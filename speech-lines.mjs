@@ -108,13 +108,13 @@ export function speechPlan(e){
   if(e.engagementAction==='follow')return [];
   if(e.engagementAction==='share')return [];
   const sys=!e.user;
-  if(e.visitorStart&&e.visitorLineup?.length>1)return [say('tiennu','Tam tiên giáng lâm: '+text.split('•').slice(1).join(' ').split('·').map(s=>s.trim()).filter(Boolean).join(', ')+'!'),say('tongsu','Gõ cơ duyên để nhận quà. Mỗi vị một loại quà riêng, có thể sở hữu skin!')];
-  if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
-  if(e.visitorStart&&e.visitorKind==='tudo')return [say('tiennu','Tư Đồ Ma Tôn giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
-  if(e.visitorStart&&e.visitorKind==='viemton')return [say('tiennu','Tần Mục Hỏa Thần giáng thế, biển lửa đốt trời!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
-  if(e.visitorStart&&e.visitorKind==='khuyniet')return [say('tiennu','Khuy Niết Lôi Tôn giáng thế, thiên lôi nổ vang!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
-  if(e.visitorStart&&e.visitorKind==='doraemon')return [say('tiennu','Doraemon đã tới tông môn!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
-  if(e.visitorStart){const name=({hanlap:'Hàn Lập',vuonglam:'Vương Lâm',shende:'Thần Đế'})[e.visitorKind]||titleCase(head.replace(/BAN CƠ DUYÊN|TRUYỀN ĐẠO|GIÁNG LÂM/g,''));return [say('tiennu',name+' giáng lâm Vân Hải Tông!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];}
+  if(e.visitorStart&&e.visitorLineup?.length>1)return [say('tiennu','Tam tiên giáng lâm: '+text.split('•').slice(1).join(' ').split('·').map(s=>s.trim()).filter(Boolean).join(', ')+'!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='tudo')return [say('tiennu','Tư Đồ Ma Tôn giáng thế!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='viemton')return [say('tiennu','Tần Mục Hỏa Thần giáng thế, biển lửa đốt trời!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='khuyniet')return [say('tiennu','Khuy Niết Lôi Tôn giáng thế, thiên lôi nổ vang!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart&&e.visitorKind==='doraemon')return [say('tiennu','Doraemon đã tới tông môn!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];
+  if(e.visitorStart){const name=({hanlap:'Hàn Lập',vuonglam:'Vương Lâm',shende:'Thần Đế'})[e.visitorKind]||titleCase(head.replace(/BAN CƠ DUYÊN|TRUYỀN ĐẠO|GIÁNG LÂM/g,''));return [say('tiennu',name+' giáng lâm Vân Hải Tông!'),say('tongsu','Gõ số sáu để nhận quà, có thể sở hữu skin!')];}
   if(e.lanternStart||e.lanternEnd||e.lanternLit||e.lanternBloom)return [say('tiennu',text.replace(/•/g,'. '))];
   if(e.togetherInvite||e.togetherStart||e.togetherDone||e.guardJoin||e.guardSuccess)return [say('tongsu',text.replace(/•/g,'. '))];
   if(e.petStart)return [say('tiennu','Linh Thú Cốc đã mở!'),say('tongsu','Thả một trăm tim kết bạn Ngọc Thố. Gõ thú để xem tiến độ, linh thú sẽ đồng hành cùng đạo hữu.')];
@@ -161,19 +161,19 @@ export function speechPlan(e){
     // 17/11 (chủ game): ban ĐAN DƯỢC → đọc rõ tu vi tăng bao nhiêu phần trăm (số % thực nhận, server tính).
     if(e.pill&&Number(e.qiPct)>0){const pillHead=pickBy(seed,[`Tông chủ ban ${gift} cho ${who}!`,`Tông chủ ban thưởng ${gift} cho ${who}!`,`Tông chủ để mắt tới ${who}, ban ${gift}!`]);
       return [say('tiennu',pillHead),say('tongsu',`${Who} luyện hóa đan dược, tu vi tăng ${viNumber(e.qiPct)} phần trăm!`+(m?` Phúc duyên gấp ${multWord(m)} trong ${viNumber(e.buff.minutes||10)} phút!`:''))];}
-    const tail=e.adminGift==='breakthrough'?`${Who} đã đủ tu vi, gõ đột phá ngay!`:got.length?`${Who} nhận ${list2(got)}!`:`${Who} hãy tạ ơn Tông chủ!`;
+    const tail=e.adminGift==='breakthrough'?`${Who} đã đủ tu vi, gõ số tám đột phá ngay!`:got.length?`${Who} nhận ${list2(got)}!`:`${Who} hãy tạ ơn Tông chủ!`;
     return [say('tiennu',head),say('tongsu',tail)];}
   // v79: hướng dẫn người mới từng bước
   if(e.guide==='checkin')return [say('tongsu',pickBy(seed,[`${Who}, gõ điểm danh để nhận linh thạch khởi đầu nhé!`,`${Who} ơi, bước một: gõ điểm danh nhận quà mỗi ngày!`]))];
   if(e.guide==='cultivate')return [say('tongsu',pickBy(seed,[`Tốt lắm ${who}! Đạo cơ đã vững.`,`${Who} đã bước vào tiên lộ!`]))];
-  if(e.guide==='gather')return [say('tongsu',pickBy(seed,[`${Who}, gõ hái để hái linh thảo.`,`Bước ba nè ${who}: gõ hái nhận linh thạch!`]))];
+  if(e.guide==='gather')return [say('tongsu',pickBy(seed,[`${Who}, gõ số hai để hái linh thảo.`,`Bước ba nè ${who}: gõ số hai nhận linh thạch!`]))];
   if(e.effect==='hint'){const cmd=cutWords(gameText(e.say||''),40),why=cutWords(gameText(e.why||'').split('.')[0],60);return [say('tongsu',`${Who}, hãy gõ ${cmd}. ${why}.`)];}
   if(e.effect==='blessing'){const n=Number(e.count);return [say('tiennu',`Thiên đạo ban phúc! ${n>0?cap(viNumber(n))+' vị đồng môn':'Đồng môn'} được đột phá cảnh giới!`)];}
-  if(e.readyReminder){const n=Number(e.count)||1;return [say('tongsu',n===1?`${gameText(String(e.text||'').replace(/^Đủ đột phá: /,'').split(' • ')[0])} đã đủ đột phá, gõ đột phá ngay!`:`${cap(viNumber(n))} đạo hữu đã đủ đột phá, gõ đột phá ngay!`)];}
+  if(e.readyReminder){const n=Number(e.count)||1;return [say('tongsu',n===1?`${gameText(String(e.text||'').replace(/^Đủ đột phá: /,'').split(' • ')[0])} đã đủ đột phá, gõ số tám đột phá ngay!`:`${cap(viNumber(n))} đạo hữu đã đủ đột phá, gõ số tám đột phá ngay!`)];}
   if(e.effect==='rebirth'&&e.rebirth)return [say('tongsu',`${Who} viên mãn Hỗn Độn, bước vào Luân Hồi lần thứ ${e.count||1}. Thân diệt, đạo tồn — niết bàn trùng sinh!`)]; // 18/11 Luân Hồi
   if(e.daoQua)return [say('tongsu',`${Who} ${e.text?.split(' • ')[0]?.toLowerCase().startsWith('lĩnh ngộ')?e.text.split(' • ')[0].replace(/^Lĩnh ngộ/,'lĩnh ngộ'):'lĩnh ngộ Đạo Quả'}.`)];
   if(e.effect==='ready'&&e.rebirthReady)return [say('tongsu',`${Who} đã viên mãn Hỗn Độn Vĩnh Hằng! Gõ chuyển sinh để bước vào luân hồi.`)];
-  if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ đột phá ngay.`)];
+  if(e.effect==='ready')return [say('tongsu',`${Who} đã đủ tu vi lên ${head.replace('Đủ tu vi đột phá','').trim()}! Gõ số tám đột phá ngay.`)];
   if(e.hallJoin){const h=titleCase(e.hallJoin.name||'Ngũ Đường');return [say('tongsu',pickBy(seed,[`${Who} bái nhập ${h}! Đồng môn hoan nghênh!`,`${h} có thêm ${who}! Từ nay cùng tu một đạo!`,`${Who} đầu nhập ${h}, nhận lệnh bài đệ tử!`]))];} // 16/11
   if(e.cmdFail){const t=gameText(String(e.text||'')).split('·').slice(0,2).map(x=>x.trim()).filter(Boolean).join(', ').replace(/"/g,''); /* tối đa 2 ý: câu ngắn tạo giọng nhanh */return [say('tongsu',`${Who}, ${t.charAt(0).toLowerCase()+t.slice(1)}`.slice(0,190))];} // 18/11
   if(e.effect==='status'){
@@ -181,11 +181,11 @@ export function speechPlan(e){
     if(!mm)return [say('tongsu',`${Who}, ${head.toLowerCase()}.`)];
     const [,qi,needQi,st,needSt]=mm.slice(0,5).map(Number),realm=mm[5].trim();
     if(qi>=needQi&&st>=needSt&&text.includes('đạo cơ đang lắng đọng'))return [say('tongsu',`${Who}, ${realm}, đạo cơ đang lắng đọng. Tiếp tục tu luyện, thiên kiếp sẽ sớm tới!`)];
-    if(qi>=needQi&&st>=needSt)return [say('tongsu',`${Who}, ${realm}, đã đủ điều kiện. Gõ đột phá ngay!`)];
+    if(qi>=needQi&&st>=needSt)return [say('tongsu',`${Who}, ${realm}, đã đủ điều kiện. Gõ số tám đột phá ngay!`)];
     const lack=[qi<needQi&&`${roundSay(needQi-qi)} tu vi`,st<needSt&&`${viNumber(needSt-st)} linh thạch`].filter(Boolean).join(' và ');
-    const how=st<needSt&&qi>=needQi?'Gõ hái hoặc điểm danh để có linh thạch.':st<needSt?'Tu luyện để tăng tu vi, gõ hái để có linh thạch.':'Trò chuyện cùng đồng môn để luận đạo.';
-    if(e.missing==='stones')return [say('tongsu',`${Who} thiếu linh thạch, gõ hái để lấy linh thạch!`)]; // 08/11: chủ game muốn ngắn gọn
-    return [say('tongsu',`${Who}, còn thiếu ${lack}. ${qi<needQi?'Gõ tu luyện.':'Gõ hái.'}`)]; // 18/11: câu ngắn → tạo giọng nhanh (trước đọc cả cảnh giới + 2 cách)
+    const how=st<needSt&&qi>=needQi?'Gõ số hai hoặc điểm danh để có linh thạch.':st<needSt?'Gõ số một để tăng tu vi, gõ số hai để có linh thạch.':'Trò chuyện cùng đồng môn để luận đạo.';
+    if(e.missing==='stones')return [say('tongsu',`${Who} thiếu linh thạch, gõ số hai để lấy linh thạch!`)]; // 08/11: chủ game muốn ngắn gọn
+    return [say('tongsu',`${Who}, còn thiếu ${lack}. ${qi<needQi?'Gõ số một.':'Gõ số hai.'}`)]; // 18/11: câu ngắn → tạo giọng nhanh (trước đọc cả cảnh giới + 2 cách)
   }
   if(text.startsWith('Kích hoạt '))return [say('tongsu',`${Who} kích hoạt ${cutWords(head.replace('Kích hoạt ',''),30)} trong trò chơi, tu vi tăng vọt!`)];
   if(text.startsWith('Chế tạo thành'))return [say('tongsu',`${Who} vừa chế tạo ${cutWords(head.replace('Chế tạo thành ',''),30)} trong trò chơi.`)];
@@ -280,7 +280,7 @@ export function speechPlan(e){
   }
   // ----- tiên nhân -----
   if(e.effect==='visitor'){
-    const vm=text.match(/^(.+?) BAN CƠ DUYÊN/);if(vm)return [say('tiennu',`${titleCase(vm[1])} giáng lâm Vân Hải Tông!`),say('tongsu','Gõ cơ duyên nhận pháp bảo miễn phí. Truyền thừa sự kiện đang mở!')];
+    const vm=text.match(/^(.+?) BAN CƠ DUYÊN/);if(vm)return [say('tiennu',`${titleCase(vm[1])} giáng lâm Vân Hải Tông!`),say('tongsu','Gõ số sáu nhận pháp bảo miễn phí. Truyền thừa sự kiện đang mở!')];
     const gm=text.match(/^(.+?) ban (.+)$/);if(gm&&!sys)return [say('tongsu',`${Who} được ${gm[1]} ban ${cutWords(gm[2],30)}!`)];
     const lm=text.match(/^(.+?) đã rời tiên môn/);if(lm)return [say('tiennu',`${lm[1]} đã rời tiên môn. Hẹn gặp lại chư vị!`)];
   }
