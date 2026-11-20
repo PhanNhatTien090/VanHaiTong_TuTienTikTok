@@ -175,11 +175,11 @@ export class CultivationAudio {
   sync(){if(this.music)this.music.volume=Math.min(1,this.volume*this.ambient*MUSIC_GAIN*(this.transitionGain??1)*Math.min(this.ducked?VOICE_MUSIC_DUCK:1,this.qiSession?(this.qiSession.duck??.22):1));if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t,.3);this.fxBus.gain.setTargetAtTime(this.sfx,t,.08);}
   ritual(event,elapsed=0){
     if(!event||!this.enabled||this.ctx?.state!=='running'){
-      if(this.qiSession){this.qiSession.audio.stop();this.qiSession=null;this.sync();}return;
+      if(this.qiSession){this.qiSession.audio?.stop?.();this.qiSession=null;this.sync();}return;
     }
     const realm=breakthroughRealm(event),duck=DIVINE_DUCKS[realm]?DIVINE_DUCKS[realm](elapsed):realm===25?thaiSoMusicDuck(elapsed):realm===26?vinhKiepMusicDuck(elapsed):realm===27?voCucMusicDuck(elapsed):realm===28?honDonMusicDuck(elapsed):realm>=29?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
-    this.qiSession?.audio.stop();
+    this.qiSession?.audio?.stop?.(); // 20/11: phiên giữ nhạc của Luân Hồi (hold) không có audio — trước đây văng lỗi mỗi khung
     // 20/11: bù độ trễ ra loa (âm phát sau hình đúng bằng outputLatency) + dùng bản dựng trước nếu có (xem prerenderRitual).
     const el=elapsed+this.ritualAudioLead()*1000,pre=this.prerendered?.get(realm),usePre=!!(pre&&pre.duration===event.duration&&el/1000<pre.buffer.duration);
     const t0=performance.now(),audio=usePre?this.playPrerendered(event,realm,el,pre):this.scheduleRitual(event,realm,el);if(usePre)pre.used=(pre.used||0)+1;this.ritualBuild={realm,ms:Math.round(performance.now()-t0),lateMs:Math.round(elapsed),leadMs:Math.round(el-elapsed),prerendered:usePre,at:Date.now()}; /* 18/11: đo âm thanh đột phá trễ (dựng đồ thị âm + độ trễ lúc bắt đầu) */

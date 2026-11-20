@@ -35,7 +35,12 @@ export function drawLuanHoiAuras(scene,c,t){
   c.restore();}
 }
 /** Huy hiệu ☸ + số lần (cạnh khung tên, bên phải). */
+// 20/11: giao diện Thủy Mặc → huy hiệu thành ẤN SON vuông (☸ màu giấy + số lần chuyển sinh), khớp thẻ tên giấy dó.
+const tmUI=()=>typeof document!=='undefined'&&!!document.body?.classList?.contains('ui-tm');
 export function drawLuanBadge(c,x,y,n,cache){const tier=luanHoiTier(n);if(!tier)return;const r=10.5,label=n>9?'X':String(n);
+ if(tmUI()){const S=19,bm=cache.get('lh-seal:'+label,(S+8)*2,(S+8)*2,b=>{b.setTransform(2,0,0,2,0,0);b.translate(S/2+4,S/2+4);b.rotate(-.12);b.fillStyle='#b3261e';b.beginPath();b.roundRect(-S/2,-S/2,S,S,2.5);b.fill();b.strokeStyle='#f3ead8';b.lineWidth=1;b.strokeRect(-S/2+2.5,-S/2+2.5,S-5,S-5);
+  b.font='900 11px "Segoe UI",Arial,sans-serif';b.textAlign='center';b.textBaseline='middle';b.fillStyle='#f3ead8';b.fillText('☸',-1.5,-1);b.font='900 8px "Segoe UI",Arial,sans-serif';b.fillText(label,S/2-4.5,S/2-4.5);});
+  if(bm)c.drawImage(bm,x-S/2-4,y-S/2-4,bm.width/2,bm.height/2);return;}
  const bm=cache.get('lh-badge:'+n,(r*2+8)*2,(r*2+8)*2,b=>{b.setTransform(2,0,0,2,0,0);const cx=r+4,cy=r+4;b.beginPath();b.arc(cx,cy,r,0,TAU);b.fillStyle=tier.deep+'f0';b.fill();b.lineWidth=1.8;b.strokeStyle=tier.main;b.stroke();
   b.beginPath();b.arc(cx,cy,r-3.2,0,TAU);b.lineWidth=.8;b.strokeStyle=tier.soft+'aa';b.stroke();
   b.font='900 12px "Segoe UI",Arial,sans-serif';b.textAlign='center';b.textBaseline='middle';b.lineWidth=2.4;b.strokeStyle='#000';b.strokeText('☸',cx,cy+.5);b.fillStyle=tier.soft;b.fillText('☸',cx,cy+.5);
@@ -66,9 +71,9 @@ export function drawLuanHoiRitualFrame(scene,c,ritual,t,H){
  for(const [x,y,s] of [[m+34,m+34,1],[W-m-34,m+34,-1],[m+34,Hh-m-34,-1],[W-m-34,Hh-m-34,1]]){c.globalCompositeOperation='source-over';c.fillStyle='#0a0612e6';c.beginPath();c.arc(x,y,30,0,TAU);c.fill();c.globalCompositeOperation='lighter';wheel(c,x,y,28,sec*.8*s,gold,.95,1,true);}
  c.globalCompositeOperation='source-over';
  // băng rôn trên
- const by=Hh*.128,bw=560,bh=58; /* dưới dòng tên của màn đột phá */c.fillStyle='#0b0612ee';c.beginPath();c.moveTo(450-bw/2,by-bh/2);c.lineTo(450+bw/2,by-bh/2);c.lineTo(450+bw/2+22,by);c.lineTo(450+bw/2,by+bh/2);c.lineTo(450-bw/2,by+bh/2);c.lineTo(450-bw/2-22,by);c.closePath();c.fill();c.strokeStyle=gold;c.lineWidth=2;c.stroke();
+ const by=Hh*.128,bw=560,bh=78; /* 20/11: dòng phụ nằm TRONG băng rôn (thẻ tên giấy dó mới nằm ngay dưới, trước đè lên nhau) */ /* dưới dòng tên của màn đột phá */c.fillStyle='#0b0612ee';c.beginPath();c.moveTo(450-bw/2,by-bh/2);c.lineTo(450+bw/2,by-bh/2);c.lineTo(450+bw/2+22,by);c.lineTo(450+bw/2,by+bh/2);c.lineTo(450-bw/2,by+bh/2);c.lineTo(450-bw/2-22,by);c.closePath();c.fill();c.strokeStyle=gold;c.lineWidth=2;c.stroke();
  const gg=c.createLinearGradient(0,by-20,0,by+20);gg.addColorStop(0,'#fffbe8');gg.addColorStop(.5,gold);gg.addColorStop(1,'#fff0c0');
- gtext(c,'☸ '+luanHoiTitle(info.n).toUpperCase()+' ☸',450,by+1,30,gg,6,4);
- gtext(c,info.beyond?'✦ PHÁ VỠ TIỀN KIẾP ✦':'Tiền kiếp · '+(REALM_NAMES[info.hi]||''),450,by+bh/2+24,20,info.beyond?'#ffe9a8':'#f3e6ff',5,3);
+ gtext(c,'☸ '+luanHoiTitle(info.n).toUpperCase()+' ☸',450,by-11,30,gg,6,4);
+ gtext(c,info.beyond?'✦ PHÁ VỠ TIỀN KIẾP ✦':'Tiền kiếp · '+(REALM_NAMES[info.hi]||''),450,by+20,19,info.beyond?'#ffe9a8':'#f3e6ff',5,3);
  c.restore();return true;
 }

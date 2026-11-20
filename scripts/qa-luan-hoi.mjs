@@ -39,8 +39,8 @@ try{
  await ev(`(async()=>{const m=await import('/luan-hoi-fx.js?v=20261118');const real=Date.now.bind(Date);const base=real();let best=0,bestN=-1;for(let k=0;k<45000;k+=150){const n=['c','d','e'].filter(id=>m.luanBurst(id,base+k)>.8).length;if(n>bestN){bestN=n;best=k;}}window.__realNow=real;Date.now=()=>real()+best;return bestN;})()`);
  await pause(900);await shot('02-san-hao-quang-bung');await ev(`Date.now=window.__realNow`);
  // tờ khung hình theo giây
- const secs=[1.9,3,7.9,12.6,14.6,15.5,15.9,16.5,17.2,17.95,19.8,21.3,22.6,24.6];
- const frames=await ev(`(async()=>{const m=await import('/luan-hoi-cinema.js?v=20261118');const s=window.__vhScene;const H=1600,res={};const cut={id:'qa',pid:'b',name:'Đế giang',n:1,fromRealm:28,seed:7};
+ const secs=[.4,.9,1.9,3,7.9,12.6,14.6,15.5,15.9,16.5,17.2,17.95,19.8,21.25,21.3,21.6,22.6,23.6,24.6];
+ const frames=await ev(`(async()=>{const m=await import('/luan-hoi-cinema.js?v=20261120tm3');const s=window.__vhScene;const H=1600,res={};const cut={id:'qa',pid:'b',name:'Đế giang',n:1,fromRealm:28,seed:7};
   for(const sec of ${JSON.stringify(secs)}){const cv=document.createElement('canvas');cv.width=900;cv.height=H;const c=cv.getContext('2d');m.drawLuanHoiFrame(s,c,performance.now()+sec*1000,H,cut,sec);
    const sm=document.createElement('canvas');sm.width=450;sm.height=800;const g=sm.getContext('2d');g.drawImage(cv,0,0,450,800);g.fillStyle='#ff0';g.font='bold 20px sans-serif';g.fillText(sec+'s',8,24);res[sec]=sm.toDataURL('image/jpeg',.85);}
   // bậc màu khác: lần 5
@@ -53,7 +53,9 @@ try{
  const au=await ev(`(async()=>{const m=await import('/luan-hoi-audio.js');const sr=22050,c=new OfflineAudioContext(2,sr*27,sr);m.scheduleLuanHoiAudio(c,c.destination,0,1);const b=await c.startRendering(),d=b.getChannelData(0),out=[];let peak=0;for(let i=0;i<54;i++){let mx=0,sq=0;const a0=i*sr/2,a1=a0+sr/2;for(let k=a0;k<a1;k++){const v=Math.abs(d[k]);if(v>mx)mx=v;sq+=v*v;}peak=Math.max(peak,mx);out.push((i/2).toFixed(1)+':'+mx.toFixed(2)+'/'+Math.sqrt(sq/(sr/2)).toFixed(3));}return {peak,clip:[...d].filter(v=>Math.abs(v)>=.999).length,rows:out.join('  ')};})()`);
  console.log('audio',JSON.stringify(au));
  // chuyển sinh THẬT → màn chiếu qua hook
+ await pause(9000); // chờ màn đột phá ở bước trước chiếu xong
  console.log('cs1',(await act({type:'chat',userId:'b',text:'chuyen sinh'})).message);
+ await ev(`(()=>{const s=window.__vhScene;s.effects=[];s.fxQueue=[];s.luxuryQueue=[];})()`);await pause(2500);await shot('08-di-tuong-2s');await pause(4000);await shot('09-di-tuong-6s'); // 20/11: Thiên Địa Dị Tượng
  console.log('cs2',(await act({type:'chat',userId:'b',text:'chuyen sinh xac nhan'})).message);
  await pause(1500);
  const perf=await ev(`(()=>{const s=window.__vhScene;let n=0,t0=performance.now();return new Promise(r=>{const f=()=>{n++;if(performance.now()-t0<3000)requestAnimationFrame(f);else r({fps:n/3,cut:!!s?.cutFullActive,lh:!!s?.luanHoiOn});};requestAnimationFrame(f);});})()`);

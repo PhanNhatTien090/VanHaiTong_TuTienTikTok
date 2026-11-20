@@ -49,7 +49,7 @@ import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
 import {residentCycle,setResidentRealm} from './residents.js';
-import {CultivationAudio,PRERENDER_FROM,PRERENDER_KEEP} from './audio.js?v=prerender-20261120';
+import {CultivationAudio,PRERENDER_FROM,PRERENDER_KEEP} from './audio.js?v=prerender-20261120b';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {forceSoLenh} from './so-lenh.js?v=20261120'; // 20/11: thay bảng thông tin góc dưới phải (info-spotlight.js) bằng Sổ lệnh trong cuộn Thiên Bảng
