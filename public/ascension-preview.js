@@ -2,7 +2,7 @@ import {Scene} from './scene.js';
 import {REALM_NAMES} from './progression.js';
 import {mountRitualHud} from './live-cinema.js';
 import {mountAscensionStage} from './ascension-stage.js';
-import {CultivationAudio} from './audio.js';
+import {CultivationAudio} from './audio.js?v=prerender-20261120';
 const params=new URLSearchParams(location.search),scene=new Scene(document.querySelector('#preview'),()=>{}),audio=new CultivationAudio();
 scene.showcase=true;scene.residents=false;scene.zoom=1;scene.setQuality(params.get('quality')||'balanced');
 const shell=document.querySelector('.scene-shell'),lobby=mountAscensionStage(shell,scene);mountRitualHud(shell,scene);
@@ -14,6 +14,6 @@ document.querySelector('#idle').onclick=()=>{audio.ritual(null);scene.effects=[]
 document.querySelector('#ritual').onclick=()=>{document.querySelector('#idle').click();const r=Number(select.value),e={id:'preview:'+Date.now(),user:p.id,name:p.name,effect:'breakthrough',fromRealm:r-1,toRealm:r,visualFrom:{...p,realm:r-1},visualTo:{...p,realm:r}};scene.noteEvent(e);scene.addEffect(e);};
 document.querySelector('#sound').onclick=async e=>{try{await audio.enable(!audio.enabled);e.target.textContent=audio.enabled?'Tắt âm thanh':'Bật âm thanh';}catch{e.target.textContent='Bấm để thử âm lại';}};
 if(params.get('capture')==='1')document.querySelector('.preview-tools').hidden=true;
-if(params.get('capture')==='1')window.__scene=scene; // QA: cho script chụp nhảy tới giây bất kỳ
+if(params.get('capture')==='1'){window.__scene=scene;window.__audio=audio;} // QA: cho script chụp nhảy tới giây bất kỳ; __audio để đo âm
 if(params.get('autoplay')==='1')setTimeout(()=>document.querySelector('#ritual').click(),1000);
 window.addEventListener('beforeunload',()=>audio.destroy());

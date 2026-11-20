@@ -22,7 +22,7 @@ import {ALL_PETS,petById} from './spirit-pets.js';
 import {BAO_ITEMS,BAO_TIER,BAO_MAX_STARS} from './phap-bao-data.js'; // 18/11: quản lý thần khí
 import {MOUNTS,MOUNT_TIERS,MAX_STARS as MOUNT_MAX_STARS} from './mounts.js'; // 18/11: quản lý tọa kỹ / linh châu
 import {isEventAnnouncement} from './event-announcements.js';
-import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
+import {breakthroughRealm,REALM_NAMES,breakthroughDuration} from './breakthrough-fx.js';
 import {divineSelection} from './divine-wardrobe.js';
 import {mountEventTab,renderSocialUI} from './social-ui.js?v=hall-management';
 import {BLACK_GOLD_VISITOR} from './court-rewards.js';
@@ -49,7 +49,7 @@ import {VoiceQueue,raceOpeningVoice} from './voice.js';
 import {IDLE_LINES,SCENE_ARRIVAL,CHECKIN_REMINDER} from './idle-lines.js';
 import {nextAct,RESIDENT_VOICES} from './resident-acts.js';
 import {residentCycle,setResidentRealm} from './residents.js';
-import {CultivationAudio} from './audio.js?v=context-music-20261114';
+import {CultivationAudio,PRERENDER_FROM,PRERENDER_KEEP} from './audio.js?v=prerender-20261120';
 import {initPuppetUI} from './puppet-ui.js';
 import {showCeremony} from './ceremony.js';
 import {renderInfoSpotlight,guideFromEvent} from './info-spotlight.js?v=20261119';
@@ -67,7 +67,13 @@ import {giftTokenHTML,lineupSlotHTML} from './gift-icons.js';
 import {giftRules,giftRuleHTML} from './gift-rule-card.js?v=hall-war-20261114';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
-const cultivationAudio=new CultivationAudio();
+const cultivationAudio=new CultivationAudio();cultivationAudio.extraLeadMs=Number(new URLSearchParams(location.search).get('audioLead'))||0; // 20/11: chỉnh tay nếu âm đột phá vẫn chậm hơn hình trên LIVE (ms, tối đa 400)
+// 20/11: dựng trước âm đột phá (≥ Hóa Thần) cho người SẮP đột phá — lúc chiếu chỉ phát 1 nguồn âm, hết rè/trễ (audio.js prerenderRitual).
+// Chỉ làm khi không có màn đột phá đang chiếu; mỗi lần 1 cảnh giới; người gần đủ (≥85% tu vi) xếp theo quà.
+if(overlay)setInterval(()=>{const A=cultivationAudio;if(!A.enabled||A.qiSession||A.prerendering||!state?.players)return;
+ const near=p=>p.active&&!p.puppet&&p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi*.85&&(p.stones||0)>=(p.neededStones||0)*.85;
+ const want=[...new Set(state.players.filter(p=>near(p)&&(p.realm||0)+1>=PRERENDER_FROM&&(p.realm||0)+1<REALM_NAMES.length).sort((a,b)=>(b.giftCoins||0)-(a.giftCoins||0)).map(p=>(p.realm||0)+1))].slice(0,PRERENDER_KEEP);
+ const r=want.find(r=>!A.prerendered?.has(r));if(r)A.prerenderRitual(r,breakthroughDuration({effect:'breakthrough',fromRealm:r-1,toRealm:r}));},4000);
 import {BGM_LIST,musicIndex,musicForState,musicChangesAt} from './music-rotation.js?v=event-music-20261115';
 const $=s=>document.querySelector(s), esc=s=>String(s??'').normalize('NFC').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>new Intl.NumberFormat('vi-VN').format(n||0);

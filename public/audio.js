@@ -38,6 +38,7 @@ const EARLY_IMPACT={1:.70,2:8.8/10.8,3:9.4/11.8};
 import {qiVariant} from './qi-impact.js';
 import {scheduleImpactLayers} from './impact-audio.js';
 // 4/11/2026: lớp nổ chung chồng lên cue gốc: [giây nổ, thời lượng cue, nốt gốc]
+export const PRERENDER_FROM=5,PRERENDER_KEEP=3; // 20/11: dựng trước âm đột phá từ Hóa Thần (giữ tối đa 3 cảnh giới ~20–60 MB)
 const IMPACT_LAYERS={3:[9.4,11.8,174.6],4:[10.75,14.4,146.8],5:[14.4,17.6,110],6:[17.25,20.8,98],7:[19,22.8,87.31],8:[27.35,31.6,82.41],11:[26,30,65.41],12:[28,32,61.74],13:[30,34,55]};
 import {scheduleTrucCoAudio,trucCoMusicDuck} from './truc-co-audio.js';
 import {scheduleKimDanAudio,kimDanMusicDuck} from './kim-dan-audio.js';
@@ -179,8 +180,41 @@ export class CultivationAudio {
     const realm=breakthroughRealm(event),duck=DIVINE_DUCKS[realm]?DIVINE_DUCKS[realm](elapsed):realm===25?thaiSoMusicDuck(elapsed):realm===26?vinhKiepMusicDuck(elapsed):realm===27?voCucMusicDuck(elapsed):realm===28?honDonMusicDuck(elapsed):realm>=29?lateMusicDuck(realm,elapsed):realm===24?dietTheMusicDuck(elapsed):realm===23?thienMaMusicDuck(elapsed):realm===22?maThanMusicDuck(elapsed):realm===13?tienDeMusicDuck(elapsed):realm===12?daiLaMusicDuck(elapsed):realm===11?thaiAtMusicDuck(elapsed):realm===10?kimTienMusicDuck(elapsed):realm===9?huyenTienMusicDuck(elapsed):realm===8?chanTienMusicDuck(elapsed):realm===7?daiThuaMusicDuck(elapsed):realm===6?luyenHuMusicDuck(elapsed):realm===5?hoaThanMusicDuck(elapsed):realm===4?nguyenAnhMusicDuck(elapsed):realm===3?kimDanMusicDuck(elapsed):realm===2?trucCoMusicDuck(elapsed):.22;
     if(this.qiSession?.event===event){if(Math.abs((this.qiSession.duck??.22)-duck)>.008){this.qiSession.duck=duck;this.sync();}return;}
     this.qiSession?.audio.stop();
-    const t0=performance.now(),audio=this.scheduleRitual(event,realm,elapsed);this.ritualBuild={realm,ms:Math.round(performance.now()-t0),lateMs:Math.round(elapsed),at:Date.now()}; /* 18/11: đo âm thanh đột phá trễ (dựng đồ thị âm + độ trễ lúc bắt đầu) */
+    // 20/11: bù độ trễ ra loa (âm phát sau hình đúng bằng outputLatency) + dùng bản dựng trước nếu có (xem prerenderRitual).
+    const el=elapsed+this.ritualAudioLead()*1000,pre=this.prerendered?.get(realm),usePre=!!(pre&&pre.duration===event.duration&&el/1000<pre.buffer.duration);
+    const t0=performance.now(),audio=usePre?this.playPrerendered(event,realm,el,pre):this.scheduleRitual(event,realm,el);if(usePre)pre.used=(pre.used||0)+1;this.ritualBuild={realm,ms:Math.round(performance.now()-t0),lateMs:Math.round(elapsed),leadMs:Math.round(el-elapsed),prerendered:usePre,at:Date.now()}; /* 18/11: đo âm thanh đột phá trễ (dựng đồ thị âm + độ trễ lúc bắt đầu) */
     this.qiSession={event,duck,audio};this.sync();
+  }
+  // ── 20/11 (chủ game: "đột phá từ trên Hóa Thần âm bị trễ so với hình và bị rè") ───────────────────────────────
+  // Đo bằng chính engine này (OfflineAudioContext, Chrome): Luyện Khí ~490 nút Web Audio, Hóa Thần ~900, từ Luyện Hư trở lên
+  // 1.200–3.100 nút dựng cùng lúc; chi phí xử lý mỗi 0,5 s gấp ~3 lần cảnh giới thấp. Máy LIVE (LIVE Studio + mã hóa + giọng)
+  // bận thì luồng âm không kịp → vấp (rè) và đồng hồ âm chạy chậm dần so với hình (trễ).
+  // Cách sửa: khi có người SẮP đột phá lên cảnh giới ≥ Hóa Thần, dựng trước phần nặng (nền + tăng cường + nhịp nổ) thành một bản
+  // thu bằng OfflineAudioContext (luồng riêng, chạy nhanh hơn thời gian thực, không cần đúng giờ). Lúc chiếu chỉ phát 1 nguồn âm
+  // (+ lớp biến thể nhẹ dựng trực tiếp) → gần như không tốn luồng âm, khớp hình. Chưa kịp dựng thì chạy như cũ.
+  ritualAudioLead(){const c=this.ctx;return Math.min(.25,Math.max(0,Number(c?.outputLatency)||Number(c?.baseLatency)||0))+Math.min(.4,Math.max(0,(Number(this.extraLeadMs)||0)/1000));} // + ?audioLead=ms trên link nguồn nếu LIVE Studio thu âm chậm hơn hình
+  async prerenderRitual(realm,duration){
+    if(!(realm>=PRERENDER_FROM)||!this.ctx||!(duration>0)||this.prerendering)return false;
+    const have=this.prerendered?.get(realm);if(have&&have.duration===duration)return true;
+    const O=globalThis.OfflineAudioContext;if(!O)return false;
+    this.prerendering=realm;const t0=performance.now();
+    try{
+      const sr=this.ctx.sampleRate,off=new O(2,Math.ceil((duration/1000+1.5)*sr),sr),a=new CultivationAudio();
+      a.init(off);a.enabled=true;a.master.disconnect();const tap=off.createGain();tap.connect(off.destination);a.fxBus=tap;
+      const ev={id:'prerender:'+realm,user:'prerender',name:'',effect:'breakthrough',fromRealm:realm-1,toRealm:realm,duration};
+      a.scheduleRitual(ev,realm,0,{variant:false,impact:realm!==6});
+      const buffer=await off.startRendering();
+      (this.prerendered??=new Map()).delete(realm);this.prerendered.set(realm,{buffer,duration,at:Date.now(),ms:Math.round(performance.now()-t0)});
+      while(this.prerendered.size>PRERENDER_KEEP)this.prerendered.delete(this.prerendered.keys().next().value);
+      return true;
+    }catch{return false;}finally{this.prerendering=null;}
+  }
+  playPrerendered(event,realm,elapsed,pre){
+    const c=this.ctx,src=c.createBufferSource(),g=c.createGain();src.buffer=pre.buffer;src.connect(g);g.connect(this.fxBus);
+    const offset=Math.max(0,elapsed/1000);src.start(c.currentTime,offset);
+    const live=this.scheduleRitual(event,realm,elapsed,{base:false,boost:false,impact:realm===6}); // biến thể (nhẹ) + lớp điện ảnh Luyện Hư dựng trực tiếp
+    let done=false;src.onended=()=>{if(!done){done=true;try{g.disconnect();}catch{}}};
+    return {endAt:c.currentTime+Math.max(0,pre.buffer.duration-offset),stop(){live.stop();if(done)return;const t=c.currentTime;g.gain.setTargetAtTime(.0001,t,.008);setTimeout(()=>{if(done)return;done=true;try{src.stop();}catch{}try{g.disconnect();}catch{}},60);}};
   }
   scheduleRitual(event,realm,elapsed=0,{base=true,impact=true,boost=true,variant=true,upgrade=true,cinematicLayers}={}){
     const c=this.ctx,seconds=elapsed/1000,duration=event.duration/1000;
