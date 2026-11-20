@@ -42,3 +42,5 @@
 #eventsView .ev-card a{font:11px Arial;color:#91d9ef}
 #eventsView .event-group-body table{width:100%;font:12px Arial;color:#cfe0dc;border-collapse:collapse}
 #eventsView .event-group-body td,#eventsView .event-group-body th{padding:4px 6px;border-bottom:1px solid #47636344;text-align:left}
+
+#eventsView .ev-tools{margin-top:14px}#eventsView .ev-tools>summary{padding:14px 16px}#eventsView .ev-tools>div{margin:0 12px 12px}

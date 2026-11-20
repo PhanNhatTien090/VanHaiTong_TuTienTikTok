@@ -4,7 +4,7 @@ const giftGuide='<code>tặng tên/mã</code> rồi gửi quà hộ · <code>t�
 let petGiftTimer;
 export function mountPetUI(post){
  const parent=document.querySelector('#eventsView');if(!parent)return;
- const root=document.createElement('div');root.id='spiritPetControl';parent.insertBefore(root,document.querySelector('#socialControl'));
+ const root=document.createElement('div');root.id='spiritPetControl';const tools=document.querySelector('#evTools');if(tools)tools.appendChild(root);else parent.insertBefore(root,document.querySelector('#socialControl')); // 20/11: gập vào Công cụ khác cho trang Sự kiện gọn
  root.addEventListener('click',async e=>{
   const flag=e.target.closest('[data-pet-v2-toggle]');
   if(flag){flag.disabled=true;try{const r=await post('/api/pet-v2-settings',{enabled:flag.dataset.petV2Toggle==='on',progression:flag.dataset.petV2Toggle==='on',combat:flag.dataset.petV2Toggle==='on',expedition:flag.dataset.petV2Toggle==='on',coveV2:flag.dataset.petV2Toggle==='on',synergy:flag.dataset.petV2Toggle==='on',evolutionArt:flag.dataset.petV2Toggle==='on'});if(!r.ok)alert(r.message||'Chưa cập nhật được.');}finally{flag.disabled=false;}return;}

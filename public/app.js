@@ -17,7 +17,7 @@ import {hallGuideRows,renderSimpleGuide} from './simple-guide.js?v=hall-manageme
 import {mountHallAdmin} from './hall-admin.js';
 import {GiftComboBuffer} from './gift-combos.js';
 import {renderCompanionHUD} from './companion-fx.js';
-import {mountPetUI,renderPetUI,showPetGiftAward} from './spirit-pet-ui.js?v=pet-gifting-20261114';
+import {mountPetUI,renderPetUI,showPetGiftAward} from './spirit-pet-ui.js?v=20261120gon';
 import {ALL_PETS,petById} from './spirit-pets.js';
 import {BAO_ITEMS,BAO_TIER,BAO_MAX_STARS} from './phap-bao-data.js'; // 18/11: quản lý thần khí
 import {MOUNTS,MOUNT_TIERS,MAX_STARS as MOUNT_MAX_STARS} from './mounts.js'; // 18/11: quản lý tọa kỹ / linh châu
