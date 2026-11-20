@@ -2,10 +2,12 @@ import test from 'node:test';import assert from 'node:assert/strict';import {cre
 import {createWorld,ensurePlayer,startVisitor,action,tick} from '../engine.mjs';
 import {SEA_SKIN,sliceSeaSkin,drawSeaBody,drawSeaAdornment,seaDragonPosition,seaWorn} from '../public/sea-dragon-heir.js';
 import {sliceSpiritAtlas} from '../public/gift-spirit-beasts.js';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 const N=1800000000000;
 test('Hải Lam is a five-minute event: free claim, exact fixed gift thresholds, duplicate protection and permanent choice',()=>{
  const w=createWorld('live');w.settings.autoEvents=false;w.settings.residents=false;w.nextBossAt=N+1e9;
- const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(w,'hailam',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
+ const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(singleVisitor(w),'hailam',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
  assert.equal(action(w,{type:'chat',userId:'a',text:'cơ duyên'},N+1000).ok,true);assert.ok(w.visitor.players.a.awarded);
  const gift=(coins,eventId,now)=>action(w,{type:'gift',userId:'a',name:'An',gift:'Rose',coins,count:1,eventId},now);
  gift(99,'g1',N+2000);assert.ok(!p.rewardSkins.includes(SEA_SKIN));gift(1,'g2',N+3000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(seaWorn(p),true);
@@ -14,7 +16,7 @@ test('Hải Lam is a five-minute event: free claim, exact fixed gift thresholds,
  const restored=JSON.parse(JSON.stringify(w));tick(restored,N+300001);assert.ok(restored.players.a.rewardSkins.includes(SEA_SKIN));
 });
 test('owned skin respects manual outfit choice, excludes simulated NPCs and ends without accepting late gifts',()=>{
- const w=createWorld('live');const p=ensurePlayer(w,'a','An',N);p.skinChoice='ivory-celestial';p.skinChoiceSource='manual';startVisitor(w,'hailam',N);
+ const w=createWorld('live');const p=ensurePlayer(w,'a','An',N);p.skinChoice='ivory-celestial';p.skinChoiceSource='manual';startVisitor(singleVisitor(w),'hailam',N);
  action(w,{type:'gift',userId:'a',gift:'Rose',coins:100,count:1,eventId:'g'},N+1000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(p.skinChoice,SEA_SKIN,'mua skin sự kiện thì mặc ngay');
  const b=ensurePlayer(w,'b','B',N);action(w,{type:'gift',userId:'b',gift:'Rose',coins:100,count:1,eventId:'late'},N+300001);assert.ok(!(b.rewardSkins||[]).includes(SEA_SKIN));
 });

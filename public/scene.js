@@ -74,9 +74,10 @@ import {tournamentCutFrame} from './skill-cutscene.js?v=20261118';
 import {warCutFrame} from './war-cutscene.js?v=20261118';import {realmCutFrame} from './realm-cutscene.js';import {alchemyCutFrame} from './alchemy-cutscene.js';import {mazeCutFrame} from './maze-cutscene.js'; /* 18/11: chiếu riêng quà ≥99 Mê Cung */ /* 18/11: chiếu riêng quà ≥99 Khai Lò */ /* 18/11: chiếu riêng quà ≥99 Bí Cảnh */import {mountCutFrame} from './mount-cut.js';import {syncBaoKho,drawBaoKho,baoCutFrame} from './bao-kho.js';import {syncTowerCut,towerCutFrame} from './tower-cutscene.js';import {drawBaoAura} from './bao-aura.js'; /* 18/11: chủ nhân thần khí GIỚI HẠN */ /* 18/11: chiếu riêng quà ≥100 Vân Hải Tháp */ /* 18/11: Thiên Công Bảo Khố */ /* 18/11: chiếu riêng nở tọa kỹ VIP/Thần */ // 18/11: chiếu riêng quà ≥30 Chính Ma
 import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
-import {visitorSkinCell} from './visitor-rewards.js';
+import {visitorSkinCell,lineupCounts} from './visitor-rewards.js';
+import {fallbackGift} from './gift-icons.js';
 import {loadImmortalArt,robeCell,outfitArt,drawPngRelic,drawImmortalGift,drawBackRelic} from './immortal-art.js';
-import {drawVisitor} from './visitor-event.js';
+import {drawVisitor,VISITORS} from './visitor-event.js';
 import {drawBossSprite,SCENES} from './world-rotation.js';
 import {sealingBoss,drawBossSeal} from './boss-seal.js';
 import {luxuryTier,queueLuxury,drawLuxuryFx} from './luxury-fx.js';
@@ -87,7 +88,7 @@ import {appearanceFor,drawRealmClothes,drawRealmAscension,drawRealmQiFront,REALM
 import {RenderBudget,CharacterFrames,makeSurface,FrameClock,inView,actorSample,BitmapCache,renderDimensions,skinFxOn} from './performance.js';
 import {CharacterAnimator,drawArticulated,drawSeatedAnimated} from './character-animation.js';
 import {drawWorldLife,drawAtmosphere} from './world-life.js';
-import {signatureVisitor} from './court-rewards.js';
+import {signatureVisitor,COURT_VISITORS} from './court-rewards.js';
 import {drawBlackGoldAward,drawCourtSkin,warmCourtSkin,courtWorn,drawCourtAdornment,courtShowsSignature,showsBlackGoldGear} from './court-art.js?v=karma-halo-v5';
 import {skinFor,layoutPlayers,layoutLabels,wrapName,spriteCell,visualGender} from './cosmetics.js';
 import {residentPlayers} from './residents.js';
@@ -728,8 +729,50 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
       }
       drawArenaShots(this,c,t,H);if(this.boss?.species!=='abyss-dragon')drawArenaCasts(this,c,t,H);if(!this.boss?.sealing)drawAbyssRetaliation(this,c,this.boss,this.motion?Date.now():(this.boss?.startedAt||0)+1000,H,'front');}
     if(!this.reducePresence&&!this.minimalCrowd&&!this.raceStatus?.active)drawGodAuras(this,c,t,'front');
-    if(!solo&&!arena&&!petCoveOn(this)&&!this.raceStatus?.active&&!drawTudoVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawKhuyVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawViemVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawSeaVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawDoraVisitor(this,c,this.visitor,this.motion?t:0,H)&&!drawLinWanVisitor(c,this.visitor,this,this.motion?t:0,H,this.signatureSprites))drawVisitor(c,this.visitor,this.armedVisitorSprites||this.visitorSprites,this.motion?t:0,H,this.signatureSprites,this.shendeArt);
+    if(!solo&&!arena&&!petCoveOn(this)&&!this.raceStatus?.active)drawVisitorLineup(this,c,this.visitor,this.motion?t:0,H);
     this.effects=this.effects.filter(e=>t-e.start<e.duration);if(this.luxuryQueue?.length&&!this.effects.some(e=>e.luxury||e.effect==='breakthrough'))this.addEffect(this.luxuryQueue.shift());if(!solo&&this.fxQueue?.length&&this.effects.filter(x=>x.kind&&x.kind!=='blessing').length<2)this.addEffect(this.fxQueue.shift());drawNhapMon(this,c,t);for(const e of this.effects)this.drawEffect(c,e,t,'front');drawSocialStage(this,c,t,'front',solo);drawRace(this,c,t,'front');if(this.raceStatus?.phase==='running')drawEventGiftFx(this,c,t,'front','race');drawWar(this,c,t,'front');drawAlchemy(this,c,t,'front');drawMaze(this,c,t,'front');drawAlchemySoot(this,c,t);if(!this.raceStatus?.active)drawBondLinks(this,c,t);this.atmosphere(c,t,'front');if(!this.raceStatus?.active&&!this.alcStatus?.active&&!mazeOn(this))drawEngagementReactions(this,c,t);this.drawNames(c,t);drawTease(this,c,t);if(!solo)drawBonk(this,c,t);if(!this.raceStatus?.active&&solo?.kind!=='gift')this.mover?.drawBubbles(c,this.targets,t);c.setTransform(sx,0,0,sy,0,0);this.atmosphere(c,t,'screen');drawLoveTower(this,c,t,H);const courtScene=!this.raceStatus?.active&&this.effects.find(e=>isCourtTransform(e.transform));if(courtScene)drawCourtTransformTitle(c,courtScene.transform,(t-courtScene.start)/courtScene.duration,H,REVEAL_AT);drawEventDonations(this,c,t,H);drawWarResult(this,c,t);drawAlchemyResult(this,c,t);drawMazeResult(this,c,t);if(this.heavenStrike){const hs=this.heavenStrike,k=(t-hs.start)/1000;if(k*1000>HEAVEN_STRIKE_MS)this.heavenStrike=null;else{const tg=this.targets.find(x=>x.id===hs.user),cm=this.lastCam||{s:1,x:0,y:0};drawHeavenStrike(c,hs.profile,k,{W:900,H,x:tg?cm.x+tg.x*cm.s:450,y:tg?cm.y+tg.y*cm.s:H*.72,scale:(tg?.scale||1.42)*cm.s},{light:this.budget?.level==='light',reducedFlash:this.reduceFlash,name:hs.name,loss:hs.loss});}}drawAbyssHealth(c,this.boss,Date.now(),H);if(!this.raceStatus?.active)this.drawAscensionTitle(c,t);for(const e of this.effects)if(!this.raceStatus?.active&&e.petAward)drawPetArrivalTitle(c,e,t,H,this.motion);
   }
+}
+function drawOneVisitor(scene,c,ev,t,H){
+  if(!drawTudoVisitor(scene,c,ev,t,H)&&!drawKhuyVisitor(scene,c,ev,t,H)&&!drawViemVisitor(scene,c,ev,t,H)&&!drawSeaVisitor(scene,c,ev,t,H)&&!drawDoraVisitor(scene,c,ev,t,H)&&!drawLinWanVisitor(c,ev,scene,t,H,scene.signatureSprites))drawVisitor(c,ev,scene.armedVisitorSprites||scene.visitorSprites,t,H,scene.signatureSprites,scene.shendeArt);
+}
+// 20/11: lượt nhiều tiên nhân — 3 vị đứng trên đỉnh Tiên Nhân Đài (vị chính ở giữa), dưới chân là ảnh món quà × số lượng.
+// Hàm vẽ từng vị vẫn vẽ quanh x=450 nhưng mỗi kiểu có mốc chân/chiều cao riêng → quy về cùng cỡ, chân đặt lên mặt đài.
+// Vị giữa đứng cao hơn để thẻ quà không che người ngồi đầu bậc thang (Tông chủ/trưởng lão).
+const LINEUP_SPOTS=[{x:450,y:.366,h:188},{x:268,y:.41,h:185},{x:632,y:.41,h:185}];
+const COURT_KINDS=new Set(COURT_VISITORS.map(v=>v.kind)),POSE_KINDS=new Set(['tudo','khuyniet','viemton','hailam']);
+function visitorAnchor(kind,H,scene){
+  if(COURT_KINDS.has(kind))return {feet:H*.38,h:315};
+  if(POSE_KINDS.has(kind))return {feet:H*.46+59,h:302};
+  if(kind==='shende')return {feet:H*.30+90,h:250};
+  if(kind==='doraemon')return {feet:(scene.floorY||H*.54)-24,h:200};
+  if(kind==='vuonglam'&&scene.linWanArt?.[0])return {feet:H*.345,h:160};
+  return {feet:H*.32+79,h:224};
+}
+function drawVisitorLineup(scene,c,e,t,H){
+  if(!e?.lineup?.length){drawOneVisitor(scene,c,e,t,H);return;}
+  const now=Date.now();if(e.closedAt||now>=e.endsAt)return;
+  const order=e.lineup.map((slot,i)=>({slot,spot:LINEUP_SPOTS[i]})).filter(x=>x.spot).reverse();
+  for(const {slot,spot} of order){
+    if(slot.kind==='shende')loadShendeArt(scene);
+    const ev={...e,kind:slot.kind,id:e.id+'|'+slot.kind},a=visitorAnchor(slot.kind,H,scene),k=spot.h/a.h;
+    c.save();c.translate(spot.x,H*spot.y);c.scale(k,k);c.translate(-450,-a.feet);drawOneVisitor(scene,c,ev,t,H);c.restore();
+  }
+  const fade=Math.min(1,(now-e.startedAt)/900,(e.endsAt-now)/650);
+  for(const {slot,spot} of order)drawLineupPlate(c,slot,spot.x,H*spot.y+24,fade);
+}
+const giftImgs=new Map();
+function giftImg(coins){const g=fallbackGift(coins);if(!g)return null;let img=giftImgs.get(g.url);if(!img){img=new Image();img.src=g.url;giftImgs.set(g.url,img);}return img.complete&&img.naturalWidth?img:null;}
+function drawLineupPlate(c,slot,x,y,alpha){
+  const n=lineupCounts(slot).skin,name=VISITORS[slot.kind]?.name||'',img=giftImg(slot.giftCoins);
+  // Một dòng: [ảnh quà] ×N  Tên — gọn, không thòng xuống che người ngồi dưới.
+  c.save();c.globalAlpha=alpha;c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';
+  const icon=34,label='×'+n,big='800 20px "Segoe UI",Arial,sans-serif',small='800 15px "Segoe UI",Arial,sans-serif';
+  c.font=big;const lw=c.measureText(label).width;c.font=small;const nw=c.measureText(name).width,w=8+icon+6+lw+8+nw+10,x0=x-w/2;
+  c.fillStyle='rgba(8,10,22,.62)';c.beginPath();c.roundRect(x0,y-icon/2-4,w,icon+8,12);c.fill();
+  if(img)c.drawImage(img,x0+8,y-icon/2,icon,icon);
+  c.strokeStyle='#000';c.lineWidth=4;c.font=big;c.fillStyle='#ffe6a0';c.strokeText(label,x0+8+icon+6,y+1);c.fillText(label,x0+8+icon+6,y+1);
+  c.font=small;c.lineWidth=3.5;c.fillStyle='#fff';c.strokeText(name,x0+8+icon+6+lw+8,y+1);c.fillText(name,x0+8+icon+6+lw+8,y+1);
+  c.restore();
 }
 function hash(s){let n=0;for(const ch of s)n=(Math.imul(n,31)+ch.charCodeAt(0))|0;return Math.abs(n);}

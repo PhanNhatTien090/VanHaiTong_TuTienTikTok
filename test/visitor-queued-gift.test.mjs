@@ -5,13 +5,15 @@ import assert from 'node:assert/strict';
 import {createWorld,action,ingest,startVisitor} from '../engine.mjs';
 import {createLiveTransfers} from '../web/cloud/live-transfers.mjs';
 import {TINH_HA_VISITOR} from '../public/court-rewards.js';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 
 const N=Date.UTC(2026,10,19,3,0,0);
 const giftEvent=(id,coins,n=1)=>({event:'gift',data:{userId:id,nickname:'Công Tài',uniqueId:'congtai',diamondCount:coins,repeatCount:n,repeatEnd:true,giftType:1,giftName:'Vương miện',msgId:'m'+id+coins+n}});
 function setup(){
  const w=createWorld('demo');w.mode='demo';
  assert.ok(action(w,{type:'join',userId:'u1',name:'Công Tài'},N-120000).ok); // vào LIVE >60 s trước → web được nhận nhân vật
- assert.ok(startVisitor(w,'tinh-ha',N+1000).ok!==false);assert.equal(w.visitor.kind,'tinh-ha');
+ assert.ok(startVisitor(singleVisitor(w),'tinh-ha',N+1000).ok!==false);assert.equal(w.visitor.kind,'tinh-ha');
  const lt=createLiveTransfers({world:w,save(){}});
  assert.equal(lt.apply({generation:1,id:'t1',playerId:'u1',kind:'acquire'},N+2000).ok,true);assert.equal(w.playTransfers.u1.phase,'web');
  return {w,lt};
@@ -36,20 +38,20 @@ test('quà tặng lúc KHÔNG có sự kiện skin thì về sau không được
  assert.ok(!(w.players.u1.rewardSkins||[]).includes(TINH_HA_VISITOR.skin));
 });
 test('tặng thẳng trên LIVE (không qua web) vẫn như cũ: 500 = skin + kiếm + biến hình',()=>{
- const w=createWorld('demo');action(w,{type:'join',userId:'u2',name:'Đế giang'},N);startVisitor(w,'tinh-ha',N+1000);
+ const w=createWorld('demo');action(w,{type:'join',userId:'u2',name:'Đế giang'},N);startVisitor(singleVisitor(w),'tinh-ha',N+1000);
  ingest(w,giftEvent('u2',500),N+5000);const p=w.players.u2;
  assert.ok(p.rewardSkins.includes(TINH_HA_VISITOR.skin));assert.ok(p.artifacts.includes(TINH_HA_VISITOR.artifact));
  assert.ok(w.events.some(e=>e.user==='u2'&&e.effect==='transform'&&e.transform==='tinh-ha'));
 });
 test('cộng dồn nhiều món trong sự kiện: 5 × 100 = đủ 500',()=>{
- const w=createWorld('demo');action(w,{type:'join',userId:'u3',name:'A'},N);startVisitor(w,'tinh-ha',N+1000);
+ const w=createWorld('demo');action(w,{type:'join',userId:'u3',name:'A'},N);startVisitor(singleVisitor(w),'tinh-ha',N+1000);
  for(let i=0;i<5;i++){const e=giftEvent('u3',100);e.data.msgId='x'+i;ingest(w,e,N+5000+i*3000);}
  assert.ok(w.players.u3.rewardSkins.includes(TINH_HA_VISITOR.skin));
 });
 test('19/11: sở hữu skin sự kiện → tự mặc pháp bảo đi kèm (kể cả khi túi có món mạnh hơn); đổi skin khác thì về món mạnh nhất',async()=>{
  const {autoEquipBest,skinArtifactOf}=await import('../engine.mjs');
  const w=createWorld('demo');action(w,{type:'join',userId:'u4',name:'B'},N);const p=w.players.u4;
- p.artifacts.push('thien-kinh','tien-de-an');startVisitor(w,'tinh-ha',N+1000);
+ p.artifacts.push('thien-kinh','tien-de-an');startVisitor(singleVisitor(w),'tinh-ha',N+1000);
  ingest(w,giftEvent('u4',500),N+5000);
  assert.equal(skinArtifactOf(p),TINH_HA_VISITOR.artifact);assert.equal(p.equipped,TINH_HA_VISITOR.artifact);
  autoEquipBest(p);assert.equal(p.equipped,TINH_HA_VISITOR.artifact,'lần tự xếp đồ sau vẫn giữ');

@@ -2,10 +2,12 @@ import test from 'node:test';import assert from 'node:assert/strict';import {cre
 import {createWorld,ensurePlayer,startVisitor,action,tick} from '../engine.mjs';
 import {TUDO_SKIN,TUDO_BLADE,sliceTudoSkin,trimBlade,drawTudoBody,drawTudoAdornment,tudoBladePose,tudoWorn} from '../public/tudo-ma-ton.js';
 import {VISITORS} from '../public/visitor-event.js';import {SPECIAL_SKINS} from '../public/patrons.js';import {speechPlan} from '../speech-lines.mjs';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 const N=1800000000000;
 test('Tư Đồ Ma Tôn: 5 phút, cơ duyên miễn phí, 200 coin skin, 300 coin Huyết Sát Ma Đao, không trùng quà',()=>{
  const w=createWorld('live');w.settings.autoEvents=false;w.settings.residents=false;w.nextBossAt=N+1e9;
- const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(w,'tudo',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
+ const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(singleVisitor(w),'tudo',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
  assert.equal(VISITORS.tudo.how,'Gõ cơ duyên để nhận quà, có thể sở hữu skin');
  assert.equal(action(w,{type:'chat',userId:'a',text:'cơ duyên'},N+1000).ok,true);assert.ok(w.visitor.players.a.awarded);
  const gift=(coins,eventId,now)=>action(w,{type:'gift',userId:'a',name:'An',gift:'Rose',coins,count:1,eventId},now);

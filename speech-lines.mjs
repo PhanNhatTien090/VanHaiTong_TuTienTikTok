@@ -108,6 +108,7 @@ export function speechPlan(e){
   if(e.engagementAction==='follow')return [];
   if(e.engagementAction==='share')return [];
   const sys=!e.user;
+  if(e.visitorStart&&e.visitorLineup?.length>1)return [say('tiennu','Tam tiên giáng lâm: '+text.split('•').slice(1).join(' ').split('·').map(s=>s.trim()).filter(Boolean).join(', ')+'!'),say('tongsu','Gõ cơ duyên để nhận quà. Mỗi vị một loại quà riêng, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='hailam')return [say('tiennu','Long Duệ Hải Lam giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='tudo')return [say('tiennu','Tư Đồ Ma Tôn giáng thế!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];
   if(e.visitorStart&&e.visitorKind==='viemton')return [say('tiennu','Tần Mục Hỏa Thần giáng thế, biển lửa đốt trời!'),say('tongsu','Gõ cơ duyên để nhận quà, có thể sở hữu skin!')];

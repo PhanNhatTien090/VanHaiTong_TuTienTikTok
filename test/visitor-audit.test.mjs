@@ -4,10 +4,12 @@ import {createWorld,ensurePlayer,startVisitor,action,snapshot} from '../engine.m
 import {reconcileVisitorPricing} from '../public/visitor-rewards.js';
 import {archiveVisitor,repairVisitorHistory,visitorAuditView} from '../visitor-audit.mjs';
 import {createAuditStorage} from '../audit-storage.mjs';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 const N=1800000000000;
 const gift=(w,id,coins,count=1,at=N+10)=>action(w,{type:'gift',userId:id,name:id,coins,count,eventId:'gift-'+id+'-'+at},at);
 test('real gift combos count once and the audit distinguishes observed non-gifters, outside gifts and simulated gifts',()=>{
- const w=createWorld();ensurePlayer(w,'watcher','Watcher',N);startVisitor(w,'vuonglam',N);
+ const w=createWorld();ensurePlayer(w,'watcher','Watcher',N);startVisitor(singleVisitor(w),'vuonglam',N);
  gift(w,'donor',40,5);gift(w,'donor',40,5);
  const npc=ensurePlayer(w,'npc','Npc',N);npc.puppet=true;gift(w,'npc',300);
  gift(w,'outside',300,1,N+180000);
@@ -20,7 +22,7 @@ test('real gift combos count once and the audit distinguishes observed non-gifte
  const s=snapshot(w,N+20);assert.equal(s.auditOutbox,undefined);assert.equal(s.visitorArchive,undefined);
 });
 test('earned skin and artifact are repaired even if stale awarded flags are true after the round closes',()=>{
- const w=createWorld(),p=ensurePlayer(w,'a','A',N);startVisitor(w,'vuonglam',N);
+ const w=createWorld(),p=ensurePlayer(w,'a','A',N);startVisitor(singleVisitor(w),'vuonglam',N);
  w.visitor.giftProgress={a:{coins:300,skinAwarded:true,artifactAwarded:true}};w.visitor.closedAt=N+180000;
  const first=reconcileVisitorPricing(w,N+200000);assert.equal(first.length,1);
  assert.ok(p.rewardSkins.includes('vuonglam-avatar'));assert.ok(p.artifacts.includes('vuonglam-soul-banner'));
@@ -28,8 +30,8 @@ test('earned skin and artifact are repaired even if stale awarded flags are true
 });
 test('archived evidence repairs missing rewards once without using lifetime coins or overriding a selected skin',()=>{
  let w=createWorld(),p=ensurePlayer(w,'a','A',N);Object.assign(p,{giftCoins:100000,skinChoice:'hanlap-avatar',skinChoiceSource:'manual',rewardSkins:['hanlap-avatar']});
- startVisitor(w,'vuonglam',N);w.visitor.giftProgress={a:{coins:199}};archiveVisitor(w);const evidence=structuredClone(w.visitor);
- startVisitor(w,'hanlap',N+180001);w=JSON.parse(JSON.stringify(w));
+ startVisitor(singleVisitor(w),'vuonglam',N);w.visitor.giftProgress={a:{coins:199}};archiveVisitor(w);const evidence=structuredClone(w.visitor);
+ startVisitor(singleVisitor(w),'hanlap',N+180001);w=JSON.parse(JSON.stringify(w));
  assert.equal(repairVisitorHistory(w,N+200000).length,0);
  evidence.giftProgress.a.coins=300;assert.equal(repairVisitorHistory(w,N+200000,[evidence]).length,1);
  assert.equal(w.players.a.skinChoice,'hanlap-avatar');assert.ok(w.players.a.rewardSkins.includes('vuonglam-avatar'));

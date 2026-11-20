@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {createWorld,ensurePlayer,action,ingest,snapshot,startVisitor,startOpportunity,tick} from '../engine.mjs';
 import {honorRoll,eventAvatar,safeAvatar} from '../public/honors.js';
 import {VISITOR_RELICS} from '../public/visitor-event.js';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 const now=1800000000000;
 test('honor winners exclude corresponding admin edits without deleting players',()=>{
  const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}}),a=ensurePlayer(w,'a','A',now),b=ensurePlayer(w,'b','B',now);Object.assign(a,{realm:8,giftCoins:9999999});Object.assign(b,{realm:5,giftCoins:100,bossWins:2});
@@ -16,17 +18,17 @@ test('avatar is captured from nested TikFinity user and restricted to HTTPS CDN'
  const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});ingest(w,{event:'chat',data:{user:{userId:'a',nickname:'A',profilePictureUrl:url},comment:'nhapmon'}},now);assert.equal(w.players.a.avatar,url);
 });
 test('Han Lap grants one persistent free reward per viewer, six different first rewards',()=>{
- const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});assert.equal(startVisitor(w,'hanlap',now).ok,true);
+ const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});assert.equal(startVisitor(singleVisitor(w),'hanlap',now).ok,true);
  for(let i=0;i<6;i++){const r=action(w,{type:'chat',text:'coduyen',userId:String(i),name:'P'+i},now+100);assert.ok(r.ok);}
  const ids=Object.values(w.players).map(p=>p.artifacts.find(id=>id.startsWith('visitor-')));assert.equal(new Set(ids).size,6);
  const restored=JSON.parse(JSON.stringify(w)),p=restored.players['0'],qi=p.qi;
  assert.equal(action(restored,{type:'chat',text:'coduyen',userId:'0'},now+1000).duplicate,true);assert.equal(p.qi,qi);
- assert.equal(startVisitor(w,'vuonglam',now+2000).ok,false);
+ assert.equal(startVisitor(singleVisitor(w),'vuonglam',now+2000).ok,false);
  assert.equal(startOpportunity(w,now+2000).ok,false);
  action(w,{type:'chat',text:'coduyen',userId:'late'},now+180000);assert.equal(w.players.late.artifacts.length,0);
 });
 test('Vuong Lam needs joined players and throttled actions, gives once on completion',()=>{
- const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});startVisitor(w,'vuonglam',now);w.visitor.goal=3;
+ const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});startVisitor(singleVisitor(w),'vuonglam',now);w.visitor.goal=3;
  action(w,{type:'chat',text:'coduyen',userId:'a',name:'A'},now+100);assert.equal(w.players.a.artifacts.length,0);
  const first=w.visitor.points;action(w,{type:'like',count:100,userId:'a'},now+200);assert.equal(w.visitor.points,first);
  action(w,{type:'chat',text:'hi',userId:'not-joined'},now+5000);assert.equal(w.visitor.points,first);
@@ -37,5 +39,5 @@ test('Vuong Lam needs joined players and throttled actions, gives once on comple
 });
 test('visitor items have equal combined score and expired event closes once',()=>{
  assert.equal(new Set(VISITOR_RELICS.map(a=>a.damage+a.bonus*100)).size,1);
- const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});startVisitor(w,'hanlap',now);tick(w,now+180001);const ends=w.events.filter(e=>e.visitorEnd).length;tick(w,now+180005);assert.equal(w.events.filter(e=>e.visitorEnd).length,ends);
+ const w=Object.assign(createWorld('live'),{settings:{bossInterval:240,engagementRewards:true}});startVisitor(singleVisitor(w),'hanlap',now);tick(w,now+180001);const ends=w.events.filter(e=>e.visitorEnd).length;tick(w,now+180005);assert.equal(w.events.filter(e=>e.visitorEnd).length,ends);
 });

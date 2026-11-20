@@ -4,6 +4,8 @@ import {createWorld,action,startVisitor,controlPetEvent} from '../engine.mjs';
 import {VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
 import {PREMIUM_PETS} from '../public/spirit-pets.js';
 import {announcement} from '../speech-lines.mjs';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 
 const N=Date.parse('2026-11-10T13:00:00Z');
 function setup(){
@@ -16,7 +18,7 @@ const chat=(w,id,text,t)=>action(w,{type:'chat',userId:id,text},t);
 const gift=(w,id,coins,eventId,t)=>action(w,{type:'gift',userId:id,coins,count:1,eventId},t);
 
 test('tặng hộ trong sự kiện skin: skin về người nhận, coin/VIP vẫn của người tặng',()=>{
- const w=setup();assert.equal(startVisitor(w,'tudo',N+10).ok,true);
+ const w=setup();assert.equal(startVisitor(singleVisitor(w),'tudo',N+10).ok,true);
  const r=VISITOR_GIFT_REWARDS.tudo;
  assert.equal(chat(w,'a','tặng Nguyễn Văn Bình',N+20).ok,true);
  assert.equal(w.players.a.giftFor.to,'b');
