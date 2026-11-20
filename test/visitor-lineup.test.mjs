@@ -60,13 +60,24 @@ test('quà đúng món của vị trùng giá không cộng vào phần đủ co
  gift(w,'a',500,e.lineup[0].giftName);assert.ok(has(w,'a','tinh-ha'));assert.ok(!has(w,'a','khuyniet'));
 });
 
-test('ba vị khác giá: đủ coin mở lần lượt, mặc skin đắt nhất vừa mở',()=>{
+test('MUA 1 LÀ 1: tặng 500 chỉ ra skin 500, không kèm skin rẻ hơn',()=>{
  const w=world(),e=setLineup(w,['tinh-ha','hanlap','tudo']);assert.ok(e.lineup.every(s=>!s.giftName));
- gift(w,'a',100,'Hand Heart');assert.ok(has(w,'a','hanlap'));assert.ok(!has(w,'a','tudo'));
- gift(w,'a',100,'Bouquet',1,N+2000);assert.ok(has(w,'a','tudo'));assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.tudo.skin);
- gift(w,'b',500,'Money Gun');for(const k of ['tinh-ha','hanlap','tudo'])assert.ok(has(w,'b',k));
+ gift(w,'b',500,'Money Gun');assert.ok(has(w,'b','tinh-ha'));assert.ok(!has(w,'b','hanlap'));assert.ok(!has(w,'b','tudo'));
  assert.equal(w.players.b.skinChoice,VISITOR_GIFT_REWARDS['tinh-ha'].skin);
  assert.ok(w.events.some(x=>x.effect==='transform'&&x.transform==='tinh-ha'&&x.user==='b'));
+ assert.equal(w.visitor.giftProgress['b|*'].coins,0);
+});
+
+test('đủ coin: trao món đắt nhất vừa đủ, trừ đúng giá, dư mới tính tiếp',()=>{
+ const w=world();setLineup(w,['tinh-ha','hanlap','tudo']);
+ gift(w,'a',100,'Hand Heart');assert.ok(has(w,'a','hanlap'));assert.equal(w.visitor.giftProgress['a|*'].coins,0);
+ gift(w,'a',200,'Baglama',1,N+2000);assert.ok(has(w,'a','tudo'));assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
+ assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.tudo.skin);
+ gift(w,'a',1,'Rose',99,N+3000);assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
+ gift(w,'a',1,'Rose',1,N+4000);assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact)); // pháp bảo Hàn Lập = phần chênh 100
+ // 600 coin một lần = skin 500 + skin 100 (trả đủ cả hai)
+ gift(w,'b',100,'Hand Heart',6,N+5000);assert.ok(has(w,'b','tinh-ha'));assert.ok(has(w,'b','hanlap'));assert.ok(!has(w,'b','tudo'));
+ assert.equal(w.players.b.skinChoice,VISITOR_GIFT_REWARDS['tinh-ha'].skin);
 });
 
 test('lượt 4 phút; lời mở và lời kết của lượt tam tiên',()=>{

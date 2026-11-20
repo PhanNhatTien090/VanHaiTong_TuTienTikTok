@@ -55,16 +55,24 @@ export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins,giftName){
  if(!e.lineup?.length){const g=grant(e.kind,p.id);if(!g)return result;g.progress.coins+=coins;return grantVisitorProgress(p,e,g.r,g.progress,true);}
  // 1) Đúng món của một vị trùng giá → chỉ vị đó.
  const k=giftKey(giftName),named=k&&e.lineup.find(s=>s.giftName&&giftKey(s.giftName)===k&&(!Number.isSafeInteger(unitCoins)||unitCoins===s.price));
- if(named){const g=grant(named.kind,p.id+'|'+named.kind);g.progress.coins+=coins;return grantVisitorProgress(p,{...e,kind:named.kind},g.r,g.progress,true);}
+ const ownsAll=s=>{const r=VISITOR_GIFT_REWARDS[s.kind];return !!r&&p.rewardSkins?.includes(r.skin)&&p.artifacts?.includes(r.artifact);};
+ if(named&&!ownsAll(named)){const g=grant(named.kind,p.id+'|'+named.kind);g.progress.coins+=coins;return grantVisitorProgress(p,{...e,kind:named.kind},g.r,g.progress,true);}
  // 2) Còn lại cộng vào phần "đủ coin" của người này → mở mọi vị giá riêng đã đủ.
- const open=e.lineup.filter(s=>!s.giftName).sort((a,b)=>a.price-b.price);if(!open.length)return result;
+ const open=e.lineup.filter(s=>!s.giftName);if(!open.length)return result;
+ // 2) MUA 1 LÀ 1 (user chốt): coin cộng vào "ví" của người này; đủ giá món nào thì trao ĐÚNG 1 món và TRỪ đúng giá đó.
+ //    Món kế của một vị: chưa có skin → skin (giá skin; cùng giá pháp bảo thì kèm pháp bảo); có skin rồi → pháp bảo (phần chênh).
+ //    Đủ cho nhiều món thì lấy món ĐẮT NHẤT trước; còn dư đủ món khác mới trao tiếp (đã trả đủ tiền cả hai).
  const pot=e.giftProgress[p.id+'|*']??={coins:0};pot.coins+=coins;
- // Rẻ → đắt: vị đắt nhất vừa mở là skin được mặc (gọi sau cùng). kind = vị đắt nhất có thưởng mới, không có thì vị rẻ nhất.
- let kind=open[0].kind;
- for(const s of open){const g=grant(s.kind,p.id+'|'+s.kind);g.progress.coins=pot.coins;const got=grantVisitorProgress(p,{...e,kind:s.kind},g.r,g.progress,true);
-  if(got.items.length||got.skinNames.length)kind=s.kind;result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);}
- const main='Skin '+visitorSkinName(kind,p.gender);if(result.skinNames.includes(main))result.skinNames=[main,...result.skinNames.filter(x=>x!==main)]; // màn biến hình dùng skinNames[0]
- return {...result,kind,coins:pot.coins};
+ const next=s=>{const r=VISITOR_GIFT_REWARDS[s.kind],pr=visitorPrices(s.kind);if(!r)return null;const skin=p.rewardSkins?.includes(r.skin),art=p.artifacts?.includes(r.artifact);
+  if(!skin)return {s,r,need:pr.skin,coins:pr.skin};if(!art&&pr.artifact>pr.skin)return {s,r,need:pr.artifact-pr.skin,coins:pr.artifact};return null;};
+ let kind=null,wear=null;
+ for(let guard=0;guard<6;guard++){
+  const pick=open.map(next).filter(x=>x&&x.need<=pot.coins).sort((a,b)=>b.need-a.need)[0];if(!pick)break;
+  pot.coins-=pick.need;const got=grantVisitorProgress(p,{...e,kind:pick.s.kind},pick.r,{coins:pick.coins},!kind);
+  if(!kind&&got.skinNames.length)wear=pick.r.skin;kind??=pick.s.kind;result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);
+ }
+ if(wear){p.skinChoice=wear;p.skinChoiceSource='visitor';} // mặc món đắt nhất vừa mua, không để món rẻ trao sau đè
+ return {...result,kind:kind||open[0].kind,coins:pot.coins};
 }
 export function visitorSkinName(kind,gender){return kind==='vuonglam'?(gender==='nu'?'Lý Mộ Uyển':'Vương Lâm'):VISITOR_GIFT_REWARDS[kind]?.skinName||'Tiên nhân';}
 function grantVisitorProgress(p,e,r,progress,equip=false){const result={items:[],itemNames:[],skinNames:[]};
