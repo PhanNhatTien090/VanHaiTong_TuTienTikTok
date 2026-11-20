@@ -493,8 +493,13 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
   // Thanh tu vi dưới tên: xanh = đang tích lũy, vàng nhấp nháy + "✦ Gõ đột phá" trên đầu = đủ đột phá.
   drawQiBar(c,l,t){const p=l.player;if(p.resident||p.puppet||!p.neededQi)return;
     const ready=p.finalRealmEligible!==false&&p.progressionReady!==false&&p.qi>=p.neededQi&&p.stones>=p.neededStones&&p.realm<(this.realmCount??REALM_STYLES.length)-1,k=Math.max(0,Math.min(1,p.qi/p.neededQi)),pulse=.5+.5*Math.sin(t*.008);
-    const tm=tmOn(),bx=l.x+5,by=l.y+l.h-6,bw=l.w-10;c.save();c.fillStyle=tm?'#1b181324':'#ffffff26';c.fillRect(bx,by,bw,3.5);
-    c.fillStyle=ready?(tm?`hsl(4,72%,${38+12*pulse}%)`:`hsl(45,100%,${55+20*pulse}%)`):(tm?'#2f7d6b':'#7fdcc6');c.fillRect(bx,by,bw*k,3.5);
+    // 20/11 (chủ game: "mất thanh tu vi ở bảng tên"): Thủy Mặc từng vẽ vạch 3,5 px mờ NẰM TRONG thẻ giấy → trông như gạch chân tên.
+    // Nay là dải riêng ngay DƯỚI thẻ: rãnh mực đậm viền giấy + phần đầy ngọc sáng (đủ đột phá: son nhấp nháy). Nhãn bước kế (tan-de-tu.js) hạ theo.
+    const tm=tmOn(),bh=tm?5:3.5,bx=l.x+(tm?3:5),by=tm?l.y+l.h+1:l.y+l.h-6,bw=l.w-(tm?6:10);c.save();
+    if(tm){c.fillStyle='rgba(27,24,19,.62)';c.strokeStyle='rgba(243,234,216,.9)';c.lineWidth=1;c.beginPath();c.roundRect(bx-.5,by-.5,bw+1,bh+1,3);c.fill();c.stroke();}
+    else{c.fillStyle='#ffffff26';c.fillRect(bx,by,bw,bh);}
+    c.fillStyle=ready?(tm?`hsl(4,78%,${44+12*pulse}%)`:`hsl(45,100%,${55+20*pulse}%)`):(tm?'#3fc79a':'#7fdcc6');
+    if(tm){if(k>0){c.beginPath();c.roundRect(bx+.5,by+.5,Math.max(bh-1,(bw-1)*k),bh-1,2);c.fill();}}else c.fillRect(bx,by,bw*k,bh);
     const reborn=p.rebirthEligible===true; /* 18/11: cảnh giới cuối đầy cây → "Gõ chuyển sinh" */
     /* 20/11: nhãn đột phá nằm trong ngân sách nhãn chung this.hintIds (≤ HINT_MAX cả sân) */
     if((ready||reborn)&&!this.warStatus?.active&&!this.tanDeTu?.has(p.id)&&(!tm||!this.hintIds||this.hintIds.has(p.id))){const a=this.targets.find(x=>x.id===p.id);if(a){const y=a.y-a.scale*62-14-pulse*4;c.font='800 12px "Segoe UI",Arial,sans-serif';const label=tm?(reborn?'Gõ chuyển sinh':'Gõ 8 · đột phá'):reborn?'✦ Gõ chuyển sinh':'✦ Gõ đột phá',w=c.measureText(label).width+14;

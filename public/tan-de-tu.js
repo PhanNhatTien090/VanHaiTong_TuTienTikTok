@@ -64,5 +64,5 @@ export function drawTanDeTuHint(scene,c,l,t){
  else if(scene.tanThu?.has(p?.id)){const q=tanThuQuest(p);if(q)im=hintArt(`${q.done}/${q.total} · ${q.next}`,true);}
  if(!im)return;
  const w=im.width/2,h=im.height/2,bob=scene.motion===false?0:Math.sin(t*.004+l.x*.02)*1.5;
- c.drawImage(im,Math.max(4,Math.min(896-w,l.x+l.w/2-w/2)),l.y+l.h+2+bob,w,h);
+ c.drawImage(im,Math.max(4,Math.min(896-w,l.x+l.w/2-w/2)),l.y+l.h+8+bob,w,h); /* 20/11: +8 chừa dải thanh tu vi dưới thẻ tên */
 }
