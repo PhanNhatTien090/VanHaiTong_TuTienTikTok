@@ -3,6 +3,7 @@
 // → NỔ (chớp, cột sáng, tia tỏa, tia lửa có trọng lực, 2 vòng xung kích, vết nứt đất) → DƯ ÂM (bụi sáng).
 // Glow = sprite vẽ sẵn + 'lighter' (rẻ GPU); hạt tính theo thời gian + chỉ số (không Math.random); light → giảm nửa số hạt.
 import {makeSurface} from './performance.js';
+import {drawDebris} from './impact-debris.js?v=20261120';
 const TAU=Math.PI*2;
 export const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),seg=(k,a,b)=>clamp((k-a)/(b-a)),out3=k=>1-(1-clamp(k))**3,smooth=k=>{k=clamp(k);return k*k*(3-2*k);};
 const rnd=i=>{const x=Math.sin(i*91.7+17.3)*43758.5453;return x-Math.floor(x);};
@@ -77,6 +78,7 @@ export function drawBurst(c,x,y,sec,P,H,{light=false,pillar=true,flash=true,scal
  for(let j=0;j<3;j++){const u=out3((sec-j*.07)/.75);if(u<=0||u>=1)continue;const r=(50+u*680)*scale;c.globalAlpha=(1-u)*.85;c.strokeStyle=j===1?P.gold:j?P.main:'#ffffff';c.lineWidth=(2+7*(1-u))*scale;c.beginPath();c.ellipse(x,ground??y,r,r*(ground!=null?.3:.62),0,0,TAU);c.stroke();}
  if(ground!=null){const cr=Math.exp(-sec*1.2)*smooth(sec/.06);if(cr>.02){c.strokeStyle=P.soft;c.lineWidth=3;c.globalAlpha=cr;for(let i=0;i<9;i++){let an=i*TAU/9+rnd(seed+i)*.4,px=x,py=ground;c.beginPath();c.moveTo(px,py);const L=(140+rnd(i+seed*3)*200)*scale*out3(sec/.12);for(let s=1;s<=5;s++){const d=L*s/5,jt=(rnd(i*7+s+seed)-.5)*.6;px=x+Math.cos(an+jt)*d;py=ground+Math.sin(an+jt)*d*.3;c.lineTo(px,py);}c.stroke();}}}
  c.restore();c.globalAlpha=1;
+ drawDebris(c,x,y,sec,{floor:ground??y+210*scale,seed:seed*3.7+1,power:light?1.4:2.4,color:P.main,hot:P.gold||'#ffffff',scale:scale*1.5,light,flash:false}); // 20/11: mảnh vỡ văng + nảy quanh chỗ nổ
  const fl=Math.exp(-sec*10)*smooth(sec/.02);if(flash&&!reduceFlash&&fl>.01){c.save();c.globalAlpha=fl*.5;c.fillStyle=P.soft;c.fillRect(-100,-100,1100,H+200);c.restore();}}
 
 /** Sóng năng lượng từ (x0,y0) tới (x1,y1); u = đầu sóng đã đi (0..1), fade = tắt dần. */

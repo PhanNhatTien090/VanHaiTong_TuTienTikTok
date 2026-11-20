@@ -1,3 +1,4 @@
+import {drawDebris} from './impact-debris.js?v=20261120';
 // Vân Hải Lôi Đài — lớp hiệu ứng theo HỆ chiêu (15/11/2026): đường bay + nổ khi trúng.
 // Mỗi hệ một DÁNG riêng (không chỉ đổi màu). Chỉ path/arc, không shadowBlur, không ảnh → nhẹ GPU.
 const TAU=Math.PI*2,clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>1-(1-clamp(k))**3;
@@ -44,6 +45,7 @@ export function drawElementTrail(c,el,from,to,k,seed=1,{light=false}={}){
 /** Nổ khi trúng, k 0→1 (vẽ từ 0,55 trở đi). power: 1 thường, 2 bạo kích, 3 tuyệt kỹ. */
 export function drawElementImpact(c,el,x,y,k,seed=1,{power=1,light=false}={}){
  const u=clamp((k-.55)/.45);if(u<=0||u>=1)return;
+ {const [m0,c0]=ARENA_ELEMENT_COLORS[el]||ARENA_ELEMENT_COLORS.sword;drawDebris(c,x,y,u*1.05,{floor:y+120,seed:seed+el.length*3.1,power:1+power*.6,color:m0,hot:c0,scale:.85+.2*power,light});} // 20/11: mảnh vỡ + chớp lõi mỗi đòn trúng
  const [main,core,deep]=ARENA_ELEMENT_COLORS[el]||ARENA_ELEMENT_COLORS.sword,r=rng(seed+7),fade=1-u,R=(50+40*power)*(light?.8:1),n=light?6:power>1?14:10;
  c.save();c.globalAlpha=fade;
  if(el==='lightning'){for(let i=0;i<n/2;i++){const a=r()*TAU;bolt(c,x,y,x+Math.cos(a)*R*(.6+u),y+Math.sin(a)*R*.7*(.6+u),r,3,i%2?core:main,18);}
