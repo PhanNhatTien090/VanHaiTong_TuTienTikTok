@@ -77,7 +77,7 @@ export function inventoryDeckHTML(e,esc){
    const summary=growth?`<div class="vd-pet-progress"><strong>${esc(growth.stageName||'Ấu Linh')} · Lv${fmt(growth.level)}</strong><span>Thân thiết ${fmt(growth.bond)}/100</span><span>${esc(growth.skill||'')}</span>${growth.xpNext?`<div class="vd-pet-exp"><i style="width:${pct(growth.xp,growth.xpNext).toFixed(1)}%"></i></div><small>XP ${fmt(growth.xp)}/${fmt(growth.xpNext)}</small>`:'<small>Đã đạt cấp tối đa</small>'}${growth.resonance?'<small>✦ Pháp bảo cộng hưởng</small>':''}</div>`:'';
    body=`<div class="vd-chips"><span>Đã có ${fmt(has)}/${fmt(card.total)}</span>${card.current?`<span>Theo: ${esc(card.current)}</span>`:''}</div>`+summary+grid([[card.owned,'pets']],esc,'Chưa có linh thú');
  }else if(kind==='mounts'){ // 18/11: lệnh linhchau / toaky
-  const o=card.orbs||{},ON={divine:'vàng',vip:'tím',common:'xanh'},CMD={divine:'truyencong than',vip:'truyencong vip',common:'truyencong'};
+  const o=card.orbs||{},ON={divine:'vàng',vip:'tím',common:'xanh'},CMD={divine:'truyền công thần',vip:'truyền công vip',common:'truyền công'};
   const orbs=['divine','vip','common'].filter(k=>o[k]>0).map(k=>`<span class="vd-orb is-${k}"><img src="/assets/toa-ky-v1/orb-${k}-2.webp" alt="">${fmt(o[k])} châu ${ON[k]}</span>`).join('')||'<span>Chưa có Linh Châu</span>';
   const ch=card.channel?`<div class="vd-state">Đang truyền công châu ${ON[card.channel.kind]||''}${card.channel.left?' · còn '+fmt(card.channel.left)+' phút':' · sắp nở'}</div>`:'';
   const first=['divine','vip','common'].find(k=>o[k]>0);

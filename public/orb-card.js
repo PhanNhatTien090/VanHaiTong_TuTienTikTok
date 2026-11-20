@@ -4,7 +4,7 @@
 import {orbImage} from './mounts.js';
 import {baoArt} from './phap-bao-data.js';
 const SHOW_MS=4600,QUEUE_MAX=3;
-const KIND={divine:{name:'LINH CHÂU VÀNG',cmd:'truyencong than',tone:'gold'},vip:{name:'LINH CHÂU TÍM',cmd:'truyencong vip',tone:'violet'},common:{name:'LINH CHÂU XANH',cmd:'truyencong',tone:'cyan'}};
+const KIND={divine:{name:'LINH CHÂU VÀNG',cmd:'truyền công thần',tone:'gold'},vip:{name:'LINH CHÂU TÍM',cmd:'truyền công vip',tone:'violet'},common:{name:'LINH CHÂU XANH',cmd:'truyền công',tone:'cyan'}};
 const SHORT={divine:'vàng',vip:'tím',common:'xanh'};
 const LINE={earned:'Quà đã đủ mốc · nhận khi Bí Cảnh kết thúc',got:'Đã vào túi · truyền công để tọa kỹ hiện thân',remind:'Truyền công để nở tọa kỹ'};
 const countLine=c=>c.stage==='remind'&&c.counts?['divine','vip','common'].filter(x=>c.counts[x]>0).map(x=>c.counts[x]+' châu '+SHORT[x]).join(' · ')+' · ':'';

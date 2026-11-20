@@ -53,7 +53,7 @@ export function loveRoomIds(scene){const L=scene.loveStatus,out=new Set();if(!L?
 export function towerRect(H){return {x:TOWER_BOX.x,y:H*TOWER_BOX.y,s:TOWER_BOX.size};}
 export function windowRect(i,H){const b=towerRect(H),w=TOWER_WINDOWS[i];return {x:b.x+w.x*b.s,y:b.y+w.y*b.s,w:w.w*b.s,h:w.h*b.s};}
 export function drawLoveTower(scene,c,t,H){
-  const L=scene.loveStatus;if(!L||scene.cutFullActive)return;
+  const L=scene.loveStatus;if(!L?.active||scene.cutFullActive)return; /* 20/11: chỉ vẽ lầu khi lễ Kết Duyên đang mở — trước đó lầu còn đè lên sân khác (tiên nhân giữa Tiên Nhân Đài) */
   const now=nowAt(scene,t),b=towerRect(H),art=img(LOVE_ART.tower),light=scene.budget?.level==='light'||(scene.visibleActors||0)>30,bare=(scene.visibleActors||0)>50;
   c.save();
   if(ready(art)){c.globalAlpha=1;c.drawImage(art,b.x,b.y,b.s,b.s);}

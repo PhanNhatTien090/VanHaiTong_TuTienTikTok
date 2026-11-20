@@ -95,7 +95,7 @@ const secs=ms=>Math.max(0,Math.ceil(ms/1000));
 // ---------- bảng hướng dẫn ----------
 function drawGuide(c,e){
  box(c,16,136,420,186,'#b58cff99');text(c,'CÁCH CHƠI BÍ CẢNH',226,156,17,'#e8d4ff',900);
- const rows=[['bicanh','vào Bí Cảnh, tự đánh yêu thú gần nhất'],['danh / 6','lao lên đánh mạnh'],['quà','tung chiêu đánh lan (bảng bên phải)'],['hạ Thú vương','cả sân cùng thu phục'],['truyencong','mở châu ra tọa kỹ (bảng dưới phải)']];
+ const rows=[['bicanh','vào Bí Cảnh, tự đánh yêu thú gần nhất'],['danh / 6','lao lên đánh mạnh'],['quà','tung chiêu đánh lan (bảng bên phải)'],['hạ Thú vương','cả sân cùng thu phục'],['truyền công','mở châu ra tọa kỹ (bảng dưới phải)']];
  rows.forEach(([k,v],i)=>{const y=186+i*28;text(c,k,30,y,16,'#ffe08a',900,'left');text(c,'· '+v,30+Math.max(64,c.measureText(k).width+8),y,15,'#f3eaff',700,'left',300);});
 }
 function drawGiftBoard(c,h){
@@ -118,7 +118,7 @@ function drawOrbBoard(c,h,H,e){
  [[300,'vip',1,'1 châu tím'],[500,'vip',2,'2 châu tím'],[1000,'divine',1,'châu vàng · chắc chắn Thần']].forEach(([coins,kind,count,why],i)=>{const yy=ry+42+i*32;let tx=gift(coins,x+12,yy);text(c,'→',tx+4,yy,18,'#ffe3a0',900,'left');tx+=26;
   for(let k=0;k<count;k++)tx=orb(kind,tx,yy,kind==='divine'?32:28)+2;text(c,why,tx+6,yy,15,kind==='divine'?'#ffe08a':'#e2c8ff',900,'left',x+w-tx-14);});
  ry+=42+3*32-6;c.fillStyle='#7fe3ff33';c.fillRect(x+10,ry,w-20,1);text(c,'MỞ CHÂU · GÕ',x+w/2,ry+14,13,'#bff3ff',900);
- const yy=ry+42,cols=[['common','truyencong','#9ff0d0'],['vip','truyencong vip','#e2c8ff'],['divine','truyencong than','#ffe08a']];
+ const yy=ry+42,cols=[['common','truyền công','#9ff0d0'],['vip','truyền công vip','#e2c8ff'],['divine','truyền công thần','#ffe08a']];
  cols.forEach(([kind,cmd,col],i)=>{const cx=x+10+i*(w-20)/3;orb(kind,cx,yy,24);text(c,cmd,cx+28,yy,i?13:14,col,900,'left',(w-20)/3-32);});
  const gv=e.givers||[];if(!gv.length)return;
  let gy=yy+26;c.fillStyle='#ffd36b33';c.fillRect(x+10,gy,w-20,1);text(c,'ĐANG GÓP QUÀ',x+w/2,gy+14,13,'#ffe3a0',900);gy+=40;
@@ -240,7 +240,7 @@ export function drawMountRealm(scene,c,t,H){
  if(done){const R=e.results;box(c,16,136,868,186,'#ffd36b');
   text(c,R.tamed?'THÚ VƯƠNG ĐÃ BỊ THU PHỤC':'BÍ CẢNH KHÉP LẠI',450,166,30,'#ffe08a',900);
   (R.top||[]).slice(0,3).forEach((x,i)=>text(c,(i+1)+'. '+short(x.name)+' · '+x.bossDmg+' sát thương Thú vương',450,206+i*32,21,'#ffffff',800));
-  text(c,R.rewarded+' đạo hữu nhận Linh Châu · gõ truyencong để mở',450,302,19,'#d9c2ff',800);}
+  text(c,R.rewarded+' đạo hữu nhận Linh Châu · gõ truyền công để mở',450,302,19,'#d9c2ff',800);}
  c.save();worldZoom(c,H);drawDrops(c,h,t,r);c.restore();
  return n;
 }

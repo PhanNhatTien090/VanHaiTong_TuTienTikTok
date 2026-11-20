@@ -47,9 +47,9 @@ export const GUIDE_PAGES=[
   {cmd:'gợi ý',text:'hỏi việc nên làm'}]},
  // 16/11: TỌA KỸ — Linh Châu nhặt ở Tọa Kỹ Bí Cảnh; truyền công đủ giờ (người phải đang ở LIVE) thì châu vỡ ra tọa kỹ.
  {title:'LINH CHÂU · TỌA KỸ',rows:[
-  {cmd:'truyencong',text:'châu xanh'},
-  {cmd:'truyencong vip',text:'châu tím'},
-  {cmd:'truyencong than',text:'châu vàng'},
+  {cmd:'truyền công',text:'châu xanh'},
+  {cmd:'truyền công vip',text:'châu tím'},
+  {cmd:'truyền công thần',text:'châu vàng'},
   {cmd:'ở lại LIVE',text:'đủ giờ ra tọa kỹ'},
   {cmd:'🎁 quà',text:'truyền nhanh hơn'},
   {cmd:'toaky số',text:'cưỡi tọa kỹ'}]}
