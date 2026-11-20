@@ -18,14 +18,14 @@ const PETS=['astral-dragon','ky-lan','sun-phoenix','frost-tiger','xich-ha-phuong
 const petSrc=id=>'/assets/spirit-pets-v1/'+id+'.png';
 // vẽ khung đầu (ô 1/3) của ảnh sheet ngang 3 ô; w = bề ngang hiển thị, đáy ảnh đặt tại (0,0)
 function drawCell(c,im,cells,cell,w){const cw=im.naturalWidth/cells,h=w*im.naturalHeight/cw;c.drawImage(im,cell*cw,0,cw,im.naturalHeight,-w/2,-h,w,h);}
-function drawMob(c,wave,w){if(wave?.art){const im=img('/assets/toa-ky-v1/'+wave.art+'.webp');if(im){const h=w*im.naturalHeight/im.naturalWidth;c.drawImage(im,-w/2,-h,w,h);return true;}return false;}const at=img('/assets/boss-atlas.png');if(!at)return false;drawCell(c,at,3,wave?.cell??0,w);return true;}
+function drawMob(c,wave,w){if(wave?.art){const im=img('/assets/toa-ky-v1/'+wave.art+'.webp');if(im){const h=w*im.naturalHeight/im.naturalWidth;c.drawImage(im,-w/2,-h,w,h);return true;}return false;}const at=img('/assets/boss-atlas.webp');if(!at)return false;drawCell(c,at,3,wave?.cell??0,w);return true;}
 const nowOf=(scene,t)=>(scene.stateServerNow||Date.now())+Math.min(2000,Math.max(0,t-(scene.stateReceivedAt||t)));
 
 export function findRealmCut(e,now){if(!e?.cuts?.length)return null;let best=null;for(const x of e.cuts){const age=now-x.at;if(age>=0&&age<x.ms&&(!best||x.at>best.x.at))best={x,age};}return best?{x:best.x,age:best.age,ms:best.x.ms,k:best.age/best.x.ms}:null;}
 
 /** Hook đầu scene.drawFrame: true = đã vẽ cả màn (bỏ sân). */
 export function realmCutFrame(scene,c,t,H){
- const e=scene.mountRealmStatus;if(e){for(const x of e.cuts||[]){img(realmLayout(e).image);if(x.boss)img(mountImage(x.boss));}for(const w of realmLayout(e).waves)if(w.art)img('/assets/toa-ky-v1/'+w.art+'.webp');img('/assets/boss-atlas.png');if(e.cuts?.some(x=>x.tier==='ultimate'))for(const id of PETS)img(petSrc(id));} // tải sẵn
+ const e=scene.mountRealmStatus;if(e){for(const x of e.cuts||[]){img(realmLayout(e).image);if(x.boss)img(mountImage(x.boss));}for(const w of realmLayout(e).waves)if(w.art)img('/assets/toa-ky-v1/'+w.art+'.webp');img('/assets/boss-atlas.webp');if(e.cuts?.some(x=>x.tier==='ultimate'))for(const id of PETS)img(petSrc(id));} // tải sẵn
  const cut=e?findRealmCut(e,nowOf(scene,t)):null,full=!!cut&&cut.k>=CUT_PHASE.wipeIn&&cut.k<CUT_PHASE.wipeOut;
  if(!!scene.realmCutOn!==!!cut){scene.realmCutOn=!!cut;if(typeof document!=='undefined')document.body?.classList?.toggle('cutscene-on',!!cut);}
  if(cut||scene.realmVeilUsed){scene.realmVeilUsed=!!cut;cutVeil(cut,full);}

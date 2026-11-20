@@ -4,7 +4,7 @@ const canvas=document.querySelector('canvas'),c=canvas.getContext('2d'),p={id:'p
 loadViemArt(scene);
 document.querySelector('#pose').onclick=()=>stand=1-stand;
 document.querySelector('#orb').onclick=()=>{p.equipped=p.equipped?null:VIEM_BLADES;};document.querySelector('#descent').onclick=()=>descent=performance.now();
-const bg=new Image();bg.src='/assets/worlds-v2/jade-palace.png';
+const bg=new Image();bg.src='/assets/worlds-v2/jade-palace.webp';
 function frame(t){canvas.width=540;canvas.height=960;c.setTransform(.6,0,0,.6,0,0);if(bg.complete&&bg.naturalWidth)c.drawImage(bg,0,0,900,1600);else{c.fillStyle='#140402';c.fillRect(0,0,900,1600);}c.fillStyle='#14040233';c.fillRect(0,0,900,1600);
  const k=descent<0?-1:(t-descent)/TRANSFORM_MS,ev={transform:'viemton'},pos={x:450,y:1210,scale:6.4},show=k<0||k>=1||k>REVEAL_AT;if(k>=0&&k<1)drawTransform(c,ev,t,k,pos,1600,'back');
  const target={id:p.id,player:p,x:450,y:1210,scale:6.4,pose:{stand}};if(show)drawViemAdornment(scene,c,target,t,'back');c.save();c.translate(target.x,target.y);c.scale(target.scale,target.scale);if(show)drawViemBody(scene,c,p,{stand},t);c.restore();if(show)drawViemAdornment(scene,c,target,t,'front');

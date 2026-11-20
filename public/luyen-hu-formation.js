@@ -27,7 +27,7 @@ function surface(w,h,paint){const im=makeSurface(Math.max(1,Math.ceil(w)),Math.m
 function path(c,pts){c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();}
 export function prepareLuyenHuArt(scene){
  if(typeof Image==='undefined')return;
- for(const [key,src] of [['luyenHuWorldArt','/assets/worlds-v2/jade-palace.png'],['luyenHuVoidArt','/assets/worlds-v2/cosmos.png']])
+ for(const [key,src] of [['luyenHuWorldArt','/assets/worlds-v2/jade-palace.webp'],['luyenHuVoidArt','/assets/worlds-v2/cosmos.webp']])
   if(!scene[key]){const im=new Image();scene[key]=im;im.onload=()=>{scene.luyenHuAssets=null;};im.src=src;}
 }
 const ready=im=>im&&(im.naturalWidth||im.width)>0&&im.complete!==false;

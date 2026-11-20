@@ -1,9 +1,9 @@
 // Reuse the game's existing PNGs at native tile detail; no generated replacement art.
 import {makeSurface} from './performance.js';
 export const NGUYEN_ANH_ASSETS=Object.freeze([
- {url:'/assets/breakthrough-v2/mid.png',tiles:[['lotus',2]]},
- {url:'/assets/breakthrough-v3/celestial-spectacle.png',tiles:[['halo',5],['groundWave',4]]},
- {url:'/assets/breakthrough-v2/bursts.png',tiles:[['burst',2]]}
+ {url:'/assets/breakthrough-v2/mid.webp',tiles:[['lotus',2]]},
+ {url:'/assets/breakthrough-v3/celestial-spectacle.webp',tiles:[['halo',5],['groundWave',4]]},
+ {url:'/assets/breakthrough-v2/bursts.webp',tiles:[['burst',2]]}
 ]);
 export function sliceNguyenAnhArt(im,tiles,factory=makeSurface){
  const result={},w=(im.naturalWidth||im.width)/3,h=(im.naturalHeight||im.height)/2,size=Math.min(512,Math.round(w));

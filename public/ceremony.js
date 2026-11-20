@@ -8,7 +8,7 @@ let timer=null;
 export const CEREMONY_MS=12000;
 function seat(p,i){return `<div class="cer-seat cer-${SLOT[i]}">
   <div class="cer-portrait"><span class="cer-initial">${esc(Array.from(p.name||'Đ')[0])}</span>${p.avatar?`<img src="${esc(p.avatar)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}
-  <svg viewBox="${FRAME[i]*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.png" width="1536" height="512" preserveAspectRatio="none"/></svg></div>
+  <svg viewBox="${FRAME[i]*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.webp" width="1536" height="512" preserveAspectRatio="none"/></svg></div>
   <b class="cer-title">${esc(p.title)}</b><strong class="cer-name">${esc(p.name)}</strong><small>${fmt(p.coins)} coin · ${esc(p.realmName||'')}</small></div>`;}
 export function showCeremony(root,e){
   if(!root||!e?.ceremony?.length)return;clearTimeout(timer);

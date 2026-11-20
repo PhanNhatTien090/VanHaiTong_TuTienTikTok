@@ -2,7 +2,7 @@
 // Six weather seals feed ONE ascending soul; the soul commands, then returns to the body.
 import {makeSurface} from './performance.js';
 export const HT_TIMING=Object.freeze({duration:17.6,opening:.16,ascent:2,seals:4.4,strikes:7.6,manifest:10.5,recall:12.8,absorbed:14.25,impact:14.4,reveal:14.65});
-export function prepareHoaThanArt(scene){if(scene.hoaThanWorldArt||typeof Image==='undefined')return;const im=new Image();scene.hoaThanWorldArt=im;im.onload=()=>{scene.hoaThanWorld=null;};im.src='/assets/hoa-than-v2/storm-world.png';}
+export function prepareHoaThanArt(scene){if(scene.hoaThanWorldArt||typeof Image==='undefined')return;const im=new Image();scene.hoaThanWorldArt=im;im.onload=()=>{scene.hoaThanWorld=null;};im.src='/assets/hoa-than-v2/storm-world.webp';}
 export const HT_STRIKES=Object.freeze(Array.from({length:6},(_,i)=>7.6+i*.44));
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);},mix=(a,b,u)=>a+(b-a)*u;
 const rnd=i=>{const v=Math.sin(i*127.1+79.7)*43758.5453;return v-Math.floor(v);};

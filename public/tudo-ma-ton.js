@@ -12,8 +12,8 @@ const rnd=(i,s)=>{const x=Math.sin(i*127.1+s*.311)*43758.5453;return x-Math.floo
 const PALETTES=[{core:'#ff3b2f',hot:'#ffb36b',deep:'#6a0710',rune:'#ff5a4a'},{core:'#ff2a2a',hot:'#ff9a5a',deep:'#560612',rune:'#ff5a3a'},{core:'#e8302a',hot:'#ffd27a',deep:'#3d0612',rune:'#ff7a3a'}];
 export function loadTudoArt(scene){
  if(typeof Image==='undefined')return;
- if(!scene.tudoSkinArt&&!scene.tudoSkinLoading){scene.tudoSkinLoading=true;const im=new Image();im.onload=()=>{scene.tudoSkinArt=sliceTudoSkin(im);scene.characterFrames?.clear?.();};im.onerror=()=>scene.tudoSkinLoading=false;im.src='/assets/tudo-ma-ton-v1/skin.png';}
- if(!scene.tudoBladeArt&&!scene.tudoBladeLoading){scene.tudoBladeLoading=true;const im=new Image();im.onload=()=>{scene.tudoBladeArt=trimBlade(im);};im.onerror=()=>scene.tudoBladeLoading=false;im.src='/assets/tudo-ma-ton-v1/sabre.png';}
+ if(!scene.tudoSkinArt&&!scene.tudoSkinLoading){scene.tudoSkinLoading=true;const im=new Image();im.onload=()=>{scene.tudoSkinArt=sliceTudoSkin(im);scene.characterFrames?.clear?.();};im.onerror=()=>scene.tudoSkinLoading=false;im.src='/assets/tudo-ma-ton-v1/skin.webp';}
+ if(!scene.tudoBladeArt&&!scene.tudoBladeLoading){scene.tudoBladeLoading=true;const im=new Image();im.onload=()=>{scene.tudoBladeArt=trimBlade(im);};im.onerror=()=>scene.tudoBladeLoading=false;im.src='/assets/tudo-ma-ton-v1/sabre.webp';}
 }
 // 2×2 ô (nam/nữ đứng trên, nam/nữ ngồi dưới); tự dò khe trống giữa 2 hàng thay vì cố định 54/46 như Hải Lam.
 export function sliceTudoSkin(im,factory=makeSurface){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,full=factory(w,h);if(!full)return [null,null,null,null];const q=full.getContext('2d');q.drawImage(im,0,0);const d=q.getImageData(0,0,w,h).data;

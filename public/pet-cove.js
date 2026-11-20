@@ -6,7 +6,7 @@ import {giftImg} from './skill-cutscene.js?v=20261118';
 import {drawPetV2CoveScene} from './pet-v2-cove-fx.js';
 import {drawPetBolt,drawRareFx,petArtFrame,premiumPetPose,PET_FACES_RIGHT as FACES_RIGHT} from './spirit-pet-art.js?v=drawn-pets-20261114';
 import {loadPetArt} from './spirit-pet-art.js?v=drawn-pets-20261114';
-export const PET_COVE_MAP={id:'pet-cove',name:'Linh Thú Cốc',image:'/assets/maps-v3/pet-cove.png',ambience:'jade',floorY:.76,layout:'ground'};
+export const PET_COVE_MAP={id:'pet-cove',name:'Linh Thú Cốc',image:'/assets/maps-v3/pet-cove.webp',ambience:'jade',floorY:.76,layout:'ground'};
 export function petCoveOn(scene,now=Date.now()){
  return !!(scene.petEvent?.active&&scene.petEvent.endsAt>now&&!scene.boss&&!scene.raceStatus?.active&&!scene.socialScene&&!scene.socialStage?.length);
 }

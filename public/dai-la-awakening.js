@@ -31,7 +31,7 @@ export function daiLaHits(){return [[DL.drop,1.2],...DL_RIPPLES.map(a=>[a,.8]),.
 function hitPower(t){let p=0;for(const [a,f] of daiLaHits()){const age=t-a;if(age>=0&&age<.5)p=Math.max(p,Math.exp(-age*9)*f);}return p;}
 function surface(w,h,paint){const im=makeSurface(Math.max(1,Math.ceil(w)),Math.max(1,Math.ceil(h)));if(im)paint(im.getContext('2d'));return im;}
 const ready=im=>im&&(im.naturalWidth||im.width)>0&&im.complete!==false;
-export function prepareDaiLaArt(scene){if(scene.daiLaWorldArt||typeof Image==='undefined')return;const im=new Image();scene.daiLaWorldArt=im;im.onload=()=>{scene.daiLaAssets=null;};im.src='/assets/dai-la-v1/star-heaven.png';}
+export function prepareDaiLaArt(scene){if(scene.daiLaWorldArt||typeof Image==='undefined')return;const im=new Image();scene.daiLaWorldArt=im;im.onload=()=>{scene.daiLaAssets=null;};im.src='/assets/dai-la-v1/star-heaven.webp';}
 // Vẽ sẵn 9 tiểu thế giới (128 px) — mỗi cái chi tiết riêng.
 function paintWorld(c,w){const r=56;c.translate(64,64);const g=c.createRadialGradient(-18,-18,4,0,0,r);g.addColorStop(0,w.a);g.addColorStop(1,w.b);c.fillStyle=g;c.beginPath();c.arc(0,0,r,0,TAU);c.fill();c.save();c.beginPath();c.arc(0,0,r,0,TAU);c.clip();
  if(w.id==='fire'){c.fillStyle='#ffe08a';for(let i=0;i<7;i++){c.beginPath();c.ellipse(rnd(i)*80-40,rnd(i+3)*80-40,10,4,i,0,TAU);c.fill();}}

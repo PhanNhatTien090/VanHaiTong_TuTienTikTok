@@ -30,7 +30,7 @@ function surface(w,h,paint){const im=makeSurface(Math.max(1,Math.ceil(w)),Math.m
 const ready=im=>im&&(im.naturalWidth||im.width)>0&&im.complete!==false;
 export function prepareChanTienArt(scene){
  loadSpiritBeasts(scene);if(typeof Image==='undefined')return;
- for(const [key,src] of [['chanTienPeakArt','/assets/chan-tien-v4/tribulation-peak.png'],['chanTienHeavenArt','/assets/chan-tien-cinema-v2/immortal-world.png']])
+ for(const [key,src] of [['chanTienPeakArt','/assets/chan-tien-v4/tribulation-peak.webp'],['chanTienHeavenArt','/assets/chan-tien-cinema-v2/immortal-world.webp']])
   if(!scene[key]){const im=new Image();scene[key]=im;im.onload=()=>{scene.chanTienAssets=null;};im.src=src;}
 }
 function buildAssets(scene,H){

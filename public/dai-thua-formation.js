@@ -19,7 +19,7 @@ export function daiThuaFormationState(t,H=1600,motion=true){
   fall:ease((t-T.impact-.15)/1.6),salute:ease((t-T.reveal-.3)/1.2),after:ease((t-T.reveal)/.4),fade:1-ease((t-T.fade)/1.2)};
 }
 function surface(w,h,paint){const im=makeSurface(Math.max(1,Math.ceil(w)),Math.max(1,Math.ceil(h)));if(im)paint(im.getContext('2d'));return im;}
-export function prepareDaiThuaWorld(scene){if(scene.daiThuaWorldArt||typeof Image==='undefined')return;const im=new Image();scene.daiThuaWorldArt=im;im.onload=()=>{scene.daiThuaAssets=null;};im.src='/assets/dai-thua-v2/sword-valley.png';}
+export function prepareDaiThuaWorld(scene){if(scene.daiThuaWorldArt||typeof Image==='undefined')return;const im=new Image();scene.daiThuaWorldArt=im;im.onload=()=>{scene.daiThuaAssets=null;};im.src='/assets/dai-thua-v2/sword-valley.webp';}
 const ready=im=>im&&(im.naturalWidth||im.width)>0&&im.complete!==false;
 // Vạn kiếm: gốc cắm trên 4 tầng núi (xa → gần); số lượng cố định theo mức đồ hoạ.
 export function dtSwordCount(light){return light?140:320;}

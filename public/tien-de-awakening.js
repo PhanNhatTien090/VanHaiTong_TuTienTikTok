@@ -34,7 +34,7 @@ export function tienDeHits(){return [...TD_KNOCKS.map(a=>[a,1.1]),[TD.open,1.6],
 function hitPower(t){let p=0;for(const [a,f] of tienDeHits()){const age=t-a;if(age>=0&&age<.5)p=Math.max(p,Math.exp(-age*9)*f);}return p;}
 function surface(w,h,paint){const im=makeSurface(Math.max(1,Math.ceil(w)),Math.max(1,Math.ceil(h)));if(im)paint(im.getContext('2d'));return im;}
 const ready=im=>im&&(im.naturalWidth||im.width)>0&&im.complete!==false;
-export function prepareTienDeArt(scene){if(scene.tienDeWorldArt||typeof Image==='undefined')return;const im=new Image();scene.tienDeWorldArt=im;im.onload=()=>{scene.tienDeAssets=null;};im.src='/assets/tien-de-v1/heaven-court.png';}
+export function prepareTienDeArt(scene){if(scene.tienDeWorldArt||typeof Image==='undefined')return;const im=new Image();scene.tienDeWorldArt=im;im.onload=()=>{scene.tienDeAssets=null;};im.src='/assets/tien-de-v1/heaven-court.webp';}
 // Cánh cổng Nam Thiên Môn: son đỏ, 9×5 đinh vàng, vòng gõ đầu sư tử.
 function paintLeaf(c,H,left){const w=450,h=H;const g=c.createLinearGradient(0,0,w,0);g.addColorStop(0,left?'#5a0c0c':'#8e1a14');g.addColorStop(1,left?'#8e1a14':'#5a0c0c');c.fillStyle=g;c.fillRect(0,0,w,h);
  c.strokeStyle='#e8b84a';c.lineWidth=14;c.strokeRect(10,10,w-20,h-20);c.lineWidth=4;c.strokeRect(34,34,w-68,h-68);

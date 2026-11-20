@@ -14,7 +14,7 @@ export function sliceSeaSkin(im,factory=makeSurface){
 }
 export function loadSeaArt(scene){
  loadSpiritBeasts(scene);if(scene.seaSkinArt||scene.seaSkinLoading||typeof Image==='undefined')return;
- scene.seaSkinLoading=true;const im=new Image();im.onload=()=>{scene.seaSkinArt=sliceSeaSkin(im);scene.characterFrames?.clear();};im.onerror=()=>scene.seaSkinLoading=false;im.src='/assets/sea-dragon-heir-v1/skin-v2.png';
+ scene.seaSkinLoading=true;const im=new Image();im.onload=()=>{scene.seaSkinArt=sliceSeaSkin(im);scene.characterFrames?.clear();};im.onerror=()=>scene.seaSkinLoading=false;im.src='/assets/sea-dragon-heir-v1/skin-v2.webp';
 }
 function poseFrame(c,im,top,height,clock,alpha){
  if(!im||alpha<=.001)return;c.save();c.globalAlpha*=alpha;const bands=12;

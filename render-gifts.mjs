@@ -6,7 +6,7 @@ import {KINDS} from './public/gift-kinds.js';
 import {drawGiftFx} from './public/gift-fx.js';
 globalThis.document={body:{classList:{contains:()=>true}}};
 const H=1600,scene=Object.create(Scene.prototype);Object.assign(scene,{width:900,height:H,motion:true,showNames:true,effects:[],focusUntil:0,selected:null});
-scene.art=await loadImage('public/assets/sect-twilight-v2.png');scene.characterArt=await loadImage('public/assets/cultivators-v3.png');
+scene.art=await loadImage('public/assets/sect-twilight-v2.webp');scene.characterArt=await loadImage('public/assets/cultivators-v3.webp');
 const bg=createCanvas(900,H);scene.paintWorld(bg.getContext('2d'));
 const kinds=Object.keys(KINDS),cols=4,cw=300,ch=533,sheet=createCanvas(cols*cw,Math.ceil(kinds.length/cols)*ch),s=sheet.getContext('2d');
 const p={id:'x',x:450,y:scene.courtyardY(H),scale:2.15,player:{id:'x',name:'Lan',giftCoins:0,realm:1,gender:'nu'}};scene.targets=[p];

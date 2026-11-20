@@ -8,7 +8,7 @@ export function immortalCamera(seconds,motion=true){
 export function projectImmortal(x,y,z,travel,H=1600){const depth=Math.max(.35,z-travel),scale=280/depth;return {x:450+x*scale,y:H*.43+y*scale,scale,depth};}
 export function prepareImmortalWorld(scene){
  if(!scene.immortalWorldArt&&!scene.immortalWorldLoading&&typeof Image!=='undefined'){
-  scene.immortalWorldLoading=true;const im=new Image();im.onload=()=>{scene.immortalWorldArt=im;};im.onerror=()=>{};im.src='/assets/chan-tien-cinema-v2/immortal-world.png';
+  scene.immortalWorldLoading=true;const im=new Image();im.onload=()=>{scene.immortalWorldArt=im;};im.onerror=()=>{};im.src='/assets/chan-tien-cinema-v2/immortal-world.webp';
  }
 }
 function nearLandscape(scene,image,H){

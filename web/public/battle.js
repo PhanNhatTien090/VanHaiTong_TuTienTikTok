@@ -33,7 +33,7 @@ export async function runBattle(host, { info, stats, sceneState, onFinish, onExi
   await app.init({ resizeTo: host, antialias: true, autoDensity: true, resolution: Math.min(2, devicePixelRatio || 1), background: '#0b1d1c', preference: 'webgl' });
   host.appendChild(app.canvas);
   const [bgTex, fgTex, atlas, tWave, tSpark, tArray, tLight, tLotus, tOrb] = await Promise.all([
-    Assets.load(info.bg), info.fg ? Assets.load(info.fg) : null, Assets.load(enemyDef.atlas || '/assets/boss-atlas.png'),
+    Assets.load(info.bg), info.fg ? Assets.load(info.fg) : null, Assets.load(enemyDef.atlas || '/assets/boss-atlas.webp'),
     Assets.load('/art/battle/fx-wave.png'), Assets.load('/art/battle/fx-spark.png'), Assets.load('/art/battle/fx-array.png'),
     Assets.load('/art/battle/fx-lightning.png'), Assets.load('/art/battle/fx-lotus.png'), Assets.load('/art/battle/fx-orb.png'),
   ]);

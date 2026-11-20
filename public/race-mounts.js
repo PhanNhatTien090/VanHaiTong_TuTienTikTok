@@ -9,7 +9,7 @@ export const RACE_MOUNTS=Object.freeze([
  {id:'koi',name:'Kim Lý',sheet:'b',cell:0,deck:.4,width:220,trail:'#ffd36b'},
  {id:'lotus',name:'Hỏa Liên',sheet:'b',cell:1,deck:.42,width:200,trail:'#ff9ad5'},
  {id:'fox',name:'Cửu Vĩ Hồ',sheet:'b',cell:2,deck:.42,width:240,trail:'#8fd8ff'}]);
-const SHEETS={a:'/assets/race-mounts-v1/mounts-a.png',b:'/assets/race-mounts-v1/mounts-b.png'};
+const SHEETS={a:'/assets/race-mounts-v1/mounts-a.webp',b:'/assets/race-mounts-v1/mounts-b.webp'};
 const hash=s=>{let h=2166136261;for(const ch of String(s||''))h=Math.imul(h^ch.codePointAt(0),16777619);return h>>>0;};
 function trim(img,cell){
  const cw=Math.floor(img.naturalWidth/3),ch=img.naturalHeight,x0=cell*cw,full={x:x0,y:0,w:cw,h:ch};

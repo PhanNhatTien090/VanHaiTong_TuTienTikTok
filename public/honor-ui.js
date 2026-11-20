@@ -17,7 +17,7 @@ export class HonorUI{
  }
  display(p,now,ms){
   if(!this.root)return;this.lastAt=now;this.until=now+ms;
-  this.root.innerHTML=`<div class="honor-portrait"><span class="honor-fallback">${esc(Array.from(p.name||'Đạo hữu')[0])}</span>${p.avatar?`<img class="honor-avatar" src="${esc(p.avatar)}" alt="Avatar ${esc(p.name)}" referrerpolicy="no-referrer">`:''}<svg class="honor-frame" viewBox="${p.frame*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.png" width="1536" height="512" preserveAspectRatio="none"/></svg></div><b>${esc(p.title)}</b><strong>${esc(p.name)}</strong><small>${esc(p.detail||'')}</small>`;
+  this.root.innerHTML=`<div class="honor-portrait"><span class="honor-fallback">${esc(Array.from(p.name||'Đạo hữu')[0])}</span>${p.avatar?`<img class="honor-avatar" src="${esc(p.avatar)}" alt="Avatar ${esc(p.name)}" referrerpolicy="no-referrer">`:''}<svg class="honor-frame" viewBox="${p.frame*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.webp" width="1536" height="512" preserveAspectRatio="none"/></svg></div><b>${esc(p.title)}</b><strong>${esc(p.name)}</strong><small>${esc(p.detail||'')}</small>`;
   const img=this.root.querySelector('.honor-avatar');if(img)img.onerror=()=>img.remove();
   this.root.hidden=false;this.root.classList.remove('honor-enter');void this.root.offsetWidth;this.root.classList.add('honor-enter');
  }

@@ -3,17 +3,17 @@ import {CELESTIAL_BOSSES,drawCelestialBoss} from './celestial-bosses.js';
 import {ELITE_BOSSES,drawEliteBoss} from './boss-encounters.js';
 export const SCENE_INTERVAL=5*60*1000;
 export const SCENES=Object.freeze([
- {id:'dungeon',name:'Huyền Thạch Cổ Ngục',image:'/assets/worlds-v2/dungeon.png',ambience:'dungeon',floorY:.64,layout:'ground'},
- {id:'jade-palace',name:'Vân Thượng Ngọc Cung',image:'/assets/worlds-v2/jade-palace.png',ambience:'jade',floorY:.64,layout:'ground'},
- {id:'underwater',name:'Thâm Hải Long Cung',image:'/assets/worlds-v2/underwater.png',ambience:'underwater',floorY:.67,layout:'seabed'},
- {id:'cosmos',name:'Vô Tận Tinh Vực',image:'/assets/worlds-v2/cosmos.png',ambience:'cosmos',floorY:.62,layout:'float'},
+ {id:'dungeon',name:'Huyền Thạch Cổ Ngục',image:'/assets/worlds-v2/dungeon.webp',ambience:'dungeon',floorY:.64,layout:'ground'},
+ {id:'jade-palace',name:'Vân Thượng Ngọc Cung',image:'/assets/worlds-v2/jade-palace.webp',ambience:'jade',floorY:.64,layout:'ground'},
+ {id:'underwater',name:'Thâm Hải Long Cung',image:'/assets/worlds-v2/underwater.webp',ambience:'underwater',floorY:.67,layout:'seabed'},
+ {id:'cosmos',name:'Vô Tận Tinh Vực',image:'/assets/worlds-v2/cosmos.webp',ambience:'cosmos',floorY:.62,layout:'float'},
  // v78: 4 cảnh tông môn cũ quay lại để chọn
- {id:'jade-lake',name:'Thanh Ngọc Hồ',image:'/assets/sect-jade-lake.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
- {id:'autumn-peak',name:'Thu Phong Lĩnh',image:'/assets/sect-autumn-peak.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
- {id:'morning',name:'Vân Hải Bình Minh',image:'/assets/sect-morning-v20.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
- {id:'twilight',name:'Hoàng Hôn Tụ Linh',image:'/assets/sect-twilight-v2.png',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
+ {id:'jade-lake',name:'Thanh Ngọc Hồ',image:'/assets/sect-jade-lake.webp',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
+ {id:'autumn-peak',name:'Thu Phong Lĩnh',image:'/assets/sect-autumn-peak.webp',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
+ {id:'morning',name:'Vân Hải Bình Minh',image:'/assets/sect-morning-v20.webp',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
+ {id:'twilight',name:'Hoàng Hôn Tụ Linh',image:'/assets/sect-twilight-v2.webp',ambience:'jade',floorY:.54,ground:{cx:.5,cy:.54,rx:.46,ry:.11},layout:'ground'},
  {id:'thien-khuyet',name:'Vân Hải Thiên Khuyết',image:'/assets/thien-khuyet/map.webp',ambience:'sect',floorY:.65,layout:'sect'},
- {id:'sect-hall',name:'Vân Hải Nguyệt Cung',image:'/assets/realm-skins-v2/moon-jade/background-v1.png',ambience:'sect',floorY:.65,layout:'sect'},
+ {id:'sect-hall',name:'Vân Hải Nguyệt Cung',image:'/assets/realm-skins-v2/moon-jade/background-v1.webp',ambience:'sect',floorY:.65,layout:'sect'},
  // 19/11 (chủ game: "đổi map, không ở trong lâu đài, có trời"): 3 map ngoài trời Thủy Mặc, cùng bố cục sàn với Thiên Khuyết (đệm Tông chủ/Trưởng Lão giữ chỗ).
  {id:'tm-van-dinh',name:'Vân Đỉnh',image:'/assets/maps-thuy-mac/dinh-nui.webp',ambience:'sect',floorY:.65,layout:'sect',group:'thuy-mac'},
  {id:'tm-tich-duong',name:'Tịch Dương Nhai',image:'/assets/maps-thuy-mac/hoang-hon.webp',ambience:'sect',floorY:.65,layout:'sect',group:'thuy-mac'},

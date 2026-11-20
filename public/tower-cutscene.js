@@ -22,7 +22,7 @@ export function findTowerCut(t,now){let best=null;for(const x of t?.cuts||[]){co
 const GUARD=new Map();let SHEET=null;
 function guardArt(g){
  if(!g||typeof Image==='undefined')return null;
- if(!SHEET){const im=new Image();im.decoding='async';SHEET={im,ok:false};im.onload=()=>SHEET.ok=true;im.src='/assets/events-v1/celestial-bosses-v1.png';}
+ if(!SHEET){const im=new Image();im.decoding='async';SHEET={im,ok:false};im.onload=()=>SHEET.ok=true;im.src='/assets/events-v1/celestial-bosses-v1.webp';}
  if(!SHEET.ok)return null;const key=g.art+'|'+g.hue;if(GUARD.has(key))return GUARD.get(key);
  let cv=null;if(typeof OffscreenCanvas!=='undefined')cv=new OffscreenCanvas(512,1024);else if(hasDoc()){cv=document.createElement('canvas');cv.width=512;cv.height=1024;}if(!cv)return null;
  const c=cv.getContext('2d');if(g.hue)c.filter=`hue-rotate(${g.hue}deg)`;c.drawImage(SHEET.im,g.art*512,0,512,1024,0,0,512,1024);c.filter='none';GUARD.set(key,cv);return cv; // lọc màu 1 lần, cache

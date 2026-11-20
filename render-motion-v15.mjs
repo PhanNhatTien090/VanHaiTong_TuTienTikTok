@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import {Scene} from './public/scene.js';
 import {CharacterAnimator,drawArticulated} from './public/character-animation.js';
 import {SKINS} from './public/cosmetics.js';
-const scene=Object.create(Scene.prototype);scene.standingArt=await loadImage('public/assets/cultivators-standing-v14.png');scene.characterArt=await loadImage('public/assets/cultivators-v3.png');scene.motion=true;scene.animator=new CharacterAnimator();
+const scene=Object.create(Scene.prototype);scene.standingArt=await loadImage('public/assets/cultivators-standing-v14.webp');scene.characterArt=await loadImage('public/assets/cultivators-v3.webp');scene.motion=true;scene.animator=new CharacterAnimator();
 const events=[{effect:'attack',text:'Kiếm pháp liên hoàn'},{effect:'sword',text:'Lĩnh ngộ bí pháp'},{effect:'petal',text:'Luyện thành Tụ Khí Đan'},{effect:'breakthrough',text:'Đột phá cảnh giới'},{effect:'lotus',kind:'lotus',text:'Liên hoa pháp trận'}];
 const actors=SKINS.map((skin,i)=>({id:'p'+i,giftCoins:skin.min}));
 for(let i=0;i<5;i++)scene.animator.trigger({...events[i],user:actors[i].id,id:'demo'+i},0);

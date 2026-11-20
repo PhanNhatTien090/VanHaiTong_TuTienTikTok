@@ -4,7 +4,7 @@ const canvas=document.querySelector('canvas'),c=canvas.getContext('2d'),p={id:'p
 scene.animator={pose:()=>({stand})};loadKhuyArt(scene);
 document.querySelector('#male').onclick=()=>p.gender='nam';document.querySelector('#female').onclick=()=>p.gender='nu';document.querySelector('#pose').onclick=()=>stand=1-stand;
 document.querySelector('#dragon').onclick=()=>{p.equipped=p.equipped?null:KHUY_DRAGON;};document.querySelector('#descent').onclick=()=>descent=performance.now();
-const bg=new Image();bg.src='/assets/worlds-v2/jade-palace.png';
+const bg=new Image();bg.src='/assets/worlds-v2/jade-palace.webp';
 function frame(t){canvas.width=540;canvas.height=960;c.setTransform(.6,0,0,.6,0,0);if(bg.complete&&bg.naturalWidth)c.drawImage(bg,0,0,900,1600);else{c.fillStyle='#14061f';c.fillRect(0,0,900,1600);}c.fillStyle='#0c041433';c.fillRect(0,0,900,1600);
  const k=descent<0?-1:(t-descent)/TRANSFORM_MS,ev={transform:'khuyniet'},pos={x:450,y:1210,scale:6.4},show=k<0||k>=1||k>REVEAL_AT;if(k>=0&&k<1)drawTransform(c,ev,t,k,pos,1600,'back');
  const target={id:p.id,player:p,x:450,y:1210,scale:6.4};if(show)drawKhuyAdornment(scene,c,target,t,'back');c.save();c.translate(target.x,target.y);c.scale(target.scale,target.scale);if(show)drawKhuyBody(scene,c,p,{stand},t);c.restore();if(show)drawKhuyAdornment(scene,c,target,t,'front');

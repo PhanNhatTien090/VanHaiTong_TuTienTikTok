@@ -10,7 +10,7 @@ export function abyssPhase(b,now){
 }
 export function prepareAbyssArt(scene){
  if(scene.abyssArt||scene.abyssLoading||typeof Image==='undefined')return;
- scene.abyssLoading=true;const im=new Image();im.onload=()=>scene.abyssArt=im;im.onerror=()=>scene.abyssLoading=false;im.src='/assets/abyss-dragon-v1/abyss-dragon.png';
+ scene.abyssLoading=true;const im=new Image();im.onload=()=>scene.abyssArt=im;im.onerror=()=>scene.abyssLoading=false;im.src='/assets/abyss-dragon-v1/abyss-dragon.webp';
 }
 function glow(c,x,y,r,color,alpha){if(alpha<=0)return;c.save();c.globalAlpha*=alpha;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,color+'00');c.fillStyle=g;c.fillRect(x-r,y-r,2*r,2*r);c.restore();}
 export function abyssPose(b,now,motion=true){

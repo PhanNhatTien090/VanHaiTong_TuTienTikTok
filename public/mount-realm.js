@@ -24,7 +24,7 @@ function load(h,e){
  if(typeof Image==='undefined')return;
  const src=realmLayout(e).image; // 17/11: ảnh map theo map của lượt
  if(h.map?.src!==src){const im=new Image();im.decoding='async';const m={im,ready:false,src};h.map=m;h.bg=null;im.onload=()=>{m.ready=true;if(h.map===m)h.bg=null;};im.src=src;}
- if(!h.atlas){const im=new Image();im.decoding='async';h.atlas={im,ready:false};im.onload=()=>{h.atlas.ready=true;};im.src='/assets/boss-atlas.png';}
+ if(!h.atlas){const im=new Image();im.decoding='async';h.atlas={im,ready:false};im.onload=()=>{h.atlas.ready=true;};im.src='/assets/boss-atlas.webp';}
 }
 function posOf(h,id,t){const p=h.pos.get(id);if(!p)return null;const k=clamp((t-p.t0)/1000);return {x:p.fx+(p.tx-p.fx)*k,y:p.fy+(p.ty-p.fy)*k};}
 export function syncMountRealm(scene,state){

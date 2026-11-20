@@ -14,7 +14,7 @@ body.overlay .tower-stage.tw2:not([hidden]){width:94%;max-width:none;top:13.5%;p
 .tw2-me small{font-size:.74em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-shadow:0 1px 2px #000}
 .tw2-vs{font:900 1.2em Georgia,serif;color:#ffd76a;text-shadow:0 0 8px rgba(255,200,90,.8)}
 .tw2-guard{position:relative;display:flex;justify-content:center}
-.tw2-beast{height:6.2em;aspect-ratio:512/1024;background:url(/assets/events-v1/celestial-bosses-v1.png) calc(var(--art)*50%) 0/300% 100% no-repeat;
+.tw2-beast{height:6.2em;aspect-ratio:512/1024;background:url(/assets/events-v1/celestial-bosses-v1.webp) calc(var(--art)*50%) 0/300% 100% no-repeat;
   filter:hue-rotate(var(--hue)) drop-shadow(0 0 8px rgba(255,120,120,.5));-webkit-mask-image:radial-gradient(ellipse 48% 50% at 50% 50%,#000 70%,transparent 100%);mask-image:radial-gradient(ellipse 48% 50% at 50% 50%,#000 70%,transparent 100%)}
 .tw2-bar{position:relative;height:1.05em;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:.22em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .tw2-bar i{display:block;height:100%;transition:width .25s linear}

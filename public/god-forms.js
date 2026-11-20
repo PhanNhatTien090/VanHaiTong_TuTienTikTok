@@ -11,7 +11,7 @@ export function sliceGodAuraAtlas(im,factory=makeSurface,width=160){
 function loadGodAuraArt(scene){
  if(scene.godAuraArt||scene.godAuraLoading||scene.godAuraRetryAt>Date.now()||typeof Image==='undefined')return;
  scene.godAuraLoading=true;let im=new Image();im.onload=()=>{scene.godAuraArt=sliceGodAuraAtlas(im,makeSurface,scene.budget?.level==='light'?160:224);scene.godAuraLoading=false;im=null;};
- im.onerror=()=>{scene.godAuraLoading=false;scene.godAuraRetryAt=Date.now()+15000;};im.src='/assets/god-forms-v1/presence-auras-v1.png';
+ im.onerror=()=>{scene.godAuraLoading=false;scene.godAuraRetryAt=Date.now()+15000;};im.src='/assets/god-forms-v1/presence-auras-v1.webp';
 }
 export const GOD_FORMS=Object.freeze([
  {name:'Thái Sơ Ngọc Thể',color:'#71ffe0',dragon:0},

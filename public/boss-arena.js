@@ -2,7 +2,7 @@ import {drawWingFx} from './wing-fx.js?v=20261117';
 // Màn đánh boss (3/11/2026): khi có yêu thú, cảnh chuyển sang chiến trường riêng.
 // Yêu thú ở trên cao, các tu sĩ xếp hàng phía dưới bắn linh quang lên; yêu thú bắn yêu khí xuống.
 // Cánh tiên vỗ nhẹ sau lưng tu sĩ (theo cảnh giới), dùng cả ngoài màn đánh boss.
-// Ảnh: /assets/arena-v1/boss-arena.png (nền dọc) và wings-atlas.png (4 kiểu cánh, nền trong suốt).
+// Ảnh: /assets/arena-v1/boss-arena.webp (nền dọc) và wings-atlas.png (4 kiểu cánh, nền trong suốt).
 import {attackTechnique,drawCombatTechnique} from './combat-techniques.js';
 const TAU = Math.PI * 2;
 const hash = s => { let h = 2166136261; for (const ch of String(s)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; };
@@ -11,7 +11,7 @@ const testArena = (() => { try { return new URLSearchParams(location.search).get
 function load(src) { if (typeof Image === 'undefined') return null; const img = new Image(); img.decoding = 'async'; img.src = src; return img; } // chạy trong Node (kiểm thử) thì không có Image
 const ready = img => img && img.complete && img.naturalWidth > 0;
 export function arenaArt(scene) {
-  return scene.arenaArt ??= { bg: load('/assets/arena-v1/boss-arena.png'), wings: load('/assets/arena-v1/wings-atlas.png') };
+  return scene.arenaArt ??= { bg: load('/assets/arena-v1/boss-arena.webp'), wings: load('/assets/arena-v1/wings-atlas.png') };
 }
 
 /** Đang ở màn đánh boss? (không áp khi đua phi kiếm / tỷ thí / kết duyên) */

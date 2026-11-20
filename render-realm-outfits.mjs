@@ -4,7 +4,7 @@ import {Scene} from './public/scene.js';
 import {CharacterAnimator} from './public/character-animation.js';
 import {skinFor} from './public/cosmetics.js';
 import {appearanceFor} from './public/realm-outfits.js';
-const s=Object.create(Scene.prototype);Object.assign(s,{characterArt:await loadImage('public/assets/cultivators-v3.png'),standingArt:await loadImage('public/assets/cultivators-standing-v14.png'),motion:false,animator:new CharacterAnimator()});
+const s=Object.create(Scene.prototype);Object.assign(s,{characterArt:await loadImage('public/assets/cultivators-v3.webp'),standingArt:await loadImage('public/assets/cultivators-standing-v14.webp'),motion:false,animator:new CharacterAnimator()});
 const canvas=createCanvas(1200,720),c=canvas.getContext('2d');c.fillStyle='#142a35';c.fillRect(0,0,1200,720);c.textAlign='center';
 for(let realm=0;realm<9;realm++){
  const p={id:'same-player',realm,giftCoins:0,gender:'nam'},col=realm%5,row=Math.floor(realm/5),x=120+col*240,y=240+row*340;

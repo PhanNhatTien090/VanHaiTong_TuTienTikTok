@@ -1,8 +1,8 @@
 import {createCanvas,loadImage} from '@napi-rs/canvas';import fs from 'node:fs/promises';
 import {sliceSeaSkin,drawSeaBody,drawSeaAdornment,SEA_SKIN} from './public/sea-dragon-heir.js';import {sliceSpiritAtlas} from './public/gift-spirit-beasts.js';
 globalThis.document={createElement:()=>createCanvas(1,1)};
-const scene={motion:true,budget:{level:'balanced'},seaSkinArt:sliceSeaSkin(await loadImage('public/assets/sea-dragon-heir-v1/skin-v2.png'),createCanvas),spiritBeasts:{dragon:sliceSpiritAtlas(await loadImage('public/assets/gift-beasts-v1/dragon.png'),3,createCanvas)}};
-const bg=await loadImage('public/assets/worlds-v2/underwater.png'),dir='output/sea-dragon-heir-v1';await fs.mkdir(dir,{recursive:true});
+const scene={motion:true,budget:{level:'balanced'},seaSkinArt:sliceSeaSkin(await loadImage('public/assets/sea-dragon-heir-v1/skin-v2.webp'),createCanvas),spiritBeasts:{dragon:sliceSpiritAtlas(await loadImage('public/assets/gift-beasts-v1/dragon.webp'),3,createCanvas)}};
+const bg=await loadImage('public/assets/worlds-v2/underwater.webp'),dir='output/sea-dragon-heir-v1';await fs.mkdir(dir,{recursive:true});
 const sheet=createCanvas(1080,960),q=sheet.getContext('2d');
 for(let i=0;i<4;i++){
  const canvas=createCanvas(540,960),c=canvas.getContext('2d');c.scale(.6,.6);c.drawImage(bg,0,0,900,1600);c.fillStyle='#06132f66';c.fillRect(0,0,900,1600);

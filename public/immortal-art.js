@@ -10,13 +10,13 @@ import {visualGender} from './cosmetics.js';
 import {appearanceFor,outfitRung} from './realm-outfits.js';
 export function loadImmortalArt(scene){
  const atlas=(url,cols,rows,size,done)=>{const image=new Image();image.onload=()=>{const frames=[],sw=image.naturalWidth/cols,sh=image.naturalHeight/rows;for(let i=0;i<cols*rows;i++){const canvas=makeSurface(size,size);if(!canvas)continue;canvas.getContext('2d').drawImage(image,(i%cols)*sw,Math.floor(i/cols)*sh,sw,sh,0,0,size,size);frames.push(canvas);}done(frames);scene.characterFrames?.clear();};image.src=url;};
- atlas('/assets/combat-relics-v41.png',2,2,192,s=>scene.combatSprites=s);
- atlas('/assets/visitor-signatures-v40.png',2,1,256,s=>scene.signatureSprites=s);
- atlas('/assets/relics-immortal.png',3,2,160,s=>scene.relicSprites=s);
+ atlas('/assets/combat-relics-v41.webp',2,2,192,s=>scene.combatSprites=s);
+ atlas('/assets/visitor-signatures-v40.webp',2,1,256,s=>scene.signatureSprites=s);
+ atlas('/assets/relics-immortal.webp',3,2,160,s=>scene.relicSprites=s);
  // Tall visitors preserve their aspect, decoded once at a small resolution.
- const visitors=new Image();visitors.onload=()=>{scene.visitorSprites=[];for(let i=0;i<2;i++){const s=makeSurface(400,640);if(s){s.getContext('2d').drawImage(visitors,i*visitors.naturalWidth/2,0,visitors.naturalWidth/2,visitors.naturalHeight,0,0,400,640);scene.visitorSprites.push(s);}}scene.characterFrames?.clear();};visitors.src='/assets/immortal-visitors.png';
- const armed=new Image();armed.onload=()=>{scene.armedVisitorSprites=[];for(let i=0;i<2;i++){const s=makeSurface(400,640);if(s){s.getContext('2d').drawImage(armed,i*armed.naturalWidth/2,0,armed.naturalWidth/2,armed.naturalHeight,0,0,400,640);scene.armedVisitorSprites.push(s);}}};armed.src='/assets/immortal-visitors-armed-v40.png';
- for(const [key,url]of [['robeArt','/assets/cultivators-robes-v39.png'],['robeStandingArt','/assets/cultivators-standing-v39.png']]){const image=new Image();image.onload=()=>{const h=image.naturalHeight,s=makeSurface(image.naturalWidth,h);if(!s)return;s.getContext('2d').drawImage(image,0,0,s.width,h);s.naturalWidth=s.width;s.naturalHeight=h;s.complete=true;scene[key]=s;scene.characterFrames?.clear();};image.src=url;}
+ const visitors=new Image();visitors.onload=()=>{scene.visitorSprites=[];for(let i=0;i<2;i++){const s=makeSurface(400,640);if(s){s.getContext('2d').drawImage(visitors,i*visitors.naturalWidth/2,0,visitors.naturalWidth/2,visitors.naturalHeight,0,0,400,640);scene.visitorSprites.push(s);}}scene.characterFrames?.clear();};visitors.src='/assets/immortal-visitors.webp';
+ const armed=new Image();armed.onload=()=>{scene.armedVisitorSprites=[];for(let i=0;i<2;i++){const s=makeSurface(400,640);if(s){s.getContext('2d').drawImage(armed,i*armed.naturalWidth/2,0,armed.naturalWidth/2,armed.naturalHeight,0,0,400,640);scene.armedVisitorSprites.push(s);}}};armed.src='/assets/immortal-visitors-armed-v40.webp';
+ for(const [key,url]of [['robeArt','/assets/cultivators-robes-v39.webp'],['robeStandingArt','/assets/cultivators-standing-v39.webp']]){const image=new Image();image.onload=()=>{const h=image.naturalHeight,s=makeSurface(image.naturalWidth,h);if(!s)return;s.getContext('2d').drawImage(image,0,0,s.width,h);s.naturalWidth=s.width;s.naturalHeight=h;s.complete=true;scene[key]=s;scene.characterFrames?.clear();};image.src=url;}
 }
 // v44: một quy tắc duy nhất. Bậc áo L = max(bậc coin quà, bậc cảnh giới) — giống hệt tên skin hiển thị.
 // Bộ v39 có 3 hình nam (0 xanh ngọc · 2 tóc bạc áo chàm · 4 trắng vàng) và 2 hình nữ (1 trắng ánh trăng · 3 đỏ phượng).

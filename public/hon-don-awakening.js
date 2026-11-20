@@ -26,7 +26,7 @@ export const HD_BEATS=Object.freeze([51.0,51.25]);
 export const HON_DON_DURATION=58000;
 const LAW_CHARS=['生','滅','恆'],LAW_NAMES=['Sinh','Diệt','Hằng'];
 const BEATS=[[0,'Chân trời tách đôi'],[6,'Vạn cảnh xuất hiện trong thiên kính'],[13,'Bóng giới phản chiếu vô tận'],[22,'Trọng lực xoay chiều'],[30,'Các thiên kính nứt vỡ'],[39,'Thu vạn cảnh vào điểm vô cực'],[46.6,'Tạc ba thiên luật'],[51.5,'Khai Thiên'],[51.85,'Vĩnh Hằng hiện thân']];
-const WORLD_SRC=['/assets/vinh-hang-giap-v1/realm-25-sky.webp','/assets/vinh-hang-giap-v1/realm-26-sky.webp','/assets/vinh-hang-giap-v1/realm-27-sky.webp','/assets/tien-de-v1/heaven-court.png','/assets/dai-la-v1/star-heaven.png','/assets/chan-tien-v4/tribulation-peak.png','/assets/dai-thua-v2/sword-valley.png'];
+const WORLD_SRC=['/assets/vinh-hang-giap-v1/realm-25-sky.webp','/assets/vinh-hang-giap-v1/realm-26-sky.webp','/assets/vinh-hang-giap-v1/realm-27-sky.webp','/assets/tien-de-v1/heaven-court.webp','/assets/dai-la-v1/star-heaven.webp','/assets/chan-tien-v4/tribulation-peak.webp','/assets/dai-thua-v2/sword-valley.webp'];
 
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);},mix=(a,b,u)=>a+(b-a)*u;
 const back=x=>{x=clamp(x);const s=1.6;return 1+(s+1)*(x-1)**3+s*(x-1)**2;};

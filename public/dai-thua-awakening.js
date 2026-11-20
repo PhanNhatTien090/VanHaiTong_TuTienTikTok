@@ -8,7 +8,7 @@ const clamp=x=>Math.max(0,Math.min(1,x));
 export function daiThuaState(k,H=1600,motion=true){const seconds=clamp(k)*T.duration;return {k:clamp(k),seconds,feet:H*.78,motion,revealed:seconds>=T.reveal,burst:seconds<T.impact?0:Math.exp(-(seconds-T.impact)*2.2),fade:1-clamp((seconds-T.fade)/1.2)};}
 // Bộ kiếm prestige dùng chung với Huyền Tiên — giữ nguyên API.
 export function sliceRitualSwords(im,factory=makeSurface){const w=(im.naturalWidth||im.width)/3,h=im.naturalHeight||im.height;return Array.from({length:3},(_,i)=>{const f=factory(512,1024);f?.getContext('2d').drawImage(im,i*w,0,w,h,0,0,512,1024);return f;});}
-export function prepareDaiThuaArt(scene){if(scene.ritualSwords||scene.ritualSwordsLoading||scene.ritualSwordsRetry>Date.now()||typeof Image==='undefined')return;scene.ritualSwordsLoading=true;const im=new Image();im.onload=()=>{scene.ritualSwords=sliceRitualSwords(im);scene.ritualSwordsLoading=false;scene.daiThuaAssets=null;};im.onerror=()=>{scene.ritualSwordsLoading=false;scene.ritualSwordsRetry=Date.now()+15000;};im.src='/assets/events-v1/prestige-swords-v1.png';}
+export function prepareDaiThuaArt(scene){if(scene.ritualSwords||scene.ritualSwordsLoading||scene.ritualSwordsRetry>Date.now()||typeof Image==='undefined')return;scene.ritualSwordsLoading=true;const im=new Image();im.onload=()=>{scene.ritualSwords=sliceRitualSwords(im);scene.ritualSwordsLoading=false;scene.daiThuaAssets=null;};im.onerror=()=>{scene.ritualSwordsLoading=false;scene.ritualSwordsRetry=Date.now()+15000;};im.src='/assets/events-v1/prestige-swords-v1.webp';}
 export function daiThuaActorImage(scene,p,e){
  if(scene.daiThuaActor?.event!==e)scene.daiThuaActor={event:e,frames:new Map()};
  const cache=scene.daiThuaActor.frames;if(cache.has(p))return cache.get(p);

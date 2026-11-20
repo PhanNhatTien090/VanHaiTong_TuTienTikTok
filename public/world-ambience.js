@@ -1,6 +1,6 @@
 import {makeSurface,QUALITY} from './performance.js';
 export function sliceFishAtlas(im,factory=makeSurface){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,out=[];for(let i=0;i<6;i++){const f=factory(128,128);if(!f)continue;f.getContext('2d').drawImage(im,i%3*w/3,Math.floor(i/3)*h/2,w/3,h/2,2,2,124,124);out.push(f);}return out;}
-export function loadFish(scene){if(scene.fishSprites||scene.fishLoading||scene.fishRetry>Date.now()||typeof Image==='undefined')return;scene.fishLoading=true;let im=new Image();im.onload=()=>{scene.fishSprites=sliceFishAtlas(im);scene.fishLoading=false;scene.environmentLayers?.clear();im=null;};im.onerror=()=>{scene.fishLoading=false;scene.fishRetry=Date.now()+15000;};im.src='/assets/worlds-v2/fish-atlas.png';}
+export function loadFish(scene){if(scene.fishSprites||scene.fishLoading||scene.fishRetry>Date.now()||typeof Image==='undefined')return;scene.fishLoading=true;let im=new Image();im.onload=()=>{scene.fishSprites=sliceFishAtlas(im);scene.fishLoading=false;scene.environmentLayers?.clear();im=null;};im.onerror=()=>{scene.fishLoading=false;scene.fishRetry=Date.now()+15000;};im.src='/assets/worlds-v2/fish-atlas.webp';}
 export function floatingTargets(scene,players,H,t){
  const visible=players.slice(0,scene.budget?.config?.seats??QUALITY.light.seats),count=visible.length;
  const slots=[[.32,.40],[.68,.43],[.2,.55],[.5,.56],[.8,.57],[.33,.69],[.67,.71],[.5,.76]];

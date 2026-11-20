@@ -41,7 +41,7 @@ function displayPos(scene,r,L,tt,walk){const st=scene.mazeRunPos??=new Map(),[tx
  else{const ease=1-(1-k)**3;p.x=p.fx+(p.tx-p.fx)*ease;p.y=p.fy+(p.ty-p.fy)*ease;}
  p.moving=k<1;p.seen=tt;return p;}
 // 16/11: yêu thú mê cung — cắt từ boss-atlas.png có sẵn (3 ô: hổ băng, rùa ngọc, phượng lửa)
-function mobArt(scene){if(scene.mazeMobArt!==undefined||typeof Image==='undefined')return scene.mazeMobArt||null;scene.mazeMobArt=null;const im=new Image();im.decoding='async';im.onload=()=>{scene.mazeMobArt=im;};im.src='/assets/boss-atlas.png';return null;}
+function mobArt(scene){if(scene.mazeMobArt!==undefined||typeof Image==='undefined')return scene.mazeMobArt||null;scene.mazeMobArt=null;const im=new Image();im.decoding='async';im.onload=()=>{scene.mazeMobArt=im;};im.src='/assets/boss-atlas.webp';return null;}
 function mobPos(scene,id,x,y,tt){const st=scene.mazeMobPos??=new Map();let p=st.get(id);if(!p){p={x,y,fx:x,fy:y,tx:x,ty:y,t0:tt};st.set(id,p);}
  if(p.tx!==x||p.ty!==y){p.fx=p.x;p.fy=p.y;p.tx=x;p.ty=y;p.t0=tt;}const k=clamp((tt-p.t0)/600),e=k<.5?2*k*k:1-(-2*k+2)**2/2;p.x=p.fx+(p.tx-p.fx)*e;p.y=p.fy+(p.ty-p.fy)*e;p.seen=tt;return p;}
 function drawMobs(scene,c,e,L,t,now){

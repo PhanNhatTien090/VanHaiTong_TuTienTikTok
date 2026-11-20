@@ -83,9 +83,9 @@ body.performance-solo .command-rail{visibility:hidden}
 .skin-table th{font-size:10px;color:var(--muted,#9bb);letter-spacing:.05em}
 .skin-pic{margin:0;width:62px;height:104px;background-repeat:no-repeat;border-radius:6px;background-color:#0c1d19;position:relative;display:inline-block}
 .skin-pic figcaption{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:9px;color:#fff;text-shadow:0 1px 2px #000}
-.skin-pic.robe{background-image:url(/assets/cultivators-robes-v39.png);background-size:500% 100%}
-.skin-pic.special{background-image:url(/assets/patron-sets-v18.png);background-size:500% 173.6%;background-position-y:0}
-.skin-pic.visitor{background-image:url(/assets/immortal-visitors.png);background-size:200% 100%;width:70px}
+.skin-pic.robe{background-image:url(/assets/cultivators-robes-v39.webp);background-size:500% 100%}
+.skin-pic.special{background-image:url(/assets/patron-sets-v18.webp);background-size:500% 173.6%;background-position-y:0}
+.skin-pic.visitor{background-image:url(/assets/immortal-visitors.webp);background-size:200% 100%;width:70px}
 .skin-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 .skin-card{display:flex;gap:12px;padding:12px;border:1px solid var(--line,#ffffff22);border-left:3px solid var(--skin-color);border-radius:8px;background:#10231f}
 .skin-card h4{margin:0;color:var(--skin-color);font-size:15px}
@@ -93,7 +93,7 @@ body.performance-solo .command-rail{visibility:hidden}
 .skin-pics{display:flex;gap:6px;flex-shrink:0}
 .skin-stat{color:#ffe9b0}
 
-.skin-pic.legacy{background-image:url(/assets/cultivators-v3.png);background-size:500% 100%}
+.skin-pic.legacy{background-image:url(/assets/cultivators-v3.webp);background-size:500% 100%}
 
 /* v56: TOP QUÀ — chân dung trong khung vinh danh (hạng 1 rồng vàng · 2 tím pha lê · 3 ngọc bích) */
 .gift-leaders{display:flex;flex-direction:column;align-items:flex-start;gap:2px!important}

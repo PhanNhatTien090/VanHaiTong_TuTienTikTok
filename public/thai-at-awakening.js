@@ -32,7 +32,7 @@ export function thaiAtHits(){return [[TA.split,1.2],...TA_SLAMS.map(a=>[a,.9]),[
 function hitPower(t){let p=0;for(const [a,f] of thaiAtHits()){const age=t-a;if(age>=0&&age<.5)p=Math.max(p,Math.exp(-age*9)*f);}return p;}
 function surface(w,h,paint){const im=makeSurface(Math.max(1,Math.ceil(w)),Math.max(1,Math.ceil(h)));if(im)paint(im.getContext('2d'));return im;}
 const ready=im=>im&&(im.naturalWidth||im.width)>0&&im.complete!==false;
-export function prepareThaiAtArt(scene){loadSpiritBeasts(scene);if(scene.thaiAtWorldArt||typeof Image==='undefined')return;const im=new Image();scene.thaiAtWorldArt=im;im.onload=()=>{scene.thaiAtAssets=null;};im.src='/assets/thai-at-v1/two-realms.png';}
+export function prepareThaiAtArt(scene){loadSpiritBeasts(scene);if(scene.thaiAtWorldArt||typeof Image==='undefined')return;const im=new Image();scene.thaiAtWorldArt=im;im.onload=()=>{scene.thaiAtAssets=null;};im.src='/assets/thai-at-v1/two-realms.webp';}
 function assets(scene,H){
  const cache=scene.thaiAtAssets;if(cache?.H===H)return cache;const art=ready(scene.thaiAtWorldArt)?scene.thaiAtWorldArt:null;
  const world=surface(450,H/2,c=>{c.scale(.5,.5);if(art)c.drawImage(art,0,0,900,H);else{const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,'#cfd8ff');g.addColorStop(.74,'#fff3d0');g.addColorStop(.745,'#140f2e');g.addColorStop(1,'#05040e');c.fillStyle=g;c.fillRect(0,0,900,H);}});

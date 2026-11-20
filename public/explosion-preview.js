@@ -5,7 +5,7 @@ import {drawBurst,PALETTES} from './cut-fx.js';
 import {drawElementImpact} from './arena-fx.js';
 import {cameraImpulse,scaleImpulse} from './cinematic-feedback.js';
 const cv=document.querySelector('#c'),c=cv.getContext('2d'),params=new URLSearchParams(location.search);
-const bg=new Image();bg.src='/assets/arena-v1/loi-dai-night.webp';const boss=new Image();boss.src='/assets/abyss-dragon-v1/abyss-dragon.png';
+const bg=new Image();bg.src='/assets/arena-v1/loi-dai-night.webp';const boss=new Image();boss.src='/assets/abyss-dragon-v1/abyss-dragon.webp';
 let kind=params.get('k')||'hit3',start=performance.now();const fixed=params.has('t')?Number(params.get('t')):null;
 const scene={motion:true,cameraEnabled:true,shakeLevel:'low',budget:{level:'balanced'}};
 for(const b of document.querySelectorAll('[data-k]'))b.onclick=()=>{kind=b.dataset.k;start=performance.now();};

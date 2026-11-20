@@ -8,7 +8,7 @@ const SHIFTS=[-30,-15,0,15,30,45],cache=new Map(),TAU=Math.PI*2;
 // 07/11: Phàm nhân → Kim Đan chiếu rất nhiều lần trên LIVE. Mỗi lần đột phá bốc ngẫu nhiên nhiều lớp khác nhau
 // (nền ảnh, lật trái/phải, khung zoom, bảng màu rộng, thời tiết, âm thanh) và không lặp lại lựa chọn của vài lần gần nhất.
 export const EARLY_RITUAL_MAX=3;
-export const RITUAL_BACKDROPS=Object.freeze(['/assets/worlds-v2/jade-palace.png','/assets/worlds-v2/cosmos.png','/assets/worlds-v2/underwater.png','/assets/sect-autumn-peak.png','/assets/sect-jade-lake.png','/assets/sect-morning-v20.png','/assets/sect-twilight-v2.png','/assets/arena-v1/boss-arena.png','/assets/chan-tien-cinema-v2/immortal-world.png','/assets/worlds-v2/dungeon.png']);
+export const RITUAL_BACKDROPS=Object.freeze(['/assets/worlds-v2/jade-palace.webp','/assets/worlds-v2/cosmos.webp','/assets/worlds-v2/underwater.webp','/assets/sect-autumn-peak.webp','/assets/sect-jade-lake.webp','/assets/sect-morning-v20.webp','/assets/sect-twilight-v2.webp','/assets/arena-v1/boss-arena.webp','/assets/chan-tien-cinema-v2/immortal-world.webp','/assets/worlds-v2/dungeon.webp']);
 export const RITUAL_WEATHER=Object.freeze(['petals','snow','fireflies','embers','rain','leaves','motes','sparks']);
 export const RITUAL_ACCENTS=Object.freeze(['gong','bell','drum','chime','thunder']);
 export const RITUAL_GRADES=Object.freeze(['#ff5d8f','#ffad42','#8a5cff','#27d3ff','#4dff9a','#ff4b3a','#3d6dff','#ffe04a','#ff7de9','#00e0b8']);

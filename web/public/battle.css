@@ -7,7 +7,7 @@
 .dp-stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin-top: 14px; }
 .dp-stage { position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: radial-gradient(120% 90% at 50% 20%, #1d4a44, #08181a); display: flex; flex-direction: column; }
 .dp-stage.locked { filter: grayscale(.9) brightness(.6); }
-.dp-portrait { height: 190px; background-image: url(/assets/boss-atlas.png); background-size: 300% auto; background-repeat: no-repeat; filter: drop-shadow(0 8px 12px #000a); }
+.dp-portrait { height: 190px; background-image: url(/assets/boss-atlas.webp); background-size: 300% auto; background-repeat: no-repeat; filter: drop-shadow(0 8px 12px #000a); }
 .dp-info { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
 .dp-info h3 { margin: 0; font-family: "Noto Serif", Georgia, serif; color: #fff1cf; }
 .dp-info .stars { color: var(--gold); letter-spacing: 2px; }

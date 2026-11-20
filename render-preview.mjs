@@ -5,7 +5,7 @@ import {Scene} from './public/scene.js';
 import {drawWorldLife} from './public/world-life.js';
 import {layoutPlayers,SKINS} from './public/cosmetics.js';
 globalThis.document={body:{classList:{contains:()=>true}}};
-const scene=Object.create(Scene.prototype);scene.width=900;scene.height=1600;scene.motion=true;scene.showNames=true;scene.effects=[];scene.focusUntil=0;scene.selected=null;scene.art=await loadImage('public/assets/sect-morning-v20.png');scene.characterArt=await loadImage('public/assets/cultivators-v3.png');
+const scene=Object.create(Scene.prototype);scene.width=900;scene.height=1600;scene.motion=true;scene.showNames=true;scene.effects=[];scene.focusUntil=0;scene.selected=null;scene.art=await loadImage('public/assets/sect-morning-v20.webp');scene.characterArt=await loadImage('public/assets/cultivators-v3.webp');
 const canvas=createCanvas(1080,1920),c=canvas.getContext('2d');c.scale(1.2,1.2);scene.paintWorld(c);
 const names=['Thanh Vân','Mộc Miên','Hàn Phong','Tiểu Ngư','Bạch Lộ','Vô Trần','Lạc Yên','Minh Nguyệt','A Thanh','Trúc Linh','Thiên Vũ','Lam Khê','Lưu Vân','Huyền Tâm','Ngọc Dao','Bạch Ly','Hạo Nhiên','Thanh Trúc','Tử Nguyệt','Kim Phong','Đạo Huyền','Phong Linh','Vũ Hạ','Tiên Nhi','Hà Quang','Trường An','Tiểu Mộc','Phi Vân','Linh Đan','Tâm An','Bích Ngọc','Đông Phong'];
 const count=process.argv.includes('--empty')?0:process.argv.includes('--crowd')?32:12;

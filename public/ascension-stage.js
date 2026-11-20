@@ -4,7 +4,7 @@ import {REALM_NAMES} from './progression.js';
 import {isNPC} from './live-integrity.js';
 import {ritualBackdropImage} from './ritual-appearance.js';
 const TAU=Math.PI*2,clamp=v=>Math.max(0,Math.min(1,v));
-export const ASCENSION_STAGE_ART='/assets/worlds-v2/jade-palace.png';
+export const ASCENSION_STAGE_ART='/assets/worlds-v2/jade-palace.webp';
 export function isAscensionEvent(scene,e){
  const p=scene.playerIndex?.get(e?.user)||scene.players?.find(p=>p.id===e?.user);
  return !!e?.user&&e.effect==='breakthrough'&&!e.resident&&!e.simulated&&e.actorKind!=='npc'&&!String(e.user).startsWith('puppet-')&&!isNPC(p);

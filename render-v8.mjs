@@ -9,7 +9,7 @@ import {StageDirector} from './public/stage.js';
 globalThis.document={body:{classList:{contains:()=>true}}};
 const T=Number(process.argv[2]||14000),zoom=Number(process.argv[3]||1.3),H=1600;
 const scene=Object.create(Scene.prototype);Object.assign(scene,{width:900,height:H,motion:true,showNames:true,effects:[],focusUntil:0,selected:null,cameraEnabled:true,zoom,worldLife:{npcs:true,environment:true}});
-scene.art=await loadImage('public/assets/sect-twilight-v2.png');scene.characterArt=await loadImage('public/assets/cultivators-v3.png');
+scene.art=await loadImage('public/assets/sect-twilight-v2.webp');scene.characterArt=await loadImage('public/assets/cultivators-v3.webp');
 const bg=createCanvas(1080,1920),b=bg.getContext('2d');b.scale(1.2,1.2);scene.paintWorld(b);
 const names=Array.from({length:30},(_,i)=>['Thanh Vân','Mộc Miên','Hàn Phong','Tiểu Ngư','Bạch Lộ','Vô Trần'][i%6]+' '+(i+1));const _unused=['Thanh Vân','Mộc Miên','Hàn Phong','Tiểu Ngư','Bạch Lộ','Vô Trần','Lạc Yên','Minh Nguyệt','A Thanh','Trúc Linh','Thiên Vũ','Lam Khê'];
 const count=Number(process.argv[4]??12);scene.players=[...residentPlayers(),...names.slice(0,count).map((name,i)=>({id:'p'+i,name,realm:i%4,giftCoins:SKINS[i%5].min,equipped:i%3?'jade':null,gender:i%2?'nu':'nam',qi:i===2?130:i*9,neededQi:120,stones:40,neededStones:20}))];
