@@ -11,7 +11,7 @@ import {smallGift,shouldFocusEvent,mountRitualHud} from './live-cinema.js';
 import {isNewbie} from './vip.js';
 import {ArrivalWelcomes,isArrivalWelcome} from './arrival-welcome.js';
 import {WelcomeClips} from './welcome-lines.js?v=20261120';
-import {initThuyMac} from './thuy-mac-hud.js?v=20261119';
+import {initThuyMac} from './thuy-mac-hud.js?v=20261120go2';
 import {addNhapMon} from './nhap-mon-fx.js?v=20261120';
 import {hallGuideRows,renderSimpleGuide} from './simple-guide.js?v=hall-management';
 import {mountHallAdmin} from './hall-admin.js';

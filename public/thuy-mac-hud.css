@@ -25,6 +25,7 @@ html body.overlay .tm-tokens{display:none}
 html body.overlay.ui-tm .tm-tokens{position:absolute;z-index:6;top:0;right:1.2%;width:33%;display:grid;grid-template-columns:repeat(3,1fr);gap:2%;pointer-events:none}
 html body.overlay.ui-tm .tm-token{position:relative;aspect-ratio:360/1086;background:url(/assets/ui-thuy-mac/token.webp) center/100% 100% no-repeat;transform-origin:50% 0;animation:tm-token-sway 3.4s ease-in-out calc(var(--i)*-1.1s) infinite alternate}
 html body.overlay.ui-tm .tm-token b{position:absolute;left:0;right:0;top:27%;text-align:center;font:900 clamp(18px,5.4cqw,58px)/1 var(--tm-title);color:var(--tm-seal)}
+html body.overlay.ui-tm .tm-token b i{font:800 .34em/1 var(--tm-body);font-style:normal;color:var(--tm-ink);vertical-align:.55em;margin-right:.12em} /* 20/11: chữ "Gõ" trên số */
 html body.overlay.ui-tm .tm-token span{position:absolute;left:8%;right:8%;top:46%;text-align:center;font:800 clamp(8px,1.75cqw,19px)/1.15 var(--tm-body);color:var(--tm-ink)}
 
 /* ---- CÔNG ĐỨC BẢNG (thay Top quà, không ghi coin) + VINH DANH ---- */
