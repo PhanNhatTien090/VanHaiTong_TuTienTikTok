@@ -74,8 +74,8 @@ import {tournamentCutFrame} from './skill-cutscene.js?v=20261118';
 import {warCutFrame} from './war-cutscene.js?v=20261118';import {realmCutFrame} from './realm-cutscene.js';import {alchemyCutFrame} from './alchemy-cutscene.js';import {mazeCutFrame} from './maze-cutscene.js'; /* 18/11: chiếu riêng quà ≥99 Mê Cung */ /* 18/11: chiếu riêng quà ≥99 Khai Lò */ /* 18/11: chiếu riêng quà ≥99 Bí Cảnh */import {mountCutFrame} from './mount-cut.js';import {syncBaoKho,drawBaoKho,baoCutFrame} from './bao-kho.js';import {syncTowerCut,towerCutFrame} from './tower-cutscene.js';import {drawBaoAura} from './bao-aura.js'; /* 18/11: chủ nhân thần khí GIỚI HẠN */ /* 18/11: chiếu riêng quà ≥100 Vân Hải Tháp */ /* 18/11: Thiên Công Bảo Khố */ /* 18/11: chiếu riêng nở tọa kỹ VIP/Thần */ // 18/11: chiếu riêng quà ≥30 Chính Ma
 import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
-import {visitorSkinCell,lineupCounts} from './visitor-rewards.js';
-import {fallbackGift} from './gift-icons.js';
+import {visitorSkinCell} from './visitor-rewards.js';
+import {lineupSlotGift} from './gift-icons.js';
 import {loadImmortalArt,robeCell,outfitArt,drawPngRelic,drawImmortalGift,drawBackRelic} from './immortal-art.js';
 import {drawVisitor,VISITORS} from './visitor-event.js';
 import {drawBossSprite,SCENES} from './world-rotation.js';
@@ -759,20 +759,18 @@ function drawVisitorLineup(scene,c,e,t,H){
     c.save();c.translate(spot.x,H*spot.y);c.scale(k,k);c.translate(-450,-a.feet);drawOneVisitor(scene,c,ev,t,H);c.restore();
   }
   const fade=Math.min(1,(now-e.startedAt)/900,(e.endsAt-now)/650);
-  for(const {slot,spot} of order)drawLineupPlate(c,slot,spot.x,H*spot.y+24,fade);
+  for(const {slot,spot} of order)drawLineupPlate(c,slot,spot.x,H*spot.y+24,fade,scene.lastState?.giftArt);
 }
 const giftImgs=new Map();
-function giftImg(coins){const g=fallbackGift(coins);if(!g)return null;let img=giftImgs.get(g.url);if(!img){img=new Image();img.src=g.url;giftImgs.set(g.url,img);}return img.complete&&img.naturalWidth?img:null;}
-function drawLineupPlate(c,slot,x,y,alpha){
-  const n=lineupCounts(slot).skin,name=VISITORS[slot.kind]?.name||'',img=giftImg(slot.giftCoins);
-  // Một dòng: [ảnh quà] ×N  Tên — gọn, không thòng xuống che người ngồi dưới.
-  c.save();c.globalAlpha=alpha;c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';
-  const icon=34,label='×'+n,big='800 20px "Segoe UI",Arial,sans-serif',small='800 15px "Segoe UI",Arial,sans-serif';
-  c.font=big;const lw=c.measureText(label).width;c.font=small;const nw=c.measureText(name).width,w=8+icon+6+lw+8+nw+10,x0=x-w/2;
-  c.fillStyle='rgba(8,10,22,.62)';c.beginPath();c.roundRect(x0,y-icon/2-4,w,icon+8,12);c.fill();
-  if(img)c.drawImage(img,x0+8,y-icon/2,icon,icon);
-  c.strokeStyle='#000';c.lineWidth=4;c.font=big;c.fillStyle='#ffe6a0';c.strokeText(label,x0+8+icon+6,y+1);c.fillText(label,x0+8+icon+6,y+1);
-  c.font=small;c.lineWidth=3.5;c.fillStyle='#fff';c.strokeText(name,x0+8+icon+6+lw+8,y+1);c.fillText(name,x0+8+icon+6+lw+8,y+1);
+function giftImg(url){if(!url)return null;let img=giftImgs.get(url);if(!img){img=new Image();img.referrerPolicy='no-referrer';img.src=url;giftImgs.set(url,img);}return img.complete&&img.naturalWidth?img:null;}
+function drawLineupPlate(c,slot,x,y,alpha,art){
+  // Huy hiệu tròn chỉ có ảnh món dưới chân (tên vị đã có ở bảng sự kiện, cùng ảnh) — nhỏ để không che người ngồi đầu bậc thang.
+  // Vị trùng giá = ảnh món riêng của vị; vị giá riêng = ảnh một món cùng giá (đủ coin là nhận).
+  const g=lineupSlotGift(slot,art),img=giftImg(g.url),r=22;if(!img)return;
+  c.save();c.globalAlpha=alpha;
+  c.fillStyle='rgba(8,10,22,.6)';c.strokeStyle='rgba(255,230,160,.85)';c.lineWidth=2;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.stroke();
+  c.drawImage(img,x-r+4,y-r+4,2*r-8,2*r-8);
+  if(g.count>1){c.font='800 15px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=3.5;c.fillStyle='#ffe6a0';c.strokeText('×'+g.count,x+r+3,y+r-6);c.fillText('×'+g.count,x+r+3,y+r-6);}
   c.restore();
 }
 function hash(s){let n=0;for(const ch of s)n=(Math.imul(n,31)+ch.charCodeAt(0))|0;return Math.abs(n);}

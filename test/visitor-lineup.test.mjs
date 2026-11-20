@@ -1,59 +1,76 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createWorld,action,ingest,startVisitor,pickVisitorLineup,tick} from '../engine.mjs';
-import {creditVisitorGift,assignLineupGifts,lineupCounts,visitorPrices,LINEUP_MS,VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
+import {createWorld,action,startVisitor,pickVisitorLineup,tick} from '../engine.mjs';
+import {creditVisitorGift,assignLineupGifts,lineupFeasible,lineupGiftsAt,visitorPrices,LINEUP_MS,VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
 import {VISITORS} from '../public/visitor-event.js';
 
 const N=1_800_000_000_000;
-const world=()=>{const w=createWorld(N-10000);action(w,{type:'join',userId:'a',name:'A'},N-9000);action(w,{type:'join',userId:'b',name:'B'},N-9000);return w;};
+// Ảnh quà kênh như LIVE (đủ 4 món 100, 3 món 500).
+const ART=Object.fromEntries(['Balloon Gift Box|100','Bouquet|100','Mini Star|100','Gem Gun|500','You’re Amazing|500',"Galaxy's Bestest|300"].map(k=>[k,{url:'https://p16.tiktokcdn.com/'+encodeURIComponent(k)+'.png',coins:Number(k.split('|')[1])}]));
+const world=(art=ART)=>{const w=createWorld(N-10000);w.giftArt=structuredClone(art);for(const id of ['a','b'])action(w,{type:'join',userId:id,name:id.toUpperCase()},N-9000);return w;};
+// Bày lượt cố định để test không phụ thuộc bốc ngẫu nhiên.
+const setLineup=(w,kinds)=>{startVisitor(w,kinds[0],N);w.visitor.lineup=assignLineupGifts(kinds,w.giftArt);return w.visitor;};
+const gift=(w,id,coins,giftName,count=1,at=N+1000)=>action(w,{type:'gift',userId:id,name:id.toUpperCase(),coins,count,giftName,eventId:id+giftName+coins+at},at);
+const has=(w,id,kind)=>!!w.players[id].rewardSkins?.includes(VISITOR_GIFT_REWARDS[kind].skin);
 
-test('mỗi lượt 3 vị khác nhau, mỗi vị một loại quà khác nhau chia hết giá skin',()=>{
+test('vị giá riêng không gắn món; vị trùng giá gắn món ĐÚNG GIÁ, khác tên',()=>{
+ const l=assignLineupGifts(['tinh-ha','bich-lan','hanlap'],ART);
+ assert.equal(l[2].giftName,undefined);assert.equal(l[2].price,100);
+ assert.equal(l[0].price,500);assert.equal(l[1].price,500);assert.ok(l[0].giftName&&l[1].giftName&&l[0].giftName!==l[1].giftName);
+ for(const s of l.slice(0,2))assert.ok(lineupGiftsAt(500,ART).includes(s.giftName));
+});
+
+test('không ghép trùng giá khi giá đó không đủ món khác nhau',()=>{
+ assert.equal(lineupFeasible(['tudo','vuonglam'],ART),false); // 200 chỉ có 1 món
+ assert.equal(lineupFeasible(['khuyniet','viemton'],ART),false); // 300 chỉ có 1 món
+ assert.equal(lineupFeasible(['tinh-ha','bich-lan','nhan-qua'],ART),true);
+ assert.equal(lineupFeasible(['tinh-ha','bich-lan'],{}),false); // chưa có ảnh Gem Gun/You're Amazing
  const kinds=Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k));
- for(let i=0;i<300;i++){
-  const first=kinds[i%kinds.length],lineup=pickVisitorLineup(first,[],Math.random);
-  assert.equal(lineup.length,3);assert.equal(lineup[0].kind,first);
-  assert.equal(new Set(lineup.map(s=>s.kind)).size,3);
-  assert.equal(new Set(lineup.map(s=>s.giftCoins)).size,3);
-  for(const s of lineup){assert.ok(s.giftCoins<=visitorPrices(s.kind).skin);assert.equal(visitorPrices(s.kind).skin%s.giftCoins,0);}
- }
+ for(let i=0;i<400;i++){const art=i%2?ART:{},l=pickVisitorLineup(kinds[i%kinds.length],[],Math.random,art);
+  assert.equal(l.length,3);assert.equal(new Set(l.map(s=>s.kind)).size,3);assert.ok(lineupFeasible(l.map(s=>s.kind),art));
+  const named=l.filter(s=>s.giftName);assert.equal(new Set(named.map(s=>s.giftName)).size,named.length);
+  for(const s of l){assert.equal(s.price,visitorPrices(s.kind).skin);if(s.giftName)assert.ok(l.filter(x=>x.price===s.price).length>1);}}
 });
 
-test('ba skin 500 coin → Money Gun ×1, Hand Heart ×5, Perfume ×25 — không trùng quà',()=>{
- const l=assignLineupGifts(['tinh-ha','bich-lan','nhan-qua']);
- assert.equal(l[0].giftCoins,500);assert.equal(lineupCounts(l[0]).skin,1);
- assert.equal(l[1].giftCoins,100);assert.equal(lineupCounts(l[1]).skin,5);
- assert.equal(l[2].giftCoins,20);assert.equal(lineupCounts(l[2]).skin,25);
+test('vị trùng giá: tặng ĐÚNG 1 món là nhận, món khác cùng giá ra vị khác',()=>{
+ const w=world(),e=setLineup(w,['tinh-ha','bich-lan','hanlap']),[a,b]=e.lineup;
+ gift(w,'a',500,a.giftName);assert.ok(has(w,'a','tinh-ha'));assert.ok(!has(w,'a','bich-lan'));
+ assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS['tinh-ha'].artifact));
+ gift(w,'b',500,b.giftName);assert.ok(has(w,'b','bich-lan'));assert.ok(!has(w,'b','tinh-ha'));
 });
 
-test('lượt tránh lặp vị của lượt trước khi còn đủ vị',()=>{
- const last=['tinh-ha','bich-lan','nhan-qua'];
- for(let i=0;i<100;i++){const l=pickVisitorLineup('hanlap',last);for(const s of l.slice(1))assert.ok(!last.includes(s.kind));}
+test('vị trùng giá: đủ coin bằng món khác KHÔNG ra skin trùng giá',()=>{
+ const w=world(),e=setLineup(w,['tinh-ha','bich-lan','nhan-qua']);
+ gift(w,'a',100,'Hand Heart',5);gift(w,'a',1,'Rose',600,N+2000);
+ for(const k of ['tinh-ha','bich-lan','nhan-qua'])assert.ok(!has(w,'a',k));
+ assert.ok(e.lineup.every(s=>s.giftName));
 });
 
-test('quà đúng loại cộng vào đúng vị; quà khác loại không tính',()=>{
- const w=world();assert.equal(startVisitor(w,'tinh-ha',N).ok,true);
- const e=w.visitor;assert.equal(e.lineup.length,3);assert.equal(e.endsAt-e.startedAt,LINEUP_MS);
- const p=w.players.a,[s0,s1]=e.lineup,r1=VISITOR_GIFT_REWARDS[s1.kind];
- const odd=[500,200,100,30,20,5,1,10,99,199].find(u=>!e.lineup.some(s=>s.giftCoins===u));
- assert.deepEqual(creditVisitorGift(w,p,odd*50,N+1000,null,odd).skinNames,[]);
- assert.equal(Object.keys(e.giftProgress||{}).length,0);
- const n=lineupCounts(s1).skin;
- let got=creditVisitorGift(w,p,s1.giftCoins*(n-1),N+2000,null,s1.giftCoins);if(n>1)assert.deepEqual(got.skinNames,[]);
- got=creditVisitorGift(w,p,s1.giftCoins,N+3000,null,s1.giftCoins);
- assert.equal(got.kind,s1.kind);assert.ok(p.rewardSkins.includes(r1.skin));
- assert.ok(!p.rewardSkins.includes(VISITOR_GIFT_REWARDS[s0.kind].skin));
+test('vị giá riêng: tặng gì cũng được, cộng dồn đủ coin là nhận',()=>{
+ const w=world(),e=setLineup(w,['tinh-ha','bich-lan','khuyniet']);
+ gift(w,'a',1,'Rose',150);gift(w,'a',100,'Hand Heart',1,N+2000);assert.ok(!has(w,'a','khuyniet'));
+ gift(w,'a',5,'Finger Heart',10,N+3000);assert.ok(has(w,'a','khuyniet'));
+ assert.ok(!has(w,'a','tinh-ha')&&!has(w,'a','bich-lan'));
+ assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.khuyniet.skin);
+ assert.ok(w.events.some(x=>x.effect==='transform'&&x.transform==='khuyniet'));
 });
 
-test('quà TikFinity thật đi qua engine: đơn giá quyết định vị',()=>{
- const w=world();startVisitor(w,'tinh-ha',N);const s2=w.visitor.lineup[2],r=VISITOR_GIFT_REWARDS[s2.kind];
- const count=lineupCounts(s2).artifact;
- action(w,{type:'gift',userId:'b',name:'B',coins:s2.giftCoins,count,eventId:'g1'},N+5000);
- assert.ok(w.players.b.rewardSkins?.includes(r.skin));assert.ok(w.players.b.artifacts.includes(r.artifact));
- assert.ok(w.visitor.giftProgress['b|'+s2.kind]);
+test('quà đúng món của vị trùng giá không cộng vào phần đủ coin của vị giá riêng',()=>{
+ const w=world(),e=setLineup(w,['tinh-ha','bich-lan','khuyniet']);
+ gift(w,'a',500,e.lineup[0].giftName);assert.ok(has(w,'a','tinh-ha'));assert.ok(!has(w,'a','khuyniet'));
 });
 
-test('lời mở và lời kết của lượt tam tiên',()=>{
- const w=world();startVisitor(w,'tinh-ha',N);
+test('ba vị khác giá: đủ coin mở lần lượt, mặc skin đắt nhất vừa mở',()=>{
+ const w=world(),e=setLineup(w,['tinh-ha','hanlap','tudo']);assert.ok(e.lineup.every(s=>!s.giftName));
+ gift(w,'a',100,'Hand Heart');assert.ok(has(w,'a','hanlap'));assert.ok(!has(w,'a','tudo'));
+ gift(w,'a',100,'Bouquet',1,N+2000);assert.ok(has(w,'a','tudo'));assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.tudo.skin);
+ gift(w,'b',500,'Money Gun');for(const k of ['tinh-ha','hanlap','tudo'])assert.ok(has(w,'b',k));
+ assert.equal(w.players.b.skinChoice,VISITOR_GIFT_REWARDS['tinh-ha'].skin);
+ assert.ok(w.events.some(x=>x.effect==='transform'&&x.transform==='tinh-ha'&&x.user==='b'));
+});
+
+test('lượt 4 phút; lời mở và lời kết của lượt tam tiên',()=>{
+ const w=world();startVisitor(w,'tinh-ha',N);assert.equal(w.visitor.endsAt-w.visitor.startedAt,LINEUP_MS);
  const start=w.events.find(x=>x.visitorStart);assert.match(start.text,/^TAM TIÊN GIÁNG LÂM/);assert.equal(start.visitorLineup.length,3);
  tick(w,w.visitor.endsAt+10);assert.ok(w.events.some(x=>x.visitorEnd&&/^Tam tiên/.test(x.text)));
 });

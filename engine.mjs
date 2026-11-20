@@ -62,7 +62,7 @@ import {gameText} from './public/game-language.js';
 import {BLACK_GOLD_VISITOR,COURT_RELICS,COURT_VISITORS,SIGNATURE_VISITORS} from './public/court-rewards.js';
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
-import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,LINEUP_SIZE,LINEUP_MS} from './public/visitor-rewards.js';
+import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,lineupFeasible,lineupGiftsAt,LINEUP_SIZE,LINEUP_MS} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
 import {RACE_CUT_MS,RACE_CUT_MIN} from './public/signature-ults.js';
 import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop,awardRaceSword} from './sword-race.mjs';
@@ -704,7 +704,7 @@ function actionCore(w,input,now) {
     if(!input.simulated&&!input.autoRose){const bg=baoKhoGift(w,p,input.coins,count,now,baoContext);if(bg){giftEvent.baoGift=bg;giftEvent.text+=' • '+bg.pulls+' lượt cầu bảo';}} // 17/11: quà trong Bảo Khố = lượt cầu
     if(!input.simulated&&!input.autoRose){const rg=mountRealmGift(w,p,input.coins*count,now,mountContext);if(rg)giftEvent.realmGift=rg;} // 16/11: quà trong Tọa Kỹ Bí Cảnh
     if(!input.simulated&&!input.autoRose){const lg=loveTowerGift(w,p,input.coins*count,input.coins,now,loveContext);if(lg){giftEvent.loveGift=lg;giftEvent.text+=' • '+lg.text;}} // 17/11: quà đôi đạo lữ trong Nguyệt Hạ = song tu
-    const visitorReward=creditVisitorGift(w,recipient,input.coins*count,now,input.visitorAt,input.coins);
+    const visitorReward=creditVisitorGift(w,recipient,input.coins*count,now,input.visitorAt,input.coins,input.giftName);
     if(!giftRecipient){items.push(...visitorReward.items);itemNames.push(...visitorReward.itemNames);}
     if(visitorReward.kind){giftEvent.visitorProgress={kind:visitorReward.kind,coins:visitorReward.coins,...(giftRecipient?{to:recipient.id,toName:recipient.name}:{})};if(!giftRecipient){giftEvent.reward.skinNames=visitorReward.skinNames;p.giftHistory.at(-1).reward.skinNames=visitorReward.skinNames;}}
     // v51: nhận skin khách mời → sự kiện BIẾN HÌNH riêng (thông báo + hiệu ứng), chạy sau màn cảm ơn quà.
@@ -1199,13 +1199,15 @@ export const VISITOR_ROTATION_MS=10*60000;
 export function visitorRotationWeights(){return Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k)).map(k=>[k,(VISITOR_GIFT_REWARDS[k].skinCoins||100)>=300?1:2]);}
 export function pickRotationVisitor(last,rand=Math.random,lastKinds=[]){const all=visitorRotationWeights().filter(([k])=>k!==last),fresh=all.filter(([k])=>!lastKinds?.includes(k)),pool=fresh.length?fresh:all,total=pool.reduce((n,[,x])=>n+x,0);let r=rand()*total;for(const [k,x] of pool)if((r-=x)<0)return k;return pool.at(-1)?.[0]||null;}
 // 20/11: mỗi lượt 3 vị khác nhau (vị được chọn đứng giữa), tránh lặp vị của lượt trước nếu còn đủ.
-export function pickVisitorLineup(first,lastKinds=[],rand=Math.random){
+export function pickVisitorLineup(first,lastKinds=[],rand=Math.random,art=null){
  const kinds=[first],avoid=new Set(lastKinds);
  while(kinds.length<LINEUP_SIZE){
-  const pool=visitorRotationWeights().filter(([k])=>!kinds.includes(k)),fresh=pool.filter(([k])=>!avoid.has(k)),use=fresh.length?fresh:pool;
+  // chỉ nhận vị trùng giá khi giá đó còn đủ món quà khác nhau (lineupFeasible)
+  const pool=visitorRotationWeights().filter(([k])=>!kinds.includes(k)&&lineupFeasible([...kinds,k],art)),fresh=pool.filter(([k])=>!avoid.has(k)),use=fresh.length?fresh:pool;
   if(!use.length)break;const total=use.reduce((n,[,x])=>n+x,0);let r=rand()*total,pick=use.at(-1)[0];for(const [k,x] of use)if((r-=x)<0){pick=k;break;}kinds.push(pick);
  }
- return assignLineupGifts(kinds);
+ // món cho nhóm trùng giá: xáo thứ tự để lượt sau không lặp y món
+ return assignLineupGifts(kinds,art,price=>[...lineupGiftsAt(price,art)].sort(()=>rand()-.5));
 }
 const rotationOn=w=>w.settings?.visitorRotation!==false;
 function visitorRotation(w,now){
@@ -1452,7 +1454,7 @@ export function startVisitor(w,kind='hanlap',now=Date.now()){
  if(w.opportunity&&now<w.opportunity.endsAt)return fail('Chờ sự kiện cơ duyên hiện tại kết thúc để tránh trùng lệnh.');
  const active=Object.values(w.players).filter(p=>currentParticipant(w,p,now)).length;
  archiveVisitor(w);
- const lineup=VISITOR_GIFT_REWARDS[kind]&&w.settings?.visitorLineup!==false?pickVisitorLineup(kind,w.lastVisitorKinds):null;
+ const lineup=VISITOR_GIFT_REWARDS[kind]&&w.settings?.visitorLineup!==false?pickVisitorLineup(kind,w.lastVisitorKinds,Math.random,w.giftArt):null;
  w.lastVisitorStartAt=now;w.lastVisitorKind=kind;w.lastVisitorKinds=lineup?lineup.map(s=>s.kind):[kind];w.nextVisitorAt=now+VISITOR_ROTATION_MS;
  w.visitor={id:'visitor-'+now,kind,...(lineup?{lineup}:{}),startedAt:now,endsAt:now+(lineup?LINEUP_MS:(VISITORS[kind].duration||180000)),players:{},points:0,goal:Math.min(200,Math.max(20,active*8)),bag:[],completed:false};
  if(w.settings?.visitorEveryFive&&['vuonglam','shende'].includes(kind)){const v=w.scheduledVariety??={};v.majorSinceVisitor=0;v.nextVisitor=kind==='vuonglam'?'shende':'vuonglam';v.lastVisitorAt=now;}

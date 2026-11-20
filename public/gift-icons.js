@@ -2,7 +2,11 @@
 // Ảnh lấy từ chính các quà người xem đã tặng trên kênh (server ghi w.giftArt từ giftPictureUrl của TikFinity).
 // Chưa ai tặng món đó trên kênh thì dùng ảnh quà thật lưu sẵn trong public/assets/gifts (tải từ danh mục quà TikTok, 08/11 tối) — không hiện chữ.
 const FALLBACK=Object.freeze([[2000,'Vương miện','crown'],[500,'Money Gun','money-gun'],[200,'Baglama','baglama'],[199,'Crown','crown'],[100,'Hand Heart','hand-heart'],[99,'Paper Crane','paper-crane'],[30,'Doughnut','doughnut'],[20,'Perfume','perfume'],[5,'Finger Heart','finger-heart'],[1,'Rose','rose']].map(([coins,name,file])=>({coins,name,url:'/assets/gifts/'+file+'.png'})));
-export const fallbackGift=coins=>FALLBACK.find(g=>g.coins===coins)||null;
+// 20/11: ảnh một món quà theo TÊN (sự kiện Tam Tiên: vị trùng giá gắn món riêng) — ảnh kênh đã ghi, không có thì ảnh dự phòng cùng tên.
+export function namedGiftUrl(name,url){const safe=safeGiftUrl(url);if(safe)return safe;const k=String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');return FALLBACK.find(g=>g.name.toLowerCase().replace(/[^a-z0-9]/g,'')===k)?.url||null;}
+// Một vị trong lượt Tam Tiên: có món riêng → ảnh món đó; giá riêng → ảnh một món đúng giá (giftFor). {url,count,name}
+export function lineupSlotGift(slot,art){if(slot?.giftName)return {url:namedGiftUrl(slot.giftName,slot.giftUrl),count:1,name:slot.giftName};const g=giftFor(art,slot?.price);return {url:g.url,count:g.count||1,name:g.name};}
+export function lineupSlotHTML(slot,art){const g=lineupSlotGift(slot,art),n=g.count>1?' ×'+g.count:'';return (g.url?`<img class="gift-ico" src="${esc(g.url)}" alt="${esc(g.name)}" referrerpolicy="no-referrer">`:`<b class="gift-ico-name">${esc(g.name)}</b>`)+n;}
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function safeGiftUrl(u){if(typeof u!=='string'||u.length>600)return null;try{const x=new URL(u);return x.protocol==='https:'&&/(^|\.)tiktokcdn(-us|-eu)?\.com$/.test(x.hostname)?x.href:null;}catch{return null;}}
 // Ưu tiên ảnh quà kênh đã ghi; đúng giá trước, rồi mới tới món rẻ hơn nhân lên (tối đa ×5, chọn món giá cao nhất).

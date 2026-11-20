@@ -9,6 +9,8 @@ import {isBlackGoldAward,presentationDuration} from '../public/presentation.js';
 import {SKIN_GEAR,ownsGear} from '../public/skin-gear.js';
 import {SIGNATURE_ULTS,signatureSkinOf} from '../public/signature-ults.js';
 import {createWorld,action,ingest,startVisitor} from '../engine.mjs';
+// 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
+const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 
 test('Bích Lân: một mốc 500 coin — 499 không nhận gì, đủ 500 nhận skin + Xà Trượng',()=>{
  const r=VISITOR_GIFT_REWARDS['bich-lan'];assert.equal(r.skinCoins,500);assert.equal(r.artifactCoins,500);assert.equal(r.artifact,'van-co-xa-truong');
@@ -26,7 +28,7 @@ test('Bích Lân: biến hình ưu tiên cao 9 s, chiêu Lôi Đài riêng; Tinh
 });
 test('Bích Lân qua engine thật: tặng 500 → mặc skin, tự mặc Xà Trượng, có màn biến hình',()=>{
  const N=Date.UTC(2026,10,19,5),w=createWorld('demo');action(w,{type:'join',userId:'n',name:'Nữ'},N-200000);
- w.players.n.artifacts.push('thien-kinh');startVisitor(w,'bich-lan',N);
+ w.players.n.artifacts.push('thien-kinh');startVisitor(singleVisitor(w),'bich-lan',N);
  ingest(w,{event:'gift',data:{userId:'n',nickname:'Nữ',diamondCount:500,repeatCount:1,repeatEnd:true,giftType:1,giftName:'Vương miện',msgId:'q'}},N+2000);
  const p=w.players.n;assert.equal(p.skinChoice,'bich-lan-doc-hau');assert.equal(p.equipped,'van-co-xa-truong');
  assert.ok(w.events.some(e=>e.user==='n'&&e.effect==='transform'&&e.transform==='bich-lan'));

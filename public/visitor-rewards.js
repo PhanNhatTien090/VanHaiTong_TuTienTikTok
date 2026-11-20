@@ -11,30 +11,37 @@ export const VISITOR_GIFT_REWARDS=Object.freeze({
  vuonglam:{skin:'vuonglam-avatar',skinName:'Vương Lâm / Lý Mộ Uyển',cell:0,skinCoins:200,artifactCoins:300,artifact:'vuonglam-soul-banner',artifactName:'Hồn Phiên'}
 });
 export const SIGNATURE_ARTIFACTS=Object.values(VISITOR_GIFT_REWARDS).map(r=>({id:r.artifact,name:r.artifactName,type:'artifact',art:r.art,icon:r.icon||(r.cell===1?'sword':'orb'),tier:0,price:0,herbs:0,damage:80,bonus:.45,exclusive:true,eventReward:r.skinName+' · tích lũy '+(r.artifactCoins||500)+' coin trong lượt xuất hiện',description:'Pháp bảo truyền thừa: +80 công lực, +45% tu vi khi trang bị. Trao cố định ở mốc '+(r.artifactCoins||500)+' coin sự kiện.'}));
-// 20/11: sự kiện skin nhiều tiên nhân — mỗi lượt 3 vị, mỗi vị gắn MỘT loại quà (nhận theo giá 1 món quà).
-// Quà loại nào thì cộng vào vị đó; quà khác loại không tính. Vị đắt chọn trước, lấy món to nhất chia hết giá skin.
+// 20/11: sự kiện skin TAM TIÊN — mỗi lượt 3 vị. Luật (user chốt):
+//  • Vị có GIÁ RIÊNG trong lượt (không trùng giá vị khác): tặng gì cũng được, ĐỦ COIN là nhận (cộng dồn cả lượt).
+//  • Vị TRÙNG GIÁ với vị khác: mỗi vị gắn 1 món quà ĐÚNG GIÁ skin, khác tên nhau — tặng đúng 1 món đó là nhận.
+//    Quà đã khớp món của vị nào thì chỉ tính cho vị đó (không cộng vào phần "đủ coin").
+// Chỉ ghép trùng giá khi có đủ món khác nhau ở giá đó (món kênh đã có ảnh hoặc có ảnh dự phòng).
 export const LINEUP_SIZE=3,LINEUP_MS=4*60000;
-export const LINEUP_GIFT_UNITS=Object.freeze([500,200,100,30,20,5,1]);
+// Tên đúng như TikFinity gửi (giftName), theo giá. Món có ảnh dự phòng trong assets/gifts: Hand Heart, Baglama, Money Gun.
+export const LINEUP_GIFTS=Object.freeze({100:['Hand Heart','Balloon Gift Box','Bouquet','Mini Star'],200:['Baglama'],300:["Galaxy's Bestest"],500:['Money Gun','Gem Gun','You’re Amazing']});
+const FALLBACK_ART=new Set(['Hand Heart','Baglama','Money Gun']);
+export const giftKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
 export const visitorPrices=kind=>{const r=VISITOR_GIFT_REWARDS[kind];if(!r)return null;const court=COURT_VISITORS.some(v=>v.kind===kind);return {skin:r.skinCoins||(court?300:100),artifact:r.artifactCoins||500};};
-export function assignLineupGifts(kinds){
- const used=new Set(),out=new Map();
- for(const kind of [...kinds].sort((a,b)=>visitorPrices(b).skin-visitorPrices(a).skin)){
-  const price=visitorPrices(kind).skin,unit=LINEUP_GIFT_UNITS.find(u=>!used.has(u)&&u<=price&&price%u===0)??LINEUP_GIFT_UNITS.find(u=>!used.has(u)&&u<=price)??1;
-  used.add(unit);out.set(kind,unit);
- }
- return kinds.map(kind=>({kind,giftCoins:out.get(kind)}));
+// Món dùng được ở một giá: có ảnh thật của kênh hoặc ảnh dự phòng.
+export const lineupGiftsAt=(price,art=null)=>(LINEUP_GIFTS[price]||[]).filter(n=>FALLBACK_ART.has(n)||!!art?.[n+'|'+price]?.url);
+// Gắn món cho các vị trùng giá; vị giá riêng để trống (đủ coin). names(price) trả danh sách món theo thứ tự ưu tiên.
+export function assignLineupGifts(kinds,art=null,names=price=>lineupGiftsAt(price,art)){
+ const byPrice=new Map();for(const k of kinds){const p=visitorPrices(k).skin;byPrice.set(p,(byPrice.get(p)||0)+1);}
+ const used=new Map(),lists=new Map(),listAt=p=>{if(!lists.has(p))lists.set(p,names(p));return lists.get(p);}; // xáo 1 lần/giá → không trùng món
+ return kinds.map(kind=>{const price=visitorPrices(kind).skin;if(byPrice.get(price)<2)return {kind,price};
+  const i=used.get(price)||0;used.set(price,i+1);const giftName=listAt(price)[i],url=art?.[giftName+'|'+price]?.url;
+  return {kind,price,giftName,...(url?{giftUrl:url}:{})};});
 }
-// Món quà cần cho từng mốc của một vị trong lượt nhiều vị (làm tròn lên).
-export const lineupCounts=slot=>{const p=visitorPrices(slot.kind);return {skin:Math.ceil(p.skin/slot.giftCoins),artifact:Math.ceil(p.artifact/slot.giftCoins)};};
-const lineupSlot=(e,unit)=>e?.lineup?.length?(Number.isSafeInteger(unit)?e.lineup.find(s=>s.giftCoins===unit):e.lineup[0])||null:undefined;
+// Lượt có ghép được không: nhóm trùng giá không vượt số món khác nhau ở giá đó.
+export const lineupFeasible=(kinds,art=null)=>{const byPrice=new Map();for(const k of kinds){const p=visitorPrices(k).skin;byPrice.set(p,(byPrice.get(p)||0)+1);}return [...byPrice].every(([p,n])=>n<2||n<=lineupGiftsAt(p,art).length);};
 export function visitorSkinCell(p){
  const r=Object.values(VISITOR_GIFT_REWARDS).find(r=>r.skin===p.skinChoice&&p.rewardSkins?.includes(r.skin));return r?.cell??null;
 }
 // Rewards use already-deduplicated gift deltas. Free-event participation is separate.
 // queued (19/11): quà đến lúc nhân vật đang ở bản web (engine giữ lại tới khi trả về) → tính theo LÚC ĐẾN và đúng sự kiện lúc đó,
 // kể cả khi sự kiện đã đóng — trước đây trả về muộn là mất tiến độ skin.
-// unitCoins = giá 1 món quà (lượt nhiều vị dùng để biết quà thuộc vị nào; bỏ trống = vị đầu, cho test/bù cũ).
-export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins){
+// unitCoins/giftName = giá + tên 1 món quà (lượt Tam Tiên dùng để biết quà thuộc vị nào).
+export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins,giftName){
  const result={items:[],itemNames:[],skinNames:[]};
  let e;
  if(queued){
@@ -42,11 +49,22 @@ export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins){
   e=[w.visitor,...(w.visitorArchive||[])].find(x=>x?.id===queued.visitorId);const at=Number(queued.at);
   if(!e||!(at>=e.startedAt&&at<e.endsAt&&(!e.closedAt||at<e.closedAt)))return result;
  }else{e=w.visitor;if(!e||e.closedAt||now<e.startedAt||now>=e.endsAt)return result;}
- const slot=lineupSlot(e,unitCoins);if(slot===null)return result;
- const kind=slot?.kind||e.kind,r=VISITOR_GIFT_REWARDS[kind];
- if(!r||(p.resident||p.puppet)||!Number.isSafeInteger(coins)||coins<1)return result;
- e.giftProgress??={};const progress=e.giftProgress[slot?p.id+'|'+kind:p.id]??={coins:0,skinAwarded:false,artifactAwarded:false};progress.coins+=coins;
- return grantVisitorProgress(p,{...e,kind},r,progress,true);
+ if((p.resident||p.puppet)||!Number.isSafeInteger(coins)||coins<1)return result;
+ e.giftProgress??={};
+ const grant=(kind,key)=>{const r=VISITOR_GIFT_REWARDS[kind];if(!r)return null;const progress=e.giftProgress[key]??={coins:0,skinAwarded:false,artifactAwarded:false};return {r,progress};};
+ if(!e.lineup?.length){const g=grant(e.kind,p.id);if(!g)return result;g.progress.coins+=coins;return grantVisitorProgress(p,e,g.r,g.progress,true);}
+ // 1) Đúng món của một vị trùng giá → chỉ vị đó.
+ const k=giftKey(giftName),named=k&&e.lineup.find(s=>s.giftName&&giftKey(s.giftName)===k&&(!Number.isSafeInteger(unitCoins)||unitCoins===s.price));
+ if(named){const g=grant(named.kind,p.id+'|'+named.kind);g.progress.coins+=coins;return grantVisitorProgress(p,{...e,kind:named.kind},g.r,g.progress,true);}
+ // 2) Còn lại cộng vào phần "đủ coin" của người này → mở mọi vị giá riêng đã đủ.
+ const open=e.lineup.filter(s=>!s.giftName).sort((a,b)=>a.price-b.price);if(!open.length)return result;
+ const pot=e.giftProgress[p.id+'|*']??={coins:0};pot.coins+=coins;
+ // Rẻ → đắt: vị đắt nhất vừa mở là skin được mặc (gọi sau cùng). kind = vị đắt nhất có thưởng mới, không có thì vị rẻ nhất.
+ let kind=open[0].kind;
+ for(const s of open){const g=grant(s.kind,p.id+'|'+s.kind);g.progress.coins=pot.coins;const got=grantVisitorProgress(p,{...e,kind:s.kind},g.r,g.progress,true);
+  if(got.items.length||got.skinNames.length)kind=s.kind;result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);}
+ const main='Skin '+visitorSkinName(kind,p.gender);if(result.skinNames.includes(main))result.skinNames=[main,...result.skinNames.filter(x=>x!==main)]; // màn biến hình dùng skinNames[0]
+ return {...result,kind,coins:pot.coins};
 }
 export function visitorSkinName(kind,gender){return kind==='vuonglam'?(gender==='nu'?'Lý Mộ Uyển':'Vương Lâm'):VISITOR_GIFT_REWARDS[kind]?.skinName||'Tiên nhân';}
 function grantVisitorProgress(p,e,r,progress,equip=false){const result={items:[],itemNames:[],skinNames:[]};
@@ -63,4 +81,4 @@ function grantVisitorProgress(p,e,r,progress,equip=false){const result={items:[]
  return {...result,kind:e.kind,coins:progress.coins};
 }
 
-export function reconcileVisitorPricing(w,now){const e=w.visitor;if(!e||now<e.startedAt)return [];const awarded=[];for(const [key,progress]of Object.entries(e.giftProgress||{})){const [id,slotKind]=key.split('|'),kind=slotKind||e.kind,r=VISITOR_GIFT_REWARDS[kind],p=w.players[id];if(!r||!p||p.resident||p.puppet||!Number.isSafeInteger(progress.coins)||progress.coins<1)continue;const reward=grantVisitorProgress(p,{...e,kind},r,progress);if(reward.items.length||reward.skinNames.length)awarded.push({player:p,reward});}return awarded;}
+export function reconcileVisitorPricing(w,now){const e=w.visitor;if(!e||now<e.startedAt)return [];const awarded=[];for(const [key,progress]of Object.entries(e.giftProgress||{})){const [id,slotKind]=key.split('|');if(slotKind==='*')continue;const kind=slotKind||e.kind,r=VISITOR_GIFT_REWARDS[kind],p=w.players[id];if(!r||!p||p.resident||p.puppet||!Number.isSafeInteger(progress.coins)||progress.coins<1)continue;const reward=grantVisitorProgress(p,{...e,kind},r,progress);if(reward.items.length||reward.skinNames.length)awarded.push({player:p,reward});}return awarded;}

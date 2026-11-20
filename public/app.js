@@ -25,7 +25,7 @@ import {breakthroughRealm,REALM_NAMES} from './breakthrough-fx.js';
 import {divineSelection} from './divine-wardrobe.js';
 import {mountEventTab,renderSocialUI} from './social-ui.js?v=hall-management';
 import {BLACK_GOLD_VISITOR} from './court-rewards.js';
-import {VISITOR_GIFT_REWARDS,lineupCounts} from './visitor-rewards.js';
+import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 import {VISITORS} from './visitor-event.js';
 import {HonorUI} from './honor-ui.js';
 import {PresentationQueue,presentationDuration,presentationPriority,isBlackGoldAward,urgentBreakthrough} from './presentation.js?v=bt-first-20261119';
@@ -62,7 +62,7 @@ import {OrbCard} from './orb-card.js'; // 18/11: thẻ Linh Châu tím/vàng
 import {realmWithStage} from './realm-stage.js';
 import {showBaoHy} from './bao-hy.js';
 import {renderTower} from './tower.js';
-import {giftTokenHTML} from './gift-icons.js';
+import {giftTokenHTML,lineupSlotHTML} from './gift-icons.js';
 import {giftRules,giftRuleHTML} from './gift-rule-card.js?v=hall-war-20261114';
 import {SCENES as MAP_SCENES} from './world-rotation.js';
 import {SKINS,skinFor,nextSkin,spriteCell,visualGender} from './cosmetics.js';
@@ -730,10 +730,10 @@ function renderVisitorHud(){
  const free=e.completed?'Đã mở thưởng · nhận quà miễn phí':'Nhận cơ duyên miễn phí';
  let html='<b>SỰ KIỆN · '+esc(e.lineup?.length>1?'TAM TIÊN GIÁNG LÂM':cfg?.name||'Khách quý')+'</b><span class="event-time">Còn '+clock+'</span><p><code>Gõ '+esc(command)+'</code><span>'+esc(free)+'</span></p>';
  if(e.lineup?.length>1){
-  // 20/11: mỗi vị một loại quà — ảnh quà × số lượng → skin (cùng mốc thì kèm pháp bảo).
-  const tok=(coins,n)=>'<b class="ev-gift">'+giftTokenHTML(state.giftArt,coins)+(n>1?' ×'+n:'')+'</b>';
-  html+='<div class="event-rewards"><strong>MỖI VỊ MỘT LOẠI QUÀ</strong>'+e.lineup.map(s=>{const r=VISITOR_GIFT_REWARDS[s.kind];if(!r)return '';const n=lineupCounts(s);
-   return n.skin===n.artifact?'<p>'+tok(s.giftCoins,n.skin)+'<span>→ '+esc(r.skinName)+' + '+esc(r.artifactName)+'</span></p>':'<p>'+tok(s.giftCoins,n.skin)+'<span>→ '+esc(r.skinName)+'</span></p>';}).join('')+'</div>';
+  // 20/11: Tam Tiên — 1 dòng/vị: ảnh món → skin (cùng mốc thì kèm pháp bảo). Vị trùng giá: đúng món đó; vị giá riêng: đủ giá là nhận.
+  const tok=s=>'<b class="ev-gift">'+lineupSlotHTML(s,state.giftArt)+'</b>';
+  html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong>'+e.lineup.map(s=>{const r=VISITOR_GIFT_REWARDS[s.kind];if(!r)return '';
+   return '<p>'+tok(s)+'<span>→ '+esc(r.skinName)+(r.skinCoins&&r.skinCoins===r.artifactCoins?' + '+esc(r.artifactName):'')+'</span></p>';}).join('')+'</div>';
  }else if(reward){
   const single=reward.skinCoins&&reward.skinCoins===reward.artifactCoins; // 14/11: Nhân Quả — 1 mốc nhận cả skin + pháp bảo
   // 17/11: luật bảng quà — ảnh quà thật thay số coin, không ghi chú dài.
