@@ -25,6 +25,10 @@ body.ritual-active .scene-shell>div:not(.scene-top){visibility:hidden!important}
 .ritual-hud[data-realm="1"][data-phase="reveal"] h2{animation:qiTitleIn 1s cubic-bezier(.2,1.5,.4,1) both;text-shadow:0 0 18px #7dffcf,0 0 42px #3fd9a8aa,0 3px 10px #000}
 .ritual-hud .ritual-sub{font-size:clamp(13px,1.9vw,24px);color:#e9dcaa;margin:.2em 0 0;text-shadow:0 0 12px #ffe7a866,0 2px 6px #000}
 .ritual-hud[data-realm="1"][data-phase="reveal"] .ritual-sub{animation:qiSubIn .9s ease-out .45s both}
+/* 20/11 v6 Luyện Khí: tên cảnh giới viết mực trên giấy viền son (trước: tím nhạt trên nền vàng nhạt, khó đọc); dòng phụ trên dải mực */
+.ritual-hud[data-realm="1"][data-phase="reveal"] h2{display:inline-block;margin:.25em 0 .1em;padding:.08em .75em .14em;font-family:"Noto Serif","Times New Roman",Georgia,serif!important;font-weight:900;font-size:clamp(34px,10cqw,96px)!important;letter-spacing:.06em!important;line-height:1.25;color:#1b1813;background:linear-gradient(180deg,#fbf4e4,#efe3c8);border:clamp(2px,.5cqw,5px) double #b3261e;border-radius:4px;text-shadow:none;box-shadow:0 0 0 clamp(2px,.35cqw,4px) #1b181355,0 0 clamp(14px,3cqw,34px) #7fdcc6cc,0 8px 22px #000a}
+.ritual-hud[data-realm="1"][data-phase="reveal"] .ritual-sub{display:inline-block;margin:.35em 0 0;padding:.2em 1.1em;font-weight:800;font-size:clamp(15px,3.6cqw,34px)!important;color:#f4c96a;background:linear-gradient(90deg,#0d171400,#0d1714e6 15%,#0d1714e6 85%,#0d171400);text-shadow:0 1px 0 #000}
+.ritual-hud[data-realm="1"] .ritual-name{font-weight:900;text-shadow:0 0 3px #000,0 2px 10px #000,0 0 22px #7fdcc6aa}
 @keyframes qiTitleIn{0%{opacity:0;transform:scale(1.7);filter:blur(10px)}55%{opacity:1;filter:blur(0)}100%{opacity:1;transform:scale(1.08);filter:blur(0)}}
 @keyframes qiSubIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.ritual-hud[data-realm="1"] h2,.ritual-hud[data-realm="1"] .ritual-sub{animation:none}}

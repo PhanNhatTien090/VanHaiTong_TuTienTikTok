@@ -18,5 +18,11 @@ test('new skin appears only after qi reenters; rendering does not call high-real
  const seen=[],canvas=createCanvas(900,1600),c=canvas.getContext('2d'),scene={motion:true,players:[],drawPlayer:(ctx,p)=>seen.push(p.realm)};
  const e={user:'a',name:'Luyện Khí',start:0,duration:8800,fromRealm:0,toRealm:1,visualFrom:{id:'a',realm:0},visualTo:{id:'a',realm:1},reward:{qi:10}},before=JSON.stringify(e);
  for(const k of [0,.15,.29,.4,.55,.6,.66,.699,.71,.99])drawQiAwakening(scene,c,e,k*8800,1600);
- assert.deepEqual(seen,[0,0,0,0,0,0,0,0,1,1]);assert.equal(JSON.stringify(e),before);assert.equal(scene.ritualDrawing,undefined);assert.equal(scene.compact,undefined);assert.equal(scene.targets.length,1);
+ assert.deepEqual(seen,[0,0,0,0,0,0,0,0,0,1]); /* 20/11 v6: đạo bào mới quét từ chân lên trong .712–.787 (ngay sau chớp nổ); trước đó chỉ bản cũ */assert.equal(JSON.stringify(e),before);assert.equal(scene.ritualDrawing,undefined);assert.equal(scene.compact,undefined);assert.equal(scene.targets.length,1);
+});
+test('v6: giữa lúc quét đổi đạo bào vẽ cả bản cũ lẫn bản mới; không chuyển động thì đổi thẳng',()=>{
+ const seen=[],c=createCanvas(900,1600).getContext('2d'),scene={motion:true,players:[],drawPlayer:(ctx,p)=>seen.push(p.realm)};
+ const e={user:'a',name:'x',start:0,duration:8800,fromRealm:0,toRealm:1,visualFrom:{id:'a',realm:0},visualTo:{id:'a',realm:1}};
+ drawQiAwakening(scene,c,e,.75*8800,1600);assert.deepEqual(seen,[0,1]);
+ seen.length=0;scene.motion=false;drawQiAwakening(scene,c,e,.75*8800,1600);assert.deepEqual(seen,[1]);
 });

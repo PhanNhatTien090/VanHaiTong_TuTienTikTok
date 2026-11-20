@@ -1,6 +1,6 @@
 import {displayActorName} from './live-integrity.js';
 import {withRim,rimTint} from './rim-light.js?v=20261119';
-import {drawNhapMon} from './nhap-mon-fx.js?v=20261119';
+import {drawNhapMon} from './nhap-mon-fx.js?v=20261120';
 import {tanThuIds,tanDeTuIds,drawTanDeTuBack,drawTanDeTuHint} from './tan-de-tu.js?v=20261119c';
 import {syncHallWar,drawHallWar} from './hall-war.js';
 import {syncMountRealm,drawMountRealm} from './mount-realm.js'; // 16/11: Tọa Kỹ Bí Cảnh

@@ -30,7 +30,41 @@ export function qiAwakeningState(k,H=1600,motion=true){
  return {k,beat,feet,origin,hover,center,core,parts,revealed:k>=.88,pulse,settle:smooth((k-.88)/.08),lift:motion?Math.sin(smooth((k-.20)/.64)*Math.PI)*8:0};
 }
 function makePearl(scene){if(scene.qiPearl)return scene.qiPearl;const f=makeSurface(160,160);if(!f)return null;const c=f.getContext('2d'),g=c.createRadialGradient(66,57,3,80,80,76);g.addColorStop(0,'#ffffff');g.addColorStop(.17,'#e6fff2');g.addColorStop(.35,'#9ff8d5');g.addColorStop(.52,'#2eaf92');g.addColorStop(.64,'#164f5d');g.addColorStop(.69,'#a1ffe5');g.addColorStop(.74,'#73edce50');g.addColorStop(1,'#73edce00');c.fillStyle=g;c.fillRect(0,0,160,160);c.strokeStyle='#d7fff7bc';c.lineWidth=1.8;for(let i=0;i<3;i++){c.save();c.translate(80,80);c.rotate(i*1.05);c.beginPath();c.ellipse(0,0,45,17,0,0,TAU);c.stroke();c.restore();}c.fillStyle='#fffbe4';c.beginPath();c.arc(65,59,7,0,TAU);c.fill();scene.qiPearl=f;return f;}
-function pearl(c,im,p){if(!im||p.alpha<=0)return;c.save();c.globalAlpha*=p.alpha;c.drawImage(im,p.x-p.r*1.45,p.y-p.r*1.45,p.r*2.9,p.r*2.9);c.restore();}
+function pearl(c,im,p){if(!im||p.alpha<=0)return;const R=p.r*1.45*PEARL;c.save();c.globalAlpha*=p.alpha;c.drawImage(im,p.x-R,p.y-R,R*2,R*2);c.restore();}
+// ── 20/11 v6 (chủ game: "cải tiến đột phá, bắt đầu từ Luyện Khí") ─────────────────────────────────────────────
+// Xem trên điện thoại: nền tối kiểu mực (bỏ lớp vàng cam đục), máy quay gần hơn, linh châu to, nét khí dày (LW trong
+// luyen-khi-formation/qi-energy), lúc nổ mực văng + sóng ngọc, đạo bào đổi màu quét từ chân lên, tên cảnh giới trên giấy (CSS).
+const PEARL=1.55,BASE_ZOOM=1.42;
+// Nền chuyển tông mực: bớt bão hòa, tối dần ra mép, chừa sáng quanh người.
+function drawInkWash(c,H,k,cy){
+ const a=smooth(k/.08)*(1-.25*smooth((k-.72)/.1));if(a<=0)return;
+ c.save();c.globalCompositeOperation='saturation';c.globalAlpha=.92*a;c.fillStyle='#808080';c.fillRect(0,0,900,H);
+ c.globalCompositeOperation='multiply';c.globalAlpha=.7*a;c.fillStyle='#3a5650';c.fillRect(0,0,900,H);
+ c.globalCompositeOperation='source-over';c.globalAlpha=a;const g=c.createRadialGradient(450,cy,120,450,cy,H*.62);g.addColorStop(0,'rgba(8,16,14,0)');g.addColorStop(.55,'rgba(8,16,14,.35)');g.addColorStop(1,'rgba(6,10,9,.82)');c.fillStyle=g;c.fillRect(0,0,900,H);c.restore();
+}
+// Mực văng sau lưng lúc nổ: các vệt mực dài toả ra, viền ngọc; góc theo biến thể (không lặp y hệt).
+function drawInkSplash(c,k,o,v){
+ const u=(k-QI_IMPACT)/.16;if(u<0||u>1)return;const grow=1-Math.pow(1-clamp(u/.55),3),fade=1-smooth((u-.4)/.6),n=9;
+ const rnd=j=>{const h=Math.sin((j+1)*12.9898+v.phase*78.233)*43758.5453;return h-Math.floor(h);};
+ c.save();c.fillStyle='#0b1411';
+ for(let i=0;i<n;i++){const r1=rnd(i),r2=rnd(i+20),a=v.phase*TAU+(i+r2*.6)*TAU/n,len=(110+230*r1)*grow,w=(14+20*r2)*(1-.35*u),bend=(r1-.5)*.6;
+  // vệt mực vuốt nhọn: gốc dày gần người, đuôi nhọn, hơi cong; giọt mực văng ở đầu
+  const d0=55,cx=Math.cos(a),sy=Math.sin(a)*.78,nx=-Math.sin(a),ny=Math.cos(a)*.78,mx=o.x+cx*(d0+len*.55)+nx*len*bend*.35,my=o.y+sy*(d0+len*.55)+ny*len*bend*.35,ex=o.x+cx*(d0+len),ey=o.y+sy*(d0+len);
+  c.globalAlpha=fade*.7;c.beginPath();c.moveTo(o.x+cx*d0+nx*w,o.y+sy*d0+ny*w);c.quadraticCurveTo(mx+nx*w*.45,my+ny*w*.45,ex,ey);c.quadraticCurveTo(mx-nx*w*.45,my-ny*w*.45,o.x+cx*d0-nx*w,o.y+sy*d0-ny*w);c.closePath();c.fill();
+  for(let j=0;j<2;j++){const rr=rnd(i*7+j),dd=len*(1.08+.22*rr+.12*j),ds=w*(.42-.14*j)*(1-.3*u);c.globalAlpha=fade*.75;c.beginPath();c.arc(o.x+cx*(d0+dd)+nx*(rr-.5)*24,o.y+sy*(d0+dd)+ny*(rr-.5)*24,ds,0,TAU);c.fill();}}
+ // quầng mực loang sau lưng làm nền cho người sáng lên
+ const g=c.createRadialGradient(o.x,o.y,20,o.x,o.y,90+200*grow);g.addColorStop(0,'rgba(11,20,17,.0)');g.addColorStop(.5,'rgba(11,20,17,'+(.5*fade)+')');g.addColorStop(1,'rgba(11,20,17,0)');c.globalAlpha=1;c.fillStyle=g;c.beginPath();c.ellipse(o.x,o.y,90+200*grow,(90+200*grow)*.8,0,0,TAU);c.fill();
+ c.restore();
+}
+// Sóng ngọc dày lan ra ngay khi nổ (trước người).
+function drawJadeShock(c,k,o){
+ const u=(k-QI_IMPACT)/.11;if(u<0||u>1)return;const e=1-Math.pow(1-u,3);
+ c.save();c.globalCompositeOperation='lighter';for(const [d,w0,col] of [[0,26,'rgba(143,243,210,'],[.18,12,'rgba(255,244,205,']]){const uu=clamp(u-d);if(uu<=0)continue;const ee=1-Math.pow(1-uu,3);
+  c.globalAlpha=(1-uu)*.9;c.strokeStyle=col+'1)';c.lineWidth=w0*(1-uu)+2;c.beginPath();c.ellipse(o.x,o.y,40+380*ee,(40+380*ee)*.62,0,0,TAU);c.stroke();}
+ c.restore();
+}
+// Đường quét đổi đạo bào: sáng ngọc chạy từ chân lên đầu.
+function drawWipeLine(c,x,y,w){c.save();c.globalCompositeOperation='lighter';const g=c.createLinearGradient(x-w,0,x+w,0);g.addColorStop(0,'rgba(143,243,210,0)');g.addColorStop(.5,'rgba(240,255,248,.95)');g.addColorStop(1,'rgba(143,243,210,0)');c.fillStyle=g;c.fillRect(x-w,y-5,w*2,10);c.globalAlpha=.45;c.fillRect(x-w,y-16,w*2,32);c.restore();}
 function trail(c,k,H,i,motion){if(!motion||k<.37||k>.88)return;c.save();c.lineWidth=2.4;c.lineCap='round';for(let j=0;j<9;j++){const a=qiAwakeningState(Math.max(.36,k-(j+1)*.0027),H,motion).parts[i],b=qiAwakeningState(Math.max(.36,k-j*.0027),H,motion).parts[i];if(!a||!b)continue;c.globalAlpha=(1-j/9)*.45*a.alpha;c.strokeStyle=['#88f4cd','#c3fff4','#b2e1ff'][i];c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();}c.restore();}
 // v4 (4/11/2026): k = thời gian hiển thị; sk = thời gian mạch truyện linh châu (cũ). Nổ ở k=.70 thay vì .88
 // để dư âm ~2,6 s đủ cho người xem LIVE đọc được tên cảnh giới.
@@ -40,9 +74,10 @@ export function drawQiAwakening(scene,c,e,t,H){
  drawAscensionStageBackdrop(scene,c,H,{clock:t-e.start,ritual:true,color:scene.ritualAppearance?.palette.main2||'#9deed1',feet:s.feet}); // 4/11: thiên đài cả trên LIVE
  drawQiEnvironment(scene,c,k,H,s.origin,true);
  const lk=luyenKhiState(k);drawLkSky(scene,c,lk,H,v);drawRitualTint(scene,c,H); // v5: núi mực + biển mây lấp nửa trên
+ drawInkWash(c,H,k,s.feet-220); // v6: nền mực, hiệu ứng nổi lên
  const halo=c.createRadialGradient(x,s.center.y,10,x,s.center.y,340);halo.addColorStop(0,'#3f8e7d22');halo.addColorStop(1,'#3f8e7d00');c.fillStyle=halo;c.fillRect(80,s.center.y-340,740,680);
  // Camera đẩy vào quanh thân người tu luyện.
- const zoom=1+(qiCamera(k,motion&&scene.cameraEnabled!==false)-1)*v.zoom,fy=s.feet-150+v.dy;c.save();c.translate(x,fy);c.scale(zoom,zoom);c.translate(-x,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
+ const zoom=BASE_ZOOM*(1+(qiCamera(k,motion&&scene.cameraEnabled!==false)-1)*v.zoom),fy=s.feet-150+v.dy; /* v6: gần hơn ~42% */c.save();c.translate(x,fy);c.scale(zoom,zoom);c.translate(-x,-fy);if(v.flip){c.translate(900,0);c.scale(-1,1);}
  c.fillStyle='#00000045';c.beginPath();c.ellipse(x,s.feet+32,150,25,0,0,TAU);c.fill();
  const energy=qiEnergyState(sk,motion),jolt=motion&&scene.cameraEnabled!==false?energy.burst*7:0;c.translate(Math.sin(k*1700)*jolt,Math.cos(k*1400)*jolt*.6);
  drawQiGround(scene,c,sk,s);
@@ -55,7 +90,8 @@ export function drawQiAwakening(scene,c,e,t,H){
  for(const p of s.parts.filter(p=>p.z<0)){trail(c,sk,H,p.id,motion);pearl(c,im,p);}
  drawQiAura(scene,c,k,s.origin,s.feet);
  drawLkWheel(scene,c,lk,s,v);       // v5: pháp luân sau lưng khi hiện thân
- const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user),to=e.visualTo||live,from=e.visualFrom||(to?{...to,realm:e.fromRealm??0}:null),actor=s.revealed?to:from;
+ drawInkSplash(c,k,{x,y:s.feet-170},v); // v6: mực văng sau lưng lúc nổ
+ const live=scene.playerIndex?.get(e.user)||scene.players?.find(p=>p.id===e.user),to=e.visualTo||live,from=e.visualFrom||(to?{...to,realm:e.fromRealm??0}:null),wipe=motion?clamp((k-QI_IMPACT-.012)/.075):(s.revealed?1:0),actor=s.revealed&&wipe>=1?to:from;
  if(actor){scene.targets=[{id:e.user,player:actor,x,y:s.feet,scale:4.2}];const wasCompact=scene.compact,wasRitual=scene.ritualDrawing;scene.compact=true;scene.ritualDrawing=true;c.save();c.translate(0,-s.lift);try{// Tint through the actor's alpha: energy lights the body, not a rectangle.
  const surface=scene.qiActorSurface??=makeSurface(600,760);
  if(surface){const a=surface.getContext('2d');a.setTransform(1,0,0,1,0,0);a.clearRect(0,0,600,760);a.save();a.translate(300-x,530-s.feet);scene.drawPlayer(a,actor,x,s.feet,t-e.start);a.restore();c.drawImage(surface,x-300,s.feet-530);
@@ -63,6 +99,7 @@ export function drawQiAwakening(scene,c,e,t,H){
   const strength=Math.min(.45,energy.charge*.22+energy.burst*.28+(k>=QI_IMPACT?(1-clamp((k-QI_IMPACT)/.2))*.12:0));
   if(strength>0){a.save();a.globalCompositeOperation='source-in';const g=a.createLinearGradient(0,530,0,240);g.addColorStop(0,'#91ffd0');g.addColorStop(.55,'#e4fff3');g.addColorStop(1,'#b2faff');a.fillStyle=g;a.fillRect(0,0,600,760);a.globalCompositeOperation='destination-in';a.drawImage(surface,0,0);a.drawImage(surface,0,0);a.restore();c.save();c.globalCompositeOperation='screen';c.globalAlpha=strength;c.drawImage(surface,x-300,s.feet-530);c.restore();}
  }else scene.drawPlayer(c,actor,x,s.feet,t-e.start);}finally{scene.compact=wasCompact;scene.ritualDrawing=wasRitual;c.restore();}}
+ if(to&&from&&wipe>0&&wipe<1){const top=s.feet-520,yLine=s.feet+30-(s.feet+30-top)*wipe;c.save();c.translate(0,-s.lift);c.beginPath();c.rect(0,yLine,900,s.feet+80-yLine);c.clip();const wasCompact=scene.compact,wasRitual=scene.ritualDrawing;scene.compact=true;scene.ritualDrawing=true;try{scene.drawPlayer(c,to,x,s.feet,t-e.start);}finally{scene.compact=wasCompact;scene.ritualDrawing=wasRitual;}c.restore();drawWipeLine(c,x,yLine-s.lift,170);} // v6: đạo bào mới quét từ chân lên
  drawLkMeridians(scene,c,lk,s,s.lift); // v5: kinh mạch + tiểu chu thiên
  for(const p of s.parts.filter(p=>p.z>=0)){trail(c,sk,H,p.id,motion);pearl(c,im,p);}
  drawQiStreams(scene,c,sk,s,'front');
@@ -73,6 +110,7 @@ export function drawQiAwakening(scene,c,e,t,H){
  if(s.pulse>0){const g=c.createRadialGradient(x,s.origin.y,0,x,s.origin.y,55+s.pulse*70);g.addColorStop(0,'#f5fff4');g.addColorStop(.15,'#baffdcbd');g.addColorStop(1,'#87f6c900');c.save();c.globalAlpha=s.pulse*.7;c.fillStyle=g;c.fillRect(x-210,s.origin.y-210,420,420);c.restore();}
  if(s.settle>0){c.save();c.globalAlpha=s.settle*.65;c.strokeStyle=color;c.lineWidth=1.5;c.beginPath();c.ellipse(x,s.feet+27,110,22,0,0,TAU);c.stroke();pearl(c,im,{x,y:s.origin.y,r:8,alpha:s.settle*.7});c.restore();}
  drawQiImpact(scene,c,k,H,s.origin,s.feet);
+ drawJadeShock(c,k,{x,y:s.feet-120}); // v6
  drawLkScatter(scene,c,lk,s);
  c.restore();
  drawQiMotes(scene,c,k,H);

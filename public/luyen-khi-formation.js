@@ -11,6 +11,7 @@
 // Không dùng Math.random: mọi chuyển động tính theo thời gian + chỉ số → render lại/offline giống hệt; biến thể theo qiVariant.
 import {makeSurface} from './performance.js';
 import {QI_IMPACT} from './qi-impact.js';
+const LW=1.8; // 20/11 v6: nét dày gấp ~1,8 để xem trên điện thoại vẫn thấy (trước mảnh như sợi tóc)
 const TAU=Math.PI*2,clamp=x=>Math.max(0,Math.min(1,x)),ease=x=>{x=clamp(x);return x*x*(3-2*x);},out=x=>1-(1-clamp(x))**3,inn=x=>clamp(x)**2;
 const JADE='#7dffcf',JADE2='#9cf7da',MIST='#cfeff0',GOLD='#ffe2a0',INK='#0b2230';
 // Thứ tự Hậu Thiên Bát Quái (Càn, Khảm, Cấn, Chấn, Tốn, Ly, Khôn, Đoài): 1 = hào dương (liền), 0 = hào âm (đứt), từ dưới lên.
@@ -55,19 +56,19 @@ function petalSprite(){if(petalCache)return petalCache;const f=makeSurface(40,60
 function trigram(c,bits,w,h,gap){for(let i=0;i<3;i++){const y=(1-i)*(h+gap);if(bits[i])c.fillRect(-w/2,y-h/2,w,h);else{c.fillRect(-w/2,y-h/2,w*.42,h);c.fillRect(w*.08,y-h/2,w*.42,h);}}}
 function baguaSurface(scene){
  if(scene.lkBagua)return scene.lkBagua;const S=760,f=makeSurface(S,S);if(!f)return null;const c=f.getContext('2d'),R=S/2;c.translate(R,R);
- const ring=(r,w,col,a=1,dash=null)=>{c.save();c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=w;if(dash)c.setLineDash(dash);c.beginPath();c.arc(0,0,r,0,TAU);c.stroke();c.restore();};
+ const ring=(r,w,col,a=1,dash=null)=>{c.save();c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=(w)*LW;if(dash)c.setLineDash(dash);c.beginPath();c.arc(0,0,r,0,TAU);c.stroke();c.restore();};
  const g=c.createRadialGradient(0,0,40,0,0,R);g.addColorStop(0,'#7dffcf22');g.addColorStop(.55,'#0e3a3f30');g.addColorStop(.8,'#7dffcf18');g.addColorStop(1,'#7dffcf00');c.fillStyle=g;c.beginPath();c.arc(0,0,R,0,TAU);c.fill();
  ring(R-8,3,JADE2,.85);ring(R-20,1.2,MIST,.6,[2,9]);ring(R-112,2.2,JADE,.9);ring(R-124,1,GOLD,.55);ring(150,2,JADE2,.8);ring(118,1,MIST,.5,[10,6]);
  // Tám quẻ giữa hai vòng ngoài, vạch phân cung.
  c.fillStyle=MIST;for(let i=0;i<8;i++){const a=i*TAU/8-Math.PI/2;c.save();c.rotate(a+Math.PI/2);c.translate(0,-(R-66));c.globalAlpha=.95;trigram(c,TRIGRAMS[i],64,9,7);c.restore();
-  c.save();c.rotate(a+TAU/16);c.strokeStyle=JADE2;c.globalAlpha=.55;c.lineWidth=1.5;c.beginPath();c.moveTo(0,-(R-112));c.lineTo(0,-(R-8));c.stroke();c.restore();}
+  c.save();c.rotate(a+TAU/16);c.strokeStyle=JADE2;c.globalAlpha=.55;c.lineWidth=(1.5)*LW;c.beginPath();c.moveTo(0,-(R-112));c.lineTo(0,-(R-8));c.stroke();c.restore();}
  // Vân văn: 24 nét móc nhỏ trên vòng giữa.
- c.strokeStyle=GOLD;c.globalAlpha=.55;c.lineWidth=1.6;for(let i=0;i<24;i++){c.save();c.rotate(i*TAU/24);c.beginPath();c.arc(0,-(R-140),9,Math.PI*.15,Math.PI*1.25);c.stroke();c.restore();}
+ c.strokeStyle=GOLD;c.globalAlpha=.55;c.lineWidth=(1.6)*LW;for(let i=0;i<24;i++){c.save();c.rotate(i*TAU/24);c.beginPath();c.arc(0,-(R-140),9,Math.PI*.15,Math.PI*1.25);c.stroke();c.restore();}
  // Thái cực ở tâm (âm dương ngọc/mực).
  c.globalAlpha=1;c.save();c.fillStyle='#d9fff1';c.beginPath();c.arc(0,0,92,-Math.PI/2,Math.PI/2);c.arc(0,46,46,Math.PI/2,-Math.PI/2,true);c.arc(0,-46,46,Math.PI/2,-Math.PI/2);c.fill();
  c.fillStyle='#123c44';c.beginPath();c.arc(0,0,92,Math.PI/2,-Math.PI/2);c.arc(0,-46,46,-Math.PI/2,Math.PI/2,true);c.arc(0,46,46,-Math.PI/2,Math.PI/2);c.fill();
  c.fillStyle='#123c44';c.beginPath();c.arc(0,-46,13,0,TAU);c.fill();c.fillStyle='#d9fff1';c.beginPath();c.arc(0,46,13,0,TAU);c.fill();c.restore();
- c.globalAlpha=.9;c.strokeStyle=JADE2;c.lineWidth=2;c.beginPath();c.arc(0,0,94,0,TAU);c.stroke();
+ c.globalAlpha=.9;c.strokeStyle=JADE2;c.lineWidth=(2)*LW;c.beginPath();c.arc(0,0,94,0,TAU);c.stroke();
  return scene.lkBagua=f;
 }
 function trigramSprite(scene,i){
@@ -82,11 +83,11 @@ function cloudSprite(scene,tone){
  const puffs=[[70,66,30],[112,52,38],[160,48,42],[206,58,34],[242,70,24]];
  c.save();c.beginPath();for(const [x,y,r] of puffs){c.moveTo(x+r,y);c.arc(x,y,r,0,TAU);}c.rect(48,66,214,26);
  const g=c.createLinearGradient(0,10,0,95);g.addColorStop(0,fill[0]+'d0');g.addColorStop(.7,fill[1]+'70');g.addColorStop(1,fill[1]+'00');c.fillStyle=g;c.fill();c.restore();
- c.strokeStyle=line;c.lineWidth=2.2;c.globalAlpha=.85;c.lineCap='round';
+ c.strokeStyle=line;c.lineWidth=(2.2)*LW;c.globalAlpha=.85;c.lineCap='round';
  c.beginPath();c.arc(112,52,38,Math.PI*1.05,Math.PI*1.75);c.stroke();c.beginPath();c.arc(160,48,42,Math.PI*1.15,Math.PI*1.85);c.stroke();c.beginPath();c.arc(206,58,34,Math.PI*1.25,Math.PI*1.95);c.stroke();
  const curl=(x,y,r,dir)=>{c.beginPath();for(let i=0;i<=40;i++){const u=i/40,a=dir*u*TAU*1.15,rr=r*(1-u*.8);const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr;i?c.lineTo(px,py):c.moveTo(px,py);}c.stroke();};
  curl(52,80,16,-1);curl(256,82,14,1);
- c.globalAlpha=.5;c.lineWidth=1.4;c.beginPath();c.moveTo(40,92);c.quadraticCurveTo(150,84,270,94);c.stroke();
+ c.globalAlpha=.5;c.lineWidth=(1.4)*LW;c.beginPath();c.moveTo(40,92);c.quadraticCurveTo(150,84,270,94);c.stroke();
  return scene.lkCloud[tone]=f;
 }
 function mountainSurface(scene){
@@ -95,7 +96,7 @@ function mountainSurface(scene){
  for(const [layer,base,amp,col,a] of [[0,300,170,'#5d8f96',.55],[1,360,150,'#3f727b',.7],[2,420,120,'#2a5660',.85]]){
   c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=6){const u=x/W,y=base-amp*(.55*Math.abs(Math.sin(u*Math.PI*(2.2+layer)+layer*1.7))**1.6+.3*Math.abs(Math.sin(u*Math.PI*(5.3+layer*1.4)+layer))**3+.15*Math.sin(u*41+layer*3));c.lineTo(x,y);}
   c.lineTo(W,H);c.closePath();const g=c.createLinearGradient(0,base-amp,0,H);g.addColorStop(0,col);g.addColorStop(.6,col+'99');g.addColorStop(1,col+'00');c.globalAlpha=a;c.fillStyle=g;c.fill();
-  c.save();c.clip();c.globalAlpha=.35;c.strokeStyle='#bff6ea';c.lineWidth=2;c.stroke();c.restore();
+  c.save();c.clip();c.globalAlpha=.35;c.strokeStyle='#bff6ea';c.lineWidth=(2)*LW;c.stroke();c.restore();
  }
  // Vài lầu gác trên đỉnh xa (bóng mực nhỏ) cho chất tiên môn.
  c.globalAlpha=.7;c.fillStyle='#2e5c66';for(const [x,y,s] of [[180,190,1],[640,215,.8],[760,250,.6]]){c.save();c.translate(x,y);c.scale(s,s);c.fillRect(-10,-26,20,26);c.beginPath();c.moveTo(-26,-26);c.quadraticCurveTo(0,-38,26,-26);c.lineTo(18,-32);c.quadraticCurveTo(0,-44,-18,-32);c.closePath();c.fill();c.fillRect(-6,-46,12,14);c.beginPath();c.moveTo(-18,-46);c.quadraticCurveTo(0,-56,18,-46);c.closePath();c.fill();c.restore();}
@@ -106,7 +107,7 @@ function brushRibbon(c,pts,width,color,alpha,core=true){
  if(pts.length<2||alpha<=.01)return;const n=pts.length,L=[],R=[];
  for(let i=0;i<n;i++){const a=pts[Math.max(0,i-1)],b=pts[Math.min(n-1,i+1)],dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,u=i/(n-1),w=width*Math.sin(Math.PI*Math.min(1,u*1.15))**.8*(pts[i].w??1);L.push([pts[i].x-dy/l*w,pts[i].y+dx/l*w]);R.push([pts[i].x+dy/l*w,pts[i].y-dx/l*w]);}
  c.save();c.globalAlpha=alpha;c.fillStyle=color;c.beginPath();c.moveTo(...L[0]);for(const p of L)c.lineTo(...p);for(let i=n-1;i>=0;i--)c.lineTo(...R[i]);c.closePath();c.fill();
- if(core){c.globalAlpha=alpha*.9;c.strokeStyle='#f2fff9';c.lineWidth=Math.max(1,width*.18);c.beginPath();c.moveTo(pts[0].x,pts[0].y);for(const p of pts)c.lineTo(p.x,p.y);c.stroke();}
+ if(core){c.globalAlpha=alpha*.9;c.strokeStyle='#f2fff9';c.lineWidth=(Math.max(1,width*.18))*LW;c.beginPath();c.moveTo(pts[0].x,pts[0].y);for(const p of pts)c.lineTo(p.x,p.y);c.stroke();}
  c.restore();
 }
 
@@ -134,7 +135,7 @@ export function drawLkFormation(scene,c,st,s,v){
  if(st.formation<1){c.beginPath();c.moveTo(0,0);c.arc(0,0,R+4,-Math.PI/2,-Math.PI/2+TAU*st.formation);c.closePath();c.clip();}
  c.globalAlpha=.92*(1-st.ka*.5);c.drawImage(im,-R,-R,R*2,R*2);
  // Vệt quét sáng ở mép đang mở.
- if(st.formation<1){const a=-Math.PI/2+TAU*st.formation;c.globalCompositeOperation='lighter';c.strokeStyle=GOLD;c.lineWidth=10;c.globalAlpha=.6;c.beginPath();c.moveTo(0,0);c.lineTo(Math.cos(a)*R,Math.sin(a)*R);c.stroke();}
+ if(st.formation<1){const a=-Math.PI/2+TAU*st.formation;c.globalCompositeOperation='lighter';c.strokeStyle=GOLD;c.lineWidth=(10)*LW;c.globalAlpha=.6;c.beginPath();c.moveTo(0,0);c.lineTo(Math.cos(a)*R,Math.sin(a)*R);c.stroke();}
  c.restore();
  // Tám quẻ sáng lần lượt khi trận mở; trước nổ nâng lên vây quanh người.
  if(st.converge<.99||!st.after){for(let i=0;i<8;i++){const lit=ease((st.k-.03-i*.012)/.03);if(lit<=0)continue;const sp=trigramSprite(scene,i),a0=i*TAU/8-Math.PI/2+rot;
@@ -143,7 +144,7 @@ export function drawLkFormation(scene,c,st,s,v){
  // Sóng mực loang: hai vòng nét bút đứt quãng lan ra.
  if(st.shock>0&&st.shock<1){for(let j=0;j<2;j++){const u=clamp(st.shock*1.15-j*.18);if(u<=0)continue;const r=120+u*560,a=(1-u)*.85;
   c.save();c.translate(x,y);c.scale(1,flat);c.globalCompositeOperation='lighter';c.strokeStyle=j?GOLD:JADE;c.globalAlpha=a;
-  for(let q=0;q<14;q++){const s0=q*TAU/14+j*.2+rot*.3,len=TAU/14*(.55+.3*rnd(q+j*7));c.lineWidth=(16+10*rnd(q))*(1-u*.6);c.beginPath();c.arc(0,0,r*(1+.04*Math.sin(q*2.1)),s0,s0+len);c.stroke();}c.restore();}}
+  for(let q=0;q<14;q++){const s0=q*TAU/14+j*.2+rot*.3,len=TAU/14*(.55+.3*rnd(q+j*7));c.lineWidth=((16+10*rnd(q))*(1-u*.6))*LW;c.beginPath();c.arc(0,0,r*(1+.04*Math.sin(q*2.1)),s0,s0+len);c.stroke();}c.restore();}}
 }
 // Phễu mây xoáy trên đỉnh đầu + dòng khí rót xuống bách hội.
 export function drawLkVortex(scene,c,st,s,H,v){
@@ -162,8 +163,8 @@ export function drawLkVortex(scene,c,st,s,H,v){
  // Khí rót: phễu nhiều sợi mảnh xoắn từ tâm xoáy xuống bách hội, đoạn sáng chạy xuống.
  if(st.pour>.01){const crown={x:450,y:s.feet-225},m=lightBudget(scene)?6:9;c.globalCompositeOperation='lighter';c.lineCap='round';
   for(let j=0;j<m;j++){const ph=j*TAU/m+spin*.6,pts=[];for(let i=0;i<=22;i++){const u=i/22,tw=(1-u)**1.4*120+6,ang=ph+u*3.2;pts.push({x:cx+Math.cos(ang)*tw,y:mix(top+10,crown.y,u)+Math.sin(ang)*tw*.25});}
-   c.strokeStyle=j%4===0?GOLD:JADE2;c.globalAlpha=st.pour*.22;c.lineWidth=2;c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();
-   const head=((st.k*2.2+j*.37)%1)*22|0;c.globalAlpha=st.pour*.9;c.strokeStyle='#effff9';c.lineWidth=3;c.beginPath();for(let i=Math.max(0,head-5);i<=head;i++){const p=pts[i];i===Math.max(0,head-5)?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y);}c.stroke();}
+   c.strokeStyle=j%4===0?GOLD:JADE2;c.globalAlpha=st.pour*.22;c.lineWidth=(2)*LW;c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.stroke();
+   const head=((st.k*2.2+j*.37)%1)*22|0;c.globalAlpha=st.pour*.9;c.strokeStyle='#effff9';c.lineWidth=(3)*LW;c.beginPath();for(let i=Math.max(0,head-5);i<=head;i++){const p=pts[i];i===Math.max(0,head-5)?c.moveTo(p.x,p.y):c.lineTo(p.x,p.y);}c.stroke();}
   blit(c,glowSprite(JADE),crown.x,crown.y,26,st.pour*(.35+.15*Math.sin(st.k*60)));}
  // Sau nổ: mây bị thổi thành vành tròn yên dần.
  if(st.after){const u=st.shock,R=230+u*260,cnt=lightBudget(scene)?10:18,cg=cloudSprite(scene,'gold');c.globalCompositeOperation='source-over';
@@ -193,7 +194,7 @@ function along(path,u,F){const seg=(path.length-1)*clamp(u),i=Math.min(path.leng
 export function drawLkMeridians(scene,c,st,s,lift=0){
  const m=st.meridian;if(m<=.01)return;const F=s.feet-lift;c.save();c.globalCompositeOperation='lighter';c.lineCap='round';c.lineJoin='round';
  MERIDIANS.forEach((path,pi)=>{const u=clamp(m*1.35-pi*.08);if(u<=0)return;const steps=24,pts=[];for(let q=0;q<=steps*u;q++)pts.push(along(path,q/steps,F));if(pts.length<2)return;
-  for(const [w,col,a] of (lightBudget(scene)?[[3.2,JADE2,.8]]:[[9,JADE,.18],[3.2,JADE2,.75],[1.2,'#ffffff',.9]])){c.globalAlpha=a*Math.min(1,m*1.4);c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(pts[0].x,pts[0].y);for(const p of pts)c.lineTo(p.x,p.y);c.stroke();}
+  for(const [w,col,a] of (lightBudget(scene)?[[3.2,JADE2,.8]]:[[9,JADE,.18],[3.2,JADE2,.75],[1.2,'#ffffff',.9]])){c.globalAlpha=a*Math.min(1,m*1.4);c.strokeStyle=col;c.lineWidth=(w)*LW;c.beginPath();c.moveTo(pts[0].x,pts[0].y);for(const p of pts)c.lineTo(p.x,p.y);c.stroke();}
   // Huyệt đạo: điểm sáng ở các nút đã thông.
   const gs=glowSprite(GOLD);for(let n=0;n<path.length;n++){if(n/(path.length-1)>u)break;const r=4+2*Math.sin(st.k*40+n+pi);blit(c,gs,450+path[n][0],F+path[n][1],r*3,Math.min(1,m*1.4));}
  });
@@ -204,7 +205,7 @@ export function drawLkMeridians(scene,c,st,s,lift=0){
 // Ngưng khí: tám quẻ (đang vây quanh người) nén vào đan điền ngay trước nổ — vẽ các vệt hút.
 export function drawLkConverge(scene,c,st,s){
  if(st.converge<=.05||st.after)return;const o={x:450,y:s.feet-25},pull=ease((st.k-.665)/.035);if(pull<=0)return;
- c.save();c.globalCompositeOperation='lighter';for(let i=0;i<8;i++){const a=i*TAU/8,r=200*(1-pull),px=o.x+Math.cos(a)*r,py=o.y-120*(1-pull)+Math.sin(a)*r*.35;c.strokeStyle=i%2?GOLD:JADE;c.globalAlpha=.7*(1-pull*.5);c.lineWidth=3;c.beginPath();c.moveTo(px,py);c.lineTo(mix(px,o.x,.6),mix(py,o.y,.6));c.stroke();}c.restore();
+ c.save();c.globalCompositeOperation='lighter';for(let i=0;i<8;i++){const a=i*TAU/8,r=200*(1-pull),px=o.x+Math.cos(a)*r,py=o.y-120*(1-pull)+Math.sin(a)*r*.35;c.strokeStyle=i%2?GOLD:JADE;c.globalAlpha=.7*(1-pull*.5);c.lineWidth=(3)*LW;c.beginPath();c.moveTo(px,py);c.lineTo(mix(px,o.x,.6),mix(py,o.y,.6));c.stroke();}c.restore();
 }
 // Tám quẻ văng ra khi phá.
 export function drawLkScatter(scene,c,st,s){
@@ -228,7 +229,7 @@ export function drawLkFloor(scene,c,st,s,H){
  const glow=Math.min(1,.25+.5*st.descend*(1-st.ka)+(st.after?.6*(1-st.ka):0)),gs=glowSprite(JADE);c.globalCompositeOperation='lighter';
  if(gs){c.globalAlpha=glow*.55;c.drawImage(gs,x-70,y+20,140,360);}
  // Gợn sóng lan từ trận đồ, nhanh hơn khi ngưng khí và sau nổ.
- const n=light?3:5,speed=.9+st.descend*1.6+(st.after?1.5:0);c.lineWidth=1.6;
+ const n=light?3:5,speed=.9+st.descend*1.6+(st.after?1.5:0);c.lineWidth=(1.6)*LW;
  for(let i=0;i<n;i++){const u=((st.k*speed*4+i/n)%1),r=330+u*380;c.strokeStyle=i%2?GOLD:JADE2;c.globalAlpha=(1-u)*a*.5;c.beginPath();c.ellipse(x,y+40+u*90,r,r*.16,0,0,TAU);c.stroke();}
  c.restore();
 }
