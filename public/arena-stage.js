@@ -1,6 +1,7 @@
 // Vân Hải Lôi Đài — vẽ sân khấu (15/11/2026). Server quyết mọi con số; file này chỉ dựng hình theo nhật ký trận.
 // Nhật ký phát chậm ARENA_DELAY_MS để mọi đòn (server tính mỗi giây) hiện đúng nhịp, không dồn cục.
 import {TECHNIQUES,drawCombatTechnique} from './combat-techniques.js';
+import {drawLimitedStrike,limitedArt} from './bao-limited-strike.js?v=20261120'; // 20/11: đòn riêng thần khí GIỚI HẠN
 import {tmOn,inkPanel} from './ink-panel.js';
 import {drawShockwave,drawAura,drawSeal} from './cinematic-vfx.js';
 import {drawV7Variant,v7SkillSpec,prewarmVariantArt} from './ultimate-variants-v7.js';
@@ -16,7 +17,7 @@ import {findCut,cutFull,drawCutFull,drawCutEdges,prewarmCutArt,cutVeil} from './
 import {baoArt,BAO_TIER} from './phap-bao-data.js';
 const BAO_IMG=new Map();function baoImg(id){if(typeof Image==='undefined')return null;let g=BAO_IMG.get(id);if(!g){const im=new Image();im.decoding='async';g={im,ok:false};im.onload=()=>g.ok=true;im.src=baoArt(id);BAO_IMG.set(id,g);}return g.ok?g.im:null;}
 // 18/11: THẦN THÔNG BẢN MỆNH trên đài — pháp bảo hiện trên đầu người ra chiêu, xoay rồi lao vào đối thủ (Đỉnh/Chung: ở lại che thân).
-function drawBaoProc(c,e,k,A,B,t){const im=baoImg(e.bao.id);if(!im)return;const col=BAO_TIER[e.bao.tier]?.color||'#ffd36b',self=e.bao.line==='dinh'||e.bao.line==='chung',fly=self?0:clamp((k-.35)/.4)**2,x=A.x+(B.x-A.x)*fly,y=A.y-330+(B.y-150-(A.y-330))*fly,s=(e.bao.tier>=6?150:e.bao.tier>=5?130:110)*(1+.25*Math.sin(Math.PI*clamp(k/.35)));
+function drawBaoProc(c,e,k,A,B,t){if(e.bao.tier===6){drawLimitedStrike(c,e.bao.id,A,B,k,t,e.n||1,{scale:(A.scale||2.05)/1.45});return;}const im=baoImg(e.bao.id);if(!im)return;const col=BAO_TIER[e.bao.tier]?.color||'#ffd36b',self=e.bao.line==='dinh'||e.bao.line==='chung',fly=self?0:clamp((k-.35)/.4)**2,x=A.x+(B.x-A.x)*fly,y=A.y-330+(B.y-150-(A.y-330))*fly,s=(e.bao.tier>=6?150:e.bao.tier>=5?130:110)*(1+.25*Math.sin(Math.PI*clamp(k/.35)));
  c.save();c.globalAlpha=Math.min(1,k/.12,(1-k)/.15);c.globalCompositeOperation='lighter';const g=c.createRadialGradient(x,y,0,x,y,s);g.addColorStop(0,col);g.addColorStop(1,col+'00');c.fillStyle=g;c.beginPath();c.arc(x,y,s,0,Math.PI*2);c.fill();c.globalCompositeOperation='source-over';c.translate(x,y);c.scale(Math.cos(t*.006)||.01,1);c.drawImage(im,-s/2,-s/2,s,s);c.restore();c.globalAlpha=1;}
 
 export const ARENA_DELAY_MS=1100;
@@ -41,7 +42,7 @@ export function syncArena(scene,state){
   // Ảnh bí pháp + ảnh quà trợ chiêu nạp trước khi cần.
   for(const id of [m.a,m.b])for(const k of m.fighters[id].kit)if(k.art)loadSkillArt(scene,k.art);
   for(const k of ['axe','sword-rain','fire-dragon'])loadSkillArt(scene,k);
-  for(const id of [m.a,m.b]){const b=m.fighters[id].bao;if(b)baoImg(b.id);} // 18/11: ảnh pháp bản mệnh
+  for(const id of [m.a,m.b]){const b=m.fighters[id].bao;if(b){baoImg(b.id);if(b.tier===6)limitedArt(b.id);}} // 18/11: ảnh pháp bản mệnh
   for(const id of [m.a,m.b])prewarmCutArt(state.players?.find?.(p=>p.id===id)?.skinChoice);
  }
 }

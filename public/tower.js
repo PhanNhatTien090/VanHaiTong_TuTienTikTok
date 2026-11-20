@@ -3,6 +3,7 @@
 // QUÀ TRỢ LỰC hoành tráng theo mốc 1 · 10 · 30 · 100 · 500: bùng sáng thẻ đài, chữ chiêu + ảnh quà, số sát thương lớn,
 // rung màn (≥10), chói lóa toàn màn (≥100), mưa kiếm (500). Không lag: HTML + CSS + WAAPI, ảnh tĩnh có sẵn.
 import {portraitCanvas} from './linh-bai.js';
+import {playLimitedStrikeIn} from './bao-limited-strike.js?v=20261120'; // 20/11: đòn riêng thần khí GIỚI HẠN trên thẻ làn
 import {giftTokenHTML} from './gift-icons.js';
 import {queueAvatarsHTML} from './queue-avatars.js';
 import {baoArt,BAO_TIER} from './phap-bao-data.js'; // 18/11: thần thông bản mệnh trong Tháp
@@ -59,7 +60,7 @@ function giftBurst(el,view,f,state,scene,esc){
 }
 
 // 18/11 tối: thần khí bản mệnh phát thần thông trên đài — ảnh pháp bảo phóng to, tên + chiêu + máu mất, nháy viền màu bậc.
-function baoBurst(el,f,state,esc){const card=el.querySelector(`.tw2-lane[data-lane="${f.lane}"]`);if(!card)return;const col=BAO_TIER[f.tier]?.color||'#ffd36b';
+function baoBurst(el,f,state,esc){const card=el.querySelector(`.tw2-lane[data-lane="${f.lane}"]`);if(!card)return;if(f.tier===6)playLimitedStrikeIn(card,f.id,{from:{x:.3,y:.95},to:{x:.66,y:.62},seed:f.at%997});const col=BAO_TIER[f.tier]?.color||'#ffd36b';
  card.style.setProperty('--fx',col);card.classList.remove('tw2-hit');void card.offsetWidth;card.classList.add('tw2-hit');setTimeout(()=>card.classList.remove('tw2-hit'),1200);
  const pop=document.createElement('div');pop.className='tw2-pop';pop.style.setProperty('--c',col);const dmg=Math.round(f.burst/100*(state?.tower?.lanes?.[f.lane]?.maxHp||0));
  /* 18/11 khuya (chủ game: "thần khí trong Tháp có chạy hiệu ứng gì không"): món lao vào thủ vệ + vệt chém màu bậc; Đỉnh ghi hồi máu, Chung ghi khiên */
