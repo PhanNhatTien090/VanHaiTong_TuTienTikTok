@@ -77,6 +77,7 @@ import {drawCombatTechnique} from './combat-techniques.js';
 import {shownRelicPlayer} from './relic-rotation.js';
 import {visitorSkinCell} from './visitor-rewards.js';
 import {lineupSlotGift} from './gift-icons.js';
+import {pickSkinShow,withFullFx,drawSkinShowBack,drawSkinShowFront} from './skin-showcase.js';
 import {loadImmortalArt,robeCell,outfitArt,drawPngRelic,drawImmortalGift,drawBackRelic} from './immortal-art.js';
 import {drawVisitor,VISITORS} from './visitor-event.js';
 import {drawBossSprite,SCENES} from './world-rotation.js';
@@ -720,7 +721,9 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     beginMountFrame(t,this.targets.length);
     for(const target of this.targets){if(!inView(target,this.camera,H)){target.mountLift=0;target.mountOn=false;continue;}target.mountLift=mountPlan(this,target);target.y-=target.mountLift; /* nhấc người + hào quang/cánh lên chỗ ngồi; trả lại cuối khung */}
     const premium=p=>showsBlackGoldGear(p)||courtWorn(p)||seaWorn(p)||tudoWorn(p)||ownsGear(p,TUDO_BLADE)||khuyWorn(p)||ownsGear(p,KHUY_DRAGON)||viemWorn(p)||ownsGear(p,VIEM_BLADES);
-    this.premiumTargets=this.raceStatus?.active?[]:this.heavyCrowd?this.targets.filter(a=>premium(a.player)).slice(0,8):this.targets;
+    this.skinShow=pickSkinShow(this,premium); // 20/11 B: sàn trình diễn skin lúc đông (skin-showcase.js)
+    this.premiumTargets=(this.raceStatus?.active?[]:this.heavyCrowd?this.targets.filter(a=>premium(a.player)).slice(0,8):this.targets).filter(a=>a!==this.skinShow);
+    if(this.skinShow){const a=this.skinShow;drawSkinShowBack(c,a,t);withFullFx(this,()=>{drawSeaAdornment(this,c,a,t,'back');drawTudoAdornment(this,c,a,t,'back');drawKhuyAdornment(this,c,a,t,'back');drawViemAdornment(this,c,a,t,'back');drawCourtAdornment(this,c,a,t,'back');});}
     for(const target of this.premiumTargets){drawSeaAdornment(this,c,target,t,'back');drawTudoAdornment(this,c,target,t,'back');drawKhuyAdornment(this,c,target,t,'back');drawViemAdornment(this,c,target,t,'back');drawCourtAdornment(this,c,target,t,'back');if(this.compact&&!this.heavyCrowd)this.gearDraw(c,target,t,()=>this.drawCompactGear(c,target,t,'back'));}drawTanDeTuBack(this,c,t);
     if(!this.raceStatus?.active&&!solo&&!arena&&!petCoveOn(this)&&!mazeOn(this))drawSectCourt(this,c,t); // màn đánh boss: ẩn ngai tông chủ để yêu thú chiếm trời
     if(!this.reducePresence&&!this.minimalCrowd&&!this.raceStatus?.active)drawGodAuras(this,c,t,'back');
@@ -730,6 +733,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
     this.onStageActors=this.targets.length;
     for(const target of this.targets){if(!inView(target,this.camera,H))continue;this.visibleActors++;if(!solo&&!this.minimalCrowd&&this.environment?.layout!=='float')mv.under(c,target,t);const savedPose=this.cinematicPose;if(this.socialScene==='tournament'&&this.socialStatus?.tournament?.current)this.cinematicPose={...(duelChargingPose(this.socialStatus?.tournament?.current,target,Date.now(),this.v6Showcase!==false)||this.animator?.pose(target.player,t,this.motion)||{}),stand:1};try{this.drawPlayer(c,shownRelicPlayer(target.player,t),target.x,target.y,t,target.scale);}finally{this.cinematicPose=savedPose;}if(target.player?.stunUntil>Date.now()&&!(this.heavenStrike&&this.heavenStrike.user===target.id))drawStunMark(c,target,t,Date.now());mountFront(this,c,target,t);if(!target.player?.mountChannel&&!this.heavyCrowd&&!this.raceStatus?.active&&target.player?.spiritPet){const cove=petCoveOn(this),visit=cove?null:petVisit(target.player.id);if(cove||visit.on)this.gearDraw(c,target,t,()=>drawPet(this,c,target,t,visit));}if(this.compact&&!this.minimalCrowd)this.gearDraw(c,target,t,()=>{this.drawCompactGear(c,target,t,'front');drawBaoAura(this,c,target,t,'front');});}
     for(const target of this.premiumTargets||[]){drawSeaAdornment(this,c,target,t,'front');drawTudoAdornment(this,c,target,t,'front');drawKhuyAdornment(this,c,target,t,'front');drawViemAdornment(this,c,target,t,'front');drawCourtAdornment(this,c,target,t,'front');}
+    if(this.skinShow){const a=this.skinShow;withFullFx(this,()=>{drawSeaAdornment(this,c,a,t,'front');drawTudoAdornment(this,c,a,t,'front');drawKhuyAdornment(this,c,a,t,'front');drawViemAdornment(this,c,a,t,'front');drawCourtAdornment(this,c,a,t,'front');});drawSkinShowFront(c,a);}
     for(const target of this.targets)if(target.mountLift){target.y+=target.mountLift;target.mountLift=0;} // 16/11: trả toạ độ ghế sau khi vẽ người
     if(arena){const strikeAge=Date.now()-(this.battleSound?.impactAt??-Infinity);
       if(strikeAge>=0&&strikeAge<500){
