@@ -133,6 +133,7 @@ Tiến trình khi đang chạy: `server.mjs` (node), `scripts/server-watchdog.mj
 ### 20/11/2026 — Chào người mới bằng câu đọc sẵn, câu chúc nhập môn, Giờ Vàng hiện trên màn
 - Vì sao: giọng chào tạo theo tên mất vài giây, trình phát chỉ chờ 1,5 s rồi BỎ → người mới lướt đi mới được chào hoặc không được chào.
 - Đã làm: `public/welcome-lines.js` (8 câu chào người mới, 3 câu người quay lại, 5 câu chúc nhập môn; chỉ lệnh gõ, không mồi tim/follow). `voice.js`: người mới → phát ngay câu đọc sẵn (cả sân 1 câu / 8 s, trước 20 s); người cũ → thử câu có tên, không kịp/máy giọng bận thì câu đọc sẵn thay vì im; bình luận đầu tiên (nhập môn) có câu chúc, làn riêng 8 s. `server.mjs`: có file đọc sẵn thì không tạo giọng theo tên cho người mới (máy giọng để dành cho quà). Giờ Vàng: snapshot có `golden`, lệnh bài người mới thêm dòng "Giờ Vàng 30 phút · tu luyện ×2" (ẩn khi có dải "Tân đệ tử"), nhãn trên đầu "Gõ 1 · tu luyện ×2".
+- Ảnh đại diện TikTok trên đỉnh lệnh bài (viền vàng + vòng ngọc + quầng thở + vệt sáng chạy quanh, chỉ transform/opacity). Lệnh bài không chờ ảnh; ảnh lỗi/không có thì giữ tranh núi. Sự kiện vào sân mang `avatar`.
 - **Phải chạy 1 lần trên máy LIVE (lúc không LIVE):** `node scripts/make-welcome-voice.mjs` → `public/assets/voice-welcome-v1/*.mp3` + `manifest.json`. Chưa có manifest thì giọng chạy y như cũ. Restart: `scripts/restart-chao-nguoi-moi.ps1`.
 - Kiểm: 997/997 test + `test/welcome-clips.test.mjs`, ảnh xem trước lệnh bài. Chưa kiểm: nghe 16 câu thật bằng VieNeu (file tạo trên máy user).
 
