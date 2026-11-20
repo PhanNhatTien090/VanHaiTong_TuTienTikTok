@@ -10,8 +10,8 @@ test('shows at most three important viewer turns with cumulative wait',()=>{
   {id:5,user:'e',name:'Em',effect:'skin'},
   {id:6,user:'f',name:'Phong',effect:'blessing'}];
  const rows=waitingRows(items,1000,null);
- assert.deepEqual(rows.map(r=>r.name),['An','Bảo','Em']);
- assert.equal(rows[0].reason,'dâng lễ vật');assert.equal(rows[1].reason,'xem tu vi');
+ assert.deepEqual(rows.map(r=>r.name),['An','Em','Phong']); // 20/11: thẻ vặt 'xem tu vi' (status) không lên bảng chờ
+ assert.equal(rows[0].reason,'dâng lễ vật');assert.equal(rows[1].reason,'khoác trang phục mới');
  assert.ok(rows[0].waitSec>=1&&rows[1].waitSec>rows[0].waitSec&&rows[2].waitSec>rows[1].waitSec);
 });
 test('current show adds its remaining time; empty queue renders nothing',()=>{

@@ -448,7 +448,7 @@ if(overlay){
   const tower=document.getElementById('towerStage');
   setInterval(()=>{if(state?.tower||!tower.hidden)renderTower(tower,state,scene,esc);},250);
 }
-if(overlay)setInterval(()=>renderStageQueue(document.getElementById('stageQueue'),queue,Date.now(),current,esc),500);
+if(overlay)setInterval(()=>renderStageQueue(document.getElementById('stageQueue'),state?.halls?.match?[]:queue,Date.now(),current,esc),500); // 20/11: trận Ngũ Đường → hàng chờ dừng (playNext) → ẩn bảng, khỏi báo "~1s" sai
 // 09/11: thẻ luật quà (cột phải) bám NGAY DƯỚI bảng TOP QUÀ để không che người giữa sân; TOP QUÀ ẩn thì lên sát góc trên.
 if(overlay){const placeRail=()=>{const shell=document.querySelector('.scene-shell'),rail=document.getElementById('phoneHudRight'),top=document.getElementById('giftRanks');if(!shell||!rail)return;
   let y='.8%';if(top&&!top.hidden&&getComputedStyle(top).display!=='none'){const a=shell.getBoundingClientRect(),b=top.getBoundingClientRect();if(b.height>0)y=Math.round(b.bottom-a.top+Math.max(3,a.height*.004))+'px';}

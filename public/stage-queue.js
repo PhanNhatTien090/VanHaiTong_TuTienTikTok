@@ -21,7 +21,8 @@ export function stageReason(e){
 export function waitingRows(items,now,current=null){
  let wait=current?Math.max(0,current.at+presentationDuration(current.e)-now):0;const rows=[];
  for(const e of items){
-  const reason=stageReason(e),show=reason&&e.name&&!e.resident&&!e.puppet&&(presentationPriority(e)>=2||!!e.adminGift);
+  // 20/11 (chủ game: "xem tu vi ~1s mà không thấy bảng tu vi nào"): thẻ vặt (thiếu tu vi khi gõ 8, gợi ý lệnh) chỉ là thẻ nhỏ góc dưới phải vài giây → không đưa lên bảng chờ
+  const reason=stageReason(e),show=reason&&e.name&&!e.resident&&!e.puppet&&!['status','hint'].includes(e.effect)&&(presentationPriority(e)>=2||!!e.adminGift);
   if(show&&rows.length<MAX_ROWS)rows.push({name:Array.from(String(e.name)).slice(0,14).join(''),reason,waitSec:Math.max(1,Math.round(wait/1000))});
   wait+=presentationDuration(e)+200;if(rows.length>=MAX_ROWS)break;
  }

@@ -187,3 +187,7 @@ html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) s
 html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(8px,1.9cqw,20px)!important;line-height:1.2!important}
 /* cùng góc với Công Đức Bảng → thẻ hiện thì bảng tạm ẩn */
 html body.overlay.ui-tm .scene-shell:has(#spotlight.spotlight.visible:not(.spot-transform)) #giftRanks.live-ranks{visibility:hidden!important}
+/* 20/11 (chủ game: "bảng dưới góc phải to ra chút") */
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){width:56%!important;max-width:56%!important;border-width:16px 24px 16px 24px!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) strong{font-size:clamp(13px,3.5cqw,38px)!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(10px,2.5cqw,27px)!important}
