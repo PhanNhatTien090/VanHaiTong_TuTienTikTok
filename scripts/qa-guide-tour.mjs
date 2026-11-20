@@ -16,6 +16,7 @@ async function server(){const data=await fs.mkdtemp(path.join(os.tmpdir(),'guide
   else if(v.endsAt>now&&!v.closedAt){v.endsAt=now-1000;v.closedAt=now-1000;}}
  for(const k of ['nextBossAt','nextSmallAt','nextBigEventAt','nextVisitorAt','nextOpportunityAt','nextMiniAt'])w[k]=far;
  w.engagement&&(w.engagement.nextSmallAt=far);
+ if(process.env.NEXTV){w.nextVisitorKind=process.env.NEXTV;w.nextVisitorAt=now+8*60000;} // NEXTV=tinh-ha: soát dòng "Tiên nhân kế"
  // giống lúc đang LIVE: phiên LIVE bật + ~25 người chơi thật (cảnh giới cao trước) đang có mặt
  w.liveSession={active:true,startedAt:now-3600e3};
  w.settings=Object.assign(w.settings||{},{autoEvents:false,bondEnabled:false}); // chụp sân thường: không cho sự kiện tự mở

@@ -1247,7 +1247,8 @@ function visitorRotation(w,now){
   if(!w.nextVisitorAt){w.nextVisitorAt=Math.max(now+60000,(w.lastVisitorStartAt||0)+VISITOR_ROTATION_MS);return;}
   if(now<w.nextVisitorAt)return;
   const active=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&now-p.lastActive<5*60000).length;if(active<2){w.nextVisitorAt=now+60000;return;}
-  const kind=pickRotationVisitor(w.lastVisitorKind,Math.random,w.lastVisitorKinds);if(!kind||!startVisitor(w,kind,now).ok)w.nextVisitorAt=now+30000;
+  // 20/11 E: vị kế đã BÁO TRƯỚC trên bảng (w.nextVisitorKind) thì mở đúng vị đó; không hợp lệ mới bốc lại.
+  const pre=w.nextVisitorKind,kind=pre&&Object.hasOwn(VISITORS,pre)&&VISITOR_GIFT_REWARDS[pre]&&pre!==w.lastVisitorKind?pre:pickRotationVisitor(w.lastVisitorKind,Math.random,w.lastVisitorKinds);if(!kind||!startVisitor(w,kind,now).ok)w.nextVisitorAt=now+30000;
 }
 // v74: RANDOM mọi sự kiện — bốc ngẫu nhiên (không lặp lại cái vừa chạy); cái nào không mở được thì thử cái khác.
 export const RANDOM_EVENTS=Object.freeze([
@@ -1492,7 +1493,7 @@ export function startVisitor(w,kind='hanlap',now=Date.now()){
  const active=Object.values(w.players).filter(p=>currentParticipant(w,p,now)).length;
  archiveVisitor(w);
  const lineup=VISITOR_GIFT_REWARDS[kind]&&w.settings?.visitorLineup!==false?pickVisitorLineup(kind,w.lastVisitorKinds,Math.random,w.giftArt):null;
- w.lastVisitorStartAt=now;w.lastVisitorKind=kind;w.lastVisitorKinds=lineup?lineup.map(s=>s.kind):[kind];w.nextVisitorAt=now+VISITOR_ROTATION_MS;
+ w.lastVisitorStartAt=now;w.lastVisitorKind=kind;w.lastVisitorKinds=lineup?lineup.map(s=>s.kind):[kind];w.nextVisitorKind=pickRotationVisitor(kind,Math.random,w.lastVisitorKinds); /* 20/11 E: bốc SẴN vị lượt sau để báo trước */w.nextVisitorAt=now+VISITOR_ROTATION_MS;
  w.visitor={id:'visitor-'+now,kind,...(lineup?{lineup}:{}),startedAt:now,endsAt:now+(lineup?LINEUP_MS:(VISITORS[kind].duration||180000)),players:{},points:0,goal:Math.min(200,Math.max(20,active*8)),bag:[],completed:false};
  if(w.settings?.visitorEveryFive&&['vuonglam','shende'].includes(kind)){const v=w.scheduledVariety??={};v.majorSinceVisitor=0;v.nextVisitor=kind==='vuonglam'?'shende':'vuonglam';v.lastVisitorAt=now;}
  for(const p of Object.values(w.players))if(currentParticipant(w,p,now))noteVisitorParticipant(w,p,now);
