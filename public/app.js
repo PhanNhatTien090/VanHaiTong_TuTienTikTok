@@ -24,7 +24,7 @@ import {MOUNTS,MOUNT_TIERS,MAX_STARS as MOUNT_MAX_STARS} from './mounts.js'; // 
 import {isEventAnnouncement} from './event-announcements.js';
 import {breakthroughRealm,REALM_NAMES,breakthroughDuration} from './breakthrough-fx.js';
 import {divineSelection} from './divine-wardrobe.js';
-import {mountEventTab,renderSocialUI} from './social-ui.js?v=hall-management';
+import {mountEventTab,renderSocialUI} from './social-ui.js?v=20261120gon';
 import {BLACK_GOLD_VISITOR} from './court-rewards.js';
 import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
 import {VISITORS} from './visitor-event.js';
@@ -384,7 +384,7 @@ function renderLiveRanks(force=false){
   const ranked=rookieTurn?rookies:[...state.players].filter(p=>!p.resident&&!p.puppet&&p.active).sort((a,b)=>b.totalQi-a.totalQi).slice(0,3);
   const short=s=>Array.from(s||'Đạo hữu').slice(0,11).join('');
   const leader=topPatron(state.players.filter(p=>p.active&&!p.resident&&!p.puppet),state.patronCurrent);
-  const qiHtml=state.halls?hallsRankHTML(state,esc,state.serverNow||Date.now()):'<div class="qi-leaders"><b>'+(rookieTurn?'🌱 TÂN TÚ 24H':'TOP TU VI')+'</b>'+ranked.map((p,i)=>`<span>${i+1}. ${esc(short(p.name))} <strong>${fmt(p.totalQi)}</strong><small class="rank-realm">${esc(realmWithStage(p.realmName||state.realms[p.realm]||'Phàm nhân',p.realmStage))}</small></span>`).join('')+'</div>';
+  const qiHtml=state.halls?hallsRankHTML(state,esc,state.serverNow||Date.now()):'<div class="qi-leaders"><b>'+(rookieTurn?'🌱 TÂN TÚ 24H':'TOP TU VI')+'</b>'+ranked.map((p,i)=>`<span>${i+1}. ${esc(short(p.name))} <strong class="tb-realm">${esc(realmWithStage(p.realmName||state.realms[p.realm]||'Phàm nhân',p.realmStage))}</strong></span>` /* 20/11: tên cảnh giới thay số tu vi */).join('')+'</div>';
   const giftHtml=((state.topGifters||[]).length?'<div class="qi-leaders gift-leaders"><b>TOP QUÀ</b>'+state.topGifters.slice(0,3).map((g,i)=>{const av=safeAvatar(g.avatar);return `<span class="gift-top gift-top-${i+1}"><i class="gift-top-portrait"><em>${esc(Array.from(g.name||'Đ')[0])}</em>${av?`<img src="${esc(av)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:''}<svg viewBox="${[1,2,0][i]*512} 0 512 512" aria-hidden="true"><image href="/assets/honor-frames-v2.png" width="1536" height="512" preserveAspectRatio="none"/></svg></i><span class="gift-top-text"><small class="gift-top-title">${['ĐỆ NHẤT CUNG PHỤNG','NHỊ CUNG PHỤNG','TAM CUNG PHỤNG'][i]}</small><span class="gift-top-line">${esc(short(g.name))} · <strong>${fmt(g.giftCoins)}</strong> coin</span></span></span>`;}).join('')+'</div>':(leader?`<div class="patron-leader"><b>${state.patronEnabled?'ĐẠI HỘ PHÁP':'TOP QUÀ'}</b> ${esc(short(leader.name))} · ${fmt(leader.giftCoins)} coin tích lũy</div>`:''));
   const giftEl=$('#giftRanks'),html=giftEl?qiHtml:qiHtml+giftHtml;
   if(force||html!==lastRanksHTML){el.innerHTML=html;lastRanksHTML=html;}

@@ -18,6 +18,7 @@ async function server(){const data=await fs.mkdtemp(path.join(os.tmpdir(),'guide
  w.engagement&&(w.engagement.nextSmallAt=far);
  // giống lúc đang LIVE: phiên LIVE bật + ~25 người chơi thật (cảnh giới cao trước) đang có mặt
  w.liveSession={active:true,startedAt:now-3600e3};
+ w.settings=Object.assign(w.settings||{},{autoEvents:false,bondEnabled:false}); // chụp sân thường: không cho sự kiện tự mở
  Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&p.realm>0).sort((a,b)=>(b.lastActive||0)-(a.lastActive||0)).slice(0,Number(process.env.CROWD||25)).forEach((p,i)=>{p.lastActive=now-i*4000;p.lastRealInteractionAt=now-i*4000;delete p.leftLiveAt;});
  w.mode='demo';await fs.writeFile(path.join(data,'live.json'),JSON.stringify({...w,mode:'live'}));await fs.writeFile(path.join(data,'demo.json'),JSON.stringify(w));
  const srv=spawn(process.execPath,['server.mjs'],{env:{...process.env,PORT:String(port),VAN_HAI_DATA_DIR:data,VAN_HAI_TTS:'off',VAN_HAI_BRIDGE_AUTO:'0',VAN_HAI_WEB:'0',WEB_SYNC_SECRET:''},stdio:'ignore',windowsHide:true});
@@ -40,7 +41,7 @@ const txt=async()=>(await send('Runtime.evaluate',{returnByValue:true,expression
 try{
  await send('Page.enable');await send('Runtime.enable');
  const srv=await server();try{await view(540,960);await send('Page.navigate',{url:overlay});await pause(7000);
-  if(process.env.ALIGN){const c=Date.now()%40000;await pause((24000-c+40000)%40000);} // ALIGN=1: chụp đúng lúc cuộn đang ở Sổ lệnh (giây 20–32 mỗi vòng 40 s)
+  if(process.env.ALIGN){const want=Number(process.env.ALIGN)>1?Number(process.env.ALIGN):24000,c=Date.now()%40000;await pause((want-c+40000)%40000);} // ALIGN=1: chụp đúng lúc cuộn đang ở Sổ lệnh (giây 20–32 mỗi vòng 40 s)
   for(let i=0;i<(process.env.QUICK?1:Number(process.env.SHOTS||10));i++){await shotZ('01-san-'+String(i*30).padStart(3,'0')+'s');if(i===0||i===5)console.log('--- bảng đang hiện @'+i*30+'s\n'+await txt());await pause(Number(process.env.EVERY||30000));}
   // người mới vào + gõ lệnh thiếu điều kiện
   await act({type:'join',userId:'newbie-qa',name:'Người Mới Toanh'});await pause(2500);await shotZ('02-nguoi-moi-vao');

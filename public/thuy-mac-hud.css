@@ -168,3 +168,13 @@ html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-lea
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.so-lenh>span:nth-of-type(n)>em{font-size:clamp(8px,1.95cqw,21px)!important}
 /* Cuộn trái hạ khỏi dải trên cùng (TikTok hiện avatar + tên chủ LIVE ở ~8% đầu màn) */
 html body.overlay.ui-tm #phoneHudLeft{top:4.5%!important}
+/* 20/11 (chủ game): Thiên Bảng hiện TÊN CẢNH GIỚI thay số tu vi — tên cảnh giới dài nên chữ nhỏ một nấc, không xuống dòng */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{font-size:clamp(8px,1.75cqw,19px)!important;white-space:nowrap}
+/* Hàng có tên cảnh giới: tên người dòng trên (đủ rộng, không bị cắt "Tuy…"), cảnh giới dòng dưới chữ son nhỏ, thẳng cột tên */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){grid-template-columns:auto 1fr!important;row-gap:0;padding:2px 0 3px!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{grid-column:2;font:700 clamp(7px,1.5cqw,16px)/1.1 var(--tm-body)!important;color:var(--tm-seal)!important;letter-spacing:.02em}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm)>i{grid-row:1/3;align-self:center}
+/* Hai dòng/hạng nhưng cuộn phải gọn trong vùng trời (trên dải banner quà ~42%): ép sát dòng */
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){padding:0 0 1px!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm)>em{line-height:1.08!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{line-height:1!important;margin-top:-1px}
