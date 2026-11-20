@@ -472,8 +472,8 @@ function actionCore(w,input,now) {
   if(type==='attack'&&w.hallWar?.phase==='running')return hallWarCommand(w,p,['danh'],now,hallWarContext);
   if(type==='attack'&&w.sectWar?.phase==='running'){const r=warCommand(w,p,'danh',now,socialContext);if(r)return r;}
   if(type==='attack'&&w.race?.phase==='running')return raceCommand(w,p,'danh',now,socialContext);
-  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(mz.ok)hallContribution(w,p,now,'event');if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now,{cmdFail:true});return mz;}} // 10/11: Bí Cảnh Mê Cung
   if(type==='chat'){const dk=doKiepCommand(w,p,cmd,now,doKiepContext);if(dk){if(dk.ok&&!dk.duplicate&&!dk.ignored)hallContribution(w,p,now,'event');if(!dk.ok&&!cooldown(p,'kiep-error',8000,now))emit(w,p,dk.message,'status',now,{cmdFail:true});return dk;}} // 20/11: Bách Nhân Độ Kiếp
+  if(type==='chat'){const mz=mazeCommand(w,p,cmd,now,mazeContext);if(mz){if(mz.ok)hallContribution(w,p,now,'event');if(!mz.ok&&!cooldown(p,'maze-error',8000,now))emit(w,p,mz.message,'status',now,{cmdFail:true});return mz;}} // 10/11: Bí Cảnh Mê Cung
   if(type==='chat'){const tw=towerCommand(w,p,cmd,now,towerContext);if(tw){if(tw.ok)hallContribution(w,p,now,'event');if(!tw.ok&&!cooldown(p,'tower-error',6000,now))emit(w,p,tw.message,'status',now,{cmdFail:true});return tw;}} // 11/11: Vân Hải Tháp
   if(type==='chat'){const bk=bonkCommand(w,p,cmd,input.text,now,bonkContext);if(bk){if(bk.ok)hallContribution(w,p,now,'event');if(!bk.ok&&!cooldown(p,'bonk-error',6000,now))emit(w,p,bk.message,'status',now,{cmdFail:true});return bk;}} // 10/11: Hội Gõ Đầu
   if(type==='chat'){const r=lanternCommand(w,p,cmd,rest,now,companionContext);if(r){if(!r.ok&&!cooldown(p,'lantern-error',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}}
@@ -699,9 +699,9 @@ function actionCore(w,input,now) {
     if(own('war')&&w.sectWar?.phase==='running'){const war=warGift(w,p,input.coins*count,now,socialContext,giftEvent);if(war){giftEvent.warGift=war.side;giftEvent.warPushed=war.pushed;giftEvent.warTruong=war.truong;giftEvent.text+=' • đẩy '+war.truong+' trượng';if(war.flip)giftEvent.warFlip=true;}}
     if(own('alchemy')&&alchemyActive(w)){const alc=alchemyGift(w,p,input.coins*count,now,alchemyContext);if(alc)giftEvent.alchemyRole=alc.role;}
     if(own('tower')&&!input.simulated&&!input.autoRose&&towerOpen(w,now)){const tg=towerGift(w,p,input.coins*count,now,towerContext);if(tg){giftEvent.towerGift=tg;giftEvent.text+=' • '+(tg.pending?'hộ thể '+tg.name+' chờ lượt leo':tg.name+(tg.to&&tg.to!==p.name?' trợ lực '+tg.to:''));}} // 16/11: quà = trợ lực Vân Hải Tháp
+    if(own('kiep')){const dk=doKiepGift(w,p,input.coins,count,now,doKiepContext);if(dk){giftEvent.kiepGift=dk;giftEvent.text+=' • '+dk.text;}} // 20/11: Bách Nhân Độ Kiếp — quà = hộ đạo
     if(own('maze')&&mazeActive(w)){const mz=mazeGift(w,p,input.coins*count,now,mazeContext,{unitCoins:input.coins});if(mz){giftEvent.mazeGift=mz;giftEvent.text+=' • '+mz.text;}}
     {const bk=own('bonk')&&!stageConflict(w,now)?bonkGift(w,p,input.coins*count,now):null;if(bk){giftEvent.bonkHammer=bk;giftEvent.text+=' • '+bk.text;}} // 10/11: Hội Gõ Đầu — quà = búa xịn
-    if(own('kiep')){const dk=doKiepGift(w,p,input.coins,count,now,doKiepContext);if(dk){giftEvent.kiepGift=dk;giftEvent.text+=' • '+dk.text;}} // 20/11: Bách Nhân Độ Kiếp — quà = hộ đạo
     recordEventGiftFx(w,p,giftEvent,now);
     if(input.autoRose&&p.puppet){giftEvent.autoRose=true;giftEvent.simulated=true;giftEvent.gift='Hoa hồng mô phỏng';giftEvent.text=giftEvent.text.replace(/^Hoa hồng/, 'Hoa hồng mô phỏng');}
     p.giftHistory??=[];p.giftHistory.push({id:input.eventId,at:now,gift,coins:input.coins,count,eventRule,reward:{qi:q,stones:award0.stones,herbs:award0.herbs,items,itemNames}});p.giftHistory=p.giftHistory.slice(-12);
@@ -751,9 +751,9 @@ export const GIFT_ROUTES=Object.freeze([
  {id:'race',label:'đua phi kiếm',on:w=>['registration','running'].includes(w.race?.phase)},
  {id:'war',label:'chính ma đại chiến',on:w=>w.sectWar?.phase==='running'},
  {id:'alchemy',label:'lò luyện đan',on:w=>['opening','brewing','tribulation'].includes(w.alchemy?.phase)},
+ {id:'kiep',label:'bách nhân độ kiếp • quà = hộ đạo',on:w=>doKiepActive(w)},
  {id:'maze',label:'bí cảnh mê cung',on:w=>['registration','running'].includes(w.maze?.phase)},
  {id:'tower',label:'vân hải tháp',on:(w,now)=>towerOpen(w,now)},
- {id:'kiep',label:'bách nhân độ kiếp • quà = hộ đạo',on:w=>doKiepActive(w)},
  {id:'visitor',label:'tiên nhân truyền đạo',on:(w,now)=>!!w.visitor&&!w.visitor.closedAt&&now>=(w.visitor.startedAt||0)&&now<w.visitor.endsAt},
  {id:'opportunity',label:'cơ duyên',on:(w,now)=>!!w.opportunity&&!w.opportunity.closedAt&&now>=(w.opportunity.startedAt||0)&&now<w.opportunity.endsAt},
  {id:'flower',label:w=>w.flowerEvent?.kind==='meteor'?'sao băng':'mưa hoa',on:(w,now)=>!!w.flowerEvent&&now>=(w.flowerEvent.startedAt||0)&&now<w.flowerEvent.endsAt},
@@ -1556,11 +1556,11 @@ const alchemyContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs
 export const startAlchemy=(w,now=Date.now())=>bigSpaced(w,now,beginAlchemy(w,now,alchemyContext));
 export const stopAlchemy=(w,now=Date.now())=>endAlchemy(w,now);
 const mazeContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
-export const startMaze=(w,now=Date.now())=>bigSpaced(w,now,beginMaze(w,now,mazeContext));
-const bonkContext={emit,active:currentParticipant};
 const doKiepContext={emit,active:currentParticipant,stageConflict,gain:(w,p,qi,stones=0,herbs=0,now=null)=>gain(w,p,qi,stones,herbs,now,false,'reward'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
 export const startDoKiep=(w,now=Date.now())=>bigSpaced(w,now,beginDoKiep(w,now,doKiepContext));
 export const stopDoKiep=(w,now=Date.now())=>endDoKiep(w,now,doKiepContext);
+export const startMaze=(w,now=Date.now())=>bigSpaced(w,now,beginMaze(w,now,mazeContext));
+const bonkContext={emit,active:currentParticipant};
 const towerContext={emit,active:currentParticipant,gain:(w,p,qi,stones=0,now=null)=>gain(w,p,qi,stones,0,now,false,'sect-event'),requiredQi:p=>rewardQiBasis(p)/progressionMult(p)};
 export const startTower=(w,now=Date.now())=>bigSpaced(w,now,beginTower(w,now,towerContext));
 export const stopTower=(w,now=Date.now())=>endTower(w,now,towerContext);
