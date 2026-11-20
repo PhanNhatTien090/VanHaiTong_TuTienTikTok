@@ -50,7 +50,9 @@ const synthesizeSpeech=createSpeech(root,dataDir);
 // 4/11/2026: cùng một cách gắn tên/giới tính cho giọng đọc, để bản tạo sẵn và bản trang hỏi tới trùng cache.
 function speechEventFor(mode,event){const owner=worlds[mode].players[event.user];return {...event,name:isNPC(owner)?actorLabel(owner):event.name||owner?.name||'',gender:owner?.gender??null};}
 // Người xem mới vào: tạo sẵn câu chào ngay khi TikTok báo, để giọng phát cùng lúc nhân vật xuất hiện (trước đây chỉ tạo khi trang hỏi → trễ vài giây).
-function prewarmArrival(playerId){try{const e=worlds.live.events.findLast(x=>x.user===playerId&&x.autoArrival);if(e&&eventAllowedOnLive(e,worlds.live.players))synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});}catch{}}
+// 20/11: đã có câu chào đọc sẵn (public/assets/voice-welcome-v1/manifest.json) → người MỚI không cần tạo giọng theo tên, để máy giọng lo quà.
+let welcomeClipsAt=0,welcomeClipsOn=false;const welcomeClipsReady=()=>{const now=Date.now();if(now-welcomeClipsAt>60000){welcomeClipsAt=now;try{welcomeClipsOn=(JSON.parse(fs.readFileSync(path.join(root,'public','assets','voice-welcome-v1','manifest.json'),'utf8')).files||[]).some(f=>f.includes('/new-'));}catch{welcomeClipsOn=false;}}return welcomeClipsOn;};
+function prewarmArrival(playerId){try{const e=worlds.live.events.findLast(x=>x.user===playerId&&x.autoArrival);if(e&&!e.returning&&welcomeClipsReady())return;if(e&&eventAllowedOnLive(e,worlds.live.players))synthesizeSpeech(speechEventFor('live',e)).catch(()=>{});}catch{}}
 function load(mode) {
   const file=path.join(dataDir,`${mode}.json`);
   if(!fs.existsSync(file))return mode==='demo'?seedDemo():createWorld('live');
@@ -110,7 +112,7 @@ function payload(mode,view='full'){
   const key=mode+':'+view,now=Date.now(),cached=payloadCache.get(key);if(cached&&now-cached.at<100)return cached.value;
   let value;
   if(view==='overlay'){
-    const full=payload(mode),fields=['signatureArtifactOwned','sectHallIndex','puppet','resident','id','name','realmStage','gender','realm','giftCoins','wingChoice','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','rebirthEligible','reincarnations','highestRealm','daoQua','isPatronLeader','avatar','honor','relicVariant','socialCode','petView','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','raceMounts','sectMasterUnlocked','sectMasterGiftAt','mount','mounts','mountChannel','equipPin'];
+    const full=payload(mode),fields=['golden','signatureArtifactOwned','sectHallIndex','puppet','resident','id','name','realmStage','gender','realm','giftCoins','wingChoice','qi','totalQi','stones','herbs','equipped','rewardSkins','skinChoice','skinChoiceSource','divineRoles','divineRoleChoice','divineRoleHidden','joinedAt','active','realmName','neededQi','neededStones','finalRealmEligible','progressionReady','rebirthEligible','reincarnations','highestRealm','daoQua','isPatronLeader','avatar','honor','relicVariant','socialCode','petView','bondId','bondIds','bondInfo','bondInfos','bondVip','bondMilestone','bondFestivalWins','tournamentTitle','spiritPet','companionPoints','raceSwordSkins','raceSwordChoice','raceMounts','sectMasterUnlocked','sectMasterGiftAt','mount','mounts','mountChannel','equipPin'];
     // Cảnh LIVE chỉ cần: người đang hoạt động (sân khấu) + top 10 (bảng xếp hạng nhỏ) + 30 sự kiện mới nhất.
     // Không gửi ký sự / top 100: gói nhỏ ~5 lần, trình duyệt trong LIVE Studio đỡ phải đọc JSON lớn liên tục.
     const top=new Set([...full.players].sort((a,b)=>b.realm-a.realm||b.totalQi-a.totalQi).slice(0,10).map(p=>p.id));

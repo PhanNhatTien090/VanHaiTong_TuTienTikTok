@@ -8,14 +8,14 @@ export function fastVoiceFile(e){const kind=e.adminGift?null:realGiftVoice(e)?(e
 // Tu tiên giả thường trú luôn xếp sau khách thật (0).
 // 18/11 (chủ game: "bỏ câu trễ nhưng biết câu nào nên bỏ, câu nào nên giữ"): khoảnh khắc lớn 4,5 · nhắc lệnh lỗi 1,5 · nhắc giữ châu 1.
 // 19/11: đột phá người thật 6,5 — trên quà (6), chỉ dưới Thiên Đạo / xuất phát đua (7). Chủ game: "đột phá phải ưu tiên hơn tất cả".
-export const priority=e=>e.heavenStrike?7:syntheticVoice(e)?0:e.effect==='breakthrough'&&!e.ritualSkipped?6.5:e.adminGift?5.5:e.mountReveal?.lucky||e.orbCard?.stage==='earned'||e.baoWin||e.mountReveal&&e.mountReveal.tier!=='common'?4.5:e.cmdFail?1.5:e.orbCard?.stage==='remind'?1:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift||e.stageUp?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
+export const priority=e=>e.heavenStrike?7:e.nhapMonVoice?5.5:syntheticVoice(e)?0:e.effect==='breakthrough'&&!e.ritualSkipped?6.5:e.adminGift?5.5:e.mountReveal?.lucky||e.orbCard?.stage==='earned'||e.baoWin||e.mountReveal&&e.mountReveal.tier!=='common'?4.5:e.cmdFail?1.5:e.orbCard?.stage==='remind'?1:e.ritualSkipped?3:raceOpeningVoice(e)?7:realGiftVoice(e)?6:e.autoArrival?5.5:e.engagementAction?3:isEventAnnouncement(e)?5:e.summary?2:e.ceremony?4:e.envelopeStart||e.quizStart||e.quizEnd||e.envelopeEnd||e.sectLevel||e.streak||e.tasksDone||e.envelopeLucky||e.raceGiftRank||e.vipReturn||e.vipUp||e.likeGoal||e.starter||e.firstGift||e.stageUp?3:e.loyaltyAward||e.guide||e.adminGift||e.missing||e.effect==='join'?3:['visitor','breakthrough','dragon','skin','victory','ready','blessing','opportunity'].includes(e.effect)||String(e.text).includes('cảm ơn đạo hữu')?3:['join','title','status','hint','boss','lotus','sword'].includes(e.effect)||String(e.text).startsWith('Kết duyên')?2:1;
 
 // 08/11/2026: GIẢM GIỌNG ĐỌC (chủ game: "đọc nhiều, lộn xộn, ồn quá"). Quà, Thiên Đạo, sự kiện lớn luôn đọc.
 // Câu thường (tu luyện, hái, đánh, nhắc lệnh, chào…) giãn ra: cả sân tối đa 1 câu / 12 s, mỗi người 1 câu / 90 s;
 // người chơi lâu (≥2 giờ, ≥400 lượt hoặc từ Chân Tiên) không nghe câu nhắc thường nữa.
 // Đột phá: người từng tặng quà luôn được đọc; người chưa tặng chỉ đọc khi là người mới, tối đa 1 câu / 45 s.
 // Đang chiếu màn đột phá: chỉ đọc quà + Thiên Đạo; thông báo sự kiện chờ màn xong; câu thường bỏ.
-export const VOICE_CALM=Object.freeze({routineGapMs:12000,userRoutineGapMs:90000,breakthroughGapMs:45000,veteranActiveMs:2*3600e3,veteranInteractions:400,veteranRealm:8,ritualRetryMs:1500,arrivalGapMs:20000,arrivalRepeatMs:30*60000,stageGapMs:15000});
+export const VOICE_CALM=Object.freeze({routineGapMs:12000,userRoutineGapMs:90000,breakthroughGapMs:45000,veteranActiveMs:2*3600e3,veteranInteractions:400,veteranRealm:8,ritualRetryMs:1500,arrivalGapMs:20000,newcomerGapMs:8000,nhapMonGapMs:8000,arrivalRepeatMs:30*60000,stageGapMs:15000});
 export const stageVoice=e=>Number.isInteger(e.stageUp)&&e.stageUp>=1&&!!e.user;
 const VETERAN_SILENT=new Set(['qi','petal','lotus','sword','attack','gather','learn','hint','status','ready','join','title','boss','pill','guide']);
 export const urgentVoice=e=>!!(e.heavenStrike||realGiftVoice(e));
@@ -23,7 +23,7 @@ export const veteranPlayer=p=>!!p&&((p.activeMs||0)>=VOICE_CALM.veteranActiveMs|
 const breakthroughVoice=e=>e.effect==='breakthrough'||!!e.ritualSkipped;
 const keepsDuringRitual=e=>isEventAnnouncement(e)||raceOpeningVoice(e)||!!e.ceremony;
 /** 'play' | 'drop' | 'defer'. Thuần, để test được. */
-export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,lastRoutineAt=-Infinity,lastUserRoutineAt=-Infinity,lastBreakthroughAt=-Infinity,lastArrivalAt=-Infinity,lastStageAt=-Infinity}={}){
+export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,lastRoutineAt=-Infinity,lastUserRoutineAt=-Infinity,lastBreakthroughAt=-Infinity,lastArrivalAt=-Infinity,lastStageAt=-Infinity,lastNhapMonAt=-Infinity}={}){
   if(urgentVoice(e))return 'play';
   if(ritualBusy)return keepsDuringRitual(e)?'defer':'drop';
   if(keepsDuringRitual(e))return 'play';
@@ -34,9 +34,12 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
     return !vet&&now-lastBreakthroughAt>=VOICE_CALM.breakthroughGapMs?'play':'drop';
   }
   if(stageVoice(e))return now-lastStageAt>=VOICE_CALM.stageGapMs?'play':'drop'; // 17/11: lên trung/hậu kỳ luôn được đọc (kể cả người chơi lâu), cả sân 1 câu / 15 s
+  // 20/11: nhập môn (bình luận đầu tiên) đọc câu làm sẵn — làn riêng, cả sân 1 câu / 8 s.
+  if(e.nhapMonVoice)return now-lastNhapMonAt<VOICE_CALM.nhapMonGapMs?'drop':'play';
   if(e.autoArrival){ // 08/11: chào người vào — cả sân tối đa 1 câu / 20 s; người chơi lâu vào lại chỉ hiện bảng, không đọc.
     if(vet&&e.returning)return 'drop';
-    return now-lastArrivalAt<VOICE_CALM.arrivalGapMs?'drop':'play';
+    // 20/11: người MỚI có câu chào đọc sẵn (phát ngay, không tốn máy) → 1 câu / 8 s.
+    return now-lastArrivalAt<(e.clipKind==='new'?VOICE_CALM.newcomerGapMs:VOICE_CALM.arrivalGapMs)?'drop':'play';
   }
   const routine=priority(e)<=3;
   if(!routine)return 'play';
@@ -59,7 +62,7 @@ export function shedQueue(queue,{now=Date.now(),running=false,ready=()=>false}={
  return {keep,drop};
 }
 export class VoiceQueue {
-  constructor({world,audio,onStart=()=>{},onStatus=()=>{},player=()=>null,calm=true,shed=true}){this.shed=shed;this.world=world;this.audio=audio;this.player=player;this.calm=calm;this.calmLast={routine:-Infinity,breakthrough:-Infinity,arrival:-Infinity,users:new Map()};this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
+  constructor({world,audio,onStart=()=>{},onStatus=()=>{},player=()=>null,calm=true,shed=true,clips=null}){this.shed=shed;this.clips=clips;this.world=world;this.audio=audio;this.player=player;this.calm=calm;this.calmLast={routine:-Infinity,breakthrough:-Infinity,arrival:-Infinity,users:new Map()};this.onStart=onStart;this.onStatus=onStatus;this.enabled=true;this.volume=1;this.queue=[];this.current=null;this.running=false;this.last=new Map();this.generation=0;this.announced=new Set();this.prepared=new Map();}
   add(e){
     if(!this.enabled||!this.audio.enabled)return;
     // 4/11/2026: mỗi sự kiện chỉ vào hàng giọng một lần (giờ được thêm ngay khi nhận, trước khi hình hiện).
@@ -68,11 +71,14 @@ export class VoiceQueue {
     if(!e.resident&&syntheticVoice(e)&&(this.running||this.queue.length))return;
     if(e.id&&(isEventAnnouncement(e)||realGiftVoice(e)||e.autoArrival)){if(this.announced.has(e.id))return;this.announced.add(e.id);if(this.announced.size>256)this.announced.delete(this.announced.values().next().value);}
     const now=Date.now(),key=(e.user||'sect')+':'+e.effect;
+    // 20/11: người mới vào → câu chào đọc sẵn (nếu đã tạo file), không chờ tạo giọng theo tên.
+    if(e.autoArrival&&!e.returning&&!e.file&&this.clips?.has('new'))e={...e,clipKind:'new'};
     if(this.calm&&!syntheticVoice(e)){
-      const users=this.calmLast.users,decision=voiceDecision(e,{now,player:e.user?this.player(e.user):null,ritualBusy:this.ritualBusy(e),lastRoutineAt:this.calmLast.routine,lastUserRoutineAt:users.get(e.user)??-Infinity,lastBreakthroughAt:this.calmLast.breakthrough,lastArrivalAt:this.calmLast.arrival,lastStageAt:this.calmLast.stage??-Infinity});
+      const users=this.calmLast.users,decision=voiceDecision(e,{now,player:e.user?this.player(e.user):null,ritualBusy:this.ritualBusy(e),lastRoutineAt:this.calmLast.routine,lastUserRoutineAt:users.get(e.user)??-Infinity,lastBreakthroughAt:this.calmLast.breakthrough,lastArrivalAt:this.calmLast.arrival,lastStageAt:this.calmLast.stage??-Infinity,lastNhapMonAt:this.calmLast.nhapMon??-Infinity});
       if(decision==='drop')return;
-      if(decision==='play'&&!urgentVoice(e)&&!keepsDuringRitual(e)){if(e.autoArrival)this.calmLast.arrival=now;else if(stageVoice(e))this.calmLast.stage=now;else if(breakthroughVoice(e))this.calmLast.breakthrough=now;else if(priority(e)<=3){this.calmLast.routine=now;if(e.user){users.set(e.user,now);if(users.size>600)users.delete(users.keys().next().value);}}}
+      if(decision==='play'&&!urgentVoice(e)&&!keepsDuringRitual(e)){if(e.nhapMonVoice)this.calmLast.nhapMon=now;else if(e.autoArrival)this.calmLast.arrival=now;else if(stageVoice(e))this.calmLast.stage=now;else if(breakthroughVoice(e))this.calmLast.breakthrough=now;else if(priority(e)<=3){this.calmLast.routine=now;if(e.user){users.set(e.user,now);if(users.size>600)users.delete(users.keys().next().value);}}}
     }
+    if(e.clipKind&&!e.file){const line=this.clips?.pick(e.clipKind);if(!line)return;e={...e,file:line.file,text:e.nhapMonVoice?line.text:e.text,clipText:line.text};}
     if(e.cmdFail&&(this.queue.length||this.running&&(this.activePriority??0)>2))return; // 18/11: câu nhắc lệnh chỉ đọc khi rảnh, không đẩy quà/đột phá ra sau
     if(priority(e)<=1&&now-(this.last.get(key)||0)<6500)return;
     if(priority(e)<=1&&this.queue.length>=3)return; // v54: hàng chờ đã dồn → bỏ câu thường, để quà/đột phá/sự kiện được đọc kịp
@@ -136,10 +142,12 @@ export class VoiceQueue {
       this.onStatus('Đang chuẩn bị giọng đọc…');
       const pending=this.prepare(e);this.prepareQueued();
       const fallback=fastVoiceFile(e),quick=realGiftVoice(e)||e.adminGift?this.giftParts(e):null;let timer;const interrupted=new Promise((_,reject)=>{this.cancelPreparation=()=>reject(Object.assign(Error('Voice superseded'),{name:'AbortError'}));});
-      let blob;try{blob=await Promise.race([pending,interrupted,...(fallback||e.autoArrival||quick?[new Promise(resolve=>{timer=setTimeout(()=>resolve(null),e.autoArrival?(this.arrivalWaitMs??1500):quick?(this.giftWaitMs??Math.min(700,this.prepareWaitMs??700)):(this.prepareWaitMs??1200));})]:[])]);}catch(err){if(err.name==='AbortError')throw err;if(!fallback)throw err;blob=null;}finally{clearTimeout(timer);this.cancelPreparation=null;}
+      let blob;try{blob=await Promise.race([pending,interrupted,...(fallback||e.autoArrival||quick?[new Promise(resolve=>{timer=setTimeout(()=>resolve(null),e.autoArrival?(this.arrivalWaitMs??1500):quick?(this.giftWaitMs??Math.min(700,this.prepareWaitMs??700)):(this.prepareWaitMs??1200));})]:[])]);}catch(err){if(err.name==='AbortError')throw err;if(!fallback&&!e.autoArrival)throw err;blob=null;}finally{clearTimeout(timer);this.cancelPreparation=null;}
       if(generation!==this.generation)return;
       // 08/11: câu cảm ơn đầy đủ chưa kịp → ghép mảnh làm sẵn "Sư huynh <tên>" + "tặng <quà>! Tu vi tăng mạnh!" (vẫn giọng tông sư).
       if(!blob&&quick){let pt;const parts=await Promise.race([quick,new Promise(r=>{pt=setTimeout(()=>r(null),this.partsWaitMs??Math.min(400,this.prepareWaitMs??400));})]);clearTimeout(pt);if(generation!==this.generation)return;if(parts){if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;}this.noteLag(e,Date.now()-(receivedAt??Date.now()),false);this.quickParts=(this.quickParts||0)+1;for(const part of parts){const u=URL.createObjectURL(part);try{await this.play(u,e,generation);}finally{URL.revokeObjectURL(u);}if(generation!==this.generation)return;}return;}}
+      // 20/11: câu chào có tên chưa kịp (hoặc máy giọng đang bận) → câu chào đọc sẵn thay vì im lặng.
+      if(!blob&&e.autoArrival){const line=this.clips?.pick(e.returning?'back':'new');if(line){if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;}this.noteLag(e,Date.now()-(receivedAt??Date.now()),false);await this.play(line.file,{...e,voiceFallback:true,clipText:line.text},generation);return;}}
       if(!blob){if(!fallback)return;if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;} /* 08/11: lời chào chưa kịp tạo trong 1,5 s thì bỏ, không chắn hàng giọng */await this.play(fallback,{...e,voiceFallback:true},generation);return;}
       if(Number.isFinite(receivedAt)&&Date.now()-receivedAt>voiceMaxAgeMs(e)){this.noteLag(e,Date.now()-receivedAt,true);return;}
       this.noteLag(e,Date.now()-(receivedAt??Date.now()),false);url=URL.createObjectURL(blob);await this.play(url,e,generation);

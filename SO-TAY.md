@@ -130,6 +130,12 @@ Tiến trình khi đang chạy: `server.mjs` (node), `scripts/server-watchdog.mj
 
 ## 6. Nhật ký phiên (mới nhất ở trên, giữ tối đa 8 phiên; phiên cũ hơn chuyển sang `NHAT-KY-CU.md`)
 
+### 20/11/2026 — Chào người mới bằng câu đọc sẵn, câu chúc nhập môn, Giờ Vàng hiện trên màn
+- Vì sao: giọng chào tạo theo tên mất vài giây, trình phát chỉ chờ 1,5 s rồi BỎ → người mới lướt đi mới được chào hoặc không được chào.
+- Đã làm: `public/welcome-lines.js` (8 câu chào người mới, 3 câu người quay lại, 5 câu chúc nhập môn; chỉ lệnh gõ, không mồi tim/follow). `voice.js`: người mới → phát ngay câu đọc sẵn (cả sân 1 câu / 8 s, trước 20 s); người cũ → thử câu có tên, không kịp/máy giọng bận thì câu đọc sẵn thay vì im; bình luận đầu tiên (nhập môn) có câu chúc, làn riêng 8 s. `server.mjs`: có file đọc sẵn thì không tạo giọng theo tên cho người mới (máy giọng để dành cho quà). Giờ Vàng: snapshot có `golden`, lệnh bài người mới thêm dòng "Giờ Vàng 30 phút · tu luyện ×2" (ẩn khi có dải "Tân đệ tử"), nhãn trên đầu "Gõ 1 · tu luyện ×2".
+- **Phải chạy 1 lần trên máy LIVE (lúc không LIVE):** `node scripts/make-welcome-voice.mjs` → `public/assets/voice-welcome-v1/*.mp3` + `manifest.json`. Chưa có manifest thì giọng chạy y như cũ. Restart: `scripts/restart-chao-nguoi-moi.ps1`.
+- Kiểm: 997/997 test + `test/welcome-clips.test.mjs`, ảnh xem trước lệnh bài. Chưa kiểm: nghe 16 câu thật bằng VieNeu (file tạo trên máy user).
+
 ### 09/11/2026 (tối) — Gỡ mồi tương tác, ghế cố định, pháp bảo skin, nhạc nền
 - Đã làm: bỏ lời mồi thả tim/follow/share sau cảnh báo "Fake Engagement" (`93b7a68`); trang quản lý chọn/gỡ linh thú cho người chơi (`6f23fa2`); ghế sân cố định 52 ghế so le, người mặc skin lớn được chừa chỗ (`0de7aed`, `6436bcb`, `e2e6ea4`); pháp bảo kèm skin (Song Đao Liệt Diễm/Tử Lôi Long/Huyết Đao) luôn hiện cho người sở hữu — vụ Công Tài mua Tần Mục 500 coin mà không thấy pháp bảo (`ba83fa9`); nhạc nền 8 bài (+5 Kevin MacLeod CC BY), tự đổi 30 phút, khung chọn trên `#scene` (`c198918`).
 - File đổi: `speech-lines.mjs`, `engine.mjs`, `heart-events.mjs`, `server.mjs`, `public/{app,scene,live-cinema,audio,skin-gear,music-rotation,viem-ton,khuy-niet,tudo-ma-ton}.js`, `public/assets/bgm-tu-tien-4..8.mp3`, test mới `skin-gear`, `music-rotation`.

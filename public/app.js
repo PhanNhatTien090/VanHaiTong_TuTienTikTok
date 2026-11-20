@@ -10,6 +10,7 @@ import {streamState,participantCounts,liveRulesActive} from './live-integrity.js
 import {smallGift,shouldFocusEvent,mountRitualHud} from './live-cinema.js';
 import {isNewbie} from './vip.js';
 import {ArrivalWelcomes,isArrivalWelcome} from './arrival-welcome.js';
+import {WelcomeClips} from './welcome-lines.js?v=20261120';
 import {initThuyMac} from './thuy-mac-hud.js?v=20261119';
 import {addNhapMon} from './nhap-mon-fx.js?v=20261119';
 import {hallGuideRows,renderSimpleGuide} from './simple-guide.js?v=hall-management';
@@ -182,10 +183,11 @@ if(overlay)mountRitualHud($('.scene-shell'),scene);
 scene.onRitualAudio=(event,elapsed)=>cultivationAudio.ritual(event,elapsed);
 scene.onRitualSound=kind=>cultivationAudio.play(kind.startsWith('qi-')?kind:kind==='gather'?'qi':kind==='reveal'?'victory':kind==='surge'?'ascension-charge':kind==='echo'?'ascension-echo':kind==='rush'?'ascension-rush':kind==='screen-impact'?'ascension-screen-impact':'impact');
 let voicePlayers={src:null,map:new Map()};const voicePlayer=id=>{if(voicePlayers.src!==state?.players)voicePlayers={src:state?.players,map:new Map((state?.players||[]).map(p=>[p.id,p]))};return voicePlayers.map.get(id)||null;}; // 08/11: giảm giọng đọc theo người chơi
-const narrator=new VoiceQueue({world:mode,audio:cultivationAudio,player:voicePlayer,onStatus:text=>$('#audioStatus').textContent=text,onStart:(e,duration)=>{
+const welcomeClips=new WelcomeClips();if(overlay&&mode==='live'){welcomeClips.load();setInterval(()=>welcomeClips.load(),10*60000);} // 20/11: câu chào đọc sẵn (có file mới dùng)
+const narrator=new VoiceQueue({world:mode,audio:cultivationAudio,player:voicePlayer,clips:welcomeClips,onStatus:text=>$('#audioStatus').textContent=text,onStart:(e,duration)=>{
   if(arrivalWelcomes.spoken(e,duration))return;
   if(shouldFocusEvent(e)&&!eventDonationContext(scene))scene.focus(e.user,duration+900);
-  const caption=$('#voiceCaption');caption.textContent=e.name+' · '+e.text.split('•')[0];caption.hidden=false;
+  const caption=$('#voiceCaption');caption.textContent=e.name+' · '+String(e.clipText||e.text).split('•')[0];caption.hidden=false;
   clearTimeout(voiceCaptionTimer);voiceCaptionTimer=setTimeout(()=>caption.hidden=true,duration+300);
 }});
 const welcomeBanner=document.createElement('aside');welcomeBanner.className='arrival-welcome';welcomeBanner.hidden=true;welcomeBanner.setAttribute('aria-live','polite');$('.scene-shell').appendChild(welcomeBanner);
@@ -203,7 +205,7 @@ const arrivalWelcomes=new ArrivalWelcomes({voice:narrator,show:(e,duration)=>{
  }
  scene.welcomeFocus={id:e.user,until:performance.now()+duration};tone('join');welcomeShownAt=t0;welcomeMore=[];
  welcomeBanner.dataset.kind=e.returning?'back':'new';
- const away=e.returning&&e.awayDays>=1?e.awayDays:0; /* 19/11: vắng từ 1 ngày → chào mừng trở lại + số ngày */welcomeBanner.innerHTML='<div class="aw-token"><small>'+(away?'CHÀO MỪNG TRỞ LẠI':e.returning?'ĐỒNG MÔN TRỞ LẠI':'ĐỆ TỬ MỚI')+'</small><strong>'+esc(e.name||'Đạo hữu')+'</strong><span>'+(away?'Vắng '+away+' ngày · gõ <b>1</b> tu luyện tiếp':e.returning?'Gõ <b>1</b> tu luyện tiếp':'Gõ <b>1</b> hoặc chào một câu<br>để nhập môn')+'</span><i class="aw-seal" aria-hidden="true">VÂN<br>HẢI<br>TÔNG</i></div><p class="aw-more"></p>';
+ const away=e.returning&&e.awayDays>=1?e.awayDays:0; /* 19/11: vắng từ 1 ngày → chào mừng trở lại + số ngày */welcomeBanner.innerHTML='<div class="aw-token"><small>'+(away?'CHÀO MỪNG TRỞ LẠI':e.returning?'ĐỒNG MÔN TRỞ LẠI':'ĐỆ TỬ MỚI')+'</small><strong>'+esc(e.name||'Đạo hữu')+'</strong><span>'+(away?'Vắng '+away+' ngày · gõ <b>1</b> tu luyện tiếp':e.returning?'Gõ <b>1</b> tu luyện tiếp':'Gõ <b>1</b> hoặc chào một câu<br>để nhập môn')+'</span>'+(e.golden&&!e.returning?'<em class="aw-golden">Giờ Vàng 30 phút<br>tu luyện ×2</em>':'')+'<i class="aw-seal" aria-hidden="true">VÂN<br>HẢI<br>TÔNG</i></div><p class="aw-more"></p>';
  welcomeBanner.hidden=false;clearTimeout(welcomeBannerTimer);welcomeBannerTimer=setTimeout(()=>welcomeBanner.hidden=true,duration);
 }});
 const overlayUrl=()=>`${location.origin}/?overlay=1&world=${mode}&sound=1&zoom=1&quality=auto&v=46#tiktok.studio`;
@@ -483,7 +485,7 @@ setInterval(()=>{for(const e of giftCombos.drain(Date.now()))enqueueReady(e);},1
 let lastFullRitualAt=0;
 function throttleRitual(e){if(e?.effect!=="breakthrough"||ascensionStage||!e.resident&&e.actorKind!=='npc'&&!e.firstStep)return e; /* 19/11: lượt NHẬP MÔN (bình luận đầu tiên) cũng giới hạn màn toàn cảnh */const now=Date.now();// 4/11 tối: mọi cảnh giới tối đa 1 màn toàn cảnh / 60 s (Luyện Khí 90 s) — nhiều người đột phá liền nhau từng tạo cảnh lặp nối đuôi.
   if(now-lastFullRitualAt<(breakthroughRealm(e)<=1?90000:60000))return {...e,effect:"qi",kind:undefined,ritualSkipped:true};lastFullRitualAt=now;return e;}
-function enqueue(e){if(!overlay)return;if(document.body.classList.contains('ui-tm')&&guideFromEvent(e))renderInfoSpotlight(state,esc);if(e?.firstStep&&!ascensionStage){/* 19/11 (chủ game: ~30 người cùng lúc phải đẹp): nhập môn = hiệu ứng TẠI CHỖ ngay, song song, không chiếm toàn màn */addNhapMon(scene,e);scene.noteEvent?.(e);return;}e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
+function enqueue(e){if(!overlay)return;if(document.body.classList.contains('ui-tm')&&guideFromEvent(e))renderInfoSpotlight(state,esc);if(e?.firstStep&&!ascensionStage){/* 19/11 (chủ game: ~30 người cùng lúc phải đẹp): nhập môn = hiệu ứng TẠI CHỖ ngay, song song, không chiếm toàn màn */addNhapMon(scene,e);scene.noteEvent?.(e);if(!e.resident)narrator.add({id:e.id+':nm',user:e.user,name:e.name,gender:e.gender,effect:'nhapmon',text:'Nhập môn',nhapMonVoice:true,clipKind:'nhapmon',at:e.at});return;} /* 20/11: kèm câu chúc nhập môn đọc sẵn (cả sân 1 câu / 8 s) */e=throttleRitual(e);if(e?.orbCard)orbCard?.show(e); /* 18/11: thẻ Linh Châu hiện ngay, giọng vẫn theo hàng */if(e?.card&&cardKind(e.card)){if(!ascensionStage)inventoryDeck?.show(e,state?.players?.find(p=>p.id===e.user));return;}if(ascensionStage){enqueueReady(e);return;}if(e.gift){scene.noteEvent(e);giftCombos.push(e,Date.now());return;}enqueueReady(e);}
 let engagementSoundAt=-Infinity;
 // 07/11/2026: QUÀ HIỆN NGAY LÚC TẶNG. Thẻ quà hiện lập tức; quà ưu tiên cao nhất và cắt ngang hiệu ứng thường.
 // Quà lớn (≥99 coin hoặc quà VIP) cắt cả màn đột phá cảnh giới thấp (≤ Hóa Thần). Không cắt Thiên Đạo, đại điển, quà khác.

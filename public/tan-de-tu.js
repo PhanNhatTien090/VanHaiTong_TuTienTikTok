@@ -15,7 +15,7 @@ export function tanDeTuIds(players,now=Date.now()){
 export function tanDeTuHint(p){
  if((Number(p.realm)||0)===0&&!(p.qi>0))return 'Gõ 1 · nhập môn';
  const ready=p.progressionReady!==false&&p.neededQi>0&&p.qi>=p.neededQi&&p.stones>=(p.neededStones||0);
- return ready?'Đầy · gõ 8 đột phá':'Gõ 1 · tu luyện';
+ return ready?'Đầy · gõ 8 đột phá':p.golden?'Gõ 1 · tu luyện ×2':'Gõ 1 · tu luyện'; // 20/11: Giờ Vàng (30 phút đầu, gõ tay ×2 tu vi) phải THẤY được
 }
 // 19/11 — NHIỆM VỤ TÂN THỦ 3 NGÀY (kế hoạch GĐ2): điểm danh hôm nay · lên cảnh giới 2 · vào một Đường.
 // Hiện dưới tên người vào game trong 3 ngày (sau 15 phút Tân Đệ Tử), tối đa 3 người mới nhất (sân đã đông chữ); xong cả 3 thì thôi.
