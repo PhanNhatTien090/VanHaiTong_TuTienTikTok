@@ -38,6 +38,9 @@ export function tickBonk(w,now,c){
  const top=obj=>Object.entries(obj).sort((a,b)=>b[1]-a[1])[0];
  const [hid,hn]=top(e.count)||[],[vid,vn]=top(e.lost)||[];
  const hitter=hid&&w.players[hid],victim=vid&&w.players[vid];
+ // 21/11 tối: trao danh hiệu thật (trước chỉ đọc tên trong thông báo, chưa từng gán lên đầu).
+ if(hitter&&!hitter.resident&&!hitter.puppet)hitter.funTitle={name:BONK_TITLES.hitter,until:now+BONK.titleMs};
+ if(victim&&victim!==hitter&&!victim.resident&&!victim.puppet)victim.funTitle={name:BONK_TITLES.victim,until:now+BONK.titleMs};
  e.result={hitter:hitter?{id:hitter.id,name:hitter.name,n:hn}:null,victim:victim?{id:victim.id,name:victim.name,n:vn}:null,total:e.seq};
  const parts=[hitter&&`${BONK_TITLES.hitter} ${hitter.name} gõ ${hn} lần`,victim&&`${BONK_TITLES.victim} ${victim.name} bị gõ ${vn} lần`].filter(Boolean);
  c.emit(w,null,'Hội Gõ Đầu khép lại'+(parts.length?' • '+parts.join(' • '):''),'bonk',now,{bonkEnd:true,bonkHitter:hitter?.name||'',bonkVictim:victim?.name||''});

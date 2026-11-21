@@ -17,7 +17,7 @@ const fontOf=(rank,family)=>'900 '+sizeOf(rank)+'px '+family;
 const RES=3; // bitmap 3× → nét trên LIVE 1080 px kể cả khi camera phóng
 const HEAD_K=80; // đỉnh đầu ≈ chân − HEAD_K × scale (bitmap có lề 5 px → đáy chữ hạ thêm 4)
 /** Icon theo tên danh hiệu sự kiện. */
-const EVENT_ICON=[[/thiết thủ|đầu sắt|gõ đầu/i,'hammer'],[/đan|lò|cứu lô/i,'cauldron'],[/độ kiếp|hộ đạo/i,'lightning'],[/mê cung/i,'compass'],[/kiếm|khôi|vô địch|quán quân/i,'sword']];
+const EVENT_ICON=[[/thiết thủ|đầu sắt|gõ đầu/i,'hammer'],[/đan|lò|cứu lô/i,'cauldron'],[/kiếp|hộ đạo/i,'lightning'],[/mê cung/i,'compass'],[/kiếm|khôi|vô địch|quán quân/i,'sword']];
 export const eventIcon=name=>EVENT_ICON.find(([re])=>re.test(String(name||'')))?.[1]||'sword';
 const GOLD={fill:['#fffbe6','#ffe27a','#f2b632','#a8700f'],stroke:'#3b2300',glow:'#ffcc4d'};
 const STYLE=Object.freeze({
@@ -29,23 +29,39 @@ const STYLE=Object.freeze({
  rank:{fill:['#fffaf0','#f3ead8','#f3ead8','#d8c9a8'],stroke:'#1b1813',glow:null},
 });
 const LIMIT=Object.freeze({busy:30,crowd:50});
+// 21/11 tối (chủ game: "danh hiệu quá dài, xấu, nhìn không rõ — rút ngắn: nhà giàu, đầu sắt, kẻ nổ lò…; chữ làm ẢNH CỐ ĐỊNH nhờ Codex vẽ").
+// Mỗi danh hiệu = 1 tên ngắn 2–3 chữ + ảnh chữ public/assets/title-text/<key>.webp (đề bài PROMPT.md cùng thư mục). Ảnh chưa tải → vẽ tạm chữ ngắn.
+export const SHORT=Object.freeze({
+ 'tong-chu':'TÔNG CHỦ','dai-gia':'ĐẠI GIA','nha-giau':'NHÀ GIÀU','phu-ho':'PHÚ HỘ','than-tai':'THẦN TÀI',
+ 'luan-hoi':'LUÂN HỒI','sap-luan-hoi':'SẮP LUÂN HỒI','chi-ton':'CHÍ TÔN',
+ 'ke-no-lo':'KẺ NỔ LÒ','cuu-lo':'THẦN CỨU LÒ','than-luyen-dan':'THẦN LUYỆN ĐAN','vuot-kiep':'VƯỢT KIẾP','ho-dao-vuong':'HỘ ĐẠO VƯƠNG',
+ 'vua-me-cung':'VUA MÊ CUNG','kiem-khoi':'KIẾM KHÔI','chien-than':'CHIẾN THẦN','vua-go-dau':'VUA GÕ ĐẦU','dau-sat':'ĐẦU SẮT',
+ 'quy-khach':'QUÝ KHÁCH','chap-su':'CHẤP SỰ','truong-lao':'TRƯỞNG LÃO','tien-nhan':'TIÊN NHÂN','ton-gia':'TÔN GIẢ','tien-de':'TIÊN ĐẾ','lao-to':'LÃO TỔ','lao-lang':'LÃO LÀNG'});
+/** Tên sự kiện (server ghi) → khóa ảnh ngắn. */
+const EVENT_KEY=[[/nổ lò|đan tặc/i,'ke-no-lo'],[/cứu lô|cứu lò/i,'cuu-lo'],[/đan sư/i,'than-luyen-dan'],[/tán tiên|vượt kiếp/i,'vuot-kiep'],[/hộ đạo/i,'ho-dao-vuong'],
+ [/mê cung/i,'vua-me-cung'],[/kiếm khôi/i,'kiem-khoi'],[/chiến thần/i,'chien-than'],[/thiết thủ|gõ đầu/i,'vua-go-dau'],[/đầu sắt/i,'dau-sat']];
+export const eventKey=name=>EVENT_KEY.find(([re])=>re.test(String(name||'')))?.[1]||null;
+/** Chức vị (honors.js) → khóa ảnh ngắn. */
+const RANK_KEY=[[/^ĐẠI TRƯỞNG LÃO/,'lao-to'],[/NGUYÊN LÃO/,'lao-lang'],[/TIÊN ĐẾ/,'tien-de'],[/TÔN GIẢ|CHÂN QUÂN/,'ton-gia'],[/TIÊN$/,'tien-nhan'],[/TRƯỞNG LÃO/,'truong-lao'],[/CHẤP SỰ/,'chap-su'],[/ĐẠI HỘ PHÁP/,'than-tai']];
+export const rankKey=title=>RANK_KEY.find(([re])=>re.test(String(title||'').toUpperCase()))?.[1]||'quy-khach';
+const mk=(rank,kind,key,extra)=>({rank,kind,key,text:SHORT[key],...extra});
 /** Danh hiệu xịn nhất đang có của 1 người (hoặc null). now = giờ server. */
 export function titleOf(p,now=Date.now()){if(!p||p.resident||p.puppet)return null;
  const h=p.honor,v=vipTier(p.giftCoins),n=Number(p.reincarnations)||0,last=REALM_NAMES.length-1;
- if(h?.role==='sect-master'||h?.title==='TÔNG CHỦ')return {rank:0,kind:'master',text:'TÔNG CHỦ',paid:true};
- const patron=h&&['guardian','patron','patron2','patron3'].includes(h.role)?h.title:null;
- if(v===3)return {rank:1,kind:'vip3',text:patron||'VIP KIM CƯƠNG',paid:true};
- if(n>0){const tr=luanHoiTier(n);return {rank:2,kind:'luanhoi',text:luanHoiTitle(n).toUpperCase(),tier:tr};}
- if((Number(p.realm)||0)>=last&&Number(p.neededQi)>0){const pct=Math.min(100,Math.floor((Number(p.qi)||0)/Number(p.neededQi)*100));return {rank:2,kind:'luanhoi',text:pct>=100?'SẴN SÀNG LUÂN HỒI':'LUÂN HỒI · '+pct+'%',tier:{main:'#ffcc80',soft:'#fff1d6',deep:'#2a1a08'},pending:true};}
- if(v===2)return {rank:3,kind:'vip2',text:patron||'VIP VÀNG',paid:true};
- if(v===1)return {rank:4,kind:'vip1',text:patron||'VIP BẠC',paid:true};
- const fun=p.funTitle?.until>now?p.funTitle.name:null,ev=fun||p.tournamentTitle||(h?.role==='champion'?h.title:null);
- if(ev)return {rank:5,kind:'feat',text:String(ev).toUpperCase(),icon:eventIcon(ev)};
- if(h?.title)return {rank:6,kind:'rank',text:h.title};
+ if(h?.role==='sect-master'||h?.title==='TÔNG CHỦ')return mk(0,'master','tong-chu',{paid:true});
+ const god=h?.role==='guardian'&&v>=1; // người tặng nhiều nhất từ trước tới nay = THẦN TÀI (giữ bậc VIP của họ)
+ if(v===3)return mk(1,'vip3',god?'than-tai':'dai-gia',{paid:true});
+ if(n>0)return mk(2,'luanhoi','luan-hoi',{tier:luanHoiTier(n),n});
+ if((Number(p.realm)||0)>=last&&Number(p.neededQi)>0){const ready=(Number(p.qi)||0)>=Number(p.neededQi);return mk(2,'luanhoi',ready?'sap-luan-hoi':'chi-ton',{tier:{main:'#ffcc80',soft:'#fff1d6',deep:'#2a1a08'},pending:true});}
+ if(v===2)return mk(3,'vip2',god?'than-tai':'nha-giau',{paid:true});
+ if(v===1)return mk(4,'vip1',god?'than-tai':'phu-ho',{paid:true});
+ const fun=p.funTitle?.until>now?p.funTitle.name:null,dan=p.alchemyTitle?.until>now?p.alchemyTitle.name:null,ev=fun||dan||p.tournamentTitle||(h?.role==='champion'?h.title:null),ek=ev&&eventKey(ev);
+ if(ek)return mk(5,'feat',ek,{icon:eventIcon(ev)});
+ if(h?.title)return mk(6,'rank',rankKey(h.title));
  return null;}
 /** 21/11: dòng Luân Hồi thêm cho người mà danh hiệu chính cao hơn Luân Hồi (Tông Chủ, VIP Kim Cương) hoặc đang ngồi ghế chức vụ. */
 export function luanHoiExtra(p,now=Date.now(),seat=false){if(!p||p.resident||p.puppet||!(Number(p.reincarnations)>0))return null;const main=seat?null:titleOf(p,now);if(main?.kind==='luanhoi')return null;
- const n=Number(p.reincarnations);return {rank:2,kind:'luanhoi',text:luanHoiTitle(n).toUpperCase(),tier:luanHoiTier(n),extra:true};}
+ const n=Number(p.reincarnations);return mk(2,'luanhoi','luan-hoi',{tier:luanHoiTier(n),n,extra:true});}
 /** Có hiện không, theo độ đông sân. Chức vị theo cảnh giới (rank 6) gần như ai cũng có → chỉ hiện khi sân vắng (≤10). */
 export const titleVisible=(t,count)=>!!t&&(count>LIMIT.crowd?t.rank<=1:count>LIMIT.busy?t.rank<=2:count>10?t.rank<=5:true);
 
@@ -60,8 +76,25 @@ function makeCanvas(w,h){if(typeof OffscreenCanvas!=='undefined')return new Offs
 const bitmaps=new Map();
 function styleOf(t){if(t.kind!=='luanhoi')return {...STYLE[t.kind],icon:t.icon||STYLE[t.kind].icon};
  return {fill:[t.tier.soft,t.tier.main,t.tier.main,t.tier.deep==='#2a1a08'?'#a8700f':t.tier.main],stroke:'#120a18',glow:t.tier.main,icon:'wheel'};}
+// ---- ảnh chữ (Codex vẽ, tải 1 lần) ----
+const arts=new Map();
+function textArt(key){if(!key||typeof Image==='undefined')return null;let im=arts.get(key);if(!im){im=new Image();im.decoding='async';im.src='/assets/title-text/'+key+'.webp?v=1';arts.set(key,im);}return im.complete&&im.naturalWidth?im:null;}
+const artH=rank=>rank<=1?27:rank<=4?25:rank===5?23:20; // chiều cao ảnh chữ trên sân (px)
+// Bitmap từ ẢNH CHỮ: icon trái + ảnh chữ (+ "×N" Luân Hồi từ lần 2); bản trắng cùng hình để quét vệt sáng.
+function artPlaque(t,st,im,art){const ih=artH(t.rank),iw=Math.round(ih*art.naturalWidth/art.naturalHeight),iconS=im?Math.round(ih*1.05):0,gap=iconS?2:0,pad=4;
+ const nTxt=t.n>=2?'×'+t.n:'',nFont='900 '+Math.round(ih*.62)+'px "Segoe UI",Arial,sans-serif';
+ const probe=makeCanvas(4,4);if(!probe)return null;const pc=probe.getContext('2d');pc.font=nFont;const nw=nTxt?Math.ceil(pc.measureText(nTxt).width)+3:0;
+ const W=pad*2+iconS+gap+iw+nw,H=Math.max(iconS,ih)+pad*2;
+ const mkc=()=>{const cv=makeCanvas(Math.ceil(W*RES),Math.ceil(H*RES));const c=cv.getContext('2d');c.setTransform(RES,0,0,RES,0,0);c.imageSmoothingQuality='high';return [cv,c];};
+ const draw=c=>{if(im){c.save();if(st.glow){c.shadowColor=st.glow;c.shadowBlur=5;}c.drawImage(im,pad,(H-iconS)/2,iconS,iconS);c.restore();}
+  c.drawImage(art,pad+iconS+gap,(H-ih)/2,iw,ih);
+  if(nTxt){c.font=nFont;c.textBaseline='middle';c.lineJoin='round';const x=pad+iconS+gap+iw+2,y=H/2+1;c.lineWidth=3.5;c.strokeStyle='#120a18';c.strokeText(nTxt,x,y);c.fillStyle=t.tier?.main||'#ffe27a';c.fillText(nTxt,x,y);}};
+ const [cv,c]=mkc();draw(c);
+ let shine=null;if(t.paid){const [sc,s]=mkc();draw(s);s.globalCompositeOperation='source-in';s.fillStyle='#ffffff';s.fillRect(0,0,W,H);shine=sc;}
+ return {cv,shine,w:W,h:H,st,art:true};}
 // Bitmap: chữ (gradient + viền tối + quầng sáng) và icon bên trái; kèm bản "chữ trắng" để quét vệt sáng đúng hình chữ.
-function plaque(t){const ok=fontOk(),st=styleOf(t),im=icon(st.icon),key=t.kind+'|'+t.text+'|'+(t.tier?.main||'')+'|'+st.icon+'|'+ok+'|'+!!im;let b=bitmaps.get(key);if(b)return b;
+function plaque(t){const ok=fontOk(),st=styleOf(t),im=icon(st.icon),art=textArt(t.key),key=t.kind+'|'+t.text+'|'+(t.n||0)+'|'+(t.tier?.main||'')+'|'+st.icon+'|'+ok+'|'+!!im+'|'+!!art;let b=bitmaps.get(key);if(b)return b;
+ if(art){b=artPlaque(t,st,im,art);if(b){bitmaps.set(key,b);if(bitmaps.size>220)bitmaps.delete(bitmaps.keys().next().value);}return b;}
  const probe=makeCanvas(4,4);if(!probe)return null;const font=fontOf(t.rank,ok?FAMILY:FALLBACK_FAMILY);const pc=probe.getContext('2d');pc.font=font;
  const fs=sizeOf(t.rank),iconS=st.icon?Math.round(fs*1.55):0,gap=iconS?3:0,tw=Math.ceil(pc.measureText(t.text).width),pad=5;
  const W=pad*2+iconS+gap+tw,H=Math.max(iconS,Math.ceil(fs*1.35))+pad*2;
@@ -86,9 +119,9 @@ export function drawTitlePlaque(c,t,x,y,ms,seed=0,light=false){const b=plaque(t)
  // LÓE SÁNG: mỗi flashMs một lần (lệch pha theo người), vệt sáng chéo quét qua chữ trong 520 ms, cuối vệt bật 1 ngôi sao chớp.
  const per=b.st.flashMs||6000,ph=((ms+seed*911)%per),dur=640;if(ph>dur+300)return;
  const k=Math.min(1,ph/dur),sx=x0-16+(W+32)*k,band=22,s=Math.sin(Math.min(1,ph/dur)*Math.PI);
- if(ph<=dur){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=.32*s;c.drawImage(b.shine,x0,y0,W,H); // cả chữ bừng lên
+ if(ph<=dur){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=(b.art?.16:.32)*s;c.drawImage(b.shine,x0,y0,W,H); // cả chữ bừng lên
   c.beginPath();c.moveTo(sx-band,y0+H);c.lineTo(sx-band+10,y0);c.lineTo(sx+band+10,y0);c.lineTo(sx+band,y0+H);c.closePath();c.clip();
-  c.globalAlpha=1;c.drawImage(b.shine,x0,y0,W,H);c.globalAlpha=.6;c.drawImage(b.shine,x0,y0,W,H);c.restore();} // vệt quét sáng chói
+  if(b.art){c.globalAlpha=.42;c.drawImage(b.shine,x0,y0,W,H);}else{c.globalAlpha=1;c.drawImage(b.shine,x0,y0,W,H);c.globalAlpha=.6;c.drawImage(b.shine,x0,y0,W,H);}c.restore();} // ảnh chữ: vệt nhẹ để chữ vẫn đọc được // vệt quét sáng chói
  if(b.st.sparkle||ph>dur*.7){const f=Math.max(0,1-Math.abs(ph-dur)/300),px=x0+W-6,py=y0+H*.3,r=(b.st.sparkle?10:7)*f;if(r>.4){c.save();c.globalCompositeOperation='lighter';c.globalAlpha=f;c.fillStyle='#fffbe6';
   c.beginPath();c.moveTo(px,py-r*1.9);c.lineTo(px+r*.32,py);c.lineTo(px,py+r*1.9);c.lineTo(px-r*.32,py);c.closePath();c.fill();
   c.beginPath();c.moveTo(px-r*1.9,py);c.lineTo(px,py+r*.32);c.lineTo(px+r*1.9,py);c.lineTo(px,py-r*.32);c.closePath();c.fill();

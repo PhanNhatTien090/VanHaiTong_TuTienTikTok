@@ -28,9 +28,24 @@ test('xếp chỗ: không chồng chữ, bậc cao giữ chỗ sát đầu',()=>
 test('21/11: Tông Chủ / Kim Cương đã chuyển sinh vẫn có dòng Luân Hồi',async()=>{
  const {luanHoiExtra}=await import('../public/title-plaques.js');
  const master={honor:{role:'sect-master'},giftCoins:15493,reincarnations:1};
- assert.equal(titleOf(master,N).kind,'master');const lh=luanHoiExtra(master,N);assert.equal(lh.kind,'luanhoi');assert.equal(lh.text,'NHẤT THẾ LUÂN HỒI');
+ assert.equal(titleOf(master,N).kind,'master');const lh=luanHoiExtra(master,N);assert.equal(lh.kind,'luanhoi');assert.equal(lh.text,'LUÂN HỒI');assert.equal(lh.n,1);
  assert.equal(luanHoiExtra(master,N,true).kind,'luanhoi','ngồi ghế Tông Chủ vẫn hiện Luân Hồi');
- assert.equal(luanHoiExtra({giftCoins:5000,reincarnations:2},N).text,'NHỊ THẾ LUÂN HỒI');
+ assert.equal(luanHoiExtra({giftCoins:5000,reincarnations:2},N).n,2);
  assert.equal(luanHoiExtra({giftCoins:0,reincarnations:1},N),null,'danh hiệu chính đã là Luân Hồi → không lặp');
  assert.equal(luanHoiExtra({giftCoins:5000},N),null);
+});
+test('21/11 tối: tên NGẮN 2–3 chữ, mỗi danh hiệu có ảnh chữ',async()=>{
+ const {SHORT,eventKey,rankKey}=await import('../public/title-plaques.js');
+ const fs=await import('node:fs');
+ for(const [k,v] of Object.entries(SHORT)){assert.ok(v.split(' ').length<=3,v+' quá dài');assert.ok(fs.existsSync(new URL('../public/assets/title-text/'+k+'.webp',import.meta.url)),'thiếu ảnh '+k);}
+ const ev=n=>titleOf({giftCoins:0,funTitle:{name:n,until:N+1}},N).text;
+ assert.equal(ev('Đan Tặc • Kẻ Nổ Lò'),'KẺ NỔ LÒ');assert.equal(ev('Đầu Sắt'),'ĐẦU SẮT');assert.equal(ev('Thiết Thủ Vương'),'VUA GÕ ĐẦU');
+ assert.equal(ev('Băng Tâm Cứu Lô'),'THẦN CỨU LÒ');assert.equal(ev('Mê Cung Chi Chủ'),'VUA MÊ CUNG');assert.equal(ev('Độ Kiếp Tán Tiên'),'VƯỢT KIẾP');assert.equal(ev('Hộ Đạo Chân Quân'),'HỘ ĐẠO VƯƠNG');
+ assert.equal(titleOf({giftCoins:0,alchemyTitle:{name:'Đan Sư Tông Môn',until:N+1}},N).text,'THẦN LUYỆN ĐAN');
+ assert.equal(titleOf({giftCoins:0,tournamentTitle:'Kiếm Khôi Tông Môn'},N).text,'KIẾM KHÔI');
+ assert.equal(titleOf({giftCoins:1500},N).text,'ĐẠI GIA');assert.equal(titleOf({giftCoins:500},N).text,'NHÀ GIÀU');assert.equal(titleOf({giftCoins:150},N).text,'PHÚ HỘ');
+ assert.equal(titleOf({giftCoins:500,honor:{role:'guardian',title:'ĐẠI HỘ PHÁP'}},N).text,'THẦN TÀI');
+ assert.equal(titleOf({giftCoins:500,honor:{role:'patron',title:'THIÊN ĐẠO CUNG PHỤNG'}},N).text,'NHÀ GIÀU','bỏ chữ cung phụng dài');
+ for(const [t,k] of [['ĐẠI TRƯỞNG LÃO','lao-to'],['NGUYÊN LÃO TÔNG MÔN','lao-lang'],['TIÊN ĐẾ','tien-de'],['ĐẠI LA TÔN GIẢ','ton-gia'],['THÁI ẤT CHÂN QUÂN','ton-gia'],['KIM TIÊN','tien-nhan'],['THƯỢNG TIÊN','tien-nhan'],['TRUYỀN CÔNG TRƯỞNG LÃO','truong-lao'],['CHẤP SỰ','chap-su'],['QUÝ KHÁCH TÔNG MÔN','quy-khach']])assert.equal(rankKey(t),k,t);
+ assert.equal(eventKey('xyz'),null);
 });

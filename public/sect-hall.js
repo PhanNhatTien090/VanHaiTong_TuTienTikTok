@@ -3,7 +3,7 @@ import {tmOn} from './ink-panel.js';
 import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
-import {luanHoiExtra,titleVisible,drawTitlePlaque} from './title-plaques.js?v=20261121d';import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
+import {luanHoiExtra,titleVisible,drawTitlePlaque} from './title-plaques.js?v=20261121e';import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
 import {drawCourtAdornment,showsBlackGoldGear} from './court-art.js?v=karma-halo-v5';
 import {drawMount} from './mount-fx.js'; // 18/11: tọa kỹ Tông chủ phục cạnh ngai
 // 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.

@@ -31,6 +31,7 @@ test('go không tên = gõ người ngẫu nhiên khác mình; kết thúc có T
  const w=setup();startBonk(w,N);const r=chat(w,'p0','go',N+100);assert.equal(r.ok,true);assert.notEqual(r.bonk,'p0');
  chat(w,'p1','go Người 2',N+200);chat(w,'p0','go Người 3',N+BONK.cooldownMs+300);
  tick(w,N+BONK.durationMs+1);const e=w.bonkFest;assert.ok(e.closedAt);assert.equal(e.result.hitter.id,'p0');assert.equal(e.result.hitter.n,2);
+ assert.equal(w.players.p0.funTitle.name,'Thiết Thủ Vương','người gõ nhiều nhất mang danh hiệu');assert.ok(w.players[e.result.victim.id].funTitle||e.result.victim.id==='p0');
  assert.equal(stageConflict(w,N+BONK.durationMs+2),null,'khép là trả sân');
  const r2=chat(w,'p2','go Người 0',N+BONK.durationMs+100);assert.notEqual(r2.bonk,'p0');
  assert.equal(snapshot(w,N+BONK.durationMs+100).bonkFest.result.hitter.id,'p0');assert.equal(snapshot(w,N+BONK.durationMs+BONK.podiumMs+10).bonkFest,null);
