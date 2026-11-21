@@ -17,12 +17,12 @@ function wheel(c,x,y,R,rot,col,a,flat=.32,spokes=true){
  c.restore();
 }
 /** Lớp sau lưng (vẽ trước thân người). */
-export function drawLuanHoiAuras(scene,c,t){
- if(scene.bareCrowd||scene.raceStatus?.active||scene.warStatus?.active)return;
- const list=scene.targets||[];if(list.length>30)return;
+export function drawLuanHoiAuras(scene,c,t,only=null){ // only = 1 người được lên sàn trình diễn lúc đông (21/11) → vẽ dù sân >30, bùng đủ
+ if(!only&&scene.bareCrowd||scene.raceStatus?.active||scene.warStatus?.active)return;
+ const list=only?[only]:scene.targets||[];if(!only&&list.length>30)return;
  const now=Date.now(),light=scene.budget?.level==='light';
  for(const a of list){const p=a.player,n=rebirths(p);if(!n||p.resident||p.puppet)continue;if(scene.gearAlpha&&scene.gearAlpha(p.id,t)<.5)continue; /* 19/11: đang biến hình thì ẩn */const tier=luanHoiTier(n);if(!tier)continue;
-  const s=a.scale||1,R=s*30,fy=a.y+s*3,b=luanBurst(p.id,now),rot=t*.00035*(n%2?1:-1);
+  const s=a.scale||1,R=s*30,fy=a.y+s*3,b=only?Math.max(.9,luanBurst(p.id,now)):luanBurst(p.id,now),rot=t*.00035*(n%2?1:-1);
   c.save();c.globalCompositeOperation='lighter';
   wheel(c,a.x,fy,R,rot,tier.main,.22+.5*b);
   if(b>0){

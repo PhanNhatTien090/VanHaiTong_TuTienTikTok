@@ -4,6 +4,7 @@
 // cho SHOWCASE_MS ms ĐỦ hiệu ứng skin (tạm coi sân không đông chỉ khi vẽ người đó) + cột sáng dưới chân + bảng tên "✦ Tên · Skin".
 // Một người một lúc, 4 s / 45 s → chi phí như 1 người mặc skin ở sân vắng (nới luật 08/11 ">50 người bỏ hết hiệu ứng" cho đúng 1 người, chủ game duyệt).
 import {VISITOR_GIFT_REWARDS} from './visitor-rewards.js';
+import {luanHoiTitle} from './luan-hoi-data.js';
 export const SHOWCASE_EVERY=45000,SHOWCASE_MS=4000;
 const skinName=p=>Object.values(VISITOR_GIFT_REWARDS).find(r=>r.skin===p?.skinChoice)?.skinName||'';
 // Người trình diễn lúc này (target trên sân) hoặc null. premium(p) = đang mặc/sở hữu đồ có hiệu ứng skin.
@@ -29,7 +30,7 @@ export function drawSkinShowBack(c,a,t){
 }
 // Lớp TRƯỚC: bảng tên giấy dó "✦ Tên · Skin" phía trên đầu.
 export function drawSkinShowFront(c,a){
- const p=a.player,al=fade();if(al<=0||!p)return;const s=a.scale||1,text='✦ '+Array.from(String(p.name||'')).slice(0,16).join('')+(skinName(p)?' · '+skinName(p):'');
+ const p=a.player,al=fade();if(al<=0||!p)return;const s=a.scale||1,text=(Number(p.reincarnations)>0&&!skinName(p)?'☸ ':'✦ ')+Array.from(String(p.name||'')).slice(0,16).join('')+(skinName(p)?' · '+skinName(p):Number(p.reincarnations)>0?' · '+luanHoiTitle(Number(p.reincarnations)):''); // 21/11: người chuyển sinh không skin → ghi kiếp Luân Hồi
  c.save();c.globalAlpha*=al;c.font='800 15px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';
  const w=c.measureText(text).width+22,x=Math.max(w/2+4,Math.min(896-w/2,a.x)),y=a.y-150*s;
  c.fillStyle='rgba(243,234,216,.96)';c.strokeStyle='#b3261e';c.lineWidth=2;c.beginPath();c.roundRect(x-w/2,y-13,w,26,5);c.fill();c.stroke();

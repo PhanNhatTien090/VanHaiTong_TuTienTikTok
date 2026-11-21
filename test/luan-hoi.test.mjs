@@ -73,3 +73,12 @@ test('21/11: người đã chuyển sinh đột phá → thông báo + giọng L
  assert.match(beyond[0].text,/tiền kiếp/i);
  const {luanHoiRitualInfo}=await import('../public/luan-hoi-fx.js');assert.ok(luanHoiRitualInfo({reincarnations:1,realm:3,highestRealm:28}));
 });
+test('21/11: người chuyển sinh vào LIVE có câu giáng lâm; được lên sàn trình diễn lúc đông',async()=>{
+ const {speechPlan}=await import('../speech-lines.mjs');
+ assert.match(speechPlan({effect:'join',autoArrival:true,returning:true,rebirths:2,name:'Đế giang',text:'x',user:'a',id:'j1'})[0].text,/Nhị Thế Luân Hồi/);
+ assert.doesNotMatch(speechPlan({effect:'join',autoArrival:true,returning:true,name:'Ai',text:'x',user:'b',id:'j2'})[0].text,/Luân Hồi/);
+ const {pickSkinShow,SHOWCASE_EVERY}=await import('../public/skin-showcase.js');
+ const a={id:'a',player:{id:'a',reincarnations:1,giftCoins:0}},b={id:'b',player:{id:'b',giftCoins:0}};
+ const scene={heavyCrowd:true,targets:[b,a]};
+ assert.equal(pickSkinShow(scene,p=>Number(p?.reincarnations)>0,SHOWCASE_EVERY*3+100),a);
+});

@@ -30,13 +30,14 @@ export function voiceDecision(e,{now=Date.now(),player=null,ritualBusy=false,las
   if(e.cmdFail)return 'play'; // 18/11 (chủ game): gõ lệnh mà chưa đủ điều kiện → luôn đọc lý do (server đã giới hạn 5–10 s/người)
   const vet=veteranPlayer(player);
   if(breakthroughVoice(e)){
-    if((player?.giftCoins||0)>0)return 'play';
+    if((player?.giftCoins||0)>0||e.rebirths>0)return 'play'; // 21/11: người đã chuyển sinh đột phá luôn được đọc (câu Luân Hồi riêng)
     return !vet&&now-lastBreakthroughAt>=VOICE_CALM.breakthroughGapMs?'play':'drop';
   }
   if(stageVoice(e))return now-lastStageAt>=VOICE_CALM.stageGapMs?'play':'drop'; // 17/11: lên trung/hậu kỳ luôn được đọc (kể cả người chơi lâu), cả sân 1 câu / 15 s
   // 20/11: nhập môn (bình luận đầu tiên) đọc câu làm sẵn — làn riêng, cả sân 1 câu / 8 s.
   if(e.nhapMonVoice)return now-lastNhapMonAt<VOICE_CALM.nhapMonGapMs?'drop':'play';
   if(e.autoArrival){ // 08/11: chào người vào — cả sân tối đa 1 câu / 20 s; người chơi lâu vào lại chỉ hiện bảng, không đọc.
+    if(e.rebirths>0)return now-lastArrivalAt<VOICE_CALM.newcomerGapMs?'drop':'play'; // 21/11: người chuyển sinh vào LIVE luôn được chào (câu giáng lâm riêng)
     if(vet&&e.returning)return 'drop';
     // 20/11: người MỚI có câu chào đọc sẵn (phát ngay, không tốn máy) → 1 câu / 8 s.
     return now-lastArrivalAt<(e.clipKind==='new'?VOICE_CALM.newcomerGapMs:VOICE_CALM.arrivalGapMs)?'drop':'play';

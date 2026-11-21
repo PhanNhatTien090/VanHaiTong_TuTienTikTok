@@ -1155,7 +1155,7 @@ export function ingest(w,event,now=Date.now()) {
     if(prior&&(now-(prior.lastAutoArrivalAt||0)<15000))return {ok:true,duplicate:true};
     const p=ensurePlayer(w,base.userId,base.name,now);if(base.avatar)p.avatar=base.avatar;p.lastAutoArrivalAt=now;p.leftLiveAt=null;
     const arrival=!prior?w.events.findLast(e=>e.user===p.id&&e.effect==='join'&&e.at===now):null;
-    Object.assign(arrival||emit(w,p,'Chào đạo hữu trở lại','join',now),{autoArrival:true,newcomerWelcome:true,returning:!!prior,avatar:p.avatar||undefined,golden:!prior&&goldenHour(p,now,w)?true:undefined,awayDays:prior&&priorSeen?Math.floor((now-priorSeen)/864e5):0});
+    Object.assign(arrival||emit(w,p,p.reincarnations>0?'☸ '+luanHoiTitle(p.reincarnations).toUpperCase()+' GIÁNG LÂM':'Chào đạo hữu trở lại','join',now),{autoArrival:true,newcomerWelcome:true,returning:!!prior,...(p.reincarnations>0?{rebirths:p.reincarnations}:{}) /* 21/11: chào riêng người chuyển sinh */,avatar:p.avatar||undefined,golden:!prior&&goldenHour(p,now,w)?true:undefined,awayDays:prior&&priorSeen?Math.floor((now-priorSeen)/864e5):0});
     // Arrival itself grants no tu vi, gift credit or task progress. The first
     // real cultivation starts the newcomer journey and remembers chosen gender.
     return {ok:true,playerId:p.id,autoArrival:true};

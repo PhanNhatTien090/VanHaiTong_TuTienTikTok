@@ -133,6 +133,7 @@ export function speechPlan(e){
   if(e.loveRoom)return e.loveRoom.fromQueue?[say('tiennu',`${sayName(e.loveRoom.aName)||'Đạo hữu'} và ${sayName(e.loveRoom.bName)||'đạo lữ'} vào Tình Các song tu!`)]:[]; // lượt quà đã đọc ở giftLines
   if(e.loveGarden)return [say('tongsu',`${sayName(e.loveGarden.aName)||'Đạo hữu'} và ${sayName(e.loveGarden.bName)||'đạo lữ'} song tu dưới cây Nguyệt Lão!`)];
   if(e.loveInvite)return [];
+  if(e.autoArrival&&e.rebirths>0){const kiep=luanHoiTitle(e.rebirths);return [say('tongsu',pickBy(seed,[`${kiep}, ${Who} giáng lâm Vân Hải Tông!`,`Luân hồi giả trở về! ${kiep}, ${Who} đã tới!`,`Tiền kiếp chí tôn ${Who}, ${kiep}, giá lâm tông môn!`]))];} // 21/11: chào riêng người chuyển sinh
   if(e.autoArrival)return [say('tongsu',e.returning?`Mừng ${who} trở lại!`:`Chào mừng ${who} đến Vân Hải Tông!`)]; // 08/11: câu ngắn → tạo giọng nhanh, bớt trễ
   if(e.effect==='join')return [say('tongsu',pickBy(seed,[`Chào mừng ${who} gia nhập Vân Hải Tông!`,`${Who} gia nhập Vân Hải Tông! Tiên lộ bắt đầu!`,`Hoan nghênh ${who} gia nhập Vân Hải Tông!`]))];
   // v87: hồng bao · câu đố · chuỗi điểm danh · nhiệm vụ ngày · tông môn kiến tạo
