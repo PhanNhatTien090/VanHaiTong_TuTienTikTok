@@ -204,6 +204,8 @@ export function speechPlan(e){
   if(e.patronAward)return [say('tiennu',`Vinh danh Đại Hộ Pháp ${raw||''}!`),say('tongsu',`Ban bộ Thương Long Hộ Pháp, Hộ Pháp Thiên Kiếm và Trấn Tông Long Ấn!`)];
   if(e.effect==='skin')return [say('tongsu',`${Who} khoác lên ${cutWords(text,40)}.`)];
   if(e.effect==='breakthrough'){const to=titleCase(head.replace(/^đột phá\s*/i,'')),up=ascendByName(to);
+   if(e.mentor?.name){const M=sayName(e.mentor.name)||'Tiền bối',kiep=luanHoiTitle(e.mentor.n||1); // 21/11: Luân Hồi chỉ điểm hậu bối
+    return [say('tongsu',pickBy(seed,[`${kiep} ${M} chỉ điểm! ${Who} đột phá ${to}!`,`Tiền kiếp chí tôn ${M} truyền đạo, ${Who} một bước vào ${to}!`,`Được ${M} chỉ điểm, ${Who} khai ngộ, đột phá ${to}!`]))];}
    if(e.rebirths>0){const kiep=luanHoiTitle(e.rebirths); // 21/11 (chủ game): người đã chuyển sinh đột phá phải có giọng Luân Hồi riêng
     if(e.beyondPast)return [say('tongsu',pickBy(seed,[`Phá vỡ tiền kiếp! ${kiep}, ${Who} bước vào ${to}, vượt xa kiếp trước!`,`${kiep}! ${Who} đột phá ${to}, đạo hạnh kiếp này đã vượt tiền kiếp!`]))];
     return [say('tongsu',pickBy(seed,[`${kiep}! ${Who} trùng tu đột phá ${to}, ký ức tiền kiếp thức tỉnh!`,`Luân hồi chuyển thế, ${Who} lại bước vào ${to}! ${kiep}, đạo tâm bất diệt!`,`${kiep}, ${Who} đột phá ${to}! Kiếp này tu lại, càng thêm vững vàng!`]))];}

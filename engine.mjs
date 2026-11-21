@@ -228,7 +228,34 @@ export function ensurePlayer(w,id,name,now=Date.now(),gender=null) {
 }
 function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
-const COMMANDS=['daoqua','luanhoi','thankhi','banmenh','chuyensinh', /* 18/11: "thần khí", "bản mệnh" có dấu cách */'phikiem','songtu','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau','biphap'];
+const COMMANDS=['chidiem' /* 21/11: Luân Hồi chỉ điểm hậu bối */,'daoqua','luanhoi','thankhi','banmenh','chuyensinh', /* 18/11: "thần khí", "bản mệnh" có dấu cách */'phikiem','songtu','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau','biphap'];
+// 21/11 (chủ game: "người chuyển sinh chả có gì để chơi" → chọn E): CHỈ ĐIỂM HẬU BỐI.
+// Người đã chuyển sinh gõ "chỉ điểm" (tự chọn hậu bối thấp nhất đang có mặt) hoặc "chỉ điểm <tên>" → hậu bối cảnh giới 1–6 đột phá NGAY.
+// Mỗi người chỉ điểm 30 phút/lần; mỗi hậu bối nhận 1 lần/ngày; vẫn tôn trọng hạn đột phá ngày (≥5). Không cộng gì cho người chỉ điểm ngoài số lần (khoe + danh vọng).
+export const MENTOR={cdMs:30*60000,minRealm:1,maxRealm:6,seenMs:5*60000};
+const mentorKey=s=>normalize(String(s||'')).replace(/[^a-z0-9]/g,'');
+function mentorHasCandidate(w,p,now){const day=vnDay(now);return Object.values(w.players).some(t=>t.id!==p.id&&!t.resident&&!t.puppet&&t.realm>=MENTOR.minRealm&&t.realm<=MENTOR.maxRealm&&now-(Number(t.lastActive)||0)<=MENTOR.seenMs&&t.mentoredDay!==day);}
+function mentorCommand(w,p,rest,now){
+ if(p.resident||p.puppet||!(Number(p.reincarnations)>0))return {ok:false,message:'Chỉ điểm hậu bối dành cho người đã chuyển sinh • đầy tu vi '+REALMS.at(-1)+' rồi gõ chuyển sinh.'};
+ if(w.webShadow)return {ok:false,message:'Chỉ điểm chỉ dùng trên LIVE.'};
+ if(warActive(w)||w.nguDuong?.match?.endsAt>now)return {ok:false,message:'Đang có trận lớn • chỉ điểm sau khi trận kết thúc.'};
+ const left=(Number(p.mentorAt)||0)+MENTOR.cdMs-now;if(left>0)return {ok:false,message:'Đạo lực tiền kiếp đang hồi • chỉ điểm lại sau '+Math.ceil(left/60000)+' phút.'};
+ const day=vnDay(now);
+ const why=t=>!t||t===p||t.id===p.id||t.resident||t.puppet?'x':t.realm<MENTOR.minRealm||t.realm>MENTOR.maxRealm?'realm':now-(Number(t.lastActive)||0)>MENTOR.seenMs?'away':t.mentoredDay===day?'done':t.realm>=5&&dailyAscensionView(w,t,now).exhausted?'cap':'';
+ const q=mentorKey(rest);let t;
+ if(q){const list=Object.values(w.players).filter(x=>!x.resident&&!x.puppet&&x.id!==p.id&&mentorKey(x.name).includes(q)).sort((a,b)=>(mentorKey(b.name)===q)-(mentorKey(a.name)===q)||(b.lastActive||0)-(a.lastActive||0));
+  if(!list.length)return {ok:false,message:'Không thấy đạo hữu tên "'+String(rest).slice(0,20)+'" • gõ chỉ điểm (không tên) để tự chọn hậu bối.'};
+  t=list.find(x=>!why(x));if(!t){const r=why(list[0]);return {ok:false,message:list[0].name+(r==='realm'?' không ở cảnh giới '+REALMS[MENTOR.minRealm]+'–'+REALMS[MENTOR.maxRealm]:r==='away'?' đang không có mặt':r==='done'?' hôm nay đã được chỉ điểm':r==='cap'?' đạo cơ đang lắng đọng, chưa đột phá được':' không nhận chỉ điểm được')+' • gõ chỉ điểm (không tên) để tự chọn.'};}}
+ else{t=Object.values(w.players).filter(x=>!why(x)).sort((a,b)=>a.realm-b.realm||(b.lastActive||0)-(a.lastActive||0))[0];
+  if(!t)return {ok:false,message:'Chưa có hậu bối nào (cảnh giới '+REALMS[MENTOR.minRealm]+'–'+REALMS[MENTOR.maxRealm]+', đang có mặt) cần chỉ điểm • thử lại sau.'};}
+ // bù đủ tu vi + linh thạch cho đúng 1 lần đột phá (số gốc, không nhân hệ số) rồi đột phá như thường
+ const needQ=Math.max(0,requiredQi(t)-(Number(t.qi)||0)),needS=Math.max(0,requiredStones(t)-(Number(t.stones)||0));t.qi=(Number(t.qi)||0)+needQ;t.totalQi=(Number(t.totalQi)||0)+needQ;t.stones=(Number(t.stones)||0)+needS;
+ recordDailyAscension(w,t,now);t.qi-=requiredQi(t);t.stones-=requiredStones(t);t.realm++;
+ p.mentorAt=now;p.mentorCount=(Number(p.mentorCount)||0)+1;t.mentoredDay=day;t.mentoredBy=p.id;
+ const mentor={id:p.id,name:String(p.name||'Đạo hữu').slice(0,24),n:p.reincarnations,count:p.mentorCount};
+ emit(w,t,'ĐỘT PHÁ '+REALMS[t.realm].toUpperCase()+' • '+mentor.name+' ('+luanHoiTitle(p.reincarnations)+') chỉ điểm','breakthrough',now,{fromRealm:t.realm-1,toRealm:t.realm,mentor});
+ return {ok:true,mentored:t.id,toRealm:t.realm,message:'Chỉ điểm '+t.name+' đột phá '+REALMS[t.realm]+' • lần thứ '+p.mentorCount};
+}
 export function commandWords(text){
   const words=normalize(text).split(/\s+/).map(w=>w.replace(/[^a-z0-9]/g,'')).filter(Boolean);
   if(words.length>1&&!COMMANDS.includes(words[0])&&COMMANDS.includes(words[0]+words[1]))words.splice(0,2,words[0]+words[1]);
@@ -455,6 +482,8 @@ function actionCore(w,input,now) {
     if(r.ok&&r.chosen)emit(w,p,r.message,'title',now,{daoQua:r.chosen});else if(!cooldown(p,'luanhoi-info',5000,now))emit(w,p,r.message,'status',now,r.ok?undefined:{cmdFail:true});
     return r;
   }
+  if(type==='chat'&&cmd!=='chidiem'&&!w.webShadow&&Number(p.reincarnations)>0&&now-(Number(p.mentorAt)||0)>=MENTOR.cdMs&&!cooldown(p,'mentor-hint',MENTOR.cdMs,now)&&mentorHasCandidate(w,p,now))emit(w,p,'☸ Có hậu bối cần chỉ điểm • gõ chỉ điểm để giúp họ đột phá ngay','status',now,{mentorHint:true}); // 21/11: nhắc người đã chuyển sinh (30 phút/lần)
+  if(type==='chat'&&cmd==='chidiem'){const r=mentorCommand(w,p,rest,now);if(!r.ok&&!cooldown(p,'mentor-info',5000,now))emit(w,p,r.message,'status',now,{cmdFail:true});return r;}
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now,requiredQi(p));
     // 18/11: Luân Hồi — màn chiếu riêng "Niết Bàn Luân Hồi" (overlay public/luan-hoi-cinema.js) thay cho màn đổi skin chung.

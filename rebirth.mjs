@@ -26,7 +26,7 @@ export function rebirthCommand(w,p,rest,now,need=0){
  p.rebirthQiSpent=(Number(p.rebirthQiSpent)||0)+spent;p.lastRebirthAt=now;p.realm=0;p.qi=0;p.readyRealm=null;
  delete p.rebirthConfirmation;delete p.novicePractice;
  // Preserve the daily ledger/cooldowns so reconnects or rebirths cannot refill a day's quota.
- return {ok:true,reborn:true,visualFrom,visualTo:structuredClone(p),message:luanHoiTitle(p.reincarnations).toUpperCase()+' • Niết Bàn trùng sinh • gõ daoqua để lĩnh ngộ Đạo Quả'};
+ return {ok:true,reborn:true,visualFrom,visualTo:structuredClone(p),message:luanHoiTitle(p.reincarnations).toUpperCase()+' • Niết Bàn trùng sinh • gõ daoqua lĩnh ngộ Đạo Quả • gõ chỉ điểm giúp hậu bối đột phá'};
 }
 const DAO_ALIAS={kiem:'kiem',kiemdao:'kiem',the:'the',thedao:'the',dan:'dan',dandao:'dan',phuc:'phuc',phucdao:'phuc',1:'kiem',2:'the',3:'dan',4:'phuc'};
 export function daoQuaCommand(p,rest){
@@ -43,5 +43,5 @@ export function daoQuaCommand(p,rest){
 }
 export function luanHoiStatus(p){
  const n=rebirths(p);if(!n)return 'Chưa chuyển sinh • đầy tu vi '+REALM_NAMES[REBIRTH_UNLOCK_REALM]+' thì gõ chuyển sinh.';
- return luanHoiTitle(n)+' • tu luyện +'+pct(Math.min(LUAN_HOI.handQiMax,n*LUAN_HOI.handQiPer))+' • Luân Hồi Ấn: '+REALM_NAMES[combatRealm(p)]+' • Lôi Đài hộ thể +'+pct(Math.min(LUAN_HOI.hpMax,n*LUAN_HOI.hpPer))+' • Đạo Quả còn '+daoFree(p)+' điểm';
+ return luanHoiTitle(n)+' • tu luyện +'+pct(Math.min(LUAN_HOI.handQiMax,n*LUAN_HOI.handQiPer))+' • Luân Hồi Ấn: '+REALM_NAMES[combatRealm(p)]+' • Lôi Đài hộ thể +'+pct(Math.min(LUAN_HOI.hpMax,n*LUAN_HOI.hpPer))+' • Đạo Quả còn '+daoFree(p)+' điểm • đã chỉ điểm '+(Number(p.mentorCount)||0)+' hậu bối (gõ chỉ điểm)';
 }

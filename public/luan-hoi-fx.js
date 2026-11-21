@@ -54,8 +54,10 @@ import {luanHoiTitle} from './luan-hoi-data.js';
 const SERIF='"Noto Serif","Times New Roman",Georgia,serif';
 function gtext(c,s,x,y,size,fill,width=6,spacing=0){c.font='900 '+size+'px '+SERIF;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';if('letterSpacing' in c)c.letterSpacing=spacing+'px';c.lineWidth=width;c.strokeStyle='#120800';c.strokeText(s,x,y,820);c.fillStyle=fill;c.fillText(s,x,y,820);if('letterSpacing' in c)c.letterSpacing='0px';}
 export function luanHoiRitualInfo(player){const n=rebirths(player);if(!n||player?.resident||player?.puppet)return null;const hi=Math.floor(Number(player.highestRealm)||0),r=Math.floor(Number(player.realm)||0);return {n,hi,beyond:r>hi,tier:luanHoiTier(n)};}
+// 21/11: hậu bối đột phá nhờ người đã chuyển sinh CHỈ ĐIỂM → khung Luân Hồi theo bậc của người chỉ điểm + băng rôn TIỀN KIẾP CHỈ ĐIỂM.
+export function mentorRitualInfo(ritual){const m=ritual?.mentor;if(!m?.name)return null;const n=Math.max(1,Math.floor(Number(m.n)||1));return {n,hi:0,beyond:false,tier:luanHoiTier(n),mentor:m};}
 export function drawLuanHoiRitualFrame(scene,c,ritual,t,H){
- const id=ritual?.user;if(!id)return false; /* 21/11: Tông Chủ/đạo lữ đang ngồi ghế bị loại khỏi realPlayers → tra cả danh sách đầy đủ (trước đây Tông Chủ đã chuyển sinh đột phá không có khung) */const p=(scene.realPlayers||[]).find(q=>q.id===id)||(scene.lastState?.players||scene.players||[]).find(q=>q.id===id);const info=luanHoiRitualInfo(p);if(!info)return false;
+ const id=ritual?.user;if(!id)return false; /* 21/11: Tông Chủ/đạo lữ đang ngồi ghế bị loại khỏi realPlayers → tra cả danh sách đầy đủ (trước đây Tông Chủ đã chuyển sinh đột phá không có khung) */const p=(scene.realPlayers||[]).find(q=>q.id===id)||(scene.lastState?.players||scene.players||[]).find(q=>q.id===id);const info=luanHoiRitualInfo(p)||mentorRitualInfo(ritual);if(!info)return false;
  const age=(t-ritual.start)/1000,dur=(ritual.duration||10000)/1000,a=Math.min(1,age/.6,(dur-age)/.6);if(a<=0)return false;
  const T=info.tier,gold='#ffd27a',main=info.beyond?'#ffe9a8':T.main,sec=t/1000,m=14,W=900,Hh=H;
  c.save();c.globalAlpha=a;
@@ -73,7 +75,7 @@ export function drawLuanHoiRitualFrame(scene,c,ritual,t,H){
  // băng rôn trên
  const by=Hh*.128,bw=560,bh=78; /* 20/11: dòng phụ nằm TRONG băng rôn (thẻ tên giấy dó mới nằm ngay dưới, trước đè lên nhau) */ /* dưới dòng tên của màn đột phá */c.fillStyle='#0b0612ee';c.beginPath();c.moveTo(450-bw/2,by-bh/2);c.lineTo(450+bw/2,by-bh/2);c.lineTo(450+bw/2+22,by);c.lineTo(450+bw/2,by+bh/2);c.lineTo(450-bw/2,by+bh/2);c.lineTo(450-bw/2-22,by);c.closePath();c.fill();c.strokeStyle=gold;c.lineWidth=2;c.stroke();
  const gg=c.createLinearGradient(0,by-20,0,by+20);gg.addColorStop(0,'#fffbe8');gg.addColorStop(.5,gold);gg.addColorStop(1,'#fff0c0');
- gtext(c,'☸ '+luanHoiTitle(info.n).toUpperCase()+' ☸',450,by-11,30,gg,6,4);
- gtext(c,info.beyond?'✦ PHÁ VỠ TIỀN KIẾP ✦':'Tiền kiếp · '+(REALM_NAMES[info.hi]||''),450,by+20,19,info.beyond?'#ffe9a8':'#f3e6ff',5,3);
+ gtext(c,info.mentor?'☸ TIỀN KIẾP CHỈ ĐIỂM ☸':'☸ '+luanHoiTitle(info.n).toUpperCase()+' ☸',450,by-11,30,gg,6,4);
+ gtext(c,info.mentor?String(info.mentor.name).slice(0,22)+' · '+luanHoiTitle(info.n):info.beyond?'✦ PHÁ VỠ TIỀN KIẾP ✦':'Tiền kiếp · '+(REALM_NAMES[info.hi]||''),450,by+20,19,info.beyond?'#ffe9a8':'#f3e6ff',5,3);
  c.restore();return true;
 }
