@@ -233,9 +233,9 @@ function fail(message){return {ok:false,message};}
 // Người xem hay gõ có dấu và có dấu cách ("đột phá", "tu luyện", "nhập môn nữ", "dotpha!") → gộp thành lệnh.
 const COMMANDS=['danhhieu' /* 21/11 tối: danh hiệu */,'chidiem' /* 21/11: Luân Hồi chỉ điểm hậu bối */,'daoqua','luanhoi','thankhi','banmenh','chuyensinh', /* 18/11: "thần khí", "bản mệnh" có dấu cách */'phikiem','songtu','cungtu','giup','bay','baykiem','dua','duakiem','tangtoc','goiy','huongdan','lenh','nhapmon','gioitinh','xungho','xunghieu','tuvi','xem','thongtin','tuluyen','dotpha','hai','diemdanh','danh','hoikhi','hoc','ren','luyendan','dung','trangbi','skin','luyencong','coduyen','tythi','kiem','ketduyen','dongy','tuchoi','duyen','huyduyen','mecung','godau','leothap','vaothap','tuido','hanhtrang','xemtui','linhthu','huycanh','lendai','xuongdai','loidai','thachdau','biphap'];
 // 21/11 (chủ game: "người chuyển sinh chả có gì để chơi" → chọn E): CHỈ ĐIỂM HẬU BỐI.
-// Người đã chuyển sinh gõ "chỉ điểm" (tự chọn hậu bối thấp nhất đang có mặt) hoặc "chỉ điểm <tên>" → hậu bối cảnh giới 1–6 đột phá NGAY.
+// Người đã chuyển sinh gõ "chỉ điểm" (tự chọn hậu bối thấp nhất đang có mặt) hoặc "chỉ điểm <tên>" → hậu bối cảnh giới 0–7 đột phá NGAY (21/11 tối, chủ game: tới Chân Tiên).
 // Mỗi người chỉ điểm 30 phút/lần; mỗi hậu bối nhận 1 lần/ngày; vẫn tôn trọng hạn đột phá ngày (≥5). Không cộng gì cho người chỉ điểm ngoài số lần (khoe + danh vọng).
-export const MENTOR={cdMs:30*60000,minRealm:0,maxRealm:6,seenMs:5*60000,minQuery:2}; // 21/11: gồm cả cảnh giới 0 — 517 người/7 ngày chỉ thả tim, chưa từng bình luận nên không tự nhập môn
+export const MENTOR={cdMs:30*60000,minRealm:0,maxRealm:7,seenMs:5*60000,minQuery:2}; // 21/11: gồm cả cảnh giới 0 — 517 người/7 ngày chỉ thả tim, chưa từng bình luận nên không tự nhập môn
 const mentorKey=s=>normalize(String(s||'')).replace(/[^a-z0-9]/g,'');
 function mentorHasCandidate(w,p,now){const day=vnDay(now);return Object.values(w.players).some(t=>t.id!==p.id&&!t.resident&&!t.puppet&&t.realm>=MENTOR.minRealm&&t.realm<=MENTOR.maxRealm&&now-(Number(t.lastActive)||0)<=MENTOR.seenMs&&t.mentoredDay!==day);}
 function mentorCommand(w,p,rest,now){

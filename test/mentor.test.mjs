@@ -36,3 +36,7 @@ test('cảnh giới 0 chỉ thả tim (chưa nhập môn) được chỉ điểm
  const before=z.stones;action(w,{type:'chat',userId:'z',text:'chào',fromLive:true},N+1000);assert.equal(z.realm,1);assert.equal(z.stones,before);
 });
 test('tên quá ngắn bị từ chối, không mất lượt',()=>{const {w,m}=setup();const r=chat(w,'m','chỉ điểm a');assert.equal(r.ok,false);assert.match(r.message,/ít nhất 2/);assert.equal(m.mentorAt,undefined);});
+// 21/11 tối (chủ game): chỉ điểm tới Chân Tiên — Đại Thừa (7) được, Chân Tiên (8) thì không.
+test('chỉ điểm Đại Thừa lên Chân Tiên; Chân Tiên trở lên không được',()=>{const {w,m,a,b}=setup();a.realm=7;a.qi=0;a.stones=0;b.realm=8;
+ assert.equal(MENTOR.maxRealm,7);const r=chat(w,'m','chỉ điểm tiểu muội');assert.equal(r.ok,true,r.message);assert.equal(a.realm,8);
+ assert.equal(chat(w,'m','chỉ điểm lão ngưu',N+MENTOR.cdMs).ok,false);assert.equal(b.realm,8);});
