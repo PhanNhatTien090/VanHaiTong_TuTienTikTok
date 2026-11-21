@@ -817,7 +817,7 @@ export function giftJackpot(w,p,coins,now,rand=Math.random,baseQi=p?.qi){
   const qi=creditQi(w,p,Math.floor(Math.max(0,Number(baseQi)||0)*GIFT_JACKPOT.qiRate),now,'gift');
   const stones=Math.max(GIFT_JACKPOT.stones,Math.round(requiredStones(p)*GIFT_JACKPOT.stoneRate)),herbs=GIFT_JACKPOT.herbs;
   p.qi+=qi;p.totalQi+=qi;p.stones+=stones;p.herbs+=herbs;w.sectQi+=qi;
-  p.rewardSkins??=[];const pool=Object.entries(VISITOR_GIFT_REWARDS).filter(([,r])=>(r.skinCoins||100)<=GIFT_JACKPOT.maxSkinCoins&&!p.rewardSkins.includes(r.skin));
+  p.rewardSkins??=[];const pool=Object.entries(VISITOR_GIFT_REWARDS).filter(([,r])=>(r.skinOnlyCoins??r.skinCoins??100)<=GIFT_JACKPOT.maxSkinCoins&&!p.rewardSkins.includes(r.skin)); /* 21/11 tối: giá skin riêng cũ — giữ nguyên bể skin Đại lễ */
   let skinName=null;if(pool.length){const [kind,r]=pool[Math.floor(rand()*pool.length)%pool.length];p.rewardSkins.push(r.skin);p.skinChoice=r.skin;p.skinChoiceSource='gift';skinName=visitorSkinName(kind,p.gender);
     emit(w,p,`Biến hình ${skinName} • quà 500 nhận skin`,'transform',now,{transform:kind,skinName,jackpotSkin:true});}
   return {qi,stones,herbs,skinName};
@@ -1271,7 +1271,7 @@ function autoSkyEvent(w,now){
 // có trọng số: skin 300 coin (Khuy Niết, Tần Mục) trọng số 1, các vị khác 2; không bao giờ trùng vị vừa rồi. Sân bận thì thử lại sau 30 s.
 // Tắt bằng settings.visitorRotation=false. Khi bật, túi sự kiện ngẫu nhiên không còn tự mở khách mời nữa.
 export const VISITOR_ROTATION_MS=10*60000;
-export function visitorRotationWeights(){return Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k)&&!RETIRED_VISITORS.includes(k)).map(k=>[k,(VISITOR_GIFT_REWARDS[k].skinCoins||100)>=300?1:2]);}
+export function visitorRotationWeights(){return Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k)&&!RETIRED_VISITORS.includes(k)).map(k=>[k,(VISITOR_GIFT_REWARDS[k].skinOnlyCoins??VISITOR_GIFT_REWARDS[k].skinCoins??100)>=300?1:2]);}
 export function pickRotationVisitor(last,rand=Math.random,lastKinds=[]){const all=visitorRotationWeights().filter(([k])=>k!==last),fresh=all.filter(([k])=>!lastKinds?.includes(k)),pool=fresh.length?fresh:all,total=pool.reduce((n,[,x])=>n+x,0);let r=rand()*total;for(const [k,x] of pool)if((r-=x)<0)return k;return pool.at(-1)?.[0]||null;}
 // 20/11: mỗi lượt 3 vị khác nhau (vị được chọn đứng giữa), tránh lặp vị của lượt trước nếu còn đủ.
 export function pickVisitorLineup(first,lastKinds=[],rand=Math.random,art=null){

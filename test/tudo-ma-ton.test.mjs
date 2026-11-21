@@ -5,15 +5,15 @@ import {VISITORS} from '../public/visitor-event.js';import {SPECIAL_SKINS} from 
 // 20/11: test luật sự kiện 1 vị (lượt nhiều vị kiểm ở visitor-lineup.test.mjs).
 const singleVisitor=w=>{w.settings??={};w.settings.visitorLineup=false;return w;};
 const N=1800000000000;
-test('Tư Đồ Ma Tôn: 5 phút, cơ duyên miễn phí, 200 coin skin, 300 coin Huyết Sát Ma Đao, không trùng quà',()=>{
+test('Tư Đồ Ma Tôn: cơ duyên miễn phí, CẢ BỘ 300 (skin + Huyết Sát Ma Đao cùng lúc, 21/11 tối), không trùng quà',()=>{
  const w=createWorld('live');w.settings.autoEvents=false;w.settings.residents=false;w.nextBossAt=N+1e9;
  const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(singleVisitor(w),'tudo',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
  assert.equal(VISITORS.tudo.how,'Gõ cơ duyên để nhận quà, có thể sở hữu skin');
  assert.equal(action(w,{type:'chat',userId:'a',text:'cơ duyên'},N+1000).ok,true);assert.ok(w.visitor.players.a.awarded);
  const gift=(coins,eventId,now)=>action(w,{type:'gift',userId:'a',name:'An',gift:'Rose',coins,count:1,eventId},now);
- gift(199,'g1',N+2000);assert.ok(!(p.rewardSkins||[]).includes(TUDO_SKIN));gift(1,'g2',N+3000);assert.ok(p.rewardSkins.includes(TUDO_SKIN));assert.equal(tudoWorn(p),true);
- gift(1,'g2',N+3100);assert.equal(w.visitor.giftProgress.a.coins,200);
- assert.ok(!p.artifacts.includes(TUDO_BLADE));gift(100,'g3',N+4000);assert.equal(p.artifacts.filter(x=>x===TUDO_BLADE).length,1);
+ gift(299,'g1',N+2000);assert.ok(!(p.rewardSkins||[]).includes(TUDO_SKIN));assert.ok(!p.artifacts.includes(TUDO_BLADE));gift(1,'g2',N+3000);assert.ok(p.rewardSkins.includes(TUDO_SKIN));assert.equal(tudoWorn(p),true);
+ gift(1,'g2',N+3100);assert.equal(w.visitor.giftProgress.a.coins,300);
+ gift(300,'g3',N+4000);assert.equal(p.artifacts.filter(x=>x===TUDO_BLADE).length,1);
  const restored=JSON.parse(JSON.stringify(w));tick(restored,N+300001);assert.ok(restored.players.a.rewardSkins.includes(TUDO_SKIN));
  assert.ok(SPECIAL_SKINS.some(s=>s.id===TUDO_SKIN&&s.name==='Tư Đồ Ma Tôn'));
  const line=speechPlan({visitorStart:true,visitorKind:'tudo'}).map(x=>x.text).join(' ');assert.match(line,/Tư Đồ Ma Tôn/);assert.match(line,/có thể sở hữu skin/);assert.doesNotMatch(line,/coin|\d/);

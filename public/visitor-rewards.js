@@ -1,14 +1,16 @@
 import {COURT_VISITORS} from './court-rewards.js';
+// 21/11 tối (chủ game): KHÔNG bán skin riêng nữa — một giá là nhận CẢ BỘ (skin + pháp bảo). skinCoins = artifactCoins = giá cả bộ.
+// skinOnlyCoins = giá skin riêng CŨ, chỉ dùng cho: Đại lễ (skin ngẫu nhiên ≤200), nhịp xoay lượt cũ, và người ĐÃ có skin mà thiếu pháp bảo (bù phần chênh).
 export const VISITOR_GIFT_REWARDS=Object.freeze({
- hailam:{skin:'sea-dragon-heir',skinName:'Long Duệ Hải Lam',cell:2,skinCoins:100,artifactCoins:300,artifact:'sea-dragon-heart',artifactName:'Hải Lam Long Tâm'},
- doraemon:{skin:'doraemon-avatar',skinName:'Doraemon',cell:3,skinCoins:100,artifactCoins:300,artifact:'dora-anywhere-door',artifactName:'Cánh Cửa Thần Kỳ'},
- shende:{skin:'shende-avatar',skinName:'Thần Đế',cell:2,skinCoins:100,artifactCoins:300,artifact:'shende-dao-seal',artifactName:'Thần Đế Đạo Ấn'},
- hanlap:{skin:'hanlap-avatar',skinName:'Hàn Lập',cell:1,skinCoins:100,artifactCoins:200,artifact:'hanlap-bamboo-swords',artifactName:'Thanh Trúc Phong Vân Kiếm'},
- tudo:{skin:'tudo-ma-ton',skinName:'Tư Đồ Ma Tôn',cell:2,skinCoins:200,artifactCoins:300,artifact:'tudo-huyet-dao',artifactName:'Huyết Sát Ma Đao'},
- khuyniet:{skin:'khuy-niet-loi-ton',skinName:'Khuy Niết Lôi Tôn',cell:0,skinCoins:300,artifactCoins:500,artifact:'khuy-niet-tu-loi-long',artifactName:'Tử Lôi Long'},
- viemton:{skin:'phan-thien-viem-ton',skinName:'Tần Mục Hỏa Thần',cell:0,skinCoins:300,artifactCoins:500,artifact:'phan-thien-song-dao',artifactName:'Song Đao Liệt Diễm',icon:'sword'},
- ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{skin:v.skin,skinName:v.name,skinCoins:v.skinCoins||300,artifactCoins:v.artifactCoins||500,artifact:v.artifact,artifactName:v.relic,icon:v.icon||'orb',art:v.artwork?.blade}])),
- vuonglam:{skin:'vuonglam-avatar',skinName:'Vương Lâm / Lý Mộ Uyển',cell:0,skinCoins:200,artifactCoins:300,artifact:'vuonglam-soul-banner',artifactName:'Hồn Phiên'}
+ hailam:{skin:'sea-dragon-heir',skinName:'Long Duệ Hải Lam',cell:2,skinOnlyCoins:100,skinCoins:300,artifactCoins:300,artifact:'sea-dragon-heart',artifactName:'Hải Lam Long Tâm'},
+ doraemon:{skin:'doraemon-avatar',skinName:'Doraemon',cell:3,skinOnlyCoins:100,skinCoins:100,artifactCoins:300,artifact:'dora-anywhere-door',artifactName:'Cánh Cửa Thần Kỳ'},
+ shende:{skin:'shende-avatar',skinName:'Thần Đế',cell:2,skinOnlyCoins:100,skinCoins:300,artifactCoins:300,artifact:'shende-dao-seal',artifactName:'Thần Đế Đạo Ấn'},
+ hanlap:{skin:'hanlap-avatar',skinName:'Hàn Lập',cell:1,skinOnlyCoins:100,skinCoins:100,artifactCoins:200,artifact:'hanlap-bamboo-swords',artifactName:'Thanh Trúc Phong Vân Kiếm'},
+ tudo:{skin:'tudo-ma-ton',skinName:'Tư Đồ Ma Tôn',cell:2,skinOnlyCoins:200,skinCoins:300,artifactCoins:300,artifact:'tudo-huyet-dao',artifactName:'Huyết Sát Ma Đao'},
+ khuyniet:{skin:'khuy-niet-loi-ton',skinName:'Khuy Niết Lôi Tôn',cell:0,skinOnlyCoins:300,skinCoins:400,artifactCoins:400,artifact:'khuy-niet-tu-loi-long',artifactName:'Tử Lôi Long'},
+ viemton:{skin:'phan-thien-viem-ton',skinName:'Tần Mục Hỏa Thần',cell:0,skinOnlyCoins:300,skinCoins:400,artifactCoins:400,artifact:'phan-thien-song-dao',artifactName:'Song Đao Liệt Diễm',icon:'sword'},
+ ...Object.fromEntries(COURT_VISITORS.map(v=>[v.kind,{skin:v.skin,skinName:v.name,skinOnlyCoins:v.skinOnlyCoins??v.skinCoins??300,skinCoins:v.artifactCoins||500,artifactCoins:v.artifactCoins||500,artifact:v.artifact,artifactName:v.relic,icon:v.icon||'orb',art:v.artwork?.blade}])),
+ vuonglam:{skin:'vuonglam-avatar',skinName:'Vương Lâm / Lý Mộ Uyển',cell:0,skinOnlyCoins:200,skinCoins:200,artifactCoins:300,artifact:'vuonglam-soul-banner',artifactName:'Hồn Phiên'}
 });
 export const SIGNATURE_ARTIFACTS=Object.values(VISITOR_GIFT_REWARDS).map(r=>({id:r.artifact,name:r.artifactName,type:'artifact',art:r.art,icon:r.icon||(r.cell===1?'sword':'orb'),tier:0,price:0,herbs:0,damage:80,bonus:.45,exclusive:true,eventReward:r.skinName+' · tích lũy '+(r.artifactCoins||500)+' coin trong lượt xuất hiện',description:'Pháp bảo truyền thừa: +80 công lực, +45% tu vi khi trang bị. Trao cố định ở mốc '+(r.artifactCoins||500)+' coin sự kiện.'}));
 // 20/11: sự kiện skin TAM TIÊN — mỗi lượt 3 vị. Luật (user chốt):
@@ -41,7 +43,7 @@ export const roundsWith=kind=>SONG_TIEN_ROUNDS.filter(r=>r.kinds.includes(kind))
 export const roundNames=r=>(r?.kinds||[]).map(k=>VISITOR_GIFT_REWARDS[k]?.skinName||k);
 // HẠ GIÁ (chủ game chốt 21/11): giá giảm phải là ĐÚNG MÓN QUÀ để người xem nhìn ảnh là biết tặng gì (350 thì không ai biết tặng kiểu gì):
 // 500 → 400 (ảnh: 2 Baglama, hoặc món kênh có, giftFor) · 300 → Baglama (200) · 200 → Hand Heart (100) · 100 → Paper Crane (99). Một mức duy nhất.
-export const SALE_PRICES=Object.freeze({500:400,300:200,200:100,100:99});
+export const SALE_PRICES=Object.freeze({500:400,400:300,300:200,200:100,100:99}); // 21/11 tối: 400 (Khuy Niết cả bộ) → 300
 export const salePrice=(base,on=true)=>on?SALE_PRICES[base]??Math.round(base*.8):base;
 // Dựng lượt từ cặp: mỗi vị lưu giá gốc (base/artBase) + giá đang bán (price/artPrice) → hạ giá chỉ đổi giá trong lượt.
 export function buildRound(round,art=null,rand=Math.random){
@@ -92,7 +94,9 @@ export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins,giftName){
  // 21/11: giá lấy từ LƯỢT (s.price/s.artPrice — đã tính hạ giá nếu có); coins = giá gốc chỉ để grantVisitorProgress biết trao gì.
  const next=s=>{const r=VISITOR_GIFT_REWARDS[s.kind],pr=visitorPrices(s.kind);if(!r)return null;const skin=p.rewardSkins?.includes(r.skin),art=p.artifacts?.includes(r.artifact);
   const sp=s.price??pr.skin,ap=s.artPrice??pr.artifact;
-  if(!skin)return {s,r,need:sp,coins:pr.skin};if(!art&&pr.artifact>pr.skin)return {s,r,need:Math.max(1,ap-sp),coins:pr.artifact};return null;};
+  if(!skin)return {s,r,need:sp,coins:pr.skin};
+  // 21/11 tối: bán cả bộ — người đã có skin (mua lẻ trước đây) còn thiếu pháp bảo: bù phần chênh so với giá skin cũ (theo hạ giá nếu có).
+  if(!art){const gap=pr.artifact-(r.skinOnlyCoins??pr.skin),onSale=s.price!=null&&s.base!=null&&s.price!==s.base;if(gap>0)return {s,r,need:onSale?salePrice(gap):gap,coins:pr.artifact};}return null;};
  let kind=null,wear=null;
  // 21/11: lượt ĐẶC BIỆT (bundle) — đủ giá là nhận CẢ 2 skin cùng lúc, không bán lẻ, không bán pháp bảo.
  // Ai đã có 1 trong 2 thì phần còn lại tính đúng giá riêng của vị đó (vẫn theo hạ giá).

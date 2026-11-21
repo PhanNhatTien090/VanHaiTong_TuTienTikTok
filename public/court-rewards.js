@@ -1,7 +1,7 @@
 export const BLACK_GOLD_VISITOR=Object.freeze({
  kind:'hac-kim',aliases:['tieu viem'],skin:'hac-kim-chien-y',name:'Đấu Đế Tiêu Viêm',
  artifact:'hac-kim-hoa-dao',relic:'Hắc Kim Hỏa Đao & Hỏa Luân',
- color:'#ff953f',trim:'#ffe6a3',dark:'#280e0a',technique:'flame',icon:'sword',
+ color:'#ff953f',trim:'#ffe6a3',dark:'#280e0a',technique:'flame',icon:'sword',skinCoins:400,artifactCoins:400,skinOnlyCoins:300, // 21/11 tối: bán cả bộ 400 (như Khuy Niết)
  aura:'Hỏa ấn · tàn lửa · đao và hỏa luân đồng bộ',
  artwork:{blade:'/assets/thien-khuyet/relic-hac-kim-hoa-dao.webp',halo:'/assets/thien-khuyet/hac-kim-halo.webp'}
 });
@@ -55,8 +55,8 @@ export const COURT_VISITORS=[
  U_MINH_VISITOR,
  KARMA_VISITOR,
  BLACK_GOLD_VISITOR,
- {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus'},
- {kind:'xich-vu',skin:'xich-vu-nu-de',name:'Xích Vũ Nữ Đế',artifact:'xich-vu-thien-kich',relic:'Xích Vũ Thiên Kích',color:'#ff925e',trim:'#ffe8a6',dark:'#511020',technique:'flame'}
+ {kind:'nguyet-lien',skin:'nguyet-lien-tien-co',name:'Nguyệt Liên Tiên Cơ',artifact:'nguyet-lien-ngoc-truong',relic:'Nguyệt Liên Ngọc Trượng',color:'#97f9f0',trim:'#f9ffff',dark:'#123854',technique:'lotus',skinCoins:400,artifactCoins:400,skinOnlyCoins:300},
+ {kind:'xich-vu',skin:'xich-vu-nu-de',name:'Xích Vũ Nữ Đế',artifact:'xich-vu-thien-kich',relic:'Xích Vũ Thiên Kích',color:'#ff925e',trim:'#ffe8a6',dark:'#511020',technique:'flame',skinCoins:400,artifactCoins:400,skinOnlyCoins:300}
 ];
 const tiers=[
  ['thanh-long-thuong','Thanh Long Thương',4,950,18,57,.28,'dragon','sword'],

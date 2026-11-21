@@ -37,8 +37,8 @@ test('Nhân Quả selects its own spear when both signature sets are owned',()=>
  assert.equal(signatureGearOf({...p,skinChoice:BLACK_GOLD_VISITOR.skin}),BLACK_GOLD_VISITOR);
 });
 
-test('Skin cũ giữ giá cũ (300 skin / 500 pháp bảo)', () => {
+test('21/11 tối: Tiêu Viêm / Nguyệt Liên / Xích Vũ bán CẢ BỘ 400 (giá skin lẻ cũ 300 chỉ để bù người đã có skin)', () => {
  for(const kind of ['hac-kim','nguyet-lien','xich-vu']){
-  assert.equal(VISITOR_GIFT_REWARDS[kind].skinCoins,300);assert.equal(VISITOR_GIFT_REWARDS[kind].artifactCoins,500);
+  assert.equal(VISITOR_GIFT_REWARDS[kind].skinCoins,400);assert.equal(VISITOR_GIFT_REWARDS[kind].artifactCoins,400);assert.equal(VISITOR_GIFT_REWARDS[kind].skinOnlyCoins,300);
  }
 });

@@ -3,7 +3,7 @@ import {createWorld,action,GIFT_JACKPOT,startWar} from '../engine.mjs';
 import {VISITOR_GIFT_REWARDS} from '../public/visitor-rewards.js';
 import {speechPlan} from '../speech-lines.mjs';
 const N=1800000000000;
-const cheap=Object.values(VISITOR_GIFT_REWARDS).filter(r=>r.skinCoins<=200).map(r=>r.skin);
+const cheap=Object.values(VISITOR_GIFT_REWARDS).filter(r=>(r.skinOnlyCoins??r.skinCoins)<=200).map(r=>r.skin);
 function setup(){const w=createWorld('live');action(w,{type:'join',userId:'a',name:'An'},N);const p=w.players.a;p.qi=10000;return {w,p};}
 test('quà 500 lúc không sự kiện: +50% tu vi hiện tại, 1 skin ≤200 chưa có, thêm linh thạch/linh thảo',()=>{
  const {w,p}=setup();p.rewardSkins=[cheap[0]];const stones=p.stones,herbs=p.herbs;

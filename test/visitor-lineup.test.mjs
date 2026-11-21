@@ -21,8 +21,8 @@ test('vị giá riêng không gắn món; vị trùng giá gắn món ĐÚNG GI�
 });
 
 test('không ghép trùng giá khi giá đó không đủ món khác nhau',()=>{
- assert.equal(lineupFeasible(['tudo','vuonglam'],ART),false); // 200 chỉ có 1 món
- assert.equal(lineupFeasible(['khuyniet','viemton'],ART),false); // 300 chỉ có 1 món
+ assert.equal(lineupFeasible(['tudo','hailam'],ART),false); // 300 chỉ có 1 món (21/11 tối: cả bộ 300)
+ assert.equal(lineupFeasible(['khuyniet','viemton'],ART),false); // 400 không có món riêng
  assert.equal(lineupFeasible(['tinh-ha','bich-lan','nhan-qua'],ART),true);
  assert.equal(lineupFeasible(['tinh-ha','bich-lan'],{}),false); // chưa có ảnh Gem Gun/You're Amazing
  const kinds=Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k));
@@ -49,7 +49,7 @@ test('vị trùng giá: đủ coin bằng món khác KHÔNG ra skin trùng giá'
 test('vị giá riêng: tặng gì cũng được, cộng dồn đủ coin là nhận',()=>{
  const w=world(),e=setLineup(w,['tinh-ha','bich-lan','khuyniet']);
  gift(w,'a',1,'Rose',150);gift(w,'a',100,'Hand Heart',1,N+2000);assert.ok(!has(w,'a','khuyniet'));
- gift(w,'a',5,'Finger Heart',10,N+3000);assert.ok(has(w,'a','khuyniet'));
+ gift(w,'a',5,'Finger Heart',10,N+3000);assert.ok(!has(w,'a','khuyniet'),'300 chưa đủ cả bộ 400');gift(w,'a',5,'Finger Heart',20,N+3500);assert.ok(has(w,'a','khuyniet'));
  assert.ok(!has(w,'a','tinh-ha')&&!has(w,'a','bich-lan'));
  assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.khuyniet.skin);
  assert.ok(w.events.some(x=>x.effect==='transform'&&x.transform==='khuyniet'));
@@ -71,7 +71,7 @@ test('MUA 1 LÀ 1: tặng 500 chỉ ra skin 500, không kèm skin rẻ hơn',()=
 test('đủ coin: trao món đắt nhất vừa đủ, trừ đúng giá, dư mới tính tiếp',()=>{
  const w=world();setLineup(w,['tinh-ha','hanlap','tudo']);
  gift(w,'a',100,'Hand Heart');assert.ok(has(w,'a','hanlap'));assert.equal(w.players.a.skinWallet.coins,0);
- gift(w,'a',200,'Baglama',1,N+2000);assert.ok(has(w,'a','tudo'));assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
+ gift(w,'a',100,'Hand Heart',3,N+2000);assert.ok(has(w,'a','tudo'));assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.tudo.artifact),'Tư Đồ cả bộ 300');assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
  assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.tudo.skin);
  gift(w,'a',1,'Rose',99,N+3000);assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact));
  gift(w,'a',1,'Rose',1,N+4000);assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hanlap.artifact)); // pháp bảo Hàn Lập = phần chênh 100

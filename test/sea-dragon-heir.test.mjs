@@ -10,14 +10,15 @@ test('Hải Lam is a five-minute event: free claim, exact fixed gift thresholds,
  const p=ensurePlayer(w,'a','An',N);assert.equal(startVisitor(singleVisitor(w),'hailam',N).ok,true);assert.equal(w.visitor.endsAt-N,180000); /* 16/11: sự kiện skin còn 3 phút */
  assert.equal(action(w,{type:'chat',userId:'a',text:'cơ duyên'},N+1000).ok,true);assert.ok(w.visitor.players.a.awarded);
  const gift=(coins,eventId,now)=>action(w,{type:'gift',userId:'a',name:'An',gift:'Rose',coins,count:1,eventId},now);
- gift(99,'g1',N+2000);assert.ok(!p.rewardSkins.includes(SEA_SKIN));gift(1,'g2',N+3000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(seaWorn(p),true);
- gift(1,'g2',N+3100);assert.equal(w.visitor.giftProgress.a.coins,100);
- gift(200,'g3',N+4000);assert.ok(p.artifacts.includes('sea-dragon-heart'));assert.equal(p.artifacts.filter(x=>x==='sea-dragon-heart').length,1);
+ // 21/11 tối: bán CẢ BỘ 300 (skin + pháp bảo cùng lúc), không bán skin lẻ.
+ gift(299,'g1',N+2000);assert.ok(!p.rewardSkins.includes(SEA_SKIN));assert.ok(!p.artifacts.includes('sea-dragon-heart'));gift(1,'g2',N+3000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(seaWorn(p),true);
+ gift(1,'g2',N+3100);assert.equal(w.visitor.giftProgress.a.coins,300);
+ assert.ok(p.artifacts.includes('sea-dragon-heart'));assert.equal(p.artifacts.filter(x=>x==='sea-dragon-heart').length,1);
  const restored=JSON.parse(JSON.stringify(w));tick(restored,N+300001);assert.ok(restored.players.a.rewardSkins.includes(SEA_SKIN));
 });
 test('owned skin respects manual outfit choice, excludes simulated NPCs and ends without accepting late gifts',()=>{
  const w=createWorld('live');const p=ensurePlayer(w,'a','An',N);p.skinChoice='ivory-celestial';p.skinChoiceSource='manual';startVisitor(singleVisitor(w),'hailam',N);
- action(w,{type:'gift',userId:'a',gift:'Rose',coins:100,count:1,eventId:'g'},N+1000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(p.skinChoice,SEA_SKIN,'mua skin sự kiện thì mặc ngay');
+ action(w,{type:'gift',userId:'a',gift:'Rose',coins:300,count:1,eventId:'g'},N+1000);assert.ok(p.rewardSkins.includes(SEA_SKIN));assert.equal(p.skinChoice,SEA_SKIN,'mua skin sự kiện thì mặc ngay');
  const b=ensurePlayer(w,'b','B',N);action(w,{type:'gift',userId:'b',gift:'Rose',coins:100,count:1,eventId:'late'},N+300001);assert.ok(!(b.rewardSkins||[]).includes(SEA_SKIN));
 });
 test('four real alpha sprites, cloth motion, glints and the miniature orbit render without player mutation',async()=>{

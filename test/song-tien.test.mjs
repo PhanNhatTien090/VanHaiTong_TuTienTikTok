@@ -32,9 +32,9 @@ test('xoay lượt: không lặp lượt vừa rồi, đủ mọi lượt; lư�
 
 test('Song Tiên thường: mở bằng cặp, lời mở "SONG TIÊN GIÁNG LÂM", mỗi vị đủ giá là nhận (mua 1 là 1)',()=>{
  const w=world(),e=open(w,'than-de-vuong-lam');
- assert.deepEqual(e.lineup.map(s=>[s.kind,s.price]),[['shende',100],['nhan-qua',500]]);
+ assert.deepEqual(e.lineup.map(s=>[s.kind,s.price]),[['shende',300],['nhan-qua',500]]); // 21/11 tối: bán cả bộ
  assert.match(w.events.find(x=>x.visitorStart).text,/^SONG TIÊN GIÁNG LÂM • Thần Đế · Nhân Quả Vương Lâm/);
- gift(w,'a',100);assert.ok(has(w,'a','shende'));assert.ok(!has(w,'a','nhan-qua'));
+ gift(w,'a',300);assert.ok(has(w,'a','shende'));assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.shende.artifact));assert.ok(!has(w,'a','nhan-qua'));
  gift(w,'a',500);assert.ok(has(w,'a','nhan-qua'));assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS['nhan-qua'].artifact));
 });
 
@@ -44,26 +44,25 @@ test('lượt ĐẶC BIỆT Tần Mục + Xích Vũ: 500 nhận CẢ 2 skin, kh�
  gift(w,'a',300);assert.ok(!has(w,'a','viemton')&&!has(w,'a','xich-vu'),'300 không mua lẻ được');assert.equal(w.players.a.skinWallet.coins,300);
  gift(w,'a',200);assert.ok(has(w,'a','viemton')&&has(w,'a','xich-vu'));assert.equal(w.players.a.skinWallet.coins,0);
  assert.equal(w.players.a.skinChoice,VISITOR_GIFT_REWARDS.viemton.skin);
- assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.viemton.artifact),'lượt đặc biệt chỉ 2 skin');
+ assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.viemton.artifact)&&w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS['xich-vu'].artifact),'21/11 tối: bán cả bộ — lượt đặc biệt nhận CẢ BỘ 2 vị');
  gift(w,'b',500);assert.ok(has(w,'b','xich-vu')&&has(w,'b','viemton'));assert.equal(w.players.b.skinChoice,VISITOR_GIFT_REWARDS['xich-vu'].skin);
  gift(w,'a',500);assert.equal(w.players.a.skinWallet.coins,500,'đã đủ cả 2 → không trừ ví');
 });
 
 test('lượt đặc biệt: ai đã có 1 vị thì vị còn lại tính đúng giá riêng',()=>{
  const w=world();w.players.a.rewardSkins=[VISITOR_GIFT_REWARDS.viemton.skin];open(w,'hoa-than');
- gift(w,'a',300);assert.ok(has(w,'a','xich-vu'));assert.equal(w.players.a.skinWallet.coins,0);
+ gift(w,'a',399);assert.ok(!has(w,'a','xich-vu'));gift(w,'a',1);assert.ok(has(w,'a','xich-vu'));assert.equal(w.players.a.skinWallet.coins,0); // Xích Vũ cả bộ 400
 });
 
 test('HẠ GIÁ = ĐÚNG MÓN QUÀ (chủ game: 350 không ai biết tặng gì): 500→400, 300→200, 200→100, 100→99; mỗi giá là 1 món ×n',()=>{
- assert.deepEqual([500,300,200,100].map(p=>salePrice(p)),[400,200,100,99]);
- for(const p of [400,200,100,99]){const g=giftFor({},p);assert.ok(g.url&&g.count<=5,p+' phải ra 1 món ảnh thật ×n');}
+ assert.deepEqual([500,400,300,200,100].map(p=>salePrice(p)),[400,300,200,100,99]);
+ for(const p of [400,300,200,100,99]){const g=giftFor({},p);assert.ok(g.url&&g.count<=5,p+' phải ra 1 món ảnh thật ×n');}
  const w=world();assert.equal(startVisitorSale(w,N).ok,false,'chưa có lượt');
  open(w,'than-de-vuong-lam');
- const r=startVisitorSale(w,N+500);assert.ok(r.ok);assert.deepEqual(r.lineup.map(s=>s.price),[99,400]);
- const ev=w.events.find(x=>x.visitorSale);assert.deepEqual(ev.saleLines.map(x=>x.gift),['Paper Crane','4 Balloon Gift Box'],'món kênh đã có ảnh, ×n ≤5');assert.doesNotMatch(ev.text,/coin|tim|follow|\d{3}/i);
+ const r=startVisitorSale(w,N+500);assert.ok(r.ok);assert.deepEqual(r.lineup.map(s=>s.price),[200,400]);
+ const ev=w.events.find(x=>x.visitorSale);assert.deepEqual(ev.saleLines.map(x=>x.gift),['Baglama','4 Balloon Gift Box'],'món kênh đã có ảnh, ×n ≤5');assert.doesNotMatch(ev.text,/coin|tim|follow|\d{3}/i);
  gift(w,'a',400);assert.ok(has(w,'a','nhan-qua'));assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS['nhan-qua'].artifact));assert.equal(w.players.a.skinWallet.coins,0);
- gift(w,'b',99);assert.ok(has(w,'b','shende'));
- gift(w,'b',101);assert.ok(w.players.b.artifacts.includes(VISITOR_GIFT_REWARDS.shende.artifact),'pháp bảo Thần Đế 300→200: phần chênh 101');
+ gift(w,'b',199);assert.ok(!has(w,'b','shende'));gift(w,'b',1);assert.ok(has(w,'b','shende'));assert.ok(w.players.b.artifacts.includes(VISITOR_GIFT_REWARDS.shende.artifact),'Thần Đế cả bộ 300→200');
  assert.equal(startVisitorSale(w,N+600).ok,false,'đã hạ giá rồi');
 });
 
@@ -77,7 +76,14 @@ test('không còn cặp trùng giá (hạ giá theo món sẽ không phân biệ
  const w=world(),e=open(w,'long-loi');assert.deepEqual(e.lineup.map(s=>s.kind),['hailam','khuyniet']);assert.ok(e.lineup.every(s=>!s.giftName));
 });
 
+test('21/11 tối bán CẢ BỘ: người đã mua skin lẻ trước đây chỉ bù phần chênh để lấy pháp bảo (theo hạ giá nếu có)',()=>{
+ const w=world();w.players.a.rewardSkins=[VISITOR_GIFT_REWARDS.hailam.skin];w.players.b.rewardSkins=[VISITOR_GIFT_REWARDS.hailam.skin];open(w,'long-loi');
+ gift(w,'a',199);assert.ok(!w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hailam.artifact));
+ gift(w,'a',1);assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS.hailam.artifact),'Hải Lam: cả bộ 300 − skin cũ 100 = 200');
+ startVisitorSale(w,N+2000);gift(w,'b',100,'Rose',N+3000);assert.ok(w.players.b.artifacts.includes(VISITOR_GIFT_REWARDS.hailam.artifact),'hạ giá: phần bù 200 → 100 (đúng 1 món)');
+});
+
 test('buildRound giữ giá gốc để hạ giá tính lại, không đổi bảng giá chung',()=>{
- const b=buildRound(songTienRound('nguyet-tinh'),ART);assert.deepEqual(b.lineup.map(s=>[s.base,s.artBase]),[[300,500],[500,500]]);
+ const b=buildRound(songTienRound('nguyet-tinh'),ART);assert.deepEqual(b.lineup.map(s=>[s.base,s.artBase]),[[400,400],[500,500]]);
  assert.equal(VISITOR_GIFT_REWARDS['tinh-ha'].skinCoins,500);
 });
