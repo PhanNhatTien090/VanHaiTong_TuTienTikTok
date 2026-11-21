@@ -26,7 +26,7 @@ export function itemStats(i,category='artifact'){
 }
 // 18/11 (chủ game: "lệnh nào gõ xem mà không hiện bảng thì làm bảng, gộp được thì gộp"):
 //   tuvi + nhiệm vụ · skin + cánh · thần khí + bản mệnh (bao) · chiêu + bí pháp (kit) · linhchau + toaky (mounts).
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin · Cánh',wings:'Cánh',mounts:'Tọa kỹ',bao:'Thần khí',kit:'Chiêu thức'};
+const KIND_LABEL={titles:'Danh hiệu',tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin · Cánh',wings:'Cánh',mounts:'Tọa kỹ',bao:'Thần khí',kit:'Chiêu thức'};
 const NUMBERED={mounts:'cưỡi',bao:'bản mệnh',wings:'đeo'}; // ô có SỐ (gõ lệnh + số) + sao + viền theo bậc
 const hintHTML=(cmd,rest)=>`<div class="vd-state">gõ <b>${cmd}</b> ${rest}</div>`;
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
@@ -92,6 +92,11 @@ export function inventoryDeckHTML(e,esc){
   body=`<div class="vd-chips"><span>Đã mở ${fmt(it.length)}</span><span>Đeo: ${esc(card.current||'chưa có')}</span>${card.auto&&it.length?'<span>tự chọn cánh mạnh nhất</span>':''}</div>`+grid([[card.owned,'wings']],esc,'Chưa mở cánh · cánh mở theo tổng quà đã tặng')
    +(nx?`<div class="vd-sub">Cánh kế tiếp</div><div class="vd-next"><img src="${esc(safeInventoryArt(nx,'wings'))}" alt="" decoding="async"><span><b>${fmt(nx.no)}</b> ${esc(nx.name)}</span></div>`:'')
    +(it.length?hintHTML('cánh + số','để đổi · <b>hủy cánh</b> để ẩn · <b>cánh tự động</b>'):'');
+ }else if(kind==='titles'){ // 21/11 tối (chủ game): gõ danh hiệu → danh sách CÓ SỐ (ảnh chữ từng danh hiệu), gõ danh hiệu + số để mặc
+  const it=card.items||[],art=k=>/^[a-z0-9-]+$/.test(String(k||''))?'/assets/title-text/'+k+'.webp?v=2':'';
+  body=`<div class="vd-chips"><span>Đang giữ ${fmt(it.length)}</span><span>Mặc: ${esc(card.off?'đang ẩn':card.current||'chưa có')}</span>${card.auto&&it.length?'<span>tự đeo cái xịn nhất</span>':''}</div>`
+   +(it.length?`<ol class="vd-titles">${it.map(t=>`<li class="${t.on?'is-on':''}"><em class="vd-no">${fmt(t.no)}</em><img src="${esc(art(t.key))}" alt="${esc(t.name)}" decoding="async"><small>${esc(t.how||'')}</small></li>`).join('')}</ol>`:'<p class="vd-empty">Chưa có danh hiệu · giành ghế ở sự kiện, Thiên Bảng, đạo lữ…</p>')
+   +(it.length?hintHTML('danh hiệu + số','để mặc · <b>danh hiệu ẩn</b> · <b>danh hiệu tự động</b>'):'');
  }else if(kind==='kit'){ // 18/11: chiêu + bí pháp
   const books=card.books||[],learned=books.filter(b=>b.on).length;
   body=`<div class="vd-chips"><span>Lv${fmt(card.lv||1)}</span><span>Bí pháp ${fmt(learned)}/${fmt(books.length)}</span></div>`

@@ -8,62 +8,35 @@
 // Hai danh hiệu chồng nhau → người cao bậc hơn giữ chỗ, người kia nhích lên 1 dòng, vẫn chồng thì ẩn (không chồng chữ).
 // Sân >30 người chỉ hiện 3 bậc đầu, >50 chỉ Tông Chủ + Kim Cương (giữ luật cũ). Chữ vẽ sẵn vào bitmap 3× (nét, không vẽ lại chữ mỗi khung).
 // Thứ bậc (rank càng nhỏ càng cao): 0 master · 1 vip3 · 2 luanhoi · 3 vip2 · 4 vip1 · 5 feat (sự kiện) · 6 rank (chức vị)
-import {vipTier} from './vip.js';
-import {luanHoiTier,luanHoiTitle} from './luan-hoi-data.js';
-import {REALM_NAMES} from './progression.js';
+import {TITLE_LIST,TITLE_BY_KEY} from './title-data.js';
 const FAMILY='"Noto Serif","Times New Roman",Georgia,serif',FALLBACK_FAMILY='"Times New Roman",Georgia,serif';
 const sizeOf=rank=>rank<=1?17:rank<=4?16:rank===5?15:13.5;
 const fontOf=(rank,family)=>'900 '+sizeOf(rank)+'px '+family;
 const RES=3; // bitmap 3× → nét trên LIVE 1080 px kể cả khi camera phóng
 const HEAD_K=80; // đỉnh đầu ≈ chân − HEAD_K × scale (bitmap có lề 5 px → đáy chữ hạ thêm 4)
-/** Icon theo tên danh hiệu sự kiện. */
-const EVENT_ICON=[[/thiết thủ|đầu sắt|gõ đầu/i,'hammer'],[/đan|lò|cứu lô/i,'cauldron'],[/kiếp|hộ đạo/i,'lightning'],[/mê cung/i,'compass'],[/kiếm|khôi|vô địch|quán quân/i,'sword']];
-export const eventIcon=name=>EVENT_ICON.find(([re])=>re.test(String(name||'')))?.[1]||'sword';
+// 21/11 tối (bản 3, chủ game): danh hiệu = GHẾ HIẾM do server tính (titles.mjs → p.title {key,rank,group,sparkle,n,lh}); danh mục public/title-data.js.
+// Không icon — mỗi danh hiệu 1 ẢNH CHỮ riêng Codex vẽ (public/assets/title-text/<key>.webp). Danh hiệu nạp CHỈ lấp lánh khi tổng quà ≥3.000 (sparkle).
+// Ảnh chưa tải → vẽ tạm chữ theo màu nhóm. Server cũ (chưa có p.title) → không vẽ.
+export const eventIcon=()=>null; // giữ tên export cũ (không còn icon)
 const GOLD={fill:['#fffbe6','#ffe27a','#f2b632','#a8700f'],stroke:'#3b2300',glow:'#ffcc4d'};
 const STYLE=Object.freeze({
- master:{...GOLD,glow:'#ff8a3c',icon:'crown',flashMs:3600,sparkle:true},
- vip3:{...GOLD,glow:'#bfeaff',icon:'diamond',flashMs:4400,sparkle:true},
- vip2:{...GOLD,icon:'ingot',flashMs:5600},
- vip1:{fill:['#fffdf0','#fbe9a8','#d9b45a','#9a7426'],stroke:'#2e2410',glow:'#f3dc94',icon:'silver-ingot',flashMs:7600},
- feat:{fill:['#f2fffd','#9ff3ff','#3cc8e6','#127a9c'],stroke:'#03202c',glow:'#5fe0ff'},
- rank:{fill:['#fffaf0','#f3ead8','#f3ead8','#d8c9a8'],stroke:'#1b1813',glow:null},
+ paid:{...GOLD,flashMs:4400,sparkle:true},
+ luanhoi:{fill:['#f3e6ff','#c99bff','#9b5cff','#e2b54a'],stroke:'#1a0a2a',glow:'#b77bff'},
+ evil:{fill:['#ffb3b3','#e01f1f','#7a0000','#2a0000'],stroke:'#000000',glow:'#ff2a2a'},
+ love:{fill:['#fff0f6','#ffc2dc','#ff8fbf','#e0609a'],stroke:'#5a1030',glow:'#ffb3d1'},
+ event:{fill:['#f2fffd','#9ff3ff','#3cc8e6','#127a9c'],stroke:'#03202c',glow:'#5fe0ff'},
+ sect:{fill:['#fffaf0','#f3ead8','#f3ead8','#d8c9a8'],stroke:'#1b1813',glow:null},
 });
 const LIMIT=Object.freeze({busy:30,crowd:50});
-// 21/11 tối (chủ game: "danh hiệu quá dài, xấu, nhìn không rõ — rút ngắn: nhà giàu, đầu sắt, kẻ nổ lò…; chữ làm ẢNH CỐ ĐỊNH nhờ Codex vẽ").
-// Mỗi danh hiệu = 1 tên ngắn 2–3 chữ + ảnh chữ public/assets/title-text/<key>.webp (đề bài PROMPT.md cùng thư mục). Ảnh chưa tải → vẽ tạm chữ ngắn.
-export const SHORT=Object.freeze({
- 'tong-chu':'TÔNG CHỦ','dai-gia':'ĐẠI GIA','nha-giau':'NHÀ GIÀU','phu-ho':'PHÚ HỘ','than-tai':'THẦN TÀI',
- 'luan-hoi':'LUÂN HỒI','sap-luan-hoi':'SẮP LUÂN HỒI','chi-ton':'CHÍ TÔN',
- 'ke-no-lo':'KẺ NỔ LÒ','cuu-lo':'THẦN CỨU LÒ','than-luyen-dan':'THẦN LUYỆN ĐAN','vuot-kiep':'VƯỢT KIẾP','ho-dao-vuong':'HỘ ĐẠO VƯƠNG',
- 'vua-me-cung':'VUA MÊ CUNG','kiem-khoi':'KIẾM KHÔI','chien-than':'CHIẾN THẦN','vua-go-dau':'VUA GÕ ĐẦU','dau-sat':'ĐẦU SẮT',
- 'quy-khach':'QUÝ KHÁCH','chap-su':'CHẤP SỰ','truong-lao':'TRƯỞNG LÃO','tien-nhan':'TIÊN NHÂN','ton-gia':'TÔN GIẢ','tien-de':'TIÊN ĐẾ','lao-to':'LÃO TỔ','lao-lang':'LÃO LÀNG'});
-/** Tên sự kiện (server ghi) → khóa ảnh ngắn. */
-const EVENT_KEY=[[/nổ lò|đan tặc/i,'ke-no-lo'],[/cứu lô|cứu lò/i,'cuu-lo'],[/đan sư/i,'than-luyen-dan'],[/tán tiên|vượt kiếp/i,'vuot-kiep'],[/hộ đạo/i,'ho-dao-vuong'],
- [/mê cung/i,'vua-me-cung'],[/kiếm khôi/i,'kiem-khoi'],[/chiến thần/i,'chien-than'],[/thiết thủ|gõ đầu/i,'vua-go-dau'],[/đầu sắt/i,'dau-sat']];
-export const eventKey=name=>EVENT_KEY.find(([re])=>re.test(String(name||'')))?.[1]||null;
-/** Chức vị (honors.js) → khóa ảnh ngắn. */
-const RANK_KEY=[[/^ĐẠI TRƯỞNG LÃO/,'lao-to'],[/NGUYÊN LÃO/,'lao-lang'],[/TIÊN ĐẾ/,'tien-de'],[/TÔN GIẢ|CHÂN QUÂN/,'ton-gia'],[/TIÊN$/,'tien-nhan'],[/TRƯỞNG LÃO/,'truong-lao'],[/CHẤP SỰ/,'chap-su'],[/ĐẠI HỘ PHÁP/,'than-tai']];
-export const rankKey=title=>RANK_KEY.find(([re])=>re.test(String(title||'').toUpperCase()))?.[1]||'quy-khach';
-const mk=(rank,kind,key,extra)=>({rank,kind,key,text:SHORT[key],...extra});
-/** Danh hiệu xịn nhất đang có của 1 người (hoặc null). now = giờ server. */
-export function titleOf(p,now=Date.now()){if(!p||p.resident||p.puppet)return null;
- const h=p.honor,v=vipTier(p.giftCoins),n=Number(p.reincarnations)||0,last=REALM_NAMES.length-1;
- if(h?.role==='sect-master'||h?.title==='TÔNG CHỦ')return mk(0,'master','tong-chu',{paid:true});
- const god=h?.role==='guardian'&&v>=1; // người tặng nhiều nhất từ trước tới nay = THẦN TÀI (giữ bậc VIP của họ)
- if(v===3)return mk(1,'vip3',god?'than-tai':'dai-gia',{paid:true});
- if(n>0)return mk(2,'luanhoi','luan-hoi',{tier:luanHoiTier(n),n});
- if((Number(p.realm)||0)>=last&&Number(p.neededQi)>0){const ready=(Number(p.qi)||0)>=Number(p.neededQi);return mk(2,'luanhoi',ready?'sap-luan-hoi':'chi-ton',{tier:{main:'#ffcc80',soft:'#fff1d6',deep:'#2a1a08'},pending:true});}
- if(v===2)return mk(3,'vip2',god?'than-tai':'nha-giau',{paid:true});
- if(v===1)return mk(4,'vip1',god?'than-tai':'phu-ho',{paid:true});
- const fun=p.funTitle?.until>now?p.funTitle.name:null,dan=p.alchemyTitle?.until>now?p.alchemyTitle.name:null,ev=fun||dan||p.tournamentTitle||(h?.role==='champion'?h.title:null),ek=ev&&eventKey(ev);
- if(ek)return mk(5,'feat',ek,{icon:eventIcon(ev)});
- if(h?.title)return mk(6,'rank',rankKey(h.title));
- return null;}
-/** 21/11: dòng Luân Hồi thêm cho người mà danh hiệu chính cao hơn Luân Hồi (Tông Chủ, VIP Kim Cương) hoặc đang ngồi ghế chức vụ. */
-export function luanHoiExtra(p,now=Date.now(),seat=false){if(!p||p.resident||p.puppet||!(Number(p.reincarnations)>0))return null;const main=seat?null:titleOf(p,now);if(main?.kind==='luanhoi')return null;
- const n=Number(p.reincarnations);return mk(2,'luanhoi','luan-hoi',{tier:luanHoiTier(n),n,extra:true});}
-/** Có hiện không, theo độ đông sân. Chức vị theo cảnh giới (rank 6) gần như ai cũng có → chỉ hiện khi sân vắng (≤10). */
-export const titleVisible=(t,count)=>!!t&&(count>LIMIT.crowd?t.rank<=1:count>LIMIT.busy?t.rank<=2:count>10?t.rank<=5:true);
+export const SHORT=Object.freeze(Object.fromEntries(TITLE_LIST.map(t=>[t.key,t.name])));
+const mk=(v,extra)=>{const d=TITLE_BY_KEY[v?.key];if(!d)return null;return {rank:d.rank,kind:d.group,key:d.key,text:d.name,paid:d.group==='paid'&&!!v.sparkle,n:v.n,...extra};};
+/** Danh hiệu đang mặc của 1 người (server tính sẵn p.title) hoặc null. */
+export function titleOf(p){if(!p||p.resident||p.puppet||!p.title)return null;return mk(p.title);}
+/** Dòng Luân Hồi đi kèm khi đang mặc danh hiệu khác (p.title.lh) hoặc ngồi ghế chức vụ (seat). */
+export function luanHoiExtra(p,now=Date.now(),seat=false){if(!p||p.resident||p.puppet||!(Number(p.reincarnations)>0))return null;
+ if(!seat&&!p.title?.lh)return null;return mk({key:'luan-hoi',n:Number(p.reincarnations)},{extra:true});}
+/** Có hiện không, theo độ đông sân: >50 người chỉ Tông Chủ/Thần Tài/Đại Gia, >30 thêm Luân Hồi/Nhà Giàu/ghế lớn. */
+export const titleVisible=(t,count)=>!!t&&(count>LIMIT.crowd?t.rank<=2:count>LIMIT.busy?t.rank<=5:true);
 
 // ---- icon (ảnh Codex vẽ, tải 1 lần) ----
 const icons=new Map();
@@ -74,12 +47,11 @@ function fontOk(){if(fontReady)return true;if(typeof document==='undefined'||!do
 
 function makeCanvas(w,h){if(typeof OffscreenCanvas!=='undefined')return new OffscreenCanvas(w,h);if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}return null;}
 const bitmaps=new Map();
-function styleOf(t){if(t.kind!=='luanhoi')return {...STYLE[t.kind],icon:t.icon||STYLE[t.kind].icon};
- return {fill:[t.tier.soft,t.tier.main,t.tier.main,t.tier.deep==='#2a1a08'?'#a8700f':t.tier.main],stroke:'#120a18',glow:t.tier.main,icon:'wheel'};}
+function styleOf(t){return {...(STYLE[t.kind]||STYLE.sect),icon:null};}
 // ---- ảnh chữ (Codex vẽ, tải 1 lần) ----
 const arts=new Map();
-function textArt(key){if(!key||typeof Image==='undefined')return null;let im=arts.get(key);if(!im){im=new Image();im.decoding='async';im.src='/assets/title-text/'+key+'.webp?v=1';arts.set(key,im);}return im.complete&&im.naturalWidth?im:null;}
-const artH=rank=>rank<=1?27:rank<=4?25:rank===5?23:20; // chiều cao ảnh chữ trên sân (px)
+function textArt(key){if(!key||typeof Image==='undefined')return null;let im=arts.get(key);if(!im){im=new Image();im.decoding='async';im.src='/assets/title-text/'+key+'.webp?v=2';arts.set(key,im);}return im.complete&&im.naturalWidth?im:null;}
+const artH=rank=>rank<=2?27:rank<=4?25:23; // chiều cao ảnh chữ trên sân (px)
 // Bitmap từ ẢNH CHỮ: icon trái + ảnh chữ (+ "×N" Luân Hồi từ lần 2); bản trắng cùng hình để quét vệt sáng.
 function artPlaque(t,st,im,art){const ih=artH(t.rank),iw=Math.round(ih*art.naturalWidth/art.naturalHeight),iconS=im?Math.round(ih*1.05):0,gap=iconS?2:0,pad=4;
  const nTxt=t.n>=2?'×'+t.n:'',nFont='900 '+Math.round(ih*.62)+'px "Segoe UI",Arial,sans-serif';
@@ -88,7 +60,7 @@ function artPlaque(t,st,im,art){const ih=artH(t.rank),iw=Math.round(ih*art.natur
  const mkc=()=>{const cv=makeCanvas(Math.ceil(W*RES),Math.ceil(H*RES));const c=cv.getContext('2d');c.setTransform(RES,0,0,RES,0,0);c.imageSmoothingQuality='high';return [cv,c];};
  const draw=c=>{if(im){c.save();if(st.glow){c.shadowColor=st.glow;c.shadowBlur=5;}c.drawImage(im,pad,(H-iconS)/2,iconS,iconS);c.restore();}
   c.drawImage(art,pad+iconS+gap,(H-ih)/2,iw,ih);
-  if(nTxt){c.font=nFont;c.textBaseline='middle';c.lineJoin='round';const x=pad+iconS+gap+iw+2,y=H/2+1;c.lineWidth=3.5;c.strokeStyle='#120a18';c.strokeText(nTxt,x,y);c.fillStyle=t.tier?.main||'#ffe27a';c.fillText(nTxt,x,y);}};
+  if(nTxt){c.font=nFont;c.textBaseline='middle';c.lineJoin='round';const x=pad+iconS+gap+iw+2,y=H/2+1;c.lineWidth=3.5;c.strokeStyle='#120a18';c.strokeText(nTxt,x,y);c.fillStyle='#d9a8ff';c.fillText(nTxt,x,y);}};
  const [cv,c]=mkc();draw(c);
  let shine=null;if(t.paid){const [sc,s]=mkc();draw(s);s.globalCompositeOperation='source-in';s.fillStyle='#ffffff';s.fillRect(0,0,W,H);shine=sc;}
  return {cv,shine,w:W,h:H,st,art:true};}

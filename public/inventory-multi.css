@@ -97,3 +97,10 @@ body.ritual-active .inventory-deck,body.hall-dueling .inventory-deck,body.ascens
 .inventory-deck .vd-wings .vd-next{display:flex;align-items:center;gap:.5em;margin:.15em 0 .3em;opacity:.78}
 .inventory-deck .vd-wings .vd-next>img{width:3.2em;height:2.4em;object-fit:contain;filter:grayscale(.55) brightness(.8) drop-shadow(0 0 3px #0008)}
 .inventory-deck .vd-wings .vd-next b{color:#ffd86a;margin-right:.2em}
+/* 21/11 tối: bảng danh hiệu — số + ảnh chữ + cách giành */
+.inventory-deck .vd-titles{list-style:none;margin:.2em 0 .1em;padding:0;display:grid;gap:.22em}
+.inventory-deck .vd-titles li{display:flex;align-items:center;gap:.45em;min-width:0;padding:.12em .3em;border:1px solid #ffffff22;border-radius:.4em;background:#0006}
+.inventory-deck .vd-titles li.is-on{border-color:#ffd77e;background:#3a321c99}
+.inventory-deck .vd-titles .vd-no{position:static;flex:none;font-size:.8em}
+.inventory-deck .vd-titles img{height:1.7em;max-width:58%;object-fit:contain;flex:none}
+.inventory-deck .vd-titles small{font-size:.66em;color:#e6dcc6;line-height:1.15;min-width:0;text-shadow:0 1px 2px #000}
