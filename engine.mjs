@@ -4,7 +4,9 @@ import {safeGiftUrl,giftFor} from './public/gift-icons.js';
 import {WING_TIERS,playerWing,syncWingTop} from './public/boss-arena.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand,daoQuaCommand,luanHoiStatus,LUAN_HOI_CUT_MS,LUAN_HOI_CUT_LEAD} from './rebirth.mjs';
-import {combatRealm,pastLifeCost,luanHoiHandQi,luanHoiHandStones} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi
+import {combatRealm,pastLifeCost,luanHoiHandQi,luanHoiHandStones,luanHoiTitle} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi
+// 21/11: đuôi thông báo đột phá — người đã chuyển sinh ghi tên kiếp Luân Hồi (+ PHÁ VỠ TIỀN KIẾP khi vượt cảnh giới cao nhất kiếp trước)
+const breakthroughTail=p=>p.reincarnations>0?(p.realm>(Number(p.highestRealm)||0)?'PHÁ VỠ TIỀN KIẾP · ':'')+luanHoiTitle(p.reincarnations).toUpperCase():'thiên môn khai mở';
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
 const viemWorn=p=>p?.skinChoice===VIEM_SKIN_ID&&p.rewardSkins?.includes(VIEM_SKIN_ID);
@@ -655,7 +657,7 @@ function actionCore(w,input,now) {
     recordDailyAscension(w,p,now);
     p.qi-=requiredQi(p);p.stones-=requiredStones(p);p.realm++;
     const helpers=finishGuard(w,p,p.realm-1,now,companionContext);
-    emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{fromRealm:p.realm-1,toRealm:p.realm,guardHelpers:helpers,...(helpers.length?{guardNames:helpers.map(id=>String(w.players[id]?.name||'').slice(0,24))}:{})}); /* V4: tên hộ pháp đi kèm để overlay luôn ghi đúng tên */
+    emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • ${breakthroughTail(p)}`,'breakthrough',now,{fromRealm:p.realm-1,toRealm:p.realm,...(p.reincarnations>0?{rebirths:p.reincarnations,beyondPast:p.realm>(Number(p.highestRealm)||0)}:{}) /* 21/11: giọng + chữ Luân Hồi khi người đã chuyển sinh đột phá */,guardHelpers:helpers,...(helpers.length?{guardNames:helpers.map(id=>String(w.players[id]?.name||'').slice(0,24))}:{})}); /* V4: tên hộ pháp đi kèm để overlay luôn ghi đúng tên */
   } else if(type==='attack') {
     if(!w.boss||w.boss.endsAt<=now||w.boss.hp<=0)return fail('Chưa có yêu thú. Bí cảnh sẽ mở theo lịch.');
     const wait=cooldown(p,'attack',4000,now);if(wait)return fail(`Chiêu thức hồi sau ${wait}s.`);
@@ -794,7 +796,7 @@ export function startOpportunity(w,now=Date.now()){
 function settleOpportunity(w,p,now){
  const event=w.opportunity;if(!event||event.closedAt||now<event.startedAt||now>=event.endsAt||p.resident||p.puppet)return;
  const result=spendOpportunityCredit(w,p,event,now,REALMS.length-1,finalRealmEligible);
- if(result.tiers)emit(w,p,`Cơ duyên đột phá ${result.tiers} cảnh giới • ${REALMS[result.from]} → ${REALMS[result.to]} • tiến độ dư được giữ cho lần sau`,'breakthrough',now,{opportunityAward:true,fromRealm:result.from,toRealm:result.to,tiers:result.tiers});
+ if(result.tiers)emit(w,p,`Cơ duyên đột phá ${result.tiers} cảnh giới • ${REALMS[result.from]} → ${REALMS[result.to]} • tiến độ dư được giữ cho lần sau`,'breakthrough',now,{opportunityAward:true,fromRealm:result.from,toRealm:result.to,tiers:result.tiers,...(p.reincarnations>0?{rebirths:p.reincarnations,beyondPast:result.to>(Number(p.highestRealm)||0)}:{})});
  return result;
 }
 function creditOpportunity(w,p,coins,now){
@@ -1472,7 +1474,7 @@ export function adminEditPlayer(w,id,patch={},now=Date.now(),{announce=false}={}
     for(const id of [].concat(patch.removeSkins||[])){const i=(p.rewardSkins||[]).indexOf(id);if(i>=0){p.rewardSkins.splice(i,1);if(p.skinChoice===id)p.skinChoice=null;changes.push('gỡ skin '+(SPECIAL_SKINS.find(s=>s.id===id)?.name||id));}}
     changes.push(...adminItems(w,p,patch,now,{announce,emit}));
     if(patch.resetCooldowns){p.cooldowns={};changes.push('xóa thời gian hồi');}
-    if(announce&&p.realm>oldRealm)emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • thiên môn khai mở`,'breakthrough',now,{fromRealm:oldRealm,toRealm:p.realm});
+    if(announce&&p.realm>oldRealm)emit(w,p,`ĐỘT PHÁ ${REALMS[p.realm].toUpperCase()} • ${breakthroughTail(p)}`,'breakthrough',now,{fromRealm:oldRealm,toRealm:p.realm});
   }catch(e){return fail(e.message);}
   if(changes.length){w.adminLog??=[];w.adminLog.push({at:now,id,name:p.name,changes});w.adminLog=w.adminLog.slice(-200);}
   return {ok:true,changes};

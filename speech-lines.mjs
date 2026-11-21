@@ -1,3 +1,4 @@
+import {luanHoiTitle} from './public/luan-hoi-data.js';
 // v75: lời thoại LIVE — câu NGẮN, nhiều biến thể, phối 3 giọng:
 //   tongsu   : tông sư (trầm, vang) — cảm ơn, ban thưởng, đột phá, nhắc lệnh
 //   tiennu   : tiên nữ (trong, vang nhẹ) — hô vinh danh quà lớn, sự kiện trời (hoa/sao), tiên nhân giáng lâm
@@ -202,6 +203,9 @@ export function speechPlan(e){
   if(e.patronAward)return [say('tiennu',`Vinh danh Đại Hộ Pháp ${raw||''}!`),say('tongsu',`Ban bộ Thương Long Hộ Pháp, Hộ Pháp Thiên Kiếm và Trấn Tông Long Ấn!`)];
   if(e.effect==='skin')return [say('tongsu',`${Who} khoác lên ${cutWords(text,40)}.`)];
   if(e.effect==='breakthrough'){const to=titleCase(head.replace(/^đột phá\s*/i,'')),up=ascendByName(to);
+   if(e.rebirths>0){const kiep=luanHoiTitle(e.rebirths); // 21/11 (chủ game): người đã chuyển sinh đột phá phải có giọng Luân Hồi riêng
+    if(e.beyondPast)return [say('tongsu',pickBy(seed,[`Phá vỡ tiền kiếp! ${kiep}, ${Who} bước vào ${to}, vượt xa kiếp trước!`,`${kiep}! ${Who} đột phá ${to}, đạo hạnh kiếp này đã vượt tiền kiếp!`]))];
+    return [say('tongsu',pickBy(seed,[`${kiep}! ${Who} trùng tu đột phá ${to}, ký ức tiền kiếp thức tỉnh!`,`Luân hồi chuyển thế, ${Who} lại bước vào ${to}! ${kiep}, đạo tâm bất diệt!`,`${kiep}, ${Who} đột phá ${to}! Kiếp này tu lại, càng thêm vững vàng!`]))];}
    if(up)return [say('tongsu',pickBy(seed,[`Phi thăng! ${Who} thành ${to}, bay lên ${up}!`,`Thiên môn rộng mở! ${Who} phi thăng ${up}, chứng ${to}!`,`${Who} phá giới phi thăng, đặt chân lên ${up}!`]))]; // 16/11: 4 cảnh giới cuối = phi thăng
    return [say('tongsu',pickBy(seed,[`Chúc mừng ${who} đột phá ${to}! Đạo hạnh thăng tiến!`,`Thiên môn khai mở! ${Who} bước vào ${to}!`,`${Who} đột phá ${to}, linh khí chấn động!`]))];}
   if(e.transform)return [say('tiennu',`${Who} nhận truyền thừa ${e.skinName||'tiên nhân'}${e.giftFrom?', do '+(sayName(e.giftFrom)||'đồng môn')+' tặng':''}!`),say('tongsu',`${e.transform==='hanlap'?'Trúc kiếm cuồng phong':e.transform==='shende'?'Đế khí bùng nổ':e.skinName==='Lý Mộ Uyển'?'Thanh quang tỏa sáng':'Tử khí cuộn trào'}, biến hình thành ${e.skinName||'tiên nhân'}!`)];

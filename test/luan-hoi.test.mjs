@@ -65,3 +65,11 @@ test('màn đột phá của người đã chuyển sinh có khung Luân Hồi; 
  const a=luanHoiRitualInfo({realm:10,highestRealm:27,reincarnations:2});assert.equal(a.n,2);assert.equal(a.hi,27);assert.equal(a.beyond,false);
  assert.equal(luanHoiRitualInfo({realm:28,highestRealm:27,reincarnations:2}).beyond,true);
 });
+test('21/11: người đã chuyển sinh đột phá → thông báo + giọng Luân Hồi; khung tra được cả Tông Chủ đang ngồi ghế',async()=>{
+ const {speechPlan}=await import('../speech-lines.mjs');
+ const plan=speechPlan({effect:'breakthrough',name:'Đế giang',text:'ĐỘT PHÁ LUYỆN HƯ • NHẤT THẾ LUÂN HỒI',rebirths:1,user:'a',id:'z1'});
+ assert.match(plan[0].text,/Nhất Thế Luân Hồi/);assert.match(plan[0].text,/Luyện Hư/);
+ const beyond=speechPlan({effect:'breakthrough',name:'Đế giang',text:'ĐỘT PHÁ LUYỆN HƯ • PHÁ VỠ TIỀN KIẾP · NHỊ THẾ LUÂN HỒI',rebirths:2,beyondPast:true,user:'a',id:'z2'});
+ assert.match(beyond[0].text,/tiền kiếp/i);
+ const {luanHoiRitualInfo}=await import('../public/luan-hoi-fx.js');assert.ok(luanHoiRitualInfo({reincarnations:1,realm:3,highestRealm:28}));
+});

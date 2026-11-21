@@ -55,7 +55,7 @@ const SERIF='"Noto Serif","Times New Roman",Georgia,serif';
 function gtext(c,s,x,y,size,fill,width=6,spacing=0){c.font='900 '+size+'px '+SERIF;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';if('letterSpacing' in c)c.letterSpacing=spacing+'px';c.lineWidth=width;c.strokeStyle='#120800';c.strokeText(s,x,y,820);c.fillStyle=fill;c.fillText(s,x,y,820);if('letterSpacing' in c)c.letterSpacing='0px';}
 export function luanHoiRitualInfo(player){const n=rebirths(player);if(!n||player?.resident||player?.puppet)return null;const hi=Math.floor(Number(player.highestRealm)||0),r=Math.floor(Number(player.realm)||0);return {n,hi,beyond:r>hi,tier:luanHoiTier(n)};}
 export function drawLuanHoiRitualFrame(scene,c,ritual,t,H){
- const id=ritual?.user;if(!id)return false;const p=(scene.realPlayers||scene.players||[]).find(q=>q.id===id);const info=luanHoiRitualInfo(p);if(!info)return false;
+ const id=ritual?.user;if(!id)return false; /* 21/11: Tông Chủ/đạo lữ đang ngồi ghế bị loại khỏi realPlayers → tra cả danh sách đầy đủ (trước đây Tông Chủ đã chuyển sinh đột phá không có khung) */const p=(scene.realPlayers||[]).find(q=>q.id===id)||(scene.lastState?.players||scene.players||[]).find(q=>q.id===id);const info=luanHoiRitualInfo(p);if(!info)return false;
  const age=(t-ritual.start)/1000,dur=(ritual.duration||10000)/1000,a=Math.min(1,age/.6,(dur-age)/.6);if(a<=0)return false;
  const T=info.tier,gold='#ffd27a',main=info.beyond?'#ffe9a8':T.main,sec=t/1000,m=14,W=900,Hh=H;
  c.save();c.globalAlpha=a;
