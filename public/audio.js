@@ -25,6 +25,7 @@ import {scheduleVinhKiepAudio,vinhKiepMusicDuck} from './vinh-kiep-audio.js';
 import {scheduleVoCucAudio,voCucMusicDuck} from './vo-cuc-audio.js';
 import {scheduleHonDonAudio,honDonMusicDuck} from './hon-don-audio.js';
 import {scheduleLuanHoiAudio} from './luan-hoi-audio.js'; // 18/11: Niết Bàn Luân Hồi
+import {scheduleBaoLimitedAudio} from './bao-limited-audio.js'; // 21/11 tối: nhạc màn thần khí GIỚI HẠN
 import {scheduleTienDeAudio,tienDeMusicDuck} from './tien-de-audio.js';import {scheduleMaThanAudio,maThanMusicDuck} from './ma-than-audio.js';import {scheduleThienMaAudio,thienMaMusicDuck} from './thien-ma-audio.js';import {scheduleDietTheAudio,dietTheMusicDuck} from './diet-the-audio.js';
 import {CinematicSfx} from './cinematic-sfx.js';
 import {prepareFeedbackAudio,playFeedbackAudio} from './feedback-audio.js';
@@ -310,6 +311,12 @@ export class CultivationAudio {
     if(!cut||!this.enabled||this.ctx?.state!=='running'||this.sfx<=0||this.luanHoiId===cut.id)return;this.luanHoiId=cut.id;
     try{this.luanHoiStop?.();this.luanHoiStop=scheduleLuanHoiAudio(this.ctx,this.fxBus,Math.max(0,elapsedMs/1000),1);}catch{}
     const hold={duck:.1};if(!this.qiSession){this.qiSession=hold;this.sync();clearTimeout(this.luanHoiTimer);this.luanHoiTimer=setTimeout(()=>{if(this.qiSession===hold){this.qiSession=null;this.sync();}},Math.max(0,26000-elapsedMs));}
+  }
+  // 21/11 tối: màn nhận thần khí GIỚI HẠN (11 s) — 1 lần mỗi lượt; hạ nhạc nền suốt màn.
+  baoLimited(k,elapsedMs=0){
+    if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0||this.baoLimK===k||elapsedMs>10000)return;this.baoLimK=k;
+    try{this.baoLimStop?.();this.baoLimStop=scheduleBaoLimitedAudio(this.ctx,this.fxBus,[...String(k)].reduce((h,ch)=>Math.imul(h^ch.charCodeAt(0),16777619)>>>0,2166136261),Math.max(0,elapsedMs/1000),1);}catch{}
+    const hold={duck:.12};if(!this.qiSession){this.qiSession=hold;this.sync();clearTimeout(this.baoLimTimer);this.baoLimTimer=setTimeout(()=>{if(this.qiSession===hold){this.qiSession=null;this.sync();}},Math.max(0,11000-elapsedMs));}
   }
   cinematicCue(id,preset,delay=0,options={}){
     if(!this.enabled||this.ctx?.state!=='running'||this.sfx<=0)return;

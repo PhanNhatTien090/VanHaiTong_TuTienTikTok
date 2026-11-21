@@ -17,7 +17,7 @@ const real=p=>p&&!p.resident&&!p.puppet&&!p.webOnly&&p.actorKind!=='npc';
 const fail=message=>({ok:false,message});
 const rng=()=>randomInt(0,1_000_000_000)/1_000_000_000;
 // 18/11: màn nhận theo kế hoạch mục 10.1 — 5★ 4,5 s, GIỚI HẠN 8 s; cách nhau ≥1,5 s (REVEAL_GAP = khoảng nghỉ giữa 2 màn).
-export const REVEAL_MS=Object.freeze({5:4500,6:8000});
+export const REVEAL_MS=Object.freeze({5:4500,6:11000}); // 21/11 tối: GIỚI HẠN 8 → 11 s (kéo dãn nổ: 5 cú bùng, rung giật) — khớp LIM.end trong public/bao-limited-timing.js
 const PODIUM_MS=20000,LOG_MAX=20,REVEAL_GAP=1500,REVEAL=REVEAL_MS,REVEAL_QUEUE=3;
 export const baoKhoActive=w=>w.baoKho?.phase==='open';
 export const baoKhoVisible=(w,now)=>baoKhoActive(w)||w.baoKho?.podiumUntil>now;
@@ -95,8 +95,8 @@ export function baoKhoGift(w,p,unitCoins,count,now,ctx){
 }
 export function baoKhoView(w,now){
  const e=w.baoKho;if(!e||!baoKhoVisible(w,now))return null;const s=season(w);
- return {id:e.id,phase:e.phase,startedAt:e.startedAt,endsAt:e.endsAt,podiumUntil:e.podiumUntil,pulls:e.pulls,log:e.log.slice(-8),
-  top:topHunters(w,5),reveals:e.reveals.filter(r=>now<r.at+r.ms+1500),
+ return {id:e.id,phase:e.phase,startedAt:e.startedAt,endsAt:e.endsAt,podiumUntil:e.podiumUntil,pulls:e.pulls,log:e.log.slice(-8).map(r=>r.t&&w.players[r.u]?.avatar?{...r,av:w.players[r.u].avatar}:r), /* 21/11 tối: ảnh đại diện cho dòng trúng 4★/5★/GIỚI HẠN */
+  top:topHunters(w,5),reveals:e.reveals.filter(r=>now<r.at+r.ms+1500).map(r=>r.t>=6&&w.players[r.u]?.avatar?{...r,av:w.players[r.u].avatar}:r),
   limited:BAO_ITEMS.filter(x=>x.tier===6).map(x=>({id:x.id,owner:s.owners[x.id]?(w.players[s.owners[x.id]]?.name||'?'):null})),season:s.n};
 }
 /** Lệnh "thần khí" (thankhi): bộ sưu tập ngắn gọn. */

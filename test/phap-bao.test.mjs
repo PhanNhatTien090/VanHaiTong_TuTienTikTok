@@ -46,7 +46,7 @@ test('màn nhận: 5★ 4,5 s, GIỚI HẠN 8 s; GIỚI HẠN chen trước 5★
  assert.equal(queueReveal(e,{k:1,t:5},N),true);assert.equal(e.reveals[0].at,N);assert.equal(e.reveals[0].ms,REVEAL_MS[5]);
  queueReveal(e,{k:2,t:5},N+100);queueReveal(e,{k:3,t:6},N+200);
  const order=e.reveals.map(x=>x.k);assert.deepEqual(order,[1,3,2],'GIỚI HẠN lên trước 5★ đang chờ, màn đang chiếu giữ nguyên');
- const lim=e.reveals.find(x=>x.k===3);assert.equal(lim.ms,8000);assert.ok(lim.at>=N+REVEAL_MS[5],'không cắt màn đang chiếu');
+ const lim=e.reveals.find(x=>x.k===3);assert.equal(lim.ms,REVEAL_MS[6]);assert.ok(lim.at>=N+REVEAL_MS[5],'không cắt màn đang chiếu');
  for(let i=0;i<3;i++)queueReveal(e,{k:10+i,t:5},N+300);
  assert.ok(e.reveals.filter(x=>x.at>N+300).length<=3,'tối đa 3 màn chờ');
  assert.equal(queueReveal(e,{k:99,t:6},N+300),true,'GIỚI HẠN luôn được chiếu');
@@ -69,9 +69,9 @@ test('overlay: không phát lại lượt cũ khi vừa mở; lượt mới ra b
  syncBaoKho(scene,{baoKho:baoKhoView(w,N+20030)});assert.equal(scene.baoFx.banners.length,1);assert.equal(scene.baoFx.cards.length,1,'4★ có thẻ');
  const c=fakeCtx();scene.stateServerNow=N+20030;scene.stateReceivedAt=0;
  assert.doesNotThrow(()=>drawBaoKho(scene,c,100,1600));
- const x={k:5,u:'a',name:'A',t:5,id:'s5-kiem',s:1,at:0,ms:4500},y={k:6,u:'a',name:'A',t:6,id:'L02-hon-don-chung',s:1,at:0,ms:8000};
+ const x={k:5,u:'a',name:'A',t:5,id:'s5-kiem',s:1,at:0,ms:4500},y={k:6,u:'a',name:'A',t:6,id:'L02-hon-don-chung',s:1,at:0,ms:11000};
  for(const sec of [.3,1,1.85,2.5,4]) assert.doesNotThrow(()=>drawGoldReveal(scene,c,1e6,1600,{x,age:sec*1000,ms:4500,k:sec/4.5}));
- for(const sec of [.5,1.5,3,3.65,4,4.3,5,7,7.8]) assert.doesNotThrow(()=>drawLimitedReveal(scene,c,1e6,1600,{x:y,age:sec*1000,ms:8000,k:sec/8},{limited:[]}));
+ for(const sec of [.1,.5,1.5,2.4,3,3.6,4.1,5,5.05,5.35,5.95,6.4,7,8.5,9.9,10.4,10.9]) assert.doesNotThrow(()=>drawLimitedReveal(scene,c,1e6,1600,{x:y,age:sec*1000,ms:11000,k:sec/11},{limited:[]}));
  assert.equal(findReveal({reveals:[x]},2000).x.k,5);assert.equal(findReveal({reveals:[x]},5000),null);
 });
 
@@ -119,4 +119,16 @@ test('nhận món mạnh hơn món đang ghim → tự mặc món mạnh nhất;
  p.bao.p5=BAO_PITY5-1;const r=rollBao(w,p,'free',miss);assert.equal(r.tier,5,'bảo hiểm ra 5★');
  assert.equal(p.bao.ban,null,'bỏ ghim vì món mới mạnh hơn');assert.equal(baoBanMenh(p).id,r.id,'tự mặc món 5★ mới');
  p.bao.items['s4-kiem']=2;assert.match(baoCollectionText(p),/cấp 2/);assert.doesNotMatch(baoCollectionText(p),/★2/);
+});
+
+test('21/11 tối: màn GIỚI HẠN 11 s khớp server; nhạc riêng có đủ 5 cú bùng; rung giật lúc nổ; view gửi ảnh đại diện cho dòng trúng',async()=>{
+ const {LIM}=await import('../public/bao-limited-timing.js'),{limitedScore}=await import('../public/bao-limited-audio.js'),{limitedJerk,LINE_MS}=await import('../public/bao-kho.js');
+ assert.equal(REVEAL_MS[6],LIM.end*1000);assert.equal(LIM.booms.length,5);
+ const sc=limitedScore(7);for(const b of LIM.booms)assert.ok(sc.some(x=>Math.abs(x.at-b)<.01&&x.kind==='sine'&&x.from>=100),'có tiếng bùng ở giây '+b);
+ assert.ok(sc.every(x=>Number.isFinite(x.at)&&x.len>0&&x.level>0&&x.at<LIM.end));
+ assert.ok(limitedJerk(LIM.booms[4]+.01)>limitedJerk(LIM.booms[0]+.01),'cú cuối giật mạnh nhất');assert.equal(limitedJerk(2.9),0);
+ assert.ok(LINE_MS[6]>LINE_MS[5]&&LINE_MS[5]>LINE_MS[4],'dòng GIỚI HẠN ở lâu nhất');
+ const w=world(),p=ensurePlayer(w,'a','A',N);p.avatar='https://p16-sign.tiktokcdn.com/x.jpeg';const {startBaoKho}=await import('../phap-bao.mjs');startBaoKho(w,N,{emit(){}});
+ w.baoKho.log.push({k:1,u:'a',name:'A',t:6,id:'L01-tru-tien',s:1,at:N},{k:2,u:'a',name:'A',t:0,id:null,s:0,at:N});
+ const v=baoKhoView(w,N+1000);assert.equal(v.log.find(r=>r.k===1).av,p.avatar);assert.equal(v.log.find(r=>r.k===2).av,undefined,'lượt trượt không gửi ảnh');
 });
