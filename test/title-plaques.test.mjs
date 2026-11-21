@@ -25,3 +25,12 @@ test('xếp chỗ: không chồng chữ, bậc cao giữ chỗ sát đầu',()=>
  for(const a of out)for(const b of out)if(a!==b)assert.ok(!(a.x0<b.x0+b.w&&a.x0+a.w>b.x0&&a.y0<b.y0+b.h&&a.y0+a.h>b.y0),'không chồng');
  assert.equal(layoutTitles([it('a',1,100,200),it('b',5,100,200),it('c',5,100,200)]).length,2,'hết chỗ thì ẩn');
 });
+test('21/11: Tông Chủ / Kim Cương đã chuyển sinh vẫn có dòng Luân Hồi',async()=>{
+ const {luanHoiExtra}=await import('../public/title-plaques.js');
+ const master={honor:{role:'sect-master'},giftCoins:15493,reincarnations:1};
+ assert.equal(titleOf(master,N).kind,'master');const lh=luanHoiExtra(master,N);assert.equal(lh.kind,'luanhoi');assert.equal(lh.text,'NHẤT THẾ LUÂN HỒI');
+ assert.equal(luanHoiExtra(master,N,true).kind,'luanhoi','ngồi ghế Tông Chủ vẫn hiện Luân Hồi');
+ assert.equal(luanHoiExtra({giftCoins:5000,reincarnations:2},N).text,'NHỊ THẾ LUÂN HỒI');
+ assert.equal(luanHoiExtra({giftCoins:0,reincarnations:1},N),null,'danh hiệu chính đã là Luân Hồi → không lặp');
+ assert.equal(luanHoiExtra({giftCoins:5000},N),null);
+});

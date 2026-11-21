@@ -43,6 +43,9 @@ export function titleOf(p,now=Date.now()){if(!p||p.resident||p.puppet)return nul
  if(ev)return {rank:5,kind:'feat',text:String(ev).toUpperCase(),icon:eventIcon(ev)};
  if(h?.title)return {rank:6,kind:'rank',text:h.title};
  return null;}
+/** 21/11: dòng Luân Hồi thêm cho người mà danh hiệu chính cao hơn Luân Hồi (Tông Chủ, VIP Kim Cương) hoặc đang ngồi ghế chức vụ. */
+export function luanHoiExtra(p,now=Date.now(),seat=false){if(!p||p.resident||p.puppet||!(Number(p.reincarnations)>0))return null;const main=seat?null:titleOf(p,now);if(main?.kind==='luanhoi')return null;
+ const n=Number(p.reincarnations);return {rank:2,kind:'luanhoi',text:luanHoiTitle(n).toUpperCase(),tier:luanHoiTier(n),extra:true};}
 /** Có hiện không, theo độ đông sân. Chức vị theo cảnh giới (rank 6) gần như ai cũng có → chỉ hiện khi sân vắng (≤10). */
 export const titleVisible=(t,count)=>!!t&&(count>LIMIT.crowd?t.rank<=1:count>LIMIT.busy?t.rank<=2:count>10?t.rank<=5:true);
 
@@ -103,7 +106,10 @@ export function drawTitlePlaques(scene,c,t,nowMs){const list=scene.targets||[];i
  const count=list.length,light=scene.budget?.level==='light';
  const elders=new Set((scene.sectElders||[]).map(e=>e?.id||e?.player?.id||e?.userId).filter(Boolean)),master=scene.sectMaster?.userId; // ghế Trưởng Lão/Tông Chủ đã có bảng chức vụ riêng
  const items=[];
- for(const a of list){const p=a.player;if(!p||elders.has(a.id)||a.id===master)continue;const tt=titleOf(p,nowMs);if(!titleVisible(tt,count))continue;
-  const b=plaque(tt);if(!b)continue;items.push({tt,id:a.id,rank:tt.rank,x:a.x,y:a.y-(a.scale||1)*HEAD_K+4,w:b.w,h:b.h});}
+ for(const a of list){const p=a.player;if(!p)continue;const seat=elders.has(a.id)||a.id===master,head=a.y-(a.scale||1)*HEAD_K+4;
+  // 21/11: Luân Hồi đi KÈM danh hiệu nạp (Tông Chủ/Kim Cương che mất — Tông chủ Đế giang chuyển sinh mà không thấy). Ghế Tông Chủ/Trưởng Lão chỉ hiện dòng Luân Hồi.
+  const lh=luanHoiExtra(p,nowMs,seat),tt=seat?null:titleOf(p,nowMs);let y=head;
+  if(titleVisible(tt,count)){const b=plaque(tt);if(b){items.push({tt,id:a.id,rank:tt.rank,x:a.x,y,w:b.w,h:b.h});y-=b.h-4;}}
+  if(lh&&titleVisible(lh,count)){const b=plaque(lh);if(b)items.push({tt:lh,id:a.id+'#lh',rank:lh.rank,x:a.x,y,w:b.w,h:b.h});}}
  for(const it of layoutTitles(items))drawTitlePlaque(c,it.tt,it.x,it.y,t,(String(it.id).length*7+String(it.id).charCodeAt(0))%17,light);
 }
