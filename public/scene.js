@@ -793,20 +793,24 @@ function giftImg(url){if(!url)return null;let img=giftImgs.get(url);if(!img){img
 // 21/11 HẠ GIÁ trên sân (chủ game: "350 thì họ không biết tặng kiểu gì") — chỉ ẢNH QUÀ, không số:
 // món gốc nhỏ phía trên bị vạch đỏ chéo + mờ đi → món mới (×n) bật sáng to trong huy hiệu; sau đó món mới nháy nhẹ mỗi 4 s.
 function drawLineupPlate(c,slot,x,y,alpha,art,e=null,base=null,price=null,bundle=false){
+  // 21/11 (chủ game: "×2 là cái gì, nhỏ quá; thêm số cũng được, đừng ghi chữ coin"): huy hiệu quà TO (r 34, hạ giá 42),
+  // số lượng món = huy hiệu đỏ "×2" to ở góc, dưới là SỐ giá (không chữ coin). Hạ giá: món cũ + số cũ nhỏ phía trên bị gạch đỏ, mờ dần.
   const sale=!!e?.sale&&price!=null&&base!=null&&price!==base,age=sale?Date.now()-e.sale.at:0;
-  const k=Math.max(0,Math.min(1,age/1800)),cut=Math.max(0,Math.min(1,(k-.2)/.25)),pop=sale?Math.max(0,Math.min(1,(k-.5)/.3)):1,pulse=sale&&k>=1?1+.1*Math.max(0,Math.sin(age*.0016))**8:1;
-  const g0=lineupSlotGift({...slot,price:base??slot.price},art),g=sale?lineupSlotGift({...slot,giftName:undefined,price},art):g0,img=giftImg(g.url),r=sale?27:22;
+  const k=Math.max(0,Math.min(1,age/1800)),cut=Math.max(0,Math.min(1,(k-.2)/.25)),pop=sale?Math.max(0,Math.min(1,(k-.5)/.3)):1,pulse=sale&&k>=1?1+.08*Math.max(0,Math.sin(age*.0016))**8:1;
+  const g0=lineupSlotGift({...slot,price:base??slot.price},art),g=sale?lineupSlotGift({...slot,giftName:undefined,price},art):g0,img=giftImg(g.url),r=sale?42:34;
+  const label=(t,tx,ty,size,fill,stroke='#000',align='center')=>{c.font='900 '+size+'px "Segoe UI",Arial,sans-serif';c.textAlign=align;c.textBaseline='middle';c.lineJoin='round';c.strokeStyle=stroke;c.lineWidth=Math.max(4,size*.22);c.fillStyle=fill;c.strokeText(t,tx,ty);c.fillText(t,tx,ty);};
   c.save();c.globalAlpha=alpha;
-  if(sale){const im0=giftImg(g0.url),oy=y-r-24,s0=30;
-    if(im0){c.save();c.globalAlpha*=1-.55*pop;c.drawImage(im0,x-s0/2,oy-s0/2,s0,s0);c.restore();}
-    if(cut>0){c.save();c.strokeStyle='#ff2a2a';c.lineWidth=3.2;c.lineCap='round';c.beginPath();c.moveTo(x-s0*.55,oy+s0*.45);c.lineTo(x-s0*.55+s0*1.1*cut,oy+s0*.45-s0*.9*cut);c.stroke();c.restore();}}
-  if(img&&pop>0){const sc=(sale?1.6-.6*pop:1)*pulse;c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha*=pop;
+  if(sale){const im0=giftImg(g0.url),oy=y-r-30,s0=34,fade=1-.45*pop;
+    c.save();c.globalAlpha*=fade;if(im0)c.drawImage(im0,x-s0-4,oy-s0/2,s0,s0);label((g0.count>1?'×'+g0.count+' ':'')+String(base),x+2,oy,20,'#fff3d0','#000','left');c.restore();
+    if(cut>0){c.save();c.strokeStyle='#ff2a2a';c.lineWidth=4;c.lineCap='round';const w0=s0+60;c.beginPath();c.moveTo(x-s0-8,oy+12);c.lineTo(x-s0-8+w0*cut,oy+12-24*cut);c.stroke();c.restore();}}
+  if(img&&pop>0){const sc=(sale?1.5-.5*pop:1)*pulse;c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha*=pop;
     if(sale){c.save();c.globalCompositeOperation='lighter';const gl=c.createRadialGradient(0,0,4,0,0,r*1.7);gl.addColorStop(0,'rgba(255,220,120,.55)');gl.addColorStop(1,'rgba(255,200,80,0)');c.fillStyle=gl;c.beginPath();c.arc(0,0,r*1.7,0,Math.PI*2);c.fill();c.restore();}
-    c.fillStyle='rgba(8,10,22,.6)';c.strokeStyle=sale?'rgba(255,214,90,1)':'rgba(255,230,160,.85)';c.lineWidth=sale?3:2;c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.fill();c.stroke();
-    c.drawImage(img,-r+4,-r+4,2*r-8,2*r-8);
-    if(g.count>1){c.font='900 18px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=3.5;c.fillStyle='#ffe6a0';c.strokeText('×'+g.count,r+3,r-6);c.fillText('×'+g.count,r+3,r-6);}
+    c.fillStyle='rgba(8,10,22,.65)';c.strokeStyle=sale?'rgba(255,214,90,1)':'rgba(255,230,160,.9)';c.lineWidth=sale?3.5:2.5;c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.fill();c.stroke();
+    c.drawImage(img,-r+5,-r+5,2*r-10,2*r-10);
+    if(g.count>1){const bx=r*.78,by=-r*.72,br=15;c.fillStyle='#d61a1a';c.strokeStyle='#ffe08a';c.lineWidth=2.5;c.beginPath();c.arc(bx,by,br,0,Math.PI*2);c.fill();c.stroke();label('×'+g.count,bx,by+1,19,'#fff','#5a0000');}
+    label(String(sale?price:base??slot.price),0,r+16,sale?28:22,sale?'#ffe36a':'#fff3d0',sale?'#5a0000':'#000');
     c.restore();}
-  if(bundle){c.font='900 17px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='top';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=4;c.fillStyle='#ffd76a';c.strokeText('2 skin',x,y+r+6);c.fillText('2 skin',x,y+r+6);}
+  if(bundle)label('2 skin',x,y+r+(sale?60:44),18,'#ffd76a');
   c.restore();
 }
 function hash(s){let n=0;for(const ch of s)n=(Math.imul(n,31)+ch.charCodeAt(0))|0;return Math.abs(n);}

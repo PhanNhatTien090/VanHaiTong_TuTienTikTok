@@ -668,7 +668,9 @@ function renderVisitorHud(){
  if(e.lineup?.length){
   // 20/11 Tam Tiên → 21/11 SONG TIÊN: 1 dòng/vị: ảnh món → skin (cùng mốc thì kèm pháp bảo). Lượt đặc biệt (bundle): 1 dòng → cả 2 skin.
   // Hạ giá (chủ game chốt): chỉ ẢNH QUÀ — món gốc gạch mờ → món mới sáng (giá giảm luôn là đúng 1 món ×n, SALE_PRICES).
-  const tok=(s,base,price)=>'<b class="ev-gift">'+(e.sale&&price!==base?'<s class="ev-old">'+lineupSlotHTML({...s,price:base},state.giftArt)+'</s><i class="ev-arrow">→</i><b class="ev-new">'+lineupSlotHTML({...s,giftName:undefined,price},state.giftArt)+'</b>':lineupSlotHTML({...s,price:base},state.giftArt))+'</b>';
+  // 21/11: kèm SỐ giá (chủ game: thêm số được, không chữ "coin"); ×n là số lượng món.
+  const num=n=>'<i class="ev-num">'+n+'</i>';
+  const tok=(s,base,price)=>'<b class="ev-gift">'+(e.sale&&price!==base?'<s class="ev-old">'+lineupSlotHTML({...s,price:base},state.giftArt)+num(base)+'</s><i class="ev-arrow">→</i><b class="ev-new">'+lineupSlotHTML({...s,giftName:undefined,price},state.giftArt)+num(price)+'</b>':lineupSlotHTML({...s,price:base},state.giftArt)+num(base))+'</b>';
   html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong>'+(e.bundle?'<p>'+tok({},e.bundle.base,e.bundle.price)+'<span>→ '+e.lineup.map(s=>esc(VISITOR_GIFT_REWARDS[s.kind]?.skinName||'')).join(' + ')+' (cả 2)</span></p>':e.lineup.map(s=>{const r=VISITOR_GIFT_REWARDS[s.kind];if(!r)return '';
    return '<p>'+tok(s,s.base??s.price,s.price)+'<span>→ '+esc(r.skinName)+(r.skinCoins&&r.skinCoins===r.artifactCoins?' + '+esc(r.artifactName):'')+'</span></p>';}).join(''))+'</div>';
  }else if(reward){

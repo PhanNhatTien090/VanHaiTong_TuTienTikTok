@@ -393,3 +393,13 @@ html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.e
 @keyframes evSaleSheen{0%,55%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(420%) skewX(-18deg)}}
 @keyframes evSaleStamp{0%,100%{transform:rotate(8deg) scale(1)}50%{transform:rotate(8deg) scale(1.12)}}
 @keyframes evSaleNew{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+/* 21/11: icon quà sự kiện to hơn, ×n và số giá to, rõ (chủ game: "×2 nhỏ quá") */
+#visitorEventInfo .event-rewards .ev-gift{font:900 1.25em/1 'Segoe UI',Arial,sans-serif;white-space:nowrap;display:inline-flex;align-items:center;gap:2px}
+#visitorEventInfo .event-rewards .ev-gift .gift-ico{height:2.7em}
+#visitorEventInfo .event-rewards .ev-gift .ev-num{font-style:normal;margin-left:.3em;color:#ffe36a;-webkit-text-stroke:.5px #000;text-shadow:0 1px 2px #000}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo:not(.ev-sale) .ev-gift .ev-num{color:#b3261e!important;text-shadow:none;-webkit-text-stroke:0}
+#visitorEventInfo .event-rewards .ev-gift .ev-old .gift-ico{height:1.8em}
+#visitorEventInfo .event-rewards .ev-gift .ev-old .ev-num{color:#fff3d0;font-size:.85em}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-new .ev-num{color:#ffe36a!important;font-size:1.15em;-webkit-text-stroke:.6px #3a0000}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-old .ev-num{color:#fff3d0!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-arrow{color:#ffe08a!important}
