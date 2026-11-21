@@ -56,10 +56,11 @@ try{
  await pause(9000); // chờ màn đột phá ở bước trước chiếu xong
  console.log('cs1',(await act({type:'chat',userId:'b',text:'chuyen sinh'})).message);
  await ev(`(()=>{const s=window.__vhScene;s.effects=[];s.fxQueue=[];s.luxuryQueue=[];})()`);await pause(2500);await shot('08-di-tuong-2s');await pause(4000);await shot('09-di-tuong-6s'); // 20/11: Thiên Địa Dị Tượng
- console.log('cs2',(await act({type:'chat',userId:'b',text:'chuyen sinh xac nhan'})).message);
+ console.log('cs2',(await act({type:'chat',userId:'b',text:'chuyen sinh'})).message); // 21/11: gõ lại = xác nhận
  await pause(1500);
  const perf=await ev(`(()=>{const s=window.__vhScene;let n=0,t0=performance.now();return new Promise(r=>{const f=()=>{n++;if(performance.now()-t0<3000)requestAnimationFrame(f);else r({fps:n/3,cut:!!s?.cutFullActive,lh:!!s?.luanHoiOn});};requestAnimationFrame(f);});})()`);
  console.log('perf',JSON.stringify(perf));
+ for(const [ms,n] of [[1000,'10-chieu-6s'],[5000,'11-chieu-11s'],[5000,'12-chieu-16s'],[4000,'13-chieu-20s'],[3500,'14-chieu-24s']]){await pause(ms);await shot(n);}
  await pause(3000);
  console.log('daoqua',(await act({type:'chat',userId:'b',text:'daoqua kiem'})).message);
  console.log('luanhoi',(await act({type:'chat',userId:'b',text:'luanhoi'})).message);

@@ -456,8 +456,8 @@ function actionCore(w,input,now) {
   if(type==='chat'&&cmd==='chuyensinh'){
     const result=rebirthCommand(w,p,rest,now,requiredQi(p));
     // 18/11: Luân Hồi — màn chiếu riêng "Niết Bàn Luân Hồi" (overlay public/luan-hoi-cinema.js) thay cho màn đổi skin chung.
-    // 20/11: THIÊN ĐỊA DỊ TƯỢNG — đang chờ xác nhận 30 s thì cả sân thấy điềm báo (public/luan-hoi-omen.js)
-    if(result.pending)w.luanHoiOmen={pid:p.id,name:p.name,n:(Number(p.reincarnations)||0)+1,at:now,until:p.rebirthConfirmation?.until||now+30000};
+    // 20/11: THIÊN ĐỊA DỊ TƯỢNG — đang chờ xác nhận (21/11: 2 phút, gõ lại chuyển sinh = xác nhận) thì cả sân thấy điềm báo (public/luan-hoi-omen.js)
+    if(result.pending&&!result.repeat)w.luanHoiOmen={pid:p.id,name:p.name,n:(Number(p.reincarnations)||0)+1,at:now,until:p.rebirthConfirmation?.until||now+30000};
     if(result.reborn&&w.luanHoiOmen?.pid===p.id)delete w.luanHoiOmen;
     if(result.reborn){const cut=w.luanHoiCut={id:'lh-'+p.id+'-'+now,pid:p.id,name:p.name,n:p.reincarnations,fromRealm:p.highestRealm,at:now+LUAN_HOI_CUT_LEAD,ms:LUAN_HOI_CUT_MS,seed:Math.floor(Math.random()*1e9)};
       emit(w,p,result.message,'rebirth',now,{rebirth:true,luanHoi:cut.id,count:p.reincarnations,fromRealm:REBIRTH_UNLOCK_REALM,toRealm:0,visualFrom:result.visualFrom,visualTo:result.visualTo});}

@@ -10,7 +10,7 @@ test('rebirth opens only at the current final realm and requires an unexpired ex
  for(const realm of [18,19,20,21,22,23,24,25,26,27]){const {w,p}=setup(realm);assert.equal(chat(w,'chuyển sinh').ok,false);assert.equal(p.realm,realm);assert.equal(p.reincarnations,undefined);}
  const {w,p}=setup(REBIRTH_UNLOCK_REALM);assert.equal(chat(w,'chuyển sinh xác nhận').ok,false);assert.equal(p.realm,REBIRTH_UNLOCK_REALM);
  assert.equal(chat(w,'chuyển sinh',N+1).pending,true);assert.equal(p.realm,REBIRTH_UNLOCK_REALM);assert.equal(p.qi,requiredQi(p));
- assert.equal(chat(w,'chuyển sinh xác nhận',N+30001).ok,false);assert.equal(p.realm,REBIRTH_UNLOCK_REALM);
+ assert.equal(chat(w,'chuyển sinh xác nhận',N+120001).ok,false);assert.equal(p.realm,REBIRTH_UNLOCK_REALM);
 });
 
 test('voluntary rebirth resets only current realm and qi, preserving ownership, relationships and daily quota across saves',()=>{
@@ -43,4 +43,14 @@ test('full final-realm bar announces "gõ chuyển sinh" once, not dotpha (18/11
  const evs=w.events.filter(e=>e.effect==='ready'&&e.rebirthReady);assert.ok(evs.length<=1);
  const e={effect:'ready',user:'a',name:'A',text:'Đủ tu vi chuyển sinh • gõ chuyển sinh',rebirthReady:true};
  assert.match(JSON.stringify(speechPlan(e)),/chuyển sinh/);assert.doesNotMatch(JSON.stringify(speechPlan(e)),/đột phá/);assert.equal(fastVoiceFile(e),null);
+});
+
+test('typing "chuyển sinh" again within 2 minutes confirms (21/11: LIVE comments lag, nobody typed "xác nhận")',()=>{
+ const {w,p}=setup();
+ assert.equal(chat(w,'chuyển sinh',N).pending,true);const omenAt=w.luanHoiOmen.at;assert.equal(w.luanHoiOmen.until,N+120000);
+ const dup=chat(w,'chuyển sinh',N+500);assert.equal(dup.pending,true);assert.equal(p.realm,REBIRTH_UNLOCK_REALM);assert.equal(w.luanHoiOmen.at,omenAt);
+ assert.equal(chat(w,'chuyển sinh',N+101000).reborn,true);assert.equal(p.realm,0);assert.equal(p.reincarnations,1);assert.ok(w.luanHoiCut);assert.equal(w.luanHoiOmen,undefined);
+ // hết 2 phút thì gõ lại chỉ mở lượt chờ mới
+ const b=setup();assert.equal(chat(b.w,'chuyển sinh',N).pending,true);assert.equal(chat(b.w,'chuyển sinh',N+120001).pending,true);assert.equal(b.p.realm,REBIRTH_UNLOCK_REALM);
+ assert.equal(chat(b.w,'chuyensinh',N+125000).reborn,true);
 });

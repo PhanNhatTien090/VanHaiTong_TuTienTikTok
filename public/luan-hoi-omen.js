@@ -1,4 +1,4 @@
-// 20/11/2026 — THIÊN ĐỊA DỊ TƯỢNG: ai gõ "chuyển sinh" (đang chờ xác nhận 30 s) → cả sân thấy điềm báo:
+// 20/11/2026 — THIÊN ĐỊA DỊ TƯỢNG: ai gõ "chuyển sinh" (đang chờ xác nhận; 21/11: 2 phút, gõ lại = xác nhận) → cả sân thấy điềm báo:
 // dải giấy dó "THIÊN ĐỊA DỊ TƯỢNG · <tên> sắp Luân Hồi lần N" + nén nhang cháy đếm ngược, trời sẫm mực, dưới chân người đó xoáy mực + vòng son.
 // Server: w.luanHoiOmen={pid,name,n,at,until} (engine.mjs, lệnh chuyensinh). Không chạy khi đang chiếu màn Luân Hồi. Chỉ vài nét vẽ / khung.
 import {paperBanner,INK,SEAL,PAPER} from './luan-hoi-ink.js?v=20261120b';
@@ -17,7 +17,7 @@ export function drawOmenVortex(scene,c,t){const s=omenActive(scene,t);if(!s)retu
  c.save();for(let i=0;i<8;i++){const u=((t*.0005+i/8)%1),x=a.x+Math.sin(i*2.1+t*.002)*sc*22,y=fy-u*sc*90,r=sc*(5+u*9);const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,'rgba(14,12,10,.5)');g.addColorStop(1,'rgba(14,12,10,0)');c.globalAlpha=k*(1-u);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}c.restore();}
 
 /** Lớp trước: trời sẫm mực + dải giấy dó + nén nhang đếm ngược. */
-// Lúc dị tượng (≤30 s): trời đất biến sắc — tạm mờ Thiên Bảng, bảng Tặng quà, lệnh bài 1·8·6 để cuộn giấy không đè lên bảng nào.
+// Lúc dị tượng (≤2 phút): trời đất biến sắc — tạm mờ Thiên Bảng, bảng Tặng quà, lệnh bài 1·8·6 để cuộn giấy không đè lên bảng nào.
 let styled=false,on=false;
 function hudClass(v){if(typeof document==='undefined'||on===v)return;on=v;
  if(!styled){styled=true;const st=document.createElement('style');st.textContent='body.overlay :is(#liveRanks,#giftBoard,.tm-tokens){transition:opacity .45s}body.overlay.lh-omen :is(#liveRanks,#giftBoard,.tm-tokens){opacity:0!important;pointer-events:none}';document.head?.appendChild(st);}
@@ -33,4 +33,6 @@ function omenHud(c,t,H,s){const {o,left,age}=s,k=Math.min(1,age/.8)*Math.min(1,l
  c.fillStyle='#ff6a3a';c.beginPath();c.arc(ix,base-L,3.2+Math.sin(t*.02),0,TAU);c.fill();
  for(let i=0;i<6;i++){const u=((t*.0006+i/6)%1),sx=ix+Math.sin(u*8+i)*10*u,sy=base-L-u*70,r=4+u*10,sg=c.createRadialGradient(sx,sy,0,sx,sy,r);sg.addColorStop(0,'rgba(220,214,200,.45)');sg.addColorStop(1,'rgba(220,214,200,0)');c.globalAlpha=k*(1-u);c.fillStyle=sg;c.fillRect(sx-r,sy-r,r*2,r*2);}
  c.globalAlpha=k;c.font='900 22px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineWidth=5;c.strokeStyle=INK;const sec=String(Math.ceil(left))+'s';c.strokeText(sec,ix,base+26);c.fillStyle=PAPER;c.fillText(sec,ix,base+26);
+ // 21/11: nhắc cách xác nhận — trước đó người chơi gõ "chuyển sinh" mãi mà không biết phải gõ lại
+ const hint='GÕ "CHUYỂN SINH" LẦN NỮA ĐỂ BẮT ĐẦU';c.font='900 26px "Segoe UI",Arial,sans-serif';c.lineWidth=6;c.globalAlpha=k*(.82+.18*Math.sin(t*.006));c.strokeText(hint,450,base+64);c.fillStyle='#ffe7a8';c.fillText(hint,450,base+64);
  c.restore();}
