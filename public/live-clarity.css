@@ -403,3 +403,8 @@ html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>#visitorEvent
 html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-new .ev-num{color:#ffe36a!important;font-size:1.15em;-webkit-text-stroke:.6px #3a0000}
 html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-old .ev-num{color:#fff3d0!important}
 html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-arrow{color:#ffe08a!important}
+/* 21/11 (chủ game: "chữ đen trên nền đỏ không thấy gì"): mọi chữ trên bảng hạ giá TRẮNG viền tối; chỉ tiêu đề + số giá mới vàng */
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]),html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) *{color:#fff!important;text-shadow:0 1px 2px #000,0 0 3px #000!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden])>b:first-child{color:#ffe08a!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .event-rewards>strong{color:#ffe08a!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .event-rewards .ev-gift .ev-new .ev-num{color:#ffe36a!important}
