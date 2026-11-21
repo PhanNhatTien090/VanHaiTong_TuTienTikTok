@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createWorld,action,startVisitor,startVisitorSale,pickSongTienRound,visitorRotationWeights,tick} from '../engine.mjs';
 import {SONG_TIEN_ROUNDS,RETIRED_VISITORS,VISITOR_GIFT_REWARDS,buildRound,songTienRound,salePrice} from '../public/visitor-rewards.js';
+import {giftFor} from '../public/gift-icons.js';
 import {VISITORS} from '../public/visitor-event.js';
 
 const N=1_800_000_000_000;
@@ -53,27 +54,27 @@ test('lượt đặc biệt: ai đã có 1 vị thì vị còn lại tính đún
  gift(w,'a',300);assert.ok(has(w,'a','xich-vu'));assert.equal(w.players.a.skinWallet.coins,0);
 });
 
-test('HẠ GIÁ 30%: giá lượt đổi ngay (500→350, 100→70, pháp bảo cũng giảm), mua theo giá mới; lời đọc chỉ giá',()=>{
- assert.deepEqual([500,300,200,100].map(p=>[salePrice(p,20),salePrice(p,30)]),[[400,350],[240,210],[160,140],[80,70]]);
- const w=world();assert.equal(startVisitorSale(w,30,N).ok,false,'chưa có lượt');
- open(w,'than-de-vuong-lam');assert.equal(startVisitorSale(w,50,N).ok,false);
- const r=startVisitorSale(w,30,N+500);assert.ok(r.ok);assert.deepEqual(r.lineup.map(s=>s.price),[70,350]);
- const ev=w.events.find(x=>x.visitorSale);assert.equal(ev.salePct,30);assert.deepEqual(ev.saleLines.map(x=>x.price),[70,350]);assert.doesNotMatch(ev.text,/coin|tim|follow/i);
- gift(w,'a',350);assert.ok(has(w,'a','nhan-qua'));assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS['nhan-qua'].artifact));assert.equal(w.players.a.skinWallet.coins,0);
- gift(w,'b',70);assert.ok(has(w,'b','shende'));
- gift(w,'b',140);assert.ok(w.players.b.artifacts.includes(VISITOR_GIFT_REWARDS.shende.artifact),'pháp bảo Thần Đế 300→210: phần chênh 140');
- assert.equal(startVisitorSale(w,30,N+600).ok,false,'đã hạ 30% rồi');assert.ok(startVisitorSale(w,20,N+700).ok,'đổi mức được');
+test('HẠ GIÁ = ĐÚNG MÓN QUÀ (chủ game: 350 không ai biết tặng gì): 500→400, 300→200, 200→100, 100→99; mỗi giá là 1 món ×n',()=>{
+ assert.deepEqual([500,300,200,100].map(p=>salePrice(p)),[400,200,100,99]);
+ for(const p of [400,200,100,99]){const g=giftFor({},p);assert.ok(g.url&&g.count<=5,p+' phải ra 1 món ảnh thật ×n');}
+ const w=world();assert.equal(startVisitorSale(w,N).ok,false,'chưa có lượt');
+ open(w,'than-de-vuong-lam');
+ const r=startVisitorSale(w,N+500);assert.ok(r.ok);assert.deepEqual(r.lineup.map(s=>s.price),[99,400]);
+ const ev=w.events.find(x=>x.visitorSale);assert.deepEqual(ev.saleLines.map(x=>x.gift),['Paper Crane','4 Balloon Gift Box'],'món kênh đã có ảnh, ×n ≤5');assert.doesNotMatch(ev.text,/coin|tim|follow|\d{3}/i);
+ gift(w,'a',400);assert.ok(has(w,'a','nhan-qua'));assert.ok(w.players.a.artifacts.includes(VISITOR_GIFT_REWARDS['nhan-qua'].artifact));assert.equal(w.players.a.skinWallet.coins,0);
+ gift(w,'b',99);assert.ok(has(w,'b','shende'));
+ gift(w,'b',101);assert.ok(w.players.b.artifacts.includes(VISITOR_GIFT_REWARDS.shende.artifact),'pháp bảo Thần Đế 300→200: phần chênh 101');
+ assert.equal(startVisitorSale(w,N+600).ok,false,'đã hạ giá rồi');
 });
 
-test('HẠ GIÁ lượt đặc biệt: 500→350 nhận cả 2',()=>{
- const w=world();open(w,'hoa-than');startVisitorSale(w,30,N+100);assert.equal(w.visitor.bundle.price,350);
- gift(w,'a',350);assert.ok(has(w,'a','viemton')&&has(w,'a','xich-vu'));
+test('HẠ GIÁ lượt đặc biệt: 500→400 nhận cả 2',()=>{
+ const w=world();open(w,'hoa-than');startVisitorSale(w,N+100);assert.equal(w.visitor.bundle.price,400);
+ gift(w,'a',400);assert.ok(has(w,'a','viemton')&&has(w,'a','xich-vu'));
 });
 
-test('cặp trùng giá (Hải Lam + Thần Đế 100): mỗi vị 1 món riêng; hạ giá vẫn nhận đúng món (món 100 trả cho giá 70)',()=>{
- const w=world(),e=open(w,'hai-than');assert.ok(e.lineup.every(s=>s.giftName),'trùng giá → gắn món');
- startVisitorSale(w,30,N+100);const sea=e.lineup.find(s=>s.kind==='hailam');
- gift(w,'a',100,sea.giftName);assert.ok(has(w,'a','hailam'));assert.ok(!has(w,'a','shende'));
+test('không còn cặp trùng giá (hạ giá theo món sẽ không phân biệt được ai mua ai), trừ lượt đặc biệt',()=>{
+ for(const r of SONG_TIEN_ROUNDS.filter(r=>!r.bundle&&r.kinds.length===2)){const [a,b]=r.kinds.map(k=>VISITOR_GIFT_REWARDS[k].skinCoins||(k==='shende'||k==='hailam'?100:300));assert.notEqual(a,b,r.id);}
+ const w=world(),e=open(w,'long-loi');assert.deepEqual(e.lineup.map(s=>s.kind),['hailam','khuyniet']);assert.ok(e.lineup.every(s=>!s.giftName));
 });
 
 test('buildRound giữ giá gốc để hạ giá tính lại, không đổi bảng giá chung',()=>{

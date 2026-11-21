@@ -764,7 +764,7 @@ function drawOneVisitorRaw(scene,c,ev,t,H){
 const LINEUP_SPOTS=[{x:450,y:.366,h:188},{x:268,y:.41,h:185},{x:632,y:.41,h:185}];
 // 21/11 SONG TIÊN (chủ game: "hiện rõ 2 bộ to lên cho họ xem hiệu ứng"): 2 vị đứng to 2 bên đài, vị skin mới đứng riêng ở giữa còn to hơn.
 // Bảng giá đặt NGOÀI mép chân (không dưới chân) để không đè người ngồi đầu bậc thang.
-const lineupSpots=n=>n===1?[{x:450,y:.452,h:335,px:150,py:-36}]:n===2?[{x:282,y:.452,h:305,px:-118,py:-30},{x:618,y:.452,h:305,px:118,py:-30}]:LINEUP_SPOTS.map(s=>({...s,px:0,py:24}));
+const lineupSpots=n=>n===1?[{x:450,y:.452,h:335,px:150,py:-36}]:n===2?[{x:338,y:.446,h:298,px:-112,py:-26},{x:562,y:.446,h:298,px:112,py:-26}]:LINEUP_SPOTS.map(s=>({...s,px:0,py:24}));
 const COURT_KINDS=new Set(COURT_VISITORS.map(v=>v.kind)),POSE_KINDS=new Set(['tudo','khuyniet','viemton','hailam']);
 function visitorAnchor(kind,H,scene){
   if(COURT_KINDS.has(kind))return {feet:H*.38,h:315};
@@ -790,30 +790,23 @@ function drawVisitorLineup(scene,c,e,t,H){
 }
 const giftImgs=new Map();
 function giftImg(url){if(!url)return null;let img=giftImgs.get(url);if(!img){img=new Image();img.referrerPolicy='no-referrer';img.src=url;giftImgs.set(url,img);}return img.complete&&img.naturalWidth?img:null;}
-// 21/11 HẠ GIÁ trên sân: số gốc hiện rõ → vạch đỏ gạch qua → mờ đi → số mới bật sáng (không chữ "coin"); sau đó số mới nháy nhẹ mỗi 4 s.
-function drawSalePrice(c,x,y,base,price,age){
-  const k=Math.max(0,Math.min(1,age/1800)),cut=Math.max(0,Math.min(1,(k-.25)/.25)),pop=Math.max(0,Math.min(1,(k-.55)/.3)),pulse=k>=1?1+.08*Math.max(0,Math.sin(age*.0016))**8:1;
-  c.save();c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
-  c.font='800 20px "Segoe UI",Arial,sans-serif';const ow=c.measureText(String(base)).width;
-  c.globalAlpha*=1-.5*pop;c.strokeStyle='#000';c.lineWidth=4;c.fillStyle='#fff3d0';c.strokeText(String(base),x,y-18);c.fillText(String(base),x,y-18);
-  if(cut>0){c.strokeStyle='#ff3030';c.lineWidth=3;c.beginPath();c.moveTo(x-ow/2-3,y-16);c.lineTo(x-ow/2-3+(ow+6)*cut,y-20);c.stroke();}
-  c.restore();
-  if(pop>0){const sc=(1.7-.7*pop)*pulse;c.save();c.translate(x,y+8);c.scale(sc,sc);c.globalAlpha*=pop;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
-   c.font='900 26px "Segoe UI",Arial,sans-serif';c.shadowColor='#ffd76a';c.shadowBlur=14;c.strokeStyle='#4a0000';c.lineWidth=5;c.strokeText(String(price),0,0);c.shadowBlur=0;
-   const g=c.createLinearGradient(0,-12,0,12);g.addColorStop(0,'#fff6b0');g.addColorStop(1,'#ff5a2a');c.fillStyle=g;c.fillText(String(price),0,0);c.restore();}
-}
+// 21/11 HẠ GIÁ trên sân (chủ game: "350 thì họ không biết tặng kiểu gì") — chỉ ẢNH QUÀ, không số:
+// món gốc nhỏ phía trên bị vạch đỏ chéo + mờ đi → món mới (×n) bật sáng to trong huy hiệu; sau đó món mới nháy nhẹ mỗi 4 s.
 function drawLineupPlate(c,slot,x,y,alpha,art,e=null,base=null,price=null,bundle=false){
-  // 21/11: ảnh món theo GIÁ GỐC (ví giữ phần dư); hạ giá thì thêm số cũ → số mới phía trên; lượt đặc biệt có "×2" (2 skin).
-  if(base!=null)slot={...slot,price:base};
-  if(e?.sale&&price!=null&&price!==base){c.save();c.globalAlpha=alpha;drawSalePrice(c,x,y-34,base,price,Date.now()-e.sale.at);c.restore();}
-  if(bundle){c.save();c.globalAlpha=alpha;c.font='900 17px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=4;c.fillStyle='#ffd76a';c.strokeText('2 skin',x+26,y);c.fillText('2 skin',x+26,y);c.restore();}
-  // Huy hiệu tròn chỉ có ảnh món dưới chân (tên vị đã có ở bảng sự kiện, cùng ảnh) — nhỏ để không che người ngồi đầu bậc thang.
-  // Vị trùng giá = ảnh món riêng của vị; vị giá riêng = ảnh một món cùng giá (đủ coin là nhận).
-  const g=lineupSlotGift(slot,art),img=giftImg(g.url),r=22;if(!img)return;
+  const sale=!!e?.sale&&price!=null&&base!=null&&price!==base,age=sale?Date.now()-e.sale.at:0;
+  const k=Math.max(0,Math.min(1,age/1800)),cut=Math.max(0,Math.min(1,(k-.2)/.25)),pop=sale?Math.max(0,Math.min(1,(k-.5)/.3)):1,pulse=sale&&k>=1?1+.1*Math.max(0,Math.sin(age*.0016))**8:1;
+  const g0=lineupSlotGift({...slot,price:base??slot.price},art),g=sale?lineupSlotGift({...slot,giftName:undefined,price},art):g0,img=giftImg(g.url),r=sale?27:22;
   c.save();c.globalAlpha=alpha;
-  c.fillStyle='rgba(8,10,22,.6)';c.strokeStyle='rgba(255,230,160,.85)';c.lineWidth=2;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.stroke();
-  c.drawImage(img,x-r+4,y-r+4,2*r-8,2*r-8);
-  if(g.count>1){c.font='800 15px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=3.5;c.fillStyle='#ffe6a0';c.strokeText('×'+g.count,x+r+3,y+r-6);c.fillText('×'+g.count,x+r+3,y+r-6);}
+  if(sale){const im0=giftImg(g0.url),oy=y-r-24,s0=30;
+    if(im0){c.save();c.globalAlpha*=1-.55*pop;c.drawImage(im0,x-s0/2,oy-s0/2,s0,s0);c.restore();}
+    if(cut>0){c.save();c.strokeStyle='#ff2a2a';c.lineWidth=3.2;c.lineCap='round';c.beginPath();c.moveTo(x-s0*.55,oy+s0*.45);c.lineTo(x-s0*.55+s0*1.1*cut,oy+s0*.45-s0*.9*cut);c.stroke();c.restore();}}
+  if(img&&pop>0){const sc=(sale?1.6-.6*pop:1)*pulse;c.save();c.translate(x,y);c.scale(sc,sc);c.globalAlpha*=pop;
+    if(sale){c.save();c.globalCompositeOperation='lighter';const gl=c.createRadialGradient(0,0,4,0,0,r*1.7);gl.addColorStop(0,'rgba(255,220,120,.55)');gl.addColorStop(1,'rgba(255,200,80,0)');c.fillStyle=gl;c.beginPath();c.arc(0,0,r*1.7,0,Math.PI*2);c.fill();c.restore();}
+    c.fillStyle='rgba(8,10,22,.6)';c.strokeStyle=sale?'rgba(255,214,90,1)':'rgba(255,230,160,.85)';c.lineWidth=sale?3:2;c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.fill();c.stroke();
+    c.drawImage(img,-r+4,-r+4,2*r-8,2*r-8);
+    if(g.count>1){c.font='900 18px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=3.5;c.fillStyle='#ffe6a0';c.strokeText('×'+g.count,r+3,r-6);c.fillText('×'+g.count,r+3,r-6);}
+    c.restore();}
+  if(bundle){c.font='900 17px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='top';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=4;c.fillStyle='#ffd76a';c.strokeText('2 skin',x,y+r+6);c.fillText('2 skin',x,y+r+6);}
   c.restore();
 }
 function hash(s){let n=0;for(const ch of s)n=(Math.imul(n,31)+ch.charCodeAt(0))|0;return Math.abs(n);}

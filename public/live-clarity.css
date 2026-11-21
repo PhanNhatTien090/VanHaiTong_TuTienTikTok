@@ -370,5 +370,26 @@ html body.overlay .scene-shell #phoneHudRight>#companionHud:not(:empty){backgrou
 html body.overlay .spotlight.spot-transform{top:68%!important}
 html body.overlay .spotlight.spot-transform span{white-space:nowrap}
 /* 21/11 Song Tiên hạ giá: số cũ gạch mờ, số mới sáng (không chữ "coin"); bảng dựng lại mỗi giây nên không animation — hiệu ứng chuyển số nằm ở bảng giá trên sân (canvas) */
-#visitorEventInfo .ev-gift .ev-old{font:700 .95em/1 'Segoe UI',sans-serif;color:#8a7a6a;opacity:.6;text-decoration:line-through 2px #d02020;margin-right:.3em;vertical-align:middle}
-#visitorEventInfo .ev-gift .ev-new{font:900 1.35em/1 'Segoe UI',sans-serif;color:#e0201a;margin-right:.25em;vertical-align:middle;text-shadow:0 0 6px #ffd76a}
+#visitorEventInfo .ev-gift .ev-old{position:relative;display:inline-block;opacity:.45;filter:grayscale(.6);text-decoration:none;vertical-align:middle}
+#visitorEventInfo .ev-gift .ev-old::after{content:'';position:absolute;left:-2px;right:-2px;top:50%;border-top:3px solid #e01818;transform:rotate(-28deg)}
+#visitorEventInfo .ev-gift .ev-old .gift-ico{height:1.5em;filter:none}
+#visitorEventInfo .ev-gift .ev-arrow{font:900 1em/1 'Segoe UI',sans-serif;font-style:normal;color:#b01010;margin:0 .2em;vertical-align:middle}
+#visitorEventInfo .ev-gift .ev-new{display:inline-block;vertical-align:middle;font:900 1em/1 'Segoe UI',sans-serif;color:#7a1010}
+/* 21/11 (chủ game: "thay màu bảng hạ giá, khung có gì khác biệt để người ta hào hứng"): bảng HẠ GIÁ = sơn mài son đỏ + viền vàng kép,
+   vệt sáng vàng quét ngang 3 s/lần, dấu triện "HẠ GIÁ" góc phải đập nhịp. Chỉ transform/opacity → nhẹ cho LIVE. Đè được khung giấy Thủy Mặc (3 id). */
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]){position:relative;border-image:none!important;border:3px solid #ffd76a!important;border-radius:10px!important;
+ background:radial-gradient(120% 90% at 50% 0%,#c0201a 0%,#7a0c0c 55%,#3e0606 100%)!important;box-shadow:0 0 0 2px #7a0c0c,0 0 0 4px #ffcf5a,0 0 18px 4px #ff9a2a99!important;padding:8px 12px!important;color:#fff4d8!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden])::before{content:'';position:absolute;inset:-20% auto -20% -40%;width:35%;background:linear-gradient(100deg,#fff0 0%,#fff6c890 50%,#fff0 100%);transform:translateX(-120%) skewX(-18deg);animation:evSaleSheen 3s ease-in-out infinite;pointer-events:none}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden])::after{content:'HẠ GIÁ';position:absolute;top:6px;right:8px;padding:3px 8px;border:2px solid #ffe08a;border-radius:6px;background:#e0241a;color:#fff7c0;font:900 clamp(10px,2.4cqw,26px)/1 'Segoe UI',Arial,sans-serif;letter-spacing:.06em;transform:rotate(8deg);box-shadow:0 0 10px #ffcf5a;animation:evSaleStamp 1.4s ease-in-out infinite;pointer-events:none}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) b{color:#ffe08a!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden])>b:first-child{padding-right:5.2em}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-old{opacity:.8;filter:grayscale(.3) brightness(1.25);background:#fff3d855;border-radius:6px;padding:1px 3px}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-old::after{border-top-color:#ffe94a;border-top-width:3px}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-arrow{font-size:1.3em!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) :is(span,small,em,li,p,strong,code){color:#fff4d8!important}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .event-rewards{border-top-color:#ffd76a88}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-arrow{color:#ffe08a}
+html body.overlay .scene-shell #phoneHudRight #eventInfoDock>#visitorEventInfo.ev-sale:not([hidden]) .ev-gift .ev-new{animation:evSaleNew 1.4s ease-in-out infinite}
+@keyframes evSaleSheen{0%,55%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(420%) skewX(-18deg)}}
+@keyframes evSaleStamp{0%,100%{transform:rotate(8deg) scale(1)}50%{transform:rotate(8deg) scale(1.12)}}
+@keyframes evSaleNew{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}

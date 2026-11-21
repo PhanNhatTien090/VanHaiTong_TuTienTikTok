@@ -31,7 +31,7 @@ export const SONG_TIEN_ROUNDS=Object.freeze([
  {id:'dau-pha',kinds:['hac-kim','bich-lan']},
  {id:'hoa-than',kinds:['viemton','xich-vu'],bundle:500},
  {id:'ta-ton',kinds:['tudo','khuyniet']},
- {id:'hai-than',kinds:['hailam','shende']},
+ {id:'long-loi',kinds:['hailam','khuyniet']}, // Long Duệ + Lôi Tôn (pháp bảo Tử Lôi Long) — 21/11 thay Hải Lam + Thần Đế (trùng giá, rối khi hạ giá)
  {id:'nu-oa',kinds:['nu-oa']},
  {id:'u-minh',kinds:['u-minh']}
 ].map(r=>Object.freeze(r)));
@@ -39,18 +39,19 @@ export const RETIRED_VISITORS=Object.freeze(['vuonglam','hanlap','doraemon']);
 export const songTienRound=id=>SONG_TIEN_ROUNDS.find(r=>r.id===id)||null;
 export const roundsWith=kind=>SONG_TIEN_ROUNDS.filter(r=>r.kinds.includes(kind));
 export const roundNames=r=>(r?.kinds||[]).map(k=>VISITOR_GIFT_REWARDS[k]?.skinName||k);
-// HẠ GIÁ: −20%/−30%, làm tròn chục (500→400/350 · 300→240/210 · 200→160/140 · 100→80/70).
-export const SALE_PCTS=Object.freeze([20,30]);
-export const salePrice=(base,pct)=>pct?Math.round(base*(1-pct/100)/10)*10:base;
+// HẠ GIÁ (chủ game chốt 21/11): giá giảm phải là ĐÚNG MÓN QUÀ để người xem nhìn ảnh là biết tặng gì (350 thì không ai biết tặng kiểu gì):
+// 500 → 400 (ảnh: 2 Baglama, hoặc món kênh có, giftFor) · 300 → Baglama (200) · 200 → Hand Heart (100) · 100 → Paper Crane (99). Một mức duy nhất.
+export const SALE_PRICES=Object.freeze({500:400,300:200,200:100,100:99});
+export const salePrice=(base,on=true)=>on?SALE_PRICES[base]??Math.round(base*.8):base;
 // Dựng lượt từ cặp: mỗi vị lưu giá gốc (base/artBase) + giá đang bán (price/artPrice) → hạ giá chỉ đổi giá trong lượt.
 export function buildRound(round,art=null,rand=Math.random){
  const slots=round.bundle?round.kinds.map(kind=>({kind,price:visitorPrices(kind).skin})):assignLineupGifts(round.kinds,art,price=>[...lineupGiftsAt(price,art)].sort(()=>rand()-.5));
  const lineup=slots.map(s=>{const pr=visitorPrices(s.kind);return {...s,base:pr.skin,price:pr.skin,artBase:pr.artifact,artPrice:pr.artifact};});
  return {round:round.id,lineup,...(round.bundle?{bundle:{base:round.bundle,price:round.bundle}}:{})};
 }
-export function applySale(e,pct,now){
- e.sale={pct,at:now};for(const s of e.lineup||[]){s.price=salePrice(s.base??s.price,pct);s.artPrice=salePrice(s.artBase??visitorPrices(s.kind).artifact,pct);}
- if(e.bundle)e.bundle.price=salePrice(e.bundle.base,pct);return e;
+export function applySale(e,now){
+ e.sale={at:now};for(const s of e.lineup||[]){s.price=salePrice(s.base??s.price);s.artPrice=salePrice(s.artBase??visitorPrices(s.kind).artifact);}
+ if(e.bundle)e.bundle.price=salePrice(e.bundle.base);return e;
 }
 // Món dùng được ở một giá: có ảnh thật của kênh hoặc ảnh dự phòng.
 export const lineupGiftsAt=(price,art=null)=>(LINEUP_GIFTS[price]||[]).filter(n=>FALLBACK_ART.has(n)||!!art?.[n+'|'+price]?.url);

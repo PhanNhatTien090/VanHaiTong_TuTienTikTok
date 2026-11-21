@@ -613,7 +613,7 @@ function renderFlowerHud(){
 }
 async function flowerEvent(minutes,kind='flower'){const r=await post('/api/flower-event',{minutes,kind});if(r.ok)toast((kind==='meteor'?'Tinh Hà Lưu Tinh':'Thiên Hoa Vũ')+' bắt đầu: '+minutes+' phút.');}
 for(const b of document.querySelectorAll('[data-visitor]'))b.onclick=async()=>{const r=await post('/api/visitor-event',{kind:b.dataset.visitor});if(r.ok)toast('Tiên nhân đã đến · gõ coduyen trên LIVE');};
-for(const b of document.querySelectorAll('[data-visitor-sale]'))b.onclick=async()=>{const r=await post('/api/visitor-sale',{pct:Number(b.dataset.visitorSale)});if(r.ok)toast('Đã hạ giá '+r.pct+'% tới hết lượt');}; // 21/11 Song Tiên hạ giá
+for(const b of document.querySelectorAll('[data-visitor-sale]'))b.onclick=async()=>{const r=await post('/api/visitor-sale',{});if(r.ok)toast('Đã hạ giá tới hết lượt');}; // 21/11 Song Tiên hạ giá
 for(const b of document.querySelectorAll('[data-flower]'))b.onclick=()=>flowerEvent(Number(b.dataset.flower),b.dataset.kind||'flower');
 // Tự động sự kiện: công tắc + khoảng cách (phút).
 function syncAutoEvents(){const box=$('#autoEvents'),min=$('#autoEventMinutes'),note=$('#autoEventNote');if(!box||!state)return;const st=state.settings||{};if(document.activeElement!==box)box.checked=st.autoEvents!==false;const rnd=$('#autoRandom');if(rnd&&document.activeElement!==rnd)rnd.checked=!!st.autoRandom;if(document.activeElement!==min)min.value=st.autoEventMinutes??15;
@@ -663,12 +663,12 @@ function renderVisitorHud(){
  const seconds=Math.max(0,Math.ceil((e.endsAt-state.serverNow)/1000)),clock=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
  const command=state.quick?.paused?'cơ duyên':'6 hoặc cơ duyên';
  const free=e.completed?'Đã mở thưởng · nhận quà miễn phí':'Nhận cơ duyên miễn phí';
- let html='<b>SỰ KIỆN · '+esc(e.lineup?.length>1?(e.bundle?'SONG TIÊN ĐẶC BIỆT':'SONG TIÊN GIÁNG LÂM'):cfg?.name||'Khách quý')+(e.sale?' · HẠ GIÁ':'')+'</b><span class="event-time">Còn '+clock+'</span><p><code>Gõ '+esc(command)+'</code><span>'+esc(free)+'</span></p>';
+ let html='<b>SỰ KIỆN · '+esc(e.lineup?.length>1?(e.bundle?'SONG TIÊN ĐẶC BIỆT':'SONG TIÊN GIÁNG LÂM'):cfg?.name||'Khách quý')+'</b><span class="event-time">Còn '+clock+'</span><p><code>Gõ '+esc(command)+'</code><span>'+esc(free)+'</span></p>';
+ el.classList.toggle('ev-sale',!!e.sale); // 21/11: bảng HẠ GIÁ đổi màu son-vàng + khung chạy sáng (CSS .ev-sale)
  if(e.lineup?.length){
   // 20/11 Tam Tiên → 21/11 SONG TIÊN: 1 dòng/vị: ảnh món → skin (cùng mốc thì kèm pháp bảo). Lượt đặc biệt (bundle): 1 dòng → cả 2 skin.
-  // Hạ giá (chủ game chốt): KHÔNG chữ "coin" — số cũ gạch mờ, số mới sáng, kèm ảnh món (ảnh theo giá gốc; ví giữ phần dư).
-  const cut=(base,price)=>e.sale&&price!==base?'<s class="ev-old">'+base+'</s><b class="ev-new">'+price+'</b>':'';
-  const tok=(s,base,price)=>'<b class="ev-gift">'+cut(base,price)+lineupSlotHTML({...s,price:base},state.giftArt)+'</b>';
+  // Hạ giá (chủ game chốt): chỉ ẢNH QUÀ — món gốc gạch mờ → món mới sáng (giá giảm luôn là đúng 1 món ×n, SALE_PRICES).
+  const tok=(s,base,price)=>'<b class="ev-gift">'+(e.sale&&price!==base?'<s class="ev-old">'+lineupSlotHTML({...s,price:base},state.giftArt)+'</s><i class="ev-arrow">→</i><b class="ev-new">'+lineupSlotHTML({...s,giftName:undefined,price},state.giftArt)+'</b>':lineupSlotHTML({...s,price:base},state.giftArt))+'</b>';
   html+='<div class="event-rewards"><strong>QUÀ SỰ KIỆN</strong>'+(e.bundle?'<p>'+tok({},e.bundle.base,e.bundle.price)+'<span>→ '+e.lineup.map(s=>esc(VISITOR_GIFT_REWARDS[s.kind]?.skinName||'')).join(' + ')+' (cả 2)</span></p>':e.lineup.map(s=>{const r=VISITOR_GIFT_REWARDS[s.kind];if(!r)return '';
    return '<p>'+tok(s,s.base??s.price,s.price)+'<span>→ '+esc(r.skinName)+(r.skinCoins&&r.skinCoins===r.artifactCoins?' + '+esc(r.artifactName):'')+'</span></p>';}).join(''))+'</div>';
  }else if(reward){

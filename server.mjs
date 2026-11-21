@@ -306,7 +306,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/visitor-event'&&req.method==='POST'){const b=await body(req);const r=startVisitor(worlds[mode],b.kind);persist(true);broadcast();json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/visitor-audit'&&req.method==='GET'){json(res,{...visitorAuditView(worlds[mode],url.searchParams.get('event')),today:auditStorage.today()});return;}
     if(url.pathname==='/api/gift-audit-log'&&req.method==='GET'){
-    if(url.pathname==='/api/visitor-sale'&&req.method==='POST'){const b=await body(req);const r=startVisitorSale(worlds[mode],b.pct);persist(true);broadcast(true);json(res,r,r.ok?200:400);return;} // 21/11: Hạ giá lượt Song Tiên (chủ game bấm)
+    if(url.pathname==='/api/visitor-sale'&&req.method==='POST'){const b=await body(req);const r=startVisitorSale(worlds[mode]);persist(true);broadcast(true);json(res,r,r.ok?200:400);return;} // 21/11: Hạ giá lượt Song Tiên (chủ game bấm)
       const date=url.searchParams.get('date')||auditStorage.today(),file=auditStorage.file(mode,date);
       if(!file||!fs.existsSync(file)){json(res,{ok:false,message:'Chưa có nhật ký ngày này.'},404);return;}
       res.writeHead(200,{'Content-Type':'application/x-ndjson; charset=utf-8','Content-Disposition':`attachment; filename="gifts-${mode}-${date}.jsonl"`,'Cache-Control':'no-store'});fs.createReadStream(file).pipe(res);return;

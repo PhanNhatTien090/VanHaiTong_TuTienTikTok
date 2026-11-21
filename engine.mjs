@@ -1,6 +1,6 @@
 import {startHallWar as beginHallWar,stopHallWar as endHallWar,tickHallWar,hallWarCommand,hallWarGift,hallWarView,hallWarVisible} from './hall-war.mjs';
 import {creditMasterGift,unlockMasterLoadout,resetHistoricMasters} from './master-rewards.mjs';
-import {safeGiftUrl} from './public/gift-icons.js';
+import {safeGiftUrl,giftFor} from './public/gift-icons.js';
 import {WING_TIERS,playerWing,syncWingTop} from './public/boss-arena.js';
 import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} from './opportunity-progress.mjs';
 import {rebirthCommand,daoQuaCommand,luanHoiStatus,LUAN_HOI_CUT_MS,LUAN_HOI_CUT_LEAD} from './rebirth.mjs';
@@ -64,7 +64,7 @@ import {BLACK_GOLD_VISITOR,COURT_RELICS,COURT_VISITORS,SIGNATURE_VISITORS} from 
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
 import {creditDayGift} from './public/day-tier.js';
-import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,lineupFeasible,lineupGiftsAt,LINEUP_SIZE,LINEUP_MS,SONG_TIEN_ROUNDS,RETIRED_VISITORS,songTienRound,roundsWith,roundNames,buildRound,applySale,SALE_PCTS} from './public/visitor-rewards.js';
+import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,lineupFeasible,lineupGiftsAt,LINEUP_SIZE,LINEUP_MS,SONG_TIEN_ROUNDS,RETIRED_VISITORS,songTienRound,roundsWith,roundNames,buildRound,applySale} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
 import {RACE_CUT_MS,RACE_CUT_MIN} from './public/signature-ults.js';
 import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop,awardRaceSword} from './sword-race.mjs';
@@ -1507,15 +1507,15 @@ export function startVisitor(w,kind='hanlap',now=Date.now()){
  else emit(w,null,VISITORS[kind].title+' • '+VISITORS[kind].how,'visitor',now,{visitorStart:true,visitorKind:kind});
  return {ok:true,endsAt:w.visitor.endsAt};
 }
-// 21/11 HẠ GIÁ: chủ game bấm ở #events → giảm ngay cho lượt Song Tiên ĐANG chạy tới hết lượt (pct 20/30). Không tự mở.
-export function startVisitorSale(w,pct,now=Date.now()){
- pct=Number(pct);if(!SALE_PCTS.includes(pct))return fail('Mức hạ giá không hợp lệ.');
+// 21/11 HẠ GIÁ: chủ game bấm ở #events → giảm ngay cho lượt Song Tiên ĐANG chạy tới hết lượt (giá = đúng món rẻ hơn, SALE_PRICES). Không tự mở.
+export function startVisitorSale(w,now=Date.now()){
  const e=w.visitor;if(!e||e.closedAt||now>=e.endsAt||!e.lineup?.length)return fail('Chưa có lượt Song Tiên đang mở.');
- if(e.sale?.pct===pct)return fail('Lượt này đã hạ giá '+pct+'%.');
- applySale(e,pct,now);auditRecord(w,'visitor-sale',now,{eventId:e.id,pct});
+ if(e.sale)return fail('Lượt này đã hạ giá.');
+ applySale(e,now);auditRecord(w,'visitor-sale',now,{eventId:e.id});
  const names=e.lineup.map(s=>VISITORS[s.kind]?.name).filter(Boolean);
- emit(w,null,'TIÊN DUYÊN HẠ GIÁ • '+(e.bundle?names.join(' + ')+' còn '+e.bundle.price:e.lineup.map(s=>VISITORS[s.kind]?.name+' còn '+s.price).join(' · ')),'visitor',now,{visitorSale:true,salePct:pct,saleLines:e.bundle?[{name:names.join(' và '),price:e.bundle.price}]:e.lineup.map(s=>({name:VISITORS[s.kind]?.name,price:s.price}))});
- return {ok:true,pct,lineup:e.lineup.map(s=>({kind:s.kind,price:s.price})),bundle:e.bundle||null};
+ const gift=price=>{const g=giftFor(w.giftArt,price);return (g.count>1?g.count+' ':'')+g.name;}; // đọc theo MÓN, không đọc số coin
+ emit(w,null,'TIÊN DUYÊN HẠ GIÁ • '+(e.bundle?names.join(' + ')+' chỉ cần '+gift(e.bundle.price):e.lineup.map(s=>VISITORS[s.kind]?.name+' chỉ cần '+gift(s.price)).join(' · ')),'visitor',now,{visitorSale:true,saleLines:e.bundle?[{name:names.join(' và '),gift:gift(e.bundle.price)}]:e.lineup.map(s=>({name:VISITORS[s.kind]?.name,gift:gift(s.price)}))});
+ return {ok:true,lineup:e.lineup.map(s=>({kind:s.kind,price:s.price})),bundle:e.bundle||null};
 }
 function awardVisitor(w,p,e,now){
  const progress=e.players[p.id];if(!progress||progress.awarded)return;progress.awarded=true;
