@@ -9,11 +9,13 @@
 // Sân >30 người chỉ hiện 3 bậc đầu, >50 chỉ Tông Chủ + Kim Cương (giữ luật cũ). Chữ vẽ sẵn vào bitmap 3× (nét, không vẽ lại chữ mỗi khung).
 // Thứ bậc (rank càng nhỏ càng cao): 0 master · 1 vip3 · 2 luanhoi · 3 vip2 · 4 vip1 · 5 feat (sự kiện) · 6 rank (chức vị)
 import {TITLE_LIST,TITLE_BY_KEY} from './title-data.js';
+import {skinFor} from './cosmetics.js';
 const FAMILY='"Noto Serif","Times New Roman",Georgia,serif',FALLBACK_FAMILY='"Times New Roman",Georgia,serif';
 const sizeOf=rank=>rank<=1?17:rank<=4?16:rank===5?15:13.5;
 const fontOf=(rank,family)=>'900 '+sizeOf(rank)+'px '+family;
 const RES=3; // bitmap 3× → nét trên LIVE 1080 px kể cả khi camera phóng
-const HEAD_K=80; // đỉnh đầu ≈ chân − HEAD_K × scale (bitmap có lề 5 px → đáy chữ hạ thêm 4)
+const HEAD_K=80,HEAD_GAP=5; // HEAD_GAP: khe giữa đỉnh tóc và chữ (đơn vị sprite)
+// (cũ) đỉnh đầu ≈ chân − HEAD_K × scale (bitmap có lề 5 px → đáy chữ hạ thêm 4)
 // 21/11 tối (bản 3, chủ game): danh hiệu = GHẾ HIẾM do server tính (titles.mjs → p.title {key,rank,group,sparkle,n,lh}); danh mục public/title-data.js.
 // Không icon — mỗi danh hiệu 1 ẢNH CHỮ riêng Codex vẽ (public/assets/title-text/<key>.webp). Danh hiệu nạp CHỈ lấp lánh khi tổng quà ≥3.000 (sparkle).
 // Ảnh chưa tải → vẽ tạm chữ theo màu nhóm. Server cũ (chưa có p.title) → không vẽ.
@@ -106,12 +108,30 @@ export function layoutTitles(items){const placed=[];const sorted=[...items].sort
  for(const it of sorted){for(const dy of [0,-(it.h-4)]){const x0=it.x-it.w/2+2,y0=it.y+dy-it.h+3,w=it.w-4,h=it.h-6;if(!hit(x0,y0,w,h)){placed.push({...it,y:it.y+dy,x0,y0,w,h});break;}}}
  return placed;}
 
+// 21/11 tối (chủ game: "người bị danh hiệu che đầu, người thì cao quá, người thì ở giữa người"): trước đặt cố định chân − 80×scale cho mọi hình.
+// Nay ĐO đỉnh đầu thật: vẽ riêng THÂN người (không VFX/pháp bảo/cánh) ra bitmap nhỏ một lần cho mỗi kiểu hình, quét alpha cột giữa (±18 đơn vị,
+// tránh pháp bảo hai bên) → khoảng cách chân→đỉnh đầu (đơn vị sprite). Lưu theo khóa hình dạng; ảnh chưa tải xong thì dùng tạm HEAD_K, đo lại sau.
+const heads=new Map(),HS=2,HW=200,HH=340,HOX=100,HOY=280;let headBudget=0,headFrame=0;
+const headKey=p=>[p.realm,p.gender,p.skinChoice,p.skinChoiceSource,p.divineRoleChoice,p.divineRoleHidden,(p.divineRoles||[]).join(),(p.rewardSkins||[]).length,skinFor(p.giftCoins)?.level,p.relicVariant,p.mountChannel?1:0].join('|');
+export function headUnits(scene,p,frame=0){if(!scene?.drawCharacterBody||typeof document==='undefined')return HEAD_K;
+ const k=headKey(p);const v=heads.get(k);if(v&&v.ok)return v.h;if(v&&frame-v.frame<90)return v.h; // chưa đo được (ảnh chưa tải) → thử lại sau ~1,5 s
+ if(headFrame!==frame){headFrame=frame;headBudget=3;}if(headBudget<=0)return v?.h??HEAD_K;headBudget--; // tối đa 3 lần đo / khung
+ const cv=makeCanvas(HW,HH);const c=cv?.getContext('2d',{willReadFrequently:true});if(!c)return HEAD_K;
+ const saved={compact:scene.compact,characterFrames:scene.characterFrames,cinematicPose:scene.cinematicPose,huyenRitualPose:scene.huyenRitualPose,raceStatus:scene.raceStatus,motion:scene.motion};
+ let h=null;
+ try{Object.assign(scene,{compact:true,characterFrames:null,cinematicPose:null,huyenRitualPose:null,raceStatus:null,motion:false});
+  c.translate(HOX,HOY);c.scale(HS,HS);scene.drawCharacterBody(c,p,skinFor(p.giftCoins),0);
+  const x0=HOX-18*HS,w=36*HS,d=c.getImageData(x0,0,w,HOY).data;
+  for(let y=0;y<HOY&&h==null;y++){let n=0;for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>60&&++n>=3){h=(HOY-y)/HS;break;}}
+ }catch{}finally{Object.assign(scene,saved);}
+ const ok=h!=null&&h>20&&h<135;const val={h:ok?h:HEAD_K,ok,frame};heads.set(k,val);if(heads.size>600)heads.delete(heads.keys().next().value);return val.h;}
 /** Vẽ cho cả sân: gọi SAU CÙNG (sau người, tên, hiệu ứng). targets: [{id,x,y,scale,player}] (y = chân). */
-export function drawTitlePlaques(scene,c,t,nowMs){const list=scene.targets||[];if(!list.length||scene.bareCrowd&&list.length>80)return;
+let frameNo=0;
+export function drawTitlePlaques(scene,c,t,nowMs){frameNo++;const list=scene.targets||[];if(!list.length||scene.bareCrowd&&list.length>80)return;
  const count=list.length,light=scene.budget?.level==='light';
  const elders=new Set((scene.sectElders||[]).map(e=>e?.id||e?.player?.id||e?.userId).filter(Boolean)),master=scene.sectMaster?.userId; // ghế Trưởng Lão/Tông Chủ đã có bảng chức vụ riêng
  const items=[];
- for(const a of list){const p=a.player;if(!p)continue;const seat=elders.has(a.id)||a.id===master,head=a.y-(a.scale||1)*HEAD_K+4;
+ for(const a of list){const p=a.player;if(!p)continue;const seat=elders.has(a.id)||a.id===master,head=a.y-(a.titleLift||0)-(a.scale||1)*(headUnits(scene,p,frameNo)+HEAD_GAP)+4;if(globalThis.__titleDebug&&p.title){c.save();c.fillStyle='lime';c.fillRect(a.x-14,a.y-1,28,2);c.fillStyle='red';c.fillRect(a.x-14,head-5,28,2);c.restore();}
   // 21/11: Luân Hồi đi KÈM danh hiệu nạp (Tông Chủ/Kim Cương che mất — Tông chủ Đế giang chuyển sinh mà không thấy). Ghế Tông Chủ/Trưởng Lão chỉ hiện dòng Luân Hồi.
   const lh=luanHoiExtra(p,nowMs,seat),tt=seat?null:titleOf(p,nowMs);let y=head;
   if(titleVisible(tt,count)){const b=plaque(tt);if(b){items.push({tt,id:a.id,rank:tt.rank,x:a.x,y,w:b.w,h:b.h});y-=b.h-4;}}
