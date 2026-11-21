@@ -1,3 +1,4 @@
+import {titleAdminView,titleAdminAction} from './title-admin.mjs'; // 21/11 tối: tab Danh hiệu
 import {baoBanMenh} from './public/phap-bao-data.js'; // 18/11 tối: thần khí bản mệnh hiện trên người
 import {visualPreferences} from './public/visual-preferences.js';
 import {giftMasterView} from './master-rewards.mjs';
@@ -261,6 +262,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/engage'&&req.method==='POST'){const b=await body(req);const result=engageNow(worlds[mode],b.kind,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/ceremony'&&req.method==='POST'){const result=honorCeremony(worlds[mode],Date.now(),true);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/heaven-strike'&&req.method==='POST'){const b=await body(req);const result=heavenStrike(worlds[mode],b.id,Date.now());if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
+    if(url.pathname==='/api/title-admin'){const w=worlds[mode];if(req.method==='POST'){const b=await body(req);const r=titleAdminAction(w,b,Date.now());if(r.ok&&b.action!=='find'){persist(true);payloadCache.clear();broadcast();}json(res,r,r.ok?200:400);}else json(res,titleAdminView(w,Date.now()));return;} // 21/11 tối: tab Danh hiệu
     if(url.pathname==='/api/admin-gift'&&req.method==='POST'){const b=await body(req);const result=adminGift(worlds[mode],b.id,b.combo,Date.now(),b.custom);if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/puppet'&&req.method==='POST'){const b=await body(req);const result=puppetControl(worlds[mode],b,Date.now());if(result.ok&&b.op!=='list'){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}
     if(url.pathname==='/api/player'&&req.method==='POST'){const b=await body(req);const patch={...(b.patch||{})};if(b.base&&typeof b.base==='object')for(const k of Object.keys(patch))if(Object.hasOwn(b.base,k)&&patch[k]===b.base[k])delete patch[k];/* 08/11: bỏ ô không đổi so với lúc mở form */const result=adminEditPlayer(worlds[mode],b.id,patch,Date.now(),{announce:b.announce===true});if(result.ok){persist(true);broadcast();}json(res,result,result.ok?200:400);return;}

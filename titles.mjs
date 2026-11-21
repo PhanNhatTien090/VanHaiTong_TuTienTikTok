@@ -34,7 +34,7 @@ export function syncSeats(w,now){
  if(top&&at){if(top.ma?.[0])seat(w,'ma-dao-vuong',[top.ma[0].id],at);if(top.ma?.[1])seat(w,'doc-vuong',[top.ma[1].id],at);if(top.chinh?.[0])seat(w,'chinh-dao-minh-chu',[top.chinh[0].id],at);}
  const t=w.tournament;if(t?.winner&&t.finishedAt)seat(w,'kiem-khoi',[t.winner],t.finishedAt);
  // Lôi Đài: Bá Chủ lượt gần nhất (trận tranh ghế master không tính)
- const a=w.arena;if(a?.champion&&a.closedAt&&!a.master&&w.players?.[a.champion]?.arenaTitle)seat(w,'loi-dai-ba-chu',[a.champion],a.closedAt);
+ const a=w.arena;if(a?.champion&&a.closedAt&&!a.master&&!a.hall&&w.players?.[a.champion]?.arenaTitle)seat(w,'loi-dai-ba-chu',[a.champion],a.closedAt);
  // Thần Tiên Quyến Lữ: cặp làm Đại Điển gần nhất
  let rite=null;for(const b of Object.values(w.social?.bonds||{}))if(b?.grandRite&&(!rite||b.grandRite>rite.grandRite))rite=b;
  if(rite)seat(w,'than-tien-quyen-lu',[rite.a,rite.b].filter(Boolean),rite.grandRite);
@@ -63,7 +63,16 @@ export function titleHolders(w,now=Date.now()){
  topBy(ps.filter(p=>p.gender!=='nu'),bonds,1,2).forEach(id=>add('dao-hoa-vuong',id));
  topBy(ps,p=>p.flirtWeek?.wk===wk?p.flirtWeek.n:0,1,2).forEach(id=>add('cao-thu-tan-gai',id));
  topBy(ps,p=>p.chatWeek?.wk===wk?p.chatWeek.n:0,1,20).forEach(id=>add('lam-mom',id));
+ for(const g of activeGrants(w,now))if(real(w.players[g.id]))add(g.key,g.id); // 21/11 tối: chủ game gán tay (có hạn)
  caches.set(w,{at:now,map});return map;}
+
+// 21/11 tối (chủ game): GÁN TAY từ trang quản lý — w.titleGrants=[{key,id,until,at}], until 0 = vĩnh viễn. Cộng thêm, không gỡ ghế tự tính.
+export const activeGrants=(w,now=Date.now())=>(w.titleGrants||[]).filter(g=>g&&TITLE_BY_KEY[g.key]&&(!g.until||g.until>now));
+export const clearTitleCache=w=>caches.delete(w);
+export function grantTitle(w,key,id,now,ms=0){if(!TITLE_BY_KEY[key]||!w.players?.[id])return null;
+ w.titleGrants=(w.titleGrants||[]).filter(g=>!(g.key===key&&g.id===id)&&(!g.until||g.until>now)); // 1 người 1 dòng/danh hiệu; dọn dòng hết hạn
+ const g={key,id,at:now,until:ms>0?now+ms:0};w.titleGrants.push(g);clearTitleCache(w);return g;}
+export function revokeTitle(w,key,id){const n=(w.titleGrants||[]).length;w.titleGrants=(w.titleGrants||[]).filter(g=>!(g.key===key&&g.id===id));clearTitleCache(w);return w.titleGrants.length<n;}
 
 /** Các danh hiệu 1 người đang giữ, xếp theo rank. */
 export function ownedTitles(w,p,now=Date.now()){if(!real(p))return [];const h=titleHolders(w,now);return TITLE_LIST.filter(t=>h.get(t.key)?.has(p.id));}
