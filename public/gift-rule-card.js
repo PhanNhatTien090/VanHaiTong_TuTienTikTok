@@ -4,6 +4,7 @@
 // luyện đan ≤4 coin hạ nhiệt · 5–98 thêm linh dược · ≥99 đại hỏa (alchemy.mjs), mưa hoa 100 điểm/coin, quà ≥500 lúc không sự kiện = đại lễ.
 import {giftTokenHTML} from './gift-icons.js';
 import {VISITORS} from './visitor-event.js';
+import {songTienRound} from './visitor-rewards.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=n=>Math.round(Number(n)||0).toLocaleString('vi-VN');
 const live=(e,now)=>e&&!e.closedAt&&now>=(e.startedAt||0)&&now<e.endsAt;
@@ -39,7 +40,7 @@ export function giftRules(s,now=s?.serverNow||Date.now()){
  // không sự kiện: quà mặc định
  // 2000 = 1 món Vương miện 2000 coin: Tông chủ cần MỘT món ≥2000 (master-rewards.mjs), không cộng dồn. Ảnh thật tự thay khi kênh nhận quà này (giftArt theo tên+giá).
  // 20/11 E (chủ game chọn "chỉ báo lượt kế"): dòng cuối báo tiên nhân lượt sau + còn khoảng mấy phút → người xem có lý do chờ.
- const nk=s.nextVisitorKind,mins=s.nextVisitorAt?Math.max(1,Math.round((s.nextVisitorAt-now)/60000)):null,next=nk&&VISITORS[nk]&&mins&&s.settings?.visitorRotation!==false?{name:VISITORS[nk].name,mins}:null;
+ const nk=s.nextVisitorKind,mins=s.nextVisitorAt?Math.max(1,Math.round((s.nextVisitorAt-now)/60000)):null,next=nk&&VISITORS[nk]&&mins&&s.settings?.visitorRotation!==false?{name:(songTienRound(s.nextVisitorRound)?.kinds.map(k=>VISITORS[k]?.name).filter(Boolean).join(' + '))||VISITORS[nk].name,mins}:null; // 21/11: báo cả cặp Song Tiên
  return {kind:'default',title:'TẶNG QUÀ',tone:'gold',rows:[[1,'+tu vi'],[99,'+pháp bảo'],[500,'ĐẠI LỄ'],[2000,'TÔNG CHỦ']],next};
 }
 export function giftRuleHTML(r,art){

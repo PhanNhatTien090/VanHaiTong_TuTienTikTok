@@ -369,3 +369,6 @@ html body.overlay .scene-shell #phoneHudRight>#companionHud:not(:empty){backgrou
 /* 19/11: chữ BIẾN HÌNH đặt dưới chân nhân vật (giữa màn là người + hào quang), một dòng */
 html body.overlay .spotlight.spot-transform{top:68%!important}
 html body.overlay .spotlight.spot-transform span{white-space:nowrap}
+/* 21/11 Song Tiên hạ giá: số cũ gạch mờ, số mới sáng (không chữ "coin"); bảng dựng lại mỗi giây nên không animation — hiệu ứng chuyển số nằm ở bảng giá trên sân (canvas) */
+#visitorEventInfo .ev-gift .ev-old{font:700 .95em/1 'Segoe UI',sans-serif;color:#8a7a6a;opacity:.6;text-decoration:line-through 2px #d02020;margin-right:.3em;vertical-align:middle}
+#visitorEventInfo .ev-gift .ev-new{font:900 1.35em/1 'Segoe UI',sans-serif;color:#e0201a;margin-right:.25em;vertical-align:middle;text-shadow:0 0 6px #ffd76a}

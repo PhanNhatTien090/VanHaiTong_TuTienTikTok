@@ -80,10 +80,10 @@ test('đủ coin: trao món đắt nhất vừa đủ, trừ đúng giá, dư m�
  assert.equal(w.players.b.skinChoice,VISITOR_GIFT_REWARDS['tinh-ha'].skin);
 });
 
-test('lượt 4 phút; lời mở và lời kết của lượt tam tiên',()=>{
+test('lượt 4 phút; lời mở và lời kết của lượt SONG TIÊN (21/11: 2 vị/lượt theo cặp)',()=>{
  const w=world();startVisitor(w,'tinh-ha',N);assert.equal(w.visitor.endsAt-w.visitor.startedAt,LINEUP_MS);
- const start=w.events.find(x=>x.visitorStart);assert.match(start.text,/^TAM TIÊN GIÁNG LÂM/);assert.equal(start.visitorLineup.length,3);
- tick(w,w.visitor.endsAt+10);assert.ok(w.events.some(x=>x.visitorEnd&&/^Tam tiên/.test(x.text)));
+ const start=w.events.find(x=>x.visitorStart);assert.match(start.text,/^SONG TIÊN GIÁNG LÂM/);assert.deepEqual(start.visitorLineup,['nguyet-lien','tinh-ha']);
+ tick(w,w.visitor.endsAt+10);assert.ok(w.events.some(x=>x.visitorEnd&&/^Song tiên/.test(x.text)));
 });
 
 test('A — VÍ TIÊN DUYÊN: tặng thiếu, hết lượt không mất; lần sau tặng phần còn thiếu là nhận',()=>{

@@ -3,9 +3,9 @@ import {createWorld,ensurePlayer,action,tick,startVisitor,VISITOR_ROTATION_MS,vi
 const N=1800000000000,MIN=60000;
 const world=()=>{const w=createWorld('live');w.settings.residents=false;w.settings.autoEvents=true;w.settings.autoRandom=true;w.nextBossAt=N+1e12;return w;};
 test('khách mời skin: trọng số — skin 300 coin ra ít hơn; không trùng vị vừa rồi',()=>{
- const W=Object.fromEntries(visitorRotationWeights());assert.equal(W.khuyniet,1);assert.equal(W.viemton,1);assert.equal(W.hanlap,2);assert.equal(W.tudo,2);
+ const W=Object.fromEntries(visitorRotationWeights());assert.equal(W.khuyniet,1);assert.equal(W.viemton,1);assert.equal(W.shende,2);assert.equal(W.tudo,2);for(const k of ['hanlap','vuonglam','doraemon'])assert.equal(W[k],undefined,k+' đã thôi bán (21/11)');
  const seen={};let last=null;for(let i=0;i<4000;i++){const k=pickRotationVisitor(last,Math.random);assert.notEqual(k,last);seen[k]=(seen[k]||0)+1;last=k;}
- assert.ok(seen.khuyniet<seen.hanlap*.75&&seen.viemton<seen.tudo*.75,JSON.stringify(seen));assert.ok(Object.keys(seen).length>=8);
+ assert.ok(seen.khuyniet<seen.shende*.75&&seen.viemton<seen.tudo*.75,JSON.stringify(seen));assert.ok(Object.keys(seen).length>=7);
 });
 test('khách mời skin luân phiên mỗi 10 phút, vị sau khác vị trước; túi ngẫu nhiên không còn tự mở khách mời',()=>{
  const w=world();for(const id of ['a','b','c'])ensurePlayer(w,id,id,N);

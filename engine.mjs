@@ -64,7 +64,7 @@ import {BLACK_GOLD_VISITOR,COURT_RELICS,COURT_VISITORS,SIGNATURE_VISITORS} from 
 import {EVENT_ARTIFACTS} from './public/event-artifacts.js';
 import {attackTechnique,COMBAT_RELICS} from './public/combat-techniques.js';
 import {creditDayGift} from './public/day-tier.js';
-import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,lineupFeasible,lineupGiftsAt,LINEUP_SIZE,LINEUP_MS} from './public/visitor-rewards.js';
+import {creditVisitorGift,reconcileVisitorPricing,visitorSkinName,SIGNATURE_ARTIFACTS,VISITOR_GIFT_REWARDS,assignLineupGifts,lineupFeasible,lineupGiftsAt,LINEUP_SIZE,LINEUP_MS,SONG_TIEN_ROUNDS,RETIRED_VISITORS,songTienRound,roundsWith,roundNames,buildRound,applySale,SALE_PCTS} from './public/visitor-rewards.js';
 import {VISITORS,VISITOR_RELICS} from './public/visitor-event.js';
 import {RACE_CUT_MS,RACE_CUT_MIN} from './public/signature-ults.js';
 import {raceStageIds,startRace as beginRace,stopRace as endRace,tickRace,raceCommand,raceBoost,raceView,raceVisible,giftRaceUnits,RACE_GIFT_PRIZES,raceGiftTop,awardRaceSword} from './sword-race.mjs';
@@ -1006,7 +1006,7 @@ export function tickCompetitionSchedule(w,now=Date.now(),{manual=false}={}){
    if(stageConflict(w,now)||w.race?.phase==='queued'||w.social?.ceremonies?.length||automaticEventsPaused(w,now))return;
    const variety=w.scheduledVariety??={majorSinceVisitor:0,nextVisitor:'vuonglam'};
    if(w.settings.visitorEveryFive&&variety.majorSinceVisitor>=4){
-     const kind=variety.nextVisitor==='shende'?'shende':'vuonglam';
+     const kind=(w.settings?.visitorLineup!==false&&(songTienRound(w.nextVisitorRound)||pickSongTienRound(w.lastVisitorRound,Math.random,w.giftArt))?.kinds[0])||'shende'; // 21/11: Vương Lâm thôi bán → mở lượt Song Tiên
      const guest=startVisitor(w,kind,now);if(!guest.ok)return;
      variety.majorSinceVisitor=0;variety.nextVisitor=kind==='vuonglam'?'shende':'vuonglam';variety.lastVisitorAt=now;
      // A guest never cancels hunt/competition: the preparation slot waits.
@@ -1075,7 +1075,7 @@ function tickCore(w,now) {
   tickMountRealm(w,now,mountContext);tickBaoKho(w,now,baoContext);tickLoveTower(w,now,loveContext);
   reconcilePatron(w,now);
 
-  if(w.visitor&&now>=w.visitor.endsAt&&!w.visitor.closedAt){w.visitor.closedAt=now;archiveVisitor(w);auditRecord(w,'visitor-end',now,{eventId:w.visitor.id,kind:w.visitor.kind});emit(w,null,(w.visitor.lineup?'Tam tiên':VISITORS[w.visitor.kind].name)+' đã rời tiên môn • giữ nguyên quà đã nhận','visitor',now,{visitorEnd:true});}
+  if(w.visitor&&now>=w.visitor.endsAt&&!w.visitor.closedAt){w.visitor.closedAt=now;archiveVisitor(w);auditRecord(w,'visitor-end',now,{eventId:w.visitor.id,kind:w.visitor.kind});emit(w,null,(w.visitor.lineup?.length>1?'Song tiên':VISITORS[w.visitor.kind].name)+' đã rời tiên môn • giữ nguyên quà đã nhận','visitor',now,{visitorEnd:true});}
   autoSkyEvent(w,now);visitorRotation(w,now);autoCeremony(w,now);tickEngagement(w,now,engageCtx);thienTaiTick(w,now);
   if(w.opportunity){
     preserveOpportunityCredit(w,w.opportunity);
@@ -1228,7 +1228,7 @@ function autoSkyEvent(w,now){
 // có trọng số: skin 300 coin (Khuy Niết, Tần Mục) trọng số 1, các vị khác 2; không bao giờ trùng vị vừa rồi. Sân bận thì thử lại sau 30 s.
 // Tắt bằng settings.visitorRotation=false. Khi bật, túi sự kiện ngẫu nhiên không còn tự mở khách mời nữa.
 export const VISITOR_ROTATION_MS=10*60000;
-export function visitorRotationWeights(){return Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k)).map(k=>[k,(VISITOR_GIFT_REWARDS[k].skinCoins||100)>=300?1:2]);}
+export function visitorRotationWeights(){return Object.keys(VISITOR_GIFT_REWARDS).filter(k=>Object.hasOwn(VISITORS,k)&&!RETIRED_VISITORS.includes(k)).map(k=>[k,(VISITOR_GIFT_REWARDS[k].skinCoins||100)>=300?1:2]);}
 export function pickRotationVisitor(last,rand=Math.random,lastKinds=[]){const all=visitorRotationWeights().filter(([k])=>k!==last),fresh=all.filter(([k])=>!lastKinds?.includes(k)),pool=fresh.length?fresh:all,total=pool.reduce((n,[,x])=>n+x,0);let r=rand()*total;for(const [k,x] of pool)if((r-=x)<0)return k;return pool.at(-1)?.[0]||null;}
 // 20/11: mỗi lượt 3 vị khác nhau (vị được chọn đứng giữa), tránh lặp vị của lượt trước nếu còn đủ.
 export function pickVisitorLineup(first,lastKinds=[],rand=Math.random,art=null){
@@ -1241,6 +1241,9 @@ export function pickVisitorLineup(first,lastKinds=[],rand=Math.random,art=null){
  // món cho nhóm trùng giá: xáo thứ tự để lượt sau không lặp y món
  return assignLineupGifts(kinds,art,price=>[...lineupGiftsAt(price,art)].sort(()=>rand()-.5));
 }
+// 21/11 SONG TIÊN: bốc 1 LƯỢT (cặp / vị đứng riêng / lượt đặc biệt) — đều nhau, không lặp lượt vừa rồi; cặp trùng giá chỉ bốc khi kênh có đủ món khác nhau.
+const roundFeasible=(r,art)=>!!r&&(r.bundle||lineupFeasible(r.kinds,art));
+export function pickSongTienRound(lastId=null,rand=Math.random,art=null){const ok=SONG_TIEN_ROUNDS.filter(r=>roundFeasible(r,art)),pool=ok.filter(r=>r.id!==lastId),use=pool.length?pool:ok;return use.length?use[Math.floor(rand()*use.length)%use.length]:null;}
 const rotationOn=w=>w.settings?.visitorRotation!==false;
 function visitorRotation(w,now){
   if(!rotationOn(w)||w.settings?.autoEvents===false||automaticEventsPaused(w,now))return;
@@ -1248,14 +1251,13 @@ function visitorRotation(w,now){
   if(now<w.nextVisitorAt)return;
   const active=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&now-p.lastActive<5*60000).length;if(active<2){w.nextVisitorAt=now+60000;return;}
   // 20/11 E: vị kế đã BÁO TRƯỚC trên bảng (w.nextVisitorKind) thì mở đúng vị đó; không hợp lệ mới bốc lại.
-  const pre=w.nextVisitorKind,kind=pre&&Object.hasOwn(VISITORS,pre)&&VISITOR_GIFT_REWARDS[pre]&&pre!==w.lastVisitorKind?pre:pickRotationVisitor(w.lastVisitorKind,Math.random,w.lastVisitorKinds);if(!kind||!startVisitor(w,kind,now).ok)w.nextVisitorAt=now+30000;
+  const preRound=w.settings?.visitorLineup!==false?songTienRound(w.nextVisitorRound):null,pre=w.nextVisitorKind,kind=preRound&&preRound.id!==w.lastVisitorRound?preRound.kinds[0]:pre&&Object.hasOwn(VISITORS,pre)&&VISITOR_GIFT_REWARDS[pre]&&pre!==w.lastVisitorKind&&!RETIRED_VISITORS.includes(pre)?pre:(w.settings?.visitorLineup!==false?pickSongTienRound(w.lastVisitorRound,Math.random,w.giftArt)?.kinds[0]:null)||pickRotationVisitor(w.lastVisitorKind,Math.random,w.lastVisitorKinds);if(!kind||!startVisitor(w,kind,now).ok)w.nextVisitorAt=now+30000;
 }
 // v74: RANDOM mọi sự kiện — bốc ngẫu nhiên (không lặp lại cái vừa chạy); cái nào không mở được thì thử cái khác.
 export const RANDOM_EVENTS=Object.freeze([
   ['flower','Thiên Hoa Vũ',(w,now)=>startFlowerEvent(w,now,w.settings?.autoEventLength??2,'flower')],
   ['meteor','Tinh Hà Lưu Tinh',(w,now)=>startFlowerEvent(w,now,w.settings?.autoEventLength??2,'meteor')],
-  ['visitor-hanlap','Tiên nhân Hàn Lập',(w,now)=>startVisitor(w,'hanlap',now)],
-  ['visitor-vuonglam','Tiên nhân Vương Lâm',(w,now)=>startVisitor(w,'vuonglam',now)],
+  // 21/11: bỏ Hàn Lập/Vương Lâm khỏi túi (chủ game: skin không ai mua)
   ['visitor-shende','Tiên nhân Thần Đế',(w,now)=>startVisitor(w,'shende',now)],
   ['opportunity','Cơ duyên',(w,now)=>startOpportunity(w,now)],
   ['arena','Vân Hải Lôi Đài',(w,now)=>startArenaEvent(w,now)], // 18/11 tối (chủ game: "Lôi Đài sao không mở mà cứ mở tỷ thí"): thay Luận Kiếm — lịch thi đấu riêng đang tắt nên Lôi Đài chưa từng tự mở
@@ -1492,15 +1494,28 @@ export function startVisitor(w,kind='hanlap',now=Date.now()){
  if(w.opportunity&&now<w.opportunity.endsAt)return fail('Chờ sự kiện cơ duyên hiện tại kết thúc để tránh trùng lệnh.');
  const active=Object.values(w.players).filter(p=>currentParticipant(w,p,now)).length;
  archiveVisitor(w);
- const lineup=VISITOR_GIFT_REWARDS[kind]&&w.settings?.visitorLineup!==false?pickVisitorLineup(kind,w.lastVisitorKinds,Math.random,w.giftArt):null;
- w.lastVisitorStartAt=now;w.lastVisitorKind=kind;w.lastVisitorKinds=lineup?lineup.map(s=>s.kind):[kind];w.nextVisitorKind=pickRotationVisitor(kind,Math.random,w.lastVisitorKinds); /* 20/11 E: bốc SẴN vị lượt sau để báo trước */w.nextVisitorAt=now+VISITOR_ROTATION_MS;
- w.visitor={id:'visitor-'+now,kind,...(lineup?{lineup}:{}),startedAt:now,endsAt:now+(lineup?LINEUP_MS:(VISITORS[kind].duration||180000)),players:{},points:0,goal:Math.min(200,Math.max(20,active*8)),bag:[],completed:false};
+ // 21/11 SONG TIÊN: lượt đã báo trước có vị này thì mở đúng lượt đó; không thì bốc 1 lượt có vị này (mở tay từ #events cũng vậy).
+ let built=null;if(VISITOR_GIFT_REWARDS[kind]&&w.settings?.visitorLineup!==false){const pre=songTienRound(w.nextVisitorRound),cand=pre?.kinds.includes(kind)&&roundFeasible(pre,w.giftArt)?[pre]:roundsWith(kind).filter(r=>roundFeasible(r,w.giftArt));const round=cand.length?cand[Math.floor(Math.random()*cand.length)%cand.length]:null;if(round)built=buildRound(round,w.giftArt,Math.random);}
+ const lineup=built?.lineup||null;
+ w.lastVisitorStartAt=now;w.lastVisitorKind=kind;w.lastVisitorKinds=lineup?lineup.map(s=>s.kind):[kind];w.lastVisitorRound=built?.round||null;
+ {const nr=w.settings?.visitorLineup!==false?pickSongTienRound(w.lastVisitorRound,Math.random,w.giftArt):null;w.nextVisitorRound=nr?.id||null;w.nextVisitorKind=nr?nr.kinds[0]:pickRotationVisitor(kind,Math.random,w.lastVisitorKinds);} /* 20/11 E: bốc SẴN vị lượt sau để báo trước */w.nextVisitorAt=now+VISITOR_ROTATION_MS;
+ w.visitor={id:'visitor-'+now,kind,...(lineup?{lineup,round:built.round,...(built.bundle?{bundle:built.bundle}:{})}:{}),startedAt:now,endsAt:now+(lineup?LINEUP_MS:(VISITORS[kind].duration||180000)),players:{},points:0,goal:Math.min(200,Math.max(20,active*8)),bag:[],completed:false};
  if(w.settings?.visitorEveryFive&&['vuonglam','shende'].includes(kind)){const v=w.scheduledVariety??={};v.majorSinceVisitor=0;v.nextVisitor=kind==='vuonglam'?'shende':'vuonglam';v.lastVisitorAt=now;}
  for(const p of Object.values(w.players))if(currentParticipant(w,p,now))noteVisitorParticipant(w,p,now);
  auditRecord(w,'visitor-start',now,{eventId:w.visitor.id,kind,endsAt:w.visitor.endsAt});
- if(lineup)emit(w,null,'TAM TIÊN GIÁNG LÂM • '+lineup.map(s=>VISITORS[s.kind]?.name).join(' · '),'visitor',now,{visitorStart:true,visitorKind:kind,visitorLineup:lineup.map(s=>s.kind)});
+ if(lineup?.length>1)emit(w,null,(built.bundle?'SONG TIÊN ĐẶC BIỆT • ':'SONG TIÊN GIÁNG LÂM • ')+lineup.map(s=>VISITORS[s.kind]?.name).join(built.bundle?' + ':' · '),'visitor',now,{visitorStart:true,visitorKind:kind,visitorLineup:lineup.map(s=>s.kind),visitorBundle:!!built.bundle});
  else emit(w,null,VISITORS[kind].title+' • '+VISITORS[kind].how,'visitor',now,{visitorStart:true,visitorKind:kind});
  return {ok:true,endsAt:w.visitor.endsAt};
+}
+// 21/11 HẠ GIÁ: chủ game bấm ở #events → giảm ngay cho lượt Song Tiên ĐANG chạy tới hết lượt (pct 20/30). Không tự mở.
+export function startVisitorSale(w,pct,now=Date.now()){
+ pct=Number(pct);if(!SALE_PCTS.includes(pct))return fail('Mức hạ giá không hợp lệ.');
+ const e=w.visitor;if(!e||e.closedAt||now>=e.endsAt||!e.lineup?.length)return fail('Chưa có lượt Song Tiên đang mở.');
+ if(e.sale?.pct===pct)return fail('Lượt này đã hạ giá '+pct+'%.');
+ applySale(e,pct,now);auditRecord(w,'visitor-sale',now,{eventId:e.id,pct});
+ const names=e.lineup.map(s=>VISITORS[s.kind]?.name).filter(Boolean);
+ emit(w,null,'TIÊN DUYÊN HẠ GIÁ • '+(e.bundle?names.join(' + ')+' còn '+e.bundle.price:e.lineup.map(s=>VISITORS[s.kind]?.name+' còn '+s.price).join(' · ')),'visitor',now,{visitorSale:true,salePct:pct,saleLines:e.bundle?[{name:names.join(' và '),price:e.bundle.price}]:e.lineup.map(s=>({name:VISITORS[s.kind]?.name,price:s.price}))});
+ return {ok:true,pct,lineup:e.lineup.map(s=>({kind:s.kind,price:s.price})),bundle:e.bundle||null};
 }
 function awardVisitor(w,p,e,now){
  const progress=e.players[p.id];if(!progress||progress.awarded)return;progress.awarded=true;

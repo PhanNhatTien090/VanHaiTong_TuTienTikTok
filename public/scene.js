@@ -762,6 +762,9 @@ function drawOneVisitorRaw(scene,c,ev,t,H){
 // Hàm vẽ từng vị vẫn vẽ quanh x=450 nhưng mỗi kiểu có mốc chân/chiều cao riêng → quy về cùng cỡ, chân đặt lên mặt đài.
 // Vị giữa đứng cao hơn để thẻ quà không che người ngồi đầu bậc thang (Tông chủ/trưởng lão).
 const LINEUP_SPOTS=[{x:450,y:.366,h:188},{x:268,y:.41,h:185},{x:632,y:.41,h:185}];
+// 21/11 SONG TIÊN (chủ game: "hiện rõ 2 bộ to lên cho họ xem hiệu ứng"): 2 vị đứng to 2 bên đài, vị skin mới đứng riêng ở giữa còn to hơn.
+// Bảng giá đặt NGOÀI mép chân (không dưới chân) để không đè người ngồi đầu bậc thang.
+const lineupSpots=n=>n===1?[{x:450,y:.452,h:335,px:150,py:-36}]:n===2?[{x:282,y:.452,h:305,px:-118,py:-30},{x:618,y:.452,h:305,px:118,py:-30}]:LINEUP_SPOTS.map(s=>({...s,px:0,py:24}));
 const COURT_KINDS=new Set(COURT_VISITORS.map(v=>v.kind)),POSE_KINDS=new Set(['tudo','khuyniet','viemton','hailam']);
 function visitorAnchor(kind,H,scene){
   if(COURT_KINDS.has(kind))return {feet:H*.38,h:315};
@@ -774,18 +777,36 @@ function visitorAnchor(kind,H,scene){
 function drawVisitorLineup(scene,c,e,t,H){
   if(!e?.lineup?.length){drawOneVisitor(scene,c,e,t,H);return;}
   const now=Date.now();if(e.closedAt||now>=e.endsAt)return;
-  const order=e.lineup.map((slot,i)=>({slot,spot:LINEUP_SPOTS[i]})).filter(x=>x.spot).reverse();
+  const spots=lineupSpots(e.lineup.length),order=e.lineup.map((slot,i)=>({slot,spot:spots[i]})).filter(x=>x.spot).reverse();
   for(const {slot,spot} of order){
     if(slot.kind==='shende')loadShendeArt(scene);
     const ev={...e,kind:slot.kind,id:e.id+'|'+slot.kind},a=visitorAnchor(slot.kind,H,scene),k=spot.h/a.h;
     c.save();c.translate(spot.x,H*spot.y);c.scale(k,k);c.translate(-450,-a.feet);drawOneVisitor(scene,c,ev,t,H);c.restore();
   }
   const fade=Math.min(1,(now-e.startedAt)/900,(e.endsAt-now)/650);
-  for(const {slot,spot} of order)drawLineupPlate(c,slot,spot.x,H*spot.y+24,fade,scene.lastState?.giftArt);
+  const art=scene.lastState?.giftArt;
+  if(e.bundle){const a=order.map(x=>x.spot);drawLineupPlate(c,{},450,H*a[0].y+6,fade,art,e,e.bundle.base,e.bundle.price,true);}
+  else for(const {slot,spot} of order)drawLineupPlate(c,slot,spot.x+spot.px,H*spot.y+spot.py,fade,art,e,slot.base??slot.price,slot.price);
 }
 const giftImgs=new Map();
 function giftImg(url){if(!url)return null;let img=giftImgs.get(url);if(!img){img=new Image();img.referrerPolicy='no-referrer';img.src=url;giftImgs.set(url,img);}return img.complete&&img.naturalWidth?img:null;}
-function drawLineupPlate(c,slot,x,y,alpha,art){
+// 21/11 HẠ GIÁ trên sân: số gốc hiện rõ → vạch đỏ gạch qua → mờ đi → số mới bật sáng (không chữ "coin"); sau đó số mới nháy nhẹ mỗi 4 s.
+function drawSalePrice(c,x,y,base,price,age){
+  const k=Math.max(0,Math.min(1,age/1800)),cut=Math.max(0,Math.min(1,(k-.25)/.25)),pop=Math.max(0,Math.min(1,(k-.55)/.3)),pulse=k>=1?1+.08*Math.max(0,Math.sin(age*.0016))**8:1;
+  c.save();c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
+  c.font='800 20px "Segoe UI",Arial,sans-serif';const ow=c.measureText(String(base)).width;
+  c.globalAlpha*=1-.5*pop;c.strokeStyle='#000';c.lineWidth=4;c.fillStyle='#fff3d0';c.strokeText(String(base),x,y-18);c.fillText(String(base),x,y-18);
+  if(cut>0){c.strokeStyle='#ff3030';c.lineWidth=3;c.beginPath();c.moveTo(x-ow/2-3,y-16);c.lineTo(x-ow/2-3+(ow+6)*cut,y-20);c.stroke();}
+  c.restore();
+  if(pop>0){const sc=(1.7-.7*pop)*pulse;c.save();c.translate(x,y+8);c.scale(sc,sc);c.globalAlpha*=pop;c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';
+   c.font='900 26px "Segoe UI",Arial,sans-serif';c.shadowColor='#ffd76a';c.shadowBlur=14;c.strokeStyle='#4a0000';c.lineWidth=5;c.strokeText(String(price),0,0);c.shadowBlur=0;
+   const g=c.createLinearGradient(0,-12,0,12);g.addColorStop(0,'#fff6b0');g.addColorStop(1,'#ff5a2a');c.fillStyle=g;c.fillText(String(price),0,0);c.restore();}
+}
+function drawLineupPlate(c,slot,x,y,alpha,art,e=null,base=null,price=null,bundle=false){
+  // 21/11: ảnh món theo GIÁ GỐC (ví giữ phần dư); hạ giá thì thêm số cũ → số mới phía trên; lượt đặc biệt có "×2" (2 skin).
+  if(base!=null)slot={...slot,price:base};
+  if(e?.sale&&price!=null&&price!==base){c.save();c.globalAlpha=alpha;drawSalePrice(c,x,y-34,base,price,Date.now()-e.sale.at);c.restore();}
+  if(bundle){c.save();c.globalAlpha=alpha;c.font='900 17px "Segoe UI",Arial,sans-serif';c.textAlign='left';c.textBaseline='middle';c.lineJoin='round';c.strokeStyle='#000';c.lineWidth=4;c.fillStyle='#ffd76a';c.strokeText('2 skin',x+26,y);c.fillText('2 skin',x+26,y);c.restore();}
   // Huy hiệu tròn chỉ có ảnh món dưới chân (tên vị đã có ở bảng sự kiện, cùng ảnh) — nhỏ để không che người ngồi đầu bậc thang.
   // Vị trùng giá = ảnh món riêng của vị; vị giá riêng = ảnh một món cùng giá (đủ coin là nhận).
   const g=lineupSlotGift(slot,art),img=giftImg(g.url),r=22;if(!img)return;

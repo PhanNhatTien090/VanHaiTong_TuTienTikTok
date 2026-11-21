@@ -22,6 +22,36 @@ export const LINEUP_GIFTS=Object.freeze({100:['Hand Heart','Balloon Gift Box','B
 const FALLBACK_ART=new Set(['Hand Heart','Baglama','Money Gun']);
 export const giftKey=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
 export const visitorPrices=kind=>{const r=VISITOR_GIFT_REWARDS[kind];if(!r)return null;const court=COURT_VISITORS.some(v=>v.kind===kind);return {skin:r.skinCoins||(court?300:100),artifact:r.artifactCoins||500};};
+// 21/11 (chủ game): SONG TIÊN thay Tam Tiên — mỗi lượt 1 CẶP liên quan nhau (hoặc 1 vị skin mới đứng riêng), hiện TO.
+// Bỏ khỏi vòng bán: Vương Lâm, Hàn Lập, Doraemon (không ai mua; người đã có vẫn giữ). Một vị có thể ở nhiều cặp.
+// bundle: lượt đặc biệt — tặng đủ giá là nhận CẢ 2 skin, không bán lẻ (Tần Mục + Xích Vũ, 500).
+export const SONG_TIEN_ROUNDS=Object.freeze([
+ {id:'than-de-vuong-lam',kinds:['shende','nhan-qua']},
+ {id:'nguyet-tinh',kinds:['nguyet-lien','tinh-ha']},
+ {id:'dau-pha',kinds:['hac-kim','bich-lan']},
+ {id:'hoa-than',kinds:['viemton','xich-vu'],bundle:500},
+ {id:'ta-ton',kinds:['tudo','khuyniet']},
+ {id:'hai-than',kinds:['hailam','shende']},
+ {id:'nu-oa',kinds:['nu-oa']},
+ {id:'u-minh',kinds:['u-minh']}
+].map(r=>Object.freeze(r)));
+export const RETIRED_VISITORS=Object.freeze(['vuonglam','hanlap','doraemon']);
+export const songTienRound=id=>SONG_TIEN_ROUNDS.find(r=>r.id===id)||null;
+export const roundsWith=kind=>SONG_TIEN_ROUNDS.filter(r=>r.kinds.includes(kind));
+export const roundNames=r=>(r?.kinds||[]).map(k=>VISITOR_GIFT_REWARDS[k]?.skinName||k);
+// HẠ GIÁ: −20%/−30%, làm tròn chục (500→400/350 · 300→240/210 · 200→160/140 · 100→80/70).
+export const SALE_PCTS=Object.freeze([20,30]);
+export const salePrice=(base,pct)=>pct?Math.round(base*(1-pct/100)/10)*10:base;
+// Dựng lượt từ cặp: mỗi vị lưu giá gốc (base/artBase) + giá đang bán (price/artPrice) → hạ giá chỉ đổi giá trong lượt.
+export function buildRound(round,art=null,rand=Math.random){
+ const slots=round.bundle?round.kinds.map(kind=>({kind,price:visitorPrices(kind).skin})):assignLineupGifts(round.kinds,art,price=>[...lineupGiftsAt(price,art)].sort(()=>rand()-.5));
+ const lineup=slots.map(s=>{const pr=visitorPrices(s.kind);return {...s,base:pr.skin,price:pr.skin,artBase:pr.artifact,artPrice:pr.artifact};});
+ return {round:round.id,lineup,...(round.bundle?{bundle:{base:round.bundle,price:round.bundle}}:{})};
+}
+export function applySale(e,pct,now){
+ e.sale={pct,at:now};for(const s of e.lineup||[]){s.price=salePrice(s.base??s.price,pct);s.artPrice=salePrice(s.artBase??visitorPrices(s.kind).artifact,pct);}
+ if(e.bundle)e.bundle.price=salePrice(e.bundle.base,pct);return e;
+}
 // Món dùng được ở một giá: có ảnh thật của kênh hoặc ảnh dự phòng.
 export const lineupGiftsAt=(price,art=null)=>(LINEUP_GIFTS[price]||[]).filter(n=>FALLBACK_ART.has(n)||!!art?.[n+'|'+price]?.url);
 // Gắn món cho các vị trùng giá; vị giá riêng để trống (đủ coin). names(price) trả danh sách món theo thứ tự ưu tiên.
@@ -58,12 +88,26 @@ export function creditVisitorGift(w,p,coins,now,queued=null,unitCoins,giftName){
  // Luật giữ nguyên: MUA 1 LÀ 1; vị TRÙNG GIÁ chỉ mua khi tặng ĐÚNG món riêng của vị đó; vị GIÁ RIÊNG đủ ví là nhận.
  const wallet=p.skinWallet??={coins:0};wallet.coins+=coins;wallet.at=now;
  // Món kế của một vị: chưa có skin → skin (cùng giá pháp bảo thì kèm); có skin rồi → pháp bảo (phần chênh). null = đã đủ cả.
+ // 21/11: giá lấy từ LƯỢT (s.price/s.artPrice — đã tính hạ giá nếu có); coins = giá gốc chỉ để grantVisitorProgress biết trao gì.
  const next=s=>{const r=VISITOR_GIFT_REWARDS[s.kind],pr=visitorPrices(s.kind);if(!r)return null;const skin=p.rewardSkins?.includes(r.skin),art=p.artifacts?.includes(r.artifact);
-  if(!skin)return {s,r,need:pr.skin,coins:pr.skin};if(!art&&pr.artifact>pr.skin)return {s,r,need:pr.artifact-pr.skin,coins:pr.artifact};return null;};
+  const sp=s.price??pr.skin,ap=s.artPrice??pr.artifact;
+  if(!skin)return {s,r,need:sp,coins:pr.skin};if(!art&&pr.artifact>pr.skin)return {s,r,need:Math.max(1,ap-sp),coins:pr.artifact};return null;};
  let kind=null,wear=null;
+ // 21/11: lượt ĐẶC BIỆT (bundle) — đủ giá là nhận CẢ 2 skin cùng lúc, không bán lẻ, không bán pháp bảo.
+ // Ai đã có 1 trong 2 thì phần còn lại tính đúng giá riêng của vị đó (vẫn theo hạ giá).
+ if(e.bundle){
+  const miss=e.lineup.filter(s=>{const r=VISITOR_GIFT_REWARDS[s.kind];return r&&!p.rewardSkins?.includes(r.skin);});
+  const need=miss.length>=e.lineup.length?e.bundle.price:miss.length?Math.min(...miss.map(s=>s.price??visitorPrices(s.kind).skin)):0;
+  if(miss.length&&wallet.coins>=need){wallet.coins-=need;
+   for(const s of miss){const r=VISITOR_GIFT_REWARDS[s.kind],got=grantVisitorProgress(p,{...e,kind:s.kind},r,{coins:visitorPrices(s.kind).skin},false);result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);}
+   const mine=e.lineup.find(s=>s.kind===(p.gender==='nu'?e.lineup[1]?.kind:e.lineup[0]?.kind))||miss[0];const r=VISITOR_GIFT_REWARDS[mine.kind];
+   if(p.rewardSkins?.includes(r.skin)){p.skinChoice=r.skin;p.skinChoiceSource='visitor';}kind=mine.kind;}
+  const left=miss.length&&!kind?need-wallet.coins:0;
+  return {...result,kind:kind||e.lineup[0]?.kind||e.kind,coins:wallet.coins,wallet:wallet.coins,toward:left>0?{kind:e.lineup[0].kind,need,left,bundle:true}:null};
+ }
  const buy=pick=>{wallet.coins-=pick.need;const got=grantVisitorProgress(p,{...e,kind:pick.s.kind},pick.r,{coins:pick.coins},!kind);
   if(!kind&&got.skinNames.length)wear=pick.r.skin;kind??=pick.s.kind;result.items.push(...got.items);result.itemNames.push(...got.itemNames);result.skinNames.push(...got.skinNames);};
- const k=giftKey(giftName),named=k&&e.lineup.find(s=>s.giftName&&giftKey(s.giftName)===k&&(!Number.isSafeInteger(unitCoins)||unitCoins===s.price));
+ const k=giftKey(giftName),named=k&&e.lineup.find(s=>s.giftName&&giftKey(s.giftName)===k&&(!Number.isSafeInteger(unitCoins)||unitCoins===(s.base??s.price)));
  const open=e.lineup.filter(s=>!s.giftName);
  if(named){const pick=next(named);if(pick&&pick.need<=wallet.coins)buy(pick);} // 1) đúng món riêng → chỉ vị đó
  else for(let guard=0;guard<6;guard++){const pick=open.map(next).filter(x=>x&&x.need<=wallet.coins).sort((a,b)=>b.need-a.need)[0];if(!pick)break;buy(pick);} // 2) đắt nhất vừa đủ trước

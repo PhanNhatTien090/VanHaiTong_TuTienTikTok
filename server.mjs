@@ -37,7 +37,7 @@ import {applyMusicCommand} from './public/music-rotation.js';
 // Đo độ trễ vòng sự kiện (server bị chặn bao lâu) để soi lag khi LIVE: GET /api/perf. Chỉ đọc, không đổi gameplay.
 const loopDelay=monitorEventLoopDelay({resolution:20});loopDelay.enable();let lastElu=perfHooks.eventLoopUtilization();
 function perfView(){const ms=n=>Math.round(n/1e4)/100,elu=perfHooks.eventLoopUtilization(lastElu);lastElu=perfHooks.eventLoopUtilization();const v={loopDelayMs:{p50:ms(loopDelay.percentile(50)),p99:ms(loopDelay.percentile(99)),max:ms(loopDelay.max)},busy:Math.round(elu.utilization*1000)/1000,clients:clients.size,heapMiB:Math.round(process.memoryUsage().heapUsed/1048576),at:Date.now()};loopDelay.reset();return v;}
-import {startNextCompetition,engageNow,honorCeremony,adminGift,heavenStrike,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
+import {startNextCompetition,engageNow,honorCeremony,adminGift,heavenStrike,puppetControl,createWorld,seedDemo,action,snapshot,ingest,tick,openBoss,blessing,markLiveSession,startOpportunity,adminEditPlayer,migrateSkinsV33,startFlowerEvent,setEventSettings,startVisitor,startVisitorSale,startTournament,stopTournament,prepareSocial,startRace,stopRace,startBondFestival,stopBondFestival,migrateDivineWardrobe,migrateSectMasters} from './engine.mjs';
 
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dataDir=process.env.VAN_HAI_DATA_DIR||path.join(root,'data');fs.mkdirSync(dataDir,{recursive:true});
@@ -306,6 +306,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname==='/api/visitor-event'&&req.method==='POST'){const b=await body(req);const r=startVisitor(worlds[mode],b.kind);persist(true);broadcast();json(res,r,r.ok?200:400);return;}
     if(url.pathname==='/api/visitor-audit'&&req.method==='GET'){json(res,{...visitorAuditView(worlds[mode],url.searchParams.get('event')),today:auditStorage.today()});return;}
     if(url.pathname==='/api/gift-audit-log'&&req.method==='GET'){
+    if(url.pathname==='/api/visitor-sale'&&req.method==='POST'){const b=await body(req);const r=startVisitorSale(worlds[mode],b.pct);persist(true);broadcast(true);json(res,r,r.ok?200:400);return;} // 21/11: Hạ giá lượt Song Tiên (chủ game bấm)
       const date=url.searchParams.get('date')||auditStorage.today(),file=auditStorage.file(mode,date);
       if(!file||!fs.existsSync(file)){json(res,{ok:false,message:'Chưa có nhật ký ngày này.'},404);return;}
       res.writeHead(200,{'Content-Type':'application/x-ndjson; charset=utf-8','Content-Disposition':`attachment; filename="gifts-${mode}-${date}.jsonl"`,'Cache-Control':'no-store'});fs.createReadStream(file).pipe(res);return;
