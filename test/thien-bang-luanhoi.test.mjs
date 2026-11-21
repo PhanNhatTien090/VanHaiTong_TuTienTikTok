@@ -19,3 +19,8 @@ test('dòng Luân Hồi có lớp riêng + bánh xe + tên Luân Hồi',()=>{
  assert.match(html,/☸ Nhất Thế Luân Hồi</);
  assert.equal((html.match(/tb-luanhoi/g)||[]).length,1,'chỉ dòng chuyển sinh');
 });
+test('server cũ không gửi reincarnations → tra state.players, tự đẩy lên đầu',()=>{
+ const state={halls:{thienBang:[{rank:1,id:'b',name:'B',realm:27},{rank:2,id:'a',name:'A',realm:2}],halls:[]},realms:['Phàm nhân','Luyện Khí','Trúc Cơ'],players:[{id:'a',reincarnations:1}]};
+ const html=hallsRankHTML(state,s=>String(s),5000);
+ assert.match(html,/<span class="tb-luanhoi"><i>1<\/i><em><img class="tb-wheel" src="[^"]+" alt="">A/);assert.match(html,/<span><i>2<\/i><em>B/);
+});
