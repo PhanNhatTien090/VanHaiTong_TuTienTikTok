@@ -29,3 +29,10 @@ test('người đã chuyển sinh bình luận → nhắc "gõ chỉ điểm" kh
  chat(w,'m','hello',N+60000);assert.equal(hints(),1);
  const {w:w2,a,b}=setup();a.realm=9;b.realm=9;chat(w2,'m','chào');assert.equal(w2.events.filter(e=>e.mentorHint).length,0,'không có hậu bối thì không nhắc');
 });
+test('cảnh giới 0 chỉ thả tim (chưa nhập môn) được chỉ điểm → nhập môn + đủ quà nhập môn, ưu tiên trước cảnh giới cao hơn',()=>{
+ const {w,m,b}=setup();const z=ensurePlayer(w,'z','Người Xem',N);Object.assign(z,{realm:0,qi:0,stones:0,herbs:0,lastActive:N});
+ const r=chat(w,'m','chỉ điểm');assert.equal(r.mentored,'z');assert.equal(z.realm,1);assert.equal(z.starterDone,true);assert.ok(z.firstStepAt);assert.equal(z.stones,20);assert.equal(z.herbs,5);assert.equal(b.realm,2);
+ // đã nhập môn rồi thì lần bình luận đầu không cho thêm lần nữa
+ const before=z.stones;action(w,{type:'chat',userId:'z',text:'chào',fromLive:true},N+1000);assert.equal(z.realm,1);assert.equal(z.stones,before);
+});
+test('tên quá ngắn bị từ chối, không mất lượt',()=>{const {w,m}=setup();const r=chat(w,'m','chỉ điểm a');assert.equal(r.ok,false);assert.match(r.message,/ít nhất 2/);assert.equal(m.mentorAt,undefined);});

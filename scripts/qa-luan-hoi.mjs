@@ -55,7 +55,7 @@ try{
  // chuyển sinh THẬT → màn chiếu qua hook
  await pause(9000); // chờ màn đột phá ở bước trước chiếu xong
  console.log('cs1',(await act({type:'chat',userId:'b',text:'chuyen sinh'})).message);
- await ev(`(()=>{const s=window.__vhScene;s.effects=[];s.fxQueue=[];s.luxuryQueue=[];})()`);await pause(2500);await shot('08-di-tuong-2s');await pause(4000);await shot('09-di-tuong-6s'); // 20/11: Thiên Địa Dị Tượng
+ await ev(`(()=>{const s=window.__vhScene;s.effects=[];s.fxQueue=[];s.luxuryQueue=[];})()`);await pause(2500);await shot('08-di-tuong-2s');await pause(4000);await shot('09-di-tuong-6s');await pause(27000);await shot('09b-di-tuong-33s-gon'); /* 21/11: sau 30 s thu gọn 1 dòng, trả bảng */ // 20/11: Thiên Địa Dị Tượng
  console.log('cs2',(await act({type:'chat',userId:'b',text:'chuyen sinh'})).message); // 21/11: gõ lại = xác nhận
  await pause(1500);
  const perf=await ev(`(()=>{const s=window.__vhScene;let n=0,t0=performance.now();return new Promise(r=>{const f=()=>{n++;if(performance.now()-t0<3000)requestAnimationFrame(f);else r({fps:n/3,cut:!!s?.cutFullActive,lh:!!s?.luanHoiOn});};requestAnimationFrame(f);});})()`);

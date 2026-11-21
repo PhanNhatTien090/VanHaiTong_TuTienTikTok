@@ -6,6 +6,8 @@ import {preserveOpportunityCredit,addOpportunityCredit,spendOpportunityCredit} f
 import {rebirthCommand,daoQuaCommand,luanHoiStatus,LUAN_HOI_CUT_MS,LUAN_HOI_CUT_LEAD} from './rebirth.mjs';
 import {combatRealm,pastLifeCost,luanHoiHandQi,luanHoiHandStones,luanHoiTitle} from './public/luan-hoi-data.js'; // 18/11: Luân Hồi
 // 21/11: đuôi thông báo đột phá — người đã chuyển sinh ghi tên kiếp Luân Hồi (+ PHÁ VỠ TIỀN KIẾP khi vượt cảnh giới cao nhất kiếp trước)
+// 21/11: lệnh XEM BẢNG (cánh, skin, túi, thần khí…) không bật thẻ nhắc Linh Châu — thẻ lớn đè mất đúng cái bảng người xem vừa gọi (chủ game: "gõ cánh không ra bảng")
+const ORB_QUIET_CMDS=new Set(['canh','huycanh','skin','tui','tuido','hanhtrang','thu','thankhi','banmenh','chieu','biphap','linhchau','toaky','tuvi','nhiemvu','truyencong']);
 const breakthroughTail=p=>p.reincarnations>0?(p.realm>(Number(p.highestRealm)||0)?'PHÁ VỠ TIỀN KIẾP · ':'')+luanHoiTitle(p.reincarnations).toUpperCase():'thiên môn khai mở';
 // 09/11: skin Tần Mục Hỏa Thần (public/viem-ton.js) — lệnh luyencong.
 export const VIEM_SKIN_ID='phan-thien-viem-ton',VIEM_LUYENCONG_QI=9;
@@ -232,7 +234,7 @@ const COMMANDS=['chidiem' /* 21/11: Luân Hồi chỉ điểm hậu bối */,'da
 // 21/11 (chủ game: "người chuyển sinh chả có gì để chơi" → chọn E): CHỈ ĐIỂM HẬU BỐI.
 // Người đã chuyển sinh gõ "chỉ điểm" (tự chọn hậu bối thấp nhất đang có mặt) hoặc "chỉ điểm <tên>" → hậu bối cảnh giới 1–6 đột phá NGAY.
 // Mỗi người chỉ điểm 30 phút/lần; mỗi hậu bối nhận 1 lần/ngày; vẫn tôn trọng hạn đột phá ngày (≥5). Không cộng gì cho người chỉ điểm ngoài số lần (khoe + danh vọng).
-export const MENTOR={cdMs:30*60000,minRealm:1,maxRealm:6,seenMs:5*60000};
+export const MENTOR={cdMs:30*60000,minRealm:0,maxRealm:6,seenMs:5*60000,minQuery:2}; // 21/11: gồm cả cảnh giới 0 — 517 người/7 ngày chỉ thả tim, chưa từng bình luận nên không tự nhập môn
 const mentorKey=s=>normalize(String(s||'')).replace(/[^a-z0-9]/g,'');
 function mentorHasCandidate(w,p,now){const day=vnDay(now);return Object.values(w.players).some(t=>t.id!==p.id&&!t.resident&&!t.puppet&&t.realm>=MENTOR.minRealm&&t.realm<=MENTOR.maxRealm&&now-(Number(t.lastActive)||0)<=MENTOR.seenMs&&t.mentoredDay!==day);}
 function mentorCommand(w,p,rest,now){
@@ -243,6 +245,7 @@ function mentorCommand(w,p,rest,now){
  const day=vnDay(now);
  const why=t=>!t||t===p||t.id===p.id||t.resident||t.puppet?'x':t.realm<MENTOR.minRealm||t.realm>MENTOR.maxRealm?'realm':now-(Number(t.lastActive)||0)>MENTOR.seenMs?'away':t.mentoredDay===day?'done':t.realm>=5&&dailyAscensionView(w,t,now).exhausted?'cap':'';
  const q=mentorKey(rest);let t;
+ if(q&&q.length<MENTOR.minQuery)return {ok:false,message:'Gõ tên rõ hơn (ít nhất 2 chữ) hoặc chỉ gõ chỉ điểm để tự chọn hậu bối.'};
  if(q){const list=Object.values(w.players).filter(x=>!x.resident&&!x.puppet&&x.id!==p.id&&mentorKey(x.name).includes(q)).sort((a,b)=>(mentorKey(b.name)===q)-(mentorKey(a.name)===q)||(b.lastActive||0)-(a.lastActive||0));
   if(!list.length)return {ok:false,message:'Không thấy đạo hữu tên "'+String(rest).slice(0,20)+'" • gõ chỉ điểm (không tên) để tự chọn hậu bối.'};
   t=list.find(x=>!why(x));if(!t){const r=why(list[0]);return {ok:false,message:list[0].name+(r==='realm'?' không ở cảnh giới '+REALMS[MENTOR.minRealm]+'–'+REALMS[MENTOR.maxRealm]:r==='away'?' đang không có mặt':r==='done'?' hôm nay đã được chỉ điểm':r==='cap'?' đạo cơ đang lắng đọng, chưa đột phá được':' không nhận chỉ điểm được')+' • gõ chỉ điểm (không tên) để tự chọn.'};}}
@@ -250,7 +253,9 @@ function mentorCommand(w,p,rest,now){
   if(!t)return {ok:false,message:'Chưa có hậu bối nào (cảnh giới '+REALMS[MENTOR.minRealm]+'–'+REALMS[MENTOR.maxRealm]+', đang có mặt) cần chỉ điểm • thử lại sau.'};}
  // bù đủ tu vi + linh thạch cho đúng 1 lần đột phá (số gốc, không nhân hệ số) rồi đột phá như thường
  const needQ=Math.max(0,requiredQi(t)-(Number(t.qi)||0)),needS=Math.max(0,requiredStones(t)-(Number(t.stones)||0));t.qi=(Number(t.qi)||0)+needQ;t.totalQi=(Number(t.totalQi)||0)+needQ;t.stones=(Number(t.stones)||0)+needS;
+ const intro=t.realm===0&&!t.starterDone; // cảnh giới 0 chưa nhập môn → nhận đúng quà nhập môn như khi tự bình luận lần đầu (mỗi người 1 lần)
  recordDailyAscension(w,t,now);t.qi-=requiredQi(t);t.stones-=requiredStones(t);t.realm++;
+ if(intro){t.firstStepAt=now;t.starterDone=true;t.stones+=20;t.herbs=(Number(t.herbs)||0)+5;finishIntro(w,t,now);}
  p.mentorAt=now;p.mentorCount=(Number(p.mentorCount)||0)+1;t.mentoredDay=day;t.mentoredBy=p.id;
  const mentor={id:p.id,name:String(p.name||'Đạo hữu').slice(0,24),n:p.reincarnations,count:p.mentorCount};
  emit(w,t,'ĐỘT PHÁ '+REALMS[t.realm].toUpperCase()+' • '+mentor.name+' ('+luanHoiTitle(p.reincarnations)+') chỉ điểm','breakthrough',now,{fromRealm:t.realm-1,toRealm:t.realm,mentor});
@@ -460,7 +465,7 @@ function actionCore(w,input,now) {
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;
   const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;syncWingTop(p);p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(existed&&!p.resident&&!p.puppet&&w.mode==='live'&&!w.webShadow&&prevActive&&now-prevActive>=BAO_RETURN_AWAY&&!cooldown(p,'bao-return',BAO_RETURN_AWAY,now)){const h=baoReturnHint(p);if(h)emit(w,p,h,'status',now,{baoReturn:true});} // 18/11: chủ nhân thần khí vào sân → nhắc xem/đeo/dùng
-  if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
+  if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)&&!(type==='chat'&&ORB_QUIET_CMDS.has(cmd))){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
   // 19/11 (chủ game duyệt): 85% người mới chưa từng gõ lệnh → người còn cảnh giới 0 BÌNH LUẬN BẤT KỲ lần đầu = nhập môn: tự đột phá lên cảnh giới 1.
     // Chỉ bình luận THẬT từ TikTok (ingest gắn fromLive). Dùng chung cờ + quà với Tân thủ lệnh (starterBoost) → mỗi người chỉ một lần.
@@ -541,7 +546,7 @@ function actionCore(w,input,now) {
       const unlocked=WING_TIERS.flatMap((tier,i)=>p.giftCoins>=tier.min?[i+1+'. '+tier.name]:[]);
       const current=p.wingChoice===0?'Đã ẩn cánh':playerWing(p)?.name||'Chưa mở cánh';
       const message=current+' • '+(unlocked.length?unlocked.join(' · ')+' • Gõ cánh + số, hủy cánh hoặc cánh tự động.':'Cánh đầu tiên mở ở 1 coin.');
-      emit(w,p,message,'status',now,{card:inventoryCard('skins',p,CATALOG)});return {ok:true,message}; // 18/11: gõ cánh → bảng Skin · Cánh
+      emit(w,p,message,'status',now,{card:inventoryCard('wings',p,CATALOG)});return {ok:true,message}; // 21/11: gõ cánh → BẢNG CÁNH riêng (ảnh từng cánh)
     }
     if(cmd==='huycanh'&&rest)return fail('Gõ hủy cánh để cất cánh.');
     const choice=cmd==='huycanh'?0:rest==='tu dong'?null:/^[1-9][0-9]*$/.test(rest)?Number(rest):NaN;

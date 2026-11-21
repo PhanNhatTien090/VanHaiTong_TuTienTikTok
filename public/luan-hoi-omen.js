@@ -22,8 +22,13 @@ let styled=false,on=false;
 function hudClass(v){if(typeof document==='undefined'||on===v)return;on=v;
  if(!styled){styled=true;const st=document.createElement('style');st.textContent='body.overlay :is(#liveRanks,#giftBoard,.tm-tokens){transition:opacity .45s}body.overlay.lh-omen :is(#liveRanks,#giftBoard,.tm-tokens){opacity:0!important;pointer-events:none}';document.head?.appendChild(st);}
  document.body?.classList?.toggle('lh-omen',v);}
-export function drawLuanHoiOmen(scene,c,t,H){const s=omenActive(scene,t);hudClass(!!s);if(!s)return;c.save();if(scene.screenT)c.setTransform(scene.screenT);try{omenHud(c,t,H,s);}finally{c.restore();}}
-function omenHud(c,t,H,s){const {o,left,age}=s,k=Math.min(1,age/.8)*Math.min(1,left/.4);
+// 21/11: khung chờ xác nhận dài 2 phút → chỉ 30 s đầu là dị tượng đầy đủ (ẩn bảng); sau đó thu gọn 1 dòng, trả lại Thiên Bảng + bảng Tặng quà.
+export const OMEN_FULL_S=30;
+export function drawLuanHoiOmen(scene,c,t,H){const s=omenActive(scene,t);hudClass(!!s&&s.age<OMEN_FULL_S);if(!s)return;c.save();if(scene.screenT)c.setTransform(scene.screenT);try{omenHud(c,t,H,s);}finally{c.restore();}}
+function omenCompact(c,t,H,s){const {o,left,age}=s,k=Math.min(1,(age-OMEN_FULL_S)/.8)*Math.min(1,left/.4);if(k<=0)return;
+ const y=H*.36,line='☸ '+String(o.name||'Đạo hữu').slice(0,18)+' chờ LUÂN HỒI · gõ "CHUYỂN SINH" lần nữa · '+Math.ceil(left)+'s';
+ c.save();c.globalAlpha=k*(.85+.15*Math.sin(t*.005));c.font='900 22px "Segoe UI",Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=6;c.strokeStyle=INK;c.strokeText(line,450,y,860);c.fillStyle='#ffe7a8';c.fillText(line,450,y,860);c.restore();}
+function omenHud(c,t,H,s){if(s.age>=OMEN_FULL_S)return omenCompact(c,t,H,s);const {o,left,age}=s,k=Math.min(1,age/.8)*Math.min(1,left/.4,(OMEN_FULL_S-age)/.8);
  // trời sẫm (mép trên mực loang xuống)
  c.save();const g=c.createLinearGradient(0,0,0,H*.45);g.addColorStop(0,'rgba(10,9,8,.55)');g.addColorStop(1,'rgba(10,9,8,0)');c.globalAlpha=k;c.fillStyle=g;c.fillRect(-60,-60,1020,H*.45+60);c.restore();
  const y=H*.15;paperBanner(c,'THIÊN ĐỊA DỊ TƯỢNG',String(o.name||'Đạo hữu').slice(0,22)+' sắp LUÂN HỒI lần '+(o.n||1),450,y,40,k,Math.min(1,age/.7),Number(String(o.pid).slice(-4))||5);
