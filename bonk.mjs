@@ -7,7 +7,9 @@
 // dùng cho mọi lượt Hội Gõ Đầu sau. Búa xịn rơi nhiều linh thạch hơn, tay đỡ mỏi hơn; người bị gõ bằng búa xịn mất tối đa
 // BONK.maxLossPremium viên/lượt (gõ tay không vẫn chỉ tới BONK.maxLoss).
 
-export const BONK=Object.freeze({durationMs:180000,cooldownMs:15000,immuneMs:8000,minDrop:1,maxDrop:3,maxLoss:15,showMs:3000,podiumMs:8000,maxLossPremium:30});
+export const BONK=Object.freeze({durationMs:180000,cooldownMs:15000,immuneMs:8000,minDrop:1,maxDrop:3,maxLoss:15,showMs:3000,podiumMs:8000,maxLossPremium:30,titleMs:3600000});
+// 21/11 (chủ game): người gõ nhiều nhất / bị gõ nhiều nhất mang DANH HIỆU SỰ KIỆN 1 giờ (chữ xanh + icon búa trên đầu, public/title-plaques.js).
+export const BONK_TITLES=Object.freeze({hitter:'Thiết Thủ Vương',victim:'Đầu Sắt'});
 export const HAMMERS=Object.freeze([
  {tier:0,name:'Búa Gỗ',min:0,drop:[1,3],cd:15000},
  {tier:1,name:'Búa Đồng',min:1,drop:[2,4],cd:12000},
@@ -37,7 +39,7 @@ export function tickBonk(w,now,c){
  const [hid,hn]=top(e.count)||[],[vid,vn]=top(e.lost)||[];
  const hitter=hid&&w.players[hid],victim=vid&&w.players[vid];
  e.result={hitter:hitter?{id:hitter.id,name:hitter.name,n:hn}:null,victim:victim?{id:victim.id,name:victim.name,n:vn}:null,total:e.seq};
- const parts=[hitter&&`Thiết Thủ Vương ${hitter.name} gõ ${hn} lần`,victim&&`Đầu Sắt ${victim.name} bị gõ ${vn} lần`].filter(Boolean);
+ const parts=[hitter&&`${BONK_TITLES.hitter} ${hitter.name} gõ ${hn} lần`,victim&&`${BONK_TITLES.victim} ${victim.name} bị gõ ${vn} lần`].filter(Boolean);
  c.emit(w,null,'Hội Gõ Đầu khép lại'+(parts.length?' • '+parts.join(' • '):''),'bonk',now,{bonkEnd:true,bonkHitter:hitter?.name||'',bonkVictim:victim?.name||''});
 }
 
