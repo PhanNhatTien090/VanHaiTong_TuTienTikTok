@@ -60,3 +60,11 @@ Theo luật mới: một giá cả bộ (skin + kiếm). Đề xuất 500, đứ
 - Concept A / B / C (hoặc ý khác)?
 - Nam, nữ, hay cả hai (mỗi giới 1 bộ tư thế = gấp đôi ảnh)?
 - Giá 500 cả bộ, đứng riêng một lượt?
+---
+## 10. ĐỔI HƯỚNG (21/11 tối, chủ game xem concept Hắc Kiếm Khách)
+- Chê: nét vẽ lệch game; kiếm hiệp rách rưới ≠ tu tiên. → BỎ concept A.
+- Mới: **tu tiên, ĐÚNG nét vẽ game** (Codex vẽ có ảnh mẫu: tinh-ha/bich-lan standing + linh thú ember-fox), cả nam + nữ, hơi gợi cảm (an toàn TikTok).
+- **Không vũ khí, không pháp bảo** — mỗi skin đi kèm **LINH THÚ RIÊNG**: con KHỈ NHỎ (linh hầu tự thiết kế, không phải Tôn Ngộ Không: không vòng kim cô, không gậy, không mây).
+- **Khoảnh khắc cinematic:** thỉnh thoảng khỉ **BIẾN LỚN cái đùng** (cự viên) rồi **nhảy qua lại** trên sân, rồi thu nhỏ về vai chủ.
+- Ảnh concept đợt 2: `%TEMP%\claude\linh-hau\` → chép `output/skin-moi-concept/v2/`.
+- Engine cần thêm: skin bán kèm linh thú (VISITOR_GIFT_REWARDS trao pet thay artifact), khỉ ngồi vai/đi cạnh, màn biến lớn + nhảy (bùng theo nhịp, chiếu riêng khi quà lớn). Mục 3 (bộ tư thế) vẫn giữ.
