@@ -12,15 +12,15 @@ body.overlay .spotlight,
 body.overlay .crowd-pulse,
 body.overlay .join-hint,
 body.overlay .join-hint.live-guide-board{
-  background:rgba(6,14,22,.32)!important;
-  border-color:transparent!important;border-radius:12px!important;
-  box-shadow:0 0 18px 10px rgba(6,14,22,.32)!important; /* mép tan dần thay cho viền */
-  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  background:rgba(6,14,22,.32);
+  border-color:transparent;border-radius:12px!important;
+  box-shadow:0 0 18px 10px rgba(6,14,22,.32); /* mép tan dần thay cho viền */
+  backdrop-filter:none;-webkit-backdrop-filter:none;
 }
 /* màu nhấn nhẹ cho bảng sự kiện, vẫn mờ */
-body.overlay .flower-hud{background:rgba(70,18,48,.34)!important;box-shadow:0 0 18px 10px rgba(70,18,48,.3)!important}
+body.overlay .flower-hud{background:rgba(70,18,48,.34);box-shadow:0 0 18px 10px rgba(70,18,48,.3)}
 body.overlay .flower-hud.meteor{background:rgba(18,16,70,.36)!important;box-shadow:0 0 18px 10px rgba(18,16,70,.32)!important}
-body.overlay .scene-bottom,body.overlay .scene-top button{background:none!important;border-color:transparent!important;box-shadow:none!important}
+body.overlay .scene-bottom,body.overlay .scene-top button{background:none;border-color:transparent;box-shadow:none}
 /* chữ: đậm hơn + viền tối mảnh */
 body.overlay .gift-board,body.overlay .gift-board *,
 body.overlay .boss-hud,body.overlay .boss-hud *,
@@ -34,10 +34,10 @@ body.overlay .scene-top,body.overlay .scene-top *,body.overlay .scene-bottom,bod
   text-shadow:0 1px 2px #000,0 0 4px #000d!important;
 }
 body.overlay .boss-hud,body.overlay .visitor-hud,body.overlay .opportunity-hud,body.overlay .flower-hud,body.overlay .live-ranks,body.overlay .spotlight span,body.overlay .crowd-pulse,body.overlay .join-hint{font-weight:600}
-body.overlay .gift-board .gift-board-row,body.overlay .gift-board [class*="row"]{background:none!important;border-color:transparent!important;box-shadow:none!important}
-body.overlay .boss-hud .progress,body.overlay .visitor-hud .progress{background:#ffffff2e!important;box-shadow:none!important}
-body.overlay .spotlight strong{color:#fff4cf!important}
-body.overlay .spotlight span,body.overlay .boss-hud,body.overlay .visitor-hud,body.overlay .opportunity-hud{color:#ffffff!important}
+body.overlay .gift-board .gift-board-row,body.overlay .gift-board [class*="row"]{background:none;border-color:transparent;box-shadow:none}
+body.overlay .boss-hud .progress,body.overlay .visitor-hud .progress{background:#ffffff2e;box-shadow:none}
+body.overlay .spotlight strong{color:#fff4cf}
+body.overlay .spotlight span,body.overlay .boss-hud,body.overlay .visitor-hud,body.overlay .opportunity-hud{color:#ffffff}
 
 /* v41c: bảng SỰ KIỆN nổi bật hơn bảng thường — nền đậm hơn, viền sáng theo màu sự kiện, phát sáng nhịp thở, tiêu đề to. */
 /* 08/11: nhịp thở bằng opacity của lớp phủ (compositor) thay vì đổi box-shadow/filter mỗi khung — đổi bóng mờ bắt GPU tích hợp vẽ lại bảng ở 60 Hz trong LIVE Studio. */
@@ -45,17 +45,17 @@ body.overlay .spotlight span,body.overlay .boss-hud,body.overlay .visitor-hud,bo
 body.overlay .flower-hud::after,body.overlay .visitor-hud::after,body.overlay .opportunity-hud::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:0 0 26px 9px var(--ev-glow);opacity:0;animation:eventGlow 2.4s ease-in-out infinite;will-change:opacity}
 body.overlay .flower-hud,body.overlay .flower-hud.meteor,body.overlay .visitor-hud,body.overlay .opportunity-hud{
   --ev-bg:rgba(60,20,50,.58);--ev-glow:#ff86b088;--ev-line:#ffc2d9cc;--ev-title1:#fff0f6;--ev-title2:#ff9ec7;
-  background:var(--ev-bg)!important;border-radius:14px!important;padding:10px 16px!important;
-  box-shadow:0 0 14px 4px var(--ev-glow),0 0 0 1.5px var(--ev-line) inset;font-size:calc(1em * 1.08)!important;
+  background:var(--ev-bg);border-radius:14px!important;padding:10px 16px;
+  box-shadow:0 0 14px 4px var(--ev-glow),0 0 0 1.5px var(--ev-line) inset;font-size:calc(1em * 1.08);
 }
 body.overlay .flower-hud.meteor{--ev-bg:rgba(18,16,72,.6);--ev-glow:#8fa8ff88;--ev-line:#cfdcffcc;--ev-title1:#ffffff;--ev-title2:#9fb4ff}
 body.overlay .visitor-hud{--ev-bg:rgba(40,22,8,.58);--ev-glow:#ffcf6a88;--ev-line:#ffe7a0cc;--ev-title1:#fff8e0;--ev-title2:#ffc24a}
 body.overlay .opportunity-hud{--ev-bg:rgba(10,40,44,.58);--ev-glow:#6fe8d088;--ev-line:#b8fff0cc;--ev-title1:#ffffff;--ev-title2:#7ff0d8}
 /* tiêu đề sự kiện: to, chữ chuyển màu */
 body.overlay .flower-hud>b,body.overlay .visitor-hud>b,body.overlay .visitor-hud strong:first-child,body.overlay .opportunity-hud>b{
-  font-size:1.3em!important;letter-spacing:.06em;
-  background:linear-gradient(180deg,var(--ev-title1),var(--ev-title2));-webkit-background-clip:text;background-clip:text;color:transparent!important;
-  text-shadow:none!important;filter:drop-shadow(0 0 6px var(--ev-glow)) drop-shadow(0 1px 1px #000);
+  font-size:1.3em;letter-spacing:.06em;
+  background:linear-gradient(180deg,var(--ev-title1),var(--ev-title2));-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:none;filter:drop-shadow(0 0 6px var(--ev-glow)) drop-shadow(0 1px 1px #000);
 }
 @media (prefers-reduced-motion:reduce){body.overlay .flower-hud,body.overlay .visitor-hud,body.overlay .opportunity-hud{animation:none}}
 
@@ -132,15 +132,15 @@ body.overlay .gift-board{width:34%!important}
 .flower-hud .fh-all{display:block;color:#b8ffdf;font-size:.85em;margin-top:2px}
 
 /* v72: bảng sự kiện gọn — chữ nhỏ hơn, mỗi hạng 1 dòng; ẩn bảng quà khi sự kiện đang chạy */
-body.overlay .flower-hud{font-size:clamp(9px,1.45vw,17px)!important;max-width:38%!important;padding:5px 9px!important}
+body.overlay .flower-hud{font-size:clamp(9px,1.45vw,17px);max-width:38%;padding:5px 9px}
 .flower-hud .fh-rank,.flower-hud .fh-all{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
 .flower-hud .fh-rank em{font-size:.85em}
 .flower-hud>span{display:block;font-size:.78em}
-body.overlay:has(.flower-hud:not([hidden])) .gift-board{display:none!important}
-body.overlay .flower-hud{max-width:44%!important}
-body.overlay .flower-hud>b{font-size:1.05em!important;white-space:nowrap}
-.flower-hud .fh-rank b{font-size:1em!important;letter-spacing:0!important;text-shadow:none}
-body.overlay .flower-hud>b{letter-spacing:.02em!important;font-size:1em!important}
+body.overlay:has(.flower-hud:not([hidden])) .gift-board{display:none}
+body.overlay .flower-hud{max-width:44%}
+body.overlay .flower-hud>b{font-size:1.05em;white-space:nowrap}
+.flower-hud .fh-rank b{font-size:1em;letter-spacing:0!important;text-shadow:none}
+body.overlay .flower-hud>b{letter-spacing:.02em!important;font-size:1em}
 
 /* v73: tab Tu sĩ giả */
 .puppet-panel{display:flex;flex-direction:column;gap:12px}
@@ -224,7 +224,7 @@ body.overlay .basic-commands{bottom:7%}
 @keyframes cerDrop{from{opacity:0;transform:translateY(-1.2em) scale(1.2)}to{opacity:1;transform:none}}
 @keyframes cerRise{to{opacity:1;transform:none}}@keyframes cerPulse{50%{transform:scale(1.12);opacity:.6}}@keyframes cerOut{to{opacity:0}}
 @media(prefers-reduced-motion:reduce){.cer-rays,.cer-sparks i,.cer-first .cer-portrait::after{animation:none}}
-.cer-rays{background:repeating-conic-gradient(from 0deg,rgba(255,215,106,.13) 0 6deg,transparent 6deg 18deg)!important}
+.cer-rays{background:repeating-conic-gradient(from 0deg,rgba(255,215,106,.13) 0 6deg,transparent 6deg 18deg)}
 
 /* v86: thanh mục tiêu tim toàn LIVE */
 .like-goal{display:none}
@@ -232,7 +232,7 @@ body.overlay .like-goal:not([hidden]){display:block;position:absolute;left:50%;t
   padding:3px 10px 6px;border-radius:12px;background:rgba(40,8,24,.45);box-shadow:0 0 14px 6px rgba(40,8,24,.3);font-size:clamp(9px,1.45vw,16px);color:#ffe3ef;text-align:center;text-shadow:0 1px 2px #000}
 body.overlay .like-goal b{color:#ff9ec7}
 body.overlay .like-goal i{display:block;height:5px;margin-top:3px;border-radius:3px;background:linear-gradient(90deg,#ff6fa8,#ffd76a);box-shadow:0 0 6px #ff6fa8}
-body.overlay.sword-race .like-goal,body.overlay.social-stage .like-goal{display:none!important}
+body.overlay.sword-race .like-goal,body.overlay.social-stage .like-goal{display:none}
 body.overlay .like-goal:not([hidden]){bottom:auto;top:1.2%}
 
 /* v87: tông môn kiến tạo (chung thanh với mục tiêu tim) */
@@ -260,10 +260,10 @@ body.overlay .quiz-box ol{margin:0;padding:0;list-style:none;display:grid;grid-t
 body.overlay .quiz-box li{background:#ffffff14;border-radius:9px;padding:4px 6px;text-align:center;font-weight:700}
 body.overlay .quiz-box li code{font-family:inherit;font-weight:900;color:#1a1206;background:#ffd76a;border-radius:50%;display:inline-grid;place-items:center;width:1.4em;height:1.4em;margin-right:4px}
 body.overlay .quiz-box small{display:block;text-align:center;margin-top:5px;color:#c9bde8;font-size:.78em}
-body.overlay.sword-race .quiz-box,body.overlay.sword-race .envelope-box{display:none!important}
+body.overlay.sword-race .quiz-box,body.overlay.sword-race .envelope-box{display:none}
 
 /* Hide the scene name and its LIVE/demo status badge. */
-.scene-location{display:none!important}
+.scene-location{display:none}
 
 /* Heart instructions follow the event currently on stage. */
 .like-goal:not([hidden]){display:block;position:absolute;left:50%;top:1%;transform:translateX(-50%);z-index:4;width:40%;max-width:360px;max-height:5.8%;overflow:hidden;padding:3px 7px;border-radius:6px;background:#290f24b8;color:#ffe3ef;text-align:center;font-size:10px;pointer-events:none;box-shadow:none!important}
@@ -281,8 +281,8 @@ body.overlay .phone-hud-rail{position:absolute;top:8%;bottom:7%;z-index:5;displa
 body.overlay #phoneHudLeft{left:var(--phone-hud-edge);width:34%}
 body.overlay #phoneHudRight{right:var(--phone-hud-edge);width:31%;align-items:flex-end}
 body.overlay #phoneHudLeft>:is(.compact-ranks,.boss-hud,.opportunity-hud,.visitor-hud,.social-hud),
-body.overlay #phoneHudRight>:is(.gift-board,.flower-hud,.command-rail,.basic-commands){position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:100%!important;min-width:0;margin:0;flex:0 0 auto;box-sizing:border-box;overflow-wrap:anywhere}
-body.overlay #phoneHudLeft>:is(.boss-hud,.opportunity-hud,.visitor-hud,.social-hud){padding:5px 7px!important;text-align:left;font-size:clamp(9px,1.65cqw,18px)!important}
+body.overlay #phoneHudRight>:is(.gift-board,.flower-hud,.command-rail,.basic-commands){position:relative;inset:auto!important;transform:none;width:100%!important;max-width:100%;min-width:0;margin:0;flex:0 0 auto;box-sizing:border-box;overflow-wrap:anywhere}
+body.overlay #phoneHudLeft>:is(.boss-hud,.opportunity-hud,.visitor-hud,.social-hud){padding:5px 7px;text-align:left;font-size:clamp(9px,1.65cqw,18px)}
 body.overlay #phoneHudLeft .boss-line{display:flex;flex-wrap:wrap;gap:2px 5px;font-size:1em}
 body.overlay #phoneHudLeft .boss-hud small,
 body.overlay #phoneHudLeft .social-hud span,
@@ -291,7 +291,7 @@ body.overlay #phoneHudLeft .social-hud b,
 body.overlay #phoneHudLeft .visitor-hud b,
 body.overlay #phoneHudLeft .opportunity-hud>b{font-size:1.1em!important;letter-spacing:0}
 body.overlay #phoneHudRight>.command-rail{width:70%!important;font-size:clamp(8px,1.3cqw,15px)}
-body.overlay #phoneHudRight>.basic-commands{width:80%!important;margin-top:auto;font-size:clamp(9px,1.5cqw,17px)}
+body.overlay #phoneHudRight>.basic-commands{width:80%;margin-top:auto;font-size:clamp(9px,1.5cqw,17px)}
 body.overlay #phoneHudRight>.flower-hud{font-size:clamp(9px,1.45cqw,17px)!important;padding:5px 7px!important}
 body.overlay #phoneHudRight>.flower-hud>b{white-space:normal}
 body.overlay .honor-banner{left:auto;right:var(--phone-hud-edge);width:25%}
@@ -303,7 +303,7 @@ body.overlay .like-goal:not([hidden]){width:52%;max-width:520px;max-height:none;
 body.overlay .like-goal i{height:5px!important;margin-top:4px!important}
 
 /* One contextual guide replaces the cycling command encyclopedia on the LIVE. */
-body.simple-play .command-rail{display:none!important}
+body.simple-play .command-rail{display:none}
 body.simple-play .basic-commands li{grid-template-columns:1fr;gap:2px}
 body.simple-play .basic-commands li::before{display:none}
 body.simple-play .basic-commands span{white-space:normal;line-height:1.25}
@@ -311,7 +311,7 @@ body.simple-play:not(.overlay) .basic-commands{display:block;position:absolute;r
 body.simple-play .basic-commands ol{padding:0;list-style:none}
 body.simple-play .basic-commands code{color:#a6edd0}
 
-body.overlay.simple-play #phoneHudRight>.basic-commands{width:100%!important;font-size:clamp(12px,2.5cqw,30px);padding:7px 10px}
+body.overlay.simple-play #phoneHudRight>.basic-commands{width:100%;font-size:clamp(12px,2.5cqw,30px);padding:7px 10px}
 body.overlay.simple-play .basic-commands>b{font-size:.8em}
 body.overlay.simple-play .basic-commands li{margin:5px 0}
 body.overlay.simple-play .basic-commands code{font-size:1.05em}
@@ -328,7 +328,7 @@ body .scene-guide-dock>.basic-commands li:first-child{padding-top:0;border-top:0
 body .scene-guide-dock>.basic-commands li::before{display:none}
 body .scene-guide-dock>.basic-commands code{font:700 1.1em 'Segoe UI',sans-serif;color:#a6edd0}
 body .scene-guide-dock>.basic-commands span{font-size:.83em;line-height:1.25;white-space:normal;overflow-wrap:anywhere;color:#f4e8c8}
-body .scene-guide-dock>.honor-banner{position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:none!important;min-width:0;margin:0;padding:4px 6px;background:#10242bd9;border:1px solid #d8c48655;border-radius:7px;box-sizing:border-box;text-align:left}
+body .scene-guide-dock>.honor-banner{position:relative;inset:auto;transform:none;width:100%;max-width:none;min-width:0;margin:0;padding:4px 6px;background:#10242bd9;border:1px solid #d8c48655;border-radius:7px;box-sizing:border-box;text-align:left}
 body .scene-guide-dock>.honor-banner:not([hidden]){display:grid;grid-template-columns:28% minmax(0,1fr);align-items:center;column-gap:5px}
 body .scene-guide-dock .honor-portrait{grid-column:1;grid-row:1 / 4;width:100%!important;min-width:0}
 body .scene-guide-dock .honor-banner>:is(b,strong,small){grid-column:2;max-width:100%;min-width:0;line-height:1.2;overflow-wrap:anywhere}
@@ -337,16 +337,16 @@ body .scene-guide-dock .honor-banner strong{font-size:clamp(10px,2.3cqw,24px)}
 body .scene-guide-dock .honor-banner small{font-size:clamp(8px,1.7cqw,17px)}
 body .scene-guide-dock>.honor-enter{animation:honor-stack-arrive .4s ease-out both}
 @keyframes honor-stack-arrive{from{opacity:0}to{opacity:1}}
-body.sword-race .scene-guide-dock,body.social-stage:not(.social-podium) .scene-guide-dock,body.performance-solo .scene-guide-dock{display:none!important}
+body.sword-race .scene-guide-dock,body.social-stage:not(.social-podium) .scene-guide-dock,body.performance-solo .scene-guide-dock{display:none}
 /* Dynamic pet/social cards join the existing rail instead of floating at 40%. */
-body .phone-hud-rail>.spirit-pet-hud{position:relative!important;inset:auto!important;width:100%;max-width:none;margin:0;padding:5px 6px}
+body .phone-hud-rail>.spirit-pet-hud{position:relative;inset:auto;width:100%;max-width:none;margin:0;padding:5px 6px}
 body .phone-hud-rail>.spirit-pet-hud b{font-size:clamp(8px,1.9cqw,18px)}
 body .phone-hud-rail>.spirit-pet-hud span{font-size:clamp(9px,2.1cqw,20px);line-height:1.25}
 body .phone-hud-rail>.spirit-pet-hud small{font-size:clamp(8px,1.7cqw,16px);line-height:1.2}
 body:not(.overlay) .phone-hud-rail{position:absolute;top:8%;bottom:26%;z-index:5;display:flex;flex-direction:column;gap:5px;pointer-events:none;min-width:0}
 body:not(.overlay) #phoneHudLeft{left:1%;width:34%}
 body:not(.overlay) #phoneHudRight{right:1%;width:31%}
-body:not(.overlay) .phone-hud-rail>:is(.compact-ranks,.boss-hud,.opportunity-hud,.visitor-hud,.social-hud,.gift-board,.flower-hud,.command-rail){position:relative!important;inset:auto!important;transform:none!important;width:100%!important;max-width:none!important;margin:0;box-sizing:border-box}
+body:not(.overlay) .phone-hud-rail>:is(.compact-ranks,.boss-hud,.opportunity-hud,.visitor-hud,.social-hud,.gift-board,.flower-hud,.command-rail){position:relative;inset:auto;transform:none;width:100%;max-width:none;margin:0;box-sizing:border-box}
 @media(prefers-reduced-motion:reduce){body .scene-guide-dock>.honor-enter{animation:none}}
 
 .gift-top-portrait em,.gift-top-portrait img,.cer-portrait img,.cer-initial{left:21%;top:21%;width:58%;height:58%}
@@ -363,7 +363,7 @@ body:not(.overlay) .phone-hud-rail>:is(.compact-ranks,.boss-hud,.opportunity-hud
 @media(prefers-reduced-motion:reduce){.arrival-welcome{animation:none}}
 
 /* Two quiet reward rows: real gift image, price, qi and one signature item. */
-body .gift-board{font-size:clamp(10px,2.25cqw,23px)!important}
+body .gift-board{font-size:clamp(10px,2.25cqw,23px)}
 body .gift-board .gift-board-row{align-items:center!important;gap:6px;padding:6px 0;border-bottom:1px solid #d5e6dc22!important}
 body .gift-board .gift-board-row:last-child{border-bottom:0!important}
 body .gift-board img.gift-original{flex:0 0 clamp(30px,8cqw,72px);width:clamp(30px,8cqw,72px);height:clamp(30px,8cqw,72px);min-width:0;object-fit:contain}
@@ -377,14 +377,14 @@ body .gift-board h3{font-size:.8em;letter-spacing:0}
 /* v-newbie: khối lệnh + thẻ vinh danh dời xuống GIỮA phía dưới (vùng bậc thang trống),
    lệnh xếp ngang — không còn che mép phải hàng ghế, chỗ người mới vừa vào hay được xếp. */
 /* Khối lệnh: góc dưới bên phải, xếp dọc dễ đọc; sát đáy để không chạm hàng ghế (ghế cuối bên phải là nhân vật giả). */
-body.overlay .scene-guide-dock{left:auto!important;right:2%!important;transform:none;width:30%;bottom:1.5%;align-items:stretch;gap:5px}
+body.overlay .scene-guide-dock{left:auto;right:2%;transform:none;width:30%;bottom:1.5%;align-items:stretch;gap:5px}
 body.overlay .scene-guide-dock>.basic-commands{font-size:clamp(10px,2.4cqw,23px);padding:6px 9px}
 
 /* Stable small command card, independent of the elder/honor dock. */
-body .scene-shell>#basicCommands.corner-command-guide{display:block!important;position:absolute!important;left:2%!important;right:auto!important;top:auto!important;bottom:2.5%!important;transform:none!important;width:35%!important;max-width:360px!important;min-width:0;margin:0;padding:7px 9px!important;border:1px solid #bda66a80;border-radius:8px;background:#071a24e8!important;box-shadow:none!important;z-index:10;pointer-events:none;font:clamp(10px,1.9cqw,20px)/1.3 Arial,"Segoe UI",sans-serif;letter-spacing:normal}
-body .scene-shell>#basicCommands.corner-command-guide>b{display:block!important;text-align:left;color:#efd397;font-size:.83em;letter-spacing:normal;margin:0 0 5px}
+body .scene-shell>#basicCommands.corner-command-guide{display:block;position:absolute;left:2%;right:auto;top:auto;bottom:2.5%;transform:none;width:35%;max-width:360px;min-width:0;margin:0;padding:7px 9px;border:1px solid #bda66a80;border-radius:8px;background:#071a24e8;box-shadow:none;z-index:10;pointer-events:none;font:clamp(10px,1.9cqw,20px)/1.3 Arial,"Segoe UI",sans-serif;letter-spacing:normal}
+body .scene-shell>#basicCommands.corner-command-guide>b{display:block;text-align:left;color:#efd397;font-size:.83em;letter-spacing:normal;margin:0 0 5px}
 body .scene-shell>#basicCommands.corner-command-guide ol{display:grid;grid-template-columns:1fr;gap:5px;margin:0;padding:0;list-style:none}
-body .scene-shell>#basicCommands.corner-command-guide li{display:grid!important;grid-template-columns:.8fr 1.5fr;gap:6px;align-items:baseline;white-space:normal;margin:0;padding:0;border:0;min-width:0}
+body .scene-shell>#basicCommands.corner-command-guide li{display:grid;grid-template-columns:.8fr 1.5fr;gap:6px;align-items:baseline;white-space:normal;margin:0;padding:0;border:0;min-width:0}
 body .scene-shell>#basicCommands.corner-command-guide li::before{display:none}
 body .scene-shell>#basicCommands.corner-command-guide code{font:700 1em/1.3 Arial,"Segoe UI",sans-serif;color:#aff1da;white-space:normal;overflow-wrap:normal}
 body .scene-shell>#basicCommands.corner-command-guide span{font-size:.83em;line-height:1.3;color:#e5e4d5;white-space:normal}
@@ -395,8 +395,8 @@ body.ritual-active .scene-shell>#basicCommands.corner-command-guide{visibility:h
 .sect-master-settings{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid #bda66a44;border-radius:8px;margin-top:12px}.sect-master-settings label{display:flex;gap:8px;align-items:center}.sect-master-settings input{padding:7px;background:#10242b;color:#e8e8dc;border:1px solid #ffffff30;border-radius:5px}.sect-master-settings small{width:100%;color:#a6bab6}
 
 /* Clean broadcast: no editor buttons, viewer counter or idle countdown on the stage. */
-body .scene-shell>.scene-top,body .scene-shell>.scene-bottom{display:none!important}
-body .scene-shell>#basicCommands.corner-command-guide{left:auto!important;right:2%!important;bottom:2.5%!important}
+body .scene-shell>.scene-top,body .scene-shell>.scene-bottom{display:none}
+body .scene-shell>#basicCommands.corner-command-guide{left:auto;right:2%;bottom:2.5%}
 
 /* Cột phải gọn hơn: hẹp lại, chỉ một bảng phụ mỗi lúc, không kéo xuống quá 32% chiều cao (vùng hàng ghế trên). */
 body.overlay #phoneHudRight{width:27%;bottom:auto;max-height:25%;overflow:hidden}
@@ -413,7 +413,7 @@ body.overlay .scene-shell>#basicCommands.corner-command-guide .corner-command-hi
 /* Khung chào người mới hẹp lại, nằm giữa 2 cột bảng, không đè Top quà / Quà → thưởng. */
 body.overlay .arrival-welcome{left:30%;right:30%;padding:6px 8px}
 /* Bảng vinh danh sang góc dưới BÊN TRÁI, không chồng lên dải lệnh ở góc dưới bên phải. */
-body.overlay .scene-guide-dock{left:2%!important;right:auto!important;transform:none!important;width:44%!important;bottom:.8%!important;align-items:stretch}
+body.overlay .scene-guide-dock{left:2%;right:auto;transform:none;width:44%;bottom:.8%;align-items:stretch}
 
 /* Lúc đua phi kiếm / tỷ thí / kết duyên: ẩn dải lệnh để không đè khung hướng dẫn sự kiện ở đáy. */
 body.sword-race .scene-shell>#basicCommands.corner-command-guide,body.social-stage:not(.social-podium) .scene-shell>#basicCommands.corner-command-guide{display:none!important}
@@ -451,7 +451,7 @@ body.abyss-fight #liveRanks{display:none!important}
 .heaven-panel .hv-stunned{margin-top:6px;color:#cbbcf2;font-size:.85em}
 .heaven-panel .hv-stun{display:inline-block;margin:2px 4px;padding:2px 8px;border-radius:10px;background:#2a1f4d}
 /* 08/11/2026: Khai Lò Cửu Chuyển — dọn các bảng khác để giao diện lò (nhiệt kế, bảng lệnh, chú thích quà) không bị che */
-body.alchemy-on .like-goal,body.alchemy-on .live-disclosure,body.alchemy-on #liveRanks,body.alchemy-on #commandRail,body.alchemy-on .command-rail,body.alchemy-on .basic-commands,body.alchemy-on .scene-guide-dock,body.alchemy-on #basicCommands,body.alchemy-on .quiz-box,body.alchemy-on .envelope-box,body.alchemy-on #bossHud,body.alchemy-on .visitor-hud,body.alchemy-on .honor-banner,body.alchemy-on .gift-board,body.alchemy-on #spotlight{display:none!important}
+body.alchemy-on .like-goal,body.alchemy-on .live-disclosure,body.alchemy-on #liveRanks,body.alchemy-on #commandRail,body.alchemy-on .command-rail,body.alchemy-on .basic-commands,body.alchemy-on .scene-guide-dock,body.alchemy-on #basicCommands,body.alchemy-on .quiz-box,body.alchemy-on .envelope-box,body.alchemy-on #bossHud,body.alchemy-on .visitor-hud,body.alchemy-on .honor-banner,body.alchemy-on .gift-board,body.alchemy-on #spotlight{display:none}
 body.alchemy-on .scene-shell>#basicCommands.corner-command-guide{display:none!important}
 
 /* 08/11 tối: dòng mua skin — không hộp quà 🎁 (người xem tưởng miễn phí); ảnh quà to rõ + chữ nhỏ 'Tặng quà' → Skin / Skin + Pháp bảo. */
@@ -468,11 +468,11 @@ body.overlay .visitor-hud .vh-what{color:#fff6c8;font-weight:900}
 .cer-stage.cer-n1{left:30%;right:30%;grid-template-columns:1fr;grid-template-areas:"c"}
 
 /* 08/11 tối: THẺ LUẬT QUÀ — luôn hiện ở cột phải, dưới widget mục tiêu quà của LIVE Studio. Ảnh quà thật → kết quả. */
-body.overlay #phoneHudRight>.gift-board.gift-rule-card{margin-top:0;width:100%!important;padding:6px 8px 7px!important;display:flex;flex-direction:column;gap:3px;text-align:left;font-size:clamp(9px,1.6cqw,18px)!important;border-radius:12px;background:linear-gradient(160deg,rgba(28,18,6,.72),rgba(10,8,20,.62))!important;box-shadow:0 0 0 1px #ffd76a66,0 0 14px 2px #ffcf6a33!important}
+body.overlay #phoneHudRight>.gift-board.gift-rule-card{margin-top:0;width:100%!important;padding:6px 8px 7px;display:flex;flex-direction:column;gap:3px;text-align:left;font-size:clamp(9px,1.6cqw,18px);border-radius:12px;background:linear-gradient(160deg,rgba(28,18,6,.72),rgba(10,8,20,.62));box-shadow:0 0 0 1px #ffd76a66,0 0 14px 2px #ffcf6a33}
 body.overlay .gift-rule-card[data-tone="war"]{box-shadow:0 0 0 1px #ff6b7899,0 0 14px 2px #ff3b4e44!important}
-body.overlay .gift-rule-card[data-tone="sky"]{box-shadow:0 0 0 1px #8fd8ff99,0 0 14px 2px #5ab8ff44!important}
-body.overlay .gift-rule-card[data-tone="rose"]{box-shadow:0 0 0 1px #ff8fc499,0 0 14px 2px #ff5aa844!important}
-body.overlay .gift-rule-card[data-tone="fire"]{box-shadow:0 0 0 1px #ff9a4a99,0 0 14px 2px #ff7a2a44!important}
+body.overlay .gift-rule-card[data-tone="sky"]{box-shadow:0 0 0 1px #8fd8ff99,0 0 14px 2px #5ab8ff44}
+body.overlay .gift-rule-card[data-tone="rose"]{box-shadow:0 0 0 1px #ff8fc499,0 0 14px 2px #ff5aa844}
+body.overlay .gift-rule-card[data-tone="fire"]{box-shadow:0 0 0 1px #ff9a4a99,0 0 14px 2px #ff7a2a44}
 body.overlay .gift-rule-card .grc-title{font-size:.8em;letter-spacing:.08em;color:#ffd76a;font-weight:900;white-space:nowrap}
 body.overlay .gift-rule-card .grc-row{display:flex;align-items:center;gap:.3em;line-height:1.12}
 body.overlay .gift-rule-card .grc-gift{display:inline-flex;align-items:center;flex:0 0 auto;font-weight:900;color:#fff;white-space:nowrap}
@@ -485,8 +485,8 @@ body.overlay .gift-rule-card small{font-size:.68em;color:#d8cfb6;white-space:nor
 .tease-box input{flex:1 1 140px;min-width:0;padding:6px 8px;border-radius:8px;border:1px solid #ffffff33;background:#0b1520;color:#fff}
 .tease-box small{flex-basis:100%;opacity:.7}
 /* 10/11/2026: Bí Cảnh Mê Cung — mê cung chiếm cả sân; dọn bảng khác để không che tường/tên/bảng xếp hạng (giữ thẻ luật quà góc phải) */
-body.maze-on .like-goal,body.maze-on .live-disclosure,body.maze-on #liveRanks,body.maze-on #giftRanks,body.maze-on #gearGuide,body.maze-on #commandRail,body.maze-on .command-rail,body.maze-on .basic-commands,body.maze-on .scene-guide-dock,body.maze-on #basicCommands,body.maze-on .quiz-box,body.maze-on .envelope-box,body.maze-on #bossHud,body.maze-on .visitor-hud,body.maze-on .honor-banner,body.maze-on .gift-board,body.maze-on #spotlight{display:none!important}
-body.maze-on .scene-shell>#basicCommands.corner-command-guide,html body.overlay.maze-on .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide{display:none!important} /* 16/11: bảng Cách chơi che chữ CỬA RA (mê cung có hướng dẫn riêng) */
+body.maze-on .like-goal,body.maze-on .live-disclosure,body.maze-on #liveRanks,body.maze-on #giftRanks,body.maze-on #gearGuide,body.maze-on #commandRail,body.maze-on .command-rail,body.maze-on .basic-commands,body.maze-on .scene-guide-dock,body.maze-on #basicCommands,body.maze-on .quiz-box,body.maze-on .envelope-box,body.maze-on #bossHud,body.maze-on .visitor-hud,body.maze-on .honor-banner,body.maze-on .gift-board,body.maze-on #spotlight{display:none}
+body.maze-on .scene-shell>#basicCommands.corner-command-guide,html body.overlay.maze-on .scene-shell #phoneHudRight:not(#_)>#basicCommands.rail-guide.corner-command-guide{display:none} /* 16/11: bảng Cách chơi che chữ CỬA RA (mê cung có hướng dẫn riêng) */
 
 /* 15/11: Linh Thú Cốc — thẻ chào gọn, nằm ở khe giữa vùng thú chạy và hàng người chơi, không che bảng mốc/hướng dẫn. */
 body.overlay.pet-cove-stage .arrival-welcome{top:57.5%;left:24%;right:24%;padding:4px 8px}
@@ -494,4 +494,4 @@ body.overlay.pet-cove-stage .arrival-welcome span{display:none}
 body.overlay.pet-cove-stage .arrival-welcome strong{font-size:clamp(14px,3cqw,30px);margin:1px 0}
 
 /* 15/11 (user): bỏ chữ "TRÒ CHƠI TU TIÊN" khỏi mọi màn hình. */
-.live-disclosure{display:none!important}
+.live-disclosure{display:none}

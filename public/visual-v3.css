@@ -123,7 +123,7 @@ body.overlay:has(.compact-ranks) .focus-card{top:38%}
 
 .game-context{font-size:.7em;opacity:.8}.opportunity-hud{top:10%;z-index:7;background:#10232de8}body.overlay:has(.opportunity-hud:not([hidden])) .compact-ranks{top:19%}body.overlay:has(.opportunity-hud:not([hidden])) .boss-hud{top:29%}
 
-body.overlay .spotlight,body.overlay .focus-card,body.overlay .voice-caption,body.overlay .gift-receipt{backdrop-filter:none!important}
+body.overlay .spotlight,body.overlay .focus-card,body.overlay .voice-caption,body.overlay .gift-receipt{backdrop-filter:none}
 
 /* One small price table instead of a catalogue of TikTok gift images. */
 .gift-board{position:absolute;top:8%;right:4%;width:43%;max-width:340px;z-index:4;padding:8px 9px;background:linear-gradient(145deg,#152a30ed,#0c1c25ed);border:1px solid #cfb77b80;border-radius:7px;box-shadow:0 3px 12px #0003;pointer-events:none;font-size:10px;line-height:1.25;color:#e8eddc}
@@ -157,7 +157,7 @@ body.performance-solo .gift-board,body.performance-solo .compact-ranks,body.perf
 
 /* v33: trang quản lý 3 tab — bảng Đạo hữu trên LIVE */
 .live-people{margin-top:22px}
-body.overlay .live-people{display:none!important}
+body.overlay .live-people{display:none}
 .people-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .people-head h2{font:22px var(--serif);color:#dfd1ab;margin:0;flex:1 1 220px;font-weight:400}
 .people-head h2 small{font:12px var(--sans,inherit);color:var(--muted)}
@@ -178,7 +178,7 @@ body.overlay .live-people{display:none!important}
 @media (max-width:760px){.people-row{grid-template-columns:24px minmax(0,1fr) 80px 70px}.people-row>:nth-child(5),.people-row>:nth-child(6),.people-row>:nth-child(7){display:none}}
 
 /* v33: khung chỉnh sửa từng người (cột phải trang quản lý) */
-body.overlay .player-editor{display:none!important}
+body.overlay .player-editor{display:none}
 .player-editor .editor{margin:12px 0;border:1px solid var(--line);border-radius:6px;background:#10231f;padding:10px 12px}
 .player-editor summary{cursor:pointer;color:var(--gold);font-size:12px;letter-spacing:.04em}
 .player-editor form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
@@ -196,8 +196,8 @@ body.overlay .player-editor{display:none!important}
 
 /* v35: TOP QUÀ trên cảnh */
 .gift-leaders{margin-top:4px;padding-top:3px;border-top:1px solid #e9cf8b40}
-.gift-leaders>b{color:#ffb3c7!important}
-.gift-leaders strong{color:#ffd9e4!important}
+.gift-leaders>b{color:#ffb3c7}
+.gift-leaders strong{color:#ffd9e4}
 .patron-tag{color:#0b1628;background:#9fe0ff;border-radius:3px;padding:0 4px;font-size:.7em}
 
 /* v37: Thiên Hoa Vũ */
@@ -215,11 +215,11 @@ body.overlay .flower-hud{font-size:clamp(11px,2vw,24px)}
 .meteor-card{border-color:#9fb4ff66;background:linear-gradient(135deg,#16163a,#11291f)}
 
 /* v39: cảnh LIVE chỉ giữ 1 khung thông báo (spotlight). Phụ đề giọng, biên nhận quà, thẻ hồ sơ ẩn — đã có giọng đọc. */
-body.overlay #voiceCaption,body.overlay #giftReceipt,body.overlay #focusCard{display:none!important}
+body.overlay #voiceCaption,body.overlay #giftReceipt,body.overlay #focusCard{display:none}
 .spotlight .spot-reward{display:block;margin-top:4px;font-size:.62em;color:#ffe9b0;letter-spacing:.02em;opacity:.95}
 
 /* Vietnamese names: use a complete Windows Vietnamese font, avoid Georgia fallback glyphs and spaced diacritics. */
-.spotlight strong{font-family:"Segoe UI",Tahoma,Arial,sans-serif!important;font-weight:600;letter-spacing:normal;line-height:1.35;font-synthesis:none}
+.spotlight strong{font-family:"Segoe UI",Tahoma,Arial,sans-serif;font-weight:600;letter-spacing:normal;line-height:1.35;font-synthesis:none}
 .spotlight span{font-family:"Segoe UI",Tahoma,Arial,sans-serif;letter-spacing:normal;line-height:1.4}
 
 /* Keep the ascension name clear while the final screen-space title is visible. */

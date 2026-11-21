@@ -4,21 +4,21 @@
    giữa = phù lục thông báo; sự kiện = chiếu chỉ. ~25% dưới để trống (TikTok che). */
 html body.overlay.ui-tm{--tm-ink:#1b1813;--tm-ink-soft:#4a3d30;--tm-seal:#b3261e;--tm-gold:#8a5a12;--tm-title:"Noto Serif","Times New Roman",Georgia,serif;--tm-body:"Segoe UI","Be Vietnam Pro",system-ui,sans-serif}
 /* bảng phụ: chỉ hiện theo ngữ cảnh → ẩn */
-html body.overlay.ui-tm :is(#lowerRightGuide,#basicCommands,.basic-commands,#commandRail,.command-rail){display:none!important}
-html body.overlay.ui-tm #gearGuide:not(.war-guide){display:none!important}
+html body.overlay.ui-tm :is(#lowerRightGuide,#basicCommands,.basic-commands,#commandRail,.command-rail){display:none}
+html body.overlay.ui-tm #gearGuide:not(.war-guide){display:none}
 html body.overlay.ui-tm :is(#liveRanks,#giftRanks,#giftBoard,#honorBanner,#eventInfoDock,#infoSpotlight,.info-spotlight,#spotlight) *{text-shadow:none!important}
 
 /* ---- BIA THIÊN BẢNG (trái trên) ---- */
-html body.overlay.ui-tm #phoneHudLeft{top:6px!important;left:6px!important;width:41%!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks{width:100%!important;background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-width:30px 20px 30px 20px!important;border-image:url(/assets/ui-thuy-mac/stele.webp) 96 52 96 52 fill / 30px 20px 30px 20px!important;padding:2px 2px 0!important;color:var(--tm-ink)!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>b{display:block;white-space:nowrap;text-align:center;font:900 clamp(11px,2.75cqw,30px)/1.15 var(--tm-title)!important;letter-spacing:.08em;color:var(--tm-seal)!important;margin:0 0 4px!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>small{display:block;text-align:center;font:600 clamp(8px,1.6cqw,17px)/1.25 var(--tm-body)!important;color:var(--tm-ink-soft)!important;margin-bottom:3px}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span{display:grid!important;grid-template-columns:auto 1fr auto;column-gap:5px;align-items:baseline;padding:2px 0!important;border:0!important;border-bottom:1px solid #1b181322!important;background:none!important;color:var(--tm-ink)!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>i{font:900 clamp(11px,2.5cqw,27px)/1 var(--tm-title)!important;font-style:normal!important;color:var(--tm-seal)!important;min-width:1.1em;text-align:center}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>i.hall-emblem{color:var(--tm-ink)!important;background:none!important;border:1.5px solid var(--tm-seal)!important;border-radius:3px!important;padding:1px 2px}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>em{font:800 clamp(10px,2.2cqw,24px)/1.2 var(--tm-body)!important;font-style:normal!important;color:var(--tm-ink)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong{font:900 clamp(10px,2.1cqw,23px)/1.2 var(--tm-body)!important;color:var(--tm-seal)!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>small{grid-column:2/4;font:600 clamp(8px,1.6cqw,17px)/1.2 var(--tm-body)!important;color:var(--tm-ink-soft)!important;margin-top:-1px}
+html body.overlay.ui-tm #phoneHudLeft{top:6px;left:6px;width:41%}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks{width:100%;background:none;box-shadow:none;border-radius:0!important;border-style:solid;border-width:30px 20px 30px 20px;border-image:url(/assets/ui-thuy-mac/stele.webp) 96 52 96 52 fill / 30px 20px 30px 20px;padding:2px 2px 0;color:var(--tm-ink)}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>b{display:block;white-space:nowrap;text-align:center;font:900 clamp(11px,2.75cqw,30px)/1.15 var(--tm-title);letter-spacing:.08em;color:var(--tm-seal);margin:0 0 4px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>small{display:block;text-align:center;font:600 clamp(8px,1.6cqw,17px)/1.25 var(--tm-body);color:var(--tm-ink-soft);margin-bottom:3px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span{display:grid;grid-template-columns:auto 1fr auto;column-gap:5px;align-items:baseline;padding:2px 0;border:0!important;border-bottom:1px solid #1b181322!important;background:none;color:var(--tm-ink)}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>i{font:900 clamp(11px,2.5cqw,27px)/1 var(--tm-title);font-style:normal;color:var(--tm-seal);min-width:1.1em;text-align:center}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>i.hall-emblem{color:var(--tm-ink);background:none;border:1.5px solid var(--tm-seal);border-radius:3px;padding:1px 2px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>em{font:800 clamp(10px,2.2cqw,24px)/1.2 var(--tm-body)!important;font-style:normal;color:var(--tm-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong{font:900 clamp(10px,2.1cqw,23px)/1.2 var(--tm-body);color:var(--tm-seal)}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>small{grid-column:2/4;font:600 clamp(8px,1.6cqw,17px)/1.2 var(--tm-body);color:var(--tm-ink-soft);margin-top:-1px}
 
 /* ---- 3 LỆNH BÀI (phải trên) ---- */
 html body.overlay .tm-tokens{display:none}
@@ -29,34 +29,34 @@ html body.overlay.ui-tm .tm-token b i{font:800 .34em/1 var(--tm-body);font-style
 html body.overlay.ui-tm .tm-token span{position:absolute;left:8%;right:8%;top:46%;text-align:center;font:800 clamp(8px,1.75cqw,19px)/1.15 var(--tm-body);color:var(--tm-ink)}
 
 /* ---- CÔNG ĐỨC BẢNG (thay Top quà, không ghi coin) + VINH DANH ---- */
-html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks{top:22.5%!important;right:1.2%!important;left:auto!important;width:38%!important;background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-width:26px 18px 14px 18px!important;border-image:url(/assets/ui-thuy-mac/plaque.webp) 110 66 40 66 fill / 26px 18px 14px 18px!important;padding:0 2px 2px!important;color:var(--tm-ink)!important}
-html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-leaders>b{display:block;text-align:center;font:900 clamp(11px,2.6cqw,28px)/1.2 var(--tm-title)!important;letter-spacing:.08em;color:var(--tm-seal)!important;margin-bottom:2px}
-html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top{display:flex!important;align-items:center;gap:5px;background:none!important;border:0!important;padding:1px 0!important}
-html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-portrait{width:clamp(18px,4.4cqw,48px)!important;height:clamp(18px,4.4cqw,48px)!important;flex:none;filter:sepia(.35) saturate(.85)}
-html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-title{font:800 clamp(7px,1.45cqw,15px)/1.1 var(--tm-body)!important;color:var(--tm-gold)!important;letter-spacing:.06em}
-html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-line{font:800 clamp(10px,2.1cqw,23px)/1.2 var(--tm-body)!important;color:var(--tm-ink)!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-html body.overlay.ui-tm #honorBanner{background:none!important;box-shadow:none!important;border-style:solid!important;border-width:26px 18px 14px 18px!important;border-image:url(/assets/ui-thuy-mac/plaque.webp) 110 66 40 66 fill / 26px 18px 14px 18px!important;color:var(--tm-ink)!important}
-html body.overlay.ui-tm #honorBanner b{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
-html body.overlay.ui-tm #honorBanner strong{color:var(--tm-ink)!important}
-html body.overlay.ui-tm #honorBanner small{color:var(--tm-ink-soft)!important}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks{top:22.5%!important;right:1.2%;left:auto!important;width:38%!important;background:none;box-shadow:none;border-radius:0!important;border-style:solid;border-width:26px 18px 14px 18px;border-image:url(/assets/ui-thuy-mac/plaque.webp) 110 66 40 66 fill / 26px 18px 14px 18px;padding:0 2px 2px;color:var(--tm-ink)}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-leaders>b{display:block;text-align:center;font:900 clamp(11px,2.6cqw,28px)/1.2 var(--tm-title);letter-spacing:.08em;color:var(--tm-seal);margin-bottom:2px}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top{display:flex;align-items:center;gap:5px;background:none;border:0;padding:1px 0}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-portrait{width:clamp(18px,4.4cqw,48px);height:clamp(18px,4.4cqw,48px);flex:none;filter:sepia(.35) saturate(.85)}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-title{font:800 clamp(7px,1.45cqw,15px)/1.1 var(--tm-body);color:var(--tm-gold);letter-spacing:.06em}
+html body.overlay.ui-tm .scene-shell #giftRanks.live-ranks .gift-top-line{font:800 clamp(10px,2.1cqw,23px)/1.2 var(--tm-body);color:var(--tm-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+html body.overlay.ui-tm #honorBanner{background:none;box-shadow:none;border-style:solid;border-width:26px 18px 14px 18px;border-image:url(/assets/ui-thuy-mac/plaque.webp) 110 66 40 66 fill / 26px 18px 14px 18px;color:var(--tm-ink)}
+html body.overlay.ui-tm #honorBanner b{color:var(--tm-seal);font-family:var(--tm-title)}
+html body.overlay.ui-tm #honorBanner strong{color:var(--tm-ink)}
+html body.overlay.ui-tm #honorBanner small{color:var(--tm-ink-soft)}
 
 /* ---- cột phải: Cúng phụng (luật quà) + chiếu chỉ sự kiện ---- */
-html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail{display:flex!important;flex-direction:column;gap:5px;top:33.5%!important;left:1.2%!important;right:auto!important;width:41%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail{display:flex;flex-direction:column;gap:5px;top:33.5%!important;left:1.2%;right:auto;width:41%}
 /* có sự kiện: chiếu chỉ + luật quà sự kiện ở trái trên (rộng), ẩn bia + Công Đức; lệnh bài giữ */
-html body.overlay.ui-tm.tm-event .scene-shell #phoneHudLeft>#liveRanks.live-ranks,html body.overlay.ui-tm.tm-event .scene-shell #giftRanks.live-ranks{display:none!important}
-html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight.phone-hud-rail{top:4px!important;width:64%!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{background:#f0dc8ef2!important;box-shadow:inset 0 0 0 2px #b3261e,inset 0 0 0 5px #f0dc8e,inset 0 0 0 6px #b3261e88!important;border:0!important;border-radius:2px!important;color:var(--tm-ink)!important;padding:6px 8px!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card .grc-title{color:var(--tm-seal)!important;font:900 clamp(10px,2.2cqw,24px)/1.2 var(--tm-title)!important;letter-spacing:.05em;text-align:center}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card em,html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card i{color:var(--tm-ink)!important;font-weight:800!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>:not([hidden]){background:none!important;box-shadow:none!important;border-radius:0!important;border-style:solid!important;border-width:16px 26px 16px 26px!important;border-image:url(/assets/ui-thuy-mac/scroll.webp) 70 80 70 80 fill / 16px 26px 16px 26px!important;color:var(--tm-ink)!important;padding:2px!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>* b{color:var(--tm-seal)!important;font-family:var(--tm-title)!important;font-size:clamp(11px,2.6cqw,28px)!important;letter-spacing:.03em}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>* :is(span,small,em,li,p){color:var(--tm-ink)!important}
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudLeft>#liveRanks.live-ranks,html body.overlay.ui-tm.tm-event .scene-shell #giftRanks.live-ranks{display:none}
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight.phone-hud-rail{top:4px!important;width:64%}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{background:#f0dc8ef2;box-shadow:inset 0 0 0 2px #b3261e,inset 0 0 0 5px #f0dc8e,inset 0 0 0 6px #b3261e88;border:0;border-radius:2px!important;color:var(--tm-ink);padding:6px 8px}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card .grc-title{color:var(--tm-seal);font:900 clamp(10px,2.2cqw,24px)/1.2 var(--tm-title);letter-spacing:.05em;text-align:center}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card em,html body.overlay.ui-tm .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card i{color:var(--tm-ink);font-weight:800!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>:not([hidden]){background:none;box-shadow:none;border-radius:0!important;border-style:solid;border-width:16px 26px 16px 26px;border-image:url(/assets/ui-thuy-mac/scroll.webp) 70 80 70 80 fill / 16px 26px 16px 26px;color:var(--tm-ink);padding:2px}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>* b{color:var(--tm-seal);font-family:var(--tm-title);font-size:clamp(11px,2.6cqw,28px);letter-spacing:.03em}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock>* :is(span,small,em,li,p){color:var(--tm-ink)}
 
 /* ---- PHÙ LỤC thông báo (tên + hiệu ứng giữa màn) + phụ đề tông sư ---- */
-html body.overlay.ui-tm #spotlight{background:none!important;border-style:solid!important;border-width:20px 30px 20px 30px!important;border-image:url(/assets/ui-thuy-mac/talisman-h.webp) 60 90 60 90 fill / 20px 30px 20px 30px!important;min-width:46%!important;padding:0 6px!important}
-html body.overlay.ui-tm #spotlight strong{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
-html body.overlay.ui-tm #spotlight span{color:#5a1208!important;font-weight:800!important}
-html body.overlay.ui-tm #voiceCaption{background:linear-gradient(90deg,#f3ead800,#f3ead8ee 10%,#f3ead8ee 90%,#f3ead800)!important;color:var(--tm-ink)!important;text-shadow:none!important;border:0!important;border-top:1px solid #1b181340!important;border-bottom:1px solid #1b181340!important;border-radius:0!important}
+html body.overlay.ui-tm #spotlight{background:none;border-style:solid;border-width:20px 30px 20px 30px;border-image:url(/assets/ui-thuy-mac/talisman-h.webp) 60 90 60 90 fill / 20px 30px 20px 30px;min-width:46%;padding:0 6px}
+html body.overlay.ui-tm #spotlight strong{color:var(--tm-seal);font-family:var(--tm-title)}
+html body.overlay.ui-tm #spotlight span{color:#5a1208;font-weight:800}
+html body.overlay.ui-tm #voiceCaption{background:linear-gradient(90deg,#f3ead800,#f3ead8ee 10%,#f3ead8ee 90%,#f3ead800);color:var(--tm-ink);text-shadow:none;border:0;border-top:1px solid #1b181340;border-bottom:1px solid #1b181340;border-radius:0}
 
 /* ---- bảng lớn góc phải (4 phút hiện 1 phút) ---- */
 html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight){background:#f3ead8f2!important;box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 5px #f3ead8,inset 0 0 0 6px #1b181366!important;border:0!important;color:var(--tm-ink)!important}
@@ -66,44 +66,44 @@ html body.overlay.ui-tm :is(#infoSpotlight,.info-spotlight) code{background:#b32
 @media(prefers-reduced-motion:reduce){html body.overlay.ui-tm .tm-token{animation:none}}
 
 html body.overlay.ui-tm .scene-shell #phoneHudRight>#eventInfoDock{order:-1}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #basicCommands.basic-commands,html body.overlay.ui-tm .scene-shell #phoneHudRight>#basicCommands{display:none!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #basicCommands.basic-commands,html body.overlay.ui-tm .scene-shell #phoneHudRight>#basicCommands{display:none}
 /* có sự kiện: thẻ luật quà sát trái, hẹp → không che yêu thú/sân giữa */
-html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{align-self:flex-start;width:58%!important;max-width:58%!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight .scene-guide-dock{background:none!important;border:0!important;box-shadow:none!important;padding:0!important}
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #giftBoard.gift-board.gift-rule-card{align-self:flex-start;width:58%!important;max-width:58%}
+html body.overlay.ui-tm .scene-shell #phoneHudRight .scene-guide-dock{background:none;border:0;box-shadow:none;padding:0}
 
 
 /* bảng HTML nền tối của sự kiện (Linh Thú Cốc, đồng hành…) → BẢNG MỰC (chữ sáng giữ nguyên) */
-html body.overlay.ui-tm .scene-shell :is(#companionHud.spirit-pet-hud,.spirit-pet-hud,.pet-cove-strip,.pet-cove-banner){background:rgba(22,17,12,.9)!important;border:1.6px solid rgba(222,196,140,.9)!important;box-shadow:inset 0 0 0 4px rgba(22,17,12,.9),inset 0 0 0 5px rgba(222,196,140,.4)!important;border-radius:6px!important}
+html body.overlay.ui-tm .scene-shell :is(#companionHud.spirit-pet-hud,.spirit-pet-hud,.pet-cove-strip,.pet-cove-banner){background:rgba(22,17,12,.9);border:1.6px solid rgba(222,196,140,.9);box-shadow:inset 0 0 0 4px rgba(22,17,12,.9),inset 0 0 0 5px rgba(222,196,140,.4);border-radius:6px}
 /* Linh Thú Cốc: thẻ thú chiếm cả trên cùng → ẩn lệnh bài */
-html body.overlay.ui-tm.pet-cove-stage .tm-tokens{display:none!important}
+html body.overlay.ui-tm.pet-cove-stage .tm-tokens{display:none}
 /* màn sự kiện vẽ trên canvas có luật riêng (Lôi Đài, Linh Thú Cốc, Ngũ Đường chiến, Bí Cảnh, Bảo Khố): giữ như cũ — ẩn cột phải */
-html body.overlay.ui-tm:is(.arena-stage,.pet-cove-stage,.hall-war,.mount-realm,.bao-kho) .scene-shell #phoneHudRight.phone-hud-rail{display:none!important}
+html body.overlay.ui-tm:is(.arena-stage,.pet-cove-stage,.hall-war,.mount-realm,.bao-kho) .scene-shell #phoneHudRight.phone-hud-rail{display:none}
 /* phù lục: lên góc trên-trái (không che mặt người được zoom), chừa lệnh bài bên phải; dòng thưởng chữ mực */
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight{top:2.5%!important;left:33%!important;width:58%!important;max-width:58%!important;min-width:0!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight{top:2.5%;left:33%;width:58%;max-width:58%;min-width:0}
 html body.overlay.ui-tm .scene-shell #spotlight.spotlight.spot-transform{top:68%!important;left:50%!important}
-html body.overlay.ui-tm #spotlight .spot-reward{color:#5a3a1a!important;font-weight:700!important;opacity:1!important}
+html body.overlay.ui-tm #spotlight .spot-reward{color:#5a3a1a;font-weight:700;opacity:1}
 /* Vân Đài chờ lượt: dải mực nhỏ dưới phù lục */
-html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:17%!important;left:33%!important;right:auto!important;transform:none!important;width:auto!important;max-width:40%!important;background:rgba(22,17,12,.86)!important;border:1px solid rgba(222,196,140,.8)!important;border-radius:4px!important;box-shadow:none!important}
+html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:17%;left:33%;right:auto;transform:none;width:auto;max-width:40%;background:rgba(22,17,12,.86);border:1px solid rgba(222,196,140,.8);border-radius:4px;box-shadow:none}
 /* chiếu chỉ: mọi chữ trên giấy là mực (chữ sáng cũ không đọc được trên nền kem) */
-html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock *{color:var(--tm-ink)!important;-webkit-text-stroke:0!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock :is(b,strong,h3,h4,.visitor-title,[class*=title]){color:var(--tm-seal)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock *{color:var(--tm-ink);-webkit-text-stroke:0}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #eventInfoDock :is(b,strong,h3,h4,.visitor-title,[class*=title]){color:var(--tm-seal)}
 /* vinh danh hộ pháp: thẻ nhỏ dưới bia, không đè sân */
-html body.overlay.ui-tm .scene-shell #phoneHudRight #honorBanner{max-width:100%!important}
+html body.overlay.ui-tm .scene-shell #phoneHudRight #honorBanner{max-width:100%}
 
 /* Thiên Bảng top 10: mỗi dòng gọn 1 hàng (bỏ dòng cảnh giới), top 3 nổi bật */
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders:not(:has(.hall-emblem))>span>small{display:none!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span{padding:1px 0!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span{padding:1px 0}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>em{font-size:clamp(9px,1.95cqw,21px)!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>i{font-size:clamp(9px,2cqw,22px)!important;color:var(--tm-ink-soft)!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;backdrop-filter:none!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:nth-of-type(n+4)>i{font-size:clamp(9px,2cqw,22px);color:var(--tm-ink-soft)}
+html body.overlay.ui-tm .scene-shell #phoneHudRight>.scene-guide-dock.rail-dock{background:transparent;border:0;box-shadow:none;padding:0;backdrop-filter:none}
 /* 19/11 map ngoài trời: chừa BẦU TRỜI — Công Đức Bảng xuống góc dưới phải, cột cúng phụng/vinh danh xuống góc dưới trái (cách đáy ≥11%) */
-html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{top:auto!important;bottom:12.5%!important;right:1.2%!important;width:40%!important}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{top:auto!important;bottom:12.5%!important;right:1.2%;width:40%!important}
 /* 20/11: bảng Tặng quà rời đáy trái (trùng vùng bình luận TikTok) → góc phải ngay dưới 3 lệnh bài (vùng trời) */
-html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{top:21%!important;bottom:auto!important;left:auto!important;right:1.2%!important;width:33%!important;flex-direction:column!important}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{top:21%!important;bottom:auto!important;left:auto;right:1.2%;width:33%;flex-direction:column}
 /* bia Thiên Bảng gọn hơn để trời giữa thoáng */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft{width:37%!important}
-html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail #honorBanner.honor-banner{background-image:none!important;background-color:transparent!important}
-html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{align-items:stretch!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft{width:37%}
+html body.overlay.ui-tm .scene-shell #phoneHudRight.phone-hud-rail #honorBanner.honor-banner{background-image:none;background-color:transparent}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight.phone-hud-rail{align-items:stretch}
 
 /* bảng hướng dẫn lớn (4 phút ẩn · 1 phút hiện, mỗi lần 1 chủ đề): giấy dó, thế chỗ Công Đức Bảng ở góc dưới phải */
 html body.overlay.ui-tm .scene-shell>#infoSpotlight{right:1.2%!important;bottom:12.5%!important;width:46%!important;border-radius:2px!important;text-shadow:none!important;animation:tm-scroll-in .5s ease-out}
@@ -115,26 +115,26 @@ html body.overlay.ui-tm.info-spotlight-on:not(.tm-event) .scene-shell #giftRanks
 @keyframes tm-scroll-in{from{opacity:0;clip-path:inset(0 50% 0 50%)}to{opacity:1;clip-path:inset(0 0 0 0)}}
 
 /* phù lục: dưới lệnh bài, bên phải (bia Thiên Bảng chiếm góc trái) */
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:18.5%!important;left:auto!important;right:1.2%!important;width:58%!important;max-width:58%!important;transform:none!important}
-html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:31%!important;left:auto!important;right:1.2%!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:18.5%;left:auto;right:1.2%;width:58%;max-width:58%;transform:none}
+html body.overlay.ui-tm .scene-shell #stageQueue.stage-queue:not([hidden]){top:31%;left:auto;right:1.2%}
 html body.overlay.ui-tm .scene-shell #spotlight.spotlight.spot-transform{width:auto!important;min-width:60%!important;max-width:94%!important;left:50%!important;transform:translateX(-50%)!important}
 html body.overlay.ui-tm .scene-shell #spotlight.spotlight.spot-transform span{font-size:clamp(10px,2.3cqw,24px)!important}
 
 /* thẻ BÁO HỶ (lên Trưởng Lão, rèn thành, thăng VIP…) + LINH BÀI (thẻ tu vi của mình) → giấy dó, chữ mực, băng son */
-html body.overlay.ui-tm :is(.bao-hy,.linh-bai):not([hidden]){background:#f3ead8f5!important;border:0!important;border-radius:2px!important;color:var(--tm-ink)!important;
- box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 6px #f3ead8,inset 0 0 0 7px #1b181366,0 6px 20px #0006!important}
-html body.overlay.ui-tm :is(.bao-hy,.linh-bai) *{text-shadow:none!important}
-html body.overlay.ui-tm .bao-hy .bh-ribbon span{background:#b3261e!important;border:0!important;box-shadow:none!important;color:#fff4dc!important;font-family:var(--tm-title)!important}
-html body.overlay.ui-tm .bao-hy .bh-portrait{background:radial-gradient(circle at 50% 45%,#e8d6ae,#f3ead800 68%)!important}
-html body.overlay.ui-tm .bao-hy .bh-title{color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
+html body.overlay.ui-tm :is(.bao-hy,.linh-bai):not([hidden]){background:#f3ead8f5;border:0;border-radius:2px;color:var(--tm-ink);
+ box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 6px #f3ead8,inset 0 0 0 7px #1b181366,0 6px 20px #0006}
+html body.overlay.ui-tm :is(.bao-hy,.linh-bai) *{text-shadow:none}
+html body.overlay.ui-tm .bao-hy .bh-ribbon span{background:#b3261e;border:0;box-shadow:none;color:#fff4dc;font-family:var(--tm-title)}
+html body.overlay.ui-tm .bao-hy .bh-portrait{background:radial-gradient(circle at 50% 45%,#e8d6ae,#f3ead800 68%)}
+html body.overlay.ui-tm .bao-hy .bh-title{color:var(--tm-seal);font-family:var(--tm-title)}
 html body.overlay.ui-tm .bao-hy .bh-title em{color:#8a5a12!important}
-html body.overlay.ui-tm .bao-hy :is(.bh-line,.bh-thanks){color:var(--tm-ink)!important}
+html body.overlay.ui-tm .bao-hy :is(.bh-line,.bh-thanks){color:var(--tm-ink)}
 html body.overlay.ui-tm .linh-bai :is(.lb-path,b){color:var(--tm-seal)!important;font-family:var(--tm-title)!important}
 html body.overlay.ui-tm .linh-bai :is(.lb-path i,.lb-ready,span,small,em,li,p,div){color:var(--tm-ink)!important}
 html body.overlay.ui-tm .linh-bai .lb-need{background:#efe0bd!important;border-color:#b3261e!important;color:var(--tm-ink)!important}
 /* 19/11 duyệt nhánh: tiêu đề "NGŨ ĐƯỜNG · TUẦN" dài hơn "THIÊN BẢNG" → thu chữ để không bị viền cuộn cắt */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>b{font-size:clamp(10px,2.3cqw,25px)!important;letter-spacing:.03em}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>small{font-size:clamp(7px,1.4cqw,15px)!important;padding:0 2px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>b{font-size:clamp(10px,2.3cqw,25px);letter-spacing:.03em}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.hall-ranks>small{font-size:clamp(7px,1.4cqw,15px);padding:0 2px}
 /* thẻ Cúng phụng hiện tạm vài giây: lúc đó nhường chỗ thẻ Tặng quà, không chồng 2 thẻ lên hàng người */
 html body.overlay.ui-tm:not(.tm-event) .scene-shell #phoneHudRight:has(#honorBanner:not([hidden])) #giftBoard.gift-board.gift-rule-card:not([hidden]){display:none!important}
 /* 19/11 duyệt nhánh: bảng hướng dẫn theo ngữ cảnh gọn 1 dòng/mục để bớt che hàng người bên phải */
@@ -143,53 +143,53 @@ html body.overlay.ui-tm .scene-shell>#infoSpotlight li{white-space:nowrap}
 html body.overlay.ui-tm .scene-shell>#infoSpotlight li>span{overflow:hidden;text-overflow:ellipsis;font-size:.8em!important}
 html body.overlay.ui-tm .scene-shell>#infoSpotlight ol{gap:1px!important}
 /* 19/11: màn đột phá — tên người thành thẻ giấy dó chữ mực, tiêu đề cảnh giới chữ có chân (giữ màu hiệu ứng) */
-html body.overlay.ui-tm .ritual-hud .ritual-name{display:inline-block;background:#f3ead8f2;color:var(--tm-ink)!important;font-family:var(--tm-title)!important;font-weight:700;padding:.15em .8em;border-radius:2px;box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 4px #f3ead8,inset 0 0 0 5px #1b181366;text-shadow:none!important}
-html body.overlay.ui-tm .ritual-hud h2{font-family:var(--tm-title)!important;letter-spacing:.06em}
-html body.overlay.ui-tm .ritual-hud .ritual-sub{font-family:var(--tm-title)!important}
+html body.overlay.ui-tm .ritual-hud .ritual-name{display:inline-block;background:#f3ead8f2;color:var(--tm-ink);font-family:var(--tm-title);font-weight:700;padding:.15em .8em;border-radius:2px;box-shadow:inset 0 0 0 2px #1b1813,inset 0 0 0 4px #f3ead8,inset 0 0 0 5px #1b181366;text-shadow:none}
+html body.overlay.ui-tm .ritual-hud h2{font-family:var(--tm-title);letter-spacing:.06em}
+html body.overlay.ui-tm .ritual-hud .ritual-sub{font-family:var(--tm-title)}
 
 /* ===== 20/11 SOÁT HƯỚNG DẪN (docs/CAI-TIEN-2026-11-20.md mục 3) ===== */
 /* Tầng 1: dòng son dưới 3 lệnh bài — người lạ biết phải gõ SỐ vào BÌNH LUẬN */
 html body.overlay.ui-tm .tm-tokens .tm-tokens-head{grid-column:1/-1;margin-top:-4%;padding:.18em .3em;border-radius:2px;background:var(--tm-seal);color:#fff4dc;font:900 clamp(8px,2cqw,21px)/1.25 "Segoe UI",Arial,sans-serif;letter-spacing:.06em;text-align:center;box-shadow:0 2px 6px #0006}
 /* Tầng 3: SỔ LỆNH trong cuộn Thiên Bảng — mỗi dòng: ấn son (lệnh) + chữ mực (việc) */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>span{display:flex!important;align-items:center;gap:.55em;padding:.34em 0!important;grid-template-columns:none!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh .sl-key{flex:none;min-width:2em;padding:.12em .45em;border-radius:3px;background:var(--tm-seal)!important;color:#fff4dc!important;font:900 clamp(10px,2.5cqw,27px)/1.2 "Segoe UI",Arial,sans-serif!important;font-style:normal!important;text-align:center;white-space:nowrap}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh em{flex:1;min-width:0;color:var(--tm-ink)!important;font:700 clamp(9px,2.15cqw,23px)/1.25 "Segoe UI",Arial,sans-serif!important;font-style:normal!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>span{display:flex;align-items:center;gap:.55em;padding:.34em 0;grid-template-columns:none}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh .sl-key{flex:none;min-width:2em;padding:.12em .45em;border-radius:3px;background:var(--tm-seal);color:#fff4dc;font:900 clamp(10px,2.5cqw,27px)/1.2 "Segoe UI",Arial,sans-serif;font-style:normal;text-align:center;white-space:nowrap}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh em{flex:1;min-width:0;color:var(--tm-ink);font:700 clamp(9px,2.15cqw,23px)/1.25 "Segoe UI",Arial,sans-serif!important;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>small{display:block}
 /* Sổ lệnh: vừa đủ 4 dòng trong cuộn (chữ nhỏ lại một nấc, được xuống dòng thay vì bị cắt "…") */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>span{padding:.22em 0!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh .sl-key{font-size:clamp(9px,2.15cqw,23px)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh>span{padding:.22em 0}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh .sl-key{font-size:clamp(9px,2.15cqw,23px)}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .so-lenh em{font-size:clamp(8px,1.95cqw,21px)!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15!important}
 /* Thẻ cá nhân (người vừa gõ lệnh) nằm TRÊN bảng Tặng quà cùng góc — trước đây bị bảng quà che */
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight{z-index:40!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight{z-index:40}
 /* Công Đức Bảng: thu hẹp sát mép phải để không lấn vùng bình luận TikTok (bình luận rộng ~74% từ trái) */
-html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{width:25%!important;right:1%!important;left:auto!important}
+html body.overlay.ui-tm:not(.tm-event) .scene-shell #giftRanks.live-ranks{width:25%!important;right:1%;left:auto!important}
 /* Hạng 4–10 Thiên Bảng chữ mờ/nhỏ (dòng 95–96) không áp cho Sổ lệnh — ô lệnh dòng 4 từng bị chữ nâu trên nền son */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.so-lenh>span:nth-of-type(n)>i.sl-key{color:#fff4dc!important;font-size:clamp(9px,2.15cqw,23px)!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.so-lenh>span:nth-of-type(n)>i.sl-key{color:#fff4dc;font-size:clamp(9px,2.15cqw,23px)}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders.so-lenh>span:nth-of-type(n)>em{font-size:clamp(8px,1.95cqw,21px)!important}
 /* Cuộn trái hạ khỏi dải trên cùng (TikTok hiện avatar + tên chủ LIVE ở ~8% đầu màn) */
-html body.overlay.ui-tm #phoneHudLeft{top:4.5%!important}
+html body.overlay.ui-tm #phoneHudLeft{top:4.5%}
 /* 20/11 (chủ game): Thiên Bảng hiện TÊN CẢNH GIỚI thay số tu vi — tên cảnh giới dài nên chữ nhỏ một nấc, không xuống dòng */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{font-size:clamp(8px,1.75cqw,19px)!important;white-space:nowrap}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{font-size:clamp(8px,1.75cqw,19px);white-space:nowrap}
 /* Hàng có tên cảnh giới: tên người dòng trên (đủ rộng, không bị cắt "Tuy…"), cảnh giới dòng dưới chữ son nhỏ, thẳng cột tên */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){grid-template-columns:auto 1fr!important;row-gap:0;padding:2px 0 3px!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{grid-column:2;font:700 clamp(7px,1.5cqw,16px)/1.1 var(--tm-body)!important;color:var(--tm-seal)!important;letter-spacing:.02em}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){grid-template-columns:auto 1fr!important;row-gap:0;padding:2px 0 3px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{grid-column:2;font:700 clamp(7px,1.5cqw,16px)/1.1 var(--tm-body);color:var(--tm-seal);letter-spacing:.02em}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm)>i{grid-row:1/3;align-self:center}
 /* Hai dòng/hạng nhưng cuộn phải gọn trong vùng trời (trên dải banner quà ~42%): ép sát dòng */
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){padding:0 0 1px!important}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm){padding:0 0 1px}
 html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span:has(>strong.tb-realm)>em{line-height:1.08!important}
-html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{line-height:1!important;margin-top:-1px}
+html body.overlay.ui-tm .scene-shell #phoneHudLeft>#liveRanks.live-ranks .qi-leaders>span>strong.tb-realm{line-height:1;margin-top:-1px}
 /* ===== 20/11 (chủ game: "sự kiện nào thiết kế mới cũng che tùm lum") — lúc có sự kiện góc trên chỉ còn bảng sự kiện + luật quà ===== */
-html body.overlay.ui-tm.tm-event .tm-tokens{display:none!important}
-html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #honorBanner{display:none!important}
+html body.overlay.ui-tm.tm-event .tm-tokens{display:none}
+html body.overlay.ui-tm.tm-event .scene-shell #phoneHudRight #honorBanner{display:none}
 /* Thẻ cá nhân (người vừa gõ lệnh/đủ đột phá…): nhỏ lại, xuống GÓC DƯỚI PHẢI, không chiếm giữa màn nữa. Thẻ biến hình (.spot-transform) giữ chỗ cũ dưới chân. */
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:auto!important;bottom:12.5%!important;right:1.2%!important;left:auto!important;width:44%!important;max-width:44%!important;transform:none!important;border-width:12px 18px 12px 18px!important}
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) strong{font-size:clamp(11px,2.8cqw,30px)!important;line-height:1.15!important}
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(8px,1.9cqw,20px)!important;line-height:1.2!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){top:auto;bottom:12.5%;right:1.2%;left:auto;width:44%;max-width:44%;transform:none;border-width:12px 18px 12px 18px}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) strong{font-size:clamp(11px,2.8cqw,30px);line-height:1.15}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(8px,1.9cqw,20px);line-height:1.2}
 /* cùng góc với Công Đức Bảng → thẻ hiện thì bảng tạm ẩn */
-html body.overlay.ui-tm .scene-shell:has(#spotlight.spotlight.visible:not(.spot-transform)) #giftRanks.live-ranks{visibility:hidden!important}
+html body.overlay.ui-tm .scene-shell:has(#spotlight.spotlight.visible:not(.spot-transform)) #giftRanks.live-ranks{visibility:hidden}
 /* 20/11 (chủ game: "bảng dưới góc phải to ra chút") */
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){width:56%!important;max-width:56%!important;border-width:16px 24px 16px 24px!important}
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) strong{font-size:clamp(13px,3.5cqw,38px)!important}
-html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(10px,2.5cqw,27px)!important}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform){width:56%;max-width:56%;border-width:16px 24px 16px 24px}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) strong{font-size:clamp(13px,3.5cqw,38px)}
+html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(10px,2.5cqw,27px)}
 /* 20/11 E: dòng "Tiên nhân kế ~N phút · Tên" cuối bảng Tặng quà */
 html body.overlay.ui-tm .scene-shell #giftBoard .grc-next{display:block;margin-top:.35em;padding-top:.3em;border-top:1px solid #1b181333;font:800 clamp(8px,1.8cqw,19px)/1.2 "Segoe UI",Arial,sans-serif;color:#7a140e;text-align:center}

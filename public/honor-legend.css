@@ -1,5 +1,5 @@
 /* 15/11/2026: trang chú giải HUY HIỆU CẠNH TÊN (gear-guide.js) — icon + chữ cùng dòng, 1 cột gọn. */
-html body.overlay #gearGuide ol.honor-legend{display:grid!important;grid-template-columns:minmax(0,1fr);gap:2px;margin:2px 0 0;padding:0}
-html body.overlay #gearGuide ol.honor-legend li{display:flex!important;flex-direction:row!important;align-items:center;gap:.3em;margin:0!important;white-space:nowrap}
+html body.overlay #gearGuide ol.honor-legend{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;margin:2px 0 0;padding:0}
+html body.overlay #gearGuide ol.honor-legend li{display:flex;flex-direction:row;align-items:center;gap:.3em;margin:0;white-space:nowrap}
 html body.overlay #gearGuide ol.honor-legend code{flex:none;font-size:1em;line-height:1}
-html body.overlay #gearGuide ol.honor-legend span{font-size:.82em!important;overflow:hidden;text-overflow:ellipsis}
+html body.overlay #gearGuide ol.honor-legend span{font-size:.82em;overflow:hidden;text-overflow:ellipsis}

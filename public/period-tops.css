@@ -1,6 +1,6 @@
 /* 07/11: Bảng xếp hạng ngày / tuần — trang quản lý */
 .period-tops{margin-top:22px;padding:14px;border:1px solid #cfb77b55;border-radius:10px;background:#0f1f2a}
-body.overlay .period-tops{display:none!important}
+body.overlay .period-tops{display:none}
 .period-tops:empty{display:none}
 .pt-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
 .pt-head h2{font:22px var(--serif);color:#dfd1ab;margin:0;font-weight:400;flex:1 1 260px}

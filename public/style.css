@@ -12,14 +12,14 @@ body.overlay{background:#123734;overflow:hidden}body.overlay .topbar,body.overla
 .ritual-hud{position:absolute;inset:17% 9% auto;z-index:35;text-align:center;pointer-events:none;color:#f8eed7;font-family:"Segoe UI",sans-serif;text-shadow:0 2px 6px #000;}
 .ritual-hud[hidden]{display:none}.ritual-eyebrow{font-size:clamp(9px,1.1vw,15px);letter-spacing:.24em;color:#c9b991}.ritual-name{display:block;margin:.65em auto .2em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(17px,2.4vw,30px)}
 .ritual-hud h2{font:700 clamp(28px,4vw,54px)/1.2 Georgia,"Times New Roman",serif;margin:.15em 0;color:var(--ritual-color,#ffe0a0);transition:transform .3s ease,opacity .3s ease;overflow-wrap:anywhere}.ritual-hud p{font-size:clamp(11px,1.45vw,19px);letter-spacing:.08em;color:#ded7c7;margin:.6em 0}.ritual-hud[data-phase="reveal"] h2{transform:scale(1.08)}
-body.ritual-active #spotlight,body.ritual-active #voiceCaption,body.ritual-active #honorBanner,body.ritual-active .arrival-welcome,body.ritual-active #giftReceipt,body.ritual-active #crowdPulse{visibility:hidden!important}
+body.ritual-active #spotlight,body.ritual-active #voiceCaption,body.ritual-active #honorBanner,body.ritual-active .arrival-welcome,body.ritual-active #giftReceipt,body.ritual-active #crowdPulse{visibility:hidden}
 body.ritual-active .scene-shell>aside:not(.ritual-hud){visibility:hidden}
 @media(prefers-reduced-motion:reduce){.ritual-hud h2{transition:none;transform:none!important}}
 
-body.ritual-active .scene-shell>div:not(.scene-top){visibility:hidden!important}body.ritual-active .scene-top>*:not(#soundButton):not(#audioSettings){visibility:hidden}
+body.ritual-active .scene-shell>div:not(.scene-top){visibility:hidden}body.ritual-active .scene-top>*:not(#soundButton):not(#audioSettings){visibility:hidden}
 
 /* Vietnamese accents must stay attached: no decorative tracking or serif fallback. */
-.ritual-hud,.ritual-hud .ritual-name,.ritual-hud h2,.ritual-hud p,.ritual-hud .ritual-eyebrow{font-family:Arial,"Segoe UI",sans-serif!important;letter-spacing:normal!important;font-kerning:normal;font-variant-ligatures:normal;word-spacing:normal}
+.ritual-hud,.ritual-hud .ritual-name,.ritual-hud h2,.ritual-hud p,.ritual-hud .ritual-eyebrow{font-family:Arial,"Segoe UI",sans-serif;letter-spacing:normal!important;font-kerning:normal;font-variant-ligatures:normal;word-spacing:normal}
 .ritual-hud h2{line-height:1.4;overflow-wrap:normal;word-break:normal}.ritual-hud .ritual-name{line-height:1.55;padding-top:.15em}
 /* 4/11/2026 Luyện Khí v4: tên cảnh giới bật lên + phát sáng, danh hiệu hiện sau nửa nhịp. */
 .ritual-hud[data-realm="1"][data-phase="reveal"] h2{animation:qiTitleIn 1s cubic-bezier(.2,1.5,.4,1) both;text-shadow:0 0 18px #7dffcf,0 0 42px #3fd9a8aa,0 3px 10px #000}
