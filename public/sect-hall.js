@@ -3,7 +3,7 @@ import {tmOn} from './ink-panel.js';
 import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
-import {luanHoiExtra,titleVisible,drawTitlePlaque} from './title-plaques.js?v=20261121i';import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
+import {luanHoiExtra,titleVisible,drawTitlePlaque} from './title-plaques.js?v=20261121j';import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
 import {HALL_STYLE,hallColor,hallIcon,drawHallBadge} from './hall-badge.js?v=1';
 const ELDER_DY=-84;
 // Ghế trống: icon Đường (thay chữ Hán) — ảnh chưa tải thì tạm vẽ chữ Hán cũ.

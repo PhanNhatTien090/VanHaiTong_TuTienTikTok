@@ -38,7 +38,7 @@ export function titleOf(p){if(!p||p.resident||p.puppet||!p.title)return null;ret
 export function luanHoiExtra(p,now=Date.now(),seat=false){if(!p||p.resident||p.puppet||!(Number(p.reincarnations)>0))return null;
  if(!seat&&!p.title?.lh)return null;return mk({key:'luan-hoi',n:Number(p.reincarnations)},{extra:true});}
 /** Có hiện không, theo độ đông sân: >50 người chỉ Tông Chủ/Thần Tài/Đại Gia, >30 thêm Luân Hồi/Nhà Giàu/ghế lớn. */
-export const titleVisible=(t,count)=>!!t&&(count>LIMIT.crowd?t.rank<=2:count>LIMIT.busy?t.rank<=5:true);
+export const titleVisible=(t,count)=>!!t&&(count>LIMIT.crowd?t.rank<=2:count>LIMIT.busy?t.rank<=5:true); // 21/11 tối (chủ game): đông người thì tắt bớt danh hiệu cấp thấp là được
 
 // ---- icon (ảnh Codex vẽ, tải 1 lần) ----
 const icons=new Map();
@@ -133,9 +133,10 @@ export function drawTitlePlaques(scene,c,t,nowMs){frameNo++;const list=scene.tar
  const items=[];
  for(const a of list){const p=a.player;if(!p)continue;const seat=elders.has(a.id)||a.id===master,head=a.y-(a.titleLift||0)-(a.scale||1)*(headUnits(scene,p,frameNo)+HEAD_GAP)+4;if(globalThis.__titleDebug&&p.title){c.save();c.fillStyle='lime';c.fillRect(a.x-14,a.y-1,28,2);c.fillStyle='red';c.fillRect(a.x-14,head-5,28,2);c.restore();}
   // 21/11: Luân Hồi đi KÈM danh hiệu nạp (Tông Chủ/Kim Cương che mất — Tông chủ Đế giang chuyển sinh mà không thấy). Ghế Tông Chủ/Trưởng Lão chỉ hiện dòng Luân Hồi.
-  const lh=luanHoiExtra(p,nowMs,seat),tt=seat?null:titleOf(p,nowMs);let y=head;
+  // 21/11 tối: Trưởng Lão cũng hiện danh hiệu (trước bỏ vì ghế có bảng chức vụ — người xem tưởng không mang được)
+  const lh=luanHoiExtra(p,nowMs,seat),tt=titleOf(p,nowMs);let y=head;
   if(titleVisible(tt,count)){const b=plaque(tt);if(b){items.push({tt,id:a.id,rank:tt.rank,x:a.x,y,w:b.w,h:b.h});y-=b.h-4;}}
-  if(lh&&titleVisible(lh,count)){const b=plaque(lh);if(b)items.push({tt:lh,id:a.id+'#lh',rank:lh.rank,x:a.x,y,w:b.w,h:b.h});}}
+  if(lh&&tt?.key!=='luan-hoi'&&titleVisible(lh,count)){const b=plaque(lh);if(b)items.push({tt:lh,id:a.id+'#lh',rank:lh.rank,x:a.x,y,w:b.w,h:b.h});}}
  const SW=scene.width||900;for(const it of items)it.x=Math.max(it.w/2+4,Math.min(SW-it.w/2-4,it.x)); // 21/11: người sát mép → chữ không bị cắt
  for(const it of layoutTitles(items))drawTitlePlaque(c,it.tt,it.x,it.y,t,(String(it.id).length*7+String(it.id).charCodeAt(0))%17,light);
 }

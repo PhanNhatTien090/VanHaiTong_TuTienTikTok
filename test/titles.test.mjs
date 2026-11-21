@@ -49,3 +49,9 @@ test('lệnh danh hiệu: xem có số, mặc theo số, ẩn, tự động; ả
  const snap=snapshot(w,N+700);assert.equal(snap.players.find(p=>p.id==='p0').title.key,'than-tai');
  for(const t of TITLE_LIST)assert.ok(fs.existsSync(new URL('../public/assets/title-text/'+t.key+'.webp',import.meta.url)),'thiếu ảnh '+t.key);
 });
+// 21/11 tối (chủ game): Trưởng Lão cũng hiện danh hiệu; sân đông thì tắt bớt danh hiệu cấp thấp (giữ luật cũ).
+test('sân đông tắt danh hiệu cấp thấp, sân vắng hiện hết',async()=>{
+ const {titleVisible,titleOf}=await import('../public/title-plaques.js');
+ const low=titleOf({title:{key:'lam-mom',rank:10,group:'sect'}}),top=titleOf({title:{key:'than-tai',rank:1,group:'paid'}});
+ assert.equal(titleVisible(low,10),true);assert.equal(titleVisible(low,40),false);assert.equal(titleVisible(top,60),true);
+});
