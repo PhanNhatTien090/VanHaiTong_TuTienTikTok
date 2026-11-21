@@ -1,6 +1,7 @@
 // 21/11: Luân Hồi — CHỈ ĐIỂM HẬU BỐI (người đã chuyển sinh giúp hậu bối cảnh giới 1–6 đột phá ngay)
 import {test} from 'node:test';import assert from 'node:assert/strict';
 import {createWorld,ensurePlayer,action,MENTOR} from '../engine.mjs';
+import {dailyAscensionView,practiceDay} from '../daily-practice.mjs';
 const N=Date.parse('2026-11-21T10:00:00+07:00');
 function setup(){const w=createWorld('live');const m=ensurePlayer(w,'m','Đế giang',N);Object.assign(m,{realm:6,highestRealm:28,reincarnations:1,lastActive:N});
  const a=ensurePlayer(w,'a','Tiểu Muội',N);Object.assign(a,{realm:3,qi:0,stones:0,lastActive:N});
@@ -40,3 +41,7 @@ test('tên quá ngắn bị từ chối, không mất lượt',()=>{const {w,m}=
 test('chỉ điểm Đại Thừa lên Chân Tiên; Chân Tiên trở lên không được',()=>{const {w,m,a,b}=setup();a.realm=7;a.qi=0;a.stones=0;b.realm=8;
  assert.equal(MENTOR.maxRealm,7);const r=chat(w,'m','chỉ điểm tiểu muội');assert.equal(r.ok,true,r.message);assert.equal(a.realm,8);
  assert.equal(chat(w,'m','chỉ điểm lão ngưu',N+MENTOR.cdMs).ok,false);assert.equal(b.realm,8);});
+// 21/11 tối (chủ game): chỉ điểm KHÔNG tính vào giới hạn đột phá/ngày (khi bật dailyRealmLimit).
+test('chỉ điểm vượt giới hạn đột phá/ngày và không trừ lượt',()=>{const {w,m,a,b}=setup();w.settings.dailyRealmLimit=1;a.realm=6;b.realm=9;
+ const day=dailyAscensionView(w,a,N).day;a.dailyAscension={day,used:1};assert.equal(dailyAscensionView(w,a,N).exhausted,true);
+ const r=chat(w,'m','chỉ điểm tiểu muội');assert.equal(r.ok,true,r.message);assert.equal(a.realm,7);assert.equal(a.dailyAscension.used,1,'không trừ thêm lượt');});

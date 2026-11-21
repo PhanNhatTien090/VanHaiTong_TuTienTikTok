@@ -244,7 +244,7 @@ function mentorCommand(w,p,rest,now){
  if(warActive(w)||w.nguDuong?.match?.endsAt>now)return {ok:false,message:'Đang có trận lớn • chỉ điểm sau khi trận kết thúc.'};
  const left=(Number(p.mentorAt)||0)+MENTOR.cdMs-now;if(left>0)return {ok:false,message:'Đạo lực tiền kiếp đang hồi • chỉ điểm lại sau '+Math.ceil(left/60000)+' phút.'};
  const day=vnDay(now);
- const why=t=>!t||t===p||t.id===p.id||t.resident||t.puppet?'x':t.realm<MENTOR.minRealm||t.realm>MENTOR.maxRealm?'realm':now-(Number(t.lastActive)||0)>MENTOR.seenMs?'away':t.mentoredDay===day?'done':t.realm>=5&&dailyAscensionView(w,t,now).exhausted?'cap':'';
+ const why=t=>!t||t===p||t.id===p.id||t.resident||t.puppet?'x':t.realm<MENTOR.minRealm||t.realm>MENTOR.maxRealm?'realm':now-(Number(t.lastActive)||0)>MENTOR.seenMs?'away':t.mentoredDay===day?'done':''; // 21/11 tối: hết lượt đột phá/ngày vẫn chỉ điểm được
  const q=mentorKey(rest);let t;
  if(q&&q.length<MENTOR.minQuery)return {ok:false,message:'Gõ tên rõ hơn (ít nhất 2 chữ) hoặc chỉ gõ chỉ điểm để tự chọn hậu bối.'};
  if(q){const list=Object.values(w.players).filter(x=>!x.resident&&!x.puppet&&x.id!==p.id&&mentorKey(x.name).includes(q)).sort((a,b)=>(mentorKey(b.name)===q)-(mentorKey(a.name)===q)||(b.lastActive||0)-(a.lastActive||0));
@@ -255,7 +255,7 @@ function mentorCommand(w,p,rest,now){
  // bù đủ tu vi + linh thạch cho đúng 1 lần đột phá (số gốc, không nhân hệ số) rồi đột phá như thường
  const needQ=Math.max(0,requiredQi(t)-(Number(t.qi)||0)),needS=Math.max(0,requiredStones(t)-(Number(t.stones)||0));t.qi=(Number(t.qi)||0)+needQ;t.totalQi=(Number(t.totalQi)||0)+needQ;t.stones=(Number(t.stones)||0)+needS;
  const intro=t.realm===0&&!t.starterDone; // cảnh giới 0 chưa nhập môn → nhận đúng quà nhập môn như khi tự bình luận lần đầu (mỗi người 1 lần)
- recordDailyAscension(w,t,now);t.qi-=requiredQi(t);t.stones-=requiredStones(t);t.realm++;
+ t.qi-=requiredQi(t);t.stones-=requiredStones(t);t.realm++; // 21/11 tối (chủ game): chỉ điểm KHÔNG tính vào giới hạn đột phá/ngày
  if(intro){t.firstStepAt=now;t.starterDone=true;t.stones+=20;t.herbs=(Number(t.herbs)||0)+5;finishIntro(w,t,now);}
  p.mentorAt=now;p.mentorCount=(Number(p.mentorCount)||0)+1;t.mentoredDay=day;t.mentoredBy=p.id;
  const mentor={id:p.id,name:String(p.name||'Đạo hữu').slice(0,24),n:p.reincarnations,count:p.mentorCount};
