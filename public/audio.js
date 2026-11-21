@@ -120,7 +120,8 @@ function scheduleDivineCue(c,destination,elapsed,duration,realm){
 }
 
 // 14/11: nhạc chỉ hạ còn 55% khi tông sư đọc (trước 28%) để nhạc không tắt lịm.
-export const VOICE_MUSIC_DUCK=.15; // 19/11: .55 → .2 (chủ game: nhạc lấn giọng). KHÔNG xử lý/khuếch đại giọng qua WebAudio — đã thử, giọng trầm + rè
+export const VOICE_SFX_DUCK=.6,VOICE_AMB_DUCK=.5; // 21/11 tối: lúc tông sư đọc hạ cả tiếng hiệu ứng (−4,4 dB) + tiếng nền (−6 dB) — file giọng đã sát trần (−1,9 dB), khuếch đại sẽ rè
+export const VOICE_MUSIC_DUCK=.11; // 21/11 tối: .15 → .11 (chủ game: giọng to thêm chút). // 19/11: .55 → .2 (chủ game: nhạc lấn giọng). KHÔNG xử lý/khuếch đại giọng qua WebAudio — đã thử, giọng trầm + rè
 export class CultivationAudio {
   constructor(){this.enabled=false;this.ctx=null;this.volume=.45;this.ambient=.6;this.sfx=.85;this.voices=[];this.last={};this.timer=null;this.drone=[];this.ducked=false;this.music=null;}
   async enable(on){
@@ -172,7 +173,7 @@ export class CultivationAudio {
     const buf=c.createBuffer(1,c.sampleRate*4,c.sampleRate),d=buf.getChannelData(0);let low=0;for(let i=0;i<d.length;i++){low=.985*low+.015*(Math.random()*2-1);d[i]=low;}
     const noise=c.createBufferSource();noise.buffer=buf;noise.loop=true;const filter=c.createBiquadFilter(),gain=c.createGain();filter.type='lowpass';filter.frequency.value=650;gain.gain.value=typeof Audio==='undefined'?.14:.025;noise.connect(filter);filter.connect(gain);gain.connect(this.ambBus);noise.start();this.sync();
   }
-  sync(){if(this.music)this.music.volume=Math.min(1,this.volume*this.ambient*MUSIC_GAIN*(this.transitionGain??1)*Math.min(this.ducked?VOICE_MUSIC_DUCK:1,this.qiSession?(this.qiSession.duck??.22):1));if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient,t,.3);this.fxBus.gain.setTargetAtTime(this.sfx,t,.08);}
+  sync(){if(this.music)this.music.volume=Math.min(1,this.volume*this.ambient*MUSIC_GAIN*(this.transitionGain??1)*Math.min(this.ducked?VOICE_MUSIC_DUCK:1,this.qiSession?(this.qiSession.duck??.22):1));if(!this.ctx)return;const t=this.ctx.currentTime;this.master.gain.setTargetAtTime(this.volume,t,.08);this.ambBus.gain.setTargetAtTime(this.ambient*(this.ducked?VOICE_AMB_DUCK:1),t,.3);this.fxBus.gain.setTargetAtTime(this.sfx*(this.ducked?VOICE_SFX_DUCK:1),t,.08);}
   ritual(event,elapsed=0){
     if(!event||!this.enabled||this.ctx?.state!=='running'){
       if(this.qiSession){this.qiSession.audio?.stop?.();this.qiSession=null;this.sync();}return;
