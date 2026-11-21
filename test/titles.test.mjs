@@ -27,6 +27,15 @@ test('tình cảm + tông môn: nữ nhiều đạo lữ nhất = Nữ Khôi; L�
  for(let i=0;i<30;i++)noteChat(p,N+20000+i*2500);assert.ok(titleHolders(w,N+200000).get('lam-mom').has('p4'));
  assert.equal(weekNo(N+7*86400000),weekNo(N)+1);
 });
+test('Lắm Mồm chỉ đếm bình luận thường: không lệnh, không lúc câu đố mở, không chỉ số/emoji',()=>{
+ const w=world();const n=()=>w.players.p5.chatWeek?.n||0;let t=N+100000;
+ const say=text=>{t+=5000;action(w,{type:'chat',userId:'p5',name:'Người 5',text,fromLive:true},t);};
+ say('hôm nay trời đẹp quá');assert.equal(n(),1,'trò chuyện thường được tính');
+ say('tu luyện');say('1');say('đột phá');say('vào đường 2');say('danh hiệu');assert.equal(n(),1,'lệnh không tính');
+ say('😂😂');say('8');assert.equal(n(),1,'chỉ số/emoji không tính');
+ w.quiz={q:'?',a:['con mèo'],startedAt:t,endsAt:t+999999,order:[],claimed:{}};say('con chó');say('con gà');assert.equal(n(),1,'đoán câu đố không tính');
+ w.quiz=null;say('mai gặp lại nhé');assert.equal(n(),2);
+});
 test('lệnh danh hiệu: xem có số, mặc theo số, ẩn, tự động; ảnh đủ cho mọi danh hiệu',()=>{
  const w=world();w.players.p0.giftCoins=500;w.players.p0.bondIds=['a','b'];
  assert.deepEqual(commandWords('danh hiệu 2').slice(0,2),['danhhieu','2']);

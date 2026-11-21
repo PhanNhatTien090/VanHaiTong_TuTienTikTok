@@ -464,7 +464,7 @@ function actionCore(w,input,now) {
   const genderCmd=['nhapmon','gioitinh','xungho','xunghieu'].includes(cmd);
   const gender=genderCmd?parseGender(rest):type==='join'&&input.gender?parseGender(input.gender):null;
   const existed=Object.hasOwn(w.players,clean(input.userId,80)),prevActive=existed?w.players[clean(input.userId,80)].lastActive||0:0;
-  const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;syncWingTop(p);p.leftLiveAt=null;if(type==='chat'&&input.fromLive&&!w.webShadow)noteChat(p,now); /* 21/11 tối: đếm bình luận tuần (Lắm Mồm) */if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
+  const p=ensurePlayer(w,input.userId,input.name,now,gender);p.lastRealInteractionAt=now;syncWingTop(p);p.leftLiveAt=null;if(input.handle)p.handle=clean(input.handle,40);let giftRecipient=null;
   if(existed&&!p.resident&&!p.puppet&&w.mode==='live'&&!w.webShadow&&prevActive&&now-prevActive>=BAO_RETURN_AWAY&&!cooldown(p,'bao-return',BAO_RETURN_AWAY,now)){const h=baoReturnHint(p);if(h)emit(w,p,h,'status',now,{baoReturn:true});} // 18/11: chủ nhân thần khí vào sân → nhắc xem/đeo/dùng
   if(!p.resident&&!p.puppet&&['live','demo'].includes(w.mode)&&!w.webShadow&&!stageConflict(w,now)&&!(type==='chat'&&ORB_QUIET_CMDS.has(cmd))){const orb=orbReminder(p);if(orb&&now-(w.orbRemindAt||0)>=ORB_REMIND_GAP_MS&&!cooldown(p,'orb-remind',ORB_REMIND_MS,now)){w.orbRemindAt=now;emit(w,p,orb.text,'mount',now,{orbCard:orb.card});}} // 18/11 (chủ game): đang giữ châu tím/vàng → thẻ nhắc truyền công khi có mặt (20 phút/lần, không chen trận)
   if(type==='gift'&&!input.simulated&&!input.autoRose||type==='attack'||type==='chat'&&cmd&&!FARM_CMDS.has(cmd)&&!INFO_CMDS.has(cmd))noteEngaged(p,now);
@@ -596,6 +596,8 @@ function actionCore(w,input,now) {
       const type=commands[cmd],itemId=wanted?.id||(rest?rest:['learn','craft','brew','use','equip'].includes(type)?autoItem(p,type):rest);
       return action(w,{...input,type,itemId},now);
     }
+    // 21/11 tối (chủ game): Lắm Mồm chỉ đếm bình luận THƯỜNG — không phải lệnh, không lúc câu đố/trò nhỏ đang mở (đoán đáp án), phải có ≥2 chữ cái.
+    if(input.fromLive&&!w.webShadow&&(String(input.text||'').match(/\p{L}/gu)||[]).length>=2){const eg=engagementView(w,now);if(!eg.quiz&&!eg.mini)noteChat(p,now);}
     if(w.mode==='live'&&w.settings?.engagementRewards!==true){talk(p,input.text,now);return {ok:true,chatOnly:true};} // 4/11: bong bóng thoại + Luận Đạo
     // DEMO/legacy: non-command chat can grant a small cultivation reward.
     if(goldenHour(p,now,w)&&now-(Number(p.joinedAt)||0)<5*60000&&!cooldown(p,'cultivate',10000,now)){
