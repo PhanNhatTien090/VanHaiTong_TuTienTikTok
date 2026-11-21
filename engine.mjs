@@ -1592,7 +1592,7 @@ const baoContext={emit,gain,audit:auditRecord};
 const loveContext={emit,gain,requiredQi};
 export const startBaoKhoEvent=(w,now=Date.now())=>bigSpaced(w,now,startBaoKho(w,now,baoContext));
 export const stopBaoKhoEvent=(w,now=Date.now())=>stopBaoKho(w,now,baoContext);
-const hallContext={emit,gain:(w,p,qi,stones,herbs,now)=>gain(w,p,qi,stones,herbs,now,false,'event'),active:currentParticipant,busy:(w,now)=>w.liveSession?.active===false||!!stageConflict(w,now)||w.tower?.endsAt>now||w.quiz?.endsAt>now||w.events.some(e=>e.effect==='breakthrough'&&now-e.at<65000)};
+const hallContext={get arena(){return socialContext;},emit,gain:(w,p,qi,stones,herbs,now)=>gain(w,p,qi,stones,herbs,now,false,'event'),active:currentParticipant,busy:(w,now)=>w.liveSession?.active===false||!!stageConflict(w,now)||w.tower?.endsAt>now||w.quiz?.endsAt>now||w.events.some(e=>e.effect==='breakthrough'&&now-e.at<65000)};
 const socialContext={emit,gain,power,technique:attackTechnique,active:currentParticipant};
 const hallWarContext={...socialContext,contribute:hallContribution,hallPoints:creditHallBattle};
 export const startHallWar=(w,now=Date.now())=>beginHallWar(w,now,hallWarContext);

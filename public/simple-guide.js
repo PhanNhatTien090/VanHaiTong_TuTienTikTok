@@ -6,7 +6,7 @@ export const HALL_GUIDE_ROWS=[
   {cmd:'rời đường',text:'Rời Đường'},
   {cmd:'đường chiến',text:'Vào trận Ngũ Đường'},
   {cmd:'thách đấu 1–5',text:'Tranh ghế Trưởng Lão'},
-  {cmd:'trợ lực',text:'Hỗ trợ Vân Đài'},
+  {cmd:'trợ lực',text:'Cổ vũ trận thách Trưởng Lão'},
   {cmd:'chân truyền + tên',text:'Mời Chân Truyền'},
   {cmd:'bái sư',text:'Nhận lời Chân Truyền'}
 ];

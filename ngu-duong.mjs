@@ -1,4 +1,6 @@
 import {settleHallWeek,payHallWeeklyRewards,hallWeeklyView} from './hall-weekly.mjs';
+import {startArena,arenaOpen,arenaCommand} from './arena.mjs';
+import {stageConflict} from './stage-lock.mjs';
 export const HALLS = [
   {name:'Truyền Công Đường', key:'truyen cong', mark:'功', color:'#79e9c4', perk:'Vận công +3% tu vi'},
   {name:'Tàng Bảo Đường', key:'tang bao', mark:'寶', color:'#ffc671', perk:'Đánh yêu thú và rèn pháp bảo có thêm tu vi'},
@@ -7,6 +9,10 @@ export const HALLS = [
   {name:'Linh Dược Đường', key:'linh duoc', mark:'藥', color:'#c7ee80', perk:'Hái thêm linh thảo · vận công +2%'}
 ];
 const DAY = 86400000, WEEK = 7*DAY, MATCH_MS = 30000;
+// 21/11 tối (chủ game): thách đấu Trưởng Lão = lên LÔI ĐÀI đánh thật; mỗi người 1 giờ mới thách lại (tính từ lúc trận bắt đầu).
+export const HALL_CHALLENGE_CD_MS = 3600000, HALL_DUEL_MINUTES = 3;
+const hallDuel = w => w.arena?.phase==='open' && w.arena.hall ? w.arena : null;
+const inHallDuel = (w,id) => { const a=hallDuel(w); return !!a && (a.hall.defender===id || a.hall.challenger===id); };
 const weekAt = now => Math.floor((now + 7*3600000 + 3*DAY)/WEEK);
 const real = p => p && !p.resident && !p.puppet && !p.webOnly && p.actorKind !== 'npc';
 const score = p => Math.max(0, Number(p?.totalQi)||0);
@@ -254,7 +260,7 @@ export function hallCommand(w,p,words,now,ctx) {
     if(m?.index===index)return success('Đạo hữu đã ở '+defs[index].name+'.');
     if(hall?.elder===p.id)return failure('Trưởng Lão đang giữ ghế của Đường.');
     // 21/11 (chủ game): đổi Đường lúc nào cũng được — bỏ hạn 7 ngày; chỉ khóa lúc đang trận Giao Lưu (dòng trên).
-    if(m && s.match && [s.match.a,s.match.b].includes(p.id))return failure('Đợi công bố kết quả Vân Đài để đổi Đường.');
+    if(m && (s.match && [s.match.a,s.match.b].includes(p.id) || inHallDuel(w,p.id)))return failure('Đợi xong trận thách đấu để đổi Đường.');
     assign(s,p,index,now);
     const message='Gia nhập '+defs[index].name;
     ctx.emit(w,p,message,'status',now,{hallJoin:{index,name:defs[index].name}}); // 16/11: giọng + thẻ BÁI NHẬP
@@ -264,13 +270,18 @@ export function hallCommand(w,p,words,now,ctx) {
     if(arg)return failure('Gõ rời đường để rời Đường hiện tại.');
     if(!m)return failure('Đạo hữu chưa gia nhập Đường nào.');
     if(['registration','running'].includes(w.hallWar?.phase))return failure('Đang Ngũ Đường Giao Lưu • đợi hết trận để rời Đường.');
-    if(s.match && [s.match.a,s.match.b].includes(p.id))return failure('Đợi công bố kết quả Vân Đài để rời Đường.');
+    if(s.match && [s.match.a,s.match.b].includes(p.id) || inHallDuel(w,p.id))return failure('Đợi xong trận thách đấu để rời Đường.');
     leaveHall(s,p,m);
     const message='Đã rời '+defs[m.index].name+'.';
     ctx.emit(w,p,message,'status',now);
     return success(message);
   }
   if(command==='tro luc'){
+    const duel=hallDuel(w);
+    if(duel?.current){ // Lôi Đài: trợ lực = cổ vũ (người cùng Đường Trưởng Lão hộ sư, còn lại trợ người thách)
+      const side=m?.index===duel.hall.index&&p.id!==duel.hall.challenger?'cv1':'cv2';
+      return arenaCommand(w,p,side,'',now,ctx.arena) || failure('Chưa có trận để trợ lực.');
+    }
     const bout=s.match;
     if(!bout || now>=bout.endsAt)return failure('Vân Đài chưa có trận thách đấu.');
     if([bout.a,bout.b].includes(p.id))return failure('Hai đấu thủ đang giao chiến.');
@@ -286,11 +297,14 @@ export function hallCommand(w,p,words,now,ctx) {
     if(index<0 || !s.halls[index].elder)return failure('Chọn ghế Trưởng Lão bằng lệnh thách đấu kèm số hoặc tên Đường.');
     const master=masterId(w,ctx.active,now);
     if(!canChallenge(w,s,p.id,master))return failure(p.id===master?'Tông chủ không thách đấu Trưởng Lão.':s.halls.some(h=>h.elder===p.id)?'Trưởng Lão đang giữ ghế, không thách đấu ghế khác.':'Đang chơi trên bản web • về LIVE rồi thách đấu.');
-    if(s.match?.a===p.id||s.queue.some(q=>q.id===p.id))return failure('Đạo hữu đã có lượt trên Vân Đài.');
+    if(s.match?.a===p.id||s.queue.some(q=>q.id===p.id)||inHallDuel(w,p.id))return failure('Đạo hữu đã có lượt thách đấu.');
+    const cdLeft=(p.hallChallengeAt||0)+HALL_CHALLENGE_CD_MS-now;
+    if(cdLeft>0)return failure('Thách đấu lại sau '+Math.ceil(cdLeft/60000)+' phút.');
     s.queue.push({id:p.id,index,queuedAt:now});
     tickHalls(w,now,ctx,true);
-    if(s.match?.a!==p.id)ctx.emit(w,p,'Đã vào hàng chờ thách đấu · '+defs[index].name,'status',now);
-    return success(s.match?.a===p.id?'Trận đấu đã bắt đầu.':'Đã xếp hàng Vân Đài.');
+    const started=hallDuel(w)?.hall.challenger===p.id;
+    if(!started)ctx.emit(w,p,'Đã vào hàng chờ thách đấu · '+defs[index].name+' · chờ Lôi Đài trống','status',now);
+    return success(started?'Lên Lôi Đài thách đấu.':'Đã xếp hàng thách đấu.');
   }
   if(command==='chan truyen'){
     if(hall?.elder!==p.id)return failure('Trưởng Lão mới có thể truyền dạy.');
@@ -321,6 +335,7 @@ export function tickHalls(w,now,ctx,force=false){
   const s=getState(w,now);
   const defs=hallDefinitions(w);
   payHallWeeklyRewards(w,s,now,ctx,defs);
+  settleHallDuel(w,s,now,ctx,defs);
   if(['registration','running'].includes(w.hallWar?.phase))return;
   if(!force && !s.match && now-(s.scanAt??-Infinity)<5000)return;
   if(s.match && now<s.match.endsAt)return;
@@ -376,14 +391,25 @@ export function tickHalls(w,now,ctx,force=false){
     const next=ranked.find(p=>p.totalQi>=score(elder)*1.2&&p.totalQi>score(elder)&&now-(w.players[p.id].lastActive||0)<3*DAY&&autoElder(w,s,p.id,master,ranked,index));
     if(next)seat(w,s,index,w.players[next.id],now,ctx.emit,'Tu vi vượt mốc kế nhiệm');
   }
-  if(ctx.busy(w,now)||s.nextMatchAt>now)return;
+  if(ctx.busy(w,now)||s.nextMatchAt>now||arenaOpen(w,now)||stageConflict(w,now))return;
   while(s.queue.length){
     const q=s.queue.shift(), h=s.halls[q.index], b=w.players[h.elder], a=w.players[q.id];
-    if(!b||!ctx.active(w,a,now)&&now-q.queuedAt>10*60000||!canChallenge(w,s,q.id,master))continue;
-    s.match={a:a.id,b:b.id,index:q.index,startedAt:now,endsAt:now+MATCH_MS,attackQi:Math.max(1,score(a)),defenseQi:Math.max(1,score(b)),offense:0,defense:0,support:{},defenderPresent:ctx.active(w,b,now)};
-    ctx.emit(w,a,'Thách đấu Trưởng Lão '+b.name+' · '+defs[q.index].name,'status',now,{hallChallenge:true});
+    if(!b||!a||!ctx.active(w,a,now)||!canChallenge(w,s,q.id,master)||b.id===a.id)continue; // người thách phải đang có mặt khi tới lượt
+    const r=startArena(w,now,ctx.arena,{minutes:HALL_DUEL_MINUTES,hall:{index:q.index,name:defs[q.index].name},champion:b.id,challenger:a.id});
+    if(!r.ok){s.queue.unshift(q);break;}
+    a.hallChallengeAt=now;
+    ctx.emit(w,a,'THÁCH ĐẤU TRƯỞNG LÃO · '+a.name+' lên Lôi Đài khiêu chiến '+b.name+' · '+defs[q.index].name,'status',now,{hallChallenge:true,pair:[b.id,a.id]});
     break;
   }
+}
+
+// Kết quả trận Lôi Đài thách đấu Trưởng Lão (arena.mjs ghi w.arena.hallResult).
+function settleHallDuel(w,s,now,ctx,defs){
+  const r=w.arena?.hallResult;if(!r||r.settled)return;r.settled=true;
+  const h=s.halls[r.index], win=w.players[r.winner], def=defs[r.index];if(!h||!def||!win)return;
+  if(r.winner===r.challenger&&h.elder===r.defender&&real(win)){seat(w,s,r.index,win,now,ctx.emit,'Thắng thách đấu');return;}
+  if(r.winner===r.defender&&h.elder===r.defender){h.guardUntil=now+10*60000;ctx.emit(w,win,'Giữ ghế Trưởng Lão · '+def.name,'title',now,{achieve:{kind:'elder',item:def.name,reason:'Thủ đài thành công'}});}
+  s.nextMatchAt=now+5500;
 }
 
 // 16/11 (chủ game): đạo lữ của Tông chủ ngồi cạnh ngai → không giữ/không lên ghế Trưởng Lão (Chân Truyền lên thay).
