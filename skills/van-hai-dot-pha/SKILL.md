@@ -21,7 +21,7 @@ Còn lại: 6 Luyện Hư (20,8 s), 7 Đại Thừa (22,8 s), 8 Chân Tiên (31,
 ## CHUẨN v5 — 05/11/2026 (ưu tiên cao nhất, thay mọi hướng dẫn cũ bên dưới khi mâu thuẫn)
 
 Chủ game duyệt **Luyện Khí v5 "Bát Quái Dẫn Khí"** là "rất đẹp" (hình) và yêu cầu âm "điện ảnh". Đây là **mức sàn**. Mẫu tham chiếu:
-`public/luyen-khi-formation.js` (hình), `public/qi-audio.js` (âm), `LUYEN-KHI-V5-2026-11-05.md` (ghi chú).
+`public/luyen-khi-formation.js` (hình), `public/qi-audio.js` (âm), `docs/ghi-chu/LUYEN-KHI-V5-2026-11-05.md` (ghi chú).
 
 ### Luật leo thang: cảnh giới sau PHẢI đỉnh hơn cảnh giới trước
 So cạnh nhau bản realm N với realm N−1 (contact sheet + video). Realm N chỉ đạt khi hơn ở **ít nhất 3/5** trục, và không kém ở trục nào:
@@ -77,7 +77,7 @@ Phạm vi tiếp theo: **toàn bộ 10 cảnh giới sau Chân Tiên, realm 9–
 ## Quy trình cho một cảnh giới
 
 ### 1. Đánh giá bằng mắt trước
-Chạy `node render-<ten>.mjs` (ví dụ `render-luyen-hu.mjs`) → mở `output/<ten>-v*/storyboard.png` (9 khung).
+Chạy `node render-<ten>.mjs` (ví dụ `scripts/render/render-luyen-hu.mjs`) → mở `output/<ten>-v*/storyboard.png` (9 khung).
 Công cụ render không nạp ảnh `jade-palace.png` (không có `Image` trong Node) nên nền thiên đài chỉ là màu trơn — bình thường.
 Ghi lại cái thiếu. Danh sách lỗi hay gặp:
 - Nền phẳng / nửa trên màn hình trống.
@@ -152,28 +152,28 @@ Tiếng Việt, ngắn: cảnh giới nào, trước thiếu gì, giờ có gì,
 
 ## Tiến độ triển khai sau kế hoạch · Huyền Tiên v1
 
-Realm 9 đã có renderer/timeline/audio riêng, 36s; absorbComplete=27, impact=28,2, reveal=28,65. Xem HUYEN-TIEN-V1-2026-11-04.md ở gốc dự án để biết bằng chứng/giới hạn. Không chạy lại scaffold hoặc dùng nhánh cũ cho realm 9. Realm 10–18 CHƯA được nâng cấp kịch bản; duration hiện đã cộng khoảng cách tương thích sau realm 9. Mỗi lượt chỉ làm một cảnh giới rồi báo cáo theo chỉ thị chủ game. Bản Huyền Tiên chưa có phản hồi thẩm mỹ từ chủ game, không tự coi là đã được duyệt đẹp/âm hay.
+Realm 9 đã có renderer/timeline/audio riêng, 36s; absorbComplete=27, impact=28,2, reveal=28,65. Xem docs/ghi-chu/HUYEN-TIEN-V1-2026-11-04.md ở gốc dự án để biết bằng chứng/giới hạn. Không chạy lại scaffold hoặc dùng nhánh cũ cho realm 9. Realm 10–18 CHƯA được nâng cấp kịch bản; duration hiện đã cộng khoảng cách tương thích sau realm 9. Mỗi lượt chỉ làm một cảnh giới rồi báo cáo theo chỉ thị chủ game. Bản Huyền Tiên chưa có phản hồi thẩm mỹ từ chủ game, không tự coi là đã được duyệt đẹp/âm hay.
 
 ## Phản hồi bắt buộc áp dụng sau Huyền Tiên v1
 
-Chủ game đã từ chối v1: vài hiệu ứng nhỏ, đầu cảnh trống, kiếm chậm và nhẹ, kéo dài cho đủ thời gian, kém Đại Thừa. Không được lấy “đã đủ 36s” hay test qua để gọi là đạt. Kiếm phải có động tác ngắn và sắc; khai cảnh có biến cố ngay; nhiều phần liên tiếp phải thay đổi tình thế thật. Xem HUYEN-TIEN-V2-2026-11-04.md ở gốc dự án. V2 đang dùng 36 kiếm thành ba tốp nhanh, sét phân nhánh đầu cảnh, hợp cự kiếm, ba nhát xé trời, kiếp lôi, nhập thể/phản phệ/thu hồi rồi mới nổ và đổi skin. Không khôi phục vòng kiếm đều của v1: hình vòng đều có thể quay nhanh về số học nhưng vẫn trông đứng yên. Phải xem frame sát nhau hoặc chuyển động thực để đánh giá tốc độ cảm nhận. V2 vẫn chờ nhận xét người dùng, chưa tự coi là đẹp/âm hay; chưa sang cảnh giới tiếp.
+Chủ game đã từ chối v1: vài hiệu ứng nhỏ, đầu cảnh trống, kiếm chậm và nhẹ, kéo dài cho đủ thời gian, kém Đại Thừa. Không được lấy “đã đủ 36s” hay test qua để gọi là đạt. Kiếm phải có động tác ngắn và sắc; khai cảnh có biến cố ngay; nhiều phần liên tiếp phải thay đổi tình thế thật. Xem docs/ghi-chu/HUYEN-TIEN-V2-2026-11-04.md ở gốc dự án. V2 đang dùng 36 kiếm thành ba tốp nhanh, sét phân nhánh đầu cảnh, hợp cự kiếm, ba nhát xé trời, kiếp lôi, nhập thể/phản phệ/thu hồi rồi mới nổ và đổi skin. Không khôi phục vòng kiếm đều của v1: hình vòng đều có thể quay nhanh về số học nhưng vẫn trông đứng yên. Phải xem frame sát nhau hoặc chuyển động thực để đánh giá tốc độ cảm nhận. V2 vẫn chờ nhận xét người dùng, chưa tự coi là đẹp/âm hay; chưa sang cảnh giới tiếp.
 
 ## Phản hồi và tiến độ Huyền Tiên v3 · 04/11/2026
 
-Chủ game đánh giá v2 hình tạm ổn nhưng chuyển động thiếu ý nghĩa, nhiều nhịp dừng và quá dài. V3 rút riêng realm 9 xuống 26s; 36 kiếm khóa thành 12 trụ lưới hộ pháp, đỡ sét rồi dẫn lực lên kiếm chủ; thêm khí thoát cơ thể, nhạc trống/dây và hall reverb. Mốc thực: absorbComplete17.5, impact18.1, reveal18.55. Timeline giữ action clock nội bộ cho primitive và xuất real clock cho consumer; không dùng nhầm mốc 28.65 cũ. Xem HUYEN-TIEN-V3-2026-11-04.md. 416 test qua; chưa nghe/xem trực tiếp trọn clip, chưa tự coi được duyệt. Chủ game yêu cầu sau đó lập kế hoạch Kim Tiên khác concept, tìm phim tham khảo; đã có KIM-TIEN-PLAN-2026-11-04.md (29s dự kiến, chưa runtime). Phân biệt nguồn tìm được với cảnh thực sự đã xem; không bịa timecode/phân tích phim từ tiêu đề.
+Chủ game đánh giá v2 hình tạm ổn nhưng chuyển động thiếu ý nghĩa, nhiều nhịp dừng và quá dài. V3 rút riêng realm 9 xuống 26s; 36 kiếm khóa thành 12 trụ lưới hộ pháp, đỡ sét rồi dẫn lực lên kiếm chủ; thêm khí thoát cơ thể, nhạc trống/dây và hall reverb. Mốc thực: absorbComplete17.5, impact18.1, reveal18.55. Timeline giữ action clock nội bộ cho primitive và xuất real clock cho consumer; không dùng nhầm mốc 28.65 cũ. Xem docs/ghi-chu/HUYEN-TIEN-V3-2026-11-04.md. 416 test qua; chưa nghe/xem trực tiếp trọn clip, chưa tự coi được duyệt. Chủ game yêu cầu sau đó lập kế hoạch Kim Tiên khác concept, tìm phim tham khảo; đã có docs/ghi-chu/KIM-TIEN-PLAN-2026-11-04.md (29s dự kiến, chưa runtime). Phân biệt nguồn tìm được với cảnh thực sự đã xem; không bịa timecode/phân tích phim từ tiêu đề.
 
 ## Kim Tiên v1 · 05/11/2026
 
-Chủ game yêu cầu cảnh tiếp khác toàn bộ concept/hình/nền và chỉ dài hơn1–2s. Realm10 đã có nghi thức riêng Thiên Lô Luyện Thân28s (Huyền Tiên26s); ba asset mới ở public/assets/kim-tien-v1, không dùng art/cue/hoạt cảnh realm cũ. Timeline19.6 nhập thể xong→20.2 nổ→20.65 reveal. Nhạc/SFX riêng, model/skin LIVE gốc và chính sách ngoại hình giữ nguyên. Xem KIM-TIEN-V1-2026-11-05.md; 424 test qua nhưng chưa coi đã duyệt nghệ thuật hay đã nghe trực tiếp. Không tự sang realm11 hoặc tự kích hoạt nghi thức thật.
+Chủ game yêu cầu cảnh tiếp khác toàn bộ concept/hình/nền và chỉ dài hơn1–2s. Realm10 đã có nghi thức riêng Thiên Lô Luyện Thân28s (Huyền Tiên26s); ba asset mới ở public/assets/kim-tien-v1, không dùng art/cue/hoạt cảnh realm cũ. Timeline19.6 nhập thể xong→20.2 nổ→20.65 reveal. Nhạc/SFX riêng, model/skin LIVE gốc và chính sách ngoại hình giữ nguyên. Xem docs/ghi-chu/KIM-TIEN-V1-2026-11-05.md; 424 test qua nhưng chưa coi đã duyệt nghệ thuật hay đã nghe trực tiếp. Không tự sang realm11 hoặc tự kích hoạt nghi thức thật.
 
 
 ## Hóa Thần v2 · 05/11/2026
 
-Theo yêu cầu mới, nâng từ Hóa Thần trở lên từng cảnh một, hiện chỉ làm realm 5. Bản Thần Niệm Chấn Thiên 17,6s giữ mốc nổ14,4/reveal14,65; thêm module hoa-than-formation.js và nền storm-world.png riêng. Sét0,16s → biển khí đảo chiều → xuất hồn2s → sáu thiên ấn4,4s → sáu lôi khảo7,6..9,8s → CHÍNH thần hồn lớn thành pháp tướng10,5s → thu ấn12,8s → nhập thể xong14,25s → nổ → đổi skin. Không dựng hai pháp tướng độc lập. Cache ảnh LIVE gốc riêng cho realm5 (nam/nữ/skin sự kiện), stand1, restore toàn bộ flags, không sửa helper actorImage dùng bởi realm6/8. Nhân vật vẽ sau lớp nổ chung để mặt không bị cột sáng phủ trắng. Nhạc B thứ→Rê trưởng, trống/sét gần-xa/ấn đồng/đàn/dây riêng theo cue, cộng impact chung. Có video trước/sau30fps kèm tiếng, kiểm khung sát nhau, ba vòng sửa + vòng chốt. Xem HOA-THAN-V2-2026-11-05.md về số đo và giới hạn; chưa được chủ game duyệt, chưa tự gọi đẹp/âm hay. Dừng để báo cáo, chưa triển khai Luyện Hư.
+Theo yêu cầu mới, nâng từ Hóa Thần trở lên từng cảnh một, hiện chỉ làm realm 5. Bản Thần Niệm Chấn Thiên 17,6s giữ mốc nổ14,4/reveal14,65; thêm module hoa-than-formation.js và nền storm-world.png riêng. Sét0,16s → biển khí đảo chiều → xuất hồn2s → sáu thiên ấn4,4s → sáu lôi khảo7,6..9,8s → CHÍNH thần hồn lớn thành pháp tướng10,5s → thu ấn12,8s → nhập thể xong14,25s → nổ → đổi skin. Không dựng hai pháp tướng độc lập. Cache ảnh LIVE gốc riêng cho realm5 (nam/nữ/skin sự kiện), stand1, restore toàn bộ flags, không sửa helper actorImage dùng bởi realm6/8. Nhân vật vẽ sau lớp nổ chung để mặt không bị cột sáng phủ trắng. Nhạc B thứ→Rê trưởng, trống/sét gần-xa/ấn đồng/đàn/dây riêng theo cue, cộng impact chung. Có video trước/sau30fps kèm tiếng, kiểm khung sát nhau, ba vòng sửa + vòng chốt. Xem docs/ghi-chu/HOA-THAN-V2-2026-11-05.md về số đo và giới hạn; chưa được chủ game duyệt, chưa tự gọi đẹp/âm hay. Dừng để báo cáo, chưa triển khai Luyện Hư.
 
 ## Luyện Hư v2 · 07/11/2026
 
-Realm 6 nâng lên "Hư Không Khai Giới · Vạn Kính Quy Nhất" (20,8 s, nổ 17,25, đổi skin 17,55): thiên đài nứt như gương → vỡ lộ hư không → vòm 8 gương phản chiếu → phân thân → 4 nhát rách → hư nhãn → tua ngược ghép lại → kính nhập thể → nổ. Module `luyen-hu-formation.js`, âm `luyen-hu-audio.js`, ghi chú LUYEN-HU-V2-2026-11-07.md. Công cụ: `scripts/render-luyen-hu-v2.mjs` (nạp ảnh nền thật; biến SECONDS=1.5,7 để dựng khung chọn lọc), `scripts/contact-sheet.mjs` (thay montage), `scripts/render-luyen-hu-audio.mjs` (Chrome OfflineAudioContext). Chưa được chủ game duyệt; chưa nghe bằng tai. Tiếp theo: 7 Đại Thừa phải vượt Luyện Hư v2 (motif gợi ý: vạn kiếm/đại đạo; không dùng lại gương/hư không làm chủ đạo).
+Realm 6 nâng lên "Hư Không Khai Giới · Vạn Kính Quy Nhất" (20,8 s, nổ 17,25, đổi skin 17,55): thiên đài nứt như gương → vỡ lộ hư không → vòm 8 gương phản chiếu → phân thân → 4 nhát rách → hư nhãn → tua ngược ghép lại → kính nhập thể → nổ. Module `luyen-hu-formation.js`, âm `luyen-hu-audio.js`, ghi chú docs/ghi-chu/LUYEN-HU-V2-2026-11-07.md. Công cụ: `scripts/render-luyen-hu-v2.mjs` (nạp ảnh nền thật; biến SECONDS=1.5,7 để dựng khung chọn lọc), `scripts/contact-sheet.mjs` (thay montage), `scripts/render-luyen-hu-audio.mjs` (Chrome OfflineAudioContext). Chưa được chủ game duyệt; chưa nghe bằng tai. Tiếp theo: 7 Đại Thừa phải vượt Luyện Hư v2 (motif gợi ý: vạn kiếm/đại đạo; không dùng lại gương/hư không làm chủ đạo).
 
 ## Đại Thừa v2 · 07/11/2026
 
@@ -185,7 +185,7 @@ Realm 8 làm lại "Cửu Kiếp Phi Thăng · Tiên Môn Khai Thiên" (31,6 s, 
 
 ## Thái Ất v1 · 07/11/2026
 
-Realm 11 "Lưỡng Nghi Định Thiên" 30 s (nổ 26,0, đổi skin 26,3); realm 12–18 dịch theo, vẫn dùng nhánh chung. Mỗi cảnh sau chỉ dài hơn cảnh trước 1–2 s theo chủ game. Xem THAI-AT-V1-2026-11-07.md. Tiếp theo: 12 Đại La (kế hoạch: Vạn Ảnh Chứng Đạo — tránh trùng gương/phân thân của Luyện Hư v2).
+Realm 11 "Lưỡng Nghi Định Thiên" 30 s (nổ 26,0, đổi skin 26,3); realm 12–18 dịch theo, vẫn dùng nhánh chung. Mỗi cảnh sau chỉ dài hơn cảnh trước 1–2 s theo chủ game. Xem docs/ghi-chu/THAI-AT-V1-2026-11-07.md. Tiếp theo: 12 Đại La (kế hoạch: Vạn Ảnh Chứng Đạo — tránh trùng gương/phân thân của Luyện Hư v2).
 
 ## Thái Ất v2 (duyệt) + Đại La v1 · 07/11/2026
 

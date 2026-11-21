@@ -1,5 +1,5 @@
 // 17/11 (chủ game): Nguyệt Hạ Tình Lâu — đôi đạo lữ song tu trong lễ Nguyệt Hạ Kết Duyên.
-// Kế hoạch: NGUYET-HA-PLAN-2026-11-17.md. Song tu kiểu tu tiên (ngồi đối diện, chạm tay) — KHÔNG cảnh quan hệ (luật TikTok).
+// Kế hoạch: docs/ghi-chu/NGUYET-HA-PLAN-2026-11-17.md. Song tu kiểu tu tiên (ngồi đối diện, chạm tay) — KHÔNG cảnh quan hệ (luật TikTok).
 // Bậc: gõ "song tu" (cả hai) → Đình Nguyệt · quà 1 coin → Tình Các (cửa sổ Tình Lâu) · ≥30 → Uyên Ương Mật Thất (chiếu riêng)
 // · một món ≥100 → Tiên Lữ Đại Điển (chiếu riêng + danh hiệu Thần Tiên Quyến Lữ).
 import {activeBonds} from './bond-relations.mjs';

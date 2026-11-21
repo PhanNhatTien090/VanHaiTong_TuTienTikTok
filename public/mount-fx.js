@@ -1,4 +1,4 @@
-// 16/11/2026 (chủ game): vẽ TỌA KỸ + LINH CHÂU trên sân, nhiều lớp theo bậc (VFX-SKIN-CAO-CAP.md).
+// 16/11/2026 (chủ game): vẽ TỌA KỸ + LINH CHÂU trên sân, nhiều lớp theo bậc (docs/ghi-chu/VFX-SKIN-CAO-CAP.md).
 // Thường: 3 lớp (bóng, quầng màu, tọa kỹ nhún) · VIP: 8 lớp (khói mực, pháp trận tím xoay, sương tím, viền sáng,
 // lôi tím chớp, hạt bay, sao) · Thần: 11 lớp (+ thần quang sau lưng, vân vĩ kim sắc, cột sáng, lông vũ, chớp sao ở đầu).
 // HIỆU NĂNG: mọi texture tải/dựng 1 lần; mỗi khung chỉ drawImage + 'lighter'. Không filter/shadowBlur.

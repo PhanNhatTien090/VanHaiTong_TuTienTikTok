@@ -1,4 +1,4 @@
-// 18/11/2026 — LUÂN HỒI (chuyển sinh có giá trị thật). Dùng chung server + overlay. Kế hoạch: LUAN-HOI-PLAN-2026-11-18.md
+// 18/11/2026 — LUÂN HỒI (chuyển sinh có giá trị thật). Dùng chung server + overlay. Kế hoạch: docs/ghi-chu/LUAN-HOI-PLAN-2026-11-18.md
 // Luật cân bằng (chủ game 18/11): hệ số tu vi CHỈ nhân khi tự tu luyện (chơi tay); quà/sự kiện = số gốc.
 export const LUAN_HOI=Object.freeze({
  keepRealm:.6,      // Luân Hồi Ấn: sức chiến đấu tính theo max(cảnh giới hiện tại, 60% cảnh giới cao nhất từng đạt)

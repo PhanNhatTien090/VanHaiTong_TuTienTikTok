@@ -1,5 +1,5 @@
 // 17/11/2026 (chủ game): PHÁP BẢO — dữ liệu dùng chung server (phap-bao.mjs) + overlay (bao-kho.js).
-// Kế hoạch: PHAP-BAO-PLAN-2026-11-17.md. KHÔNG có số cơ duyên ở đây (chỉ server) — overlay chỉ biết ngọn lửa.
+// Kế hoạch: docs/ghi-chu/PHAP-BAO-PLAN-2026-11-17.md. KHÔNG có số cơ duyên ở đây (chỉ server) — overlay chỉ biết ngọn lửa.
 // Ảnh: /assets/phap-bao-v1/<art>.webp (Codex image_gen 17/11, nền trong suốt).
 export const BAO_LINES=Object.freeze({
  kiem:{name:'Kiếm',skill:'Bạo kích'},an:{name:'Ấn',skill:'Choáng'},dinh:{name:'Đỉnh',skill:'Hồi máu'},

@@ -1,4 +1,4 @@
-// 18/11/2026 (chủ game): THIÊN CÔNG BẢO KHỐ trên overlay — kế hoạch PHAP-BAO-PLAN-2026-11-17.md mục 4 + 10.
+// 18/11/2026 (chủ game): THIÊN CÔNG BẢO KHỐ trên overlay — kế hoạch docs/ghi-chu/PHAP-BAO-PLAN-2026-11-17.md mục 4 + 10.
 // • Màn sự kiện (thay sân, nhẹ máy): tiêu đề + đồng hồ, bảng CƠ DUYÊN (ảnh quà → ngọn lửa, KHÔNG số %), lưới GIỚI HẠN 12 món,
 //   trận pháp giữa màn với 3 thần khí bay, người vừa cầu đứng giữa trận, băng rôn từng lượt (≤3), "còn N lượt tới 4★/5★",
 //   SĂN BẢO NHIỀU NHẤT cột phải. Không góc dưới trái, cách đáy ≥11%.

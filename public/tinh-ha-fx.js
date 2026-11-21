@@ -1,5 +1,5 @@
 // 19/11/2026: TINH HÀ KIẾM ĐẾ (skin 500 coin) — chủ game: "đẹp hơn tất cả skin hiện có, tự sáng tạo".
-// Theo công thức VFX-SKIN-CAO-CAP.md (mẫu karma-fx.js) nhưng nhiều lớp hơn + lớp đặc trưng CỬU TINH KIẾM TRẬN:
+// Theo công thức docs/ghi-chu/VFX-SKIN-CAO-CAP.md (mẫu karma-fx.js) nhưng nhiều lớp hơn + lớp đặc trưng CỬU TINH KIẾM TRẬN:
 //  1 tinh vân mực tím sau lưng · 2 thần quang lam bạc xoay ngược · 3 Tinh Đồ (ảnh hào quang) + quầng lam + 2 sao quét vành ·
 //  4 vòng tinh tú (vạch chia + 8 sao) quay · 5 tinh trận dưới chân (Tinh Đồ nằm ngửa + sao 8 cánh) · 6 tinh khí bốc + cột sáng ·
 //  7 lõi sao ở ngực đập nhịp · 8 CỬU TINH KIẾM TRẬN: 9 tinh kiếm bay vòng elip có đuôi (sáng cộng + tối phủ), trước/sau thân thật ·

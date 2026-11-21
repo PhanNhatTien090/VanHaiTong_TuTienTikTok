@@ -1,4 +1,4 @@
-// 17/11/2026 (chủ game): THIÊN CÔNG BẢO KHỐ — sự kiện "cầu" pháp bảo kiểu Genshin. Kế hoạch: PHAP-BAO-PLAN-2026-11-17.md.
+// 17/11/2026 (chủ game): THIÊN CÔNG BẢO KHỐ — sự kiện "cầu" pháp bảo kiểu Genshin. Kế hoạch: docs/ghi-chu/PHAP-BAO-PLAN-2026-11-17.md.
 // • Gõ "cầu" (cau) miễn phí, hồi 20 s/người; mỗi QUÀ = 1 lượt (≥999 coin: mỗi 999 = 1 lượt). Quà nào cũng +tu vi an ủi.
 // • Kết quả: TRƯỢT (không lưu gì) · 4★ · 5★ · GIỚI HẠN. Bảo hiểm: 4★ chắc chắn trong mỗi 10 lượt, 5★ trong 80 lượt (mềm từ 65).
 //   GIỚI HẠN KHÔNG bảo hiểm, chỉ ra hiếm khi đã ra 5★; 12 suất/mùa, mỗi người tối đa 1/mùa.

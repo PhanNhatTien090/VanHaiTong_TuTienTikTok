@@ -1,4 +1,4 @@
-// 15/11/2026: BẢNG XEM — tu vi · túi đồ · linh thú · skin (kế hoạch BANG-XEM-PLAN-2026-11-15.md).
+// 15/11/2026: BẢNG XEM — tu vi · túi đồ · linh thú · skin (kế hoạch docs/ghi-chu/BANG-XEM-PLAN-2026-11-15.md).
 // Bảng hiện GIỮA màn (to) → bay ra 1 trong 4 GÓC → mờ dần. Tối đa 4 bảng cùng lúc, người thứ 5+ xếp hàng.
 // Gọn: ít chữ, ảnh vật phẩm to (ảnh thật từ item-thumbs.js), chữ to. Chuyển động chỉ bằng CSS transform/opacity,
 // HTML dựng theo sự kiện (không chạy gì theo khung hình).

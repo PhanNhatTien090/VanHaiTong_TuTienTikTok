@@ -1,5 +1,5 @@
 // 19/11/2026: BÍCH LÂN ĐỘC HẬU (skin nữ độc tu, 500 coin) — chủ game: "content khác, sáng tạo đặc biệt, xanh lá, có con rắn, độc tu".
-// Cơ chế RIÊNG (không phải Tinh Hà đổi màu) — theo công thức VFX-SKIN-CAO-CAP.md:
+// Cơ chế RIÊNG (không phải Tinh Hà đổi màu) — theo công thức docs/ghi-chu/VFX-SKIN-CAO-CAP.md:
 //  1 độc vụ mực lục cuộn sau lưng · 2 lục quang xoay ngược · 3 Xà Hoàn (ảnh rắn ngậm đuôi) xoay chậm + giọt độc nhỏ từ vành ·
 //  4 vòng phù văn độc quay ngược · 5 ĐỘC TRÌ dưới chân: hồ độc + Xà Hoàn nằm ngửa + BONG BÓNG nổi lên rồi vỡ thành vòng ·
 //  6 MÃNG XÀ LINH HỒN: ảnh rắn cắt dải dọc, mỗi dải lệch theo sóng → thân rắn TRƯỜN thật sau lưng, đầu nhô qua vai ·

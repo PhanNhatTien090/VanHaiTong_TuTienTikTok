@@ -1,4 +1,4 @@
-// 16/11/2026 (chủ game): TỌA KỸ — Linh Châu, truyền công, sao, chỉ số. Kế hoạch: TOA-KY-PLAN-2026-11-16.md.
+// 16/11/2026 (chủ game): TỌA KỸ — Linh Châu, truyền công, sao, chỉ số. Kế hoạch: docs/ghi-chu/TOA-KY-PLAN-2026-11-16.md.
 // Luật LIVE: KHÔNG nói/ghi "ngẫu nhiên", "tỷ lệ", "%" — chỉ báo nhận châu và tọa kỹ hiện thân.
 import {randomInt} from 'node:crypto';
 import {MOUNTS,ORBS,MAX_STARS,mountById,orbKind,mountStat} from './public/mounts.js';

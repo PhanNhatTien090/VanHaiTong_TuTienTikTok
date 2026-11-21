@@ -9,7 +9,7 @@
 > - Giọng VieNeu dùng model/công cụ cài riêng; xem `speech.mjs` và `scripts/vieneu_worker.py`. Không đóng gói model vào repo.
 > - Muốn dùng nút mở tunnel, cài Cloudflare `cloudflared` và đặt file thực thi vào `tools/cloudflared.exe`. Binary tải ngoài không được commit.
 
-Bản cập nhật Thiên đài đột phá 03/11/2026: xem [hướng dẫn và kiểm chứng](ASCENSION-STAGE-NOTES.md). Nhịp tu luyện và giao diện LIVE trong ghi chú này thay thế các thông số cũ bên dưới.
+Bản cập nhật Thiên đài đột phá 03/11/2026: xem [hướng dẫn và kiểm chứng](docs/ghi-chu/ASCENSION-STAGE-NOTES.md). Nhịp tu luyện và giao diện LIVE trong ghi chú này thay thế các thông số cũ bên dưới.
 
 # Vân Hải Tông — Tiên giới LIVE
 
@@ -97,7 +97,7 @@ Phiên bản cảnh sắc 02: nền tiên môn chi tiết do ImageGen tạo; Can
 
 Mục tiêu là kiểm tra vòng chơi trước khi mở rộng đồ họa. Thông số kinh tế là giả thuyết cân bằng ban đầu, chưa có dữ liệu chứng minh hiệu quả giữ chân hay doanh thu. Mọi vật phẩm có đường chế tạo miễn phí. Quà thật là phản hồi trong trò chơi, không quy đổi tài sản, không hứa lợi nhuận hoặc phần thưởng ngoài trò chơi. Cần đối chiếu chính sách kiếm tiền và điều kiện tài khoản TikTok hiện hành trước khi chạy mapping quà thật.
 
-Đọc **RESEARCH.md** để xem nguồn và quyết định thiết kế.
+Đọc **docs/ghi-chu/RESEARCH.md** để xem nguồn và quyết định thiết kế.
 
 
 ## Phiên bản 0.3 — Nhân vật, skin và âm thanh
@@ -160,7 +160,7 @@ Giọng Việt động cần internet và Python `edge-tts` (`python -m pip inst
 - **Thu phóng:** mặc định 125%, link nguồn LIVE Studio đặt `zoom=1.3`. Chỉnh trong ≋ → *Thu phóng cảnh* (100–170%). Khi phóng to, hàng nhân vật được nén vào vùng nhìn thấy, không ai bị cắt ở mép. Lúc có tương tác máy quay vẫn zoom sâu hơn vào người đó.
 - **Lời tông sư khi vắng:** sau khoảng 35–55 giây không có giọng đọc nào, tông sư nói một câu tu tiên ("Mệnh ta do ta, không do trời cao", "Tu đạo như nghịch thủy hành chu…", "Đại đạo ba nghìn, ta chỉ lấy một"…). Cứ 3 câu thì có 1 câu kêu gọi nhập môn. Không lặp lại 8 câu gần nhất. Tương tác thật luôn được đọc trước. Có thể tắt trong ≋ → *Tông sư nói khi vắng*. Các câu nằm trong `public/idle-lines.js`; sửa xong chạy `node scripts/make-idle-voice.mjs --force` để đọc lại.
 - Tông sư tự xưng **"lão phu"**, vì VieNeu đọc chữ "bổn tọa" không chuẩn.
-- Xem trước khung hình không cần trình duyệt: `node render-v8.mjs <ms> <zoom>` → `output/preview-v8-<ms>.png`.
+- Xem trước khung hình không cần trình duyệt: `node scripts/render/render-v8.mjs <ms> <zoom>` → `output/preview-v8-<ms>.png`.
 
 ## v9: tu tiên giả thường trú tự hoạt động
 
