@@ -4,6 +4,7 @@ import {MAX_REALM} from './public/progression.js';
 export const DAILY_PRACTICE_LIMIT=900;
 export const DAILY_PRACTICE_SOFT_RATE=.1;
 export const DAILY_PRACTICE_REALM_BONUS=75;
+export const DAILY_REALM_LIMIT=3; // 21/11 tối: đột phá tối đa 3 lần/ngày từ Hóa Thần (trừ người chuyển sinh, lần chỉ điểm)
 const COSTS=Object.freeze({cultivate:100,gather:140,attack:35});
 const formatter=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'});
 let cachedMinute=null,cachedDay;
@@ -26,9 +27,11 @@ export function creditDailyPractice(w,p,amount,kind,now=Date.now(),qiPerPoint=nu
 // High-realm ascensions share a calendar-day ledger across normal play, blessings,
 // opportunities, reconnects and rebirth. Early onboarding through Hoa Than stays fast.
 export function dailyAscensionView(w,p,now=Date.now()){
- // 16/11 (chủ game): mặc định KHÔNG giới hạn số lần đột phá mỗi ngày (người xem tưởng lỗi). Chỉ bật lại khi đặt settings.dailyRealmLimit > 0.
- const day=practiceDay(now),enabled=w.mode==='live'&&!p.resident&&!p.puppet&&p.realm>=5&&Number.isSafeInteger(w.settings?.dailyRealmLimit)&&w.settings.dailyRealmLimit>0;
- const limit=Number.isSafeInteger(w.settings?.dailyRealmLimit)&&w.settings.dailyRealmLimit>0?Math.min(10,w.settings.dailyRealmLimit):1;
+ // 16/11 (chủ game): tắt giới hạn (người xem tưởng lỗi). 21/11 tối (chủ game): BẬT LẠI — từ Hóa Thần mỗi ngày tối đa
+ // DAILY_REALM_LIMIT lần; người ĐÃ CHUYỂN SINH không bị giới hạn; lần CHỈ ĐIỂM không tính (engine mentorCommand không ghi lượt).
+ // settings.dailyRealmLimit: số khác để đổi mức, 0 = tắt hẳn.
+ const set=w.settings?.dailyRealmLimit,limit=Number.isSafeInteger(set)&&set>=0?Math.min(10,set):DAILY_REALM_LIMIT;
+ const day=practiceDay(now),enabled=w.mode==='live'&&!p.resident&&!p.puppet&&p.realm>=5&&limit>0&&!(Number(p.reincarnations)>0);
  const used=p.dailyAscension?.day===day&&Number.isSafeInteger(p.dailyAscension.used)?Math.max(0,p.dailyAscension.used):0;
  return {enabled,day,limit,used,remaining:Math.max(0,limit-used),exhausted:enabled&&used>=limit,resetsAt:Date.parse(day+'T00:00:00+07:00')+86400000};
 }
