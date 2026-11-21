@@ -111,5 +111,6 @@ export function drawTitlePlaques(scene,c,t,nowMs){const list=scene.targets||[];i
   const lh=luanHoiExtra(p,nowMs,seat),tt=seat?null:titleOf(p,nowMs);let y=head;
   if(titleVisible(tt,count)){const b=plaque(tt);if(b){items.push({tt,id:a.id,rank:tt.rank,x:a.x,y,w:b.w,h:b.h});y-=b.h-4;}}
   if(lh&&titleVisible(lh,count)){const b=plaque(lh);if(b)items.push({tt:lh,id:a.id+'#lh',rank:lh.rank,x:a.x,y,w:b.w,h:b.h});}}
+ const SW=scene.width||900;for(const it of items)it.x=Math.max(it.w/2+4,Math.min(SW-it.w/2-4,it.x)); // 21/11: người sát mép → chữ không bị cắt
  for(const it of layoutTitles(items))drawTitlePlaque(c,it.tt,it.x,it.y,t,(String(it.id).length*7+String(it.id).charCodeAt(0))%17,light);
 }

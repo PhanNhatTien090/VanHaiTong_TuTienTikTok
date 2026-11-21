@@ -21,7 +21,7 @@ try{
  Object.assign(w.players.c,{realm:9,highestRealm:27,reincarnations:2,giftCoins:300,qi:1e12,stones:1e7,lastActive:Date.now()});
  Object.assign(w.players.d,{realm:4,highestRealm:26,reincarnations:5,lastActive:Date.now()});
  Object.assign(w.players.e,{realm:14,highestRealm:28,reincarnations:10,lastActive:Date.now()});
- for(const k of ['visitor','boss','miniEvent'])delete w[k];w.nextBossAt=Date.now()+36e5;w.nextSmallAt=Date.now()+36e5;
+ w.settings={...w.settings,sceneMode:process.env.SCENE||w.settings?.sceneMode};for(const k of ['visitor','boss','miniEvent'])delete w[k];w.nextBossAt=Date.now()+36e5;w.nextSmallAt=Date.now()+36e5;
  await fs.writeFile(file,JSON.stringify(w));
  srv=start();await up();
  profile=await fs.mkdtemp(path.join(os.tmpdir(),'luanhoi-ch-'));
