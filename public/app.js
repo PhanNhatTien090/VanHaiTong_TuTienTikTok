@@ -502,8 +502,10 @@ setInterval(()=>{const now=Date.now();while(pulse.length&&now-pulse[0].t>10000)p
   if(pulse.length<6){el.hidden=true;return;}
   const n={tu:0,join:0,gift:0,heart:0,other:0};for(const {e}of pulse){if(e.gift)n.gift++;else if(e.effect==='join')n.join++;else if(String(e.text).startsWith('Tụ linh'))n.heart++;else if(/^Vận|^Luận|^Hái/.test(String(e.text)))n.tu++;else n.other++;}
   el.innerHTML=`✦ 10 giây qua: <b>${pulse.length}</b> lượt`+[[n.tu,'tu luyện'],[n.join,'nhập môn'],[n.heart,'thả tim'],[n.gift,'quà']].filter(([k])=>k).map(([k,l])=>` · ${k} ${l}`).join('');el.hidden=false;},1000);
-const ownVisitorReveal=(event,state)=>isBlackGoldAward(event)&&state?.visitor?.kind===event.transform
-  &&!state.visitor.closedAt&&state.visitor.endsAt>state.serverNow;
+// 21/11 tối (chủ game: "mua skin không thấy biến hình, hết sự kiện mới biến"): trước chỉ vị ĐẦU lượt + skin Thiên Khuyết được biến hình ngay
+// → nay mọi vị trong lượt Song Tiên, mọi loại skin sự kiện.
+const ownVisitorReveal=(event,state)=>{const v=state?.visitor;if(!event?.transform||!v||v.closedAt||!(v.endsAt>state.serverNow))return false;
+  return (v.lineup?.length?v.lineup.map(s=>s.kind):[v.kind]).includes(event.transform);};
 function playNext(){
  if(busy||state?.halls?.match)return;let e;for(;;){e=presentations.take(Date.now(),e=>ownVisitorReveal(e,state)||!(e.effect==='breakthrough'?ascensionHeld(state):majorEventActive(state)&&(e.effect==='transform'||e.petAward)));if(!e)return;if(e.gift&&e._arrivedAt&&Date.now()-e._arrivedAt>GIFT_STALE_MS)continue;if(!presentations.start(e))continue;break;} // 07/11: quà quá trễ thì bỏ màn diễn (thẻ quà đã hiện lúc tặng)
  if(e.gift&&eventDonationContext(scene)){scene.noteEvent(e);scene.addEffect(e);showGiftReceipt(e);queueMicrotask(playNext);return;}
