@@ -3,7 +3,11 @@ import {tmOn} from './ink-panel.js';
 import {skinFor} from './cosmetics.js';
 import {drawWings} from './boss-arena.js';
 import {safeAvatar} from './honors.js';
-import {luanHoiExtra,titleVisible,drawTitlePlaque} from './title-plaques.js?v=20261121h';import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
+import {luanHoiExtra,titleVisible,drawTitlePlaque} from './title-plaques.js?v=20261121i';import {masterTier,drawThroneBack,drawThroneFront,drawMasterPlate} from './master-throne.js'; // 12/11: ngai Tông Chủ
+import {HALL_STYLE,hallColor,hallIcon,drawHallBadge} from './hall-badge.js?v=1';
+const ELDER_DY=-84;
+// Ghế trống: icon Đường (thay chữ Hán) — ảnh chưa tải thì tạm vẽ chữ Hán cũ.
+function drawHallMark(c,hall,x,y,size){const st=HALL_STYLE[hall.key],im=hallIcon(st?.icon);if(im){c.save();c.shadowColor=hallColor(hall);c.shadowBlur=10;c.drawImage(im,x-size/2,y-size/2,size,size);c.restore();return;}c.textAlign='center';c.fillStyle=hallColor(hall);c.font='700 30px "Noto Serif",Georgia,serif';c.fillText(hall.mark,x,y+12);}
 import {drawCourtAdornment,showsBlackGoldGear} from './court-art.js?v=karma-halo-v5';
 import {drawMount} from './mount-fx.js'; // 18/11: tọa kỹ Tông chủ phục cạnh ngai
 // 08/11: ảnh đại diện TikTok trên đầu 2 trưởng lão. Ảnh lỗi/hết hạn thì hiện chữ cái đầu, thử lại sau 60 s.
@@ -141,11 +145,13 @@ export function drawSectCourt(scene,c,t){
   for(const [column,hall] of scene.sectHalls.entries()){
    c.save();c.translate(hallX(column,count),y);c.scale(scale,scale);
    if(tmOn()){ // 19/11 Thủy Mặc: đệm ngồi dưới Trưởng Lão; MỘT bảng giấy dưới đệm: "TRƯỞNG LÃO · tên Đường" + tên người ngồi (không chồng lên đệm Tông chủ)
+    // 21/11 tối (chủ game: "ghế Trưởng Lão thấp quá so với họ"): cả đệm + thẻ giấy nâng lên ELDER_DY (trước đệm ở dưới chân 92 đơn vị)
+    c.translate(0,ELDER_DY);
     const cushion=courtSeat('elder');if(cushion)paintSeat(c,cushion,0,92,140);
-    if(!active.has(hall.elder?.id)){c.textAlign='center';c.fillStyle=hall.color;c.font='700 30px "Noto Serif",Georgia,serif';c.fillText(hall.mark,0,70);}
+    if(!active.has(hall.elder?.id))drawHallMark(c,hall,0,58,40);
     const short=String(hall.name||'').replace(/ Đường$/,''),who=hall.elder?.name||'Ghế trống';
     // thẻ giấy treo trước đệm (gọn, không lấn hàng người phía dưới)
-    c.fillStyle='rgba(243,234,216,.96)';c.strokeStyle='#1b1813';c.lineWidth=1.2;c.beginPath();c.roundRect(-70,96,140,20,2);c.fill();c.stroke();c.fillStyle=hall.color;c.fillRect(-70,96,5,20);
+    c.fillStyle='rgba(243,234,216,.96)';c.strokeStyle='#1b1813';c.lineWidth=1.2;c.beginPath();c.roundRect(-70,96,140,20,2);c.fill();c.stroke();c.fillStyle=hallColor(hall);c.fillRect(-70,96,8,20);drawHallBadge(c,-70,106,{...HALL_STYLE[hall.key],key:hall.key,name:hall.name},null,9);
     c.textAlign='center';c.fillStyle='#b3261e';c.font='900 11px "Noto Serif",Georgia,serif';c.fillText('TRƯỞNG LÃO · '+short.toUpperCase(),3,110,128);
     c.font='800 13px "Segoe UI",Arial,sans-serif';c.lineWidth=3;c.strokeStyle='#1b1813dd';c.strokeText(who,0,131,150);c.fillStyle='#fff3d6';c.fillText(who,0,131,150);
     c.restore();continue;
@@ -154,7 +160,7 @@ export function drawSectCourt(scene,c,t){
    c.fillStyle='#102b32';c.strokeStyle=hall.color;c.lineWidth=2;
    c.beginPath();c.moveTo(-45,0);c.lineTo(-36,-60);c.lineTo(36,-60);c.lineTo(45,0);c.closePath();if(!elder){c.fill();c.stroke();}
    c.fillStyle=hall.color;c.textAlign='center';c.font='700 32px Georgia';
-   if(!active.has(hall.elder?.id))c.fillText(hall.mark,0,-16);
+   if(!active.has(hall.elder?.id))drawHallMark(c,hall,0,-28,40);
    c.fillStyle=hall.color;c.beginPath();c.moveTo(-60,-65);c.lineTo(-43,-65);c.lineTo(-48,-39);c.lineTo(-55,-42);c.closePath();c.fill();
    const tm=tmOn();c.fillStyle=tm?'rgba(243,234,216,.95)':'#092028';if(tm){c.strokeStyle='#1b1813';c.lineWidth=1.5;}c.beginPath();c.roundRect(-83,16,166,51,tm?3:8);c.fill();c.stroke();if(tm){c.fillStyle=hall.color;c.fillRect(-83,16,6,51);}
    c.fillStyle=tm?'#b3261e':hall.color;c.font=(tm?'900 15px "Noto Serif",Georgia,serif':'800 15px "Segoe UI",Arial,sans-serif');c.fillText('TRƯỞNG LÃO',0,36,154);

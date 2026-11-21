@@ -108,7 +108,7 @@ import {drawTransform,transformMs,REVEAL_AT} from './transform-fx.js';
 import {drawHighGift} from './high-gift-fx.js';
 import {drawFlowerRain,drawMeteorShower} from './flower-event-fx.js';
 // 15/11/2026: chữ trên sân — sans đậm nét, nhỏ gọn kiểu kênh mẫu (user: tên to che hết người, khó nhìn).
-import {honorIcon,honorSeal} from './honor-icons.js?v=20261119';import {tmOn} from './ink-panel.js';import {luanHoiCutFrame} from './luan-hoi-cinema.js?v=20261120tm3';import {drawTitlePlaques} from './title-plaques.js?v=20261121h';import {drawLimitedStrike,isLimited,LIMITED_STRIKE_MS} from './bao-limited-strike.js?v=20261120';import {syncDoKiep,drawDoKiep,drawDoKiepHud} from './do-kiep.js?v=20261120d';import {drawLuanHoiOmen,drawOmenVortex} from './luan-hoi-omen.js?v=20261120c';import {drawLuanHoiAuras,drawLuanBadge,drawLuanHoiRitualFrame} from './luan-hoi-fx.js?v=20261120tm2'; /* 18/11: Luân Hồi */
+import {honorIcon,honorSeal} from './honor-icons.js?v=20261119';import {tmOn} from './ink-panel.js';import {luanHoiCutFrame} from './luan-hoi-cinema.js?v=20261120tm3';import {hallOf,drawHallBadge} from './hall-badge.js?v=1';import {drawTitlePlaques} from './title-plaques.js?v=20261121i';import {drawLimitedStrike,isLimited,LIMITED_STRIKE_MS} from './bao-limited-strike.js?v=20261120';import {syncDoKiep,drawDoKiep,drawDoKiepHud} from './do-kiep.js?v=20261120d';import {drawLuanHoiOmen,drawOmenVortex} from './luan-hoi-omen.js?v=20261120c';import {drawLuanHoiAuras,drawLuanBadge,drawLuanHoiRitualFrame} from './luan-hoi-fx.js?v=20261120tm2'; /* 18/11: Luân Hồi */
 import {syncLoveTower,drawLoveTower,loveCutFrame,loveRoomIds} from './love-tower.js'; // 17/11: Nguyệt Hạ Tình Lâu
 import {drawHeartQi,HEART_QI_MS} from './heart-qi-fx.js';
 const NAME_FONT='800 15px \"Segoe UI\",Arial,sans-serif',TALK_FONT='700 14px "Segoe UI",Arial,sans-serif';
@@ -469,7 +469,7 @@ loadPrestigeArt(this);syncHallWar(this,state);syncMountRealm(this,state);syncBao
         const off=u<1500?0:u<1500+move?travel*(u-1500)/move:u<2700+move?travel:travel*(1-(u-2700-move)/move);
         c.save();c.beginPath();c.rect(l.x+5,l.y,inner,l.h);c.clip();if(text)c.drawImage(text,l.x+5-off-1,l.y-1,text.width/2,text.height/2);c.restore();}
       // 15/11: danh hiệu + Chân Truyền thành icon tròn nhỏ hai bên khung tên (không còn dòng chữ đè lên người).
-      if(l.player.honor)this.drawBadge(c,l.x-10,l.y+l.h/2,honorIcon(l.player.honor),['#7fe0c8','#ffd27a','#c9a8ff'][l.player.honor.frame]||'#ffd27a',cache);
+      {const hall=hallOf(this,l.player);if(hall)drawHallBadge(c,l.x-11,l.y+l.h/2,hall,cache);} // 21/11 tối: huy hiệu bên trái = ĐƯỜNG (màu + icon riêng), thay ấn chức danh chữ Hán (danh hiệu đã hiện trên đầu)
       if(l.player.sectHallDiscipleRank!=null)this.drawBadge(c,l.x+l.w+10,l.y+l.h/2,'📜','#ffe39b',cache);if(l.player.reincarnations>0)drawLuanBadge(c,l.x+l.w+10+(l.player.sectHallDiscipleRank!=null?24:0),l.y+l.h/2,l.player.reincarnations,cache); /* 18/11: ☸ Luân Hồi */
       this.drawQiBar(c,l,t);drawTanDeTuHint(this,c,l,t);
     }
