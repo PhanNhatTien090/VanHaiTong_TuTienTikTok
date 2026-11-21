@@ -1,3 +1,4 @@
+import {luanHoiTitle} from './luan-hoi-data.js';
 import {soLenhHTML,soLenhPage,soLenhForced,lateSoLenh,BOARD_CYCLE_MS,TOP_MS,SO_LENH_MS} from './so-lenh.js';
 const compact = new Intl.NumberFormat('vi-VN',{notation:'compact',maximumFractionDigits:1});
 const points = n => Number(n||0).toLocaleString('vi-VN');
@@ -15,7 +16,10 @@ export function hallsRankHTML(state,esc,now){
     const rows=[...halls].sort(hallStandingOrder);
     return `<div class="qi-leaders hall-ranks"><b>NGŨ ĐƯỜNG · TUẦN</b><small>Hoạt động + Đường chiến · thưởng cuối tuần</small>${rows.map(h=>`<span>${emblem(h)}<em>${esc(hallLabel(h))}</em><strong>${points(h.points)}</strong>${h.champion?'<small>+5% tu vi tuần này</small>':''}</span>`).join('')}</div>`;
   }
-  return `<div class="qi-leaders hall-ranks"><b>THIÊN BẢNG</b>${top.slice(0,10).map(p=>`<span><i>${p.rank}</i><em>${esc(p.name)}${p.active?'<u title="Đang ở LIVE"></u>':''}</em><strong class="tb-realm">${esc(state.realms[p.realm]||'Phàm nhân')}</strong></span>`).join('')}</div>`; // 20/11 (chủ game): hiện TÊN CẢNH GIỚI, không hiện số tu vi mấy tỷ
+  // 21/11 (chủ game): người ĐÃ CHUYỂN SINH luôn top đầu (server xếp, ngu-duong.mjs thienBangOrder) + dòng màu mè riêng (thien-bang-luanhoi.css): bánh xe Luân Hồi, chữ vàng, dòng phụ "☸ Nhất Thế Luân Hồi · cảnh giới".
+  return `<div class="qi-leaders hall-ranks"><b>THIÊN BẢNG</b>${top.slice(0,10).map(p=>{const n=Number(p.reincarnations)||0,realm=esc(state.realms[p.realm]||'Phàm nhân'),live=p.active?'<u title="Đang ở LIVE"></u>':'';
+    return n>0?`<span class="tb-luanhoi"><i>${p.rank}</i><em><img class="tb-wheel" src="/assets/title-icons/wheel.webp" alt="">${esc(p.name)}${live}</em><strong class="tb-realm" title="${realm}">☸ ${esc(luanHoiTitle(n))}</strong></span>`
+      :`<span><i>${p.rank}</i><em>${esc(p.name)}${live}</em><strong class="tb-realm">${realm}</strong></span>`;}).join('')}</div>`; // 20/11 (chủ game): hiện TÊN CẢNH GIỚI, không hiện số tu vi mấy tỷ // 20/11 (chủ game): hiện TÊN CẢNH GIỚI, không hiện số tu vi mấy tỷ
 }
 
 function hallRoster(h,esc){

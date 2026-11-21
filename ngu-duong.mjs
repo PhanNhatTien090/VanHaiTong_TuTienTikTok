@@ -12,6 +12,9 @@ const real = p => p && !p.resident && !p.puppet && !p.webOnly && p.actorKind !==
 const score = p => Math.max(0, Number(p?.totalQi)||0);
 const membership = (s,id) => Object.hasOwn(s.members,id) ? s.members[id] : null;
 const rankOrder = (a,b) => score(b)-score(a) || String(a.id).localeCompare(String(b.id));
+// 21/11 (chủ game): ĐÃ CHUYỂN SINH luôn đứng đầu Thiên Bảng (nhiều lần Luân Hồi hơn đứng trên), rồi mới tới tổng tu vi.
+const rebirthsOf = p => Math.max(0, Math.floor(Number(p?.reincarnations)||0));
+export const thienBangOrder = (a,b) => rebirthsOf(b)-rebirthsOf(a) || rankOrder(a,b);
 const byPoints = (a,b) => b.points-a.points || a.index-b.index;
 const nameKey = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/đ/g,'d').replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,' ').trim();
 const success = message => ({ok:true,message});
@@ -134,13 +137,13 @@ export function thienBang(w,active,now,master=masterId(w,active,now)){return rem
 function thienBangScan(w,active,now,master) {
   const top=[];
   for(const p of Object.values(w.players)){
-    if(!real(p) || top.length===10 && rankOrder(p,top[9])>=0)continue;
+    if(!real(p) || top.length===10 && thienBangOrder(p,top[9])>=0)continue;
     let i=top.length;
-    while(i>0 && rankOrder(p,top[i-1])<0)i--;
+    while(i>0 && thienBangOrder(p,top[i-1])<0)i--;
     top.splice(i,0,p);
     if(top.length>10)top.pop();
   }
-  return top.map((p,i)=>({rank:i+1,id:p.id,name:p.name,realm:p.realm,totalQi:score(p),active:active(w,p,now),master:p.id===master}));
+  return top.map((p,i)=>({rank:i+1,id:p.id,name:p.name,realm:p.realm,totalQi:score(p),reincarnations:rebirthsOf(p),active:active(w,p,now),master:p.id===master}));
 }
 
 export function hallBenefits(w,p,now,source) {

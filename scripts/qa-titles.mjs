@@ -30,7 +30,7 @@ const shot=async(n,clip)=>{const r=await send('Page.captureScreenshot',{format:'
 try{await send('Page.enable');await send('Runtime.enable');
  await send('Emulation.setDeviceMetricsOverride',{width:540,height:960,deviceScaleFactor:2,mobile:false});
  await send('Page.navigate',{url:`${base}/?overlay=1&world=demo&stage=world&quality=high&qa=1`});await pause(9000);
- for(let i=0;i<Number(process.env.SHOTS||3);i++){await shot('san-'+i);await pause(1700);}
+ for(let i=0;i<Number(process.env.SHOTS||3);i++){await shot('san-'+i);await pause(Number(process.env.EVERY||1700));}
  // ảnh phóng to vùng giữa sân (nơi đông người)
  await shot('zoom-giua',{x:60,y:330,width:420,height:330});
  // FLASH=x,y,w,h (px CSS): chụp cận 14 khung cách 250 ms để xem chữ vàng lóe sáng
