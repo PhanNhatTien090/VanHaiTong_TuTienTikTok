@@ -18,10 +18,10 @@ test('shuffle-bag: every 10 successful picks cover all 10 events (bond, race, ar
 
 test('16/11: bí cảnh nhiều tu vi (tháp, mê cung, lò đan, tọa kỹ bí cảnh) không vào túi thường — 25 phút mới mở một cái, luân phiên',()=>{
  const w=createWorld('live');let now=1e7;for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'nhapmon'},now);
- setEventSettings(w,{autoRandom:true,autoEventMinutes:5});w.settings.visitorRotation=false;w.nextBossAt=now+1e12;const big=['tower','maze','alchemy','mount-realm'],seen=[];
+ setEventSettings(w,{autoRandom:true,autoEventMinutes:5});w.settings.visitorRotation=false;w.nextBossAt=now+1e12;const big=['tower','alchemy','mount-realm','bao-kho'] /* 21/11: Mê Cung không tự mở nữa */,seen=[];
  for(let i=0;i<400;i++){for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'tuvi'},now);w.nextAutoEventAt=now;const last=w.bigEventSeq||0;tick(w,now);
   if((w.bigEventSeq||0)!==last)seen.push([w.lastRandomEvent,now]);
-  for(const k of ['boss','tower','maze','alchemy','mountRealm','race','tournament','arena','bond','bonk'])if(w[k]&&typeof w[k]==='object')w[k]=null;w.flowerEvent=null;now+=5*60000;}
+  for(const k of ['boss','tower','maze','alchemy','mountRealm','baoKho','race','tournament','arena','bond','bonk'])if(w[k]&&typeof w[k]==='object')w[k]=null;w.flowerEvent=null;now+=5*60000;}
  assert.ok(seen.length>=4,'bí cảnh: '+seen.length);
  assert.deepEqual(seen.slice(0,4).map(x=>x[0]).sort(),[...big].sort());
  for(let i=1;i<seen.length;i++)assert.ok(seen[i][1]-seen[i-1][1]>=25*60000,'cách nhau '+(seen[i][1]-seen[i-1][1])/60000+' phút');
@@ -32,4 +32,12 @@ test('16/11: mở tay một bí cảnh lớn → bí cảnh tự động kế ti
  const {startMountRealmEvent}=await import('../engine.mjs');
  const w=createWorld('live');const now=1e7;for(const id of ['a','b','c'])action(w,{type:'chat',userId:id,name:id,text:'nhapmon'},now);
  w.nextBigEventAt=now+60000;assert.equal(startMountRealmEvent(w,now).ok,true);assert.ok(w.nextBigEventAt>=now+25*60000);
+});
+
+test('21/11: Mê Cung không tự mở trong vòng sự kiện lớn (chỉ mở tay hoặc settings.mazeAuto)',()=>{
+ const w=createWorld('live');let now=1e7;for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'nhapmon'},now);
+ setEventSettings(w,{autoRandom:true,autoEventMinutes:5});w.settings.visitorRotation=false;w.nextBossAt=now+1e12;const seen=new Set();
+ for(let i=0;i<300;i++){for(const id of ['a','b','c','d'])action(w,{type:'chat',userId:id,name:id,text:'tuvi'},now);w.nextAutoEventAt=now;tick(w,now);if(w.lastRandomEvent)seen.add(w.lastRandomEvent);
+  for(const k of ['boss','tower','maze','alchemy','mountRealm','baoKho','race','tournament','arena','bond','bonk'])if(w[k]&&typeof w[k]==='object')w[k]=null;w.flowerEvent=null;now+=5*60000;}
+ assert.ok(!seen.has('maze'),[...seen].join(','));assert.ok(seen.has('tower'));
 });

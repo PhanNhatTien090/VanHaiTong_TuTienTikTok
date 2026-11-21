@@ -11,7 +11,7 @@ const w=JSON.parse(await fs.readFile('data/live.json','utf8')),now=Date.now(),fa
 for(const k of ['boss','miniEvent','opportunity','envelope','visitor'])delete w[k];
 for(const [k,v] of Object.entries(w))if(v&&typeof v==='object'&&!Array.isArray(v)){if(v.phase&&!['idle','closed','done','ended','finished'].includes(v.phase)){v.phase='idle';v.endsAt=now-1000;v.closedAt=now-1000;}else if(v.endsAt>now&&!v.closedAt){v.endsAt=now-1000;v.closedAt=now-1000;}}
 for(const k of ['nextBossAt','nextSmallAt','nextBigEventAt','nextVisitorAt','nextOpportunityAt','nextMiniAt'])w[k]=far;w.engagement&&(w.engagement.nextSmallAt=far);
-w.liveSession={active:true,startedAt:now-3600e3};w.settings=Object.assign(w.settings||{},{autoEvents:false,bondEnabled:false});
+w.liveSession={active:true,startedAt:now-3600e3};w.settings=Object.assign(w.settings||{},{autoEvents:false,bondEnabled:false});w.lastCeremonyAt=now;w.honorStageUntil=0;delete w.flowerEvent;if(w.nguDuong)delete w.nguDuong.match; // đại điển tự mở / dở sự kiện sẽ chặn EVENT
 const crowd=Object.values(w.players).filter(p=>!p.resident&&!p.puppet&&p.realm>0).sort((a,b)=>(b.lastActive||0)-(a.lastActive||0)).slice(0,Number(process.env.CROWD||25));
 crowd.forEach((p,i)=>{p.lastActive=now-i*4000;p.lastRealInteractionAt=now-i*4000;delete p.leftLiveAt;});
 // mẫu danh hiệu sự kiện cho người KHÔNG VIP (VIP luôn thắng danh hiệu sự kiện)
@@ -30,6 +30,15 @@ const shot=async(n,clip)=>{const r=await send('Page.captureScreenshot',{format:'
 try{await send('Page.enable');await send('Runtime.enable');
  await send('Emulation.setDeviceMetricsOverride',{width:540,height:960,deviceScaleFactor:2,mobile:false});
  await send('Page.navigate',{url:`${base}/?overlay=1&world=demo&stage=world&quality=high&qa=1`});await pause(9000);
+ // EVENT=sc:start-tower | visitor:tinh-ha | arena | boss | pet — mở 1 sự kiện trước khi chụp (soát giao diện từng sự kiện)
+ if(process.env.EVENT){const [k,v]=process.env.EVENT.split(':');const P=(p,b={})=>fetch(base+p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json()).catch(e=>({err:String(e)}));
+  const r=k==='sc'?await P('/api/social-control?world=demo',{action:v}):k==='visitor'?await P('/api/visitor-event?world=demo',{kind:v}):k==='arena'?await P('/api/arena?world=demo',{minutes:5}):k==='boss'?await P('/api/boss?world=demo',{}):k==='pet'?await P('/api/pet-event?world=demo',{action:'start'}):k==='flower'?await P('/api/flower-event?world=demo',{minutes:3}):{err:'EVENT lạ'};
+  console.log('mở',process.env.EVENT,JSON.stringify(r).slice(0,120));await pause(Number(process.env.EVENT_WAIT||8000));
+  for(const id of crowd.slice(0,6).map(p=>p.id))await P('/api/action?world=demo',{type:'chat',userId:id,name:'x',text:'1'});await pause(1500);}
+ // RECTS="#giftBoard;.tw2-panel": in khung các phần tử theo selector
+ if(process.env.RECTS){const r=await send('Runtime.evaluate',{returnByValue:true,expression:`${JSON.stringify(process.env.RECTS)}.split(";").map(q=>[...document.querySelectorAll(q)].slice(0,3).map(el=>{const b=el.getBoundingClientRect();return q+" "+(el.id||el.className.toString().slice(0,40))+" ["+Math.round(b.left)+","+Math.round(b.top)+" "+Math.round(b.width)+"x"+Math.round(b.height)+"] hidden="+el.hidden}).join(" | ")||q+" (không có)").join(" ### ")`});console.log(r.result?.value??JSON.stringify(r).slice(0,200));}
+ // PROBE="x,y;x,y" (px CSS): in phần tử + khung tại từng điểm (tìm đúng bảng bị đè)
+ if(process.env.PROBE){const r=await send('Runtime.evaluate',{returnByValue:true,expression:`${JSON.stringify(process.env.PROBE)}.split(';').map(p=>{const [x,y]=p.split(',').map(Number);const out=[];for(const el of document.elementsFromPoint(x,y).slice(0,4)){const b=el.getBoundingClientRect();out.push((el.id?'#'+el.id:el.tagName.toLowerCase())+'.'+[...el.classList].slice(0,3).join('.')+' ['+Math.round(b.left)+','+Math.round(b.top)+' '+Math.round(b.width)+'x'+Math.round(b.height)+'] z='+getComputedStyle(el).zIndex);}return p+' → '+out.join(' | ');}).join(' ### ')`});console.log(r.result?.value??JSON.stringify(r.exceptionDetails||r).slice(0,300));}
  for(let i=0;i<Number(process.env.SHOTS||3);i++){await shot('san-'+i);await pause(Number(process.env.EVERY||1700));}
  // ảnh phóng to vùng giữa sân (nơi đông người)
  await shot('zoom-giua',{x:60,y:330,width:420,height:330});

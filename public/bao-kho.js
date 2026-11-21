@@ -191,8 +191,8 @@ function banners(h,c,t,H){
   stx(c,s,x+w/2+16,y,b.t?30:28,col,{width:6,max:w-90});c.restore();});
 }
 // 18/11 (chủ game: "pháp bảo coi với trang bị kiểu gì, không thấy hướng dẫn"): bảng ĐÃ NHẬN THẦN KHÍ dưới CƠ DUYÊN.
-function howTo(c,H){const x=22,y=H*.41,w=272,rows=[['thần khí','xem đồ đã có'],['trang bị + tên','đeo làm bản mệnh'],['bản mệnh','món đang mang'],['Tháp · tỷ thí','tự tung thần thông']];
- panel(c,x,y,w,56+rows.length*22,'ĐÃ NHẬN THẦN KHÍ');rows.forEach(([k,v],i)=>{const yy=y+66+i*22;stx(c,k,x+18,yy,16,'#ffd36b',{width:4,align:'left',max:104});stx(c,v,x+w-16,yy,15,'#f2e6ff',{width:4,align:'right',weight:'700',max:136});});}
+function howTo(c,H){const x=22,y=H*.41,w=300 /* 21/11: 272 → 300, hai cột chữ từng dính nhau ("trang bị + tênđeo làm…") */,rows=[['thần khí','xem đồ đã có'],['trang bị + tên','đeo làm bản mệnh'],['bản mệnh','món đang mang'],['Tháp · tỷ thí','tự tung thần thông']];
+ panel(c,x,y,w,56+rows.length*22,'ĐÃ NHẬN THẦN KHÍ');rows.forEach(([k,v],i)=>{const yy=y+66+i*22;stx(c,k,x+18,yy,16,'#ffd36b',{width:4,align:'left',max:112});stx(c,v,x+w-16,yy,15,'#f2e6ff',{width:4,align:'right',weight:'700',max:140});});}
 function hunters(c,e,H){
  const top=(e.top||[]).slice(0,5);if(!top.length)return;const x=452,y=H*.775,w=426,rowH=30;panel(c,x,y,w,58+rowH*top.length,'SĂN BẢO NHIỀU NHẤT');
  top.forEach((p,i)=>{const yy=y+70+i*rowH;stx(c,(i+1)+'. '+short(p.name,13),x+20,yy,19,i?'#ffffff':'#ffe28a',{width:4,align:'left',weight:'800',max:240});stx(c,p.items+' món · '+p.pulls+' lượt',x+w-18,yy,17,'#d9cff0',{width:4,align:'right',weight:'700'});});

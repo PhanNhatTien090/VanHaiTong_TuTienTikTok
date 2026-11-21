@@ -1,5 +1,5 @@
 /* 16/11/2026: Vân Hải Tháp 4 đài (public/tower.js). Khung tower-stage cũ ở live-clarity.css; đây là phần ruột mới. */
-body.overlay .tower-stage.tw2:not([hidden]){width:94%;max-width:none;top:13.5%;padding:1.4em .6em .5em;font-size:clamp(9px,1.75cqw,19px);
+body.overlay .tower-stage.tw2:not([hidden]){width:94%;max-width:none;top:15.5% /* 21/11: 13.5% → dải tên Tháp bị thẻ Tặng quà đè */;padding:1.4em .6em .5em;font-size:clamp(9px,1.75cqw,19px);
   background:linear-gradient(180deg,rgba(6,12,24,.86),rgba(6,12,24,.95));}
 .tw2-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45em}
 .tw2-lane{position:relative;border-radius:12px;padding:.35em .45em .4em;background:linear-gradient(180deg,rgba(20,40,70,.85),rgba(8,14,30,.92));

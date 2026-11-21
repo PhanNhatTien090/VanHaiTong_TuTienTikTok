@@ -193,3 +193,5 @@ html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) s
 html body.overlay.ui-tm .scene-shell #spotlight.spotlight:not(.spot-transform) :is(span,small){font-size:clamp(10px,2.5cqw,27px)}
 /* 20/11 E: dòng "Tiên nhân kế ~N phút · Tên" cuối bảng Tặng quà */
 html body.overlay.ui-tm .scene-shell #giftBoard .grc-next{display:block;margin-top:.35em;padding-top:.3em;border-top:1px solid #1b181333;font:800 clamp(8px,1.8cqw,19px)/1.2 "Segoe UI",Arial,sans-serif;color:#7a140e;text-align:center}
+/* 21/11 (soát giao diện): Lò Đan vẽ bảng điều khiển trên canvas phủ cả bề ngang từ 2% tới 24% chiều cao → thẻ Tặng quà hạ xuống ngay dưới, không đè tên lò */
+html body.overlay.ui-tm.tm-event.alchemy-on .scene-shell #phoneHudRight.phone-hud-rail{top:24.5%!important}

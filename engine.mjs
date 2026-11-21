@@ -1334,7 +1334,8 @@ function bigSpaced(w,now,r){if(r?.ok)w.nextBigEventAt=Math.max(w.nextBigEventAt|
 function bigEvent(w,now){if(w.settings?.bigEvents===false)return null;
   if(!w.nextBigEventAt){w.nextBigEventAt=now+20*60000;return null;}
   if(now<w.nextBigEventAt||['registration','running'].includes(w.race?.phase))return null;
-  const skip=w.settings?.randomExclude||[],seq=w.bigEventSeq||0;
+  // 21/11 (chủ game: Mê Cung "không ai thèm chơi" — mỗi bình luận 1 ô, đường ~85 ô, bình luận LIVE trễ 1–2 phút → không chơi nổi): KHÔNG tự mở nữa, chỉ mở tay ở tab Sự kiện (hoặc settings.mazeAuto=true).
+  const skip=[...(w.settings?.randomExclude||[]),...(w.settings?.mazeAuto===true?[]:['maze'])],seq=w.bigEventSeq||0;
   for(let i=0;i<BIG_EVENTS.length;i++){const [id,,start]=BIG_EVENTS[(seq+i)%BIG_EVENTS.length];if(skip.includes(id))continue;let r;try{r=start(w,now);}catch{r=null;}
     if(r?.ok){w.bigEventSeq=seq+i+1;w.lastRandomEvent=id;w.nextBigEventAt=now+Math.max(15,w.settings?.bigEventMinutes??BIG_EVENT_MINUTES)*60000;return id;}}
   w.nextBigEventAt=now+5*60000;return null;}
