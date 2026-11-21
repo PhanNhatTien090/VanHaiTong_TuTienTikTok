@@ -84,7 +84,11 @@ export function drawCourtAdornment(scene,c,target,t,layer){
   // 21/11 (chủ game: Tinh Hà/Bích Lân "mặc vào thiếu hiệu ứng lum la"): sân ≥15 người là budget 'light' → trước đây skin LUÔN vẽ bản rút gọn,
   // kể cả lúc bùng. Nay trong 8 s bùng (mỗi người lệch pha, tối đa 8 người premium → ~2 người cùng bùng) vẽ ĐỦ lớp;
   // chỉ rút gọn khi FPS thật tụt (pressured) hoặc sân >30 người. Lúc nghỉ: chỉ pháp bảo, bản nhẹ như cũ.
-  const burst=skinFxOn(scene,p,t),fullBurst=burst&&!scene.budget?.pressured&&!scene.minimalCrowd,fxLight=fullBurst?false:light;
+  // 21/11 trưa (LIVE tụt 8 FPS khi Bích Lân bùng): sân ÍT người mà FPS tụt thì RenderBudget hạ level 'light' KHÔNG bật pressured
+  // → trước đây vẫn vẽ đủ lớp. Nay: chỉ đủ lớp khi máy không hề bị hạ vì FPS (sân đông: !pressured; sân vắng: level khác 'light').
+  const b=scene.budget,fpsDown=!!b&&(b.pressured||(!b.crowded&&b.level==='light'));
+  // Đấu thủ Lôi Đài vẽ rất to (fighterScale) → lớp cộng sáng phủ diện tích lớn, GPU nghẽn (LIVE 8 FPS khi Bích Lân giữ ngai) → luôn bản nhẹ.
+  const burst=skinFxOn(scene,p,t),fullBurst=burst&&!fpsDown&&!scene.minimalCrowd&&!target.arenaFighter,fxLight=fullBurst?false:(light||!!target.arenaFighter);
   if(FX[spec?.kind]&&!revealing&&!karmaShow&&burst)FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light:fxLight,seed,art:spec.artwork?signatureArt(spec):null});
   const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
   if(gear&&!unlocking&&!revealing&&!karmaShow)FX[gear.kind].gear(c,signatureArt(gear),t,pose,layer,{motion,light:fxLight});
