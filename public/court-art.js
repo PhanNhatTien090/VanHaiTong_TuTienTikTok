@@ -4,8 +4,8 @@ import {drawBlackGoldAura,drawBlackGoldGear,drawBlackGoldReveal} from './black-g
 import {drawKarmaAura,drawKarmaGear,drawKarmaReveal} from './karma-fx.js?v=karma-halo-v5';
 import {drawTinhHaAura,drawTinhHaGear,drawTinhHaReveal} from './tinh-ha-fx.js?v=20261119';
 import {drawBichLanAura,drawBichLanGear,drawBichLanReveal} from './bich-lan-fx.js?v=20261119-gear';
-import {drawNuOaAura,drawNuOaGear,drawNuOaReveal} from './nu-oa-fx.js?v=20261121';
-import {drawUMinhAura,drawUMinhGear,drawUMinhReveal} from './u-minh-fx.js?v=20261121';
+import {drawNuOaAura,drawNuOaGear,drawNuOaReveal} from './nu-oa-fx.js?v=20261121b';
+import {drawUMinhAura,drawUMinhGear,drawUMinhReveal} from './u-minh-fx.js?v=20261121b';
 import {feedbackBudget} from './cinematic-feedback.js';
 import {ownsGear} from './skin-gear.js';
 import {skinFxOn} from './performance.js';
@@ -81,9 +81,13 @@ export function drawCourtAdornment(scene,c,target,t,layer){
   // Màn biến hình Nhân Quả tự vẽ hào quang + thương suốt màn → tránh vẽ chồng.
   const karmaShow=scene.effects?.some(e=>e.user===p.id&&(e.transform===KARMA_VISITOR.kind||e.transform===TINH_HA_VISITOR.kind||e.transform===BICH_LAN_VISITOR.kind||e.transform===NU_OA_VISITOR.kind||e.transform===U_MINH_VISITOR.kind)&&t<e.start+e.duration);
   let seed=0;for(const ch of String(p.id))seed=(seed*31+ch.codePointAt(0))%997;
-  if(FX[spec?.kind]&&!revealing&&!karmaShow&&skinFxOn(scene,p,t))FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light,seed,art:spec.artwork?signatureArt(spec):null});
+  // 21/11 (chủ game: Tinh Hà/Bích Lân "mặc vào thiếu hiệu ứng lum la"): sân ≥15 người là budget 'light' → trước đây skin LUÔN vẽ bản rút gọn,
+  // kể cả lúc bùng. Nay trong 8 s bùng (mỗi người lệch pha, tối đa 8 người premium → ~2 người cùng bùng) vẽ ĐỦ lớp;
+  // chỉ rút gọn khi FPS thật tụt (pressured) hoặc sân >30 người. Lúc nghỉ: chỉ pháp bảo, bản nhẹ như cũ.
+  const burst=skinFxOn(scene,p,t),fullBurst=burst&&!scene.budget?.pressured&&!scene.minimalCrowd,fxLight=fullBurst?false:light;
+  if(FX[spec?.kind]&&!revealing&&!karmaShow&&burst)FX[spec.kind].aura(c,t,pose.stand||0,layer,{motion,light:fxLight,seed,art:spec.artwork?signatureArt(spec):null});
   const unlocking=scene.effects?.some(e=>e.user===p.id&&e.hacKimArtifact&&t<e.start+e.duration);
-  if(gear&&!unlocking&&!revealing&&!karmaShow)FX[gear.kind].gear(c,signatureArt(gear),t,pose,layer,{motion,light});
+  if(gear&&!unlocking&&!revealing&&!karmaShow)FX[gear.kind].gear(c,signatureArt(gear),t,pose,layer,{motion,light:fxLight});
   c.restore();return;
  }
  if(!spec)return;

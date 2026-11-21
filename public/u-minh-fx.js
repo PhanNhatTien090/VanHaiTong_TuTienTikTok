@@ -27,16 +27,17 @@ const rng=seed=>{let s=seed%2147483647||7;return ()=>((s=s*16807%2147483647)-1)/
 
 function surface(w,h,draw){const canvas=makeSurface(w,h);if(!canvas)return null;draw(canvas.getContext('2d'),w/2,h/2);return canvas;}
 function radial(size,stops){return surface(size,size,(c,r)=>{const g=c.createRadialGradient(r,r,1,r,r,r);for(const [at,color] of stops)g.addColorStop(at,color);c.fillStyle=g;c.fillRect(0,0,size,size);});}
-const smokeArt=()=>art.smoke??=radial(128,[[0,'#06000ee0'],[.45,'#12021e90'],[1,'#00000000']]);
-const violetArt=()=>art.violet??=radial(128,[[0,'#f0d8ffe0'],[.3,'#b060ff90'],[.65,'#6a20c038'],[1,'#30087000']]);
+// 21/11 (chủ game: "màu đen phải nhiều hơn màu tím"): khói đặc + đen hơn, quầng tím trầm + nhạt hơn; ảnh skin/hào quang/cờ đã hạ tím (bản gốc ở data/backups/u-minh-orig-20261121).
+const smokeArt=()=>art.smoke??=radial(128,[[0,'#000000f4'],[.45,'#05000ac0'],[.8,'#02000440'],[1,'#00000000']]);
+const violetArt=()=>art.violet??=radial(128,[[0,'#d8b0ffc0'],[.3,'#7a30d070'],[.65,'#3a0a7a28'],[1,'#1a043800']]);
 const coreArt=()=>art.core??=radial(64,[[0,'#ffffff'],[.3,'#e0b8ff'],[.7,'#9040ff60'],[1,'#6020c000']]);
 const sparkArt=()=>art.spark??=surface(64,64,(c,r)=>{c.translate(r,r);
  for(const [w,h] of [[28,2.2],[2.2,28]]){const g=c.createRadialGradient(0,0,0,0,0,28);g.addColorStop(0,'#ffffff');g.addColorStop(.4,'#d8a8ffa0');g.addColorStop(1,'#9040ff00');c.fillStyle=g;c.beginPath();c.ellipse(0,0,w,h,0,0,TAU);c.fill();}
  const g=c.createRadialGradient(0,0,0,0,0,9);g.addColorStop(0,'#ffffff');g.addColorStop(1,'#ffffff00');c.fillStyle=g;c.beginPath();c.arc(0,0,9,0,TAU);c.fill();});
 // Lưỡi hắc viêm: viền tím sáng, lõi đen (vẽ thường, không cộng sáng → lửa ĐEN).
 const flameArt=()=>art.flame??=surface(32,64,(c)=>{const tongue=(s,col)=>{c.beginPath();c.moveTo(16,62);c.bezierCurveTo(16-13*s,52,16-9*s,26,16+2*s,4+ (1-s)*20);c.bezierCurveTo(16+6*s,24,16+13*s,46,16,62);c.closePath();c.fillStyle=col;c.fill();};
- const g=c.createLinearGradient(0,64,0,0);g.addColorStop(0,'#c070ffe0');g.addColorStop(.6,'#8a30ffb0');g.addColorStop(1,'#b070ff00');tongue(1,g);
- const k=c.createLinearGradient(0,64,0,10);k.addColorStop(0,'#05000af0');k.addColorStop(.7,'#12022af0');k.addColorStop(1,'#20063a00');tongue(.62,k);});
+ const g=c.createLinearGradient(0,64,0,0);g.addColorStop(0,'#9a50e0c0');g.addColorStop(.6,'#5a1aa090');g.addColorStop(1,'#40108000');tongue(1,g);
+ const k=c.createLinearGradient(0,64,0,10);k.addColorStop(0,'#000000fa');k.addColorStop(.7,'#06000ef4');k.addColorStop(1,'#10031c00');tongue(.8,k);});
 // Mắt xích (1 mắt dẹt nhìn thẳng): khung kim loại tối + vệt sáng tím.
 const linkArt=()=>art.link??=surface(24,14,(c)=>{c.lineWidth=3;c.strokeStyle='#241c30';c.beginPath();c.ellipse(12,7,9.5,4.5,0,0,TAU);c.stroke();c.lineWidth=1;c.strokeStyle='#c8a0ffd0';c.beginPath();c.ellipse(12,6.4,9.5,4.3,0,Math.PI*1.1,Math.PI*1.9);c.stroke();});
 const emberArt=()=>art.ember??=radial(16,[[0,'#ffffff'],[.3,'#d090ff'],[1,'#8020ff00']]);
@@ -66,7 +67,7 @@ function haloLayer(c,a,t,cy,width,{alpha=1,pulse=0,motion=true}={}){
  if(!a?.halo)return;const k=1+pulse+(motion?Math.sin(t*.0019)*.014:0),w=width*k,h=w*a.halo.naturalHeight/a.halo.naturalWidth;
  img(c,smokeArt(),-w*.55,cy-w*.55,w*1.1,w*1.1,.3*alpha);
  c.save();c.translate(0,cy);c.rotate(motion?-t*.00005:0);img(c,a.halo,-w*UM_RING.x,-h*UM_RING.y,w,h,alpha);c.restore();
- glow(c,violetArt(),-w*.42,cy-w*.42,w*.84,w*.84,alpha*(motion?.22+.14*Math.sin(t*.011)*Math.sin(t*.0037):.25));
+ glow(c,violetArt(),-w*.42,cy-w*.42,w*.84,w*.84,alpha*(motion?.08+.06*Math.sin(t*.011)*Math.sin(t*.0037):.1));
 }
 // U MINH MÔN: hố đen + viền tím + hạt sáng xoáy HÚT vào tâm.
 function abyssGate(c,t,width,alpha,{motion=true,light=false}={}){
@@ -82,7 +83,7 @@ function abyssGate(c,t,width,alpha,{motion=true,light=false}={}){
 function blackFlames(c,t,layer,alpha,count=10,spread=40,scale=1){
  for(let i=0;i<count;i++){const ang=i/count*TAU+Math.sin(i*1.7)*.3,front=Math.sin(ang)>0;if(front!==(layer==='front'))continue;
   const per=1300+i*170,u=((t+i*397)%per)/per,life=Math.sin(u*Math.PI),x=Math.cos(ang)*spread,y=22+Math.sin(ang)*spread*.26,h=(18+(i%3)*8)*scale*(.5+.7*life),w=h*.5,sk=Math.sin(t*.006+i)*.2;
-  glow(c,violetArt(),x-w,y-h*.8,w*2,h,alpha*life*.35);c.save();c.globalAlpha*=alpha*Math.min(1,life*1.6);c.translate(x,y);c.transform(1,0,sk,1,0,0);c.drawImage(flameArt(),-w/2,-h,w,h);c.restore();}
+  glow(c,violetArt(),x-w,y-h*.8,w*2,h,alpha*life*.12);c.save();c.globalAlpha*=alpha*Math.min(1,life*1.6);c.translate(x,y);c.transform(1,0,sk,1,0,0);c.drawImage(flameArt(),-w/2,-h,w,h);c.restore();}
 }
 // XÍCH U MINH: mắt xích đặt dọc xoắn ốc; mắt chẵn nằm dẹt, mắt lẻ xoay cạnh (co ngang) → giống xích thật.
 function chainHelix(c,t,stand,layer,alpha,ph=0,links=46){
@@ -101,6 +102,12 @@ function wisps(c,t,stand,alpha,count=4,light=false){
  for(let i=0;i<count;i++){for(let j=light?3:7;j>=0;j--){const p=wispPos(t-j*45,i,stand,bx,by),s=j?4.5*(1-j/9):6.5;glow(c,j?violetArt():coreArt(),p.x-s,p.y-s,2*s,2*s,alpha*p.a*(j?.7*(1-j/8):1));}
   const u=wispPos(t,i,stand,bx,by).u;if(u>.92)pull=Math.max(pull,(u-.92)/.08);}
  return pull;}
+// 21/11: CỘT MA KHÍ ĐEN — cụm khói đen bốc từ chân lên quá đầu sau lưng (vẽ thường → đen thật, không cộng sáng).
+function blackPlume(c,t,stand,alpha,count=9){const top=HALO_Y(stand)-70;
+ for(let i=0;i<count;i++){const u=((t*.00018)+i/count)%1,x=Math.sin(i*2.1+u*4+t*.0004)*(22+u*30),y=20+(top-20)*u,s=40+u*70,a=alpha*Math.sin(u*Math.PI)**.7;img(c,smokeArt(),x-s/2,y-s/2,s,s,a*.75);}}
+// Sương đen bò sát đất phía trước chân (che mép dưới áo → người như đứng trong ma vụ).
+function groundFog(c,t,alpha,count=6){for(let i=0;i<count;i++){const u=((t*.00012)+i/count)%1,x=(u-.5)*150*(i%2?1:-1),s=46+Math.sin(u*Math.PI)*24;
+ c.save();c.translate(x,24);c.scale(1,.38);img(c,smokeArt(),-s/2,-s/2,s,s,alpha*Math.sin(u*Math.PI)*.8);c.restore();}}
 function embers(c,t,count,width,height,alpha){for(let i=0;i<count;i++){const u=(i*.618+t*.00022)%1,x=Math.sin(i*2.4+u*5)*width*(.5+.5*((i*.37)%1)),y=20-u*height,a=Math.sin(u*Math.PI)*alpha;glow(c,emberArt(),x-1.6,y-1.6,3.2,3.2,a);}}
 // VẠN HỒN PHIÊN: cán đứng yên; vải cắt dải ngang, lệch sóng (đuôi bay nhiều hơn phần gần thanh ngang).
 function banner(c,a,t,stand,{alpha=1,motion=true,rise=0,light=false,pull=0}={}){
@@ -114,18 +121,19 @@ function banner(c,a,t,stand,{alpha=1,motion=true,rise=0,light=false,pull=0}={}){
  for(let r=0;r<rows;r++){const v=(r+.5)/rows,off=motion?(Math.sin(v*5-t*.004)*4+Math.sin(v*9-t*.007)*1.6)*v:0;
   c.drawImage(im,cut,clothTop+r*rh,iw-cut,rh+1,left+w*CLOTH_U+off,top+h*CLOTH_V+r*dh,w*(1-CLOTH_U),dh+.6);}
  c.restore();
- const cx=left+w*.6,cy=top+h*.45;glow(c,violetArt(),cx-w*.6,cy-h*.3,w*1.2,h*.6,alpha*(.18+.5*pull));
+ const cx=left+w*.6,cy=top+h*.45;glow(c,violetArt(),cx-w*.6,cy-h*.3,w*1.2,h*.6,alpha*(.05+.45*pull));
  if(motion&&!rise){const u=(t*.0005)%1;glow(c,violetArt(),cx+Math.sin(u*6)*6-4,top+h*.85-u*h*.5-4,8,8,alpha*Math.sin(u*Math.PI)*.8);}
 }
 
 export function drawUMinhAura(c,t,stand,layer,{motion=true,light=false,seed=0}={}){
  const time=motion?t:0,hy=HALO_Y(stand);
  if(layer==='back'){
-  img(c,smokeArt(),-95,hy-80,190,220,.8);
-  if(motion){miasma(c,time,hy+20,light?.6:1,light?3:5);
+  img(c,smokeArt(),-105,hy-90,210,240,.95);
+  if(motion){blackPlume(c,time,stand,1,light?5:9);miasma(c,time,hy+20,light?.6:1,light?3:5);
    if(!light){const e=eyeCycle(time+seed);demonEye(c,0,hy-62,64,e.open,.95,1,e.look);chainHelix(c,time,stand,'back',1,0);chainHelix(c,time,stand,'back',.9,Math.PI);}
    blackFlames(c,time,'back',1,light?6:12,40);}
  }else if(motion){
+  groundFog(c,time,1,light?3:6);
   blackFlames(c,time,'front',1,light?6:12,40);
   if(!light){chainHelix(c,time,stand,'front',1,0);chainHelix(c,time,stand,'front',.9,Math.PI);}
   wisps(c,time,stand,1,light?2:4,light);

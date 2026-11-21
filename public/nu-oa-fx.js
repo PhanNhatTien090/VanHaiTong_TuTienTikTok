@@ -106,6 +106,28 @@ function pearls(c,t,stand,layer,alpha,count=6){for(let i=0;i<count;i++){const a=
 function flowers(c,t,count,width,height,alpha,seed=0){
  for(let i=0;i<count;i++){const u=(i*.618+(t+seed)*.0001)%1,x=Math.sin(i*2.399+u*3)*width*(.4+.6*((i*.37)%1))+Math.sin(t*.0012+i)*8,y=-height+u*(height+22),a=Math.sin(u*Math.PI)*alpha,s=4+(i%3)*1.6;
   if(a<.04)continue;c.save();c.globalAlpha*=a*.9;c.translate(x,y);c.rotate(t*.0008+i);c.scale(1,.55+.45*Math.abs(Math.sin(t*.0015+i)));c.drawImage(flowerArt(),-s,-s,2*s,2*s);c.restore();}}
+// 21/11 (chủ game: "skin nữ hơi ít hiệu ứng") — thêm 4 lớp theo đúng chủ đề Vá Trời / nước:
+// NGŨ SẮC THẠCH: 5 viên đá vá trời bay vòng quanh đầu (che khuất trước/sau), đuôi sáng đúng màu.
+function fiveStones(c,t,stand,layer,alpha,light=false){const hy=HALO_Y(stand),tr=light?2:5;
+ for(let i=0;i<5;i++){const at=tt=>{const a=tt*.0007+i*TAU/5;return {x:Math.cos(a)*(52+stand*6),y:hy+8+Math.sin(a)*10+Math.sin(tt*.0013+i)*5,z:Math.sin(a)};};
+  const p=at(t);if((p.z>0)!==(layer==='front'))continue;const k=.75+.25*p.z;
+  for(let j=tr;j>=1;j--){const q=at(t-j*60);glow(c,stoneArt(STONES[i]),q.x-4*k,q.y-4*k,8*k,8*k,alpha*.5*(1-j/(tr+1)));}
+  glow(c,stoneArt(STONES[i]),p.x-8*k,p.y-8*k,16*k,16*k,alpha*(.8+.2*Math.sin(t*.004+i)));glow(c,lightArt(),p.x-2.5,p.y-2.5,5,5,alpha*.9);}}
+// GIỌT NƯỚC xoắn ốc từ mặt nước bay lên rồi tan thành bụi sáng.
+function droplets(c,t,stand,layer,alpha,count=10){const top=HALO_Y(stand)+10;
+ for(let i=0;i<count;i++){const u=((t*.00025)+i/count)%1,a=u*TAU*1.6+i*1.7,z=Math.sin(a);if((z>0)!==(layer==='front'))continue;
+  const R=36-u*14,x=Math.cos(a)*R,y=22+(top-22)*u,s=2.6+(1-u)*1.6,f=Math.sin(u*Math.PI);
+  glow(c,aquaArt(),x-s*1.6,y-s*1.6,s*3.2,s*3.2,alpha*f*.9);img(c,pearlArt(),x-s/2,y-s/2,s,s,alpha*f*.8);}}
+// CẦU VỒNG BỔ THIÊN: ~9 s một lần, cung ngũ sắc quét sau hào quang rồi tan (bùng theo nhịp, không liên tục).
+function rainbowSweep(c,t,stand,alpha){const P=9000,u=(t%P)/P;if(u>.32)return;const k=u/.32,hy=HALO_Y(stand),R=50+stand*8,a=alpha*Math.sin(k*Math.PI);
+ c.save();c.globalCompositeOperation='lighter';c.lineCap='round';
+ STONES.forEach((col,i)=>{c.globalAlpha=a*.55;c.strokeStyle=col;c.lineWidth=2.2;c.beginPath();c.arc(0,hy+12,R+i*3,Math.PI*(1.05+0),Math.PI*(1.05+.9*ease(k*1.4)));c.stroke();});
+ c.restore();
+ const e=Math.PI*(1.05+.9*ease(k*1.4)),hx=Math.cos(e)*(R+6),hyy=hy+12+Math.sin(e)*(R+6);spin(c,sparkArt(),hx,hyy,18,t*.004,a,true);}
+// SAO NHÁY quanh đầu.
+function twinkles(c,t,stand,alpha,count=7,seed=0){const hy=HALO_Y(stand);
+ for(let i=0;i<count;i++){const P=2200+i*310,u=((t+seed*13+i*700)%P)/P;if(u>.35)continue;const f=Math.sin(u/.35*Math.PI),x=Math.sin(i*2.7+seed)*70,y=hy-30+Math.cos(i*1.9)*50;
+  spin(c,sparkArt(),x,y,6+8*f,i,alpha*f,true);}}
 function chestLotus(c,t,stand,alpha){const y=CHEST_Y(stand),p=.8+.2*Math.sin(t*.003);glow(c,violetArt(),-12*p,y-12*p,24*p,24*p,alpha*.5);glow(c,lightArt(),-5,y-5,10,10,alpha*.6);}
 // BỔ THIÊN LINH CHÂU: quầng tím hồng thở, tia điện nhỏ, dòng nước quấn quanh (sau/trước cầu).
 function orb(c,a,t,x,y,{alpha=1,motion=true,size=1,light=false}={}){
@@ -124,12 +146,15 @@ export function drawNuOaAura(c,t,stand,layer,{motion=true,light=false,seed=0}={}
  if(layer==='back'){
   img(c,darkArt(),-85,hy-70,170,200,.68);
   aurora(c,time,hy+30,200,140+stand*20,motion?.9:.6,light?8:16);
-  if(motion){ribbon(c,time,stand,'back',0,1,light?16:36);if(!light)ribbon(c,time,stand,'back',Math.PI,.8,36);waterRings(c,time,stand,'back',1,light?2:3);pearls(c,time,stand,'back',1,light?4:6);}
+  if(motion){if(!light)rainbowSweep(c,time+seed*31,stand,1);ribbon(c,time,stand,'back',0,1,light?16:36);if(!light)ribbon(c,time,stand,'back',Math.PI,.8,36);waterRings(c,time,stand,'back',1,light?2:3);pearls(c,time,stand,'back',1,light?4:6);
+   fiveStones(c,time,stand,'back',1,light);droplets(c,time,stand,'back',1,light?4:10);}
  }else if(motion){
+  droplets(c,time,stand,'front',1,light?4:10);
   waterRings(c,time,stand,'front',1,light?2:3);
   ribbon(c,time,stand,'front',0,1,light?16:36);if(!light)ribbon(c,time,stand,'front',Math.PI,.8,36);
   pearls(c,time,stand,'front',1,light?4:6);chestLotus(c,time,stand,light?.6:1);
   flowers(c,time,light?5:14,64,130+stand*30,1,seed);
+  fiveStones(c,time,stand,'front',1,light);if(!light)twinkles(c,time,stand,1,7,seed);
  }
 }
 // Gear (luôn hiện với người sở hữu): mặt nước + sen · hào quang trăng · Bổ Thiên Linh Châu.
@@ -141,19 +166,31 @@ export function drawNuOaGear(c,a,t,pose,layer,{motion=true,light=false}={}){
 
 const hash=s=>{let h=0;for(const ch of String(s||''))h=(h*31+ch.codePointAt(0))%9973;return h;};
 // 5 vết nứt trời: vị trí + đường gấp khúc (theo seed).
+// 21/11 (chủ game xem: khe nứt cũ là khối đen dày hình chữ M → trông như đàn dơi): nay là VẾT NỨT MẢNH, dài, nghiêng khác nhau,
+// lòng khe là ánh sáng (trời rách lộ ánh tím trắng), có nhánh rẽ; toác dần từ giữa ra hai đầu.
 function rifts(seed,stand){const key='rf'+seed%5+'-'+(stand>.5?1:0);if(art[key])return art[key];const r=rng(seed+5),hy=HALO_Y(stand),L=[];
- for(let i=0;i<5;i++){const cx=(i-2)*38+(r()-.5)*10,cy=hy-78-Math.abs(i-2)*-10-(i%2)*18+(r()-.5)*8,pts=[];let x=cx-20,y=cy+(r()-.5)*6;
-  for(let j=0;j<7;j++){pts.push([x,y]);x+=40/6;y+=(r()-.5)*12;}L.push({cx,cy,pts});}
+ for(let i=0;i<5;i++){const cx=(i-2)*44+(r()-.5)*12,cy=hy-70-(2-Math.abs(i-2))*16-(r())*14,ang=(r()-.5)*1.1+(i-2)*.18,len=46+r()*26,n=13,pts=[];
+  const ca=Math.cos(ang),sa=Math.sin(ang);
+  for(let j=0;j<n;j++){const s=j/(n-1)-.5,off=(r()-.5)*7*(j%2?1:.6);pts.push([cx+ca*s*len-sa*off,cy+sa*s*len+ca*off]);}
+  const br=[];for(let b=0;b<3;b++){const j=2+Math.floor(r()*(n-4)),side=r()<.5?-1:1,bl=8+r()*12,ba=ang+side*(.7+r()*.6);br.push({j,dx:Math.cos(ba)*bl,dy:Math.sin(ba)*bl,kx:(r()-.5)*4,ky:(r()-.5)*4});}
+  L.push({cx,cy,pts,br});}
  return art[key]=L;}
 function drawRift(c,R,open,heal,col){if(open<=0||heal>=1)return;const P=R.pts,n=P.length,a=1-heal,mid=(n-1)/2;
- // khe toác: mép trên/dưới lệch theo bề dày (giữa dày, hai đầu nhọn) × độ mở
- const w=j=>(1-Math.abs(j-mid)/mid)**.8*6*open*(j%2?.7:1),up=P.map(([x,y],j)=>[x,y-w(j)]),dn=P.map(([x,y],j)=>[x,y+w(j)*.8]).reverse(),poly=[...up,...dn];
+ // toác từ giữa ra: đoạn hiện = |j-mid| ≤ open*mid; bề dày giữa ≤2,2
+ const reach=open*mid+.5,vis=P.filter((_,j)=>Math.abs(j-mid)<=reach);if(vis.length<2)return;
+ const w=j=>Math.max(.15,(1-Math.abs(j-mid)/mid))**.9*2.2*open;
+ const idx=P.map((_,j)=>j).filter(j=>Math.abs(j-mid)<=reach);
+ const up=idx.map(j=>[P[j][0],P[j][1]-w(j)]),dn=idx.map(j=>[P[j][0],P[j][1]+w(j)]).reverse(),poly=[...up,...dn];
  const path=()=>{c.beginPath();poly.forEach(([x,y],i)=>c[i?'lineTo':'moveTo'](x,y));c.closePath();};
- glow(c,violetArt(),R.cx-34,R.cy-18,68,36,a*.7*open);
- c.save();c.globalAlpha=a;path();c.fillStyle='#05010f';c.fill();
- c.globalCompositeOperation='lighter';c.lineJoin='round';c.strokeStyle='#a060ff';c.lineWidth=2.4;c.globalAlpha=a*.75;path();c.stroke();c.strokeStyle='#f4e8ff';c.lineWidth=.8;c.globalAlpha=a;path();c.stroke();
- // nhánh nứt nhỏ từ mép
- c.strokeStyle='#c090ff';c.lineWidth=.8;c.globalAlpha=a*.8*open;for(let j=1;j<n-1;j+=2){const [x,y]=P[j],d=j%4===1?-1:1;c.beginPath();c.moveTo(x,y+d*w(j)*.8);c.lineTo(x+4,y+d*(w(j)+5));c.lineTo(x+2,y+d*(w(j)+9));c.stroke();}
+ const line=()=>{c.beginPath();idx.forEach((j,i)=>c[i?'lineTo':'moveTo'](P[j][0],P[j][1]));};
+ glow(c,violetArt(),R.cx-30,R.cy-16,60,32,a*.45*open);
+ c.save();c.lineJoin='round';c.lineCap='round';
+ c.globalAlpha=a*.85;path();c.fillStyle='#1a0838';c.fill(); // mép rách tối mảnh
+ c.globalCompositeOperation='lighter';c.strokeStyle='#8a50ff';c.lineWidth=3.2*open;c.globalAlpha=a*.35;line();c.stroke(); // quầng
+ c.strokeStyle='#e8d8ff';c.lineWidth=1.1*open+.3;c.globalAlpha=a;line();c.stroke(); // lòng khe sáng
+ c.strokeStyle='#ffffff';c.lineWidth=.45;c.globalAlpha=a*open;line();c.stroke();
+ // nhánh rẽ
+ c.strokeStyle='#c8a8ff';c.lineWidth=.7;c.globalAlpha=a*.85*clamp((open-.4)/.6);for(const b of R.br){if(Math.abs(b.j-mid)>reach)continue;const [x,y]=P[b.j];c.beginPath();c.moveTo(x,y);c.lineTo(x+b.dx*.55+b.kx,y+b.dy*.55+b.ky);c.lineTo(x+b.dx,y+b.dy);c.stroke();}
  c.restore();
  if(heal>0)glow(c,stoneArt(col),R.cx-40*(1-heal*.4),R.cy-40*(1-heal*.4),80*(1-heal*.4),80*(1-heal*.4),Math.sin(heal*Math.PI)*1.2);
 }
