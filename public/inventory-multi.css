@@ -92,3 +92,8 @@ body.ritual-active .inventory-deck,body.hall-dueling .inventory-deck,body.ascens
 .inventory-deck .vd-rows li{display:flex;align-items:center;gap:.4em;min-width:0}.inventory-deck .vd-rows b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff4d5}
 .inventory-deck .vd-rows .vd-no{position:static;flex:none;font-size:.78em}.inventory-deck .vd-rows small{flex:none;font-size:.7em;color:#c9b6ff;border:1px solid #c79bff77;border-radius:999px;padding:0 .4em}
 .inventory-deck .vd-cell.is-limited .vd-pic{box-shadow:inset 0 0 0 2px #ff8fd0,0 0 .5em #ff8fd088}
+/* 21/11: BẢNG CÁNH (gõ "cánh") — ảnh cánh nằm ngang nên ô hơi bẹt, cánh kế tiếp ảnh mờ + chữ */
+.inventory-deck .vd-wings .vd-pic>img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 4px #ffe9a866)}
+.inventory-deck .vd-wings .vd-next{display:flex;align-items:center;gap:.5em;margin:.15em 0 .3em;opacity:.78}
+.inventory-deck .vd-wings .vd-next>img{width:3.2em;height:2.4em;object-fit:contain;filter:grayscale(.55) brightness(.8) drop-shadow(0 0 3px #0008)}
+.inventory-deck .vd-wings .vd-next b{color:#ffd86a;margin-right:.2em}

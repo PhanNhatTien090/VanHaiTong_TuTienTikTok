@@ -3,7 +3,7 @@
 // Chỉ đọc dữ liệu nhân vật, không đổi gì. Không nhắc giá quà/coin (luật LIVE).
 import {petById,ALL_PETS} from './public/spirit-pets.js';
 import {SPECIAL_SKINS} from './public/patrons.js';
-import {WING_TIERS,playerWing} from './public/boss-arena.js'; // 18/11: gộp cánh vào bảng skin
+import {WING_TIERS,playerWing,wingArt} from './public/boss-arena.js'; // 18/11: gộp cánh vào bảng skin
 export const BAG_CMDS=['tuido','tui','hanhtrang','xemtui'];
 const PET_CMDS=['thu','linhthu'];
 const petOpen=(w,now)=>{const e=w.petEvent;return !!(e&&!e.closedAt&&now>=e.startedAt&&now<e.endsAt);};
@@ -43,6 +43,13 @@ export function skinCard(p){
   owned:cap(owned.map(s=>({id:s.id,name:s.name,on:s.id===cur?.id})),24),
   tip:owned.length?'Gõ skin + tên để mặc · skin macdinh để về áo cảnh giới':'Skin mở từ sự kiện, đua kiếm, rèn pháp bảo'};
 }
+// 21/11 (chủ game): gõ "cánh" → BẢNG CÁNH riêng: ảnh từng cánh đã mở (số để gõ cánh + số), cánh đang đeo, cánh KẾ TIẾP (ảnh mờ). Không ghi coin.
+export function wingCard(p){
+ const coins=Number(p.giftCoins)||0,wing=playerWing(p),nextI=WING_TIERS.findIndex(t=>coins<t.min);
+ return {kind:'wings',off:p.wingChoice===0,auto:p.wingChoice==null,current:p.wingChoice===0?'đang ẩn':wing?.name||'chưa có',
+  owned:{items:WING_TIERS.flatMap((t,i)=>coins>=t.min?[{no:i+1,id:'w'+(i+1),name:t.name,on:t===wing&&p.wingChoice!==0,art:wingArt(t)}]:[])},
+  next:nextI>=0?{no:nextI+1,name:WING_TIERS[nextI].name,art:wingArt(WING_TIERS[nextI])}:null};
+}
 // Trả về {kind, text} nếu là lệnh xem; null nếu không phải.
 export function inventoryRequest(w,p,cmd,rest,now){
  if(BAG_CMDS.includes(cmd))return {kind:'bag'};
@@ -58,7 +65,7 @@ export function petEventTip(w,p,now){
  const v=mine?p.petProgress:{hearts:0,coins:0},f=e.featured&&open?petById(e.featured):null;
  return (open?'Linh Thú Cốc':'Linh Thú Cốc vừa khép')+' · đã nhận '+(v.hearts||0)+' tim'+(f?' · thần thú lượt này: '+f.name:''); // không ghi coin (luật bảng LIVE)
 }
-export function inventoryCard(kind,p,catalog,growth=null){return kind==='bag'?bagCard(p,catalog):kind==='pets'?petCard(p,growth||{}):skinCard(p);}
+export function inventoryCard(kind,p,catalog,growth=null){return kind==='bag'?bagCard(p,catalog):kind==='pets'?petCard(p,growth||{}):kind==='wings'?wingCard(p):skinCard(p);}
 export function inventoryText(c){
  if(c.kind==='bag')return `Túi đồ • ${c.artifacts.items.length+c.artifacts.more} pháp bảo • ${c.pills.items.reduce((s,x)=>s+x.n,0)} viên đan • ${c.stones.toLocaleString('vi-VN')} linh thạch`;
  if(c.kind==='pets')return `Linh thú • ${c.current||'chưa có đồng hành'} • sở hữu ${c.owned.items.length+c.owned.more}/${c.total}`;

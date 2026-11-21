@@ -26,8 +26,8 @@ export function itemStats(i,category='artifact'){
 }
 // 18/11 (chủ game: "lệnh nào gõ xem mà không hiện bảng thì làm bảng, gộp được thì gộp"):
 //   tuvi + nhiệm vụ · skin + cánh · thần khí + bản mệnh (bao) · chiêu + bí pháp (kit) · linhchau + toaky (mounts).
-const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin · Cánh',mounts:'Tọa kỹ',bao:'Thần khí',kit:'Chiêu thức'};
-const NUMBERED={mounts:'cưỡi',bao:'bản mệnh'}; // ô có SỐ (gõ lệnh + số) + sao + viền theo bậc
+const KIND_LABEL={tuvi:'Tu vi',bag:'Túi đồ',pets:'Linh thú',skins:'Skin · Cánh',wings:'Cánh',mounts:'Tọa kỹ',bao:'Thần khí',kit:'Chiêu thức'};
+const NUMBERED={mounts:'cưỡi',bao:'bản mệnh',wings:'đeo'}; // ô có SỐ (gõ lệnh + số) + sao + viền theo bậc
 const hintHTML=(cmd,rest)=>`<div class="vd-state">gõ <b>${cmd}</b> ${rest}</div>`;
 export const cardKind=card=>card?.kind&&KIND_LABEL[card.kind]?card.kind:card&&card.realmName!=null?'tuvi':null;
 const thumbKind={artifact:'artifact',pets:'pet',skins:'skin'};
@@ -37,7 +37,7 @@ function cell(i,category,esc){
  const thumb=item.id&&thumbKind[category]?` data-thumb="${thumbKind[category]}:${esc(item.id)}"${category==='pets'?` data-pet-stage="${esc(String(item.stage||0))}"`:''}`:'';
  const n=category==='pill'&&item.n>1?`<em class="vd-n">×${fmt(item.n)}</em>`:'';
  const tag=item.on?`<em class="vd-tag">${category==='artifact'?'đeo':category==='pets'?'theo':NUMBERED[category]||'mặc'}</em>`:item.secondary?'<em class="vd-tag is-sub">phụ</em>':'';
- const no=NUMBERED[category]&&item.no?`<em class="vd-no">${fmt(item.no)}</em><em class="vd-stars">${category==='bao'?'cấp '+Math.max(1,Math.min(5,item.stars||1)):'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
+ const no=NUMBERED[category]&&item.no?`<em class="vd-no">${fmt(item.no)}</em>${category==='wings'?'':`<em class="vd-stars">${category==='bao'?'cấp '+Math.max(1,Math.min(5,item.stars||1)):'★'.repeat(Math.max(1,Math.min(5,item.stars||1)))}</em>`}`:''; // 18/11: tọa kỹ có SỐ để gõ toaky số
  return `<div class="vd-cell${item.on?' is-on':item.secondary?' is-sub':''}${NUMBERED[category]&&item.tier?' is-'+esc(item.tier):''}"><span class="vd-pic">${thumb?`<canvas width="${THUMB}" height="${THUMB}"${thumb}></canvas>`:''}<img src="${esc(safeInventoryArt(item,category))}" alt="" decoding="async">${n}${no}${tag}</span><span class="vd-cap">${esc(item.name||'Vật phẩm')}</span></div>`;
 }
 // 15/11 (user): HIỆN HẾT món — nhiều món thì thêm cột cho ô nhỏ lại (3→4→5→6 cột), bảng không cao quá ô góc.
@@ -87,6 +87,11 @@ export function inventoryDeckHTML(e,esc){
   const it=card.owned?.items||[];
   body=`<div class="vd-chips">${card.banMenh?`<span class="vd-orb is-divine">Bản mệnh: ${esc(card.banMenh)}</span>`:''}${card.pity4!=null?`<span>còn ${fmt(card.pity4)} lượt tới 4★</span><span>còn ${fmt(card.pity5)} lượt tới 5★</span>`:''}</div>`
    +(it.length>1?hintHTML('bản mệnh + số','để đổi bản mệnh'):'')+grid([[card.owned,'bao']],esc,'Chưa có thần khí · gõ <b>cầu</b> khi Bảo Khố mở');
+ }else if(kind==='wings'){ // 21/11 (chủ game): BẢNG CÁNH riêng — ảnh từng cánh đã mở (số = gõ cánh + số), cánh đang đeo sáng viền, cánh KẾ TIẾP ảnh mờ
+  const it=card.owned?.items||[],nx=card.next;
+  body=`<div class="vd-chips"><span>Đã mở ${fmt(it.length)}</span><span>Đeo: ${esc(card.current||'chưa có')}</span>${card.auto&&it.length?'<span>tự chọn cánh mạnh nhất</span>':''}</div>`+grid([[card.owned,'wings']],esc,'Chưa mở cánh · cánh mở theo tổng quà đã tặng')
+   +(nx?`<div class="vd-sub">Cánh kế tiếp</div><div class="vd-next"><img src="${esc(safeInventoryArt(nx,'wings'))}" alt="" decoding="async"><span><b>${fmt(nx.no)}</b> ${esc(nx.name)}</span></div>`:'')
+   +(it.length?hintHTML('cánh + số','để đổi · <b>hủy cánh</b> để ẩn · <b>cánh tự động</b>'):'');
  }else if(kind==='kit'){ // 18/11: chiêu + bí pháp
   const books=card.books||[],learned=books.filter(b=>b.on).length;
   body=`<div class="vd-chips"><span>Lv${fmt(card.lv||1)}</span><span>Bí pháp ${fmt(learned)}/${fmt(books.length)}</span></div>`

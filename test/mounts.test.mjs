@@ -153,9 +153,27 @@ test('mọi lệnh xem đều kèm bảng: tuvi+nhiệm vụ · skin+cánh · th
  const w=createWorld('live');Object.assign(w.settings,{autoEvents:false,residents:false,heartGate:false});
  action(w,{type:'chat',userId:'u1',name:'U1',text:'xin chào'},NOW);
  const p=w.players.u1;p.giftCoins=600;p.bao={items:{'s4-kiem':2,'s5-kiem':1},p4:2,p5:10};
- const want={tuvi:'tuvi',nhiemvu:'tuvi',skin:'skins',canh:'skins',thankhi:'bao',banmenh:'bao',chieu:'kit',biphap:'kit',linhchau:'mounts',toaky:'mounts'};
+ const want={tuvi:'tuvi',nhiemvu:'tuvi',skin:'skins',canh:'wings' /* 21/11: bảng cánh riêng */,thankhi:'bao',banmenh:'bao',chieu:'kit',biphap:'kit',linhchau:'mounts',toaky:'mounts'};
  let t=NOW+60000;
  for(const [cmd,kind] of Object.entries(want)){t+=20000;const n=w.events.length;action(w,{type:'chat',userId:'u1',name:'U1',text:cmd},t);
   const ev=w.events.slice(n).find(e=>e.user==='u1'&&e.card);assert.ok(ev,cmd+' phải có bảng');assert.equal(cardKind(ev.card),kind,cmd);
   assert.ok(inventoryDeckHTML(ev,s=>String(s)).length>100,cmd);}
+});
+test('21/11: bảng cánh — ảnh từng cánh đã mở, cánh đang đeo, cánh kế tiếp; không ghi coin',async()=>{
+ const {inventoryDeckHTML}=await import('../public/inventory-multi.js');const {wingCard}=await import('../inventory.mjs');
+ const c=wingCard({giftCoins:10676,wingChoice:null});
+ assert.equal(c.owned.items.length,12);assert.equal(c.next.name,'Thiên Đạo Thần Hoàn');assert.ok(c.owned.items.every(x=>/^\/assets\/[a-z0-9/_-]+\.webp$/.test(x.art)));
+ const html=inventoryDeckHTML({name:'hoàng',user:'h',card:c},s=>String(s));
+ assert.match(html,/Cánh kế tiếp/);assert.match(html,/wing-thumbs\/w1\.webp/);assert.match(html,/wing-thumbs\/w12\.webp/);assert.doesNotMatch(html,/coin|\d\.\d{3}/i);
+ assert.equal(wingCard({giftCoins:0}).owned.items.length,0);
+});
+test('21/11: gõ cánh khi đang giữ Linh Châu tím → không bật thẻ nhắc châu đè lên bảng cánh',()=>{
+ const w=createWorld('live');Object.assign(w.settings,{autoEvents:false,residents:false,heartGate:false});
+ action(w,{type:'chat',userId:'u1',name:'U1',text:'xin chào'},NOW);const p=w.players.u1;p.giftCoins=600;p.mountOrbs={vip:1};delete p.cooldowns?.['orb-remind'];w.orbRemindAt=0;
+ const n=w.events.length;action(w,{type:'chat',userId:'u1',name:'U1',text:'cánh'},NOW+30*60000);
+ const evs=w.events.slice(n).filter(e=>e.user==='u1');assert.ok(evs.some(e=>e.card?.kind==='wings'));assert.ok(!evs.some(e=>e.orbCard),'không có thẻ Linh Châu');
+});
+test('21/11: mỗi cánh đều có ảnh nhỏ cho bảng cánh',async()=>{
+ const fs=await import('node:fs');const {WING_TIERS,wingArt}=await import('../public/boss-arena.js');
+ for(const t of WING_TIERS)assert.ok(fs.existsSync('public'+wingArt(t)),t.name+' thiếu ảnh '+wingArt(t));
 });

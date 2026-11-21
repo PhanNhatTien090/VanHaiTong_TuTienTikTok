@@ -58,6 +58,8 @@ export const WING_TIERS = [
   { min: 18000, name:'Hỗn Độn Ma Dực', fx:'chaos', width:1.12 },
   { min: 20000, name:'Cửu Thiên Đế Dực', fx:'emperor', width:1.14 },
 ];
+// 21/11: ảnh đại diện từng cánh cho BẢNG CÁNH (gõ "cánh"): public/assets/wing-thumbs/w<N>.webp (cắt sẵn bằng scripts/wing-thumbs.py; N = số thứ tự). Thêm cánh mới → chạy lại script.
+export const wingArt = tier => {const i=WING_TIERS.indexOf(tier);return i<0?'':'/assets/wing-thumbs/w'+(i+1)+'.webp';};
 export const wingTopIndex = coins => WING_TIERS.findLastIndex(w => (Number(coins)||0) >= w.min);
 // 18/11 (chủ game): vừa đủ MỐC MỚI thì tự mặc cánh mới nhất (bỏ lựa chọn cũ đang ghim); muốn đổi lại thì gõ cánh + số. Người tự ẩn cánh (wingChoice 0) giữ nguyên.
 const OLD_WING_MINS = [1,100,500,2000,3000,4000,5000,6000,7000,8500,10000,12000,15000]; // mốc trước 18/11 — để người đã chọn cánh trước khi hạ mốc cũng được lên cánh mới
