@@ -27,7 +27,7 @@ test('hall battle joins by real membership, resolves, saves history and never pa
  const medals=w.players.a.hallWarMedals;w=JSON.parse(JSON.stringify(w));tick(w,NOW+220000);assert.equal(w.players.a.hallWarMedals,medals);assert.equal(w.hallWarHistory.length,1);
  const view=snapshot(w,NOW+220000);assert.ok(Array.isArray(view.hallWar.members));assert.ok(view.halls.weekly.endsAt>view.halls.weekly.startsAt);
 });
-test('rời Đường xóa vai trò và lời mời, giữ điểm Đường và thời hạn đổi Đường',()=>{
+test('rời Đường xóa vai trò và lời mời, giữ điểm Đường; đổi Đường lúc nào cũng được',()=>{
  const w=setup(),s=w.nguDuong,h=s.halls[0];
  h.disciples.push('c');h.offers.push({id:'c',until:NOW+100000});h.points=12;
  s.queue.push({id:'c',index:1,queuedAt:NOW});
@@ -37,7 +37,8 @@ test('rời Đường xóa vai trò và lời mời, giữ điểm Đường và
  assert.equal(h.points,12);
  assert.equal(hallBenefits(w,w.players.c,NOW+1000,'cultivate').rate,0);
  assert.equal(action(w,{type:'chat',userId:'c',text:'rời đường'},NOW+2000).ok,false);
- assert.match(action(w,{type:'chat',userId:'c',text:'vào đường 2'},NOW+3000).message,/Đổi Đường sau/);
+ assert.equal(action(w,{type:'chat',userId:'c',text:'vào đường 2'},NOW+3000).ok,true);
+ assert.equal(s.members.c.index,1);
  assert.equal(action(w,{type:'chat',userId:'c',text:'vào đường 1'},NOW+4000).ok,true);
  assert.equal(s.members.c.index,0);
 });

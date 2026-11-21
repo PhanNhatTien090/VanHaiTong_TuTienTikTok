@@ -253,8 +253,8 @@ export function hallCommand(w,p,words,now,ctx) {
     if(index<0)return failure('Gõ vào đường kèm số hoặc tên Đường.');
     if(m?.index===index)return success('Đạo hữu đã ở '+defs[index].name+'.');
     if(hall?.elder===p.id)return failure('Trưởng Lão đang giữ ghế của Đường.');
-    const previous=m ?? p.hallDeparture;
-    if(previous && previous.index!==index && now-previous.joinedAt<WEEK)return failure('Đổi Đường sau '+Math.ceil((previous.joinedAt+WEEK-now)/3600000)+' giờ.');
+    // 21/11 (chủ game): đổi Đường lúc nào cũng được — bỏ hạn 7 ngày; chỉ khóa lúc đang trận Giao Lưu (dòng trên).
+    if(m && s.match && [s.match.a,s.match.b].includes(p.id))return failure('Đợi công bố kết quả Vân Đài để đổi Đường.');
     assign(s,p,index,now);
     const message='Gia nhập '+defs[index].name;
     ctx.emit(w,p,message,'status',now,{hallJoin:{index,name:defs[index].name}}); // 16/11: giọng + thẻ BÁI NHẬP
